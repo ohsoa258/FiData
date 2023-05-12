@@ -7,7 +7,10 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.TaskTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
@@ -16,10 +19,15 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
+import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.entity.TBETLlogPO;
+import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
-import com.fisk.task.listener.nifi.*;
+import com.fisk.task.listener.nifi.IExecScriptListener;
+import com.fisk.task.listener.nifi.INifiTaskListener;
+import com.fisk.task.listener.nifi.INonRealTimeListener;
+import com.fisk.task.listener.nifi.ITriggerScheduling;
 import com.fisk.task.listener.nifi.impl.BuildNifiCustomWorkFlow;
 import com.fisk.task.listener.olap.BuildModelTaskListener;
 import com.fisk.task.listener.olap.BuildWideTableTaskListener;
@@ -35,21 +43,24 @@ import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.nifi.ITableNifiSettingService;
+import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.ITBETLIncremental;
-import com.fisk.task.utils.*;
+import com.fisk.task.utils.KafkaTemplateHelper;
+import com.fisk.task.utils.NifiHelper;
+import com.fisk.task.utils.StackTraceHelper;
+import com.fisk.task.utils.TaskPgTableStructureHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Test;
-import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -113,6 +124,8 @@ public class TestController {
     TaskPublish taskPublish;
     @Resource
     MissionEndCenter missionEndCenter;
+    @Resource
+    IBuildKfkTaskService iBuildKfkTaskService;
 
 
     @PostMapping("/nificzh")
@@ -973,6 +986,46 @@ public class TestController {
 
     }
 
+    /**
+     * 创建管道1
+     *
+     * @return
+     */
+    @PostMapping("/NifiCustomWorkFlow1")
+    @MQConsumerLog
+    public void publishBuildNifiCustomWorkFlowTask(String data) {
+        log.info(data);
+        taskPublish.taskPublish(data, null);
+    }
 
+
+    /**
+     * 创建管道2
+     *
+     * @param nifiCustomWorkListDTO
+     * @return
+     */
+    @PostMapping("/NifiCustomWorkFlow2")
+    @ApiOperation(value = "创建管道")
+    public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW,
+                nifiCustomWorkListDTO);
+    }
+
+    /**
+     * task.build.customwork.flow
+     *
+     * @param dataInfo
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    @PutMapping("/buildNifiCustomWorkFlow")
+    public ResultEntity<Object> buildNifiCustomWorkFlow(String dataInfo) {
+        return ResultEntityBuild.build(buildNifiCustomWorkFlow.msg(dataInfo, null));
+    }
 
 }

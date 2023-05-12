@@ -4,7 +4,7 @@ spring:
   application:
     name: auth-service
   profiles:
-    active: demo
+    active: dev
   freemarker:
     check-template-location: false
 

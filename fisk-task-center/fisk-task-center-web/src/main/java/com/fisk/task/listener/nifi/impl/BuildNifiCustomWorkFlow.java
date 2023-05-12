@@ -101,6 +101,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
 
     public ResultEnum msg(String data, Acknowledgment acke) {
+        //李世纪 2023-05-10测试修改
+        acke.acknowledge();
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
         nifiCustomWorkflowDTO.id = dto.pipelineId;
@@ -142,7 +144,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.info("此组启动失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            acke.acknowledge();
+            log.info("BuildNifiCustomWorkFlow.msg方法结束");
+//            acke.acknowledge();
         }
 
     }
@@ -747,7 +750,6 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         }
     }
 
-
     public TableNifiSettingPO getTableNifiSettingPO(BuildNifiCustomWorkFlowDTO nifiNode) {
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         log.info("父级id:" + nifiNode.groupId);
@@ -786,6 +788,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     }
 
     public ProcessorEntity updateTopicNames(String processorId, String topicName, TopicTypeEnum type, int tableId, int tableType, Long workflowDetailId) {
+        log.info("updateTopicNames开始...");
         //停止   修改   启动
         try {
             //更新topic_name并使用

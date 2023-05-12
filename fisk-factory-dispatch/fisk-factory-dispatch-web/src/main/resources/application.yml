@@ -4,7 +4,7 @@ spring:
   application:
     name: data-factory
   profiles:
-    active: demo
+    active: dev
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

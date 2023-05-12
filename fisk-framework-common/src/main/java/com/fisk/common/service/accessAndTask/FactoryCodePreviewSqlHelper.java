@@ -29,10 +29,10 @@ public class FactoryCodePreviewSqlHelper {
 //        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName!=null){
+            if (f.sourceFieldName != null && f.attributeType==0) {
                 prefix.append(f.sourceFieldName)
                         .append(",");
-            }else {
+            } else {
                 prefix.append(f.fieldEnName)
                         .append(",");
             }
@@ -47,7 +47,7 @@ public class FactoryCodePreviewSqlHelper {
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName!=null){
+            if (f.sourceFieldName != null && f.attributeType==0) {
                 //主键不需要
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
                     suffix.append(" CASE WHEN CAST(isnumeric(")
@@ -101,7 +101,7 @@ public class FactoryCodePreviewSqlHelper {
                             .append(f.sourceFieldName)
                             .append(",");
                 }
-            }else {
+            } else {
                 //主键不需要
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
                     suffix.append(" CASE WHEN CAST(isnumeric(")
@@ -224,10 +224,10 @@ public class FactoryCodePreviewSqlHelper {
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
             for (PublishFieldDTO pkField : pkFields) {
-                if (pkField.sourceFieldName!=null){
+                if (pkField.sourceFieldName != null && pkField.attributeType==0) {
                     pkFieldNames.append(pkField.sourceFieldName)
                             .append(",");
-                }else {
+                } else {
                     pkFieldNames.append(pkField.fieldEnName)
                             .append(",");
                 }
@@ -242,13 +242,13 @@ public class FactoryCodePreviewSqlHelper {
         StringBuilder matchAgain = new StringBuilder(halfSql);
         //第二次拼接开始：AND TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
         for (PublishFieldDTO pkField : pkFields) {
-            if (pkField.sourceFieldName!=null){
+            if (pkField.sourceFieldName != null && pkField.attributeType==0) {
                 matchAgain.append("AND TARGET.")
                         .append(pkField.sourceFieldName)
                         .append(" = SOURCE.")
                         .append(pkField.sourceFieldName)
                         .append(" ");
-            }else {
+            } else {
                 matchAgain.append("AND TARGET.")
                         .append(pkField.fieldEnName)
                         .append(" = SOURCE.")
@@ -283,10 +283,10 @@ public class FactoryCodePreviewSqlHelper {
                 .append(" AS TARGET USING (SELECT ");
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName!=null){
+            if (f.sourceFieldName != null && f.attributeType==0) {
                 startSql.append(f.sourceFieldName)
                         .append(",");
-            }else {
+            } else {
                 startSql.append(f.fieldEnName)
                         .append(",");
             }
@@ -303,13 +303,13 @@ public class FactoryCodePreviewSqlHelper {
         if (!CollectionUtils.isEmpty(pkFields)) {
             //遍历前端传递的字段集合--只包含主键
             for (PublishFieldDTO pkField : pkFields) {
-                if (pkField.sourceFieldName!=null){
+                if (pkField.sourceFieldName != null && pkField.attributeType==0) {
                     startSql.append("TARGET.")
                             .append(pkField.sourceFieldName)
                             .append(" = SOURCE.")
                             .append(pkField.sourceFieldName)
                             .append(" AND ");
-                }else {
+                } else {
                     startSql.append("TARGET.")
                             .append(pkField.fieldEnName)
                             .append(" = SOURCE.")
@@ -329,7 +329,7 @@ public class FactoryCodePreviewSqlHelper {
 
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName!=null){
+            if (f.sourceFieldName != null && f.attributeType==0) {
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
                     middleSql.append("TARGET.")
                             .append(f.sourceFieldName)
@@ -365,7 +365,7 @@ public class FactoryCodePreviewSqlHelper {
                             .append(f.sourceFieldName)
                             .append(",");
                 }
-            }else {
+            } else {
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
                     middleSql.append("TARGET.")
                             .append(f.fieldEnName)
@@ -416,10 +416,10 @@ public class FactoryCodePreviewSqlHelper {
 
         //遍历字段集合,拼接 insert(.....)
         for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName!=null){
+            if (f.sourceFieldName != null && f.attributeType==0) {
                 endSql.append(f.sourceFieldName)
                         .append(",");
-            }else {
+            } else {
                 endSql.append(f.fieldEnName)
                         .append(",");
             }
@@ -429,7 +429,7 @@ public class FactoryCodePreviewSqlHelper {
 
         //遍历字段集合,拼接values...
         for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName!=null){
+            if (f.sourceFieldName != null && f.attributeType==0) {
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
                     endSql.append("DATEADD(DATE,CAST(left(SOURCE.")
                             .append(f.sourceFieldName)
@@ -450,12 +450,12 @@ public class FactoryCodePreviewSqlHelper {
                             .append(f.sourceFieldName)
                             .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
                             .append(",");
-                }else {
+                } else {
                     endSql.append("SOURCE.")
                             .append(f.sourceFieldName)
                             .append(",");
                 }
-            }else {
+            } else {
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
                     endSql.append("DATEADD(DATE,CAST(left(SOURCE.")
                             .append(f.fieldEnName)
@@ -476,7 +476,7 @@ public class FactoryCodePreviewSqlHelper {
                             .append(f.fieldEnName)
                             .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00')")
                             .append(",");
-                }else {
+                } else {
                     endSql.append("SOURCE.")
                             .append(f.fieldEnName)
                             .append(",");
