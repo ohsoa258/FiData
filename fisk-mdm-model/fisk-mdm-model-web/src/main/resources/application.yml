@@ -5,7 +5,7 @@ spring:
     name: mdmmodel-service
   # 日志输入环境
   profiles:
-    active: demo
+    active: dev
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

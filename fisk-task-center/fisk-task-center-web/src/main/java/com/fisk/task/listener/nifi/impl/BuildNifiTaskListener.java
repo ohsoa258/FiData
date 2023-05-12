@@ -1,8 +1,6 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.*;
@@ -10,7 +8,6 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
@@ -76,8 +73,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -2662,14 +2657,26 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
         log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
-        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? (buildNifiFlow.updateSql + buildNifiFlow.syncStgToOdsSql) : executsql;
-
+        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
+
         //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
         log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
         log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
-        callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
+        //获取外键sql
+        String updateSql = buildNifiFlow.updateSql;
+        //获取自定义加载前sql
+        String customScriptBefore = buildNifiFlow.customScriptBefore;
+        //声明 sqlPreQuery 变量
+        String sqlPreQuery = "";
+        //通过判断 updateSql 和 customScriptBefore 的值是否为空，决定最终的 sqlPreQuery
+        if (StringUtils.isNotEmpty(updateSql)){
+            sqlPreQuery+=updateSql;
+        }else if (StringUtils.isNotEmpty(customScriptBefore)){
+            sqlPreQuery+=sqlPreQuery;
+        }
+        callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
 
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
