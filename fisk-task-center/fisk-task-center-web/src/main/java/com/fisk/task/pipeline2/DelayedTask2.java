@@ -12,7 +12,7 @@ import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
-import com.fisk.task.po.app.TableNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;

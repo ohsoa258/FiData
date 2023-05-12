@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
@@ -160,4 +161,12 @@ public interface MdmClient {
      */
     @GetMapping("/access/dataAccessConfig")
     ResultEntity<AccessMdmConfigDTO> dataAccessConfig(@RequestParam("entityId") long entityId, @RequestParam("modelId") long modelId);
+
+    /**
+     * 获取所有实体表id
+     *
+     * @return list
+     */
+    @GetMapping("/access/getTableId")
+    ResultEntity<List<ChannelDataDTO>> getTableId();
 }

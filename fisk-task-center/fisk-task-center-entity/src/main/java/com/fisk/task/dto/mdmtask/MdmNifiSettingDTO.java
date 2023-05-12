@@ -1,7 +1,7 @@
 package com.fisk.task.dto.mdmtask;
 
 import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.po.app.AppNifiSettingPO;
+import com.fisk.task.po.AppNifiSettingPO;
 import io.swagger.annotations.ApiModelProperty;
 
 /**

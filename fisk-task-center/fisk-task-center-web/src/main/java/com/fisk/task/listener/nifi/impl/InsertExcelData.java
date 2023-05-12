@@ -26,7 +26,7 @@ import com.fisk.task.dto.daconfig.FtpConfig;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
-import com.fisk.task.po.app.TableNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.utils.StackTraceHelper;
 import com.jcraft.jsch.*;

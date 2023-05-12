@@ -1,7 +1,7 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.task.po.app.AppNifiSettingPO;
+import com.fisk.task.po.AppNifiSettingPO;
 import com.fisk.task.mapper.AppNifiSettingMapper;
 import com.fisk.task.service.nifi.IAppNifiSettingService;
 import lombok.extern.slf4j.Slf4j;

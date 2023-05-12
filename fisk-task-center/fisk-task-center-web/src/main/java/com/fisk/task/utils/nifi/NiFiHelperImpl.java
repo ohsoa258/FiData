@@ -42,14 +42,10 @@ import com.fisk.task.dto.task.UpdateControllerServiceConfigDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
 import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
-import com.fisk.task.po.app.AppNifiSettingPO;
-import com.fisk.task.po.app.NifiConfigPO;
-import com.fisk.task.po.app.TableNifiSettingPO;
-import com.fisk.task.po.mdm.MdmNifiSettingPO;
-import com.fisk.task.po.mdm.MdmTableNifiSettingPO;
+import com.fisk.task.po.AppNifiSettingPO;
+import com.fisk.task.po.NifiConfigPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
-import com.fisk.task.service.nifi.impl.MdmNifiSettingServiceImpl;
-import com.fisk.task.service.nifi.impl.MdmTableNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
 import com.fisk.task.service.pipeline.impl.TableTopicImpl;
@@ -89,10 +85,6 @@ public class NiFiHelperImpl implements INiFiHelper {
     TableNifiSettingServiceImpl tableNifiSettingService;
     @Resource
     AppNifiSettingServiceImpl appNifiSettingService;
-    @Resource
-    MdmTableNifiSettingServiceImpl mdmTableNifiSettingService;
-    @Resource
-    MdmNifiSettingServiceImpl mdmNifiSettingService;
     @Resource
     TableTopicImpl tableTopic;
     @Value("${nifi.basePath}")
@@ -1624,12 +1616,11 @@ public class NiFiHelperImpl implements INiFiHelper {
                     NifiHelper.getProcessorsApi().deleteProcessor(processor.getId(), String.valueOf(processor.getRevision().getVersion()), null, null);
                 }
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
-                QueryWrapper<MdmTableNifiSettingPO> queryWrapper = new QueryWrapper<>();
+                QueryWrapper<TableNifiSettingPO> queryWrapper = new QueryWrapper<>();
                 queryWrapper.lambda()
-                        .eq(MdmTableNifiSettingPO::getModelId, dataModelVO.businessId)
-                        .eq(MdmTableNifiSettingPO::getEntityId, nifiRemoveDTO.getTableId())
-                        .eq(MdmTableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
-                mdmTableNifiSettingService.remove(queryWrapper);
+                        .eq(TableNifiSettingPO::getAppId, dataModelVO.businessId)
+                        .eq(TableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
+                tableNifiSettingService.remove(queryWrapper);
                 }
             //删除应用
             if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
@@ -1710,9 +1701,9 @@ public class NiFiHelperImpl implements INiFiHelper {
     private List<NifiRemoveDTO> createMdmNifiRemoveDTOs(DataModelVO dataModelVO) {
         List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
         //mdm
-        MdmNifiSettingPO mdmNifiSettingPO = mdmNifiSettingService.query().eq("model_id", dataModelVO.businessId).eq("type", dataModelVO.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
-        if (mdmNifiSettingPO != null){
-            List<NifiRemoveDTO> nifiRemoveList5 = createMdmNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, mdmNifiSettingPO, dataModelVO.delBusiness);
+        AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("type", dataModelVO.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
+        if (appNifiSettingPO != null){
+            List<NifiRemoveDTO> nifiRemoveList5 = createMdmNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, appNifiSettingPO, dataModelVO.delBusiness);
             nifiRemoveDTOS.addAll(nifiRemoveList5);
         }
         return nifiRemoveDTOS;
@@ -1829,7 +1820,7 @@ public class NiFiHelperImpl implements INiFiHelper {
 
 
 
-    private List<NifiRemoveDTO> createMdmNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, MdmNifiSettingPO mdmNifiSettingPO, Boolean delApp) {
+    private List<NifiRemoveDTO> createMdmNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, AppNifiSettingPO appNifiSettingPO, Boolean delApp) {
         List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
         NifiRemoveDTO nifiRemoveDTO = new NifiRemoveDTO();
         if (dataModelTableVO != null && dataModelTableVO.ids != null) {
@@ -1840,7 +1831,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 List<String> outputPortIds = new ArrayList<>();
                 List<String> inputportConnectIds = new ArrayList<>();
                 List<String> outputportConnectIds = new ArrayList<>();
-                MdmTableNifiSettingPO tableNifiSettingPO = mdmTableNifiSettingService.query().eq("model_id", businessId).eq("entity_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
+                TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
                 //无论是否成功删除任务组,都先暂停接收卡夫卡组件
                 try {
                     ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.consumeKafkaProcessorId);
@@ -1851,7 +1842,7 @@ public class NiFiHelperImpl implements INiFiHelper {
 
                 //删除topic_name
                 TableTopicDTO topicDTO = new TableTopicDTO();
-                topicDTO.tableId = tableNifiSettingPO.entityId;
+                topicDTO.tableId = tableNifiSettingPO.tableAccessId;
                 topicDTO.tableType = tableNifiSettingPO.type;
                 tableTopic.deleteTableTopicByTableId(topicDTO);
                 if (tableNifiSettingPO == null) {
@@ -1912,7 +1903,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.saveTargetDbProcessorId);
                 ProcessIds.add(tableNifiSettingPO.generateFlowFileProcessorId);
                 ProcessIds.add(tableNifiSettingPO.invokeHttpProcessorId);
-                ProcessIds.add(tableNifiSettingPO.mdmToStgProcessorId);
+                ProcessIds.add(tableNifiSettingPO.odsToStgProcessorId);
                 ProcessIds.add(tableNifiSettingPO.queryNumbersProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertNumbersToJsonProcessorId);
                 ProcessIds.add(tableNifiSettingPO.setNumbersProcessorId);
@@ -1921,7 +1912,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 ProcessIds.add(tableNifiSettingPO.queryForSupervisionProcessorId);
                 ProcessIds.add(tableNifiSettingPO.convertJsonForSupervisionProcessorId);
                 ProcessIds.add(tableNifiSettingPO.publishKafkaForSupervisionProcessorId);
-                nifiRemoveDTO.appId = mdmNifiSettingPO.modelComponentId;
+                nifiRemoveDTO.appId = appNifiSettingPO.appComponentId;
                 nifiRemoveDTO.ProcessIds = ProcessIds;
                 nifiRemoveDTO.controllerServicesIds = controllerServicesIds;
                 nifiRemoveDTO.inputPortIds = inputPortIds;

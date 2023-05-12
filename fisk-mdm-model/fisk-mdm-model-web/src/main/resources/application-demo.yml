@@ -39,7 +39,11 @@ pgsql-mdm:
   username: postgres
   type: PG
 
-
+taskdb:
+  url: jdbc:mysql://192.168.21.21:3306/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  username: root
+  password: root123
+  driver-class-name: com.mysql.jdbc.Driver
 # 阿里云ocr参数配置
 ocr:
   aliyun:

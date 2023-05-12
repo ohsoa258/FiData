@@ -1,7 +1,7 @@
 package com.fisk.task.service.pipeline.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fisk.task.po.app.NotifyConfigurationPO;
+import com.fisk.task.po.NotifyConfigurationPO;
 import com.fisk.task.mapper.NotifyConfigurationMapper;
 import com.fisk.task.service.pipeline.INotifyConfiguration;
 import lombok.extern.slf4j.Slf4j;

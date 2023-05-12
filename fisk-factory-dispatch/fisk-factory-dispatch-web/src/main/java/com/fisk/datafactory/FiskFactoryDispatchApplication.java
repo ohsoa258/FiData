@@ -31,7 +31,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.fisk.dataaccess.client",
         "com.fisk.task.client",
         "com.fisk.datamodel.client",
-        "com.fisk.system.client"
+        "com.fisk.system.client",
+        "com.fisk.mdm.client"
 })
 @EnableTransactionManagement
 @EnableHystrix

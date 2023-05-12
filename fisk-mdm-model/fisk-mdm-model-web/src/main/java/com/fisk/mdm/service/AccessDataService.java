@@ -3,6 +3,7 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.access.AccessAttributeAddDTO;
 import com.fisk.mdm.dto.access.AccessAttributeListDTO;
 import com.fisk.mdm.dto.access.AccessSqlDTO;
@@ -82,5 +83,11 @@ public interface AccessDataService extends IService<AccessDataPO> {
      * @return DataAccessConfigDTO
      */
     ResultEntity<AccessMdmConfigDTO> dataAccessConfig(long entityId, long modelId);
+
+    /**
+     * 获取实体表id
+     * @return
+     */
+    List<ChannelDataDTO> getTableId();
 }
 

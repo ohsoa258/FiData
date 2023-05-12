@@ -1,6 +1,6 @@
 package com.fisk.task.dto.task;
 
-import com.fisk.task.po.app.TableTopicPO;
+import com.fisk.task.po.TableTopicPO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

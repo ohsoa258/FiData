@@ -2,6 +2,7 @@ package com.fisk.mdm.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.access.AccessAttributeAddDTO;
 import com.fisk.mdm.dto.access.AccessSqlDTO;
@@ -73,5 +74,11 @@ public class AccessDataController {
             @RequestParam("entityId") long entityId, @RequestParam("modelId") long modelId) {
 
         return accessDataService.dataAccessConfig(entityId, modelId);
+    }
+
+    @GetMapping("/getTableId")
+    @ApiOperation(value = "获取实体表id")
+    public ResultEntity<List<ChannelDataDTO>> getTableId(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,accessDataService.getTableId());
     }
 }

@@ -1,6 +1,7 @@
 package com.fisk.mdm.map;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.EntityPO;
@@ -10,6 +11,8 @@ import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -77,5 +80,22 @@ public interface ModelMap {
      */
     List<ModelDropDownVO> poListToDropDownVoList(List<ModelPO> poList);
 
+    /**
+     * po -> dto
+     *
+     * @param po source
+     * @return target
+     */
+    @Mappings({
+            @Mapping(source = "name", target = "businessName")
+    })
+    ChannelDataDTO poToChannelDataDto(ModelPO po);
 
+    /**
+     * list: po -> dto
+     *
+     * @param list source
+     * @return target
+     */
+    List<ChannelDataDTO> listPoToChannelDataDto(List<ModelPO> list);
 }

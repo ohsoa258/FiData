@@ -1,7 +1,7 @@
 package com.fisk.task.map;
 
 import com.fisk.task.dto.task.TableTopicDTO;
-import com.fisk.task.po.app.TableTopicPO;
+import com.fisk.task.po.TableTopicPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;

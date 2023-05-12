@@ -17,8 +17,8 @@ import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.TBETLIncrementalMapper;
-import com.fisk.task.po.mdm.MdmTableNifiSettingPO;
-import com.fisk.task.service.nifi.IMdmTableNifiSettingService;
+import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +42,7 @@ public class BuildMdmAccessETLListener {
     @Value("${fiData-data-ods-source}")
     public String dataSourceOdsId;
     @Resource
-    IMdmTableNifiSettingService mdmTableNifiSettingService;
+    ITableNifiSettingService tableNifiSettingService;
     @Resource
     PublishTaskController pc;
     @Resource
@@ -120,18 +120,18 @@ public class BuildMdmAccessETLListener {
                 bfd.fetchSize = accessPublishDataDTO.access.fetchSize;
                 bfd.traceId = accessPublishDataDTO.traceId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
-                MdmTableNifiSettingPO one = mdmTableNifiSettingService.query().eq("model_id", bfd.modelId).eq("entity_id", bfd.entityId).eq("type", bfd.type.getValue()).one();
-                MdmTableNifiSettingPO tableNifiSettingPO = new MdmTableNifiSettingPO();
+                TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.modelId).eq("type", bfd.type.getValue()).one();
+                TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
                 if (one != null) {
                     tableNifiSettingPO = one;
                 }
-                tableNifiSettingPO.modelId = Math.toIntExact(bfd.modelId);
-                tableNifiSettingPO.entityId = Math.toIntExact(bfd.entityId);
+                tableNifiSettingPO.appId = Math.toIntExact(bfd.modelId);
+                tableNifiSettingPO.tableAccessId = Math.toIntExact(bfd.entityId);
                 tableNifiSettingPO.tableName = bfd.tableName;
                 tableNifiSettingPO.selectSql = bfd.selectSql;
                 tableNifiSettingPO.type = bfd.type.getValue();
-                tableNifiSettingPO.syncMode = 1;
-                mdmTableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
+                tableNifiSettingPO.syncMode = bfd.synMode;
+                tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
                 pc.publishAccessMdmNifiFlowTask(bfd);
                 log.info("执行完成");
                 accessPublishStatusDTO.publish = 1;

@@ -16,7 +16,7 @@ import com.fisk.datafactory.dto.taskschedule.TaskCronDTO;
 import com.fisk.datafactory.dto.taskschedule.TaskScheduleDTO;
 import com.fisk.datafactory.service.ITaskSchedule;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.po.app.TableNifiSettingPO;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

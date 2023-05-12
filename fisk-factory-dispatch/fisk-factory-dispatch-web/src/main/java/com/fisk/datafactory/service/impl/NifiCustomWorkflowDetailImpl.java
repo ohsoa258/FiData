@@ -36,6 +36,7 @@ import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.service.ITaskSetting;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -75,6 +76,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     PublishTaskClient publishTaskClient;
     @Resource
     DataModelClient dataModelClient;
+    @Resource
+    MdmClient mdmClient;
     @Resource
     DataAccessClient dataAccessClient;
     @Resource
@@ -304,6 +307,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                     break;
                 case SFTP_FILE_COPY_TASK:
                     e.componentsId = 14;
+                    break;
+                case MDM_TABLE_TASK:
+                    e.componentsId = 16;
+                    break;
                 default:
                     break;
             }
@@ -333,7 +340,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 管道名称
         workListDTO.pipelineName = pipelineName;
         // TODO 封装nifi所有节点(大量改动)
-        workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(pipelineId, list);
+         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(pipelineId, list);
         // TODO 管道详情-父子级tree,
         workListDTO.structure = getMenuTree(list);
         // 管道详情下的任务组-tree
@@ -606,6 +613,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 break;
             // 数据湖表任务
             case DATALAKE_TASK:
+                //主数据表任务
+            case MDM_TABLE_TASK:
                 // 数据湖ftp任务
             case DATALAKE_FTP_TASK:
                 return OlapTableEnum.CUSTOMWORKPHYSICS;
@@ -809,6 +818,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 ResultEntity<List<ChannelDataDTO>> resultEntity = dataModelClient.getTableId(dto);
                 list = resultEntity.data;
                 break;
+            //主数据表任务
+            case MDM_TABLE_TASK:
+                ResultEntity<List<ChannelDataDTO>> mdmData = mdmClient.getTableId();
+                list = mdmData.data;
+                break;
             default:
                 break;
         }
@@ -847,6 +861,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                                                 case DW_FACT_TASK:
                                                     v.setSourceId(DataSourceConfigEnum.DMP_DW.getValue());
                                                     v.setTableBusinessType(TableBusinessTypeEnum.DW_FACT.getValue());
+                                                    break;
+                                                // 主数据表任务
+                                                case MDM_TABLE_TASK:
+                                                    v.setSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
+                                                    v.setTableBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
                                                     break;
                                                 default:
                                                     break;

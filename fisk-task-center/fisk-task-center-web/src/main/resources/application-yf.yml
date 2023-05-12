@@ -36,6 +36,7 @@ nifi-MaxRowsPerFlowFile: 10000
 nifi-OutputBatchSize: 1
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
+fiData-data-mdm-source: 3
 # 是否调用数据质量接口
 nifi-data-security-enable: false
 # consumeServer启动控制

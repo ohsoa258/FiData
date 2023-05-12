@@ -18,8 +18,6 @@ public class MqConstants {
 
         public static final String TOPIC_PREFIX = "dmp.datafactory.nifi.";
 
-        public static final String TOPIC_MDM_PREFIX = "dmp.mdm.nifi.";
-
     }
 
     /**

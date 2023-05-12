@@ -33,7 +33,7 @@ import com.fisk.task.enums.PortComponentEnum;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.mapper.OlapMapper;
-import com.fisk.task.po.app.*;
+import com.fisk.task.po.*;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.*;
@@ -714,7 +714,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 String Topic = TopicName;
                 nifiNode = nifiCustomWorkDTO.NifiNode;
                 log.info("父级id:" + nifiNode.groupId);
-                //2.拼装参数,三类nifi流程,3.调用方法生成流程
+                //2.拼装参数,4类nifi流程,3.调用方法生成流程
                 TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
 
                 if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
@@ -750,7 +750,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     public TableNifiSettingPO getTableNifiSettingPO(BuildNifiCustomWorkFlowDTO nifiNode) {
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         log.info("父级id:" + nifiNode.groupId);
-        //2.拼装参数,三类nifi流程,3.调用方法生成流程
+        //2.拼装参数,4类nifi流程,3.调用方法生成流程
         if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAACCESS)) {
             tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.PHYSICS.getValue()).eq("del_flag", 1).one();
         } else if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELING)) {
@@ -780,6 +780,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", olapPO.id).eq("type", OlapTableEnum.KPI.getValue()).eq("del_flag", 1).one();
         } else if (Objects.equals(nifiNode.type, DataClassifyEnum.DATAMODELWIDETABLE)) {
             tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.WIDETABLE.getValue()).eq("del_flag", 1).one();
+        } else if (Objects.equals(nifiNode.type, DataClassifyEnum.MDM_DATA_ACCESS)) {
+            tableNifiSettingPO = tableNifiSettingService.query().eq("table_access_id", nifiNode.tableId).eq("type", OlapTableEnum.MDM_DATA_ACCESS.getValue()).eq("del_flag", 1).one();
         }
         return tableNifiSettingPO;
     }
