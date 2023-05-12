@@ -1601,17 +1601,6 @@ public class TableFieldsImpl
         //调用方法，获取sql语句
         String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO,conType);
 
-        //判断是否是全量覆盖方式
-        if (dto.syncMode==1){
-            //判断全量覆盖方式是否生成快照  1使用  0不使用
-            int snapshotFlag = dto.snapshotDTO.ifEnableSnapshot;
-            if (snapshotFlag == 1){
-                String fullVolumeSql = finalSql.substring(finalSql.indexOf(";"));
-            }else {
-                log.info("全量覆盖未选择生成版本快照...");
-            }
-        }
-
         //返回最终拼接好的sql
         return finalSql;
     }
