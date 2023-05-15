@@ -123,8 +123,26 @@ public class DimensionAttributeImpl
         if (!result) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
+
         //修改发布状态
-        dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+//        dimensionPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+//        if (dimensionPo.isDimDateTbl != null && dimensionPo.isDimDateTbl) {
+//            dimensionPo.isPublish = PublicStatusEnum.PUBLIC_SUCCESS.getValue();
+//        }
+
+        //2023-04-26李世纪新增，拼接删除temp表的脚本并存入数据库
+        //获取临时表前缀
+        String prefixTempName = dimensionPo.prefixTempName;
+        //获取表名称
+        String dimensionTabName = dimensionPo.dimensionTabName;
+        //拼接删除临时表的脚本
+        StringBuilder delSql = new StringBuilder("TRUNCATE TABLE ");
+        delSql.append(prefixTempName)
+                .append("_")
+                .append(dimensionTabName)
+                .append(";");
+        dimensionPo.deleteTempScript = String.valueOf(delSql);
+
         dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
         dimensionPo.coverScript = dto.coverScript;
         if (mapper.updateById(dimensionPo) == 0) {
@@ -132,6 +150,8 @@ public class DimensionAttributeImpl
         }
         //是否发布
         if (dto.isPublish) {
+//        //2023-04-27 这里不能这样写，日期维度表也要走普通表相同的流程
+//        if (dto.isPublish && !dimensionPo.isDimDateTbl || dimensionPo.isDimDateTbl == null) {
             DimensionFolderPublishQueryDTO queryDTO = new DimensionFolderPublishQueryDTO();
             List<Integer> dimensionIds = new ArrayList<>();
             dimensionIds.add(dto.dimensionId);
@@ -166,8 +186,8 @@ public class DimensionAttributeImpl
             } else {
                 fieldDTO.sourceFieldName = attributePo.sourceFieldName;
             }
-            fieldDTO.associateDimensionId=attributePo.associateDimensionId;
-            fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
+            fieldDTO.associateDimensionId = attributePo.associateDimensionId;
+            fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
             //判断是否关联维度
             if (attributePo.associateDimensionId != 0 && attributePo.associateDimensionFieldId != 0) {
                 DimensionPO dimensionPo = mapper.selectById(attributePo.associateDimensionId);
@@ -182,31 +202,29 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public ResultEnum deleteDimensionAttribute(List<Integer> ids)
-    {
+    public ResultEnum deleteDimensionAttribute(List<Integer> ids) {
         //判断字段是否与其他表有关联
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.in("associate_dimension_field_id",ids);
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("associate_dimension_field_id", ids);
+        List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
         if (list.size() > 0) {
             return ResultEnum.FIELDS_ASSOCIATED;
         }
 
         //判断字段是否与事实表有关联
-        QueryWrapper<FactAttributePO> queryWrapper1=new QueryWrapper<>();
-        queryWrapper1.in("associate_dimension_field_id",ids);
-        List<FactAttributePO> poList=factAttributeMapper.selectList(queryWrapper1);
+        QueryWrapper<FactAttributePO> queryWrapper1 = new QueryWrapper<>();
+        queryWrapper1.in("associate_dimension_field_id", ids);
+        List<FactAttributePO> poList = factAttributeMapper.selectList(queryWrapper1);
         if (poList.size() > 0) {
             return ResultEnum.FIELDS_ASSOCIATED;
         }
 
         ////DimensionAttributePO po=attributeMapper.selectById(ids.get(0));
-        return attributeMapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return attributeMapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public DimensionAttributeUpdateDTO getDimensionAttribute(int id)
-    {
+    public DimensionAttributeUpdateDTO getDimensionAttribute(int id) {
         return DimensionAttributeMap.INSTANCES.poToDetailDto(attributeMapper.selectById(id));
     }
 
@@ -263,16 +281,15 @@ public class DimensionAttributeImpl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum updateDimensionAttribute(DimensionAttributeUpdateDTO dto)
-    {
-        DimensionAttributePO po=attributeMapper.selectById(dto.id);
+    public ResultEnum updateDimensionAttribute(DimensionAttributeUpdateDTO dto) {
+        DimensionAttributePO po = attributeMapper.selectById(dto.id);
         if (po == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,po.dimensionId)
-                .eq(DimensionAttributePO::getDimensionFieldEnName,dto.dimensionFieldEnName);
-        DimensionAttributePO model=attributeMapper.selectOne(queryWrapper);
+        QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, po.dimensionId)
+                .eq(DimensionAttributePO::getDimensionFieldEnName, dto.dimensionFieldEnName);
+        DimensionAttributePO model = attributeMapper.selectOne(queryWrapper);
         if (model != null && model.id != dto.id) {
             return ResultEnum.DATA_EXISTS;
         }
@@ -280,32 +297,30 @@ public class DimensionAttributeImpl
         ////DimensionPO dimensionPO=mapper.selectById(po.dimensionId);
         ////dimensionPO.isPublish=PublicStatusEnum.UN_PUBLIC.getValue();
         //更改维度字段数据
-        po.dimensionFieldCnName=dto.dimensionFieldCnName;
-        po.dimensionFieldDes=dto.dimensionFieldDes;
-        po.dimensionFieldLength=dto.dimensionFieldLength;
-        po.dimensionFieldEnName=dto.dimensionFieldEnName;
-        po.dimensionFieldType=dto.dimensionFieldType;
+        po.dimensionFieldCnName = dto.dimensionFieldCnName;
+        po.dimensionFieldDes = dto.dimensionFieldDes;
+        po.dimensionFieldLength = dto.dimensionFieldLength;
+        po.dimensionFieldEnName = dto.dimensionFieldEnName;
+        po.dimensionFieldType = dto.dimensionFieldType;
         ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
 
         //系统变量
         if (!CollectionUtils.isEmpty(dto.deltaTimes)) {
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes, CreateTypeEnum.CREATE_DIMENSION.getValue());
         }
-        return attributeMapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return attributeMapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id)
-    {
-        QueryWrapper <DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionAttributePO::getDimensionId,id);
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+    public List<DimensionAttributeAssociationDTO> getDimensionAttributeData(int id) {
+        QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.orderByDesc("create_time").lambda().eq(DimensionAttributePO::getDimensionId, id);
+        List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
         return DimensionAttributeMap.INSTANCES.poToNameListDTO(list);
     }
 
     @Override
-    public List<ModelMetaDataDTO> getDimensionMetaDataList(List<Integer> factIds)
-    {
+    public List<ModelMetaDataDTO> getDimensionMetaDataList(List<Integer> factIds) {
         List<ModelMetaDataDTO> list = new ArrayList<>();
         if (CollectionUtils.isEmpty(factIds)) {
             return list;
@@ -326,31 +341,30 @@ public class DimensionAttributeImpl
     }
 
     @Override
-    public ModelMetaDataDTO getDimensionMetaData(int id)
-    {
-        ModelMetaDataDTO data=new ModelMetaDataDTO();
-        DimensionPO po=mapper.selectById(id);
+    public ModelMetaDataDTO getDimensionMetaData(int id) {
+        ModelMetaDataDTO data = new ModelMetaDataDTO();
+        DimensionPO po = mapper.selectById(id);
         if (po == null) {
             return data;
         }
-        data.tableName =po.dimensionTabName;
-        data.id=po.id;
-        data.appId=po.businessId;
+        data.tableName = po.dimensionTabName;
+        data.id = po.id;
+        data.appId = po.businessId;
         //获取注册表相关数据
-        QueryWrapper<DimensionAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId,id);
-        List<ModelAttributeMetaDataDTO> dtoList=new ArrayList<>();
-        List<DimensionAttributePO> list=attributeMapper.selectList(queryWrapper);
+        QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, id);
+        List<ModelAttributeMetaDataDTO> dtoList = new ArrayList<>();
+        List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
             return data;
         }
-        for (DimensionAttributePO item:list) {
+        for (DimensionAttributePO item : list) {
             ModelAttributeMetaDataDTO dto = new ModelAttributeMetaDataDTO();
             dto.fieldEnName = item.dimensionFieldEnName;
             dto.fieldLength = item.dimensionFieldLength;
             dto.fieldType = item.dimensionFieldType;
-            dto.fieldId= String.valueOf(item.id);
-            dto.attributeType=1;
+            dto.fieldId = String.valueOf(item.id);
+            dto.attributeType = 1;
             dtoList.add(dto);
             //判断维度是否关联维度
             if (item.associateDimensionId != 0 && item.associateDimensionFieldId != 0) {
@@ -363,21 +377,21 @@ public class DimensionAttributeImpl
                 }
             }
         }
-        data.dto=dtoList;
+        data.dto = dtoList;
         return data;
     }
 
     /**
      * 生成时间日期维度表数据
+     *
      * @param list
      * @param dimensionId
      * @return
      */
-    public ResultEnum addTimeTableAttribute(List<DimensionAttributeDTO> list,int dimensionId)
-    {
-        List<DimensionAttributePO> poList=DimensionAttributeMap.INSTANCES.dtoListToPoList(list);
-        poList.stream().map(e->e.dimensionId=dimensionId).collect(Collectors.toList());
-        return this.saveOrUpdateBatch(poList)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    public ResultEnum addTimeTableAttribute(List<DimensionAttributeDTO> list, int dimensionId) {
+        List<DimensionAttributePO> poList = DimensionAttributeMap.INSTANCES.dtoListToPoList(list);
+        poList.stream().map(e -> e.dimensionId = dimensionId).collect(Collectors.toList());
+        return this.saveOrUpdateBatch(poList) == true ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override

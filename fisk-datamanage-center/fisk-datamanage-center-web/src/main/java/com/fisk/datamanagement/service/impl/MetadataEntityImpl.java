@@ -362,7 +362,7 @@ public class MetadataEntityImpl
         map2.put("classifications", classifications);
 
         //自定义属性
-        getMetadataCustom(map2, Integer.parseInt(entityId));
+        map2= getMetadataCustom(map2, Integer.parseInt(entityId));
 
         //获取业务元数据
         Map businessMetadata = metadataBusinessMetadataMap.getBusinessMetadata(entityId);

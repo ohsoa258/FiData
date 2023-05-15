@@ -97,4 +97,10 @@ public class ModelPublishTableDTO {
      */
     @ApiModelProperty(value = "覆盖脚本执行SQL语句")
     public String coverScript;
+
+    /**
+     * 清空临时表脚本
+     */
+    @ApiModelProperty(value = "清空临时表脚本")
+    public String deleteTempScript;
 }
