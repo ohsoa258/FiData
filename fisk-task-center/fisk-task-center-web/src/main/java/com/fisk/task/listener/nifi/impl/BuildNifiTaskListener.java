@@ -2813,7 +2813,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * data转json组件
-     *
      * @param groupId 组id
      * @return 组件对象
      */

@@ -11,7 +11,8 @@ public enum SynchronousTypeEnum implements BaseEnum {
     /**
      * 推给第三方库
      */
-    TOEXTERNALDB(3,"toExternalDb");
+    TOEXTERNALDB(3,"toExternalDb"),
+    ODSTOMDM(4,"odsToMdm");//ODSTOMDM
 
 
     private final String name;

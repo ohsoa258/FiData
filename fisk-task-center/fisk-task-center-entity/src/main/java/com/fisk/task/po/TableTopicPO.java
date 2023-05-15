@@ -17,5 +17,5 @@ public class TableTopicPO extends BasePO {
     public String topicName;
     public int topicType;
     public Integer componentId;
-
+    public String workflowId;
 }

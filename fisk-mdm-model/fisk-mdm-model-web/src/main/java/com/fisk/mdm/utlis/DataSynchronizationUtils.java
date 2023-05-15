@@ -15,7 +15,6 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
-import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
@@ -210,6 +209,7 @@ public class DataSynchronizationUtils {
         str.append(MARK + "update_time").append(",");
         str.append(MARK + "update_user").append(",");
         str.append(MARK + "del_flag").append(",");
+        str.append(MARK + "batch_code").append(",");
 
         // 业务字段
         String businessFields = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName()))
@@ -229,7 +229,7 @@ public class DataSynchronizationUtils {
 
         str.append(businessFields).append(")");
         str.append(" VALUES (" + placeholders + ",unnest(?),unnest(?),unnest(?),unnest(?)" +
-                ",unnest(?),unnest(?),unnest(?),unnest(?)" +") ");
+                ",unnest(?),unnest(?),unnest(?),unnest(?),unnest(?)" +") ");
 
         List<AttributeInfoDTO> codeAssociationCondition = attributeList.stream().filter(e -> e.getStatus().equals(AttributeStatusEnum.SUBMITTED.getName())
                 && e.getName().equals("code")).collect(Collectors.toList());
@@ -244,6 +244,7 @@ public class DataSynchronizationUtils {
         str.append(MARK + "del_flag = " + "excluded." + MARK + "del_flag").append(",");
         str.append(MARK + "update_time = " + "excluded." + MARK + "update_time").append(",");
         str.append(MARK + "update_user = " + "excluded." + MARK + "update_user").append(",");
+        str.append(MARK + "batch_code = " + "excluded." + MARK + "batch_code").append(",");
 
         String code1 = "\"" + columnName + "\" = " + "excluded." + MARK + "new_code" + ",";
 
@@ -271,9 +272,10 @@ public class DataSynchronizationUtils {
             stmt.setArray(6, connection.createArrayOf(JDBCType.TIMESTAMP.getName(), this.getParameter(listMap,MARK + "update_time").toArray()));
             stmt.setArray(7, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,MARK + "update_user").toArray()));
             stmt.setArray(8, connection.createArrayOf(JDBCType.INTEGER.getName(), this.getParameter(listMap,MARK + "del_flag").toArray()));
+            stmt.setArray(9, connection.createArrayOf(JDBCType.VARCHAR.getName(), this.getParameter(listMap,MARK + "batch_code").toArray()));
 
             // 业务字段
-            int index = 8;
+            int index = 9;
             for (AttributeInfoDTO infoDto : attributeList) {
                 stmt.setArray(++index, connection.createArrayOf(this.getFieldType(infoDto.getDataType()), this.getParameter(listMap,infoDto.getColumnName()).toArray()));
             }

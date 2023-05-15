@@ -5,12 +5,14 @@ import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.ApiImportDataDTO;
 import com.fisk.task.dto.doris.TableInfoDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
 import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -27,7 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author gy
@@ -55,6 +56,14 @@ public class PublishTaskController {
         return iBuildKfkTaskService.publishTask("数据湖表:" + data.tableName + "的数据流任务",
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW,
+                data);
+    }
+    @PostMapping("/accessMdmNifiFlow")
+    @ApiOperation(value = "创建接入mdm同步数据nifi流程")
+    public ResultEntity<Object> publishAccessMdmNifiFlowTask(@RequestBody BuildMdmNifiFlowDTO data) {
+        return iBuildKfkTaskService.publishTask("数据湖表:" + data.tableName + "的数据流任务",
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.NifiTopicConstants.BUILD_ACCESS_MDM_NIFI_FLOW,
                 data);
     }
 
@@ -216,6 +225,21 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.MdmTopicConstants.BUILD_DATAMODEL_DORIS_TABLE,
                 modelPublishDataDTO);
+    }
+
+    /**
+     * mdmETL发布
+     *
+     * @param accessPublishDataDTO
+     * @return
+     */
+    @PostMapping("/mdmTableTask")
+    @ApiOperation(value = "mdmETL发布")
+    public ResultEntity<Object> publishBuildMdmAccessETLTask(@RequestBody AccessPublishDataDTO accessPublishDataDTO) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.MDM_PUBLISH_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.MdmTopicConstants.MDM_PUBLISH_TASK,
+                accessPublishDataDTO);
     }
 
     /**

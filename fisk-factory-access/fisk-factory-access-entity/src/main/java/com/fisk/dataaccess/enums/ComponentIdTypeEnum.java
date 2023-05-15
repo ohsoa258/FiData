@@ -70,7 +70,18 @@ public enum ComponentIdTypeEnum implements BaseEnum {
 
     KEYTAB_CREDENTIALS_SERVICE_ID(21,"KEYTAB_CREDENTIALS_SERVICE_ID"),
 
-    DRAFT(1,"草稿");
+    DRAFT(1,"草稿"),
+    /**
+     *
+     */
+    /**
+     * ods_mdm
+     */
+    MDM_NIFI_FLOW_GROUP_ID(7,"MdmNifiFlowGroupId"),
+
+    PG_MDM_DB_POOL_PASSWORD(24,"PG_MDM_DB_POOL_PASSWORD"),
+    PG_MDM_DB_POOL_USERNAME(25,"PG_MDM_DB_POOL_USERNAME"),
+    PG_MDM_DB_POOL_URL(26,"PG_MDM_DB_POOL_URL");
 
 
     ComponentIdTypeEnum(int value, String name) {

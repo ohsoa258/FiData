@@ -38,6 +38,11 @@ pgsql-mdm:
   username: postgres
   type: PG
 
+taskdb:
+  url: jdbc:mysql://192.168.21.13:3306/FiData_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  username: root
+  password: Password01!
+  driver-class-name: com.mysql.jdbc.Driver
 # 图片上传
 file:
   uploadUrl: /opt/0226/soft/nginx/app/file/mdm/
