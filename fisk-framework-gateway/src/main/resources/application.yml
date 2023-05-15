@@ -74,7 +74,7 @@ spring:
     name: fk-gateway
   # 日志输入环境
   profiles:
-    active: demo
+    active: dev
   freemarker:
     check-template-location: false
   redis:
