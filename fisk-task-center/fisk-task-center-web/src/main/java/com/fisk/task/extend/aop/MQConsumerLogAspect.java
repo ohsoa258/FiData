@@ -98,8 +98,17 @@ public class MQConsumerLogAspect {
                         log.info("此次调度队列: {},此次队列参数: {}", taskQueue, JSON.toJSONString(args[0]));
                     } else {
                         log.info("不是代码发的消息,无需记结束,因为连开始都没有");
-                        return null;
+                        res = joinPoint.proceed();
+                        return res;
+
                     }
+                    //                    2023/05/08李世纪注释掉，当涉及到管道触发器调度时，
+                    //                    虽然不需要记录结束，但是这样操作会导致调度不成功
+//                    else {
+//                    log.info("不是代码发的消息,无需记结束,因为连开始都没有");
+//                    return null;
+//                    }
+
                     // 设置TraceID
                     if (!StringUtils.isEmpty(data.traceId)) {
                         traceId = data.traceId;

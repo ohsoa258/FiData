@@ -9,7 +9,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -30,7 +29,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author: DennyHui
@@ -74,6 +76,7 @@ public class BuildDataInputPgTableListener {
         //获取ods数据源的信息  dataSourceOdsId=2 ->  ods
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         DataSourceTypeEnum conType = null;
+        log.info("ods数据源信息{}",JSON.toJSONString(fiDataDataSource));
 
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             //获取成功

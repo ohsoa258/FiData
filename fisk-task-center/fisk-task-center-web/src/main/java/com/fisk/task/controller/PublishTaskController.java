@@ -130,7 +130,6 @@ public class PublishTaskController {
         resultEntity.msg = "流程创建成功";
         buildAtlasTableAndColumnTaskListener.msg(JSON.toJSONString(ArDto), null);
         return resultEntity;
-
     }
 
 

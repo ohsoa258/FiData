@@ -25,6 +25,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
+import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -45,7 +46,6 @@ import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.codepreview.CodePreviewDTO;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -1204,7 +1204,8 @@ public class BusinessAreaImpl
                 str.append(" ").append(item.targetTable);
             }
             str.append(" on ")
-                    .append("temp_");;
+                    .append("temp_");
+            ;
             str.append(item.sourceTable).append(".").append(item.sourceColumn);
             str.append(" = ");
             str.append(item.targetTable).append(".").append(item.targetColumn);
@@ -1321,7 +1322,7 @@ public class BusinessAreaImpl
         CodePreviewDTO codePreviewDTO = new CodePreviewDTO();
         codePreviewDTO.setOverLoadCodeDTO(dataModel);
         codePreviewDTO.setOverlayCodePreviewDTO(dto);
-        String finalSql = codePreviewBySyncMode(codePreviewDTO);
+        String finalSql = codePreviewBySyncMode(codePreviewDTO).replaceAll("-","_");
 
         //检测获取到的sql预览结果
         log.info("预返回的覆盖方式预览sql为" + finalSql);
@@ -1368,11 +1369,11 @@ public class BusinessAreaImpl
         //获取同步方式
         int syncMode = configDTO.targetDsConfig.syncMode;
         //获取表名
-        String tableName = configDTO.processorConfig.targetTableName;
+        String tableName = "[" + configDTO.processorConfig.targetTableName + "]";
         //获取临时表前缀
         String prefixTempName = buildNifiFlow.prefixTempName;
         //拼接临时表名称
-        String tempTableName = prefixTempName + "_" + tableName;
+        String tempTableName = "[" + prefixTempName + "_" + tableName + "]";
         //获取前端传递的表字段集合
         List<ModelPublishFieldDTO> fields = originalDTO.modelPublishFieldDTOList;
         //ModelPublishFieldDTO List ==> PublishFieldDTO List
@@ -1399,7 +1400,7 @@ public class BusinessAreaImpl
                     //业务时间覆盖
                     case 4:
                         //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList,previewTableBusinessDTO);
+                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
                     //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
                     case 5:
                         //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回

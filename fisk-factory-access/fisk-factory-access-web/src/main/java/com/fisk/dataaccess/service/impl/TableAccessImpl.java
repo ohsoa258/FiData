@@ -1749,12 +1749,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     odsTableName = stgAndTableName.get(i);
                 }
             }
+
             if (appRegistrationPO.whetherSchema) {
-                stgTableName = appRegistrationPO.appAbbreviation + "." + stgTableName;
-                odsTableName = appRegistrationPO.appAbbreviation + "." + odsTableName;
+                stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+                odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
             } else {
-                stgTableName = "dbo."+stgTableName;
-                odsTableName = "dbo."+odsTableName;
+                stgTableName = "[dbo]." + "[" + stgTableName + "]";
+                odsTableName = "[dbo]." + "[" + odsTableName + "]";
             }
 
             StringBuilder delSql = new StringBuilder("DELETE FROM ");
@@ -2494,6 +2495,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             } else {
                 odsTableName = stgAndTableName.get(i);
             }
+        }
+
+        if (appRegistrationPO.whetherSchema) {
+            stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+            odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
+        } else {
+            stgTableName = "[dbo]." + "[" + stgTableName + "]";
+            odsTableName = "[dbo]." + "[" + odsTableName + "]";
         }
 
         //获取keepNumber
