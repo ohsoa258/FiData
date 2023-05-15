@@ -606,7 +606,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         } else {
                             TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
                             String Topic = TopicName;
-                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
+                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.PIPELINE_NIFI_FLOW,
                                     tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId,nifiCustomWorkList.getNifiCustomWorkflowId());
                             if (processorEntity != null) {
                                 processorEntities.add(processorEntity);
