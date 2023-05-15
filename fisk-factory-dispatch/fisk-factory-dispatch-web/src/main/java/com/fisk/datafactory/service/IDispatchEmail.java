@@ -3,6 +3,7 @@ package com.fisk.datafactory.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
+import com.fisk.datafactory.dto.customworkflow.RecipientsDtO;
 import com.fisk.datafactory.entity.DispatchEmailPO;
 
 /**
@@ -44,6 +45,11 @@ public interface IDispatchEmail extends IService<DispatchEmailPO> {
      * @return
      */
     ResultEnum pipelineSendEmails(DispatchEmailDTO dispatchEmail);
+
+    /*
+    * 设置通知
+    * */
+    ResultEnum setNotification(RecipientsDtO dto);
 
 
 }

@@ -71,4 +71,11 @@ public class EmailServerController {
     public ResultEntity<EmailServerVO> getDefaultEmailServer() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDefaultEmailServer());
     }
+
+    @PostMapping("/searchWechatUser")
+    @ApiOperation(value = "获取企业微信用户")
+    public ResultEntity<Object> searchWechatUser(int serverConfigId,String recipients)
+    {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchWechatUser(serverConfigId,recipients));
+    }
 }

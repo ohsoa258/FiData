@@ -12,6 +12,11 @@
         email_server_pwd,
         email_server_type AS emailServerTypeValue,
         enable_ssl,
+        server_config_type,
+        wechat_agent_id,
+        wechat_app_servers_address,
+        wechat_corp_id,
+        wechat_app_secret,
         create_time,
         create_user
         FROM
@@ -34,6 +39,11 @@
         email_server_pwd,
         email_server_type AS emailServerTypeValue,
         enable_ssl,
+        server_config_type,
+        wechat_agent_id,
+        wechat_app_servers_address,
+        wechat_corp_id,
+        wechat_app_secret,
         create_time,
         create_user
         FROM
@@ -52,6 +62,11 @@
             email_server_pwd,
             email_server_type AS emailServerTypeValue,
             enable_ssl,
+            server_config_type,
+            wechat_agent_id,
+            wechat_app_servers_address,
+            wechat_corp_id,
+            wechat_app_secret,
             create_time,
             create_user
         FROM
@@ -70,6 +85,11 @@
             email_server_pwd,
             email_server_type AS emailServerTypeValue,
             enable_ssl,
+            server_config_type,
+            wechat_agent_id,
+            wechat_app_servers_address,
+            wechat_corp_id,
+            wechat_app_secret,
             create_time,
             create_user
         FROM
