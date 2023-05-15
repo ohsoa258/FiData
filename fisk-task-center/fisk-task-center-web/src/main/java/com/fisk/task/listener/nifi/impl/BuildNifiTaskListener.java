@@ -542,6 +542,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
+    /**
+     * 接入,建模 --- 创建NIFI流程
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
     @Override
     public ResultEnum msg(String data, Acknowledgment ack) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -2669,12 +2676,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //获取自定义加载前sql
         String customScriptBefore = buildNifiFlow.customScriptBefore;
         //声明 sqlPreQuery 变量
-        String sqlPreQuery = "";
+        String sqlPreQuery = buildNifiFlow.customScriptBefore;
         //通过判断 updateSql 和 customScriptBefore 的值是否为空，决定最终的 sqlPreQuery
-        if (StringUtils.isNotEmpty(updateSql)){
-            sqlPreQuery+=updateSql;
-        }else if (StringUtils.isNotEmpty(customScriptBefore)){
-            sqlPreQuery+=sqlPreQuery;
+        if (StringUtils.isNotEmpty(updateSql)) {
+            sqlPreQuery = updateSql + sqlPreQuery;
         }
         callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;

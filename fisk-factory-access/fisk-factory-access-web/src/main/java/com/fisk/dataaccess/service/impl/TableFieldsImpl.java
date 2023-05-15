@@ -1568,11 +1568,11 @@ public class TableFieldsImpl
         }
 
         if (appRegistrationPO.whetherSchema) {
-            stgTableName = appRegistrationPO.appAbbreviation + "." + stgTableName;
-            odsTableName = appRegistrationPO.appAbbreviation + "." + odsTableName;
+            stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+            odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
         } else {
-            stgTableName = "dbo." + stgTableName;
-            odsTableName = "dbo." + odsTableName;
+            stgTableName = "[dbo]." + "[" + stgTableName + "]";
+            odsTableName = "[dbo]." + "[" + odsTableName + "]";
         }
 
         //List<ModelPublishFieldDTO> ==> List<AccessPublishFieldDTO>
@@ -1583,7 +1583,13 @@ public class TableFieldsImpl
         //遍历==>手动转换，属性不多，并未使用mapStruct
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
-            a.sourceFieldName = m.sourceFieldName;
+            //如果源表字段为空或"",就获取目标表名去拼接sql
+            if (StringUtils.isEmpty(m.sourceFieldName)){
+                a.sourceFieldName = m.fieldName;
+            }else {
+                a.sourceFieldName = m.sourceFieldName;
+            }
+
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
             a.isBusinessKey = m.isPrimarykey;
@@ -1602,15 +1608,15 @@ public class TableFieldsImpl
         previewDTO.modelPublishFieldDTOList = accessList;
 
         //调用方法，获取sql语句
-        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
+        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType).replaceAll("-","_");
 
-        //判断是否是全量覆盖方式
-        if (dto.syncMode == 1) {
-            //获取全量覆盖方式的是否使用快照dto
-            AccessFullVolumeSnapshotDTO snapshotDTO = dto.snapshotDTO;
-            finalSql = getSnapshotSql(snapshotDTO,finalSql);
-
-        }
+        //判断是否是全量覆盖方式 todo:全量覆盖,快照
+//        if (dto.syncMode == 1) {
+//            //获取全量覆盖方式的是否使用快照dto
+//            AccessFullVolumeSnapshotDTO snapshotDTO = dto.snapshotDTO;
+//            finalSql = getSnapshotSql(snapshotDTO,finalSql);
+//
+//        }
 
         //返回最终拼接好的sql
         return finalSql;

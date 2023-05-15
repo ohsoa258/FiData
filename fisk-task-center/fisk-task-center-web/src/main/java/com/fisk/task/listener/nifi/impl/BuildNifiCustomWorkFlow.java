@@ -101,8 +101,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
 
     public ResultEnum msg(String data, Acknowledgment acke) {
-        //李世纪 2023-05-10测试修改
-        acke.acknowledge();
+//        //李世纪 2023-05-10测试修改
+//        acke.acknowledge();
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
         nifiCustomWorkflowDTO.id = dto.pipelineId;
@@ -145,7 +145,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             return ResultEnum.ERROR;
         } finally {
             log.info("BuildNifiCustomWorkFlow.msg方法结束");
-//            acke.acknowledge();
+            acke.acknowledge();
         }
 
     }

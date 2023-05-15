@@ -92,6 +92,7 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
         str = JSON.toJSONString(data);
         try {
             //同步方式发送数据
+            log.info("发送消息");
             kafkaTemplateHelper.sendMessageSync(queue, str);
             model.taskSendOk = true;
             this.updateById(model);

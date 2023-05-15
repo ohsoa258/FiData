@@ -83,8 +83,8 @@ public class TaskPublish {
      * 接收到的本节点,需要找所有下游,根据下游状态调用
      */
     public void taskPublish(String message, Acknowledgment acke) {
-//        //李世纪 2023-05-10测试修改
-        acke.acknowledge();
+////        //李世纪 2023-05-10测试修改
+//        acke.acknowledge();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String pipelTraceId = "";
         try {
@@ -315,9 +315,9 @@ public class TaskPublish {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             log.info("TaskPublish.taskPublish方法结束...");
-//            if (acke != null) {
-//                acke.acknowledge();
-//            }
+            if (acke != null) {
+                acke.acknowledge();
+            }
         }
     }
 
