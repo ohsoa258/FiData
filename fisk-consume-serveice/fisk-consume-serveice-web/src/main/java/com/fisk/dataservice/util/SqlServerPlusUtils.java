@@ -75,7 +75,7 @@ public class SqlServerPlusUtils {
                 String name = resultSet.getString("name");
                 // 架构名
                 String field2 = resultSet.getString("field");
-                tableMap.put(name, field2);
+                tableMap.put(field2 + "." + name, field2);
             }
         } catch (SQLException e) {
             log.error("【getTablesPlus】获取表名及架构名失败, ex", e);
@@ -151,7 +151,7 @@ public class SqlServerPlusUtils {
                 // 根据表名获取字段
                 //List<TableStructureDTO> columnsName = getColumnsName(conn, entry.getKey());
                 TableNameDTO tablePyhNameDTO = new TableNameDTO();
-                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
+                tablePyhNameDTO.setTableName(entry.getKey());
                 //tablePyhNameDTO.setFields(columnsName);
                 finalList.add(tablePyhNameDTO);
             }

@@ -18,7 +18,6 @@ import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.nifi.ITableNifiSettingService;
-import com.fisk.task.utils.DelayedTask;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.StackTraceHelper;

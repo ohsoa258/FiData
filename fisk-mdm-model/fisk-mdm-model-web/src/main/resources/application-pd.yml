@@ -40,6 +40,12 @@ pgsql-mdm:
   username: adminuser
   type: PG
 
+taskdb:
+  url: jdbc:mysql://100.102.201.107:3307/dmp_task_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  username: root
+  password: .FdF_r&tj4)+
+  driver-class-name: com.mysql.jdbc.Driver
+
 file:
   uploadUrl: /root/nginx/app/file/mdm/
   echoPath: /file/mdm/

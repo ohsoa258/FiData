@@ -362,6 +362,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("constraint pk_" +tableName + "_id_" + pk + " primary key(" + MARK + "id)").append(",");
         str.append(MARK + "import_type int4 NULL").append(",");
         str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
+        str.append(MARK + "flow_batch_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "error_msg VARCHAR ( 1000 ) NULL").append(",");
         str.append(MARK + "new_code VARCHAR ( 100 ) NULL").append(",");
@@ -382,6 +383,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         StringBuilder str = new StringBuilder();
         str.append(MARK + "id serial NOT NULL").append(",");
         str.append("constraint pk_"+ tableName + "_id_" + pk +" primary key(" + MARK + "id)").append(",");
+        str.append(MARK + "batch_code VARCHAR ( 100 ) NULL").append(",");
         str.append(MARK + "version_id int4 NULL").append(",");
         str.append(MARK + "lock_tag int4 NULL").append(",");
         str.append(MARK + "new_code varchar(100) NULL").append(",");

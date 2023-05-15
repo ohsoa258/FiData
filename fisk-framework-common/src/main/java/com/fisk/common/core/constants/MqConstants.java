@@ -23,7 +23,7 @@ public class MqConstants {
     /**
      * topic消费者组id
      */
-    public static final class TopicGroupId{
+    public static final class TopicGroupId {
 
         /**
          * task模块kafka消费者组名称
@@ -49,6 +49,8 @@ public class MqConstants {
 
             public static final String BUILD_NIFI_FLOW = "task.build.nifi.flow";
 
+            public static final String BUILD_ACCESS_MDM_NIFI_FLOW = "task.build.access.mdm.nifi.flow";
+
             public static final String BUILD_IMMEDIATELYSTART_FLOW = "task.build.immediatelyStart.flow";
         }
 
@@ -71,6 +73,8 @@ public class MqConstants {
             public static final String BUILD_MDM_MODEL_DATA = "task.build.mdm.model";
 
             public static final String BUILD_MDM_ENTITY_DATA = "task.build.mdm.entity";
+
+            public static final String MDM_PUBLISH_TASK = "task.build.mdm.flow";
 
             public static final String BUILD_DATAMODEL_DORIS_TABLE = "task.build.datamodel.doris.table.flow";
         }
@@ -124,7 +128,7 @@ public class MqConstants {
          */
         public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpFile.copy";
         /**
-         *powerbi刷新数据集任务
+         * powerbi刷新数据集任务
          */
         public static final String BUILD_POWERBI_DATA_SET_REFRESH_FLOW = "build.powerbi.data.set.refresh.flow";
         /**
@@ -144,10 +148,6 @@ public class MqConstants {
      */
     public static final class FlowQueueConstants {
 //
-
-
-
-
 
 
     }

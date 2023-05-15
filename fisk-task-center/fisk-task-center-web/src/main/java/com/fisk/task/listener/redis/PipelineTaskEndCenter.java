@@ -1,49 +1,23 @@
 package com.fisk.task.listener.redis;
 
-import com.alibaba.fastjson.JSON;
-import com.fisk.common.core.constants.MqConstants;
-import com.fisk.common.core.enums.task.TopicTypeEnum;
-import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.framework.mdc.MDCHelper;
-import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
-import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
-import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
-import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
-import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
-import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.controller.PublishTaskController;
-import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
-import com.fisk.task.dto.kafka.KafkaReceiveDTO;
-import com.fisk.task.dto.task.ExecScriptDTO;
-import com.fisk.task.entity.PipelJobLogPO;
-import com.fisk.task.entity.PipelTaskLogPO;
-import com.fisk.task.enums.DispatchLogEnum;
-import com.fisk.task.enums.NifiStageTypeEnum;
-import com.fisk.task.enums.OlapTableEnum;
-import com.fisk.task.listener.nifi.IExecScriptListener;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.utils.KafkaTemplateHelper;
-import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.listener.KeyExpirationEventMessageListener;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 @Component
 @Slf4j

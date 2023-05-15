@@ -197,14 +197,14 @@ public class BuildDataModelDorisTableListener
                     log.error("userclient无法查询到dw库的连接信息");
                     throw new FkException(ResultEnum.ERROR);
                 }
-                //执行删除表的sql，也就是pgdbTable2集合中的第一条sql  DROP TABLE IF EXISTS....  数据建模---dw库
+                //执行临时表建表sql，也就是pgdbTable2集合中的第一条sql  DROP TABLE IF EXISTS....  数据建模---dw库
                 BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
 
                 if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                    //执行创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
+                    //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
                     BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
                     if (!businessResult1.success) {
                         throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);

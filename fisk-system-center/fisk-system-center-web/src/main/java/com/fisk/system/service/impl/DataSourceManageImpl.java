@@ -11,7 +11,6 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -78,7 +77,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     public List<DataSourceDTO> getExternalDataSource() {
         List<DataSourceDTO> all = getAll(true);
         if (CollectionUtils.isNotEmpty(all)) {
-            all = all.stream().filter(t -> t.getSourceType() == 2).collect(Collectors.toList());
+            all = all.stream().filter(t -> t.getSourceType() == 1 || t.getSourceType() == 2).collect(Collectors.toList());
         }
         return all;
     }

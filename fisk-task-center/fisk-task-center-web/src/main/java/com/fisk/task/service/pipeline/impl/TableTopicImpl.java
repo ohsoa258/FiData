@@ -61,6 +61,8 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
         conditionMap.put("table_id", tableTopicDTO.tableId);
         conditionMap.put("table_type", tableTopicDTO.tableType);
         conditionMap.put("topic_type", tableTopicDTO.topicType);
+        conditionMap.put("workflow_id",tableTopicDTO.workflowId);
+
         List<TableTopicDTO> dtoList = TableTopicMap.INSTANCES.listPoToDto(tableTopicMapper.selectByMap(conditionMap));
         if (dtoList != null && dtoList.size() != 0) {
             tableTopicDTO.id = dtoList.get(0).id;

@@ -15,7 +15,6 @@ import com.fisk.task.dto.nifi.BuildExecuteSqlProcessorDTO;
 import com.fisk.task.dto.nifi.BuildProcessGroupDTO;
 import com.fisk.task.dto.nifi.BuildPublishKafkaProcessorDTO;
 import com.fisk.task.dto.task.UnifiedControlDTO;
-import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.listener.nifi.ITriggerScheduling;
 import com.fisk.task.po.NifiConfigPO;
 import com.fisk.task.po.TableNifiSettingPO;

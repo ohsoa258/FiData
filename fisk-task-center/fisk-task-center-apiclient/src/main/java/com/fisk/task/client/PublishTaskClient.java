@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -96,6 +97,16 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/atlasDorisTable")
     ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO);
+
+
+    /**
+     * mdmETL发布
+     *
+     * @param accessPublishDataDTO
+     * @return
+     */
+    @PostMapping("/publishTask/mdmTableTask")
+    ResultEntity<Object> publishBuildMdmTableTask(@RequestBody AccessPublishDataDTO accessPublishDataDTO);
 
 
     /**

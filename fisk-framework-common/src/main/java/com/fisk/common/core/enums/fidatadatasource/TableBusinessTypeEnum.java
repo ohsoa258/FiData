@@ -15,7 +15,8 @@ public enum TableBusinessTypeEnum implements BaseEnum {
     DW_FACT(2, "dw_fact"), //dw事实表
     DORIS_DIMENSION(3, "doris_dimension"), //doris维度表
     DORIS_FACT(4, "doris_fact"), //doris事实表
-    WIDE_TABLE(5, "wide_table"); //宽表
+    WIDE_TABLE(5, "wide_table"), //宽表
+    ENTITY_TABLR(6,"entity_table");//主数据实体表
 
     TableBusinessTypeEnum(int value, String name) {
         this.value = value;
