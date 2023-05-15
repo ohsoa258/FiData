@@ -92,10 +92,10 @@ public enum TaskTypeEnum implements BaseEnum {
     BUILD_DELETE_TABLE_SERVER_TASK(20, "删除表服务nifi流程"),
 
     BUILD_TASK_OVER_TASK(21, "任务结束中心"),
-    /**
-     * 流程批量审批
-     */
-    BATCH_APPROVAL_TASK(22, "流程批量审批");
+
+    BATCH_APPROVAL_TASK(22, "流程批量审批"),
+
+    MDM_PUBLISH_TASK(23, "mdmETL发布");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

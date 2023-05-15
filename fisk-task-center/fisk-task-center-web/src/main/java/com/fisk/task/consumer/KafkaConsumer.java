@@ -10,6 +10,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
+import com.fisk.task.listener.access.BuildMdmAccessETLListener;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.listener.doris.BuildDorisTaskListener;
@@ -79,6 +80,8 @@ public class KafkaConsumer {
     @Resource
     BuildDataModelDorisTableListener buildDataModelDorisTableListener;
     @Resource
+    BuildMdmAccessETLListener buildMdmAccessETLListener;
+    @Resource
     BuildDorisTaskListener buildDorisTaskListener;
     @Resource
     BuildNifiCustomWorkFlow buildNifiCustomWorkFlow;
@@ -94,6 +97,8 @@ public class KafkaConsumer {
     BuildWideTableTaskListener buildWideTableTaskListener;
     @Resource
     INifiTaskListener iNifiTaskListener;
+    @Resource
+    IAccessMdmNifiTaskListener accessMdmNifiTaskListener;
     @Resource
     INiFiHelper iNiFiHelper;
     @Resource
@@ -220,6 +225,20 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.access.mdm.nifi.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.NifiTopicConstants.BUILD_ACCESS_MDM_NIFI_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    public ResultEntity<Object> buildAccessMdmNifiTaskListener(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(accessMdmNifiTaskListener.accessMdmMsg(data, ack));
+    }
+
+    /**
      * task.build.table.server.flow
      *
      * @param data
@@ -273,6 +292,19 @@ public class KafkaConsumer {
     @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD, notificationType = 2)
     public ResultEntity<Object> buildDataModelDorisTableListener(String dataInfo, Acknowledgment acke) {
         return ResultEntityBuild.build(buildDataModelDorisTableListener.msg(dataInfo, acke));
+    }
+
+    /**
+     * task.build.mdm.flow
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.MDM_PUBLISH_TASK, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> buildMdmAccessETLListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildMdmAccessETLListener.msg(dataInfo, acke));
     }
 
     /**

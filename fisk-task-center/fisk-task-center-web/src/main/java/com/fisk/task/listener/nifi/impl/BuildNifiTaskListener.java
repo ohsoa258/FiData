@@ -1,8 +1,6 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.*;
@@ -10,7 +8,6 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
@@ -76,8 +73,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -2756,7 +2751,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * data转json组件
-     *
      * @param groupId 组id
      * @return 组件对象
      */

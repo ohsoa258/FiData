@@ -1,7 +1,6 @@
 package com.fisk.task.pipeline2;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
@@ -11,16 +10,13 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
-import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
-import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.enums.DispatchLogEnum;

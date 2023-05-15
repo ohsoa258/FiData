@@ -12,6 +12,7 @@ import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 

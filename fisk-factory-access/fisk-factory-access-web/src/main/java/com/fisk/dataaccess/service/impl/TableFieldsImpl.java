@@ -529,7 +529,7 @@ public class TableFieldsImpl
      * @param dto              发布历史
      * @param currUserName     用户名
      */
-    private void publish(boolean success,
+    private void  publish(boolean success,
                          long appId,
                          long accessId,
                          String tableName,

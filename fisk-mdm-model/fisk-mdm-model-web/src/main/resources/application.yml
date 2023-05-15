@@ -114,3 +114,5 @@ mybatis-plus:
 # 定时任务执行时间
 timed:
   setDataStructure: "0 0 0 1 * ? "
+
+fiData-data-mdm-source: 3

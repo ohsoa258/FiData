@@ -19,5 +19,9 @@ public class PutDatabaseRecordDTO   extends BaseProcessorDTO{
      * 是否严格按照字段名称添加属性,实际上是bool类型
      */
     public String putDbRecordTranslateFieldNames;
+    /**
+     * 是否给表名加双引号 pgsql区分大小写需要
+     */
+    public boolean putDbRecordQuotedTableIdentifiers;
 
 }
