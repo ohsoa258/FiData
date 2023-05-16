@@ -1,12 +1,11 @@
 package com.fisk.datafactory.dto.customworkflow;
 
-import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.datafactory.dto.UserInfoDTO;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
 
-public class RecipientsDtO {
+public class RecipientsDTO {
 
     @ApiModelProperty(value = "发送邮箱id")
     public int dispatchEmailId;

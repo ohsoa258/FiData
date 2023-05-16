@@ -5,7 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.config.SwaggerConfig;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
-import com.fisk.datafactory.dto.customworkflow.RecipientsDtO;
+import com.fisk.datafactory.dto.customworkflow.RecipientsDTO;
 import com.fisk.datafactory.service.IDispatchEmail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -75,7 +75,7 @@ public class DispatchEmailController {
     }
     @PostMapping("/setNotification")
     @ApiOperation(value = "设置通知")
-    public ResultEntity<Object> setNotification(@RequestBody RecipientsDtO dto) {
+    public ResultEntity<Object> setNotification(@RequestBody RecipientsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iDispatchEmail.setNotification(dto));
     }
 }

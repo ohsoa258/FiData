@@ -10,7 +10,7 @@ import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
-import com.fisk.datafactory.dto.customworkflow.RecipientsDtO;
+import com.fisk.datafactory.dto.customworkflow.RecipientsDTO;
 import com.fisk.datafactory.dto.UserInfoDTO;
 import com.fisk.datafactory.entity.DispatchEmailPO;
 import com.fisk.datafactory.entity.RecipientsPO;
@@ -210,7 +210,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     }
 
     @Override
-    public ResultEnum setNotification(RecipientsDtO dto)
+    public ResultEnum setNotification(RecipientsDTO dto)
     {
         List<DispatchEmailPO> dispatchList = new ArrayList<>();
         List<RecipientsPO> recipientsList = new ArrayList<>();
