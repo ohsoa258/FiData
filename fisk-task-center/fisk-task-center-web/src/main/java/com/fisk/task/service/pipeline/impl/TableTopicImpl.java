@@ -121,6 +121,9 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
             int tableId = dto.tableId;
             int tableType = dto.tableType;
             int topicType = dto.topicType;
+            if (topicType == 2){
+                topicType = 3;
+            }
             int taskId = dto.componentId;
             List<TableTopicPO> list1 = new ArrayList<>();
             if (Objects.equals(tableId, 0)) {
