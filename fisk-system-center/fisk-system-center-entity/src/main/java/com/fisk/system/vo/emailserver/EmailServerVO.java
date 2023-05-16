@@ -68,6 +68,35 @@ public class EmailServerVO {
     @ApiModelProperty(value = "是否启用SSL加密连接")
     public Integer enableSsl;
 
+    /*
+     * 服务配置类型：1、邮箱 2、企业微信
+     */
+    @ApiModelProperty(value = "服务配置类型：1、邮箱 2、企业微信")
+    public Integer serverConfigType;
+
+    /*
+     * 企业微信应用标识
+     */
+    @ApiModelProperty(value = "企业微信应用标识")
+    public String wechatAgentId;
+
+    /*
+     * 企业微信应用服务地址
+     */
+    @ApiModelProperty(value = "企业微信应用服务地址")
+    public String wechatAppServersAddress;
+
+    /*
+     * 企业微信公司标识
+     */
+    @ApiModelProperty(value = "企业微信公司标识")
+    public String wechatCorpId;
+
+    /*
+     * 企业微信应用密钥
+     */
+    @ApiModelProperty(value = "企业微信应用密钥")
+    public String wechatAppSecret;
     /**
      * 创建时间
      */
