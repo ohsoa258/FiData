@@ -12,5 +12,5 @@ public interface ISftpDataUploadListener {
      * @param data
      * @return
      */
-    public ResultEnum buildSftpDataUploadListener(String data);
+    ResultEnum buildSftpDataUploadListener(String data);
 }
