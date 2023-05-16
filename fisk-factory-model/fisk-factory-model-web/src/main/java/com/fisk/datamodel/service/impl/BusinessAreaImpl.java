@@ -1205,10 +1205,15 @@ public class BusinessAreaImpl
             }
             str.append(" on ")
                     .append("temp_");
-            ;
-            str.append(item.sourceTable).append(".").append(item.sourceColumn);
+
+            str.append(item.sourceTable)
+                    .append(".")
+                    .append(item.sourceColumn);
             str.append(" = ");
-            str.append(item.targetTable).append(".").append(item.targetColumn);
+            str.append(item.targetTable)
+                    .append(".")
+                    .append(item.targetColumn)
+                    .append("WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'");
             str.append(";");
         }
 

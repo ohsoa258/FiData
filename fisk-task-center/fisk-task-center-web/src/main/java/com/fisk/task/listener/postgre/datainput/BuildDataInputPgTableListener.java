@@ -108,12 +108,13 @@ public class BuildDataInputPgTableListener {
             //获取建表语句
             List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
             log.info("建表语句:" + JSON.toJSONString(sqlList));
-            //执行第二条建表语句
+            //执行第二条建表语句--创建stg表
             BusinessResult result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
             if (!result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                //执行第一条建表语句--创建目标表
                 iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
                 log.info("【PGSTG】" + sqlList.get(0));
                 log.info("pg：建表完成");

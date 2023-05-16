@@ -662,7 +662,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                  */
                 List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
 
+                /**
+                 * 启动组件
+                 */
                 enabledProcessor(taskGroupEntity.getId(), processors);
+
+                /**
+                 * 如果数仓或数接页面勾选了立即同步（按照配置同步一次数据），即dto.openTransmission是否为true，则会同步,
+                 * 就会调用pc.taskPublish(kafkaRkeceiveDTO)在nifi中进行数据的同步
+                 *
+                 */
                 //7. 如果是接入,同步一次,然后把调度组件停掉
                 if (dto.groupStructureId == null && dto.openTransmission) {
                     String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
@@ -2673,11 +2682,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
         //获取外键sql
         String updateSql = buildNifiFlow.updateSql;
-        //获取自定义加载前sql
-        String customScriptBefore = buildNifiFlow.customScriptBefore;
-        //声明 sqlPreQuery 变量
+        //声明 sqlPreQuery 变量 = 自定义加载前sql
         String sqlPreQuery = buildNifiFlow.customScriptBefore;
-        //通过判断 updateSql 和 customScriptBefore 的值是否为空，决定最终的 sqlPreQuery
+        //通过判断 updateSql的值是否为空，决定最终的 sqlPreQuery
         if (StringUtils.isNotEmpty(updateSql)) {
             sqlPreQuery = updateSql + sqlPreQuery;
         }
@@ -2813,6 +2820,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * data转json组件
+     *
      * @param groupId 组id
      * @return 组件对象
      */

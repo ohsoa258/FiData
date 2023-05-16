@@ -121,6 +121,9 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
             int tableId = dto.tableId;
             int tableType = dto.tableType;
             int topicType = dto.topicType;
+            if (topicType == TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue()){
+                topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+            }
             int taskId = dto.componentId;
             List<TableTopicPO> list1 = new ArrayList<>();
             if (Objects.equals(tableId, 0)) {
