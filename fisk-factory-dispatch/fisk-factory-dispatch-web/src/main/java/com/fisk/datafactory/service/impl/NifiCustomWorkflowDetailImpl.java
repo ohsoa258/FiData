@@ -405,6 +405,15 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.MDM_TABLE_TASK.getName())) {
+                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.MDM_DATA_ACCESS.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
+                            topicDTO.tableType = OlapTableEnum.MDM_DATA_ACCESS.getValue();
+                            topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
+                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
+                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                        }
                         //只保存调度的自定义脚本任务
                         if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
                             topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
@@ -586,6 +595,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return DataClassifyEnum.SFTPFILECOPYTASK;
             case POWERBI_DATA_SET_REFRESH_TASK:
                 return DataClassifyEnum.POWERBIDATASETREFRESHTASK;
+            case MDM_TABLE_TASK:
+                return DataClassifyEnum.MDM_DATA_ACCESS;
             case DW_TASK:
             case OLAP_TASK:
 

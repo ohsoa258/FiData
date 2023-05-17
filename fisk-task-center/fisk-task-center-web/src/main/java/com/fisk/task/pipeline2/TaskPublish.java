@@ -213,7 +213,7 @@ public class TaskPublish {
                         log.info("第一处调用保存job日志");
                         iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
-                    } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue()) || Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.MDM_NIFI_FLOW.getValue())) {
+                    } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
                         //卡夫卡的内容在发布时就定义好了
                         String dailyNifiMsg = JSON.toJSONString(kafkaReceiveDTO);
                         log.info("打印topic内容:" + dailyNifiMsg);

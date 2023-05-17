@@ -229,7 +229,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
                 //7. 如果是接入,同步一次,然后把调度组件停掉
                 if (dto.groupStructureId == null && dto.openTransmission) {
                     String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.modelId + "." + dto.id;
-                    int value = TopicTypeEnum.MDM_NIFI_FLOW.getValue();
+                    int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
                     KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
                     kafkaRkeceiveDTO.topic = topicName;
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -239,7 +239,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
                     kafkaRkeceiveDTO.fidata_batch_code = kafkaRkeceiveDTO.pipelTaskTraceId;
                     kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                     kafkaRkeceiveDTO.ifTaskStart = true;
-                    kafkaRkeceiveDTO.topicType = TopicTypeEnum.MDM_NIFI_FLOW.getValue();
+                    kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
                     kafkaRkeceiveDTO.traceId = dto.traceId;
                     kafkaRkeceiveDTO.userId = dto.userId;
                     pc.taskPublish(kafkaRkeceiveDTO);
