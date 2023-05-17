@@ -1216,7 +1216,10 @@ public class BusinessAreaImpl
                     .append("]");
             if (!StringUtils.isEmpty(item.joinType)) {
                 str.append(" ").append(item.joinType);
-                str.append(" ").append(item.targetTable);
+                str.append(" ")
+                        .append("[")
+                        .append(item.targetTable)
+                        .append("]");
             }
             str.append(" on ")
                     .append("[temp_");
