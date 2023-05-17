@@ -1380,11 +1380,23 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         //------------------------------------------
         log.info("是否调用数据安全接口，{}", enable);
+
+        /**
+         * 如果是excel表格（sftp/ftp），他们的nifi流程组件与普通表的不同
+         */
         if (dto.excelFlow && enable) {
             //ftp文件拷贝
+
+            /**
+             * replaceTextForFtpProcess组件，用于替换字符串为指定的格式
+             */
             ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpProcess(config, groupId, dto);
             tableNifiSettingPO.replaceTextForFtpProcessorId = replaceTextForFtpProcess.getId();
             componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+            /**
+             * invokeHTTPForFtpProcessor组件，用于向指定的接口发送请求
+             */
             ProcessorEntity invokeHTTPForFtpProcessor = invokeHTTPForFtpProcessor(groupId);
             tableNifiSettingPO.invokeHttpForFtpProcessorId = invokeHTTPForFtpProcessor.getId();
             componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -1405,11 +1417,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //pg2doris不需要调用存储过程
         ProcessorEntity processorEntity1 = new ProcessorEntity();
         List<ProcessorEntity> excelProcessorEntity = new ArrayList<>();
+        /**
+         * 如果是普通表（数接的物理表、数仓的事实表和维度表）的nifi流程，则创建这个执行查询的组件：ExecuteSQLRecord
+         */
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
+            /**
+             * 如果是sftp/ftp的excel表格
+             */
             if (dto.excelFlow) {
                 //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+                /**
+                 * createExcelProcessorEntity2会返回一个集合，
+                 * 集合里面第一个是replaceTextForFtpProcess组件
+                 * 第二个是invokeHTTPForFtpProcessor组件
+                 */
                 excelProcessorEntity = createExcelProcessorEntity2(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
 
                 res.addAll(excelProcessorEntity);
@@ -1917,9 +1940,15 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public List<ProcessorEntity> createExcelProcessorEntity2(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
 
         List<ProcessorEntity> processorEntities = new ArrayList<>();
+        /**
+         * 流程中的第二个replaceTextForFtpProcess组件
+         */
         ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpDataUploadProcess(config, groupId, dto);
         tableNifiSettingPO.getFtpProcessorId = replaceTextForFtpProcess.getId();
         //componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        /**
+         * 流程中的第二个invokeHTTPProcessor组件
+         */
         ProcessorEntity invokeHTTPForFtpProcessor = invokeHTTPForFtpDataUploadProcessor(groupId);
         tableNifiSettingPO.convertExcelToCsvProcessorId = invokeHTTPForFtpProcessor.getId();
         componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -2682,12 +2711,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
         //获取外键sql
         String updateSql = buildNifiFlow.updateSql;
-        //声明 sqlPreQuery 变量 = 自定义加载前sql
-        String sqlPreQuery = buildNifiFlow.customScriptBefore;
+        //声明自定义加载前sql
+        String customScriptBefore = buildNifiFlow.customScriptBefore;
+        //声明presql
+        String sqlPreQuery = null;
         //通过判断 updateSql的值是否为空，决定最终的 sqlPreQuery
-        if (StringUtils.isNotEmpty(updateSql)) {
-            sqlPreQuery = updateSql + sqlPreQuery;
+        if (StringUtils.isNotBlank(updateSql) && StringUtils.isNotBlank(customScriptBefore)) {
+            sqlPreQuery = updateSql + customScriptBefore;
+        } else if (StringUtils.isNotBlank(updateSql) && StringUtils.isBlank(customScriptBefore)) {
+            sqlPreQuery = updateSql;
+        } else if (StringUtils.isNotBlank(customScriptBefore) && StringUtils.isBlank(updateSql)) {
+            sqlPreQuery = customScriptBefore;
         }
+
         callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
 
@@ -2991,6 +3027,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        //替换为map
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
@@ -3006,7 +3043,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextForFtpDataUploadProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> map = new HashMap<>();
+        //放入topic
         map.put("topic", "${kafka.topic}");
+        //放入大批次号
+        map.put("fidata_batch_code", "${fidata_batch_code}");
 
 
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
@@ -3016,6 +3056,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        //设置替换值为map，也就是map里面装载的连个键值对
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
