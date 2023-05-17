@@ -93,6 +93,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
+import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.RESTFULAPI;
 
 /**
  * @author Lock
@@ -1611,10 +1612,10 @@ public class TableFieldsImpl
         String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
 
         //如果连接类型是非数据库类型，移除sql中的小批次号
-        if (conType.getValue() != com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getValue() ||
-                conType.getValue() != com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getValue() ||
-                conType.getValue() != com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getValue() ||
-                conType.getValue() != POSTGRESQL.getValue()) {
+        if (conType.getValue() == com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getValue() ||
+                conType.getValue() == com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.FTP.getValue() ||
+                conType.getValue() == com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.API.getValue() ||
+                conType.getValue() == RESTFULAPI.getValue()) {
             String regex = "AND fidata_flow_batch_code='\\$\\{fragment.index}'";
             finalSql = finalSql.replaceAll(regex, "");
         }
