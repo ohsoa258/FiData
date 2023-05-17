@@ -145,6 +145,8 @@ public enum ChannelDataEnum implements BaseEnum {
                 return OlapTableEnum.GOVERNANCE;
             case 13:
                 return OlapTableEnum.CUSTOMIZESCRIPT;
+            case 18:
+                return OlapTableEnum.MDM_DATA_ACCESS;
             default:
                 return null;
         }
@@ -170,6 +172,7 @@ public enum ChannelDataEnum implements BaseEnum {
         list.add(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName());
         list.add(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName());
         list.add(ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName());
+        list.add(ChannelDataEnum.MDM_TABLE_TASK.getName());
         return list;
     }
 }
