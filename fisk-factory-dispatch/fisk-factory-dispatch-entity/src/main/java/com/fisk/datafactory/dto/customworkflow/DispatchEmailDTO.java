@@ -1,10 +1,12 @@
 package com.fisk.datafactory.dto.customworkflow;
 
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.datafactory.dto.UserInfoDTO;
 import com.fisk.datafactory.enums.SendModeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,13 +28,16 @@ public class DispatchEmailDTO extends BasePO {
     /**
      * 通知类别,1邮件,2短信,3微信
      */
-    @ApiModelProperty(value = "通知类别,1邮件,2短信,3微信")
+    @ApiModelProperty(value = "通知类别,1邮件,2微信,3信息")
     public int type;
     /**
      * 收件人
      */
     @ApiModelProperty(value = "收件人")
     public String recipients;
+
+    @ApiModelProperty(value = "用户信息")
+    public List<UserInfoDTO> userInfo;
     /**
      * 报错信息
      */

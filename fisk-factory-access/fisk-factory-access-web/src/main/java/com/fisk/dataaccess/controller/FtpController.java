@@ -12,7 +12,10 @@ import com.fisk.dataaccess.service.IFtp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
@@ -33,7 +36,6 @@ public class FtpController {
     @ApiOperation("测试ftp数据源连接")
     @PostMapping("/connectFtp")
     public ResultEntity<Object> connectFtp(@RequestBody DbConnectionDTO dto) {
-
         return service.connectFtp(dto);
     }
 

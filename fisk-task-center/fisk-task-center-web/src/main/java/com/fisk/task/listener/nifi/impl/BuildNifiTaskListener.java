@@ -542,6 +542,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
+    /**
+     * 接入,建模 --- 创建NIFI流程
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
     @Override
     public ResultEnum msg(String data, Acknowledgment ack) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -655,7 +662,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                  */
                 List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
 
+                /**
+                 * 启动组件
+                 */
                 enabledProcessor(taskGroupEntity.getId(), processors);
+
+                /**
+                 * 如果数仓或数接页面勾选了立即同步（按照配置同步一次数据），即dto.openTransmission是否为true，则会同步,
+                 * 就会调用pc.taskPublish(kafkaRkeceiveDTO)在nifi中进行数据的同步
+                 *
+                 */
                 //7. 如果是接入,同步一次,然后把调度组件停掉
                 if (dto.groupStructureId == null && dto.openTransmission) {
                     String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
@@ -1232,6 +1248,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * 创建nifi单个同步流程的组件
+     *
      * @param appGroupId
      * @param config
      * @param groupId
@@ -1381,6 +1398,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentsConnector(groupId, logProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         //执行查询组件
         ProcessorEntity executeSQLRecord = new ProcessorEntity();
+
+//        //提取关联外键的sql
+//        ProcessorEntity processorEntity3 = new ProcessorEntity();
+
         //pg2doris不需要调用存储过程
         ProcessorEntity processorEntity1 = new ProcessorEntity();
         List<ProcessorEntity> excelProcessorEntity = new ArrayList<>();
@@ -1417,6 +1438,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
             if (dto.excelFlow) {
+
+//                processorEntity3 = executeSqlRecordForKey(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
 
                 tableNifiSettingPO.saveTargetDbProcessorId = null;
                 /**
@@ -2647,17 +2670,63 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
+
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
-        //如果sql预览页面没有传参，这里就执行存储过程
+        log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
-        callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
+
+        //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
+        log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
+        log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
+        //获取外键sql
+        String updateSql = buildNifiFlow.updateSql;
+        //声明 sqlPreQuery 变量 = 自定义加载前sql
+        String sqlPreQuery = buildNifiFlow.customScriptBefore;
+        //通过判断 updateSql的值是否为空，决定最终的 sqlPreQuery
+        if (StringUtils.isNotEmpty(updateSql)) {
+            sqlPreQuery = updateSql + sqlPreQuery;
+        }
+        callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
     }
+
+//    /**
+//     * 该组件创建在CallDbProcedure之前，专门用于数仓建模的关联维度外键的sql执行
+//     * 2023-05-11李世纪修改
+//     *
+//     * @param config
+//     * @param groupId
+//     * @param targetDbPoolId
+//     * @param synchronousTypeEnum
+//     * @param buildNifiFlow
+//     * @return
+//     */
+//    private ProcessorEntity executeSqlRecordForKey(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
+//        BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
+//        callDbProcedureProcessorDTO.name = "executeSqlRecord";
+//        callDbProcedureProcessorDTO.details = "insert_phase";
+//        callDbProcedureProcessorDTO.groupId = groupId;
+//        String executsql = "";
+//        //config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
+//        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+//        log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
+//        //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
+//        callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
+//        //数仓建模，关联外键的sql
+//        callDbProcedureProcessorDTO.executsql = buildNifiFlow.updateSql;
+//        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+//        callDbProcedureProcessorDTO.haveNextOne = true;
+//
+//        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
+//        verifyProcessorResult(processorEntityBusinessResult);
+//        return processorEntityBusinessResult.data;
+//    }
 
 
     private ProcessorEntity queryNumbersProcessor(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
@@ -2751,6 +2820,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * data转json组件
+     *
      * @param groupId 组id
      * @return 组件对象
      */

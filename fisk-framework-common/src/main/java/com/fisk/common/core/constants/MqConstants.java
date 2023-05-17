@@ -23,7 +23,7 @@ public class MqConstants {
     /**
      * topic消费者组id
      */
-    public static final class TopicGroupId{
+    public static final class TopicGroupId {
 
         /**
          * task模块kafka消费者组名称
@@ -128,7 +128,7 @@ public class MqConstants {
          */
         public static final String BUILD_SFTP_FILE_COPY_FLOW = "build.sftpFile.copy";
         /**
-         *powerbi刷新数据集任务
+         * powerbi刷新数据集任务
          */
         public static final String BUILD_POWERBI_DATA_SET_REFRESH_FLOW = "build.powerbi.data.set.refresh.flow";
         /**
@@ -148,10 +148,6 @@ public class MqConstants {
      */
     public static final class FlowQueueConstants {
 //
-
-
-
-
 
 
     }

@@ -49,4 +49,34 @@ public class EmailServerPO extends BasePO {
      * 是否启用SSL加密连接
      */
     public Integer enableSsl;
+
+    /*
+     * 服务配置类型：1、邮箱 2、企业微信
+     */
+    @TableField("`server_config_type`")
+    public int serverConfigType;
+
+    /*
+     * 企业微信应用标识
+     */
+    @TableField("`wechat_agent_id`")
+    public String wechatAgentId;
+
+    /*
+     * 企业微信应用服务地址
+     */
+    @TableField("`wechat_app_servers_address`")
+    public String wechatAppServersAddress;
+
+    /*
+     * 企业微信公司标识
+     */
+    @TableField("`wechat_corp_id`")
+    public String wechatCorpId;
+
+    /*
+     * 企业微信应用密钥
+     */
+    @TableField("`wechat_app_secret`")
+    public String wechatAppSecret;
 }

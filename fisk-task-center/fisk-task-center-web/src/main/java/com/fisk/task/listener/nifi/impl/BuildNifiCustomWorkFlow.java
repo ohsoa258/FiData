@@ -100,6 +100,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
 
     public ResultEnum msg(String data, Acknowledgment acke) {
+//        //李世纪 2023-05-10测试修改
+//        acke.acknowledge();
         NifiCustomWorkListDTO dto = JSON.parseObject(data, NifiCustomWorkListDTO.class);
         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
         nifiCustomWorkflowDTO.id = dto.pipelineId;
@@ -141,6 +143,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             log.info("此组启动失败" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
+            log.info("BuildNifiCustomWorkFlow.msg方法结束");
             acke.acknowledge();
         }
 
@@ -537,9 +540,6 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         //1.找到在哪个组下面
         List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkList.nifiCustomWorkDTOS;
         try {
-            QueryWrapper<TableTopicPO> wrapper = new QueryWrapper<>();
-            wrapper.lambda().eq(TableTopicPO::getWorkflowId, nifiCustomWorkList.getNifiCustomWorkflowId());
-            tableTopic.remove(wrapper);
             //----------------------------------------------------------------------------------
             for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
                 if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
@@ -571,7 +571,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             topicDTO.topicName = TopicName;
                             topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
+//                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
                             tableTopic.updateTableTopicByComponentId(topicDTO);
                         } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
                             TableTopicDTO topicDTO = new TableTopicDTO();
@@ -580,7 +580,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             topicDTO.topicName = TopicName;
                             topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
+//                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
                             tableTopic.updateTableTopicByComponentId(topicDTO);
                             sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
                             commonTask = true;
@@ -749,7 +749,6 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         }
     }
 
-
     public TableNifiSettingPO getTableNifiSettingPO(BuildNifiCustomWorkFlowDTO nifiNode) {
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
         log.info("父级id:" + nifiNode.groupId);
@@ -790,6 +789,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
     }
 
     public ProcessorEntity updateTopicNames(String processorId, String topicName, TopicTypeEnum type, int tableId, int tableType, Long workflowDetailId,String nifiCustomWorkflowId) {
+        log.info("updateTopicNames开始...");
         //停止   修改   启动
         try {
             //更新topic_name并使用
@@ -799,7 +799,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             topicDTO.componentId = Math.toIntExact(workflowDetailId);
             topicDTO.topicName = topicName;
             topicDTO.topicType = type.getValue();
-            topicDTO.workflowId = nifiCustomWorkflowId;
+//            topicDTO.workflowId = nifiCustomWorkflowId;
             tableTopic.updateTableTopicByComponentId(topicDTO);
             topicDTO.topicType = TopicTypeEnum.NO_TYPE.getValue();
             List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
