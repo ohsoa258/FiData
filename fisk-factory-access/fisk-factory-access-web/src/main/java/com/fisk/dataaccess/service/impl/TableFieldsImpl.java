@@ -1584,9 +1584,9 @@ public class TableFieldsImpl
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
             //如果源表字段为空或"",就获取目标表名去拼接sql
-            if (StringUtils.isEmpty(m.sourceFieldName)){
+            if (StringUtils.isEmpty(m.sourceFieldName)) {
                 a.sourceFieldName = m.fieldName;
-            }else {
+            } else {
                 a.sourceFieldName = m.sourceFieldName;
             }
 
@@ -1608,7 +1608,16 @@ public class TableFieldsImpl
         previewDTO.modelPublishFieldDTOList = accessList;
 
         //调用方法，获取sql语句
-        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO,conType);
+        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
+
+        //如果连接类型是非数据库类型，移除sql中的小批次号
+        if (conType.getValue() != com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getValue() ||
+                conType.getValue() != com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getValue() ||
+                conType.getValue() != com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getValue() ||
+                conType.getValue() != POSTGRESQL.getValue()) {
+            String regex = "AND fidata_flow_batch_code='\\$\\{fragment.index}'";
+            finalSql = finalSql.replaceAll(regex, "");
+        }
 
         //        //判断是否是全量覆盖方式 todo:全量覆盖,快照
 //        if (dto.syncMode==1){
@@ -1627,10 +1636,11 @@ public class TableFieldsImpl
 
     /**
      * 获取全量覆盖方式，使用快照时的sql
+     *
      * @param snapshotDTO
      * @return
      */
-    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO,String finalSql) {
+    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO, String finalSql) {
         //判断全量覆盖方式是否生成快照  1使用  0不使用
         int snapshotFlag = snapshotDTO.ifEnableSnapshot;
         //新建变量预装载拼装前的sql
@@ -1666,15 +1676,15 @@ public class TableFieldsImpl
 
 
             //todo:生成版本号
-            if ("YEAR".equalsIgnoreCase(dateUnit)){
+            if ("YEAR".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("QUARTER".equalsIgnoreCase(dateUnit)){
+            } else if ("QUARTER".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("MONTH".equalsIgnoreCase(dateUnit)){
+            } else if ("MONTH".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("WEEK".equalsIgnoreCase(dateUnit)){
+            } else if ("WEEK".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("DAY".equalsIgnoreCase(dateUnit)){
+            } else if ("DAY".equalsIgnoreCase(dateUnit)) {
 
             }
 
