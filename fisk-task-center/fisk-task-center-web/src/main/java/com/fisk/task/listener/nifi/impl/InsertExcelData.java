@@ -130,9 +130,9 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     }
                     sqlBuilder.append("[" + tableFieldsList.get(i).fieldName + "]");
                 }
-                sqlBuilder.append(") VALUES (")
+                sqlBuilder.append(") VALUES ('")
                         .append(fidata_batch_code)
-                        .append(",");
+                        .append("',");
                 ////fori循环，目的是遍历tableFieldsList，将要插入的数据以占位符 ? 替代
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
