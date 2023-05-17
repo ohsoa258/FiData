@@ -66,7 +66,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                 dispatchEmail.nifiCustomWorkflowId = Integer.parseInt(pipelId);
                 dispatchEmail.msg = pipelLog.msg;
                 dispatchEmail.result = pipelLog.msg.contains("运行成功") ? "【运行成功】" : "【运行失败】";
-                dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
+                //dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
+                dispatchEmail.pipelTraceId = pipelTraceId;
                 //    /**
                 //     * 运行时长
                 //     */
