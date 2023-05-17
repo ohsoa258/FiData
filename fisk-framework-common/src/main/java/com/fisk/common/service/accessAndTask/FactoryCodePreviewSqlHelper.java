@@ -270,16 +270,16 @@ public class FactoryCodePreviewSqlHelper {
         suffix.append("DELETE TARGET FROM ")
                 .append(tableName)
                 .append(" TARGET JOIN (SELECT fidata_batch_code,")
-                .append(" & ")
+                .append(" ? ")
                 .append("FROM ")
                 .append(sourceTableName)
                 .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'")
                 .append(" GROUP BY fidata_batch_code,")
-                .append(" & ")
+                .append(" ? ")
                 .append(") ")
                 .append("SOURCE ON TARGET.fidata_batch_code <> SOURCE.fidata_batch_code ");
 
-        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  &
+        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
         StringBuilder pkFieldNames = new StringBuilder();
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
@@ -299,8 +299,11 @@ public class FactoryCodePreviewSqlHelper {
             //删除最后一个多余的逗号
             pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
         }
-        //将所有的占位符&替换成我们拼接完成的业务覆盖标识字段字符串
-        String halfSql = String.valueOf(suffix).replaceAll("&", String.valueOf(pkFieldNames));
+
+        //替换规则
+        String regex = "\\?";
+        //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
+        String halfSql = String.valueOf(suffix).replaceAll(regex, String.valueOf(pkFieldNames));
 
         //String halfSql转为StringBulider,准备拼接
         StringBuilder matchAgain = new StringBuilder(halfSql);
