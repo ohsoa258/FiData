@@ -1238,10 +1238,12 @@ public class BusinessAreaImpl
                     .append("[")
                     .append(item.targetColumn)
                     .append("]")
-                    .append(" WHERE fidata_batch_code=")
+                    .append(" WHERE ")
                     .append(tName)
-                    .append("'${fidata_batch_code}' AND fidata_flow_batch_code=")
+                    .append("fidata_batch_code=")
+                    .append("'${fidata_batch_code}' AND ")
                     .append(tName)
+                    .append("fidata_flow_batch_code=")
                     .append("'${fragment.index}'");
             str.append(";");
         }
