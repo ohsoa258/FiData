@@ -82,6 +82,10 @@ public enum OlapTableEnum implements BaseEnum {
                 return SFTPFILECOPYTASK;
             case 16:
                 return DATASECURITY;
+            case 17:
+                return POWERBIDATASETREFRESHTASK;
+            case 18:
+                return MDM_DATA_ACCESS;
             default:
                 return null;
         }
