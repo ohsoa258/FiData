@@ -74,7 +74,7 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * POWERBI数据集刷新任务(PBI DataSet 刷新)
      */
-    POWERBI_DATA_SET_REFRESH_TASK(15,"POWERBI数据集刷新任务"),
+    POWERBI_DATA_SET_REFRESH_TASK(15,"PBI DataSet 刷新"),
     /**
      * 主数据模型表任务
      */
