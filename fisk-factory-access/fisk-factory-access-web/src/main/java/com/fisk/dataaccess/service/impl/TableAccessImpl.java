@@ -2508,9 +2508,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //获取keepNumber
         String keepNumber = dto.keepNumber;
         //日期范围
-        char dateRange = keepNumber.charAt(0);
+        String[] kNumber = keepNumber.split(" ");
+        String dateRange = kNumber[0];
         //日期单位   去除头尾空格,变为大写
-        String dateUnit = keepNumber.substring(1).trim().toUpperCase();
+        String dateUnit = kNumber[1].toUpperCase();
 
         StringBuilder delSql = new StringBuilder("DELETE FROM ");
         //为sql拼接stg表名和where条件

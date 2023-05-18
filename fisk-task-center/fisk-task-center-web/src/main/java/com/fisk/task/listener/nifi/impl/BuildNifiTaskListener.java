@@ -2933,7 +2933,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //2023-04-28:李世纪注释，
 //        querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow);
         //2023-04-28李世纪修改：目前数据接入页面配置的stg过期时间需要起作用，因此这里改为从传递过来的参数获取执行删除的sql
-        querySqlDto.querySql = buildNifiFlow.deleteScript;
+        //2023-05-18李世纪修正：如果buildNifiFlow.deleteScript为空，仍然调用存储过程，防止nifi流程报错
+        querySqlDto.querySql = StringUtils.isEmpty(buildNifiFlow.deleteScript) ?
+                componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow)
+                : buildNifiFlow.deleteScript;
 
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
