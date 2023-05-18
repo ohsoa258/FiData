@@ -1593,13 +1593,8 @@ public class TableFieldsImpl
         //遍历==>手动转换，属性不多，并未使用mapStruct
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
-            //如果源表字段为空或"",就获取目标表名去拼接sql
-            if (StringUtils.isEmpty(m.sourceFieldName)) {
-                a.sourceFieldName = m.fieldName;
-            } else {
-                a.sourceFieldName = m.sourceFieldName;
-            }
-
+            //数据接入，直接使用fieldName拼接sql
+            a.sourceFieldName = m.fieldName;
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
             a.isBusinessKey = m.isPrimarykey;
