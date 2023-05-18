@@ -70,6 +70,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
             String topic = kafkaReceive.topic;
             //获取大批次号
             String fidata_batch_code = kafkaReceive.fidata_batch_code;
+            log.info("大批次号：{}",fidata_batch_code);
 
             String[] topicParameter = topic.split("\\.");
             String appId = "";
@@ -115,7 +116,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 String[] split = ftpConfig.fileFilterRegex.split("\\.");
                 //调用封装的方法 readExcelFromInputStream() , 读取excel内容
                 List<List<Object>> lists = readExcelFromInputStream(fileInputStream, split[split.length - 1], ftpConfig.startLine, config);
-                log.info("excel的内容是：{}", JSON.toJSONString(lists));
+//                log.info("excel的内容是：{}", JSON.toJSONString(lists));
                 //List<List<Object>> lists:第一个list是行,第二个list是列,里面每个object是格
 
                 // 构造 SQL 语句，? 代表需要填充的数据
