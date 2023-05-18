@@ -369,6 +369,9 @@ public class OlapImpl extends ServiceImpl<OlapMapper, OlapPO> implements IOlap {
             case POWERBIDATASETREFRESHTASK:
                 nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK;
                 break;
+            case MDM_DATA_ACCESS:
+                nifiGetPortHierarchyDTO.channelDataEnum = ChannelDataEnum.MDM_TABLE_TASK;
+                nifiGetPortHierarchyDTO.tableId = String.valueOf(tableAccessId);
             default:
                 break;
         }

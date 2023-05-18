@@ -937,7 +937,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("put-db-record-table-name", putDatabaseRecordDTO.TableName);
         map.put("put-db-record-schema-name", putDatabaseRecordDTO.schemaName);
         map.put("put-db-record-quoted-identifiers", "true");
-        map.put("put-db-record-quoted-table-identifiers",String.valueOf(putDatabaseRecordDTO.putDbRecordQuotedTableIdentifiers));
+        map.put("put-db-record-quoted-table-identifiers", String.valueOf(putDatabaseRecordDTO.putDbRecordQuotedTableIdentifiers));
         if (Objects.nonNull(putDatabaseRecordDTO.putDbRecordTranslateFieldNames)) {
             map.put("put-db-record-translate-field-names", putDatabaseRecordDTO.putDbRecordTranslateFieldNames);
         }
@@ -1616,12 +1616,14 @@ public class NiFiHelperImpl implements INiFiHelper {
                     NifiHelper.getProcessorsApi().deleteProcessor(processor.getId(), String.valueOf(processor.getRevision().getVersion()), null, null);
                 }
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
-                QueryWrapper<TableNifiSettingPO> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda()
-                        .eq(TableNifiSettingPO::getAppId, dataModelVO.businessId)
-                        .eq(TableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
-                tableNifiSettingService.remove(queryWrapper);
+                if (!Objects.equals(OlapTableEnum.MDM_DATA_ACCESS, nifiRemoveDTO.olapTableEnum)) {
+                    QueryWrapper<TableNifiSettingPO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.lambda()
+                            .eq(TableNifiSettingPO::getTableAccessId, nifiRemoveDTO.tableId)
+                            .eq(TableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
+                    tableNifiSettingService.remove(queryWrapper);
                 }
+            }
             //删除应用
             if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
                 //禁用2个控制器服务
@@ -1632,7 +1634,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             }
             return ResultEnum.SUCCESS;
         } catch (ApiException e) {
-            log.error("nifi删除失败，【" + e.getResponseBody() + "】: ", e  );
+            log.error("nifi删除失败，【" + e.getResponseBody() + "】: ", e);
             return ResultEnum.TASK_NIFI_DELETE_FLOW;
         }
     }
@@ -1698,11 +1700,12 @@ public class NiFiHelperImpl implements INiFiHelper {
         nifiRemoveDTOS.addAll(nifiRemoveList4);
         return nifiRemoveDTOS;
     }
+
     private List<NifiRemoveDTO> createMdmNifiRemoveDTOs(DataModelVO dataModelVO) {
         List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
         //mdm
         AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("type", dataModelVO.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
-        if (appNifiSettingPO != null){
+        if (appNifiSettingPO != null) {
             List<NifiRemoveDTO> nifiRemoveList5 = createMdmNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, appNifiSettingPO, dataModelVO.delBusiness);
             nifiRemoveDTOS.addAll(nifiRemoveList5);
         }
@@ -1817,7 +1820,6 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
         return nifiRemoveDTOS;
     }
-
 
 
     private List<NifiRemoveDTO> createMdmNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, AppNifiSettingPO appNifiSettingPO, Boolean delApp) {
