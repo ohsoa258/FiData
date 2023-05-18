@@ -3,6 +3,7 @@ package com.fisk.system.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.system.dto.WeChatUserDTO;
 import com.fisk.system.dto.emailserver.EmailServerDTO;
 import com.fisk.system.dto.emailserver.EmailServerEditDTO;
 import com.fisk.system.dto.emailserver.EmailServerQueryDTO;
@@ -68,4 +69,6 @@ public interface IEmailServerManageService extends IService<EmailServerPO> {
      * @return
      */
     EmailServerVO getDefaultEmailServer();
+
+    List<WeChatUserDTO> searchWechatUser(int serverConfigId, String recipients );
 }

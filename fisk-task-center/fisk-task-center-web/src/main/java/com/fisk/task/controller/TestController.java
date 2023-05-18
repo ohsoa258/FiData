@@ -986,46 +986,46 @@ public class TestController {
 
     }
 
-    /**
-     * 创建管道1
-     *
-     * @return
-     */
-    @PostMapping("/NifiCustomWorkFlow1")
-    @MQConsumerLog
-    public void publishBuildNifiCustomWorkFlowTask(String data) {
-        log.info(data);
-        taskPublish.taskPublish(data, null);
-    }
+//    /**
+//     * 创建管道1
+//     *
+//     * @return
+//     */
+//    @PostMapping("/NifiCustomWorkFlow1")
+//    @MQConsumerLog
+//    public void publishBuildNifiCustomWorkFlowTask(String data) {
+//        log.info(data);
+//        taskPublish.taskPublish(data, null);
+//    }
 
 
-    /**
-     * 创建管道2
-     *
-     * @param nifiCustomWorkListDTO
-     * @return
-     */
-    @PostMapping("/NifiCustomWorkFlow2")
-    @ApiOperation(value = "创建管道")
-    public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
-        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
-                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
-                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW,
-                nifiCustomWorkListDTO);
-    }
-
-    /**
-     * task.build.customwork.flow
-     *
-     * @param dataInfo
-     * @return
-     */
-    @KafkaListener(topics = MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory",
-            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    @MQConsumerLog
-    @PutMapping("/buildNifiCustomWorkFlow")
-    public ResultEntity<Object> buildNifiCustomWorkFlow(String dataInfo) {
-        return ResultEntityBuild.build(buildNifiCustomWorkFlow.msg(dataInfo, null));
-    }
+//    /**
+//     * 创建管道2
+//     *
+//     * @param nifiCustomWorkListDTO
+//     * @return
+//     */
+//    @PostMapping("/NifiCustomWorkFlow2")
+//    @ApiOperation(value = "创建管道")
+//    public ResultEntity<Object> publishBuildNifiCustomWorkFlowTask(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
+//        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_CUSTOMWORK_TASK.getName(),
+//                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+//                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW,
+//                nifiCustomWorkListDTO);
+//    }
+//
+////    /**
+////     * task.build.customwork.flow
+////     *
+////     * @param dataInfo
+////     * @return
+////     */
+////    @KafkaListener(topics = MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_CUSTOMWORK_FLOW, containerFactory = "batchFactory",
+////            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+////    @MQConsumerLog
+//    @PutMapping("/buildNifiCustomWorkFlow")
+//    public ResultEntity<Object> buildNifiCustomWorkFlow(String dataInfo) {
+//        return ResultEntityBuild.build(buildNifiCustomWorkFlow.msg(dataInfo, null));
+//    }
 
 }

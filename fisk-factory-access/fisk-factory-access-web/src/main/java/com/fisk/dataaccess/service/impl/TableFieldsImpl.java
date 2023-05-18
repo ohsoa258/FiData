@@ -53,10 +53,7 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
-import com.fisk.dataaccess.service.IAppRegistration;
-import com.fisk.dataaccess.service.ITableAccess;
-import com.fisk.dataaccess.service.ITableFields;
-import com.fisk.dataaccess.service.ITableHistory;
+import com.fisk.dataaccess.service.*;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -93,6 +90,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
+import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.RESTFULAPI;
 
 /**
  * @author Lock
@@ -141,6 +139,8 @@ public class TableFieldsImpl
     private DataManageClient dataManageClient;
     @Resource
     private UserClient userClient;
+    @Resource
+    private IAppDataSource iAppDataSource;
 
     @Resource
     FlinkConfigDTO flinkConfig;
@@ -1535,9 +1535,19 @@ public class TableFieldsImpl
         if (Objects.isNull(appRegistrationPO)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，应用不存在");
         }
-        //获取应用下的数据源信息
+        //获取应用的目标数据源信息
         DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
-        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = dataSourceDTO.getConType();
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = dataSourceDTO.conType;
+
+        //获取应用下的连接类型
+        List<AppDataSourcePO> conTypes = iAppDataSource.getDataSourceDrivesTypeByAppId(appRegistrationPO.id);
+        StringBuilder connections = new StringBuilder();
+        conTypes.forEach(d -> {
+            connections.append(d.driveType);
+        });
+        //转为字符串，转为大写
+        String driverTypes = connections.toString().toUpperCase();
+
 
         // 处理不同架构下的表名称
         String targetTableName = "";
@@ -1583,13 +1593,8 @@ public class TableFieldsImpl
         //遍历==>手动转换，属性不多，并未使用mapStruct
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
-            //如果源表字段为空或"",就获取目标表名去拼接sql
-            if (StringUtils.isEmpty(m.sourceFieldName)){
-                a.sourceFieldName = m.fieldName;
-            }else {
-                a.sourceFieldName = m.sourceFieldName;
-            }
-
+            //数据接入，直接使用fieldName拼接sql
+            a.sourceFieldName = m.fieldName;
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
             a.isBusinessKey = m.isPrimarykey;
@@ -1608,7 +1613,16 @@ public class TableFieldsImpl
         previewDTO.modelPublishFieldDTOList = accessList;
 
         //调用方法，获取sql语句
-        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO,conType);
+        String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
+
+        //如果连接类型是非数据库类型，移除sql中的小批次号
+        if (driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getName())||
+                driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.FTP.getName()) ||
+                driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.API.getName()) ||
+                driverTypes.contains(RESTFULAPI.getName())) {
+            String regex = "AND fidata_flow_batch_code='\\$\\{fragment.index}'";
+            finalSql = finalSql.replaceAll(regex, "");
+        }
 
         //        //判断是否是全量覆盖方式 todo:全量覆盖,快照
 //        if (dto.syncMode==1){
@@ -1627,10 +1641,11 @@ public class TableFieldsImpl
 
     /**
      * 获取全量覆盖方式，使用快照时的sql
+     *
      * @param snapshotDTO
      * @return
      */
-    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO,String finalSql) {
+    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO, String finalSql) {
         //判断全量覆盖方式是否生成快照  1使用  0不使用
         int snapshotFlag = snapshotDTO.ifEnableSnapshot;
         //新建变量预装载拼装前的sql
@@ -1666,15 +1681,15 @@ public class TableFieldsImpl
 
 
             //todo:生成版本号
-            if ("YEAR".equalsIgnoreCase(dateUnit)){
+            if ("YEAR".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("QUARTER".equalsIgnoreCase(dateUnit)){
+            } else if ("QUARTER".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("MONTH".equalsIgnoreCase(dateUnit)){
+            } else if ("MONTH".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("WEEK".equalsIgnoreCase(dateUnit)){
+            } else if ("WEEK".equalsIgnoreCase(dateUnit)) {
 
-            }else if ("DAY".equalsIgnoreCase(dateUnit)){
+            } else if ("DAY".equalsIgnoreCase(dateUnit)) {
 
             }
 

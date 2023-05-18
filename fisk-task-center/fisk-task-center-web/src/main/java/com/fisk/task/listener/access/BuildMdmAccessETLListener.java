@@ -120,7 +120,7 @@ public class BuildMdmAccessETLListener {
                 bfd.fetchSize = accessPublishDataDTO.access.fetchSize;
                 bfd.traceId = accessPublishDataDTO.traceId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
-                TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.modelId).eq("type", bfd.type.getValue()).one();
+                TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.modelId).eq("table_access_id", bfd.entityId).eq("type", bfd.type.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
                 if (one != null) {
                     tableNifiSettingPO = one;

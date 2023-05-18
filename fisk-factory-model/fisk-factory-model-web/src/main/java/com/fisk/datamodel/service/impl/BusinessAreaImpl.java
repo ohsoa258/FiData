@@ -1187,28 +1187,64 @@ public class BusinessAreaImpl
 
         StringBuilder str = new StringBuilder();
 
+        String tName = "[temp_" + dto.get(0).sourceTable + "].";
+
         for (TableSourceRelationsDTO item : dto) {
             str.append("update ")
-                    .append("temp_");
-            str.append(item.sourceTable);
+                    .append("[temp_");
+            str.append(item.sourceTable)
+                    .append("]");
             str.append(" set ")
-                    .append("temp_");
-            str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
+                    .append("[temp_");
+            str.append(item.sourceTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append("]");
             str.append(" = ");
-            str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
+            str.append("[")
+                    .append(item.targetTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append("]");
             str.append(" from ")
-                    .append("temp_");
-            str.append(item.sourceTable);
+                    .append("[temp_");
+            str.append(item.sourceTable)
+                    .append("]");
             if (!StringUtils.isEmpty(item.joinType)) {
                 str.append(" ").append(item.joinType);
-                str.append(" ").append(item.targetTable);
+                str.append(" ")
+                        .append("[")
+                        .append(item.targetTable)
+                        .append("]");
             }
             str.append(" on ")
-                    .append("temp_");
-            ;
-            str.append(item.sourceTable).append(".").append(item.sourceColumn);
+                    .append("[temp_");
+
+            str.append(item.sourceTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(item.sourceColumn)
+                    .append("]");
             str.append(" = ");
-            str.append(item.targetTable).append(".").append(item.targetColumn);
+            str.append("[")
+                    .append(item.targetTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(item.targetColumn)
+                    .append("]")
+                    .append(" WHERE ")
+                    .append(tName)
+                    .append("fidata_batch_code=")
+                    .append("'${fidata_batch_code}' AND ")
+                    .append(tName)
+                    .append("fidata_flow_batch_code=")
+                    .append("'${fragment.index}'");
             str.append(";");
         }
 
@@ -1322,7 +1358,7 @@ public class BusinessAreaImpl
         CodePreviewDTO codePreviewDTO = new CodePreviewDTO();
         codePreviewDTO.setOverLoadCodeDTO(dataModel);
         codePreviewDTO.setOverlayCodePreviewDTO(dto);
-        String finalSql = codePreviewBySyncMode(codePreviewDTO).replaceAll("-","_");
+        String finalSql = codePreviewBySyncMode(codePreviewDTO);
 
         //检测获取到的sql预览结果
         log.info("预返回的覆盖方式预览sql为" + finalSql);
@@ -1370,10 +1406,13 @@ public class BusinessAreaImpl
         int syncMode = configDTO.targetDsConfig.syncMode;
         //获取表名
         String tableName = "[" + configDTO.processorConfig.targetTableName + "]";
+
+        String tableName1 = configDTO.processorConfig.targetTableName;
+
         //获取临时表前缀
         String prefixTempName = buildNifiFlow.prefixTempName;
         //拼接临时表名称
-        String tempTableName = "[" + prefixTempName + "_" + tableName + "]";
+        String tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
         //获取前端传递的表字段集合
         List<ModelPublishFieldDTO> fields = originalDTO.modelPublishFieldDTOList;
         //ModelPublishFieldDTO List ==> PublishFieldDTO List
