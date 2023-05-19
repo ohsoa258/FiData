@@ -128,7 +128,9 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         //获取sql脚本
         data.sqlScript = accessPo.getExtractionSql();
         data.dataSourceId = accessPo.getSouceSystemId();
-        data.attributeDTOList = getAccessAttributeField((int) accessPo.id, accessPo.getEntityId());
+        data.versionId = accessPo.versionId;
+        //获取表字段详情
+        data.attributeInfoDTOS = attributeService.listPublishedAttribute(entityId);
 
         //获取增量配置信息
         QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
