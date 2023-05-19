@@ -1,5 +1,5 @@
 package com.fisk.mdm.dto.access;
-import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
+import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import lombok.Data;
 
 import java.util.List;
@@ -17,10 +17,8 @@ public class AccessAttributeListDTO {
      * sql脚本
      */
     public String sqlScript;
-    /**
-     * 源表与目标表对应关系列
-     */
-    public List<AccessAttributeDTO> attributeDTOList;
+
+    public List<AttributeInfoDTO> attributeInfoDTOS;
     /**
      * 增量配置信息
      */
@@ -41,5 +39,9 @@ public class AccessAttributeListDTO {
      * 预览nifi调用SQL执行语句
      */
     public String execSql;
+    /**
+     * 版本id
+     */
+    public Integer versionId;
 
 }
