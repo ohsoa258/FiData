@@ -70,7 +70,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
             String topic = kafkaReceive.topic;
             //获取大批次号
             String fidata_batch_code = kafkaReceive.fidata_batch_code;
-            log.info("大批次号：{}",fidata_batch_code);
+            log.info("大批次号：{}", fidata_batch_code);
 
             String[] topicParameter = topic.split("\\.");
             String appId = "";
@@ -143,6 +143,8 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     sqlBuilder.append("?");
                 }
                 sqlBuilder.append(")");
+                log.info("预编译的sql语句为：{}", sqlBuilder);
+                log.info("预编译sql的占位符个数为：{}", columnCount);
 
                 //远程调用，调用系统管理的接口从dmp_system_db库，tb_datasource_config表中获取ods数据源的信息  即dataSourceOdsId = 2
                 ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
@@ -155,10 +157,16 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     // 循环插入数据
                     int batchSize = 1000; // 每批次插入的数据条数
                     int count = 0;
+                    int excelRowCount = 1;
                     assert lists != null;
                     for (List list : lists) {
+
+                        log.info("excel第" + excelRowCount + "行数据个数：{}", list.size());
                         for (int i = 0; i < list.size(); i++) {
+                            //列数和占位符必须匹配
+                            if (i >= columnCount) break;
                             Object object = list.get(i);
+                            excelRowCount++;
                             if (object != null) {
                                 pstmt.setString(i + 1, object.toString());
                             } else {
@@ -221,6 +229,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
     }
 
     /**
+     * @param startRow dmp_datainput_db库 -- tb_table_access表中的start_line列的值
      * @return java.util.List<java.util.List < java.lang.String>>
      * @description 读取Excel内容，返回list，每一行存放一个list
      * @author Lock
@@ -228,7 +237,6 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @version v1.0
      * @params wb 工作簿对象
      * @params index sheet页
-     * @param startRow dmp_datainput_db库 -- tb_table_access表中的start_line列的值
      */
     private static List<List<Object>> readExcelContentList(Workbook wb, String sheetName, int startRow, DataAccessConfigDTO config) {
         if (wb != null) {
