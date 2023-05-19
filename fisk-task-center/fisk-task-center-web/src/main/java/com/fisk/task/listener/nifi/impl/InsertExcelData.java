@@ -228,6 +228,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @version v1.0
      * @params wb 工作簿对象
      * @params index sheet页
+     * @param startRow dmp_datainput_db库 -- tb_table_access表中的start_line列的值
      */
     private static List<List<Object>> readExcelContentList(Workbook wb, String sheetName, int startRow, DataAccessConfigDTO config) {
         if (wb != null) {
@@ -241,6 +242,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 //解决最大行数一直变的问题,拿第一次得到的行数
                 int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
                 for (int i = 0; i <= physicalNumberOfRows; i++) {
+
                     if (getRow < startRow + 1) {
                         getRow++;
                         continue;
