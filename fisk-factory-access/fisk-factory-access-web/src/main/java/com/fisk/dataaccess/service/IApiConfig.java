@@ -152,5 +152,12 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return
      */
     List<ApiColumnInfoDTO> getTableColumnInfoByApi(Integer apiId);
+
+    /**
+     * 根据apiId获取指定api
+     * @param apiId
+     * @return
+     */
+    ResultEntity<ApiConfigDTO> getOneApiById(Integer apiId);
 }
 

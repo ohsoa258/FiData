@@ -152,4 +152,10 @@ public class ApiConfigController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableColumnInfoByApi(apiId));
     }
 
+    @GetMapping("/getOneApi/{apiId}")
+    @ApiOperation(value = "根据apiId获取指定api")
+    public ResultEntity<ApiConfigDTO> getOneApiById(@PathVariable("apiId") Integer apiId) {
+        return service.getOneApiById(apiId);
+    }
+
 }

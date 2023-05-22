@@ -32,6 +32,7 @@ import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
+import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
@@ -141,6 +142,8 @@ public class TableFieldsImpl
     private UserClient userClient;
     @Resource
     private IAppDataSource iAppDataSource;
+    @Resource
+    private IApiConfig iApiConfig;
 
     @Resource
     FlinkConfigDTO flinkConfig;
@@ -1520,21 +1523,42 @@ public class TableFieldsImpl
             log.info("表信息不存在...");
             return "";
         }
+        //提取ApiConfigDTO data
+        ApiConfigDTO data = null;
 
         // 查询物理表数据
         //从tb_table_access表获取物理表信息
         TableAccessPO tableAccessPO = tableAccessMapper.selectById(dto.id);
-        //获取不到，抛出异常
+        //如果前面从tb_table_access表获取不到信息，则认为是实时api
         if (Objects.isNull(tableAccessPO)) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
+            //调用方法，获取tb_api_config表的指定信息
+            ResultEntity<ApiConfigDTO> apiConfig = iApiConfig.getOneApiById(dto.id);
+            data = apiConfig.getData();
+
+            //如果是实时api，则通过前端传参的物理表id获取物理表信息
+            tableAccessPO = tableAccessMapper.selectById(dto.modelPublishFieldDTOList.get(0).tableAccessId);
+            //如果获取实时api失败或获取不到物理表信息，则抛出异常
+            if (apiConfig.getCode() != ResultEnum.SUCCESS.getCode() || tableAccessPO  == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
+            }
         }
 
-        // 查询app应用信息
-        AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
+        AppRegistrationPO appRegistrationPO = null;
+
+        //判断是否是实时api,如果data == null，则不是实时api
+        if (data == null) {
+            //如果不是实时api，则通过tableAccessPO.appId获取物理表所在的app应用信息
+            appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
+        } else {
+            //如果是实时api，则使用data.appId获取实时api所在的app应用信息
+            appRegistrationPO = appRegistrationMapper.selectById(data.appId);
+
+        }
         //获取不到应用信息，则抛出异常
         if (Objects.isNull(appRegistrationPO)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，应用不存在");
         }
+
         //获取应用的目标数据源信息
         DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
         com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = dataSourceDTO.conType;
@@ -1616,7 +1640,7 @@ public class TableFieldsImpl
         String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
 
         //如果连接类型是非数据库类型，移除sql中的小批次号
-        if (driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getName())||
+        if (driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.FTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.API.getName()) ||
                 driverTypes.contains(RESTFULAPI.getName())) {

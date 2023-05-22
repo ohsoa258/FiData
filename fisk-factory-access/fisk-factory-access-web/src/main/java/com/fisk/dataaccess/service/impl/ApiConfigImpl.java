@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -1795,6 +1796,23 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             list.add(tableAccessImpl.getTableColumnInfo(po.id));
         }
         return list;
+    }
+
+    /**
+     * 根据apiId获取指定api
+     * @param apiId
+     * @return
+     */
+    @Override
+    public ResultEntity<ApiConfigDTO> getOneApiById(Integer apiId) {
+        LambdaQueryWrapper<ApiConfigPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ApiConfigPO::getId,apiId);
+        ApiConfigPO apiConfigPO = getOne(wrapper);
+        if (apiConfigPO != null){
+            return ResultEntityBuild.build(ResultEnum.SUCCESS,ApiConfigMap.INSTANCES.poToDto(apiConfigPO));
+        }else {
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+        }
     }
 
 //    public static void main(String[] args) {
