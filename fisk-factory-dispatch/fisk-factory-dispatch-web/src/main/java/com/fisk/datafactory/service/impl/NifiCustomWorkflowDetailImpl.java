@@ -387,7 +387,18 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             } else if (Objects.equals(ChannelDataEnum.TASKGROUP.getName(), po.componentType)) {
                 log.info("任务组不做处理");
             } else {
-                List<NifiCustomWorkflowDetailPO> detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
+                List<NifiCustomWorkflowDetailPO> detailPoList = new ArrayList<>();
+
+                //如果是PBI任务，po.id = id,因为PBI没有子任务
+                //如果不这样改，会导致数据管道--PBI的nifi流程建立不完全，缺失组件
+                if (Objects.equals(po.componentType,ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName())){
+                    detailPoList = this.query().eq("id", po.id).orderByAsc("table_order").list();
+                }else {
+                    detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
+                }
+
+//                detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
+
                 if (CollectionUtils.isNotEmpty(detailPoList)) {
                     for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo : detailPoList) {
                         NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
