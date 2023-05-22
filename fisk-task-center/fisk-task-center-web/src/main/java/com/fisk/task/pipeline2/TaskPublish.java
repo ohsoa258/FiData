@@ -15,7 +15,6 @@ import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
-import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.PowerBiDataSetRefreshDTO;
@@ -26,7 +25,6 @@ import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
-import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
@@ -83,6 +81,8 @@ public class TaskPublish {
      * 接收到的本节点,需要找所有下游,根据下游状态调用
      */
     public void taskPublish(String message, Acknowledgment acke) {
+////        //李世纪 2023-05-10测试修改
+//        acke.acknowledge();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String pipelTraceId = "";
         try {
@@ -312,10 +312,10 @@ public class TaskPublish {
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
+            log.info("TaskPublish.taskPublish方法结束...");
             if (acke != null) {
                 acke.acknowledge();
             }
-
         }
     }
 

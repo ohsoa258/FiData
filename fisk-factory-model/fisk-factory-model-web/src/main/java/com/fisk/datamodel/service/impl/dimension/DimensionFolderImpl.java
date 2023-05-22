@@ -281,23 +281,25 @@ public class DimensionFolderImpl
     public ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto)
     {
         try {
+            //获取数据接入--业务域对象
             BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
             if (businessAreaPo == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
 
+            //获取定义的dw的数据库类型  1
             getDwDbType(targetDbId);
 
-            //获取维度文件夹下所有维度
-//            LambdaQueryWrapper<DimensionPO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//            lambdaQueryWrapper.in(DimensionPO::getId,dto.dimensionIds);
-//            dimensionMapper.selectList(lambdaQueryWrapper);
+            //获取待发布的维度表集合
             QueryWrapper<DimensionPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.in("id", dto.dimensionIds);
             List<DimensionPO> dimensionPoList = dimensionMapper.selectList(queryWrapper);
+
+            //获取不到，报错，发布失败
             if (CollectionUtils.isEmpty(dimensionPoList)) {
                 throw new FkException(ResultEnum.PUBLISH_FAILURE, "维度表为空");
             }
+
             //更改发布状态
             for (DimensionPO item : dimensionPoList) {
                 item.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
@@ -305,19 +307,26 @@ public class DimensionFolderImpl
                     throw new FkException(ResultEnum.PUBLISH_FAILURE);
                 }
             }
-            //获取维度字段数据
-            //获取维度id集合
+
+            //获取待发布的维度表的id集合
             List<Integer> dimensionIds = (List) dimensionMapper.selectObjs(queryWrapper.select("id"));
+            //获取待发布的维度表的维度字段数据
             QueryWrapper<DimensionAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
             attributePoQueryWrapper.in("dimension_id", dimensionIds);
             List<DimensionAttributePO> dimensionAttributePoList = dimensionAttributeMapper
                     .selectList(attributePoQueryWrapper);
-            //遍历取值
+
+            //组装参数..........
             ModelPublishDataDTO data = new ModelPublishDataDTO();
+            //业务域id
             data.businessAreaId = businessAreaPo.getId();
+            //业务域名称
             data.businessAreaName = businessAreaPo.getBusinessName();
+            //用户id
             data.userId = userHelper.getLoginUserInfo().id;
+            //是否同步
             data.openTransmission = dto.openTransmission;
+
             List<ModelPublishTableDTO> dimensionList = new ArrayList<>();
             //获取表增量配置信息
             QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
@@ -341,19 +350,28 @@ public class DimensionFolderImpl
             for (DimensionPO item : dimensionPoList) {
                 //拼接数据
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
+                //表id
                 pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
+                //表名称
                 pushDto.tableName = convertName(item.dimensionTabName);
+                //创建类型：维度表  0
                 pushDto.createType = CreateTypeEnum.CREATE_DIMENSION.getValue();
+
+                //DataTranDTO dtDto用于拼接sql数据传输
                 DataTranDTO dtDto = new DataTranDTO();
+                //表名称
                 dtDto.tableName = pushDto.tableName;
+                //维度sql脚本
                 dtDto.querySql = item.sqlScript;
+
+                //远程调用   -->  拼接sql替换时间
                 ResultEntity<Map<String, String>> converMap = publishTaskClient.converSql(dtDto);
                 Map<String, String> data1 = converMap.data;
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 pushDto.sqlScript = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
-                //获取维度键update语句
+                //获取维度键update语句 todo:数仓建模，关联外键的sql在这里传递
                 pushDto.factUpdateSql = item.dimensionKeyScript;
 
                 /*
@@ -370,20 +388,28 @@ public class DimensionFolderImpl
 
                 // 设置维度表临时表名称
                 pushDto.setPrefixTempName(item.getPrefixTempName() + "_");
+                //设置覆盖的脚本   todo:数仓建模，覆盖方式预览的sql在这里传递
                 pushDto.setCoverScript(item.coverScript);
+                //设置删除临时表的脚本 todo:数仓建模，删除临时表的sql在这里传递  新增
+                pushDto.setDeleteTempScript(item.deleteTempScript);
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
+                //1 维度表
                 customScriptDto.type = 1;
+                //维度表id
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
+                //执行类型 1stg   2ods
                 customScriptDto.execType = 1;
+                //调用获取自定义脚本的方法
                 String beforeCustomScript = customScript.getBatchScript(customScriptDto);
                 if (!StringUtils.isEmpty(beforeCustomScript)) {
                     pushDto.customScript = beforeCustomScript;
                 }
-                customScriptDto.execType = 2;
 
-                //自定义脚本
+                //执行类型 1stg   2ods
+                customScriptDto.execType = 2;
+                //最后的自定义脚本
                 String batchScript = customScript.getBatchScript(customScriptDto);
                 if (!StringUtils.isEmpty(batchScript)) {
                     pushDto.customScriptAfter = batchScript;
@@ -408,8 +434,8 @@ public class DimensionFolderImpl
                 dimensionList.add(pushDto);
             }
             data.dimensionList = dimensionList;
-            //发送消息
-            log.info(JSON.toJSONString(data));
+            //打印参数
+            log.info("数仓建模待发布的表参数："+JSON.toJSONString(data));
             publishTaskClient.publishBuildAtlasDorisTableTask(data);
         } catch (Exception ex) {
             log.error("batchPublishDimensionFolder ex:", ex);

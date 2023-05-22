@@ -9,7 +9,6 @@ import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -127,131 +126,197 @@ public class BuildDataModelDorisTableListener
         //2.修改表的存储过程
         //3.生成nifi流程
         try {
+            //将转为json字符串的数据重新转为对象
             ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
+            //获取维度列表
             List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
+            //远程调用systemCenter的方法，获取id为1的数据源的信息，也就是dw   dmp_system_db库----db_datasource_config表
             ResultEntity<DataSourceDTO> DataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
             DataSourceTypeEnum conType = null;
             if (DataSource.code == ResultEnum.SUCCESS.getCode()) {
+                //获取数据源信息
                 DataSourceDTO dataSource = DataSource.data;
+                //conType==1  SqlServer
                 conType = dataSource.conType;
             } else {
                 log.error("userclient无法查询到ods库的连接信息");
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
+            //遍历维度列表
             for (ModelPublishTableDTO modelPublishTableDTO : dimensionList) {
+                //获取表id
                 id = Math.toIntExact(modelPublishTableDTO.tableId);
+                //获取表类型
                 tableType = modelPublishTableDTO.createType;
                 //生成版本号
                 //获取时间戳版本号
                 DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
+
+                //调用方法，保存建模相关表结构数据(保存版本号)
                 ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
                 log.info("执行存储过程返回结果" + resultEnum.getCode());
+
                 //生成建表语句
                 List<String> pgdbTable2 = new ArrayList<>();
+                //远程调用systemCenter的方法，获取id为1的数据源的信息，也就是dw   dmp_system_db库----tb_datasource_config表
                 ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+                //如果获取成功
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    //获取数据源
                     DataSourceDTO dataSource = fiDataDataSource.data;
+                    //根据数据源连接类型，获取建表实现类   pg/sqlServer
                     IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+                    //根据维度列表字段，调用方法，返回两条建表语句
                     pgdbTable2 = dbCommand.buildDwStgAndOdsTable(modelPublishTableDTO);
+                    //新建map集合，预装载键值对
                     HashMap<String, Object> map = new HashMap<>();
+                    //放入表名称
                     map.put("table_name", modelPublishTableDTO.tableName);
+                    //从dmp_task_db模块 tb_task_dw_dim表删除待发布的表信息
                     taskDwDimMapper.deleteByMap(map);
+
+                    //新建tb_task_dw_dim表的po
                     TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
                     //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
-                    taskDwDimPO.sqlContent = pgdbTable2.get(1);//创建表的sql
+                    //获取创建表的sql，也就是pgdbTable2集合中的第二条sql CREATE TABLE....
+                    taskDwDimPO.sqlContent = pgdbTable2.get(1);
+                    //表名
                     taskDwDimPO.tableName = modelPublishTableDTO.tableName;
+                    //要调用的存储过程名称
                     taskDwDimPO.storedProcedureName = "update" + modelPublishTableDTO.tableName + "()";
+                    //插入到tb_task_dw_dim表中
                     taskDwDimMapper.insert(taskDwDimPO);
                     log.info("建模创表语句:" + JSON.toJSONString(pgdbTable2));
                 } else {
                     log.error("userclient无法查询到dw库的连接信息");
                     throw new FkException(ResultEnum.ERROR);
                 }
+                //执行临时表建表sql，也就是pgdbTable2集合中的第一条sql  DROP TABLE IF EXISTS....  数据建模---dw库
                 BusinessResult businessResult = iPostgreBuild.postgreBuildTable(pgdbTable2.get(0), BusinessTypeEnum.DATAMODEL);
                 if (!businessResult.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
+
                 if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                    //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
                     BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
                     if (!businessResult1.success) {
                         throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                     }
                 }
+
                 //生成函数,并执行
             /*String storedProcedure3 = createStoredProcedure3(modelPublishTableDTO);
             log.info("dw库生成函数:"+storedProcedure3);
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);*/
                 log.info("开始执行nifi创建数据同步");
+                //新建dmp_system_db库----tb_etl_Incremental表对象
                 TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
+                //数据同步流程的表名
                 ETLIncremental.objectName = modelPublishTableDTO.tableName;
+                //同步流程是否启动,1启动  2停止
                 ETLIncremental.enableFlag = "1";
+                //数据同步批次号
                 ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
+
                 Map<String, Object> conditionHashMap = new HashMap<>();
                 conditionHashMap.put("object_name", ETLIncremental.objectName);
+                //通过表名获取数据，校验是否已有同步记录
                 List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
                 if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
                     log.info("此表已有同步记录,无需重复添加");
                 } else {
+                    //没有同步记录，则插入一条
                     incrementalMapper.insert(ETLIncremental);
                 }
+
                 BuildNifiFlowDTO bfd = new BuildNifiFlowDTO();
+                //用户id
                 bfd.userId = inpData.userId;
+                //应用id
                 bfd.appId = inpData.businessAreaId;
+                //ODSTODW
                 bfd.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
-                //来源为数据接入
+                //来源为数据建模
                 bfd.dataClassifyEnum = DataClassifyEnum.DATAMODELING;
+                //表id
                 bfd.id = modelPublishTableDTO.tableId;
+                //表名
                 bfd.tableName = modelPublishTableDTO.tableName;
+                //selectsql(只有toDoris,todw用得到)
                 bfd.selectSql = modelPublishTableDTO.sqlScript;
                 //同步方式
                 bfd.synMode = modelPublishTableDTO.synMode;
+                //查询范围开始时间
                 bfd.queryStartTime = modelPublishTableDTO.queryStartTime;
+                //查询范围结束时间
                 bfd.queryEndTime = modelPublishTableDTO.queryEndTime;
+                //业务域名称
                 bfd.appName = inpData.businessAreaName;
+                //是否同步
                 bfd.openTransmission = inpData.openTransmission;
+                //事实表-维度键的更新sql集合
                 bfd.updateSql = modelPublishTableDTO.factUpdateSql;
+                //数据来源id
                 bfd.dataSourceDbId = modelPublishTableDTO.dataSourceDbId;
+                //目标数据源id
                 bfd.targetDbId = modelPublishTableDTO.targetDbId;
+                //临时表名称
                 bfd.prefixTempName = modelPublishTableDTO.prefixTempName;
+                //自定义脚本执行--前
                 bfd.customScriptBefore = modelPublishTableDTO.customScript;
+                //自定义脚本执行--后
                 bfd.customScriptAfter = modelPublishTableDTO.customScriptAfter;
-                // 设置预览SQL执行语句
+                //设置预览SQL执行语句  覆盖脚本执行SQL语句
                 bfd.syncStgToOdsSql = modelPublishTableDTO.coverScript;
+                //删除temp表的sql
+                bfd.deleteScript = modelPublishTableDTO.deleteTempScript;
+                //临时表(建模temp_tablename)建表语句
                 bfd.buildTableSql = pgdbTable2.get(0);
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;
                 } else {
-                    //类型为物理表
+                    //类型为事实表
                     bfd.type = OlapTableEnum.FACT;
                 }
                 bfd.maxRowsPerFlowFile = modelPublishTableDTO.maxRowsPerFlowFile;
                 bfd.fetchSize = modelPublishTableDTO.fetchSize;
                 bfd.traceId = inpData.traceId;
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
+                //通过应用id(app_id)，表id(table_access_id),表类别(物理表3,事实表2,维度表1,指标表0)type从dmp_system_db库 tb_table_nifi_setting表获取数据
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("app_id", bfd.appId).eq("table_access_id", bfd.id).eq("type", bfd.type.getValue()).one();
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
                 if (one != null) {
                     tableNifiSettingPO = one;
                 }
+                //应用id
                 tableNifiSettingPO.appId = Math.toIntExact(bfd.appId);
+                //表名称
                 tableNifiSettingPO.tableName = bfd.tableName;
+                //表id
                 tableNifiSettingPO.tableAccessId = Math.toIntExact(bfd.id);
+                //查询sql
                 tableNifiSettingPO.selectSql = bfd.selectSql;
+                //表类别(物理表3,事实表2,维度表1,指标表0)
                 tableNifiSettingPO.type = bfd.type.getValue();
+                //同步方式
                 tableNifiSettingPO.syncMode = 1;
+                //执行保存或更新
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
-                if (bfd.openTransmission) {
-                    bfd.popout = true;
-                }
+                //弹框
+                bfd.popout = true;
+                //调用方法，创建同步数据nifi流程
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");
+
+                //执行完成后，修改维度表或事实表的发布状态
                 //0维度表
                 if (modelPublishTableDTO.createType == 0) {
                     modelPublishStatusDTO.status = 1;
@@ -270,6 +335,7 @@ public class BuildDataModelDorisTableListener
         } catch (Exception e) {
             log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
             result = ResultEnum.ERROR;
+            //执行失败后，修改维度表或事实表的发布状态
             if (tableType == 0) {
                 modelPublishStatusDTO.status = 2;
                 modelPublishStatusDTO.id = Math.toIntExact(id);

@@ -19,9 +19,9 @@ public class CustomScriptQueryDTO {
     public Integer tableId;
 
     /**
-     * 执行类型:1stg 2 fact和事实表
+     * 执行类型:1stg 2 ods
      */
-    @ApiModelProperty(value = "执行类型:1stg 2 fact和事实表")
+    @ApiModelProperty(value = "执行类型:1stg 2 ods")
     public Integer execType;
 
 }

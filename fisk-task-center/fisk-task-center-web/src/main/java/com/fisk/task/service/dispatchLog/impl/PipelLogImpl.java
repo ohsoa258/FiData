@@ -66,7 +66,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                 dispatchEmail.nifiCustomWorkflowId = Integer.parseInt(pipelId);
                 dispatchEmail.msg = pipelLog.msg;
                 dispatchEmail.result = pipelLog.msg.contains("运行成功") ? "【运行成功】" : "【运行失败】";
-                dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
+                //dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
+                dispatchEmail.pipelTraceId = pipelTraceId;
                 //    /**
                 //     * 运行时长
                 //     */
@@ -208,11 +209,15 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                 }
             }
         }
-        // 处理超过50分钟的失败任务
-        handleIsFailStatus(pipelMergeLogs);
+        // 处理超过50分钟的失败任务-把和当前时间比超过50分钟并且没有结束时间的任务指定为失败是不合理的，先注释；
+       // handleIsFailStatus(pipelMergeLogs);
         return pipelMergeLogs;
     }
 
+    /**
+     * 把和当前时间比并且结束时间是空的日志直接改为已失败；
+     * @param pipelMergeLogs
+     */
     private void handleIsFailStatus(List<PipelMergeLog> pipelMergeLogs){
         for (PipelMergeLog item : pipelMergeLogs){
             Date endTime = item.getEndTime();

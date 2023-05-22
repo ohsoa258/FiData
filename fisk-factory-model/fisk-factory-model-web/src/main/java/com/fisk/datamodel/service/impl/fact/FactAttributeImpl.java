@@ -167,6 +167,20 @@ public class FactAttributeImpl
         factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         factPo.dimensionKeyScript = dto.dimensionKeyScript;
         factPo.coverScript = dto.coverScript;
+
+        //2023-04-26李世纪新增，拼接删除temp表的脚本并存入数据库
+        //获取临时表前缀
+        String prefixTempName = factPo.prefixTempName;
+        //获取表名称
+        String dimensionTabName = factPo.factTabName;
+        //拼接删除临时表的脚本
+        StringBuilder delSql = new StringBuilder("TRUNCATE TABLE ");
+        delSql.append(prefixTempName)
+                .append("_")
+                .append(dimensionTabName)
+                .append(";");
+        factPo.deleteTempScript = String.valueOf(delSql);
+
         if (factMapper.updateById(factPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }

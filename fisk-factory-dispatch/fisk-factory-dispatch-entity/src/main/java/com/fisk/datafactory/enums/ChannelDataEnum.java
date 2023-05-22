@@ -72,9 +72,13 @@ public enum ChannelDataEnum implements BaseEnum {
      */
     SFTP_FILE_COPY_TASK(14,"SFTP文件复制"),
     /**
-     * powerbi数据集刷新任务
+     * POWERBI数据集刷新任务(PBI DataSet 刷新)
      */
-    POWERBI_DATA_SET_REFRESH_TASK(15,"POWERBI数据集刷新任务")
+    POWERBI_DATA_SET_REFRESH_TASK(15,"PBI DataSet 刷新"),
+    /**
+     * 主数据模型表任务
+     */
+    MDM_TABLE_TASK(16,"主数据表任务")
 
     ;
 
@@ -141,6 +145,8 @@ public enum ChannelDataEnum implements BaseEnum {
                 return OlapTableEnum.GOVERNANCE;
             case 13:
                 return OlapTableEnum.CUSTOMIZESCRIPT;
+            case 18:
+                return OlapTableEnum.MDM_DATA_ACCESS;
             default:
                 return null;
         }
@@ -166,6 +172,7 @@ public enum ChannelDataEnum implements BaseEnum {
         list.add(ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName());
         list.add(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName());
         list.add(ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName());
+        list.add(ChannelDataEnum.MDM_TABLE_TASK.getName());
         return list;
     }
 }

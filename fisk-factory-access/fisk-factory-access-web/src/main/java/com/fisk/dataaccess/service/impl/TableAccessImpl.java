@@ -1143,7 +1143,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 ftpConfig.linuxPath = null;
             }
         }
-        ftpConfig.whetherSftpl = DataSourceTypeEnum.SFTP.getName().equals(modelDataSource.driveType);;
+        ftpConfig.whetherSftpl = DataSourceTypeEnum.SFTP.getName().equals(modelDataSource.driveType);
+
         if (DataSourceTypeEnum.FTP.getName().equals(modelDataSource.driveType)) {
             ftpConfig.password = modelDataSource.connectPwd;
         }
@@ -1505,7 +1506,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
                 tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
                         .poListToDtoList(tableFieldsList.stream()
-                        .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                                .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
                 }
@@ -1523,10 +1524,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         // 获取所有的ods数据源
         List<ExternalDataSourceDTO> fiDataDataSource = appRegistrationImpl.getFiDataDataSource();
-        if (CollectionUtils.isEmpty(fiDataDataSource)){
+        if (CollectionUtils.isEmpty(fiDataDataSource)) {
             return root;
         }
-        for (ExternalDataSourceDTO item : fiDataDataSource){
+        for (ExternalDataSourceDTO item : fiDataDataSource) {
             AppAllRegistrationDataDTO dto = new AppAllRegistrationDataDTO();
             dto.setId(item.getId());
             dto.setName(item.getName());
@@ -1538,7 +1539,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         QueryWrapper<AppRegistrationPO> appQw = new QueryWrapper<>();
         appQw.eq("del_flag", 1);
         List<AppRegistrationPO> appPoList = registrationMapper.selectList(appQw);
-        if (CollectionUtils.isEmpty(appPoList)){
+        if (CollectionUtils.isEmpty(appPoList)) {
             return root;
         }
         appList = appRegistrationDataDTOList(appPoList);
@@ -1548,9 +1549,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 只需要发布状态为3: 正在发布 -> 1:发布成功
         wrapper.lambda().eq(TableAccessPO::getPublish, 3).or().eq(TableAccessPO::getPublish, 1);
         List<TableAccessPO> tableAccessList = accessMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(tableAccessList)){
+        if (CollectionUtils.isEmpty(tableAccessList)) {
             // 存在多个应用，但每个应用下不存在表，则将应用赋值到每个root下
-            for (AppAllRegistrationDataDTO parent : root){
+            for (AppAllRegistrationDataDTO parent : root) {
                 parent.setAppList(appList.stream().filter(e -> e.getTargetDbId() == parent.getId()).collect(Collectors.toList()));
             }
             return root;
@@ -1585,24 +1586,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Collections.reverse(appList);
 
         // 为当前ods划分应用
-        for (AppAllRegistrationDataDTO parent : root){
+        for (AppAllRegistrationDataDTO parent : root) {
             parent.setAppList(appList.stream().filter(e -> e.getTargetDbId() == parent.getId()).collect(Collectors.toList()));
         }
         return root;
     }
 
-    private List<AppRegistrationDataDTO> appRegistrationDataDTOList(List<AppRegistrationPO> poList){
-        if (CollectionUtils.isEmpty(poList)){
+    private List<AppRegistrationDataDTO> appRegistrationDataDTOList(List<AppRegistrationPO> poList) {
+        if (CollectionUtils.isEmpty(poList)) {
             return null;
         }
         List<AppRegistrationDataDTO> parent = new ArrayList<>();
-        for (AppRegistrationPO po : poList){
+        for (AppRegistrationPO po : poList) {
             AppRegistrationDataDTO dto = new AppRegistrationDataDTO();
             dto.setId(po.getId());
             dto.setAppName(po.getAppName());
             dto.setAppAbbreviation(po.getAppAbbreviation());
             dto.setTargetDbId(po.getTargetDbId());
-            if (po.getWhetherSchema() != null){
+            if (po.getWhetherSchema() != null) {
                 dto.setWhetherSchema(po.getWhetherSchema());
             }
             parent.add(dto);
@@ -1634,6 +1635,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean save = this.save(model);
         if (!save) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        //2023-04-26李世纪修改，数据接入添加物理表时，设置默认的stg保存时间
+        TableKeepNumberDTO tableKeepNumberDTO = new TableKeepNumberDTO();
+        //默认五天
+        tableKeepNumberDTO.setKeepNumber("5 day");
+        //获取物理表id
+        tableKeepNumberDTO.setId(model.getId());
+        //调用设置stg保存时间的方法
+        ResultEnum resultEnum = setKeepNumber(tableKeepNumberDTO);
+        if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+            log.error("添加物理表时，设置stg默认保存时间失败...");
+            throw new FkException(ResultEnum.SET_KEEP_NUMBER_ERROR, "修改物理表时，设置stg默认保存时间失败...");
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, model.id);
@@ -1696,6 +1710,66 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             po.setTableName("");
         }*/
         //po.setPublish(0);
+
+        //2023-04-26李世纪修改，数据接入编辑物理表时，设置默认的stg保存时间
+        //如果前端传递的参数没有app id(应用id),则认为并不是要设置默认stg保存时间的操作，就不进行stg默认保存时间的操作
+        Long appId = dto.appId;
+
+        if (appId != null) {
+            po.setKeepNumber("5 day");
+            // 查询app应用信息
+            AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(po.appId);
+            //获取不到应用信息，则抛出异常
+            if (Objects.isNull(appRegistrationPO)) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS, "设置stg保存时间失败，应用不存在");
+            }
+            //获取应用下的数据源信息
+            DataSourceDTO dataSourceDTO = tableFieldsImpl.getTargetDbInfo(appRegistrationPO.getTargetDbId());
+            // 处理不同架构下的表名称
+            String targetTableName = "";
+            /*appRegistrationPO.whetherSchema
+             * 是否将应用简称作为schema使用
+             * 否：0  false
+             * 是：1  true
+             */
+            if (appRegistrationPO.whetherSchema) {
+                targetTableName = po.tableName;
+            } else {
+                targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + po.getTableName();
+            }
+            List<String> stgAndTableName = tableFieldsImpl.getStgAndTableName(targetTableName, appRegistrationPO);
+            //临时表
+            String stgTableName = "";
+            //目标表
+            String odsTableName = "";
+            for (int i = 0; i < 2; i++) {
+                if (i == 0) {
+                    stgTableName = stgAndTableName.get(i);
+                } else {
+                    odsTableName = stgAndTableName.get(i);
+                }
+            }
+
+            if (appRegistrationPO.whetherSchema) {
+                stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+                odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
+            } else {
+                stgTableName = "[dbo]." + "[" + stgTableName + "]";
+                odsTableName = "[dbo]." + "[" + odsTableName + "]";
+            }
+
+            StringBuilder delSql = new StringBuilder("DELETE FROM ");
+            delSql.append(stgTableName)
+                    .append(" WHERE fi_createtime<DATEADD(")
+                    .append("DAY")
+                    .append(",")
+                    .append("-5")
+                    .append(",getdate())");
+
+            //设置删除stg表时的默认保存时间 5day 的del_stg_sql
+            po.setDeleteStgScript(String.valueOf(delSql));
+        }
+
         return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -2165,21 +2239,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId) {
 
+        //获取信息................
+        //新建对象
         BuildPhysicalTableDTO dto = new BuildPhysicalTableDTO();
+        //获取数据源
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("id", appId).one();
+        //获取应用信息
         AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", dataSourcePo.appId).one();
+        //获取物理表信息
         TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
+        //获取物理表字段
         List<TableFieldsPO> listPo = tableFieldsImpl.query().eq("table_access_id", tableId).list();
         if (tableAccessPo == null || registrationPo == null || dataSourcePo == null || CollectionUtils.isEmpty(listPo)) {
             return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
         }
+        //获取物理表同步方式
         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", tableId).one();
+
+        //装载参数................
+        //装载同步方式
         dto.syncMode = tableSyncmodePo.syncMode;
+        //装载数据源驱动
         dto.driveType = DbTypeEnum.getValue(dataSourcePo.driveType);
+        //装载物理表字段集合
         dto.tableFieldsDTOS = TableFieldsMap.INSTANCES.listPoToDto(listPo);
+        //装载应用简称
         dto.appAbbreviation = registrationPo.appAbbreviation;
+        //装载物理表名
         dto.tableName = tableAccessPo.tableName;
+        //装载查询sql
         dto.selectSql = tableAccessPo.sqlScript;
+        //装载业务时间覆盖需要的条件sql  2023-04-28 李世纪：该属性目前不需要了，业务时间的覆盖语句已经包含条件sql
         dto.whereScript = tableAccessPo.whereScript;
         // 非实时物理表才有sql
         if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
@@ -2364,11 +2454,76 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public ResultEnum setKeepNumber(TableKeepNumberDTO dto) {
+        // 查询物理表数据
         TableAccessPO model = baseMapper.selectById(dto.id);
+        //获取不到，抛出异常
         if (model == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "设置stg保存时间失败，物理表不存在");
         }
-        return baseMapper.setKeepNumber(dto.id, dto.keepNumber) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        // 查询app应用信息
+        AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(model.appId);
+        //获取不到应用信息，则抛出异常
+        if (Objects.isNull(appRegistrationPO)) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS, "设置stg保存时间失败，应用不存在");
+        }
+        //获取应用下的数据源信息
+        DataSourceDTO dataSourceDTO = tableFieldsImpl.getTargetDbInfo(appRegistrationPO.getTargetDbId());
+
+        // 处理不同架构下的表名称
+        String targetTableName = "";
+
+        /*appRegistrationPO.whetherSchema
+         * 是否将应用简称作为schema使用
+         * 否：0  false
+         * 是：1  true
+         */
+        if (appRegistrationPO.whetherSchema) {
+            targetTableName = model.tableName;
+        } else {
+            targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + model.getTableName();
+        }
+
+        List<String> stgAndTableName = tableFieldsImpl.getStgAndTableName(targetTableName, appRegistrationPO);
+
+        //临时表
+        String stgTableName = "";
+        //目标表
+        String odsTableName = "";
+        for (int i = 0; i < 2; i++) {
+            if (i == 0) {
+                stgTableName = stgAndTableName.get(i);
+            } else {
+                odsTableName = stgAndTableName.get(i);
+            }
+        }
+
+        if (appRegistrationPO.whetherSchema) {
+            stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+            odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
+        } else {
+            stgTableName = "[dbo]." + "[" + stgTableName + "]";
+            odsTableName = "[dbo]." + "[" + odsTableName + "]";
+        }
+
+        //获取keepNumber
+        String keepNumber = dto.keepNumber;
+        //日期范围
+        String[] kNumber = keepNumber.split(" ");
+        String dateRange = kNumber[0];
+        //日期单位   去除头尾空格,变为大写
+        String dateUnit = kNumber[1].toUpperCase();
+
+        StringBuilder delSql = new StringBuilder("DELETE FROM ");
+        //为sql拼接stg表名和where条件
+        delSql.append(stgTableName)
+                .append(" WHERE fi_createtime<DATEADD(")
+                .append(dateUnit)
+                .append(",")
+                .append("-")
+                .append(dateRange)
+                .append(",getdate())");
+
+        return baseMapper.setKeepNumber(dto.id, keepNumber, String.valueOf(delSql)) > 0 ? ResultEnum.SUCCESS : ResultEnum.SET_KEEP_NUMBER_ERROR;
     }
 
     @Override

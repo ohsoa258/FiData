@@ -359,6 +359,14 @@ public interface INiFiHelper {
     ResultEnum deleteNifiFlow(DataModelVO dataModelVO);
 
     /**
+     * 删除mdm nifi流程
+     *
+     * @param dataModelVO dataModelVO
+     * @return ResultEnum
+     */
+    ResultEnum deleteMdmNifiFlow(DataModelVO dataModelVO);
+
+    /**
      * 创建input port组件
      *
      * @param buildPortDTO buildPortDTO

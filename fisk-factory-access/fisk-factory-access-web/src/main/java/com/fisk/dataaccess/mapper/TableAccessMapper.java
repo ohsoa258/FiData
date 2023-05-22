@@ -180,8 +180,8 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      * @param keepNumber
      * @return
      */
-    @Update("update tb_table_access set keep_number = #{keepNumber} where id = #{id} ")
-    Integer setKeepNumber(@Param("id") long id, @Param("keepNumber") String keepNumber);
+    @Update("update tb_table_access set keep_number = #{keepNumber},delete_stg_script = #{delSql}  where id = #{id} ")
+    Integer setKeepNumber(@Param("id") long id, @Param("keepNumber") String keepNumber,@Param("delSql") String delSql);
 
     /**
      * 根据appId获取物理表列表

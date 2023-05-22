@@ -1,8 +1,6 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.*;
@@ -10,7 +8,6 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
@@ -76,8 +73,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -547,6 +542,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
+    /**
+     * 接入,建模 --- 创建NIFI流程
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
     @Override
     public ResultEnum msg(String data, Acknowledgment ack) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -563,6 +565,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 modelPublishStatusDTO.tableId = dto.id;
                 //获取数据接入配置项
                 DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
+                log.info("数据接入配置项：{}",JSON.toJSONString(configDTO));
                 if (configDTO == null) {
                     log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
                     return ResultEnum.NOTFOUND;
@@ -616,7 +619,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     sourceId = dbPool.get(0).getId();
                 }
 
-
                 //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响  dto.id, dto.appId
                 DataModelVO dataModelVO = new DataModelVO();
                 dataModelVO.dataClassifyEnum = dto.dataClassifyEnum;
@@ -656,8 +658,21 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                 //5. 创建组件
 
+                /**
+                 * 创建组件！！！！！
+                 */
                 List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
+
+                /**
+                 * 启动组件
+                 */
                 enabledProcessor(taskGroupEntity.getId(), processors);
+
+                /**
+                 * 如果数仓或数接页面勾选了立即同步（按照配置同步一次数据），即dto.openTransmission是否为true，则会同步,
+                 * 就会调用pc.taskPublish(kafkaRkeceiveDTO)在nifi中进行数据的同步
+                 *
+                 */
                 //7. 如果是接入,同步一次,然后把调度组件停掉
                 if (dto.groupStructureId == null && dto.openTransmission) {
                     String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
@@ -1232,6 +1247,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
+    /**
+     * 创建nifi单个同步流程的组件
+     *
+     * @param appGroupId
+     * @param config
+     * @param groupId
+     * @param sourceDbPoolId
+     * @param targetDbPoolId
+     * @param cfgDbPoolId
+     * @param appNifiSettingPO
+     * @param dto
+     * @return
+     */
     private List<ProcessorEntity> buildProcessorVersion2(String appGroupId, DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId, AppNifiSettingPO appNifiSettingPO, BuildNifiFlowDTO dto) {
         List<ProcessorEntity> res = new ArrayList<>();
         SynchronousTypeEnum synchronousTypeEnum = dto.synchronousTypeEnum;
@@ -1291,6 +1319,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR);
         }
 
+        //连接器(中间那条线)
         componentConnector(groupId, consumeKafkaProcessor.getId(), evaluateJsonPathProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
@@ -1326,7 +1355,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         ProcessorEntity logProcessor = putLogProcessor(groupId, cfgDbPoolId, dto, config);
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
         //连接器
-        // 这里要换,上面是evaluateJson,下面是logProcessor.接下来的组件赋予的变量值会覆盖上面的
+        //这里要换,上面是evaluateJson,下面是logProcessor.接下来的组件赋予的变量值会覆盖上面的
         List<ProcessorEntity> processorEntities1 = buildDeltaTimeProcessorEntity(dto.deltaTimes, groupId, sourceDbPoolId, res, tableNifiSettingPO);
         if (CollectionUtils.isEmpty(processorEntities1)) {
             componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
@@ -1337,6 +1366,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
 
         //创建执行删除组件
+        /**
+         * Exec Target Delete
+         */
         ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
         tableNifiSettingPO.executeTargetDeleteProcessorId = delSqlRes.getId();
         //------------------------------------------
@@ -1349,11 +1381,23 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         //------------------------------------------
         log.info("是否调用数据安全接口，{}", enable);
+
+        /**
+         * 如果是excel表格（sftp/ftp），他们的nifi流程组件与普通表的不同
+         */
         if (dto.excelFlow && enable) {
             //ftp文件拷贝
+
+            /**
+             * replaceTextForFtpProcess组件，用于替换字符串为指定的格式
+             */
             ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpProcess(config, groupId, dto);
             tableNifiSettingPO.replaceTextForFtpProcessorId = replaceTextForFtpProcess.getId();
             componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+            /**
+             * invokeHTTPForFtpProcessor组件，用于向指定的接口发送请求
+             */
             ProcessorEntity invokeHTTPForFtpProcessor = invokeHTTPForFtpProcessor(groupId);
             tableNifiSettingPO.invokeHttpForFtpProcessorId = invokeHTTPForFtpProcessor.getId();
             componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -1367,14 +1411,29 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentsConnector(groupId, logProcessor.getId(), supervisionId, autoEndBranchTypeEnums);
         //执行查询组件
         ProcessorEntity executeSQLRecord = new ProcessorEntity();
+
+//        //提取关联外键的sql
+//        ProcessorEntity processorEntity3 = new ProcessorEntity();
+
         //pg2doris不需要调用存储过程
         ProcessorEntity processorEntity1 = new ProcessorEntity();
         List<ProcessorEntity> excelProcessorEntity = new ArrayList<>();
+        /**
+         * 如果是普通表（数接的物理表、数仓的事实表和维度表）的nifi流程，则创建这个执行查询的组件：ExecuteSQLRecord
+         */
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
+            /**
+             * 如果是sftp/ftp的excel表格
+             */
             if (dto.excelFlow) {
                 //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+                /**
+                 * createExcelProcessorEntity2会返回一个集合，
+                 * 集合里面第一个是replaceTextForFtpProcess组件
+                 * 第二个是invokeHTTPForFtpProcessor组件
+                 */
                 excelProcessorEntity = createExcelProcessorEntity2(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
 
                 res.addAll(excelProcessorEntity);
@@ -1404,7 +1463,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ProcessorEntity putDatabaseRecord = null;
             if (dto.excelFlow) {
 
+//                processorEntity3 = executeSqlRecordForKey(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
+
                 tableNifiSettingPO.saveTargetDbProcessorId = null;
+                /**
+                 * CallDbProcedure
+                 */
                 ProcessorEntity processorEntity2 = CallDbProcedure(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
                 componentConnector(groupId, processorEntity1.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.RESPONSE);
                 processorEntity1 = processorEntity2;
@@ -1412,11 +1476,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 tableNifiSettingPO.updateFieldForCodeProcessorId = null;
                 tableNifiSettingPO.saveTargetDbProcessorId = null;
             } else {
+                /**
+                 * UpdateRecord 1 字段映射转换
+                 */
                 //字段映射转换
                 ProcessorEntity updateField = createUpdateField(appGroupId, config, groupId, dto, tableNifiSettingPO);
                 tableNifiSettingPO.updateFieldProcessorId = updateField.getId();
                 componentConnector(groupId, processorEntity1.getId(), updateField.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 //componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
+                /**
+                 * UpdateRecord 2 加字段  大小批次号
+                 */
                 //加批量字段值
                 ProcessorEntity updateField1 = createUpdateField1(appGroupId, config, groupId, dto, tableNifiSettingPO);
                 componentConnector(groupId, updateField.getId(), updateField1.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -1458,7 +1528,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 //res.add(invokeHTTP);
                 //-----------------------------------
             }
-
 
             tableNifiSettingPO.odsToStgProcessorId = processorEntity1.getId();
             //连接器
@@ -1872,9 +1941,15 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     public List<ProcessorEntity> createExcelProcessorEntity2(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
 
         List<ProcessorEntity> processorEntities = new ArrayList<>();
+        /**
+         * 流程中的第二个replaceTextForFtpProcess组件
+         */
         ProcessorEntity replaceTextForFtpProcess = replaceTextForFtpDataUploadProcess(config, groupId, dto);
         tableNifiSettingPO.getFtpProcessorId = replaceTextForFtpProcess.getId();
         //componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        /**
+         * 流程中的第二个invokeHTTPProcessor组件
+         */
         ProcessorEntity invokeHTTPForFtpProcessor = invokeHTTPForFtpDataUploadProcessor(groupId);
         tableNifiSettingPO.convertExcelToCsvProcessorId = invokeHTTPForFtpProcessor.getId();
         componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -2270,7 +2345,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         //至少有一个属性
         //nifi的三元运算,如果pipelTraceId是空的,取pipelTaskTraceId当作fidata_batch_code的值
-        buildParameter.put("/fidata_batch_code", "${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}");
+//        buildParameter.put("/fidata_batch_code", "${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}");
+
+        //2023-05-04 李世纪修改  大批次号直接拿${pipelTaskTraceId}，存入临时表
+        buildParameter.put("/fidata_batch_code", "${pipelTaskTraceId}");
         buildParameter.put("/fidata_flow_batch_code", "${fragment.index}");
         if (StringUtils.isNotEmpty(dto.generateVersionSql)) {
             buildParameter.put("/fi_version", "${fi_version}");
@@ -2622,16 +2700,70 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
         //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
+
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
+        log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
-        callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
+
+        //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
+        log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
+        log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
+        //获取外键sql
+        String updateSql = buildNifiFlow.updateSql;
+        //声明自定义加载前sql
+        String customScriptBefore = buildNifiFlow.customScriptBefore;
+        //声明presql
+        String sqlPreQuery = null;
+        //通过判断 updateSql的值是否为空，决定最终的 sqlPreQuery
+        if (StringUtils.isNotBlank(updateSql) && StringUtils.isNotBlank(customScriptBefore)) {
+            sqlPreQuery = updateSql + customScriptBefore;
+        } else if (StringUtils.isNotBlank(updateSql) && StringUtils.isBlank(customScriptBefore)) {
+            sqlPreQuery = updateSql;
+        } else if (StringUtils.isNotBlank(customScriptBefore) && StringUtils.isBlank(updateSql)) {
+            sqlPreQuery = customScriptBefore;
+        }
+
+        callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
     }
+
+//    /**
+//     * 该组件创建在CallDbProcedure之前，专门用于数仓建模的关联维度外键的sql执行
+//     * 2023-05-11李世纪修改
+//     *
+//     * @param config
+//     * @param groupId
+//     * @param targetDbPoolId
+//     * @param synchronousTypeEnum
+//     * @param buildNifiFlow
+//     * @return
+//     */
+//    private ProcessorEntity executeSqlRecordForKey(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
+//        BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
+//        callDbProcedureProcessorDTO.name = "executeSqlRecord";
+//        callDbProcedureProcessorDTO.details = "insert_phase";
+//        callDbProcedureProcessorDTO.groupId = groupId;
+//        String executsql = "";
+//        //config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
+//        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+//        log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
+//        //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
+//        callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
+//        //数仓建模，关联外键的sql
+//        callDbProcedureProcessorDTO.executsql = buildNifiFlow.updateSql;
+//        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+//        callDbProcedureProcessorDTO.haveNextOne = true;
+//
+//        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
+//        verifyProcessorResult(processorEntityBusinessResult);
+//        return processorEntityBusinessResult.data;
+//    }
 
 
     private ProcessorEntity queryNumbersProcessor(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
@@ -2794,10 +2926,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Exec Target Delete";
         querySqlDto.details = "query_phase";
-        querySqlDto.postSql = buildNifiFlow.whereScript;
+        //2023-05-05 李世纪注释掉，目前该功能由sql预览模块施行
+//        querySqlDto.postSql = buildNifiFlow.whereScript;
         querySqlDto.preSql = buildNifiFlow.buildTableSql;
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow);
+
+        //2023-04-28:李世纪注释，
+//        querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow);
+        //2023-04-28李世纪修改：目前数据接入页面配置的stg过期时间需要起作用，因此这里改为从传递过来的参数获取执行删除的sql
+        //2023-05-18李世纪修正：如果buildNifiFlow.deleteScript为空，仍然调用存储过程，防止nifi流程报错
+        querySqlDto.querySql = StringUtils.isEmpty(buildNifiFlow.deleteScript) ?
+                componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow)
+                : buildNifiFlow.deleteScript;
+
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         }
@@ -2890,6 +3031,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        //替换为map
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
@@ -2905,7 +3047,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ProcessorEntity replaceTextForFtpDataUploadProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> map = new HashMap<>();
+        //放入topic
         map.put("topic", "${kafka.topic}");
+        //放入大批次号
+        map.put("fidata_batch_code", "${fidata_batch_code}");
 
 
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
@@ -2915,6 +3060,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        //设置替换值为map，也就是map里面装载的连个键值对
         buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;

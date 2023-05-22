@@ -25,6 +25,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
+import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -45,7 +46,6 @@ import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.codepreview.CodePreviewDTO;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -1187,23 +1187,64 @@ public class BusinessAreaImpl
 
         StringBuilder str = new StringBuilder();
 
+        String tName = "[temp_" + dto.get(0).sourceTable + "].";
+
         for (TableSourceRelationsDTO item : dto) {
-            str.append("update ");
-            str.append(item.sourceTable);
-            str.append(" set ");
-            str.append(item.sourceTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
+            str.append("update ")
+                    .append("[temp_");
+            str.append(item.sourceTable)
+                    .append("]");
+            str.append(" set ")
+                    .append("[temp_");
+            str.append(item.sourceTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append("]");
             str.append(" = ");
-            str.append(item.targetTable).append(".").append(StringBuildUtils.dimensionKeyName(item.targetTable));
-            str.append(" from ");
-            str.append(item.sourceTable);
+            str.append("[")
+                    .append(item.targetTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append("]");
+            str.append(" from ")
+                    .append("[temp_");
+            str.append(item.sourceTable)
+                    .append("]");
             if (!StringUtils.isEmpty(item.joinType)) {
                 str.append(" ").append(item.joinType);
-                str.append(" ").append(item.targetTable);
+                str.append(" ")
+                        .append("[")
+                        .append(item.targetTable)
+                        .append("]");
             }
-            str.append(" on ");
-            str.append(item.sourceTable).append(".").append(item.sourceColumn);
+            str.append(" on ")
+                    .append("[temp_");
+
+            str.append(item.sourceTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(item.sourceColumn)
+                    .append("]");
             str.append(" = ");
-            str.append(item.targetTable).append(".").append(item.targetColumn);
+            str.append("[")
+                    .append(item.targetTable)
+                    .append("]")
+                    .append(".")
+                    .append("[")
+                    .append(item.targetColumn)
+                    .append("]")
+                    .append(" WHERE ")
+                    .append(tName)
+                    .append("fidata_batch_code=")
+                    .append("'${fidata_batch_code}' AND ")
+                    .append(tName)
+                    .append("fidata_flow_batch_code=")
+                    .append("'${fragment.index}'");
             str.append(";");
         }
 
@@ -1240,7 +1281,6 @@ public class BusinessAreaImpl
      */
     @Override
     public Object overlayCodePreview(OverlayCodePreviewDTO dto) {
-
         //表名
         String tableName;
         //临时表名称前缀
@@ -1287,8 +1327,8 @@ public class BusinessAreaImpl
 
         data.modelPublishFieldDTOList = dto.modelPublishFieldDTOList;
 
-        //e.isPrimaryKey 改为 e.isBusinessKey,因页面传参改变  2023-04-24李世纪修改
-        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isBusinessKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
+        //e.isPrimaryKey 主键
+        List<String> collect = dto.modelPublishFieldDTOList.stream().filter(e -> e.isPrimaryKey == 1).map(e -> e.fieldEnName).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             data.businessKeyAppend = String.join(",", collect);
         }
@@ -1301,6 +1341,7 @@ public class BusinessAreaImpl
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
         dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
+        //固定连接类型：sqlServer
         dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
         dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
 
@@ -1364,11 +1405,14 @@ public class BusinessAreaImpl
         //获取同步方式
         int syncMode = configDTO.targetDsConfig.syncMode;
         //获取表名
-        String tableName = configDTO.processorConfig.targetTableName;
+        String tableName = "[" + configDTO.processorConfig.targetTableName + "]";
+
+        String tableName1 = configDTO.processorConfig.targetTableName;
+
         //获取临时表前缀
         String prefixTempName = buildNifiFlow.prefixTempName;
         //拼接临时表名称
-        String tempTableName = prefixTempName + "_" + tableName;
+        String tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
         //获取前端传递的表字段集合
         List<ModelPublishFieldDTO> fields = originalDTO.modelPublishFieldDTOList;
         //ModelPublishFieldDTO List ==> PublishFieldDTO List
@@ -1395,7 +1439,7 @@ public class BusinessAreaImpl
                     //业务时间覆盖
                     case 4:
                         //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList,previewTableBusinessDTO);
+                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
                     //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
                     case 5:
                         //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回

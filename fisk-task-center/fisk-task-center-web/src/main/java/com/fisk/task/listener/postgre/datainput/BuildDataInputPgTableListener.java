@@ -9,7 +9,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
-import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -30,7 +29,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author: DennyHui
@@ -59,22 +61,35 @@ public class BuildDataInputPgTableListener {
     public ResultEnum msg(String dataInfo, Acknowledgment acke) {
         log.info("执行pg build table");
         log.info("dataInfo:" + dataInfo);
+        //新建发布状态dto
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = PublishTypeEnum.SUCCESS.getValue();
+        //dataInfo  ->  buildPhysicalTableDTO
+        //将待发布的数据转化为buildPhysicalTableDTO
         BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(dataInfo, BuildPhysicalTableDTO.class);
+        //为发布状态dto装载物理表id
         modelPublishStatusDTO.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
+        //为发布状态dto装载应用id
         modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
+        //获取版本号和修改表结构的参数
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
+        //获取ods数据源的信息  dataSourceOdsId=2 ->  ods
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         DataSourceTypeEnum conType = null;
+        log.info("ods数据源信息{}",JSON.toJSONString(fiDataDataSource));
+
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            //获取成功
+            //获取系统数据源信息
             DataSourceDTO dataSource = fiDataDataSource.data;
+            //获取连接类型
             conType = dataSource.conType;
         } else {
+            //获取失败 报错
             log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         }
-        //分辨库的类别
+        //分辨库的类别，获取对应数据库的建表
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(conType);
         log.info("开始保存ods版本号,参数为{}", dto);
         // 保存ods版本号
@@ -84,18 +99,22 @@ public class BuildDataInputPgTableListener {
         String version = df.format(calendar.getTime());
         ResultEnum resultEnum = ResultEnum.SQL_ERROR;
         try {
+            //保存建模相关表结构数据(保存版本号)
             resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
             log.info("执行修改语句返回结果:" + resultEnum);
 
             log.info("保存版本号方法执行成功");
 
+            //获取建表语句
             List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
             log.info("建表语句:" + JSON.toJSONString(sqlList));
+            //执行第二条建表语句--创建stg表
             BusinessResult result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
             if (!result.success) {
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                //执行第一条建表语句--创建目标表
                 iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
                 log.info("【PGSTG】" + sqlList.get(0));
                 log.info("pg：建表完成");

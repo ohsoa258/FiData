@@ -2,6 +2,8 @@ package com.fisk.task.listener.postgre.datainput;
 
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
+import com.fisk.task.dto.mdmconfig.AccessMdmConfigDTO;
+import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
@@ -53,6 +55,20 @@ public interface IbuildTable {
      * @return String
      */
     String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId);
+
+    /**
+     * 查询mdm同步数据条数语句
+     *
+     * @return String
+     */
+    String queryMdmNumbersField(BuildMdmNifiFlowDTO dto, AccessMdmConfigDTO config, String groupId);
+
+    /**
+     * 删除stg同步数据语句
+     *
+     * @return String
+     */
+    String delMdmField(BuildMdmNifiFlowDTO dto, AccessMdmConfigDTO config, String groupId);
 
     /**
      * tableName 一般是简称_表名,或简称.表名,如果是.要从中间切开,简称.stg_表名.或者stg_简称_表名

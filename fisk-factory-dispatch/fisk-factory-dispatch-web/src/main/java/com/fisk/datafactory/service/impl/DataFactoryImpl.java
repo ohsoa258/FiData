@@ -373,7 +373,7 @@ public class DataFactoryImpl implements IDataFactory {
             if (!CollectionUtils.isEmpty(sftpFileCopyTaskDtoList)) {
                 inportList.add(sftpFileCopyTaskDtoList.get(0));
             }
-            // POWERBI数据集刷新任务
+            // POWERBI数据集刷新任务(PBI DataSet 刷新)
             List<NifiCustomWorkflowDetailDTO> powerBiDataSetRefreshTaskList = listAllTable.stream()
                     .filter(Objects::nonNull)
                     // 确保在同一个分析模型任务下

@@ -136,4 +136,10 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public String coverScript;
 
+    /**
+     * 当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句
+     * 默认：5 day
+     */
+    public String deleteStgScript;
+
 }

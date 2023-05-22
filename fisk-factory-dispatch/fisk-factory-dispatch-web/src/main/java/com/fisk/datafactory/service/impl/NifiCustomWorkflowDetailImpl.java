@@ -36,6 +36,7 @@ import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.service.ITaskSetting;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -75,6 +76,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     PublishTaskClient publishTaskClient;
     @Resource
     DataModelClient dataModelClient;
+    @Resource
+    MdmClient mdmClient;
     @Resource
     DataAccessClient dataAccessClient;
     @Resource
@@ -197,7 +200,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
         if (dto.flag) {
             // 前端有时会传入已经删除的组件,后端使用入库后的数据
-            List<NifiCustomWorkflowDetailPO> originalWorkflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).list();
+            List<NifiCustomWorkflowDetailPO> originalWorkflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).eq("del_flag", 1).list();
 
             // 重新组装参数
             List<NifiCustomWorkflowDetailPO> workflowDetailPoList = buildWorkflowDetailPoList(originalWorkflowDetailPoList);
@@ -304,6 +307,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                     break;
                 case SFTP_FILE_COPY_TASK:
                     e.componentsId = 14;
+                    break;
+                case MDM_TABLE_TASK:
+                    e.componentsId = 16;
+                    break;
                 default:
                     break;
             }
@@ -333,7 +340,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         // 管道名称
         workListDTO.pipelineName = pipelineName;
         // TODO 封装nifi所有节点(大量改动)
-        workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(pipelineId, list);
+         workListDTO.nifiCustomWorkDTOS = getNifiCustomWorkList(pipelineId, list);
         // TODO 管道详情-父子级tree,
         workListDTO.structure = getMenuTree(list);
         // 管道详情下的任务组-tree
@@ -395,6 +402,16 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
                             topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
+                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
+                        }
+                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.MDM_TABLE_TASK.getName())) {
+                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.MDM_DATA_ACCESS.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
+                            topicDTO.tableType = OlapTableEnum.MDM_DATA_ACCESS.getValue();
+                            topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
+                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
                         //只保存调度的自定义脚本任务
@@ -403,6 +420,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
                             topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
                         if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.SFTP_FILE_COPY_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
@@ -410,6 +428,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.SFTPFILECOPYTASK.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
                             topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
                         if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
@@ -417,6 +436,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
                             topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
                             topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
+                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
                             publishTaskClient.updateTableTopicByComponentId(topicDTO);
                         }
                     }
@@ -575,6 +595,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 return DataClassifyEnum.SFTPFILECOPYTASK;
             case POWERBI_DATA_SET_REFRESH_TASK:
                 return DataClassifyEnum.POWERBIDATASETREFRESHTASK;
+            case MDM_TABLE_TASK:
+                return DataClassifyEnum.MDM_DATA_ACCESS;
             case DW_TASK:
             case OLAP_TASK:
 
@@ -606,6 +628,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 break;
             // 数据湖表任务
             case DATALAKE_TASK:
+                //主数据表任务
+            case MDM_TABLE_TASK:
                 // 数据湖ftp任务
             case DATALAKE_FTP_TASK:
                 return OlapTableEnum.CUSTOMWORKPHYSICS;
@@ -809,6 +833,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 ResultEntity<List<ChannelDataDTO>> resultEntity = dataModelClient.getTableId(dto);
                 list = resultEntity.data;
                 break;
+            //主数据表任务
+            case MDM_TABLE_TASK:
+                ResultEntity<List<ChannelDataDTO>> mdmData = mdmClient.getTableId();
+                list = mdmData.data;
+                break;
             default:
                 break;
         }
@@ -847,6 +876,11 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                                                 case DW_FACT_TASK:
                                                     v.setSourceId(DataSourceConfigEnum.DMP_DW.getValue());
                                                     v.setTableBusinessType(TableBusinessTypeEnum.DW_FACT.getValue());
+                                                    break;
+                                                // 主数据表任务
+                                                case MDM_TABLE_TASK:
+                                                    v.setSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
+                                                    v.setTableBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
                                                     break;
                                                 default:
                                                     break;

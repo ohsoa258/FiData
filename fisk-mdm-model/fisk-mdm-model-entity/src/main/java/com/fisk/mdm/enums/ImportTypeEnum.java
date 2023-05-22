@@ -15,7 +15,11 @@ public enum ImportTypeEnum implements BaseEnum {
     /**
      * excel导入
      */
-    EXCEL_IMPORT(1,"excel导入");
+    EXCEL_IMPORT(1,"excel导入"),
+    /**
+     * NIFI同步
+     */
+    NIFI_SYNC(2,"NIFI同步");
 
     @EnumValue
     private final int value;

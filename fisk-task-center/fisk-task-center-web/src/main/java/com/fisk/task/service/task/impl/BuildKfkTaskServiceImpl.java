@@ -46,9 +46,19 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
     TaskLogMapper taskLogMapper;
 
 
+    /**
+     * 创建同步数据nifi流程
+     *
+     * @param name     提示框内容
+     * @param exchange MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME
+     * @param queue    MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW
+     * @param data     data数据   BuildNifiFlowDTO
+     * @return
+     */
     @Override
     public ResultEntity<Object> publishTask(String name, String exchange, String queue, MQBaseDTO data) {
         log.info("MQBaseDTO的信息:{}", JSON.toJSONString(data));
+        //task日志对象  tb_task_log
         TaskLogPO model = new TaskLogPO();
         String traceId = data.traceId;
         if (StringUtils.isNotEmpty(traceId)) {
@@ -61,6 +71,7 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
         } else {
             model.traceId = UUID.randomUUID().toString();
         }
+        //数据 对象转为字符串
         String str = JSON.toJSONString(data);
         model.taskName = name;
         model.taskExchange = exchange;
@@ -72,12 +83,16 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
         if (str.length() <= dataMaxLength) {
             model.taskData = str;
         }
+        //保存日志
         this.save(model);
 
         data.logId = model.id;
         data.traceId = model.traceId;
+        //数据 转为 json字符串
         str = JSON.toJSONString(data);
         try {
+            //同步方式发送数据
+            log.info("发送消息");
             kafkaTemplateHelper.sendMessageSync(queue, str);
             model.taskSendOk = true;
             this.updateById(model);

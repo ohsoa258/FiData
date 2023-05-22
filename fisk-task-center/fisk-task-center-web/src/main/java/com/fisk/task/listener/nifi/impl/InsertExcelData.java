@@ -1,16 +1,5 @@
 package com.fisk.task.listener.nifi.impl;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -39,7 +28,18 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static com.fisk.common.core.constants.ExcelConstants.EXCEL2003_SUFFIX_NAME;
 
@@ -66,7 +66,12 @@ public class InsertExcelData implements ISftpDataUploadListener {
 
         try {
             KafkaReceiveDTO kafkaReceive = JSON.parseObject(data, KafkaReceiveDTO.class);
+            //获取topic
             String topic = kafkaReceive.topic;
+            //获取大批次号
+            String fidata_batch_code = kafkaReceive.fidata_batch_code;
+            log.info("大批次号：{}", fidata_batch_code);
+
             String[] topicParameter = topic.split("\\.");
             String appId = "";
             String tableId = "";
@@ -77,46 +82,71 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 appId = topicParameter[5];
                 tableId = topicParameter[6];
             }
+            //远程调用数据接入的接口，获取数据接入配置项
             ResultEntity<DataAccessConfigDTO> dataAccessConfig = client.dataAccessConfig(Long.parseLong(tableId), Long.parseLong(appId));
             if (dataAccessConfig.code == ResultEnum.SUCCESS.getCode()) {
+                //获取数据接入配置项
                 DataAccessConfigDTO config = dataAccessConfig.data;
+                //获取目标源jdbc连接
                 DataSourceConfig targetDsConfig = config.targetDsConfig;
+                //通过表id,应用id,表类别从 tb_table_nifi_setting 表获取 TableNifiSettingPO 对象
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("table_access_id", tableId).eq("app_id", appId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
+                //获取表名
                 targetDsConfig.targetTableName = one.tableName;
+                //获取物理表字段集合
                 List<TableFieldsDTO> tableFieldsList = targetDsConfig.tableFieldsList;
+                //获取列总数
                 Integer columnCount = tableFieldsList.size();
+                //获取sftp/ftp配置信息
                 FtpConfig ftpConfig = config.ftpConfig;
                 InputStream fileInputStream = null;
+                //判断是否是sftp
                 if (ftpConfig.whetherSftpl) {
+                    //获取sftp连接
                     ChannelSftp connect = connect(ftpConfig.hostname, Integer.valueOf(ftpConfig.port), ftpConfig.username, ftpConfig.password, StringUtils.isEmpty(ftpConfig.fileName) ? null : (ftpConfig.linuxPath + ftpConfig.fileName));
+                    //预览sftp文件
                     fileInputStream = getSftpFileInputStream(connect, ftpConfig.remotePath + "/" + ftpConfig.fileFilterRegex);
                 } else {
+                    //获取ftp连接
                     FTPClient ftpClient = getFtpClient(ftpConfig.hostname, ftpConfig.port, ftpConfig.username, ftpConfig.password);
+                    //根据名称获取文件，以输入流返回
                     fileInputStream = getInputStreamByName(ftpClient, ftpConfig.remotePath, ftpConfig.fileFilterRegex);
                 }
 
                 String[] split = ftpConfig.fileFilterRegex.split("\\.");
+                //调用封装的方法 readExcelFromInputStream() , 读取excel内容
                 List<List<Object>> lists = readExcelFromInputStream(fileInputStream, split[split.length - 1], ftpConfig.startLine, config);
-                //第一个list是行,第二个list是列,里面每个object是格
-                // 构造 SQL 语句，? 代表需要填充的数据
+//                log.info("excel的内容是：{}", JSON.toJSONString(lists));
+                //List<List<Object>> lists:第一个list是行,第二个list是列,里面每个object是格
 
+                // 构造 SQL 语句，? 代表需要填充的数据
+                //调用方法获取stg表名和目标表名
                 List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(targetDsConfig.targetTableName);
-                StringBuilder sqlBuilder = new StringBuilder("INSERT INTO " + stgAndTableName.get(0) + " (fidata_flow_batch_code,");
+                //stgAndTableName.get(0) 是stg表名，即 sqlBuilder 语句是往stg表里面插入数据
+                StringBuilder sqlBuilder = new StringBuilder("INSERT INTO " + stgAndTableName.get(0) + " (fidata_batch_code,");
+                //fori循环，目的是遍历tableFieldsList，获取每个字段的字段名
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
                         sqlBuilder.append(", ");
                     }
                     sqlBuilder.append("[" + tableFieldsList.get(i).fieldName + "]");
                 }
-                sqlBuilder.append(") VALUES ('',");
+                sqlBuilder.append(") VALUES ('")
+                        .append(fidata_batch_code)
+                        .append("',");
+                ////fori循环，目的是遍历tableFieldsList，将要插入的数据以占位符 ? 替代
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
                         sqlBuilder.append(", ");
                     }
+                    //将要插入的数据以占位符 ? 替代
                     sqlBuilder.append("?");
                 }
                 sqlBuilder.append(")");
+                log.info("预编译的sql语句为：{}", sqlBuilder);
+                log.info("预编译sql的占位符个数为：{}", columnCount);
 
+                //远程调用，调用系统管理的接口从dmp_system_db库，tb_datasource_config表中获取ods数据源的信息  即dataSourceOdsId = 2
                 ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     DataSourceDTO dataSource = fiDataDataSource.data;
@@ -127,10 +157,16 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     // 循环插入数据
                     int batchSize = 1000; // 每批次插入的数据条数
                     int count = 0;
+                    int excelRowCount = 1;
                     assert lists != null;
                     for (List list : lists) {
+
+                        log.info("excel第" + excelRowCount + "行数据个数：{}", list.size());
                         for (int i = 0; i < list.size(); i++) {
+                            //列数和占位符必须匹配
+                            if (i >= columnCount) break;
                             Object object = list.get(i);
+                            excelRowCount++;
                             if (object != null) {
                                 pstmt.setString(i + 1, object.toString());
                             } else {
@@ -193,6 +229,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
     }
 
     /**
+     * @param startRow dmp_datainput_db库 -- tb_table_access表中的start_line列的值
      * @return java.util.List<java.util.List < java.lang.String>>
      * @description 读取Excel内容，返回list，每一行存放一个list
      * @author Lock
@@ -213,7 +250,10 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 //解决最大行数一直变的问题,拿第一次得到的行数
                 int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
                 for (int i = 0; i <= physicalNumberOfRows; i++) {
-                    if (getRow < startRow + 1) {
+                    //2023-05-19李世纪修改
+                    //开始读取的行数不再加1
+                    if (getRow < startRow) {
+//                    if (getRow < startRow + 1) {
                         getRow++;
                         continue;
                     }

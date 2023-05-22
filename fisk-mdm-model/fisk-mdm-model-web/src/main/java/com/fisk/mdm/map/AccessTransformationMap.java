@@ -1,8 +1,8 @@
 package com.fisk.mdm.map;
 
-import com.fisk.mdm.dto.access.AccessAttributeDTO;
 import com.fisk.mdm.entity.AccessTransformationPO;
 import com.fisk.mdm.utlis.TypeConversionUtils;
+import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
