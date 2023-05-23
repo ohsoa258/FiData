@@ -311,6 +311,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 case MDM_TABLE_TASK:
                     e.componentsId = 16;
                     break;
+                case POWERBI_DATA_SET_REFRESH_TASK:
+                    e.componentsId = 15;
+                    break;
                 default:
                     break;
             }
@@ -389,15 +392,15 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             } else {
                 List<NifiCustomWorkflowDetailPO> detailPoList = new ArrayList<>();
 
-                //如果是PBI任务，po.id = id,因为PBI没有子任务
-                //如果不这样改，会导致数据管道--PBI的nifi流程建立不完全，缺失组件
-                if (Objects.equals(po.componentType,ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName())){
-                    detailPoList = this.query().eq("id", po.id).orderByAsc("table_order").list();
-                }else {
-                    detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
-                }
+//                //如果是PBI任务，po.id = id,因为PBI没有子任务
+//                //如果不这样改，会导致数据管道--PBI的nifi流程建立不完全，缺失组件
+//                if (Objects.equals(po.componentType,ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName())){
+//                    detailPoList = this.query().eq("id", po.id).orderByAsc("table_order").list();
+//                }else {
+//                    detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
+//                }
 
-//                detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
+                detailPoList = this.query().eq("pid", po.id).orderByAsc("table_order").list();
 
                 if (CollectionUtils.isNotEmpty(detailPoList)) {
                     for (NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo : detailPoList) {
@@ -502,14 +505,22 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         List<BuildNifiCustomWorkFlowDTO> buildNifiCustomWorkFlows = new ArrayList<>();
         for (String id : outportIds) {
             NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPo = this.query().eq("id", id).one();
-            if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.TASKGROUP)) {
+            if (!Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.TASKGROUP )) {
+                //提取变量
+                List<NifiCustomWorkflowDetailPO> list = new ArrayList<>();
+                //如果是 PBI 数据集刷新任务，查询条件是 "id" = id,反之则是 "pid" = id，因为PBI下面不挂载表任务
+                if (nifiCustomWorkflowDetailPo.componentsId == ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getValue()){
+                    list = this.query().eq("id", id).orderByAsc("table_order").list();
+                }else {
+                    list = this.query().eq("pid", id).orderByAsc("table_order").list();
+                }
 
-                List<NifiCustomWorkflowDetailPO> list = this.query().eq("pid", id).orderByAsc("table_order").list();
                 if (CollectionUtils.isEmpty(list)) {
                     continue;
                 }
-                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = list.get(0);
-                buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO)));
+                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO2 = list.get(0);
+
+                buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO2)));
             }
 
         }

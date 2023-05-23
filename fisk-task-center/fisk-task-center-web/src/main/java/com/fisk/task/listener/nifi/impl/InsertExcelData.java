@@ -166,7 +166,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             //列数和占位符必须匹配
                             if (i >= columnCount) break;
                             Object object = list.get(i);
-                            excelRowCount++;
+
                             if (object != null) {
                                 pstmt.setString(i + 1, object.toString());
                             } else {
@@ -174,6 +174,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             }
                         }
                         pstmt.addBatch();
+                        excelRowCount++;
                         count++;
                         if (count % batchSize == 0) {
                             pstmt.executeBatch();
