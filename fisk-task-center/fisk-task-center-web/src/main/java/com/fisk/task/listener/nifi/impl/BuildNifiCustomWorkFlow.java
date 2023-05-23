@@ -540,6 +540,9 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         //1.找到在哪个组下面
         List<NifiCustomWorkDTO> nifiCustomWorkDTOS = nifiCustomWorkList.nifiCustomWorkDTOS;
         try {
+            QueryWrapper<TableTopicPO> wrapper = new QueryWrapper<>();
+            wrapper.lambda().eq(TableTopicPO::getWorkflowId, nifiCustomWorkList.getNifiCustomWorkflowId());
+            tableTopic.remove(wrapper);
             //----------------------------------------------------------------------------------
             for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
                 if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
@@ -571,7 +574,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             topicDTO.topicName = TopicName;
                             topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-//                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
+                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
                             tableTopic.updateTableTopicByComponentId(topicDTO);
                         } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
                             TableTopicDTO topicDTO = new TableTopicDTO();
@@ -580,7 +583,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                             topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
                             topicDTO.topicName = TopicName;
                             topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-//                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
+                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
                             tableTopic.updateTableTopicByComponentId(topicDTO);
                             sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
                             commonTask = true;
@@ -799,7 +802,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             topicDTO.componentId = Math.toIntExact(workflowDetailId);
             topicDTO.topicName = topicName;
             topicDTO.topicType = type.getValue();
-//            topicDTO.workflowId = nifiCustomWorkflowId;
+            topicDTO.workflowId = nifiCustomWorkflowId;
             tableTopic.updateTableTopicByComponentId(topicDTO);
             topicDTO.topicType = TopicTypeEnum.NO_TYPE.getValue();
             List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
