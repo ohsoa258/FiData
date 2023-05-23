@@ -1538,7 +1538,7 @@ public class TableFieldsImpl
             //如果是实时api，则通过前端传参的物理表id获取物理表信息
             tableAccessPO = tableAccessMapper.selectById(dto.modelPublishFieldDTOList.get(0).tableAccessId);
             //如果获取实时api失败或获取不到物理表信息，则抛出异常
-            if (apiConfig.getCode() != ResultEnum.SUCCESS.getCode() || tableAccessPO  == null) {
+            if (apiConfig.getCode() != ResultEnum.SUCCESS.getCode() || tableAccessPO == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
             }
         }

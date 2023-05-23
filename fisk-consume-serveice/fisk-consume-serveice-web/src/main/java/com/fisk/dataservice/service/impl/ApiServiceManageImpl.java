@@ -196,10 +196,18 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             // 第七步：获取请求参数中的分页信息
             Integer current = dto.getCurrent();
             Integer size = dto.getSize();
+            // 如果传参的分页大小不为空，判断是否大于100，如果大于100，返回提示：分页大小最大为100
+            if (size != null) {
+                if (size > 100) {
+                    return ResultEntityBuild.build(ResultEnum.DS_DATA_SIZE_CANNOT_BE_GREATER_THAN_100);
+                }
+            }
+
             if (current == null && size == null) {
                 // 未设置分页参数，默认查询第一页，查询数字的最大值
                 current = 1;
-                size = Integer.MAX_VALUE;
+                // 未设置分页大小（size），默认100
+                size = 100;
             }
             log.info("数据服务【getData】分页参数【current】：" + current);
             log.info("数据服务【getData】分页参数【size】：" + size);
