@@ -532,6 +532,14 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         return appNifiSettingDTOS;
     }
 
+    /**
+     * 创建nifi管道组件
+     * 更新tb_table_topic表
+     * 更新nifi流程中接收kafka消息组件的topicName
+     * @param nifiCustomWorkList
+     * @param groupStructure
+     * @param nifiCustomWorkflowDTO
+     */
     public void createCustomWorkNifiFlowVersion2(NifiCustomWorkListDTO nifiCustomWorkList, String groupStructure, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
         BuildNifiCustomWorkFlowDTO nifiNode = new BuildNifiCustomWorkFlowDTO();
         String TopicName = MqConstants.TopicPrefix.TOPIC_PREFIX + nifiCustomWorkList.pipelineId;
@@ -545,18 +553,21 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             tableTopic.remove(wrapper);
             //----------------------------------------------------------------------------------
             for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
-                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE)) {
+                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK) ||
+                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
                     continue;
                 }
                 nifiNode = nifiCustomWorkDTO.NifiNode;
                 //组id在这里
                 log.info("父级id:" + nifiNode.groupId);
+                //处理触发器组件需要做的事
                 if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT)) {
 
                     List<BuildNifiCustomWorkFlowDTO> outputDucts = nifiCustomWorkDTO.outputDucts;
                     boolean commonTask = false;
-                    boolean fapi = false;
-                    String queryApiSql = "";
                     String scriptTaskIds = "";
                     String sftpFileCopyTaskIds = "";
                     String powerBiDataSetRefreshTaskIds = "";
@@ -564,57 +575,56 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     PipelApiDispatchDTO pipelApiDispatch = new PipelApiDispatchDTO();
 
                     for (BuildNifiCustomWorkFlowDTO buildNifiCustomWorkFlowDTO : outputDucts) {
-                        if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT)) {
-                            scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
-                            commonTask = true;
-                            //更新topic_name并使用
-                            TableTopicDTO topicDTO = new TableTopicDTO();
-                            topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
-                            topicDTO.tableId = 0;
-                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
-                            topicDTO.topicName = TopicName;
-                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
-                            tableTopic.updateTableTopicByComponentId(topicDTO);
-                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
-                            TableTopicDTO topicDTO = new TableTopicDTO();
-                            topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
-                            topicDTO.tableId = 0;
-                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
-                            topicDTO.topicName = TopicName;
-                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
-                            tableTopic.updateTableTopicByComponentId(topicDTO);
-                            sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
-                            commonTask = true;
-                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK)) {
-                            //power刷新任务id
-                            TableTopicDTO topicDTO = new TableTopicDTO();
-                            topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
-                            topicDTO.tableId = 0;
-                            topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
-                            topicDTO.topicName = TopicName;
-                            topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
-                            topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
-                            tableTopic.updateTableTopicByComponentId(topicDTO);
-                            powerBiDataSetRefreshTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
-                            commonTask = true;
-                        } else if (Objects.equals(buildNifiCustomWorkFlowDTO.type, DataClassifyEnum.DATAACCESS_API)) {
-                            fapi = true;
-                            pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
-                            pipelApiDispatch.appId = buildNifiCustomWorkFlowDTO.appId;
-                            pipelApiDispatch.apiId = Long.parseLong(buildNifiCustomWorkFlowDTO.tableId);
-                            pipelApiDispatch.pipelineId = nifiCustomWorkList.pipelineId;
-                            pipelApiDispatchs.add(pipelApiDispatch);
-                        } else {
-                            TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
-                            String Topic = TopicName;
-                            ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.PIPELINE_NIFI_FLOW,
-                                    tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId,nifiCustomWorkList.getNifiCustomWorkflowId());
-                            if (processorEntity != null) {
-                                processorEntities.add(processorEntity);
-                            }
-                            commonTask = true;
+                        TableTopicDTO topicDTO = new TableTopicDTO();
+                        topicDTO.tableId = 0;
+                        topicDTO.componentId = Math.toIntExact(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                        topicDTO.topicName = TopicName;
+                        topicDTO.topicType = TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue();
+                        topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
+                        switch (buildNifiCustomWorkFlowDTO.type) {
+                            //自定义脚本任务
+                            case CUSTOMWORKCUSTOMIZESCRIPT:
+                                scriptTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                                topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+                                tableTopic.updateTableTopicByComponentId(topicDTO);
+                                commonTask = true;
+                                break;
+                            //SFTP文件复制
+                            case SFTPFILECOPYTASK:
+                                sftpFileCopyTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                                topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
+                                tableTopic.updateTableTopicByComponentId(topicDTO);
+                                commonTask = true;
+                                break;
+                            //POWERBI数据集刷新任务
+                            case POWERBIDATASETREFRESHTASK:
+                                powerBiDataSetRefreshTaskIds += buildNifiCustomWorkFlowDTO.workflowDetailId + ",";
+                                topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
+                                tableTopic.updateTableTopicByComponentId(topicDTO);
+                                commonTask = true;
+                                break;
+                            //非实时api
+                            case DATAACCESS_API:
+                                pipelApiDispatch.workflowId = String.valueOf(buildNifiCustomWorkFlowDTO.workflowDetailId);
+                                pipelApiDispatch.appId = buildNifiCustomWorkFlowDTO.appId;
+                                pipelApiDispatch.apiId = Long.parseLong(buildNifiCustomWorkFlowDTO.tableId);
+                                pipelApiDispatch.pipelineId = nifiCustomWorkList.pipelineId;
+                                pipelApiDispatchs.add(pipelApiDispatch);
+                                commonTask = true;
+                                break;
+                            //跟表相关的
+                            default:
+                                //不同任务获取不同TableNifiSettingPO 4类nifi流程
+                                TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(buildNifiCustomWorkFlowDTO);
+
+                                ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, TopicName,
+                                        TopicTypeEnum.PIPELINE_NIFI_FLOW, tableNifiSettingPO.tableAccessId,
+                                        tableNifiSettingPO.type, nifiNode.workflowDetailId, nifiCustomWorkList.getNifiCustomWorkflowId());
+                                if (processorEntity != null) {
+                                    processorEntities.add(processorEntity);
+                                }
+                                commonTask = true;
+                                break;
                         }
 
                     }
@@ -633,12 +643,15 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         //加管道批次
                         querySqlDto.querySql += " ,'" + JSON.toJSONString(pipelApiDispatchs) + "' as pipelApiDispatch ,'" + TopicName + "' as topic, '${uuid}' as pipelTraceId, '" + pipelineNifiFlow.getValue() + "' as topicType  ";
                     }
+                    //自定义脚本任务
                     if (StringUtils.isNotEmpty(scriptTaskIds)) {
                         querySqlDto.querySql += " ,'" + scriptTaskIds.substring(0, scriptTaskIds.length() - 1) + "' as scriptTaskIds ";
                     }
+                    //SFTP文件复制
                     if (StringUtils.isNotEmpty(sftpFileCopyTaskIds)) {
                         querySqlDto.querySql += " ,'" + sftpFileCopyTaskIds.substring(0, sftpFileCopyTaskIds.length() - 1) + "' as sftpFileCopyTaskIds ";
                     }
+                    //POWERBI数据集刷新任务
                     if (StringUtils.isNotEmpty(powerBiDataSetRefreshTaskIds)) {
                         querySqlDto.querySql += " ,'" + powerBiDataSetRefreshTaskIds.substring(0, powerBiDataSetRefreshTaskIds.length() - 1) + "' as powerBiDataSetRefreshTaskIds ";
                     }
@@ -654,6 +667,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     querySqlDto.scheduleExpression = nifiNode.scheduleExpression;
                     querySqlDto.scheduleType = nifiNode.scheduleType;
                     querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+                    //组件1:创建ExecuteSQL组件
                     BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
                     if (!querySqlRes.success) {
                         throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, querySqlRes.msg);
@@ -674,8 +688,10 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                     toJsonDto.details = "query_phase";
                     toJsonDto.groupId = groupStructure;
                     toJsonDto.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 1);
+                    //组件2:创建ConvertToJson组件
                     BusinessResult<ProcessorEntity> toJsonRes = componentsBuild.buildConvertToJsonProcess(toJsonDto);
                     componentsBuild.buildConnectProcessors(groupStructure, nifiSchedulingComponentPO.componentId, toJsonRes.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    //只要触发器连接有组件就创建
                     if (commonTask) {
                         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
                         buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
@@ -686,53 +702,27 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         buildPublishKafkaProcessorDTO.UseTransactions = "false";
                         buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
                         buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW;
+                        //组件3:创建PublishKafka组件
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
                         componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                     }
-                    if (fapi) {
-                        BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
-                        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
-                        buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
-                        buildPublishKafkaProcessorDTO.groupId = groupStructure;
-                        buildPublishKafkaProcessorDTO.name = "PublishKafka";
-                        buildPublishKafkaProcessorDTO.details = "PublishKafka";
-                        buildPublishKafkaProcessorDTO.UseTransactions = "false";
-                        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
-                        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW;
-                        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
-                        componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                }else {
+                    //处理nifi流程中需要更新的topicName(非直连触发器的任务)
+                    String topic = TopicName;
+                    //不同任务获取不同TableNifiSettingPO 4类nifi流程
+                    TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
 
-                    }
-                }
-
-            }
-            //--------------------------------------------------------------------------
-            for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
-
-                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSCHEDULINGCOMPONENT) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
-                    continue;
-                }
-                String Topic = TopicName;
-                nifiNode = nifiCustomWorkDTO.NifiNode;
-                log.info("父级id:" + nifiNode.groupId);
-                //2.拼装参数,4类nifi流程,3.调用方法生成流程
-                TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
-
-                if (Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL) ||
-                        Objects.equals(nifiNode.type, DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL)) {
-                    Topic += "." + OlapTableEnum.KPI.getValue() + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
-                } else {
-                    Topic += "." + tableNifiSettingPO.type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
-                }
-                ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, Topic, TopicTypeEnum.COMPONENT_NIFI_FLOW,
-                        tableNifiSettingPO.tableAccessId, tableNifiSettingPO.type, nifiNode.workflowDetailId,nifiCustomWorkList.getNifiCustomWorkflowId());
-                if (processorEntity != null) {
-                    processors.add(processorEntity);
+                    Map<DataClassifyEnum, Integer> dataClassifyMap = new HashMap<>();
+                    dataClassifyMap.put(DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL, OlapTableEnum.KPI.getValue());
+                    dataClassifyMap.put(DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL, OlapTableEnum.KPI.getValue());
+                    //如果是数据建模的维度指标或者是事实指标则取OlapTableEnum.KPI.getValue()否则取tableNifiSettingPO.type
+                    Integer type = dataClassifyMap.getOrDefault(nifiNode.type, tableNifiSettingPO.type);
+                    topic += "." + type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
+                    //更新TableTopic表并更新nifi 流程中接收kafka组件的topicname
+                    ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, topic,
+                            TopicTypeEnum.COMPONENT_NIFI_FLOW, tableNifiSettingPO.tableAccessId,
+                            type, nifiNode.workflowDetailId, nifiCustomWorkList.getNifiCustomWorkflowId());
+                    Optional.ofNullable(processorEntity).ifPresent(processors::add);
                 }
             }
             //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完
@@ -791,7 +781,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         return tableNifiSettingPO;
     }
 
-    public ProcessorEntity updateTopicNames(String processorId, String topicName, TopicTypeEnum type, int tableId, int tableType, Long workflowDetailId,String nifiCustomWorkflowId) {
+    public ProcessorEntity updateTopicNames(String processorId, String topicName, TopicTypeEnum type, int tableId, int tableType, Long workflowDetailId, String nifiCustomWorkflowId) {
         log.info("updateTopicNames开始...");
         //停止   修改   启动
         try {
