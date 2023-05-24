@@ -63,7 +63,7 @@ public class FactoryCodePreviewSqlHelper {
                             .append("[")
                             .append(f.sourceFieldName)
                             .append("]")
-                            .append(" ELSE convert(datetime,DATEADD(DATE,CAST(LEFT(")
+                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(LEFT(")
                             .append("[")
                             .append(f.sourceFieldName)
                             .append("]")
@@ -158,7 +158,7 @@ public class FactoryCodePreviewSqlHelper {
                             .append("[")
                             .append(f.fieldEnName)
                             .append("]")
-                            .append(" ELSE convert(datetime,DATEADD(DATE,CAST(LEFT(")
+                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(LEFT(")
                             .append("[")
                             .append(f.fieldEnName)
                             .append("]")
@@ -448,11 +448,11 @@ public class FactoryCodePreviewSqlHelper {
                             .append("[")
                             .append(f.sourceFieldName)
                             .append("]")
-                            .append(" = convert(datetime,DATEADD(DATE,CAST(left(SOURCE.")
+                            .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
                             .append("[")
                             .append(f.sourceFieldName)
                             .append("]")
-                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
+                            .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
                             .append(",");
                 } else if (f.fieldType.equalsIgnoreCase("TIME")) {
                     middleSql.append("TARGET.")
@@ -504,11 +504,11 @@ public class FactoryCodePreviewSqlHelper {
                             .append("[")
                             .append(f.fieldEnName)
                             .append("]")
-                            .append(" = convert(datetime,DATEADD(DATE,CAST(left(SOURCE.")
+                            .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
                             .append("[")
                             .append(f.fieldEnName)
                             .append("]")
-                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
+                            .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
                             .append(",");
                 } else if (f.fieldType.equalsIgnoreCase("TIME")) {
                     middleSql.append("TARGET.")
@@ -588,11 +588,11 @@ public class FactoryCodePreviewSqlHelper {
         for (PublishFieldDTO f : fieldList) {
             if (f.sourceFieldName != null && f.attributeType == 0) {
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
-                    endSql.append("convert(datetime,DATEADD(DATE,CAST(left(SOURCE.")
+                    endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
                             .append("[")
                             .append(f.sourceFieldName)
                             .append("]")
-                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
+                            .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
                             .append(",");
                 } else if (f.fieldType.equalsIgnoreCase("TIME")) {
                     endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
@@ -624,11 +624,11 @@ public class FactoryCodePreviewSqlHelper {
                 }
             } else {
                 if (f.fieldType.equalsIgnoreCase("DATE")) {
-                    endSql.append("convert(datetime,DATEADD(DATE,CAST(left(SOURCE.")
+                    endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
                             .append("[")
                             .append(f.fieldEnName)
                             .append("]")
-                            .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
+                            .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
                             .append(",");
                 } else if (f.fieldType.equalsIgnoreCase("TIME")) {
                     endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")

@@ -18,6 +18,8 @@ import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -94,6 +96,7 @@ public class TaskPgTableStructureHelper
      * @param version 时间戳版本号
      * @param dataSourceType 数据源连接类型
      */
+    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
     public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
@@ -143,11 +146,11 @@ public class TaskPgTableStructureHelper
                     poList.add(po2);
                 }
             }
-            //保存成功,调用存储过程,获取修改表结构SQL语句
+            //保存表结构到tb_task_pg_table_structure
             if (!this.saveBatch(poList.stream().distinct().collect(Collectors.toList()))) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
-            //执行存储过程
+            //保存成功,调用存储过程,获取修改表结构SQL语句
             String sql = execProcedure(version, type, dataSourceType);
             log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
             //判断是否有修改语句
@@ -185,8 +188,11 @@ public class TaskPgTableStructureHelper
             List<String> sqlList = new ArrayList<>();
             CallableStatement cs = null;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSourceType);
+            //dbCommand.prepareCallSql() = "call pg_check_table_structure_sqlserver(?,?)"
             cs = (CallableStatement) conn.prepareCall(dbCommand.prepareCallSql());
+            //第一个参数为前面我们生成的版本号
             cs.setString(1, version);
+            //第二个参数为数据库连接类型，type=2--ods,也是前面获取的
             cs.setInt(2, type);
             cs.execute();
             ResultSet rs = cs.getResultSet();
@@ -302,7 +308,7 @@ public class TaskPgTableStructureHelper
             if (sql != null && sql.length() > 0) {
                 st = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                st.execute(sql);
+                boolean execute = st.execute(sql);
             }
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
