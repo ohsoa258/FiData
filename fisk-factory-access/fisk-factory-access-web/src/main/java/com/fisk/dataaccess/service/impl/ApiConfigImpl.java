@@ -53,6 +53,7 @@ import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
@@ -294,6 +295,115 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 receiveDataDto.pushData = pushDataStr;
             }
             pushData(receiveDataDto);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+
+    public List<ApiParameterDTO> getSourceFieldList(long tableAccessId) {
+
+        List<ApiParameterPO> apiParameterPOList = apiParameterServiceImpl.query().eq("table_access_id",tableAccessId).list();
+
+        List<ApiParameterDTO> apiParameterDTO = new ArrayList<>();
+        for (ApiParameterPO p: apiParameterPOList) {
+            ApiParameterDTO parameterDTO = new ApiParameterDTO();
+            parameterDTO.apiId = p.apiId;
+            parameterDTO.tableAccessId = p.tableAccessId;
+            parameterDTO.attributeType = p.attributeType;
+            parameterDTO.attributeFieldType = p.attributeFieldType;
+            parameterDTO.attributeFieldRule = p.attributeFieldRule;
+            parameterDTO.attributeFieldSample = p.attributeFieldSample;
+            parameterDTO.attributeFieldDesc = p.attributeFieldDesc;
+            apiParameterDTO.add(parameterDTO);
+        }
+
+        return apiParameterDTO;
+    }
+
+    public ResultEnum addSourceField(List<ApiParameterDTO> dto)
+    {
+        //查询数据是否存在
+        for (ApiParameterDTO d : dto ) {
+            //添加字段
+            ApiParameterPO po = apiParameterServiceImpl.query().eq("table_access_id", d.tableAccessId)
+                        .eq("attribute_field_name", d.attributeFieldName).one();
+            if (po != null) {
+                throw new FkException(ResultEnum.DATA_EXISTS);
+            }
+            ApiParameterPO model = ApiParameterMap.INSTANCES.dtoToPo(d);
+            apiParameterServiceImpl.save(model) ;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEnum editSourceField(ApiParameterDTO dto)
+    {
+        //根据Id查出数据 并进行修改
+        ApiParameterPO po = apiParameterServiceImpl.query().eq("id", dto.id).one();
+        if (po != null) {
+            po.tableAccessId = dto.tableAccessId;
+            po.attributeType = dto.attributeType;
+            po.attributeFieldName = dto.attributeFieldName;
+            po.attributeFieldDesc = dto.attributeFieldDesc;
+            po.attributeFieldType = dto.attributeFieldType;
+            po.attributeFieldRule = dto.attributeFieldRule;
+            po.attributeFieldSample = dto.attributeFieldSample;
+            po.attributeFieldParent = dto.attributeFieldParent;
+            apiParameterServiceImpl.updateById(po);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEnum deleteSourceField(long id)
+    {
+        //根据Id进行删除
+        ApiParameterPO po = apiParameterServiceImpl.query().eq("id", id).one();
+        if (po!=null)
+        {
+            apiParameterServiceImpl.removeById(id);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEnum saveMapping(List<ApiFieldDTO> dto)
+    {
+        for (ApiFieldDTO d: dto) {
+            TableFieldsPO po = tableFieldImpl.query().eq("id", d.id).one();
+            po.sourceFieldName = d.fieldName;
+            po.sourceFieldType = d.fieldType;
+            tableFieldImpl.updateById(po);
+
+            AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", d.appId).one();
+            if (dataSourcePo == null) {
+                return ResultEnum.DATASOURCE_ISNULL;
+            }
+
+            // 发布之后,按照配置调用一次非实时api
+            if (d.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
+                ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
+                apiImportDataDTO.appId = d.appId;
+                apiImportDataDTO.apiId = d.id;
+                // 调用api推送数据方法
+                importData(apiImportDataDTO);
+
+                // 发布之后,按照配置推送一次实时api
+            } else if (d.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
+                ReceiveDataDTO receiveDataDto = new ReceiveDataDTO();
+                receiveDataDto.apiCode = d.id;
+                // 系统内部调用
+                receiveDataDto.flag = true;
+                // 实时推送示例数据
+                receiveDataDto.executeConfigFlag = true;
+                String pushData = d.pushData;
+                if (StringUtils.isNotBlank(pushData)) {
+                    String pushDataStr = pushData.replace("&nbsp;", "").replace("<br/>", "").replace("\\\\n\\n", "");
+                    log.info("pushDataStr = " + pushDataStr);
+                    receiveDataDto.pushData = pushDataStr;
+                }
+                pushData(receiveDataDto);
+            }
         }
 
         return ResultEnum.SUCCESS;

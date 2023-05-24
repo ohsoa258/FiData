@@ -158,4 +158,34 @@ public class ApiConfigController {
         return service.getOneApiById(apiId);
     }
 
+    @GetMapping("/getSourceFieldList/{tableAccessId}")
+    @ApiOperation(value = "根据tableAccessId获取源字段列表")
+    public ResultEntity<List<ApiParameterDTO>> getSourceFieldList(
+            @PathVariable("tableAccessId") long tableAccessId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceFieldList(tableAccessId));
+    }
+
+    @PostMapping("/addSourceField")
+    @ApiOperation(value = "新增源字段")
+    public ResultEntity<Object> addSourceField(@Validated @RequestBody List<ApiParameterDTO> dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.addSourceField(dto));
+    }
+
+    @PostMapping("/editSourceField")
+    @ApiOperation(value = "修改源字段")
+    public ResultEntity<Object> editSourceField(@Validated @RequestBody ApiParameterDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.editSourceField(dto));
+    }
+    @DeleteMapping("/deleteSourceField/{id}")
+    @ApiOperation(value = "删除源字段")
+    public ResultEntity<Object> deleteSourceField(@PathVariable("id") long id) {
+
+        return ResultEntityBuild.build(service.deleteSourceField(id));
+    }
+
+    @PostMapping("/saveMapping")
+    @ApiOperation(value = "保存映射")
+    public ResultEntity<Object> saveMapping(@Validated @RequestBody List<ApiFieldDTO>  dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.saveMapping(dto));
+    }
 }
