@@ -152,5 +152,15 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return
      */
     List<ApiColumnInfoDTO> getTableColumnInfoByApi(Integer apiId);
+
+    List<ApiParameterDTO> getSourceFieldList(long tableAccessId);
+    ResultEnum addSourceField(List<ApiParameterDTO> dto);
+
+    ResultEnum deleteSourceField(long id);
+
+    ResultEnum editSourceField(ApiParameterDTO dto);
+
+    ResultEnum saveMapping(List<ApiFieldDTO> dto);
+
 }
 
