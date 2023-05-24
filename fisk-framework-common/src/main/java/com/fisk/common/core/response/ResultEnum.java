@@ -292,6 +292,8 @@ public enum ResultEnum {
     API_NOT_CONFIGURED_FOR_OUTPUT_CONFIGURATION(10037, "API未配置输出配置，请检查输出配置（SQL）"),
     DS_DATA_PAGE_SHOULD_BE_GREATER_THAN_0(10038,"页码（current）应为大于0的正整数"),
     DS_DATA_SIZE_SHOULD_BE_GREATER_THAN_0(10039,"页数（size）应为大于0的正整数"),
+    DS_DATA_SIZE_CANNOT_BE_GREATER_THAN_100(10040,"最大只能返回100行数据"),
+
 
     /**
      * 数据质量

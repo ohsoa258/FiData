@@ -565,6 +565,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 modelPublishStatusDTO.tableId = dto.id;
                 //获取数据接入配置项
                 DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
+                log.info("数据接入配置项：{}",JSON.toJSONString(configDTO));
                 if (configDTO == null) {
                     log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
                     return ResultEnum.NOTFOUND;

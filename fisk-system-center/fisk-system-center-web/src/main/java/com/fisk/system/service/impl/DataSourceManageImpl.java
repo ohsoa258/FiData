@@ -103,8 +103,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     @Override
     public Page<DataSourceDTO> getAllDataSource(DataSourceQueryDTO queryDTO) {
         StringBuilder querySql = new StringBuilder();
+        List<FilterQueryDTO> filterQueryDTOS = null;
         if (CollectionUtils.isNotEmpty(queryDTO.getDto())) {
-            List<FilterQueryDTO> filterQueryDTOS = queryDTO.getDto().stream().filter(t -> t.columnName.contains("con_type")).collect(Collectors.toList());
+            filterQueryDTOS = queryDTO.getDto().stream().filter(t -> t.columnName.contains("con_type")).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(filterQueryDTOS)) {
                 filterQueryDTOS.forEach(filterQueryDTO -> {
                     if (StringUtils.isNotEmpty(filterQueryDTO.getColumnValue())) {
@@ -121,14 +122,29 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("5");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("ORACLE")) {
                             filterQueryDTO.setColumnValue("6");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("REDSHIFT")) {
+                            filterQueryDTO.setColumnValue("7");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("RESTFULAPI")) {
+                            filterQueryDTO.setColumnValue("8");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("API")) {
+                            filterQueryDTO.setColumnValue("9");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("FTP")) {
+                            filterQueryDTO.setColumnValue("10");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("SFTP")) {
+                            filterQueryDTO.setColumnValue("11");
                         }
                     }
                 });
             }
         }
 
-        // 拼接原生筛选条件
-        querySql.append(generateCondition.getCondition(queryDTO.getDto()));
+        if (filterQueryDTOS != null) {
+            // 拼接原生筛选条件
+            querySql.append(generateCondition.getCondition(filterQueryDTOS));
+        }else {
+            querySql.append(generateCondition.getCondition(queryDTO.dto));
+        }
+
         DataSourcePageDTO data = new DataSourcePageDTO();
         data.page = queryDTO.getPage();
         // 筛选器左边的模糊搜索查询SQL拼接
@@ -254,18 +270,18 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     //为了测试ftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
                     DbConnectionDTO ftpDTO = saveDtoToConDto(dto);
                     ResultEntity<Object> connectFtp = dataAccessClient.connectFtp(ftpDTO);
-                    if (connectFtp.getCode() == ResultEnum.SUCCESS.getCode()){
+                    if (connectFtp.getCode() == ResultEnum.SUCCESS.getCode()) {
                         return ResultEnum.SUCCESS;
-                    }else {
+                    } else {
                         return ResultEnum.FTP_CONNECTION_ERROR;
                     }
                 case SFTP:
                     //为了测试sftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
                     DbConnectionDTO sftpDTO = saveDtoToConDto(dto);
                     ResultEntity<Object> connectSftp = dataAccessClient.connectSftp(sftpDTO);
-                    if (connectSftp.getCode() == ResultEnum.SUCCESS.getCode()){
+                    if (connectSftp.getCode() == ResultEnum.SUCCESS.getCode()) {
                         return ResultEnum.SUCCESS;
-                    }else {
+                    } else {
                         return ResultEnum.SFTP_CONNECTION_ERROR;
                     }
                 case API:

@@ -299,7 +299,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             });
         } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
             data.forEach(dataSourceDTO -> {
-                if (dataSourceDTO.conType.getValue() == 0 && dataSourceDTO.conPort == 0) {
+                if (dataSourceDTO.conType.getValue() == 8) {
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });

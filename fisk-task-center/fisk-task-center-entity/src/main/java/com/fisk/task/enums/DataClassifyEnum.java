@@ -28,7 +28,7 @@ public enum DataClassifyEnum  implements BaseEnum {
     /**
      * POWERBI数据集刷新任务(PBI DataSet 刷新)
      */
-    POWERBIDATASETREFRESHTASK(16,"POWERBI数据集刷新任务"),
+    POWERBIDATASETREFRESHTASK(16,"PBI DataSet 刷新"),
 
     MDM_DATA_ACCESS(17,"mdm-数据接入");
 

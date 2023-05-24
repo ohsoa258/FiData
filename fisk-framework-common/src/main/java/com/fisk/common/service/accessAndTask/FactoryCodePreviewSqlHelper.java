@@ -113,7 +113,20 @@ public class FactoryCodePreviewSqlHelper {
                             .append(f.sourceFieldName)
                             .append("]")
                             .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END, ");
-                } else {
+                } else if (f.fieldType.equalsIgnoreCase("INT") || f.fieldType.equalsIgnoreCase("BIGINT")) {
+                    suffix.append("CAST(CONVERT(FLOAT,")
+                            .append("[")
+                            .append(f.sourceFieldName)
+                            .append("])")
+                            .append(" AS ")
+                            .append(f.fieldType)
+                            .append(")")
+                            .append(" AS ")
+                            .append("[")
+                            .append(f.sourceFieldName)
+                            .append("]")
+                            .append(",");
+                }else {
                     suffix.append("CAST(")
                             .append("[")
                             .append(f.sourceFieldName)
@@ -195,6 +208,19 @@ public class FactoryCodePreviewSqlHelper {
                             .append(f.fieldEnName)
                             .append("]")
                             .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END, ");
+                } else if (f.fieldType.equalsIgnoreCase("INT") || f.fieldType.equalsIgnoreCase("BIGINT")) {
+                    suffix.append("CAST(CONVERT(FLOAT,")
+                            .append("[")
+                            .append(f.fieldEnName)
+                            .append("])")
+                            .append(" AS ")
+                            .append(f.fieldType)
+                            .append(")")
+                            .append(" AS ")
+                            .append("[")
+                            .append(f.fieldEnName)
+                            .append("]")
+                            .append(",");
                 } else {
                     suffix.append("CAST(")
                             .append("[")
@@ -239,7 +265,7 @@ public class FactoryCodePreviewSqlHelper {
      * @return
      */
     public static String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
-        //全量和追加的区别在于：多了一段truncate table tableName...
+        //全量和追加的区别在于：多了一段DELETE FROM tableName...
         //调用封装的追加方式拼接sql方法
         StringBuilder suffixSql =
                 new StringBuilder(FactoryCodePreviewSqlHelper.insertAndSelectSql(tableName, sourceTableName, fieldList));
