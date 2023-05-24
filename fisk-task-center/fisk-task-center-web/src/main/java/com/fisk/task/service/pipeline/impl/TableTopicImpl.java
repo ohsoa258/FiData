@@ -116,8 +116,10 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
     @Override
     public List<TableTopicDTO> getByTopicName(String topicName) {
         List<TableTopicPO> tableTopics = new ArrayList<>();
+
         List<TableTopicPO> list = this.query().eq("topic_name", topicName).eq("del_flag", 1).list();
         for (TableTopicPO dto : list) {
+            List<TableTopicPO> tableTopics1 = new ArrayList<>();
             int tableId = dto.tableId;
             int tableType = dto.tableType;
             int topicType = dto.topicType;
@@ -125,20 +127,15 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
                 topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
             }
             int taskId = dto.componentId;
-            List<TableTopicPO> list1 = new ArrayList<>();
+            //无表的组件走if里面
             if (Objects.equals(tableId, 0)) {
-                list1 = this.query().eq("table_id", tableId).eq("table_type", tableType).eq("component_id", taskId)
-                        .eq("del_flag", 1).like("topic_name", topicName).list();
+                tableTopics1 = this.query().eq("table_type", tableType).eq("component_id", taskId)
+                        .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
             } else {
-                list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
+                tableTopics1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
                         .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
             }
-
-            for (TableTopicPO dto1 : list1) {
-                if (!Objects.equals(dto.topicName, dto1.topicName)) {
-                    tableTopics.add(dto1);
-                }
-            }
+            tableTopics.addAll(tableTopics1);
         }
         return TableTopicMap.INSTANCES.listPoToDto(tableTopics);
     }
