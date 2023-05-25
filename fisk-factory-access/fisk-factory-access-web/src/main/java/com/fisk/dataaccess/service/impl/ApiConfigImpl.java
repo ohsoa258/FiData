@@ -175,22 +175,29 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEnum addData(ApiConfigDTO dto) {
+    public ResultEntity<Object> addData(ApiConfigDTO dto) {
         // 当前字段名不可重复,得保证同一应用下
         boolean flag = checkApiName(dto);
         if (flag) {
-            return ResultEnum.APINAME_ISEXIST;
+            return ResultEntityBuild.build(ResultEnum.APINAME_ISEXIST);
         }
 
         // dto -> po
         ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
         // 参数校验
         if (model == null) {
-            return ResultEnum.PARAMTER_NOTNULL;
+            return  ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
+
         //保存
-        return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        boolean save = this.save(model);
+
+        if (!save) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, model.id);
     }
 
     private boolean checkApiName(ApiConfigDTO dto) {

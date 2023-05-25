@@ -33,7 +33,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addData(ApiConfigDTO dto);
+    ResultEntity<Object> addData(ApiConfigDTO dto);
 
     /**
      * 添加api下的物理表--保存or发布

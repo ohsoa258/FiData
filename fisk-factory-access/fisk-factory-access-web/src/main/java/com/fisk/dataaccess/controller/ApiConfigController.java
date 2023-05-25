@@ -52,7 +52,7 @@ public class ApiConfigController {
     @ApiOperation(value = "添加api")
     public ResultEntity<Object> addData(@RequestBody ApiConfigDTO dto) {
 
-        return ResultEntityBuild.build(service.addData(dto));
+        return service.addData(dto);
     }
 
     @PostMapping("/addApiDetail")
