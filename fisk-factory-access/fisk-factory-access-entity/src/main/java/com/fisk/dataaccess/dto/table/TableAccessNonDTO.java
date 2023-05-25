@@ -3,6 +3,7 @@ package com.fisk.dataaccess.dto.table;
 import com.fisk.common.core.baseObject.dto.BaseDTO;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
+import com.fisk.dataaccess.dto.api.ApiParameterDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -107,6 +108,9 @@ public class TableAccessNonDTO extends BaseDTO {
      */
     @ApiModelProperty(value = "表字段对象")
     public List<TableFieldsDTO> list;
+
+    @ApiModelProperty(value = "源字段列表")
+    public List<ApiParameterDTO> fieldList;
 
     /**
      * 业务时间对象

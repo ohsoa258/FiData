@@ -53,7 +53,6 @@ import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
-import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
@@ -300,26 +299,44 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEnum.SUCCESS;
     }
 
+    public List<TableAccessNonDTO> getSourceTableAndField(long apiId) {
+        // 根据apiId获取表
+        List<TableAccessPO> tablePO = tableAccessImpl.query().eq("api_id", apiId).list();
+        List<TableAccessNonDTO> tableList = new ArrayList<>();
 
-    public List<ApiParameterDTO> getSourceFieldList(long tableAccessId) {
+        for (TableAccessPO po : tablePO) {
+            TableAccessNonDTO tableAccessNonDTO = new TableAccessNonDTO();
+            tableAccessNonDTO.tableName = po.tableName;
+            tableAccessNonDTO.id = po.id;
+            tableAccessNonDTO.displayName = po.displayName;
+            tableAccessNonDTO.tableDes = po.tableDes;
+            tableAccessNonDTO.apiId = po.apiId;
+            tableAccessNonDTO.appId = po.appId;
+            tableAccessNonDTO.pid = po.pid;
+            tableAccessNonDTO.appDataSourceId = po.appDataSourceId;
+            // 获取字段
+            List<ApiParameterPO> apiParameterPOList = apiParameterServiceImpl.query().eq("table_access_id", po.id).list();
+            tableAccessNonDTO.fieldList = new ArrayList<>();
 
-        List<ApiParameterPO> apiParameterPOList = apiParameterServiceImpl.query().eq("table_access_id",tableAccessId).list();
+            for (ApiParameterPO p : apiParameterPOList) {
+                ApiParameterDTO parameterDTO = new ApiParameterDTO();
+                parameterDTO.apiId = p.apiId;
+                parameterDTO.tableAccessId = p.tableAccessId;
+                parameterDTO.attributeType = p.attributeType;
+                parameterDTO.attributeFieldType = p.attributeFieldType;
+                parameterDTO.attributeFieldRule = p.attributeFieldRule;
+                parameterDTO.attributeFieldSample = p.attributeFieldSample;
+                parameterDTO.attributeFieldDesc = p.attributeFieldDesc;
 
-        List<ApiParameterDTO> apiParameterDTO = new ArrayList<>();
-        for (ApiParameterPO p: apiParameterPOList) {
-            ApiParameterDTO parameterDTO = new ApiParameterDTO();
-            parameterDTO.apiId = p.apiId;
-            parameterDTO.tableAccessId = p.tableAccessId;
-            parameterDTO.attributeType = p.attributeType;
-            parameterDTO.attributeFieldType = p.attributeFieldType;
-            parameterDTO.attributeFieldRule = p.attributeFieldRule;
-            parameterDTO.attributeFieldSample = p.attributeFieldSample;
-            parameterDTO.attributeFieldDesc = p.attributeFieldDesc;
-            apiParameterDTO.add(parameterDTO);
+                tableAccessNonDTO.fieldList.add(parameterDTO);
+            }
+
+            tableList.add(tableAccessNonDTO);
         }
 
-        return apiParameterDTO;
+        return tableList;
     }
+
 
     public ResultEnum addSourceField(List<ApiParameterDTO> dto)
     {
