@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -32,7 +33,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addData(ApiConfigDTO dto);
+    ResultEntity<Object> addData(ApiConfigDTO dto);
 
     /**
      * 添加api下的物理表--保存or发布
@@ -153,7 +154,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      */
     List<ApiColumnInfoDTO> getTableColumnInfoByApi(Integer apiId);
 
-    List<ApiParameterDTO> getSourceFieldList(long tableAccessId);
+    List<TableAccessNonDTO> getSourceTableAndField(long apiId);
     ResultEnum addSourceField(List<ApiParameterDTO> dto);
 
     ResultEnum deleteSourceField(long id);

@@ -53,7 +53,6 @@ import com.fisk.dataaccess.utils.json.JsonUtils;
 import com.fisk.dataaccess.utils.sql.PgsqlUtils;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
-import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
@@ -177,22 +176,29 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEnum addData(ApiConfigDTO dto) {
+    public ResultEntity<Object> addData(ApiConfigDTO dto) {
         // 当前字段名不可重复,得保证同一应用下
         boolean flag = checkApiName(dto);
         if (flag) {
-            return ResultEnum.APINAME_ISEXIST;
+            return ResultEntityBuild.build(ResultEnum.APINAME_ISEXIST);
         }
 
         // dto -> po
         ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
         // 参数校验
         if (model == null) {
-            return ResultEnum.PARAMTER_NOTNULL;
+            return  ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
+
         //保存
-        return this.save(model) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        boolean save = this.save(model);
+
+        if (!save) {
+            return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, model.id);
     }
 
     private boolean checkApiName(ApiConfigDTO dto) {
@@ -300,26 +306,44 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEnum.SUCCESS;
     }
 
+    public List<TableAccessNonDTO> getSourceTableAndField(long apiId) {
+        // 根据apiId获取表
+        List<TableAccessPO> tablePO = tableAccessImpl.query().eq("api_id", apiId).list();
+        List<TableAccessNonDTO> tableList = new ArrayList<>();
 
-    public List<ApiParameterDTO> getSourceFieldList(long tableAccessId) {
+        for (TableAccessPO po : tablePO) {
+            TableAccessNonDTO tableAccessNonDTO = new TableAccessNonDTO();
+            tableAccessNonDTO.tableName = po.tableName;
+            tableAccessNonDTO.id = po.id;
+            tableAccessNonDTO.displayName = po.displayName;
+            tableAccessNonDTO.tableDes = po.tableDes;
+            tableAccessNonDTO.apiId = po.apiId;
+            tableAccessNonDTO.appId = po.appId;
+            tableAccessNonDTO.pid = po.pid;
+            tableAccessNonDTO.appDataSourceId = po.appDataSourceId;
+            // 获取字段
+            List<ApiParameterPO> apiParameterPOList = apiParameterServiceImpl.query().eq("table_access_id", po.id).list();
+            tableAccessNonDTO.fieldList = new ArrayList<>();
 
-        List<ApiParameterPO> apiParameterPOList = apiParameterServiceImpl.query().eq("table_access_id",tableAccessId).list();
+            for (ApiParameterPO p : apiParameterPOList) {
+                ApiParameterDTO parameterDTO = new ApiParameterDTO();
+                parameterDTO.apiId = p.apiId;
+                parameterDTO.tableAccessId = p.tableAccessId;
+                parameterDTO.attributeType = p.attributeType;
+                parameterDTO.attributeFieldType = p.attributeFieldType;
+                parameterDTO.attributeFieldRule = p.attributeFieldRule;
+                parameterDTO.attributeFieldSample = p.attributeFieldSample;
+                parameterDTO.attributeFieldDesc = p.attributeFieldDesc;
 
-        List<ApiParameterDTO> apiParameterDTO = new ArrayList<>();
-        for (ApiParameterPO p: apiParameterPOList) {
-            ApiParameterDTO parameterDTO = new ApiParameterDTO();
-            parameterDTO.apiId = p.apiId;
-            parameterDTO.tableAccessId = p.tableAccessId;
-            parameterDTO.attributeType = p.attributeType;
-            parameterDTO.attributeFieldType = p.attributeFieldType;
-            parameterDTO.attributeFieldRule = p.attributeFieldRule;
-            parameterDTO.attributeFieldSample = p.attributeFieldSample;
-            parameterDTO.attributeFieldDesc = p.attributeFieldDesc;
-            apiParameterDTO.add(parameterDTO);
+                tableAccessNonDTO.fieldList.add(parameterDTO);
+            }
+
+            tableList.add(tableAccessNonDTO);
         }
 
-        return apiParameterDTO;
+        return tableList;
     }
+
 
     public ResultEnum addSourceField(List<ApiParameterDTO> dto)
     {
