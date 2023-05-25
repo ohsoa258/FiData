@@ -97,7 +97,7 @@ public class TaskPgTableStructureHelper
      * @param dataSourceType 数据源连接类型
      */
     @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
-    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
+    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) throws Exception{
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
