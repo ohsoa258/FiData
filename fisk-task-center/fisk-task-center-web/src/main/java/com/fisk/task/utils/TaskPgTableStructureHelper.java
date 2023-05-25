@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -156,6 +157,8 @@ public class TaskPgTableStructureHelper
             //判断是否有修改语句
             return updatePgTableStructure(sql, version, dto.createType);
         } catch (Exception ex) {
+            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             log.error("saveTableStructure:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
@@ -174,6 +177,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
+    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
     public String execProcedure(String version, int type, DataSourceTypeEnum dataSourceType) throws Exception {
         //配置数据库参数
         Class.forName(driverClassName);
@@ -224,6 +228,7 @@ public class TaskPgTableStructureHelper
                         }
                     } catch (SQLException e) {
                         log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                     }
                 }
             }
@@ -233,8 +238,13 @@ public class TaskPgTableStructureHelper
             return str.toString();
         } catch (SQLException e) {
             log.error("execProcedure:" + e);
-            conn.close();
+            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return "";
+        }finally {
+            if (conn!=null){
+                conn.close();
+            }
         }
     }
 
@@ -245,6 +255,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
+    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
@@ -308,7 +319,7 @@ public class TaskPgTableStructureHelper
             if (sql != null && sql.length() > 0) {
                 st = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                boolean execute = st.execute(sql);
+                st.execute(sql);
             }
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {

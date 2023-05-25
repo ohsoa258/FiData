@@ -158,9 +158,9 @@ public class BuildDataModelDorisTableListener
                 ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
-                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,"修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
                 }
-                log.info("执行存储过程返回结果" + resultEnum.getCode());
+                log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
 
                 //生成建表语句
                 List<String> pgdbTable2 = new ArrayList<>();

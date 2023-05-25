@@ -2347,8 +2347,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //nifi的三元运算,如果pipelTraceId是空的,取pipelTaskTraceId当作fidata_batch_code的值
 //        buildParameter.put("/fidata_batch_code", "${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}");
 
-        //2023-05-04 李世纪修改  大批次号直接拿${pipelTaskTraceId}，存入临时表
-        buildParameter.put("/fidata_batch_code", "${pipelTaskTraceId}");
+        //2023-05-25 李世纪修改  大批次号直接拿${fidata_batch_code}，存入临时表
+        buildParameter.put("/fidata_batch_code", "${fidata_batch_code}");
         buildParameter.put("/fidata_flow_batch_code", "${fragment.index}");
         if (StringUtils.isNotEmpty(dto.generateVersionSql)) {
             buildParameter.put("/fi_version", "${fi_version}");
