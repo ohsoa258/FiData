@@ -1,6 +1,8 @@
 package com.fisk.task.pipeline2;
 
 import com.alibaba.fastjson.JSON;
+import com.davis.client.ApiException;
+import com.davis.client.model.ProcessGroupEntity;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.framework.mdc.MDCHelper;
@@ -25,13 +27,16 @@ import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
+import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.IOlap;
 import com.fisk.task.service.nifi.ITableNifiSettingService;
+import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.utils.KafkaTemplateHelper;
+import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -76,13 +81,10 @@ public class TaskPublish {
     @Resource
     DataAccessClient dataAccessClient;
 
-
     /**
      * 接收到的本节点,需要找所有下游,根据下游状态调用
      */
     public void taskPublish(String message, Acknowledgment acke) {
-////        //李世纪 2023-05-10测试修改
-//        acke.acknowledge();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String pipelTraceId = "";
         try {
@@ -162,7 +164,23 @@ public class TaskPublish {
                                 sendPowerBiDataSetRefreshTask(kafkaReceiveDTO, pipelineId, split[4], split[6]);
                             } else {
                                 log.info("发送的topic2:{},内容:{}", topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
-                                kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+                                List<TableNifiSettingPO> list = new ArrayList<>();
+                                if (split.length == 6) {
+                                    list = iTableNifiSettingService.query().eq("type", split[3]).eq("table_access_id", split[5]).list();
+                                } else if (split.length == 7) {
+                                    list = iTableNifiSettingService.query().eq("type", split[4]).eq("table_access_id", split[6]).list();
+                                }
+                                if (!CollectionUtils.isEmpty(list)) {
+                                    groupId = list.get(0).tableComponentId;
+                                }
+                                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(groupId);
+                                //组中组件关闭数量
+                                Integer stoppedCount = processGroup.getStoppedCount();
+                                log.info("nifi组件groupId:{},stoppedCount:{}",groupId,stoppedCount);
+                                if(stoppedCount == 0){
+                                    kafkaTemplateHelper.sendMessageAsync(topic.topicName, JSON.toJSONString(kafkaReceiveDTO));
+                                }
+
                             }
                             //-----------------------------------------------------
                             //job开始日志
@@ -319,7 +337,7 @@ public class TaskPublish {
         }
     }
 
-    private void sendNextTask(String pipelTraceId, String topic, OlapTableEnum type, TaskHierarchyDTO taskHierarchy) {
+    private void sendNextTask(String pipelTraceId, String topic, OlapTableEnum type, TaskHierarchyDTO taskHierarchy) throws ApiException {
         String[] split = topic.split("\\.");
         DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(taskHierarchy.id));
         String jobTraceId = dispatchJobHierarchy.jobTraceId;
@@ -358,7 +376,7 @@ public class TaskPublish {
                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
             } else if (Objects.equals(type, OlapTableEnum.SFTPFILECOPYTASK)) {
                 SftpCopyDTO sftpCopy = getSftpCopy(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, split[6], null);
-                log.info("执行脚本任务发送卡夫卡请求参数:{}", JSON.toJSONString(sftpCopy));
+                log.info("执行SFTP文件复制发送卡夫卡请求参数:{}", JSON.toJSONString(sftpCopy));
                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_SFTP_FILE_COPY_FLOW, JSON.toJSONString(sftpCopy));
             } else if (Objects.equals(type, OlapTableEnum.POWERBIDATASETREFRESHTASK)) {
                 // 发送power刷新数据集任务
@@ -369,7 +387,23 @@ public class TaskPublish {
             } else {
                 KafkaReceiveDTO kafkaReceive = getKafkaReceive(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, simpleDateFormat.format(new Date()), TopicTypeEnum.COMPONENT_NIFI_FLOW, topic);
                 log.info("发送卡夫卡请求参数:{},内容:{}", topic, JSON.toJSONString(kafkaReceive));
-                kafkaTemplateHelper.sendMessageAsync(topic, JSON.toJSONString(kafkaReceive));
+                List<TableNifiSettingPO> list = new ArrayList<>();
+                String groupId = null;
+                if (split.length == 6) {
+                    list = iTableNifiSettingService.query().eq("type", split[3]).eq("table_access_id", split[5]).list();
+                } else if (split.length == 7) {
+                    list = iTableNifiSettingService.query().eq("type", split[4]).eq("table_access_id", split[6]).list();
+                }
+                if (!CollectionUtils.isEmpty(list)) {
+                    groupId = list.get(0).tableComponentId;
+                }
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(groupId);
+                Integer stoppedCount = processGroup.getStoppedCount();
+                //组中组件关闭数量
+                log.info("nifi组件groupId:{},stoppedCount:{}",groupId,stoppedCount);
+                if(stoppedCount == 0){
+                    kafkaTemplateHelper.sendMessageAsync(topic, JSON.toJSONString(kafkaReceive));
+                }
             }
         } else {
             //失效调用失效中心

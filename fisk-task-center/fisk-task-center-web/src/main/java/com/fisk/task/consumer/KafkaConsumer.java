@@ -181,7 +181,7 @@ public class KafkaConsumer {
     public void consumer(String message, Acknowledgment ack) {
         //iPipelineTaskPublishCenter.msg(message, ack);
         message = "[" + message + "]";
-        heartbeatService.heartbeatService(message, ack);
+        heartbeatService.endService(message, ack);
     }
 
     /**

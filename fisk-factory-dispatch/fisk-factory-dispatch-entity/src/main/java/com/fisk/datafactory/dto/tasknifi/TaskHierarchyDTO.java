@@ -2,6 +2,7 @@ package com.fisk.datafactory.dto.tasknifi;
 
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.task.enums.DispatchLogEnum;
+import com.fisk.task.enums.MyTopicStateEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -71,6 +72,10 @@ public class TaskHierarchyDTO {
      */
     @ApiModelProperty(value = "创建的时候就定义好的,在redis里面的traceid")
     public String taskTraceId;
-
+    /**
+     * 创建的时候就定义好的,在redis里面的traceid
+     */
+    @ApiModelProperty(value = "my-topic运行状态")
+    public MyTopicStateEnum myTopicState;
 
 }
