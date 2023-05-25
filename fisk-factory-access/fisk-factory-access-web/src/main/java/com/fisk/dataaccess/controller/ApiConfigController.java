@@ -7,6 +7,7 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.api.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.service.IApiConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -152,11 +153,11 @@ public class ApiConfigController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableColumnInfoByApi(apiId));
     }
 
-    @GetMapping("/getSourceFieldList/{tableAccessId}")
-    @ApiOperation(value = "根据tableAccessId获取源字段列表")
-    public ResultEntity<List<ApiParameterDTO>> getSourceFieldList(
-            @PathVariable("tableAccessId") long tableAccessId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceFieldList(tableAccessId));
+    @GetMapping("/getSourceFieldList/{apiId}")
+    @ApiOperation(value = "根据apiId获取源表和字段")
+    public ResultEntity<List<TableAccessNonDTO>> getSourceTableAndField(
+            @PathVariable("apiId") long apiId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceTableAndField(apiId));
     }
 
     @PostMapping("/addSourceField")
