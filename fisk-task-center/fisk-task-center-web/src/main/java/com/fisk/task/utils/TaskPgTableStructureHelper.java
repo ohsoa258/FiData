@@ -97,8 +97,8 @@ public class TaskPgTableStructureHelper
      * @param version 时间戳版本号
      * @param dataSourceType 数据源连接类型
      */
-    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
-    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) throws Exception{
+//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = FkException.class)
+    public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType){
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
@@ -158,7 +158,7 @@ public class TaskPgTableStructureHelper
             return updatePgTableStructure(sql, version, dto.createType);
         } catch (Exception ex) {
             //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             log.error("saveTableStructure:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
@@ -177,7 +177,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
+//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
     public String execProcedure(String version, int type, DataSourceTypeEnum dataSourceType) throws Exception {
         //配置数据库参数
         Class.forName(driverClassName);
@@ -238,8 +238,8 @@ public class TaskPgTableStructureHelper
             return str.toString();
         } catch (SQLException e) {
             log.error("execProcedure:" + e);
-            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
-            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+//            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return "";
         }finally {
             if (conn!=null){
@@ -255,7 +255,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
+//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = FkException.class)
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
