@@ -334,7 +334,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 parameterDTO.attributeFieldRule = p.attributeFieldRule;
                 parameterDTO.attributeFieldSample = p.attributeFieldSample;
                 parameterDTO.attributeFieldDesc = p.attributeFieldDesc;
-
+                parameterDTO.attributeFieldName = p.attributeFieldName;
                 tableAccessNonDTO.fieldList.add(parameterDTO);
             }
 

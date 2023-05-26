@@ -159,7 +159,7 @@ public class ApiConfigController {
         return service.getOneApiById(apiId);
     }
 
-    @GetMapping("/getSourceFieldList/{apiId}")
+    @GetMapping("/getSourceTableAndField/{apiId}")
     @ApiOperation(value = "根据apiId获取源表和字段")
     public ResultEntity<List<TableAccessNonDTO>> getSourceTableAndField(
             @PathVariable("apiId") long apiId) {
