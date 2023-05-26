@@ -1303,6 +1303,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.setIncrementProcessorId = evaluateJsonPathProcessor.getId();
 
         //接受消息ConsumeKafka
+        /**
+         * ConsumeKafka
+         */
         ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId);
         List<ProcessorEntity> processorEntityList = new ArrayList<>();
         processorEntityList.add(consumeKafkaProcessor);
