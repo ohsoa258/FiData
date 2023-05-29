@@ -327,6 +327,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             for (ApiParameterPO p : apiParameterPOList) {
                 ApiParameterDTO parameterDTO = new ApiParameterDTO();
+                parameterDTO.id = p.id;
                 parameterDTO.apiId = p.apiId;
                 parameterDTO.tableAccessId = p.tableAccessId;
                 parameterDTO.attributeType = p.attributeType;
