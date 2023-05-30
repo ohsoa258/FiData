@@ -553,11 +553,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             tableTopic.remove(wrapper);
             //----------------------------------------------------------------------------------
             for (NifiCustomWorkDTO nifiCustomWorkDTO : nifiCustomWorkDTOS) {
-                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.DATAACCESS_API) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKCUSTOMIZESCRIPT) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.POWERBIDATASETREFRESHTASK) ||
-                        Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.SFTPFILECOPYTASK)) {
+                if (Objects.equals(nifiCustomWorkDTO.NifiNode.type, DataClassifyEnum.CUSTOMWORKSTRUCTURE) ) {
                     continue;
                 }
                 nifiNode = nifiCustomWorkDTO.NifiNode;
@@ -706,23 +702,58 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
                         componentsBuild.buildConnectProcessors(groupStructure, toJsonRes.data.getId(), processorEntityBusinessResult.data.getId(), AutoEndBranchTypeEnum.SUCCESS);
                     }
-                }else {
-                    //处理nifi流程中需要更新的topicName(非直连触发器的任务)
-                    String topic = TopicName;
-                    //不同任务获取不同TableNifiSettingPO 4类nifi流程
-                    TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
+                    continue;
+                }
+                TableTopicDTO topicDTO = new TableTopicDTO();
+                topicDTO.tableId = 0;
+                topicDTO.componentId = Math.toIntExact(nifiNode.workflowDetailId);
+                topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                topicDTO.workflowId = nifiCustomWorkList.getNifiCustomWorkflowId();
+                switch (nifiNode.type) {
+                    //非实时api
+                    case DATAACCESS_API:
+                        topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiNode.appId + "." + nifiNode.tableId;
+                        topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
+                        topicDTO.tableId = Integer.parseInt(nifiNode.tableId);
+                        tableTopic.updateTableTopicByComponentId(topicDTO);
+                        break;
+                    //自定义脚本任务
+                    case CUSTOMWORKCUSTOMIZESCRIPT:
+                        topicDTO.topicName = TopicName + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + nifiNode.workflowDetailId;
+                        topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+                        tableTopic.updateTableTopicByComponentId(topicDTO);
+                        break;
+                    //SFTP文件复制
+                    case SFTPFILECOPYTASK:
+                        topicDTO.topicName = TopicName + "." + OlapTableEnum.SFTPFILECOPYTASK.getValue() + ".0." + nifiNode.workflowDetailId;
+                        topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
+                        tableTopic.updateTableTopicByComponentId(topicDTO);
+                        break;
+                    //POWERBI数据集刷新任务
+                    case POWERBIDATASETREFRESHTASK:
+                        topicDTO.topicName = TopicName + "." + OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue() + ".0." + nifiNode.workflowDetailId;
+                        topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
+                        tableTopic.updateTableTopicByComponentId(topicDTO);
+                        break;
+                    //跟表相关的
+                    default:
+                        //处理nifi流程中需要更新的topicName(非直连触发器的任务)
+                        String topic = TopicName;
+                        //不同任务获取不同TableNifiSettingPO 4类nifi流程
+                        TableNifiSettingPO tableNifiSettingPO = getTableNifiSettingPO(nifiNode);
 
-                    Map<DataClassifyEnum, Integer> dataClassifyMap = new HashMap<>();
-                    dataClassifyMap.put(DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL, OlapTableEnum.KPI.getValue());
-                    dataClassifyMap.put(DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL, OlapTableEnum.KPI.getValue());
-                    //如果是数据建模的维度指标或者是事实指标则取OlapTableEnum.KPI.getValue()否则取tableNifiSettingPO.type
-                    Integer type = dataClassifyMap.getOrDefault(nifiNode.type, tableNifiSettingPO.type);
-                    topic += "." + type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
-                    //更新TableTopic表并更新nifi 流程中接收kafka组件的topicname
-                    ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, topic,
-                            TopicTypeEnum.COMPONENT_NIFI_FLOW, tableNifiSettingPO.tableAccessId,
-                            type, nifiNode.workflowDetailId, nifiCustomWorkList.getNifiCustomWorkflowId());
-                    Optional.ofNullable(processorEntity).ifPresent(processors::add);
+                        Map<DataClassifyEnum, Integer> dataClassifyMap = new HashMap<>();
+                        dataClassifyMap.put(DataClassifyEnum.CUSTOMWORKDATAMODELDIMENSIONKPL, OlapTableEnum.KPI.getValue());
+                        dataClassifyMap.put(DataClassifyEnum.CUSTOMWORKDATAMODELFACTKPL, OlapTableEnum.KPI.getValue());
+                        //如果是数据建模的维度指标或者是事实指标则取OlapTableEnum.KPI.getValue()否则取tableNifiSettingPO.type
+                        Integer type = dataClassifyMap.getOrDefault(nifiNode.type, tableNifiSettingPO.type);
+                        topic += "." + type + "." + tableNifiSettingPO.appId + "." + tableNifiSettingPO.tableAccessId;
+                        //更新TableTopic表并更新nifi 流程中接收kafka组件的topicname
+                        ProcessorEntity processorEntity = updateTopicNames(tableNifiSettingPO.consumeKafkaProcessorId, topic,
+                                TopicTypeEnum.COMPONENT_NIFI_FLOW, tableNifiSettingPO.tableAccessId,
+                                type, nifiNode.workflowDetailId, nifiCustomWorkList.getNifiCustomWorkflowId());
+                        Optional.ofNullable(processorEntity).ifPresent(processors::add);
+                        break;
                 }
             }
             //nifiSchedulingComponentId,重启调度组件,因为在调度的时候消费者topic_name还没改完

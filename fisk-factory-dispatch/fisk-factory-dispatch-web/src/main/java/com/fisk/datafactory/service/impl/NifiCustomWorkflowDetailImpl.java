@@ -400,52 +400,6 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                         NifiCustomWorkDTO dto = new NifiCustomWorkDTO();
                         dto.NifiNode = getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPo));
                         nifiCustomWorkDTOList.add(dto);
-                        // 保存topic
-                        TableTopicDTO topicDTO = new TableTopicDTO();
-                        //只保存非实时api的topic
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK.getName())) {
-                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.PHYSICS_API.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
-                            topicDTO.tableType = OlapTableEnum.PHYSICS_API.getValue();
-                            topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
-                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
-                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
-                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
-                        }
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.MDM_TABLE_TASK.getName())) {
-                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.MDM_DATA_ACCESS.getValue() + "." + nifiCustomWorkflowDetailPo.appId + "." + nifiCustomWorkflowDetailPo.tableId;
-                            topicDTO.tableType = OlapTableEnum.MDM_DATA_ACCESS.getValue();
-                            topicDTO.tableId = Integer.parseInt(dto.NifiNode.tableId);
-                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
-                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
-                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
-                        }
-                        //只保存调度的自定义脚本任务
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.CUSTOMIZE_SCRIPT_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
-                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
-                            topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
-                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
-                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
-                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
-                        }
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.SFTP_FILE_COPY_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
-                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.SFTPFILECOPYTASK.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
-                            topicDTO.tableType = OlapTableEnum.SFTPFILECOPYTASK.getValue();
-                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
-                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
-                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
-                        }
-                        if (Objects.equals(nifiCustomWorkflowDetailPo.componentType, ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName()) && !Objects.equals(nifiCustomWorkflowDetailPo.pid, 0)) {
-                            topicDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-                            topicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + id + "." + OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue() + ".0." + nifiCustomWorkflowDetailPo.id;
-                            topicDTO.tableType = OlapTableEnum.POWERBIDATASETREFRESHTASK.getValue();
-                            topicDTO.componentId = Math.toIntExact(nifiCustomWorkflowDetailPo.id);
-                            topicDTO.workflowId = nifiCustomWorkflowDetailPo.workflowId;
-                            publishTaskClient.updateTableTopicByComponentId(topicDTO);
-                        }
                     }
                 }
 //                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = this.query().eq("pid", po.id).orderByAsc("table_order").list().get(0);
