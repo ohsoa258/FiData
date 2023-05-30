@@ -53,6 +53,7 @@ public class ATVServiceAnalyseController {
     @ApiOperation(value = "扫描数据服务API是否熔断")
     @GetMapping("/scanDataServiceApiIsFuSing")
     public ResultEntity<Object> scanDataServiceApiIsFuSing() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.scanDataServiceApiIsFuSing());
+        analyseService.scanDataServiceApiIsFuSing();
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, true);
     }
 }

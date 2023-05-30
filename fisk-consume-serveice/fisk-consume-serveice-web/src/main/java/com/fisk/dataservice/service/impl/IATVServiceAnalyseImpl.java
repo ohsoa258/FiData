@@ -168,13 +168,13 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
         return logsMapper.getAtvTopCallApiAnalyse();
     }
 
-    @Async
     @Override
-    public boolean scanDataServiceApiIsFuSing() {
+    public void scanDataServiceApiIsFuSing() {
         AtvCallApiFuSingAnalyseVO atvCallApiFuSingAnalyseVO = new AtvCallApiFuSingAnalyseVO();
         atvCallApiFuSingAnalyseVO.setLastScanDateTime(DateTimeUtils.getNow());
         try {
             String url = scanApiAddress + "/dataservice/apiService/getToken";
+            log.info("【scanDataServiceApiIsFuSing-url】:" + url);
             TokenDTO tokenDTO = new TokenDTO();
             tokenDTO.setAppAccount("fiData_DataService_ScanTest_Account");
             tokenDTO.setAppPassword("fiData_DataService_ScanTest_Password");
@@ -198,6 +198,5 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
                 log.error("定时扫描数据服务API是否熔断，redis写入异常：" + se);
             }
         }
-        return true;
     }
 }

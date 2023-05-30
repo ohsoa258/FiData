@@ -48,5 +48,5 @@ public interface IATVServiceAnalyseService {
      *
      * @return
      */
-    boolean scanDataServiceApiIsFuSing();
+    void scanDataServiceApiIsFuSing();
 }
