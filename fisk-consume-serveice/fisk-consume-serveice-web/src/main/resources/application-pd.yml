@@ -16,6 +16,14 @@ dataservice:
     enabled: true
     api_address: http://10.220.108.140:10089
 spring:
+  hikari:
+    maximum-pool-size: 60
+    data-source-properties:
+      setIdleTimeout: 60000
+      setConnectionTimeout: 60000
+      setValidationTimeout: 3000
+      setLoginTimeout: 5
+      setMaxLifetime: 60000
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     password: .FdF_r&tj4)+
