@@ -114,8 +114,31 @@ public class ExcelUtils {
                     List<Object> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
                         //System.out.println("坐标:"+i+","+j);
-                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j));
-                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
+                        //获取当前单元格
+                        Cell cell = Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j);
+                        Object obj = getCellFormatValue(cell);
+
+                        //如果调用方法处理过的单元格是日期格式，我们再次进行处理
+                        if (obj instanceof Date){
+                            //获取当前单元格的日期格式数值
+                            /*
+                                yyyy-MM-dd----- 14
+                                yyyy年m月d日--- 31
+                                yyyy年m月------- 57
+                                m月d日  ---------- 58
+                                HH:mm----------- 20
+                                h时mm分  ------- 32
+                             */
+                            short format = cell.getCellStyle().getDataFormat();
+
+                            //调用封装的方法，获取SimpleDateFormat
+                            SimpleDateFormat dateFormat = dealWithDateCellType(format);
+
+                            obj = dateFormat.format((Date) obj);
+//                            obj = simpleDateFormat.format((Date) obj);
+                        }
+
+//                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
                     long count = col.stream().count();
@@ -128,6 +151,33 @@ public class ExcelUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * 根据excel单元格的日期格式，返回处理过的SimpleDateFormat
+     * @param formatID
+     * @return
+     */
+    private static SimpleDateFormat dealWithDateCellType(short formatID) {
+        String formatString = BuiltinFormats.getBuiltinFormat(formatID);
+//        DataFormatter dataFormatter = new DataFormatter();
+
+        SimpleDateFormat sdf = null;
+        if (formatID == 20 || formatID == 32) {
+            sdf = new SimpleDateFormat("HH:mm");
+        } else if (formatID == 14 || formatID == 31 || formatID == 57 || formatID == 58) {
+            // 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
+            sdf = new SimpleDateFormat("yyyy-MM-dd");
+        } else if (formatID == 22) {
+            // 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
+            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        } else if (formatID == 176) {
+            // 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
+            sdf = new SimpleDateFormat("yyyy-MM-dd");
+        } else {// 日期
+            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+        return sdf;
     }
 
     /**
@@ -169,9 +219,11 @@ public class ExcelUtils {
         Object cellvalue = "";
         if (cell != null) {
             switch (cell.getCellType()) {
+                //字符串
                 case STRING:
                     cellvalue = cell.getStringCellValue();
                     break;
+                //数值类型 - 整数、小数、日期
                 case NUMERIC:
                     if (DateUtil.isCellDateFormatted(cell)) {
                         cellvalue = cell.getDateCellValue();
@@ -179,9 +231,11 @@ public class ExcelUtils {
                         cellvalue = cell.getNumericCellValue();
                     }
                     break;
+                //布尔值
                 case BOOLEAN:
                     cellvalue = cell.getBooleanCellValue();
                     break;
+                //公式
                 case FORMULA:
                     switch (cell.getCachedFormulaResultType()) {
                         case STRING:
@@ -201,11 +255,13 @@ public class ExcelUtils {
                             break;
                     }
                     break;
+                //空单元格- 没值，但有单元格样式
                 case BLANK:
                     break;
+                //错误单元格
                 case ERROR:
                     break;
-                // 处理其他类型的值
+                //处理其他类型的值
                 default:
                     break;
             }
@@ -264,7 +320,7 @@ public class ExcelUtils {
                 finalListDto.add(excelDTO);
             });
         } catch (Exception e) {
-            throw new FkException(ResultEnum.READ_EXCEL_CONTENT_ERROR);
+            throw new FkException(ResultEnum.READ_EXCEL_CONTENT_ERROR,"读取excel内容失败！");
         }
         return listDto;
     }

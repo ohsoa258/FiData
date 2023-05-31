@@ -27,4 +27,9 @@ public class AccessPublishFieldDTO {
      * 事实表：是否是业务覆盖标识 0:否 1:是
      */
     public int isBusinessKey;
+
+//    /**
+//     * 目标字段名称
+//     */
+//    public String fieldEnName;
 }

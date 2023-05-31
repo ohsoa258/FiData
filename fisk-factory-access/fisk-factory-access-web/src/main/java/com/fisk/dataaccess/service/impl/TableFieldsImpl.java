@@ -1617,11 +1617,16 @@ public class TableFieldsImpl
         //遍历==>手动转换，属性不多，并未使用mapStruct
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
-            //数据接入，直接使用fieldName拼接sql
+            //源字段名称
+//            a.sourceFieldName = m.sourceFieldName.substring(m.sourceFieldName.indexOf("["));
             a.sourceFieldName = m.fieldName;
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
             a.isBusinessKey = m.isPrimarykey;
+
+//            //目标字段名称
+//            a.fieldEnName = m.fieldName;
+
             accessList.add(a);
         }
 
