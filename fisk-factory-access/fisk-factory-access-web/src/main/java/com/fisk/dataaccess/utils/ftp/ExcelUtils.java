@@ -5,7 +5,6 @@ import com.csvreader.CsvReader;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.ftp.ExcelDTO;
-import com.monitorjbl.xlsx.StreamingReader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
@@ -32,12 +31,12 @@ import static com.fisk.common.core.constants.ExcelConstants.EXCEL2003_SUFFIX_NAM
 public class ExcelUtils {
 
     /**
+     * @return org.apache.poi.ss.usermodel.Workbook
      * @description 读取Excel文件
      * @author Lock
      * @date 2021/12/28 9:59
      * @version v1.0
      * @params filePath
-     * @return org.apache.poi.ss.usermodel.Workbook
      */
     private static Workbook read(String filePath) {
         if (filePath == null) {
@@ -54,13 +53,13 @@ public class ExcelUtils {
     }
 
     /**
+     * @return org.apache.poi.ss.usermodel.Workbook excel工作簿对象
      * @description 从流中读取，上传文件可以直接获取文件流，无需暂存到服务器上
      * @author Lock
      * @date 2021/12/28 10:15
      * @version v1.0
      * @params inputStream 文件输入流
      * @params ext 文件后缀名
-     * @return org.apache.poi.ss.usermodel.Workbook excel工作簿对象
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
         try {
@@ -90,7 +89,8 @@ public class ExcelUtils {
         if (wb != null) {
             try {
                 List<List<Object>> content = new ArrayList<>();
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                //2023-05-31 李世纪修改 日期格式改为yyyy-MM-dd HH:mm:ss 避免日期数据丢失
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Sheet sheet = wb.getSheetAt(index);
                 // 获取行数
                 int getRow = 0;
@@ -118,27 +118,19 @@ public class ExcelUtils {
                         Cell cell = Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j);
                         Object obj = getCellFormatValue(cell);
 
-                        //如果调用方法处理过的单元格是日期格式，我们再次进行处理
-                        if (obj instanceof Date){
-                            //获取当前单元格的日期格式数值
-                            /*
-                                yyyy-MM-dd----- 14
-                                yyyy年m月d日--- 31
-                                yyyy年m月------- 57
-                                m月d日  ---------- 58
-                                HH:mm----------- 20
-                                h时mm分  ------- 32
-                             */
-                            short format = cell.getCellStyle().getDataFormat();
+//                        //如果调用方法处理过的单元格是日期格式，我们再次进行处理 todo:这样改不行
+//                        if (obj instanceof Date) {
+//                            Date date = (Date) obj;
+//                            String formatDate = simpleDateFormat.format(date);
+//
+//                            short dataFormat = cell.getCellStyle().getDataFormat();
+//                            //调用封装的方法，获取对应的日期格式化对象
+//                            SimpleDateFormat dateFormat = dealWithDateCellType(formatDate);
+//                            obj = dateFormat.format((Date) obj);
+////                            obj = simpleDateFormat.format((Date) obj);
+//                        }
 
-                            //调用封装的方法，获取SimpleDateFormat
-                            SimpleDateFormat dateFormat = dealWithDateCellType(format);
-
-                            obj = dateFormat.format((Date) obj);
-//                            obj = simpleDateFormat.format((Date) obj);
-                        }
-
-//                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
+                        obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
                     long count = col.stream().count();
@@ -153,32 +145,50 @@ public class ExcelUtils {
         return null;
     }
 
-    /**
-     * 根据excel单元格的日期格式，返回处理过的SimpleDateFormat
-     * @param formatID
-     * @return
-     */
-    private static SimpleDateFormat dealWithDateCellType(short formatID) {
-        String formatString = BuiltinFormats.getBuiltinFormat(formatID);
-//        DataFormatter dataFormatter = new DataFormatter();
-
-        SimpleDateFormat sdf = null;
-        if (formatID == 20 || formatID == 32) {
-            sdf = new SimpleDateFormat("HH:mm");
-        } else if (formatID == 14 || formatID == 31 || formatID == 57 || formatID == 58) {
-            // 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
-            sdf = new SimpleDateFormat("yyyy-MM-dd");
-        } else if (formatID == 22) {
-            // 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
-            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        } else if (formatID == 176) {
-            // 处理自定义日期格式：m月d日(通过判断单元格的格式id解决，id的值是58)
-            sdf = new SimpleDateFormat("yyyy-MM-dd");
-        } else {// 日期
-            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        }
-        return sdf;
-    }
+//    /**
+//     * 根据excel单元格的日期格式，返回处理过的SimpleDateFormat todo:这样行不通
+//     *
+//     * @param formatdDate)
+//     * @return
+//     */
+//    private static SimpleDateFormat dealWithDateCellType(String formatdDate) {
+////        String formatString = BuiltinFormats.getBuiltinFormat(formatID);
+////        DataFormatter dataFormatter = new DataFormatter();
+//        String[] split = formatdDate.split(":");
+//        String hour = null;
+//        String minute = null;
+//        String second = null;
+//        for (int i = 0; i < split.length; i++) {
+//            if (i == 0) {
+//                hour = split[i].substring(split[i].indexOf(" ") + 1);
+//            } else if (i == 1) {
+//                if (Integer.parseInt(split[i]) == 0) {
+//                    minute = null;
+//                } else {
+//                    minute = split[i];
+//                }
+//            } else if (i == 2) {
+//                if (Integer.parseInt(split[i]) == 0) {
+//                    second = null;
+//                } else {
+//                    second = split[i];
+//                }
+//            }
+//        }
+//        SimpleDateFormat sdf = null;
+//        if (formatdDate.contains("00:00:00")) {
+//            sdf = new SimpleDateFormat("yyyy-MM-dd");
+//        } else if (StringUtils.isEmpty(second)) {
+//            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+//        } else if (StringUtils.isEmpty(minute) && StringUtils.isEmpty(second)) {
+//            sdf = new SimpleDateFormat("yyyy-MM-dd HH");
+//        } else if (StringUtils.isEmpty(hour) && StringUtils.isEmpty(minute) && StringUtils.isEmpty(second)) {
+//            sdf = new SimpleDateFormat("yyyy-MM-dd");
+//        } else {
+//            sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        }
+//        return sdf;
+//    }
 
     /**
      * @return java.util.List<java.util.List < java.lang.String>>
@@ -208,12 +218,12 @@ public class ExcelUtils {
 
 
     /**
+     * @return java.lang.Object
      * @description 根据Cell类型设置数据
      * @author Lock
      * @date 2021/12/28 10:25
      * @version v1.0
      * @params cell excel单元格对象
-     * @return java.lang.Object
      */
     private static Object getCellFormatValue(Cell cell) {
         Object cellvalue = "";
@@ -285,15 +295,15 @@ public class ExcelUtils {
     }*/
 
     /**
+     * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
      * @description 读取excel内容
      * @author Lock
      * @date 2021/12/28 10:29
      * @version v1.0
      * @params inputStream Excel文件流
      * @params ext 文件后缀名
-     * @return java.util.List<com.fisk.dataaccess.dto.ftp.ExcelDTO>
      */
-    public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext,Integer startRow) {
+    public static List<ExcelDTO> readExcelFromInputStream(InputStream inputStream, String ext, Integer startRow) {
         List<ExcelDTO> listDto = null;
         try {
             Workbook workbook = readFromInputStream(inputStream, ext);
@@ -307,7 +317,7 @@ public class ExcelUtils {
             List<ExcelDTO> finalListDto = listDto;
             IntStream.range(0, numberOfSheets).forEachOrdered(i -> {
                 // 读取Excel内容，返回list，每一行存放一个list
-                List<List<Object>> lists = readExcelContentList(workbook, i,startRow);
+                List<List<Object>> lists = readExcelContentList(workbook, i, startRow);
                 ExcelDTO excelDTO = new ExcelDTO();
                 // excel预览内容 根据用户定义的起始行预览
                 excelDTO.excelContent = lists;
@@ -320,7 +330,7 @@ public class ExcelUtils {
                 finalListDto.add(excelDTO);
             });
         } catch (Exception e) {
-            throw new FkException(ResultEnum.READ_EXCEL_CONTENT_ERROR,"读取excel内容失败！");
+            throw new FkException(ResultEnum.READ_EXCEL_CONTENT_ERROR, "读取excel内容失败！");
         }
         return listDto;
     }
@@ -334,7 +344,7 @@ public class ExcelUtils {
      * @params inputStream
      * @params ext
      */
-    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename,Integer startRow) {
+    public static List<ExcelDTO> readCsvFromInputStream(InputStream inputStream, String filename, Integer startRow) {
         List<ExcelDTO> listDto = null;
         try {
             listDto = new ArrayList<>();

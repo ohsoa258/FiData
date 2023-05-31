@@ -243,7 +243,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
         if (wb != null) {
             try {
                 List<List<Object>> content = new ArrayList<>();
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 Sheet sheet = wb.getSheet(sheetName);
                 // 获取行数
                 int getRow = 0;

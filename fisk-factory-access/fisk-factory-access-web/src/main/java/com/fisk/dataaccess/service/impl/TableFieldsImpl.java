@@ -1618,7 +1618,7 @@ public class TableFieldsImpl
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
             //源字段名称
-//            a.sourceFieldName = m.sourceFieldName.substring(m.sourceFieldName.indexOf("["));
+//            a.sourceFieldName = m.sourceFieldName.substring(m.sourceFieldName.indexOf("[")).replace("[","").replace("]","");
             a.sourceFieldName = m.fieldName;
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
