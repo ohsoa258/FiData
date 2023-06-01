@@ -716,8 +716,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
         List<FieldConfigVO> fieldConfigVOS = new ArrayList<>();
-        int count = 1;
-        while (rs.next() && count <= 10) {
+        while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
@@ -726,7 +725,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
             }
-            count++;
             array.add(jsonObj);
         }
 
