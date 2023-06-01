@@ -184,7 +184,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
 
                 } else {
                     log.error("userclient无法查询到ods库的连接信息");
-                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,"userclient无法查询到ods库的连接信息");
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "userclient无法查询到ods库的连接信息");
                 }
             }
         } catch (Exception e) {
@@ -350,6 +350,9 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @params ext 文件后缀名
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
+        //因为传参前使用split方法去掉了".",因此这里需要加上 "." 才能获取正确的工作簿对象
+        //2023-06-01 李世纪添加
+        ext = "." + ext;
         try {
             if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
                 // Excel 2003
