@@ -169,7 +169,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         iPipelineTaskPublishCenter.getPipeDagDto(Hierarchy, pipelTraceId);
 
                         //管道开始,job开始,task开始
-                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName);
+                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName,pipelTraceId);
                         for (TableTopicDTO topic : topicNames) {
                             String[] split = topic.topicName.split("\\.");
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.valueOf(split[6]));

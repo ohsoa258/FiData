@@ -123,7 +123,7 @@ public class TaskPublish {
                         iPipelineTaskPublishCenter.getPipeDagDto(hierarchy, pipelTraceId);
 
                         //管道开始,job开始,task开始
-                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName);
+                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName,pipelTraceId);
                         for (TableTopicDTO topic : topicNames) {
                             String[] split = topic.topicName.split("\\.");
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.valueOf(split[6]));
@@ -262,13 +262,23 @@ public class TaskPublish {
                         TaskHierarchyDTO data = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                         //本节点
                         NifiCustomWorkflowDetailDTO itselfPort = data.itselfPort;
-                        String id = String.valueOf(itselfPort.id);
-                        TableTopicDTO topicSelf = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort.id),
-                                nifiGetPortHierarchy.tableId, kafkaReceiveDTO.tableType);
-
+                        //组件内最后一个节点(因为最后一个节点的nextList会有下一个组件第一个任务)
+                        TaskHierarchyDTO lastTaskHierarchyDTO = null;
+                        Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                        Iterator<Map.Entry<Object, Object>> taskNodeMap = hmTask.entrySet().iterator();
+                        while (taskNodeMap.hasNext()) {
+                            Map.Entry<Object, Object> next = taskNodeMap.next();
+                            TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
+                            if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == data.itselfPort.pid){
+                                if (taskNodeHierarchyDTO.pipeEndFlag){
+                                    lastTaskHierarchyDTO = taskNodeHierarchyDTO;
+                                }
+                            }
+                        }
                         //下一级
-                        List<NifiPortsHierarchyNextDTO> nextList = data.nextList;
+                        List<NifiPortsHierarchyNextDTO> nextList = lastTaskHierarchyDTO.nextList;
                         if (!CollectionUtils.isEmpty(nextList)) {
+                            //可能连接多个组件
                             for (NifiPortsHierarchyNextDTO nifiPortsHierarchyNext : nextList) {
                                 //下一级本身
                                 NifiGetPortHierarchyDTO nextHierarchy = new NifiGetPortHierarchyDTO();
@@ -279,18 +289,20 @@ public class TaskPublish {
                                 DispatchJobHierarchyDTO nextDispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(itselfPort1.id));
                                 String nextJobTraceId = nextDispatchJobHierarchy.jobTraceId;
                                 log.info("下一级jobtraceid:{},{}", itselfPort1.id, nextJobTraceId);
-                                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceiveDTO.pipelTraceId);
-                                TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(String.valueOf(nextHierarchy.nifiCustomWorkflowDetailId)).toString(), TaskHierarchyDTO.class);
-                                ChannelDataEnum channel = ChannelDataEnum.getValue(itselfPort1.componentType);
-                                OlapTableEnum olapTableEnum = ChannelDataEnum.getOlapTableEnum(channel.getValue());
-                                log.info("表类别:{}", olapTableEnum);
+                                List<Long> componentIds = new ArrayList<>();
+                                Iterator<Map.Entry<Object, Object>> nextTaskNodeMap = hmTask.entrySet().iterator();
+                                while (nextTaskNodeMap.hasNext()) {
+                                    Map.Entry<Object, Object> next = nextTaskNodeMap.next();
+                                    TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
+                                    if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == itselfPort1.pid){
+                                        componentIds.add(taskNodeHierarchyDTO.itselfPort.id);
+                                    }
+                                }
                                 //下一级所有的上一级
                                 List<Long> upPortList = nifiPortsHierarchyNext.upPortList;
-                                //判断redis里面有没有这个key    itselfPort1(key,很关键,tnnd)
-                                TableTopicDTO topicDTO = iTableTopicService.getTableTopicDTOByComponentId(Math.toIntExact(itselfPort1.id),
-                                        itselfPort1.tableId, olapTableEnum.getValue());
-                                String topic = topicDTO.topicName;
-                                String upPid = "";
+                                //下一组件所有任务的topic
+                                List<TableTopicDTO> topicDTOs = iTableTopicService.getTableTopicDTOByComponentId(componentIds);
+                                log.info("topicDTOs:{}",topicDTOs);
                                 if (!CollectionUtils.isEmpty(upPortList)) {
                                     boolean goNext = true;
                                     for (Long upId : upPortList) {
@@ -300,24 +312,22 @@ public class TaskPublish {
                                                 goNext = false;
                                             }
                                         }
-                                        upPid = String.valueOf(dispatchJobHierarchy.id);
                                     }
-                                    List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("job_trace_id", nextJobTraceId).eq("task_id", taskNext.itselfPort.id).list();
+                                    List<PipelTaskLogPO> list = iPipelTaskLog.query().eq("job_trace_id", nextJobTraceId).list();
                                     if (goNext && !taskNext.taskProcessed && CollectionUtils.isEmpty(list)) {
-                                        sendNextTask(pipelTraceId, topic, olapTableEnum, taskHierarchy);
-                                        if (Objects.equals(String.valueOf(itselfPort1.pid), upPid)) {
-                                            log.info("job没有变");
-                                        } else {
-                                            //job开始日志
-                                            Map<Integer, Object> jobMap = new HashMap<>();
-                                            //任务依赖的组件
-                                            jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                            iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, nextJobTraceId, String.valueOf(itselfPort1.pid));
+                                        //job开始日志
+                                        Map<Integer, Object> jobMap = new HashMap<>();
+                                        //任务依赖的组件
+                                        jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                        iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, nextJobTraceId, String.valueOf(itselfPort1.pid));
+                                        for (TableTopicDTO topicDTO : topicDTOs) {
+                                            TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmTask.get(topicDTO.componentId.toString()).toString(), TaskHierarchyDTO.class);
+                                            sendNextTask(pipelTraceId, topicDTO.topicName,OlapTableEnum.getNameByValue(topicDTO.tableType),taskHierarchy);
+                                            HashMap<Integer, Object> taskMap = new HashMap<>();
+                                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                            log.info("第三处调用保存task日志");
+                                            iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, nextJobTraceId, taskHierarchy.taskTraceId, taskMap, String.valueOf(taskHierarchy.itselfPort.id), String.valueOf(taskHierarchy.itselfPort.tableId), OlapTableEnum.getNameByValue(topicDTO.tableType).getValue());
                                         }
-                                        HashMap<Integer, Object> taskMap = new HashMap<>();
-                                        taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                        log.info("第三处调用保存task日志");
-                                        iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, nextJobTraceId, taskNext.taskTraceId, taskMap, String.valueOf(taskNext.itselfPort.id), taskNext.itselfPort.tableId, olapTableEnum.getValue());
                                     }
                                 }
                             }
