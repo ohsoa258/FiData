@@ -157,11 +157,11 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     // 循环插入数据
                     int batchSize = 1000; // 每批次插入的数据条数
                     int count = 0;
-                    int excelRowCount = 1;
+//                    int excelRowCount = 1;
                     assert lists != null;
                     for (List list : lists) {
 
-                        log.info("excel第" + excelRowCount + "行数据个数：{}", list.size());
+//                        log.info("excel第" + excelRowCount + "行数据个数：{}", list.size());
                         for (int i = 0; i < list.size(); i++) {
                             //列数和占位符必须匹配
                             if (i >= columnCount) break;
@@ -174,7 +174,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             }
                         }
                         pstmt.addBatch();
-                        excelRowCount++;
+//                        excelRowCount++;
                         count++;
                         if (count % batchSize == 0) {
                             pstmt.executeBatch();
@@ -184,7 +184,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
 
                 } else {
                     log.error("userclient无法查询到ods库的连接信息");
-                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,"userclient无法查询到ods库的连接信息");
                 }
             }
         } catch (Exception e) {
