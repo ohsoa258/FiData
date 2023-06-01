@@ -58,6 +58,13 @@ public interface ITableTopicService extends IService<TableTopicPO> {
      * @return Integer
      */
     TableTopicDTO getTableTopicDTOByComponentId(Integer id, String tableId, Integer tableType);
+    /**
+     * 根据ComponentId查询tableTopicDTO
+     *
+     * @param componentId
+     * @return TableTopicDTO
+     */
+    List<TableTopicDTO> getTableTopicDTOByComponentId(List<Long> componentId);
 
     /**
      * 根据管道topic找到实际topic
@@ -65,7 +72,7 @@ public interface ITableTopicService extends IService<TableTopicPO> {
      * @param topicName
      * @return List<TableTopicDTO>
      */
-    List<TableTopicDTO> getByTopicName(String topicName);
+    List<TableTopicDTO> getByTopicName(String topicName,String pipelTraceId);
 
     /**
      * 管道删除组件,同时删除topic
