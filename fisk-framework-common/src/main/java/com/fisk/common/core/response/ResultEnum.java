@@ -70,6 +70,8 @@ public enum ResultEnum {
     SET_KEEP_NUMBER_ERROR(1040,"设置stg保存时间失败"),
     SAVE_ACCESS_DATA_SOURCE_ERROR(1041,"数据接入服务修改数据源失败"),
     GET_ACCESS_DATA_SOURCE_ERROR(1042,"根据SystemDataSourceId获取数据接入引用的数据源信息失败"),
+    DATA_SOURCE_IS_USING(1043,"平台数据源删除失败！当前要删除的数据源仍有数据接入的app应用在引用，请移除引用后在删除！"),
+    APP_IS_NOT_EXISTS(1044,"数据接入-app应用不存在"),
 
     /**
      * 报表可视化服务，错误码从2000开始

@@ -91,16 +91,16 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         String odsTableName = "";
         if (buildPhysicalTableDTO.whetherSchema) {
             odsTableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
-            stg_sql1 = sql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName);
-            stg_sql2 = stgSql.toString().replace("fi_tableName", buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName);
-            stg_sql2 = "DROP TABLE IF EXISTS " + buildPhysicalTableDTO.appAbbreviation + ".stg_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
+            stg_sql1 = sql.toString().replace("fi_tableName", "[" + buildPhysicalTableDTO.appAbbreviation + "].[" + buildPhysicalTableDTO.tableName + "]");
+            stg_sql2 = stgSql.toString().replace("fi_tableName", "[" + buildPhysicalTableDTO.appAbbreviation + "].[stg_" + buildPhysicalTableDTO.tableName + "]");
+            stg_sql2 = "DROP TABLE IF EXISTS " + "[" + buildPhysicalTableDTO.appAbbreviation + "].[stg_" + buildPhysicalTableDTO.tableName + "];" + stg_sql2 +
+                    "create index enableflagsy on [stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "] (fi_enableflag);";
         } else {
             odsTableName = "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
-            stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
-            stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
-            stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2 +
-                    "create index enableflagsy on stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + " (fi_enableflag);";
+            stg_sql1 = sql.toString().replace("fi_tableName", "[ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "]");
+            stg_sql2 = stgSql.toString().replace("fi_tableName", "[stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "]");
+            stg_sql2 = "DROP TABLE IF EXISTS " + "[stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "];" + stg_sql2 +
+                    "create index enableflagsy on [stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "] (fi_enableflag);";
         }
         List<String> sqlList = new ArrayList<>();
         //alter table Date add constraint PK_Date primary key(ID)
@@ -247,7 +247,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             }
         }
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-            sql = sql.substring(0,sql.length() - 1);
+            sql = sql.substring(0, sql.length() - 1);
         }
         log.info("函数语句:" + sql);
         return sql;
@@ -287,7 +287,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
     @Override
     public String queryMdmNumbersField(BuildMdmNifiFlowDTO dto, AccessMdmConfigDTO config, String groupId) {
-        String mdmTableName = "mdm_"+dto.getModelName()+"_"+dto.getEntityName();
+        String mdmTableName = "mdm_" + dto.getModelName() + "_" + dto.getEntityName();
         String querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                 "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
                 "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + mdmTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
@@ -296,8 +296,8 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
     @Override
     public String delMdmField(BuildMdmNifiFlowDTO dto, AccessMdmConfigDTO config, String groupId) {
-        String stgTableName = "stg_"+dto.getModelName()+"_"+dto.getEntityName();
-        String delSql = "delete from " + stgTableName + " where fidata_import_type='"+ ImportTypeEnum.NIFI_SYNC.getValue()+"'";
+        String stgTableName = "stg_" + dto.getModelName() + "_" + dto.getEntityName();
+        String delSql = "delete from " + stgTableName + " where fidata_import_type='" + ImportTypeEnum.NIFI_SYNC.getValue() + "'";
         return delSql;
     }
 
@@ -388,7 +388,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
         });
 
-        String sql1 = "CREATE TABLE " + modelPublishTableDTO.tableName + " ( " + tablePk + " BIGINT IDENTITY(1,1) NOT NULL, ";
+        String sql1 = "CREATE TABLE [" + modelPublishTableDTO.tableName + "] ( " + tablePk + " BIGINT IDENTITY(1,1) NOT NULL, ";
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
@@ -408,7 +408,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         //创建表
         log.info("pg_dw建表语句" + sql1);
         //String stgTable = sql1.replaceFirst(tableName, "stg_" + tableName);
-        String stgTable = "DROP TABLE IF EXISTS " + modelPublishTableDTO.prefixTempName + tableName + "; CREATE TABLE " + modelPublishTableDTO.prefixTempName + tableName + " (" + tablePk + " BIGINT IDENTITY(1,1) NOT NULL ," + stgSqlFileds.toString() + associatedKey + "fi_createtime DATETIME DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
+        String stgTable = "DROP TABLE IF EXISTS [" + modelPublishTableDTO.prefixTempName + tableName + "]; CREATE TABLE [" + modelPublishTableDTO.prefixTempName + tableName + "] (" + tablePk + " BIGINT IDENTITY(1,1) NOT NULL ," + stgSqlFileds.toString() + associatedKey + "fi_createtime DATETIME DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3');";
         //stgTable += "create index " + tableName + "enableflagsy on stg_" + tableName + " (fi_enableflag);";
         sqlList.add(stgTable);
         sqlList.add(sql1);
