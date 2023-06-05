@@ -1617,8 +1617,8 @@ public class TableFieldsImpl
         //遍历==>手动转换，属性不多，并未使用mapStruct
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
-            //数据接入，直接使用fieldName拼接sql
-            a.sourceFieldName = m.fieldName;
+            //不论是数接还是数仓，建成的temp/stg表和目标表（ods,dw库里的目标表）都是使用的目标字段
+            a.fieldEnName = m.fieldName;
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
             a.isBusinessKey = m.isPrimarykey;

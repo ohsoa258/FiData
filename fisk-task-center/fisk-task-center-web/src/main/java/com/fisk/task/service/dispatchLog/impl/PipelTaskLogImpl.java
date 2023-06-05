@@ -93,6 +93,11 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                         taskMap.put(taskId, JSON.toJSONString(dto));
                         redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, taskMap, Long.parseLong(maxTime));
                     } else if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
+                        if (next.getKey() == DispatchLogEnum.taskstart.getValue()){
+                            dto.taskStatus = DispatchLogEnum.taskstart;
+                        }else if (next.getKey() == DispatchLogEnum.taskend.getValue()){
+                            dto.taskStatus = DispatchLogEnum.taskend;
+                        }
                        /* if (pipelTaskLog.msg.contains(NifiStageTypeEnum.PASS.getName())) {
                             dto.taskStatus = DispatchLogEnum.taskpass;
                         } else if (pipelTaskLog.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName())) {

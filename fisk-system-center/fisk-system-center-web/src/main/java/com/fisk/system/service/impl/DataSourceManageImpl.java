@@ -20,6 +20,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.datasource.*;
@@ -141,7 +142,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         if (filterQueryDTOS != null) {
             // 拼接原生筛选条件
             querySql.append(generateCondition.getCondition(filterQueryDTOS));
-        }else {
+        } else {
             querySql.append(generateCondition.getCondition(queryDTO.dto));
         }
 
@@ -189,15 +190,43 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEnum deleteDataSource(int id) {
+    public ResultEntity<Object> deleteDataSource(int id) {
+        ResultEnum resultEnum = null;
         DataSourcePO model = baseMapper.selectById(id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 //        if (model.getSourceType() == 1) {
 //            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
 //        }
-        return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+        //系统配置--平台数据源删除数据源时，需要校验数据接入是否仍有应用引用要删除的数据源，如果有，禁止删除，并提醒有哪些应用正引用当前数据源
+        ResultEntity<List<AppDataSourceDTO>> sources = dataAccessClient.getDataSourcesBySystemDataSourceId(id);
+        if (sources.getCode() != ResultEnum.SUCCESS.getCode()) {
+            return ResultEntityBuild.build(ResultEnum.GET_ACCESS_DATA_SOURCE_ERROR);
+        } else {
+            List<AppDataSourceDTO> data = sources.getData();
+            //新建集合预装载数据接入的app应用名称
+            List<String> appNames = new ArrayList<>();
+            appNames.add("引用该数据源的应用为：");
+            for (AppDataSourceDTO datum : data) {
+                Long appId = datum.appId;
+                ResultEntity<AppRegistrationDTO> appRegistration = dataAccessClient.getAppNameById(appId);
+                if (appRegistration.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    log.error("获取应用信息失败");
+                    return ResultEntityBuild.build(ResultEnum.APP_IS_NOT_EXISTS, "获取应用信息失败");
+                } else {
+                    String appName = appRegistration.getData().appName;
+                    appNames.add("[" + appName + "]");
+                }
+            }
+            if (CollectionUtils.isNotEmpty(data)) {
+                log.info("当前数据源仍有数据接入的app应用在引用！");
+                return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_IS_USING, appNames);
+            } else {
+                resultEnum = baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+            }
+        }
+        return ResultEntityBuild.build(resultEnum);
     }
 
     @Override

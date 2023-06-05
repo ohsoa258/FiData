@@ -8,11 +8,13 @@ import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -64,6 +66,30 @@ public class DataSourceController {
     @GetMapping("/getOutSource/{driverId}")
     public ResultEntity<DataSourceDTO> getOutSourceFromSystemConfigById(@PathVariable("driverId") Integer id) {
         return service.getOutSourceById(id);
+    }
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     * @param dto
+     * @return
+     */
+    @ApiOperation(value = "修改数据接入引用的平台配置数据源信息")
+    @PostMapping("/editDataSourceByTask")
+    public ResultEntity<Boolean> editDataSourceByTask(@RequestBody DataSourceSaveDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.editDataSource(dto));
+    }
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "根据SystemDataSourceId获取数据接入引用的数据源信息")
+    @GetMapping("/getDataSourcesBySystemDataSourceId")
+    public ResultEntity<List<AppDataSourceDTO>> getDataSourcesBySystemDataSourceId(@RequestParam("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataSourcesBySystemDataSourceId(id));
     }
 
 }

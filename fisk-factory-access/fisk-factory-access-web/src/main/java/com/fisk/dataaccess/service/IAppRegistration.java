@@ -325,4 +325,11 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<AppDriveTypeDTO> getDriveTypeByAppId(Long appid);
+
+    /**
+     * 根据appId获取app应用名称
+     * @param id
+     * @return
+     */
+    AppRegistrationDTO getAppNameById(Long id);
 }

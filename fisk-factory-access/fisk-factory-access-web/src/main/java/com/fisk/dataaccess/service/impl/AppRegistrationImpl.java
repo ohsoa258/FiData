@@ -2,6 +2,7 @@ package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -172,7 +173,7 @@ public class AppRegistrationImpl
         Boolean aBoolean = checkSourcesTypeIfOk(data);
         if (!aBoolean){
             log.error("当前应用选择的数据源类型存在冲突！");
-            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR);
+            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR,"当前应用选择的数据源类型存在冲突");
         }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -2031,6 +2032,19 @@ public class AppRegistrationImpl
 //                        ArrayList::new));
         //调用封装的筛选方法
         return chooseDriveType(data, appDriveTypeDTOS);
+    }
+
+    /**
+     * 根据appId获取app应用名称
+     * @param id
+     * @return
+     */
+    @Override
+    public AppRegistrationDTO getAppNameById(Long id) {
+        QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
+        wrapper.eq("id",id).select("app_name");
+        AppRegistrationPO one = getOne(wrapper);
+        return AppRegistrationMap.INSTANCES.poToDto(one);
     }
 
     /**

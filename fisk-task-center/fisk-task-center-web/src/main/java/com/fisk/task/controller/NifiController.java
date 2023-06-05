@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -47,6 +48,8 @@ public class NifiController {
     INifiCustomWorkFlow iNifiCustomWorkFlow;
     @Resource
     UserClient userClient;
+    @Resource
+    DataAccessClient dataAccessClient;
     @Resource
     ISftpDataUploadListener iSftpDataUploadListener;
     @ApiOperation("修改调度")
@@ -142,6 +145,15 @@ public class NifiController {
                 log.error("system服务修改数据源失败，[{}]", resultEntity.getMsg());
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
             }
+            //在修改数据源的同时，连带修改数据接入引用了平台配置数据源的app应用的数据源信息
+            //远程调用数据接入的方法
+            ResultEntity<Boolean> booleanResultEntity = dataAccessClient.editDataSourceByTask(dto);
+            if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                log.error("数据接入服务修改数据源失败，[{}]", booleanResultEntity.getMsg());
+                return ResultEntityBuild.build(ResultEnum.SAVE_ACCESS_DATA_SOURCE_ERROR);
+            }
+
+
         } catch (Exception e) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }

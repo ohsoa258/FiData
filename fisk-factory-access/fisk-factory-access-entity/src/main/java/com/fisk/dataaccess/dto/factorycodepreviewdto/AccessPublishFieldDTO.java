@@ -19,12 +19,13 @@ public class AccessPublishFieldDTO {
     public int fieldLength;
 
     /**
-     * 源字段名称
+     * 数据接入--目标字段名称
      */
-    public String sourceFieldName;
+    public String fieldEnName;
 
     /**
      * 事实表：是否是业务覆盖标识 0:否 1:是
      */
     public int isBusinessKey;
+
 }

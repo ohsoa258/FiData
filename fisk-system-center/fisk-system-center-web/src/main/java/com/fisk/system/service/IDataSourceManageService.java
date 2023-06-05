@@ -68,7 +68,7 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @param id
      * @return 执行结果
      */
-    ResultEnum deleteDataSource(int id);
+    ResultEntity<Object> deleteDataSource(int id);
 
     /**
      * 新增数据

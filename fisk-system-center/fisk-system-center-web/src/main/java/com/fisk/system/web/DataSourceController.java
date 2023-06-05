@@ -82,7 +82,7 @@ public class DataSourceController {
     @DeleteMapping("/delete/{id}")
     @ApiOperation("删除数据源")
     public ResultEntity<Object> deleteDate(@PathVariable("id") int id) {
-        return ResultEntityBuild.build(service.deleteDataSource(id));
+        return service.deleteDataSource(id);
     }
 
     @PostMapping("/test")
