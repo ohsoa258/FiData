@@ -47,6 +47,18 @@ public class AppRegisterVO
     public String appAccount;
 
     /**
+     * 应用类型：1本地应用、2代理应用
+     */
+    @ApiModelProperty(value = "应用类型：1本地应用、2代理应用")
+    public int appType;
+
+    /**
+     * 应用白名单，多个逗号分隔
+     */
+    @ApiModelProperty(value = "应用白名单，多个逗号分隔")
+    public String appWhiteList;
+
+    /**
      * 密码/加密
      */
     @ApiModelProperty(value = "密码/加密")

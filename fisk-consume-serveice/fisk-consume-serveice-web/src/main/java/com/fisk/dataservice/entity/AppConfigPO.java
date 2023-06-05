@@ -38,4 +38,14 @@ public class AppConfigPO extends BasePO
      * 密码/加密
      */
     public String appPassword;
+
+    /**
+     * 应用类型：1本地应用、2代理应用
+     */
+    public int appType;
+
+    /**
+     * 应用白名单，多个逗号分隔
+     */
+    public String appWhiteList;
 }

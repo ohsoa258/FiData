@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 /**
@@ -20,8 +21,10 @@ import java.util.List;
 @Mapper
 public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO> {
     Page<AppApiSubVO> getSubscribeAll(Page<AppApiSubVO> page, @Param("query") AppApiSubQueryDTO query);
+
     /**
      * 根据应用ID获取该应用下表的数据源
+     *
      * @param apiId
      * @return
      */
@@ -47,7 +50,8 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "            AND t3.del_flag=1\n" +
             "            AND t1.type=1\n" +
             "            AND t3.id= #{apiId}")
-    List<AppApiSubVO>  getAppByIdApiService( @Param("apiId")long apiId);
+    List<AppApiSubVO> getAppByIdApiService(@Param("apiId") long apiId);
+
     /**
      * 根据应用id和apiId查询单条订阅记录
      *
