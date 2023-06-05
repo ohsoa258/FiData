@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
 import com.fisk.dataaccess.entity.AppDataSourcePO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 
 import java.util.List;
 
@@ -77,4 +78,20 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     List<AppDataSourcePO> getDataSourceDrivesTypeByAppId(Long id);
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     * @param dto
+     * @return
+     */
+    Boolean editDataSource(DataSourceSaveDTO dto);
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     * @param id
+     * @return
+     */
+    List<AppDataSourceDTO> getDataSourcesBySystemDataSourceId(Integer id);
 }

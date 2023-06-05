@@ -25,6 +25,7 @@ import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -421,4 +422,34 @@ public interface DataAccessClient {
     @ApiOperation(value = "jwt验证方式,测试获取token")
     @PostMapping("/appRegistration/getApiToken")
     ResultEntity<Object> getApiToken(@RequestBody AppDataSourceDTO dto);
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     * @param dto
+     * @return
+     */
+    @ApiOperation(value = "修改数据接入引用的平台配置数据源信息")
+    @PostMapping("/datasource/editDataSourceByTask")
+    ResultEntity<Boolean> editDataSourceByTask(@RequestBody DataSourceSaveDTO dto);
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "根据SystemDataSourceId获取数据接入引用的数据源信息")
+    @GetMapping("/datasource/getDataSourcesBySystemDataSourceId")
+    ResultEntity<List<AppDataSourceDTO>> getDataSourcesBySystemDataSourceId(@RequestParam("id") Integer id);
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 根据appId获取app应用名称
+     * @param id
+     * @return
+     */
+    @GetMapping("/appRegistration/getAppNameById")
+    @ApiOperation(value = "根据appId获取app应用名称")
+    ResultEntity<AppRegistrationDTO> getAppNameById(@RequestParam("id") Long id);
 }
