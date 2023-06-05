@@ -667,18 +667,21 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             //获取数据集
             apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS);
             rs.close();
+            int totalCount = 0;
             if (StringUtils.isNotEmpty(countSql))
             {
                 ResultSet countRs = st.executeQuery(countSql);
-                int totalCount = 0;
                 if (countRs.next()) {
                     Object count = countRs.getObject(1);
                     if (count != null && RegexUtils.isNumeric(count) != null)
                         totalCount = RegexUtils.isNumeric(count);
                 }
                 countRs.close();
-                apiPreviewVO.setTotalCount(totalCount);
+                apiPreviewVO.setTotal(totalCount);
             }
+            apiPreviewVO.setCurrent(current);
+            apiPreviewVO.setSize(size);
+            apiPreviewVO.setPage((int) Math.ceil(1.0 * totalCount / size));
         } catch (Exception e) {
             log.error("【preview】系统异常：" + e);
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());

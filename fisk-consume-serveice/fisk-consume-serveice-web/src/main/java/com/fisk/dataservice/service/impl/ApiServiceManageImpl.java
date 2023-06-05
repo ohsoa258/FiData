@@ -78,9 +78,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
     private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
-    private ApiFilterConditionMapper apiFilterConditionMapper;
-
-    @Resource
     private LogsManageImpl logsManageImpl;
 
     @Resource
@@ -351,4 +348,6 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
     }
+
+
 }
