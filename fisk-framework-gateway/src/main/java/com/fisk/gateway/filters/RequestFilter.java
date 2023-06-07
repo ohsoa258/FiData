@@ -171,6 +171,11 @@ public class RequestFilter implements GlobalFilter, Ordered {
             return true;
         }
 
+        // 代理转发不走网关验证。此处不在白名单中配置是因为路由是动态路由
+        if (request.getPath().value().contains(SystemConstants.DATA_SERVICE_PROXY)) {
+            return true;
+        }
+
         // 判断是否在白名单中
         ResultEntity<Boolean> res = authClient.pathIsExists(request.getPath().value());
         if (res.code == ResultEnum.SUCCESS.getCode() && res.data) {
