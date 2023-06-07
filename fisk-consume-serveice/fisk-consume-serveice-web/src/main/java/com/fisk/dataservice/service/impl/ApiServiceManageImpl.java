@@ -484,17 +484,19 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             clientHttpResponse.getHeaders().forEach((key, value) -> value.forEach(it -> {
                 response.setHeader(key, it);
             }));
-            // 流式写入数据，避免数据量过大一次性加载到内容导致内存溢出
-            // StreamUtils.copy(clientHttpResponse.getBody(), response.getOutputStream());
-//            try (InputStream inputStream = clientHttpResponse.getBody();
-//                 OutputStream outputStream = response.getOutputStream()) {
-//                byte[] buffer = new byte[4096];
-//                int bytesRead;
-//                while ((bytesRead = inputStream.read(buffer)) != -1) {
-//                    outputStream.write(buffer, 0, bytesRead);
-//                }
-//                outputStream.flush();
-//            }
+            /*
+             流式写入数据，避免数据量过大一次性加载到内容导致内存溢出
+             StreamUtils.copy(clientHttpResponse.getBody(), response.getOutputStream());
+                        try (InputStream inputStream = clientHttpResponse.getBody();
+                             OutputStream outputStream = response.getOutputStream()) {
+                            byte[] buffer = new byte[4096];
+                            int bytesRead;
+                            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                outputStream.write(buffer, 0, bytesRead);
+                            }
+                            outputStream.flush();
+                        }
+            */
             try (InputStream inputStream = clientHttpResponse.getBody();
                  ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                  OutputStream outputStream = response.getOutputStream()) {
