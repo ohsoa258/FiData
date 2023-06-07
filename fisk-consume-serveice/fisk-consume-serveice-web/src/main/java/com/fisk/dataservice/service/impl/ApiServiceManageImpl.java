@@ -39,6 +39,7 @@ import com.fisk.dataservice.vo.api.ApiProxyMsgVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import com.fisk.dataservice.vo.app.AppWhiteListVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
+import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
@@ -394,7 +395,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         }
         String logInfo = "代理转发接口地址：" + fullURL + ",\n";
         try {
-            String apiCode = request.getRequestURI().replace("/proxy", "");
+            String apiCode = request.getRequestURI().replace("/proxy/", "");
             // 验证是否携带apiCode
             if (StringUtils.isEmpty(apiCode)) {
                 resultEnum = ResultEnum.DS_MISSING_APICODE_IN_URL;
@@ -432,7 +433,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 return;
             }
             List<Integer> appIds = appWhiteList.stream().map(AppWhiteListVO::getAppId).collect(Collectors.toList());
-            logPO.setAppIds(String.join(",", (CharSequence) appIds));
+            logPO.setAppIds(Joiner.on(",").join(appIds));
 
             logPO.setParamCheckDate(DateTimeUtils.getNow());
             String query = request.getQueryString();
