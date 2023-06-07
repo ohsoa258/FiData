@@ -32,9 +32,9 @@ public class AppRegisterDTO
     public String appDesc;
 
     /**
-     * 应用负责人
+     * 应用申请人
      */
-    @ApiModelProperty(value = "应用负责人")
+    @ApiModelProperty(value = "应用申请人")
     @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String appPrincipal;
@@ -62,4 +62,10 @@ public class AppRegisterDTO
      */
     @ApiModelProperty(value = "应用白名单，多个逗号分隔")
     public String appWhiteList;
+
+    /**
+     * 应用白名单状态：1启用、2禁用
+     */
+    @ApiModelProperty(value = "应用白名单状态：1启用、2禁用")
+    public int appWhiteListState;
 }

@@ -12,6 +12,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.Dto.SqlParmDto;
 import com.fisk.common.core.utils.EnCryptUtils;
 import com.fisk.common.core.utils.RegexUtils;
@@ -34,20 +35,27 @@ import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
+import com.fisk.dataservice.vo.app.AppWhiteListVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URI;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -357,5 +365,185 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         return ResultEntityBuild.buildData(resultEnum, responseVO);
     }
 
+    @Override
+    public void proxy(HttpServletRequest request, HttpServletResponse response) {
+        // 开始记录日志
+        LogPO logPO = new LogPO();
+        logPO.setRequestStartDate(DateTimeUtils.getNow());
+        logPO.setLogType(LogTypeEnum.AGENT_API.getValue());
+        logPO.setLogLevel(LogLevelTypeEnum.INFO.getName());
+        logPO.setBusinessState("失败");
+        ResultEnum resultEnum = ResultEnum.REQUEST_SUCCESS;
+        String logInfo = "代理转发接口地址：" + request.getRequestURI() + (StringUtils.isNotEmpty(request.getQueryString()) ? "?" + request.getQueryString() : "") + ",\n";
+        try {
+            String apiCode = request.getRequestURI().replace("/proxy", "");
+            // 验证是否携带apiCode
+            if (StringUtils.isEmpty(apiCode)) {
+                resultEnum = ResultEnum.DS_MISSING_APICODE_IN_URL;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+            // 验证api是否存在
+            ApiConfigPO apiConfigPO = apiRegisterMapper.getByApiCode(apiCode);
+            if (apiConfigPO == null) {
+                resultEnum = ResultEnum.DS_API_EXISTS;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+            logPO.setApiId(Math.toIntExact(apiConfigPO.getId()));
+            // 验证是否已订阅该api
+            List<AppWhiteListVO> appWhiteList = appApiMapper.getAppWhiteListByServiceId(apiConfigPO.getId());
+            if (CollectionUtils.isEmpty(appWhiteList)) {
+                resultEnum = ResultEnum.DS_APISERVICE_APP_NOTSUB;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+            // 验证订阅的api是否启用
+            appWhiteList = appWhiteList.stream().filter(t -> t.getApiState() == ApiStateTypeEnum.Enable.getValue()).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(appWhiteList)) {
+                resultEnum = ResultEnum.DS_APISERVICE_APP_NOTENABLE;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+            // 验证客户端ip是否存在于白名单中
+            String clientIp = request.getRemoteAddr();
+            appWhiteList = appWhiteList.stream().filter(t -> t.getAppWhiteListState() == 2 || t.getAppWhiteList().contains(clientIp)).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(appWhiteList)) {
+                resultEnum = ResultEnum.DS_ILLEGAL_REQUEST;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+            List<Integer> appIds = appWhiteList.stream().map(AppWhiteListVO::getAppId).collect(Collectors.toList());
+            logPO.setAppIds(String.join(",", (CharSequence) appIds));
 
+            logPO.setParamCheckDate(DateTimeUtils.getNow());
+            String query = request.getQueryString();
+            // 构建目标 URL
+            String url = apiConfigPO.getApiProxyUrl();
+            if (url.contains("?")) {
+                url += StringUtils.isNotEmpty(query) ? "?" + query.replace("?", "&") : "";
+            } else {
+                url += StringUtils.isNotEmpty(query) ? "?" + query : "";
+            }
+            logInfo += "代理转发目标接口地址：" + url + ",\n";
+            URI targetUri = new URI(url);
+
+            String methodName = request.getMethod();
+            logInfo += "代理转发目标接口类型：" + methodName + ",\n";
+            HttpMethod httpMethod = HttpMethod.resolve(methodName);
+            if (httpMethod == null) {
+                return;
+            }
+            ClientHttpRequest delegate = new SimpleClientHttpRequestFactory().createRequest(targetUri, httpMethod);
+            Enumeration<String> headerNames = request.getHeaderNames();
+            // 设置请求头
+            while (headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement();
+                Enumeration<String> v = request.getHeaders(headerName);
+                List<String> arr = new ArrayList<>();
+                while (v.hasMoreElements()) {
+                    arr.add(v.nextElement());
+                }
+                delegate.getHeaders().addAll(headerName, arr);
+            }
+            //StreamUtils.copy(request.getInputStream(), delegate.getBody());
+            try (InputStream inputStream = request.getInputStream();
+                 OutputStream outputStream = delegate.getBody()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                outputStream.flush();
+            }
+            logPO.setLogRequest("代理转发请求数据流大小：" + request.getContentLength() + "bytes");
+            // 执行远程调用
+            ClientHttpResponse clientHttpResponse = delegate.execute();
+            // 设置响应状态码
+            response.setStatus(clientHttpResponse.getStatusCode().value());
+            logPO.setResponseStatus(clientHttpResponse.getStatusCode().toString());
+            // 设置响应头
+            clientHttpResponse.getHeaders().forEach((key, value) -> value.forEach(it -> {
+                response.setHeader(key, it);
+            }));
+            // 流式写入数据，避免数据量过大一次性加载到内容导致内存溢出
+            // StreamUtils.copy(clientHttpResponse.getBody(), response.getOutputStream());
+//            try (InputStream inputStream = clientHttpResponse.getBody();
+//                 OutputStream outputStream = response.getOutputStream()) {
+//                byte[] buffer = new byte[4096];
+//                int bytesRead;
+//                while ((bytesRead = inputStream.read(buffer)) != -1) {
+//                    outputStream.write(buffer, 0, bytesRead);
+//                }
+//                outputStream.flush();
+//            }
+            try (InputStream inputStream = clientHttpResponse.getBody();
+                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                 OutputStream outputStream = response.getOutputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                int totalBytesRead = 0; // 总字节数
+
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                    byteArrayOutputStream.write(buffer, 0, bytesRead);
+                    totalBytesRead += bytesRead;
+                }
+
+                outputStream.flush();
+
+                byte[] responseData = byteArrayOutputStream.toByteArray();
+                int responseDataSize = responseData.length;
+
+                logPO.setLogResponseInfo("代理转发响应数据流大小：" + totalBytesRead + "bytes,\n代理转发响应数据量大小：" + responseDataSize + "bytes");
+            }
+            logPO.setBusinessState("成功");
+        } catch (Exception ex) {
+            log.error("代理转发异常：" + ex);
+            logInfo += "代理转发异常：" + ex + ",\n";
+            logPO.setResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR.toString());
+            resultEnum = ResultEnum.DS_PROXY_FORWARDING_ERROR;
+            doSetResponse(resultEnum, response);
+        } finally {
+            logInfo += "代理转发接口执行结果：" + resultEnum + "";
+            logPO.setLogInfo(logInfo);
+            logPO.setRequestEndDate(DateTimeUtils.getNow());
+            try {
+                logsManageImpl.saveLog(logPO);
+            } catch (Exception exs) {
+                log.error("代理服务转发请求-日志保存异常：" + exs);
+            }
+        }
+    }
+
+    private void doSetResponse(ResultEnum resultEnum, HttpServletResponse response) {
+        try {
+            ResultEntity<String> resultEntity = new ResultEntity<>();
+            resultEntity.setCode(resultEnum.getCode());
+            // 将对象转换为字节数组
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+            objectOutputStream.writeObject(resultEntity);
+            objectOutputStream.flush();
+            byte[] objectBytes = byteArrayOutputStream.toByteArray();
+
+            // 创建InputStream对象
+            InputStream inputStream = new ByteArrayInputStream(objectBytes);
+
+            // 写入HttpServletResponse对象
+            OutputStream outputStream = response.getOutputStream();
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            // 刷新输出流并关闭资源
+            outputStream.flush();
+            outputStream.close();
+            inputStream.close();
+        } catch (Exception ex) {
+            log.error("doSetResponse ex：" + ex);
+        }
+    }
 }

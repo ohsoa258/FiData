@@ -25,7 +25,6 @@ public class FilterConditionConfigDTO
      * 字段名称
      */
     @ApiModelProperty(value = "字段名称")
-    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String fieldName;
 
@@ -40,7 +39,6 @@ public class FilterConditionConfigDTO
      * GEQ - 大于或等于
      */
     @ApiModelProperty(value = "运算符")
-    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String operator;
 

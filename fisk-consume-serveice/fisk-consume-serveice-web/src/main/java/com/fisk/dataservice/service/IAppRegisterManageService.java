@@ -107,12 +107,12 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @param dto dto
      * @return 内置参数列表
      */
-    List<AppApiParmVO> getParmAll(AppApiParmQueryDTO dto);
+    List<AppApiParmVO> getParamAll(AppApiParmQueryDTO dto);
 
     /**
      * 设置内置参数
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum setParm(AppApiBuiltinParmEditDTO dto);
+    ResultEnum setParam(AppApiBuiltinParmEditDTO dto);
 }

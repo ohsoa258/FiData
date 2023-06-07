@@ -20,8 +20,10 @@ public class AppApiSubQueryDTO {
     @NotNull()
     public Integer appId;
 
-    @ApiModelProperty(value = "类型：1api服务 2表服务 3 文件服务")
-    @NotNull()
+    /**
+     * 类型：1api服务、2表服务、3文件服务
+     */
+    @ApiModelProperty(value = "类型：1api服务、2表服务、3文件服务")
     public Integer type;
 
     /**
