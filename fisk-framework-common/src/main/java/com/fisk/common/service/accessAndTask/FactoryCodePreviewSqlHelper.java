@@ -403,12 +403,14 @@ public class FactoryCodePreviewSqlHelper {
                 .append(sourceTableName)
                 .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'")
                 .append(" GROUP BY fidata_batch_code,")
-                .append(" ? ")
+                .append(" ?? ")
                 .append(") ")
                 .append("SOURCE ON TARGET.fidata_batch_code <> SOURCE.fidata_batch_code ");
 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
         StringBuilder pkFieldNames = new StringBuilder();
+        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ??
+        StringBuilder pkFieldNames1 = new StringBuilder();
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
             for (PublishFieldDTO pkField : pkFields) {
@@ -423,19 +425,115 @@ public class FactoryCodePreviewSqlHelper {
 //                            .append("]")
 //                            .append(",");
 //                }
-                pkFieldNames.append("[")
-                        .append(pkField.fieldEnName)
-                        .append("]")
-                        .append(",");
+
+                if (pkField.fieldType.equalsIgnoreCase("DATE")) {
+                    pkFieldNames.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("]")
+                            .append(",10) AS bigint)/60,'1970-01-01'),112) AS ")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("] ");
+                } else if (pkField.fieldType.equalsIgnoreCase("TIME")) {
+                    pkFieldNames.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("]")
+                            .append(",10) AS bigint)/60,'08:00:00'),112) AS ")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("] ");
+                } else if (pkField.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                    pkFieldNames.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("]")
+                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("] ");
+                } else if (pkField.fieldType.equalsIgnoreCase("DATETIME")) {
+                    pkFieldNames.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("]")
+                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
+                            .append("[")
+                            .append(pkField.fieldEnName)
+                            .append("] ");
+                }else {
+                    pkFieldNames.append("[")
+                            .append(pkField.fieldEnName)
+                            .append("]")
+                            .append(",");
+                }
             }
             //删除最后一个多余的逗号
             pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
         }
 
+        //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
+        // 去掉上一个循环的 AS ")
+        //                            .append("[")
+        //                            .append(pkField.fieldEnName)
+        //                            .append("] ");
+        //替换第二个占位符 ??
+        for (PublishFieldDTO pkField : pkFields) {
+
+            if (pkField.fieldType.equalsIgnoreCase("DATE")) {
+                pkFieldNames1.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'1970-01-01'),112) AS ")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("] ");
+            } else if (pkField.fieldType.equalsIgnoreCase("TIME")) {
+                pkFieldNames1.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'08:00:00'),112) AS ")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("] ");
+            } else if (pkField.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                pkFieldNames1.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("] ");
+            } else if (pkField.fieldType.equalsIgnoreCase("DATETIME")) {
+                pkFieldNames1.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
+                        .append("[")
+                        .append(pkField.fieldEnName)
+                        .append("] ");
+            }else {
+                pkFieldNames1.append("[")
+                        .append(pkField.fieldEnName)
+                        .append("]")
+                        .append(",");
+            }
+        }
+        //删除最后一个多余的逗号
+        pkFieldNames1.deleteCharAt(pkFieldNames.lastIndexOf(","));
+
+
         //替换规则
         String regex = "\\?";
+        String regex1 = "\\?\\?";
         //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
-        String halfSql = String.valueOf(suffix).replaceAll(regex, String.valueOf(pkFieldNames));
+        String halfSql = String.valueOf(suffix).replaceFirst(regex, String.valueOf(pkFieldNames)).replaceFirst(regex1, String.valueOf(pkFieldNames1));
+        //将所有的占位符 ?? 替换成我们拼接完成的业务覆盖标识字段字符串
 
         //String halfSql转为StringBulider,准备拼接
         StringBuilder matchAgain = new StringBuilder(halfSql);
@@ -510,10 +608,48 @@ public class FactoryCodePreviewSqlHelper {
 //                        .append("]")
 //                        .append(",");
 //            }
-            startSql.append("[")
-                    .append(f.fieldEnName)
-                    .append("]")
-                    .append(",");
+            if (f.fieldType.equalsIgnoreCase("DATE")) {
+                startSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'1970-01-01'),112) AS ")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("] ");
+            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+                startSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'08:00:00'),112) AS ")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("] ");
+            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                startSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("] ");
+            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
+                startSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("]")
+                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
+                        .append("[")
+                        .append(f.fieldEnName)
+                        .append("] ");
+            }else {
+                startSql.append("[")
+                        .append(f.fieldEnName)
+                        .append("]")
+                        .append(",");
+            }
         }
         //删除最后一个多余的逗号
         startSql.deleteCharAt(startSql.lastIndexOf(","));
@@ -924,7 +1060,9 @@ public class FactoryCodePreviewSqlHelper {
         StringBuilder tailSql = new StringBuilder(" AND ");
         if (otherLogic == 1) {
             //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
-            startSQL.append(businessTimeField)
+            startSQL.append("[")
+                    .append(businessTimeField)
+                    .append("]")
                     .append(businessOperator)
                     .append("DATEADD(")
                     .append(rangeDateUnit)
@@ -936,7 +1074,9 @@ public class FactoryCodePreviewSqlHelper {
 
             //拼接tailSql
             tailSql.append("DATEADD(MINUTE, CAST(left(")
+                    .append("[")
                     .append(businessTimeField)
+                    .append("]")
                     .append(", 10) AS bigint)/60, '1970-01-01 08:00:00')")
                     .append(businessOperator)
                     .append("DATEADD(")
@@ -964,7 +1104,9 @@ public class FactoryCodePreviewSqlHelper {
             Long businessRangeStandby = previewTableBusinessDTO.businessRangeStandby;
             //业务覆盖单位,Year,Month,Day,Hour预备值
             String rangeDateUnitStandby = previewTableBusinessDTO.rangeDateUnitStandby;
-            startSQL.append(businessTimeField)
+            startSQL.append("[")
+                    .append(businessTimeField)
+                    .append("]")
                     .append(businessOperator)
                     .append("(")
                     .append("CASE WHEN ")
@@ -989,7 +1131,9 @@ public class FactoryCodePreviewSqlHelper {
 
             //拼接tailSql
             tailSql.append("DATEADD(MINUTE, CAST(left(")
+                    .append("[")
                     .append(businessTimeField)
+                    .append("]")
                     .append(", 10) AS bigint)/60, '1970-01-01 08:00:00')")
                     .append(businessOperator)
                     .append("(CASE WHEN ")
