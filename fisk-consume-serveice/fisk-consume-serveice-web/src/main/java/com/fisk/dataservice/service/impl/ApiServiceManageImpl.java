@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
@@ -34,6 +35,7 @@ import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IApiServiceManageService;
+import com.fisk.dataservice.vo.api.ApiProxyMsgVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
 import com.fisk.dataservice.vo.app.AppWhiteListVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
@@ -374,7 +376,23 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         logPO.setLogLevel(LogLevelTypeEnum.INFO.getName());
         logPO.setBusinessState("失败");
         ResultEnum resultEnum = ResultEnum.REQUEST_SUCCESS;
-        String logInfo = "代理转发接口地址：" + request.getRequestURI() + (StringUtils.isNotEmpty(request.getQueryString()) ? "?" + request.getQueryString() : "") + ",\n";
+
+        String scheme = request.getScheme(); // 获取协议 (http 或 https)
+        String serverName = request.getServerName(); // 获取服务器名
+        int serverPort = request.getServerPort(); // 获取服务器端口号
+        String contextPath = request.getContextPath(); // 获取应用上下文路径
+        String servletPath = request.getServletPath(); // 获取Servlet路径
+        String queryString = request.getQueryString(); // 获取请求参数
+        StringBuilder fullURL = new StringBuilder();
+        fullURL.append(scheme).append("://").append(serverName);
+        if (serverPort != 80 && serverPort != 443) {
+            fullURL.append(":").append(serverPort);
+        }
+        fullURL.append(contextPath).append(servletPath);
+        if (queryString != null) {
+            fullURL.append("?").append(queryString);
+        }
+        String logInfo = "代理转发接口地址：" + fullURL + ",\n";
         try {
             String apiCode = request.getRequestURI().replace("/proxy", "");
             // 验证是否携带apiCode
@@ -461,7 +479,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             ClientHttpResponse clientHttpResponse = delegate.execute();
             // 设置响应状态码
             response.setStatus(clientHttpResponse.getStatusCode().value());
-            logPO.setResponseStatus(clientHttpResponse.getStatusCode().toString());
+            logPO.setResponseStatus(clientHttpResponse.getStatusCode().getReasonPhrase());
             // 设置响应头
             clientHttpResponse.getHeaders().forEach((key, value) -> value.forEach(it -> {
                 response.setHeader(key, it);
@@ -501,7 +519,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         } catch (Exception ex) {
             log.error("代理转发异常：" + ex);
             logInfo += "代理转发异常：" + ex + ",\n";
-            logPO.setResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR.toString());
+            logPO.setResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
             resultEnum = ResultEnum.DS_PROXY_FORWARDING_ERROR;
             doSetResponse(resultEnum, response);
         } finally {
@@ -518,30 +536,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
     private void doSetResponse(ResultEnum resultEnum, HttpServletResponse response) {
         try {
-            ResultEntity<String> resultEntity = new ResultEntity<>();
+            ApiProxyMsgVO resultEntity = new ApiProxyMsgVO();
             resultEntity.setCode(resultEnum.getCode());
-            // 将对象转换为字节数组
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(resultEntity);
-            objectOutputStream.flush();
-            byte[] objectBytes = byteArrayOutputStream.toByteArray();
+            resultEntity.setMsg(resultEnum.getMsg());
 
-            // 创建InputStream对象
-            InputStream inputStream = new ByteArrayInputStream(objectBytes);
+            // 将对象转换为JSON字符串
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(resultEntity);
 
-            // 写入HttpServletResponse对象
+            // 设置响应的Content-Type为"application/json"
+            response.setContentType("application/json");
+
+            // 将JSON字符串写入HttpServletResponse对象
             OutputStream outputStream = response.getOutputStream();
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
+            outputStream.write(json.getBytes("UTF-8"));
 
             // 刷新输出流并关闭资源
             outputStream.flush();
             outputStream.close();
-            inputStream.close();
         } catch (Exception ex) {
             log.error("doSetResponse ex：" + ex);
         }
