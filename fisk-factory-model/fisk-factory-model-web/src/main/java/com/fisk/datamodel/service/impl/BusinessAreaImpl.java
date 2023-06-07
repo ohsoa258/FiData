@@ -24,14 +24,14 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
-import com.fisk.common.service.accessAndTask.FactoryCodePreviewPgSqlHelper;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
+import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -1421,60 +1421,33 @@ public class BusinessAreaImpl
         //获取集合大小（字段数量）
         int size = fieldList.size();
 
-        //根据覆盖方式决定返回的sql
-        switch (sourceType) {
-            case SQLSERVER:
-                switch (syncMode) {
-                    //全量
-                    case 1:
-                        //调用封装的全量覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
-                    //追加
-                    case 2:
-                        //调用封装的追加覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
-                    //业务标识覆盖（业务主键覆盖）---merge覆盖
-                    case 3:
-                        //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.merge(tableName, tempTableName, fieldList);
-                    //业务时间覆盖
-                    case 4:
-                        //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
-                    //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
-                    case 5:
-                        //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.delAndInsert(tableName, tempTableName, fieldList);
-                    default:
-                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-                }
-                //todo:暂时搁置
-            case POSTGRESQL:
-                switch (syncMode) {
-                    //全量
-                    case 1:
-                        //调用封装的全量覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewPgSqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
-                    //追加
-                    case 2:
-                        //调用封装的追加覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewPgSqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
-                    //业务标识覆盖（业务主键覆盖）---merge覆盖
-                    case 3:
-                        //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                        return FactoryCodePreviewPgSqlHelper.merge(tableName, tempTableName, fieldList);
-                    //业务时间覆盖
-                    case 4:
-                        //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                        return FactoryCodePreviewPgSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
-                    //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
-                    case 5:
-                        //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                        return FactoryCodePreviewPgSqlHelper.delAndInsert(tableName, tempTableName, fieldList);
-                    default:
-                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-                }
+        IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
+        //根据覆盖方式决定返回的sql
+        switch (syncMode) {
+            //如果是0的话，不拼接任何sql
+            case 0:
+                return "";
+            //全量
+            case 1:
+                //调用封装的全量覆盖方式拼接sql方法并返回
+                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
+            //追加
+            case 2:
+                //调用封装的追加覆盖方式拼接sql方法并返回
+                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
+            //业务标识覆盖（业务主键覆盖）---merge覆盖
+            case 3:
+                //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
+                return sqlHelper.merge(tableName, tempTableName, fieldList);
+            //业务时间覆盖
+            case 4:
+                //调用封装的业务时间覆盖方式的拼接sql方法并返回
+                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
+            //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
+            case 5:
+                //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

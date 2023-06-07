@@ -89,6 +89,7 @@ public class BuildDataInputPgTableListener {
             log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         }
+        log.info("连接类型:{}",conType);
         //分辨库的类别，获取对应数据库的建表
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(conType);
         log.info("开始保存ods版本号,参数为{}", dto);

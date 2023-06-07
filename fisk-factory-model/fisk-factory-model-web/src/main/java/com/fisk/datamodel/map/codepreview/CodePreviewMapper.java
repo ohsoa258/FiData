@@ -1,7 +1,7 @@
 package com.fisk.datamodel.map.codepreview;
 
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessPublishFieldDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;

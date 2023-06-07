@@ -1,4 +1,4 @@
-package com.fisk.common.service.accessAndTask.factorycodepreviewdto;
+package com.fisk.common.service.factorycodepreview.factorycodepreviewdto;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
