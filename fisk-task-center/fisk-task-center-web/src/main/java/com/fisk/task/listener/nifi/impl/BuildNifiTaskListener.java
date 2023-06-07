@@ -565,7 +565,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 modelPublishStatusDTO.tableId = dto.id;
                 //获取数据接入配置项
                 DataAccessConfigDTO configDTO = getConfigData(dto.id, dto.appId, dto.synchronousTypeEnum, dto.type, dto.dataClassifyEnum, dto.tableName, dto.selectSql, dto);
-                log.info("数据接入配置项：{}",JSON.toJSONString(configDTO));
+                log.info("数据接入配置项：{}", JSON.toJSONString(configDTO));
                 if (configDTO == null) {
                     log.error("数据接入配置项获取失败。id: 【" + dto.id + "】, appId: 【" + dto.appId + "】");
                     return ResultEnum.NOTFOUND;
@@ -2238,20 +2238,24 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         } else {
             buildAvroReaderServiceDTO.groupId = appGroupId;
         }
-        if (Objects.equals(dto.type, OlapTableEnum.PHYSICS) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKPHYSICS) || Objects.equals(dto.type, OlapTableEnum.DATASERVICES)) {
+        if (Objects.equals(dto.type, OlapTableEnum.PHYSICS) ||
+                Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKPHYSICS) ||
+                Objects.equals(dto.type, OlapTableEnum.DATASERVICES)) {
             sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
             tableFieldsList = config.targetDsConfig.tableFieldsList;
             for (TableFieldsDTO tableFieldsDTO : tableFieldsList) {
-                if (!Objects.equals(tableFieldsDTO.fieldName, tableFieldsDTO.sourceFieldName)) {
+                if (!Objects.equals(tableFieldsDTO.fieldName, tableFieldsDTO.sourceFieldName) && StringUtils.isNotEmpty(tableFieldsDTO.sourceFieldName)) {
                     buildParameter.put("/" + tableFieldsDTO.fieldName, "/" + tableFieldsDTO.sourceFieldName);
                 }
             }
             buildParameter.put("/" + tableFieldsList.get(0).fieldName, "/" + tableFieldsList.get(0).sourceFieldName);
-        } else if (Objects.equals(dto.type, OlapTableEnum.FACT) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKFACT)
-                || Objects.equals(dto.type, OlapTableEnum.DIMENSION) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKDIMENSION)) {
+        } else if (Objects.equals(dto.type, OlapTableEnum.FACT) ||
+                Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKFACT) ||
+                Objects.equals(dto.type, OlapTableEnum.DIMENSION) ||
+                Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKDIMENSION)) {
             List<ModelPublishFieldDTO> modelPublishFieldDTOS = config.modelPublishFieldDTOList;
             for (ModelPublishFieldDTO modelPublishFieldDTO : modelPublishFieldDTOS) {
-                if (!Objects.equals(modelPublishFieldDTO.fieldEnName, modelPublishFieldDTO.sourceFieldName)) {
+                if (!Objects.equals(modelPublishFieldDTO.fieldEnName, modelPublishFieldDTO.sourceFieldName) && StringUtils.isNotEmpty(modelPublishFieldDTO.sourceFieldName)) {
                     buildParameter.put("/" + modelPublishFieldDTO.fieldEnName, "/" + modelPublishFieldDTO.sourceFieldName);
                 }
             }

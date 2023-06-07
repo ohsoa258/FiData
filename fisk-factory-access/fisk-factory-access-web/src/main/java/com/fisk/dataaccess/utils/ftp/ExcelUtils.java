@@ -8,13 +8,20 @@ import com.fisk.dataaccess.dto.ftp.ExcelDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.NumberToTextConverter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -91,6 +98,8 @@ public class ExcelUtils {
                 List<List<Object>> content = new ArrayList<>();
                 //2023-05-31 李世纪修改 日期格式改为yyyy-MM-dd HH:mm:ss 避免日期数据丢失
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                //指定时区为东八区，避免时区偏移的现象出现
+                simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+8"));
                 Sheet sheet = wb.getSheetAt(index);
                 // 获取行数
                 int getRow = 0;
@@ -117,19 +126,6 @@ public class ExcelUtils {
                         //获取当前单元格
                         Cell cell = Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j);
                         Object obj = getCellFormatValue(cell);
-
-//                        //如果调用方法处理过的单元格是日期格式，我们再次进行处理 todo:这样改不行
-//                        if (obj instanceof Date) {
-//                            Date date = (Date) obj;
-//                            String formatDate = simpleDateFormat.format(date);
-//
-//                            short dataFormat = cell.getCellStyle().getDataFormat();
-//                            //调用封装的方法，获取对应的日期格式化对象
-//                            SimpleDateFormat dateFormat = dealWithDateCellType(formatDate);
-//                            obj = dateFormat.format((Date) obj);
-////                            obj = simpleDateFormat.format((Date) obj);
-//                        }
-
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
@@ -236,9 +232,22 @@ public class ExcelUtils {
                 //数值类型 - 整数、小数、日期
                 case NUMERIC:
                     if (DateUtil.isCellDateFormatted(cell)) {
-                        cellvalue = cell.getDateCellValue();
+                        //该方法是直接获取单元格的真实值，并非日期值，而是获取的公式，不符合要求
+//                        double excelValue = cell.getNumericCellValue();
+
+                        //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
+                        //至少保证预览没问题
+                        double excelValue = cell.getNumericCellValue();
+                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+                        //减去时差
+                        cellvalue = new Date(timeInMilliSeconds + 1 - TimeZone.getDefault().getRawOffset());
+
+                        //直接调用该方法会导致精度损失
+//                        cellvalue = cell.getDateCellValue();
                     } else {
-                        cellvalue = cell.getNumericCellValue();
+                        //浮点数，excel是什么值，就存储什么值
+                        cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+//                        cellvalue = cell.getNumericCellValue();
                     }
                     break;
                 //布尔值
@@ -253,9 +262,22 @@ public class ExcelUtils {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
-                                cellvalue = cell.getDateCellValue();
+                                //该方法可以直接获取excel单元格里的真正值（并非显示的数值，而是表达式）
+//                                cellvalue = new DataFormatter().formatCellValue(cell);
+
+                                //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
+                                //至少保证预览没问题
+                                double excelValue = cell.getNumericCellValue();
+                                long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+                                //减去时差
+                                cellvalue = new Date(timeInMilliSeconds + 1 - TimeZone.getDefault().getRawOffset());
+
+                                //直接调用该方法会导致精度损失
+//                                cellvalue = cell.getDateCellValue();
                             } else {
-                                cellvalue = cell.getNumericCellValue();
+                                //浮点数，excel是什么值，就存储什么值
+                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+//                                cellvalue = cell.getNumericCellValue();
                             }
                             break;
                         case BOOLEAN:

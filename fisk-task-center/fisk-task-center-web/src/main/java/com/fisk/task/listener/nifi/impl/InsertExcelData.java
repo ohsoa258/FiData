@@ -25,6 +25,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.NumberToTextConverter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -244,6 +245,8 @@ public class InsertExcelData implements ISftpDataUploadListener {
             try {
                 List<List<Object>> content = new ArrayList<>();
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                //指定时区为东八区，避免时区偏移的现象出现
+                simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+8"));
                 Sheet sheet = wb.getSheet(sheetName);
                 // 获取行数
                 int getRow = 0;
@@ -267,7 +270,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     List<Object> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
                         //System.out.println("坐标:"+i+","+j);
-                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j));
+                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j), physicalNumberOfRows);
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
@@ -291,7 +294,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @version v1.0
      * @params cell excel单元格对象
      */
-    private static Object getCellFormatValue(Cell cell) {
+    private static Object getCellFormatValue(Cell cell, int physicalNumberOfRows) {
         Object cellvalue = "";
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -300,9 +303,33 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     break;
                 case NUMERIC:
                     if (DateUtil.isCellDateFormatted(cell)) {
+//                        //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
+//                        //获取excel单元格的日期值和1900年1月1日0时0分相差的天数，带小数点 例：44561.99999999191
+//                        double excelValue = cell.getNumericCellValue();
+//                        //excel日期起始日期为1900年1月1日0时0分0秒 java Date起始日期为1970年1月1日0时0分0秒
+//                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+//                        //+1毫秒可以保证4500条数据不出现精度损失问题，
+//                        //那么这里就加个判断，如果数据小于4500条，就加2，是4500条的二倍时就+4，以此类推,不足二倍则+3
+//                        if (physicalNumberOfRows < 4500) {
+//                            timeInMilliSeconds = timeInMilliSeconds + 1;
+//                        } else {
+//                            //整除
+//                            int i = physicalNumberOfRows / 4500;
+//                            //保留小数
+//                            double v = (double) physicalNumberOfRows / 4500d;
+//                            //如果保留小数的商(v)大于整除的i且小于整除的i+1,则多加1
+//                            if (v>i && v<i+1) {
+//                                i = i+1;
+//                            }
+//                            timeInMilliSeconds = timeInMilliSeconds + physicalNumberOfRows / 4500 + i;
+//                        }
+//                        cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+
                         cellvalue = cell.getDateCellValue();
                     } else {
-                        cellvalue = cell.getNumericCellValue();
+                        //浮点数，excel是什么值，就存储什么值
+                        cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+//                        cellvalue = cell.getNumericCellValue();
                     }
                     break;
                 case BOOLEAN:
@@ -315,9 +342,33 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
+//                        //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
+//                        //获取excel单元格的日期值和1900年1月1日0时0分相差的天数，带小数点 例：44561.99999999191
+//                        double excelValue = cell.getNumericCellValue();
+//                        //excel日期起始日期为1900年1月1日0时0分0秒 java Date起始日期为1970年1月1日0时0分0秒
+//                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+//                        //+1毫秒可以保证4500条数据不出现精度损失问题，
+//                        //那么这里就加个判断，如果数据小于4500条，就加2，是4500条的二倍时就+4，以此类推,不足二倍则+3
+//                        if (physicalNumberOfRows < 4500) {
+//                            timeInMilliSeconds = timeInMilliSeconds + 1;
+//                        } else {
+//                            //整除
+//                            int i = physicalNumberOfRows / 4500;
+//                            //保留小数
+//                            double v = (double) physicalNumberOfRows / 4500d;
+//                            //如果保留小数的商(v)大于整除的i且小于整除的i+1,则多加1
+//                            if (v>i && v<i+1) {
+//                                i = i+1;
+//                            }
+//                            timeInMilliSeconds = timeInMilliSeconds + physicalNumberOfRows / 4500 + i;
+//                        }
+//                        cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+
                                 cellvalue = cell.getDateCellValue();
                             } else {
-                                cellvalue = cell.getNumericCellValue();
+                                //浮点数，excel是什么值，就存储什么值
+                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+//                                cellvalue = cell.getNumericCellValue();
                             }
                             break;
                         case BOOLEAN:
