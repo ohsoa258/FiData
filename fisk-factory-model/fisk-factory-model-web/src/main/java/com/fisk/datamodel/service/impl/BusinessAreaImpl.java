@@ -25,6 +25,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
+import com.fisk.common.service.accessAndTask.factorycodepreviewdto.FactoryCodePreviewPgSqlHelper;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
@@ -1449,6 +1450,30 @@ public class BusinessAreaImpl
                 }
                 //todo:暂时搁置
             case POSTGRESQL:
+                switch (syncMode) {
+                    //全量
+                    case 1:
+                        //调用封装的全量覆盖方式拼接sql方法并返回
+                        return FactoryCodePreviewPgSqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
+                    //追加
+                    case 2:
+                        //调用封装的追加覆盖方式拼接sql方法并返回
+                        return FactoryCodePreviewPgSqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
+                    //业务标识覆盖（业务主键覆盖）---merge覆盖
+                    case 3:
+                        //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
+                        return FactoryCodePreviewPgSqlHelper.merge(tableName, tempTableName, fieldList);
+                    //业务时间覆盖
+                    case 4:
+                        //调用封装的业务时间覆盖方式的拼接sql方法并返回
+                        return FactoryCodePreviewPgSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
+                    //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
+                    case 5:
+                        //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
+                        return FactoryCodePreviewPgSqlHelper.delAndInsert(tableName, tempTableName, fieldList);
+                    default:
+                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+                }
 
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
