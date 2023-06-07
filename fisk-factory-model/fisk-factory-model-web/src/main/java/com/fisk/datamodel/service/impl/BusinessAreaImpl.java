@@ -25,7 +25,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.FactoryCodePreviewPgSqlHelper;
+import com.fisk.common.service.accessAndTask.FactoryCodePreviewPgSqlHelper;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;

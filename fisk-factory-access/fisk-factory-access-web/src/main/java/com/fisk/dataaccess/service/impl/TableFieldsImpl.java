@@ -14,7 +14,7 @@ import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.FactoryCodePreviewPgSqlHelper;
+import com.fisk.common.service.accessAndTask.FactoryCodePreviewPgSqlHelper;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
