@@ -253,7 +253,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 short lastCellNum = (short) config.targetDsConfig.tableFieldsList.size();
                 //解决最大行数一直变的问题,拿第一次得到的行数
                 int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
-                for (int i = 0; i <= physicalNumberOfRows; i++) {
+                for (int i = 0; i < physicalNumberOfRows; i++) {
                     //2023-05-19李世纪修改
                     //开始读取的行数不再加1
                     if (getRow < startRow) {
