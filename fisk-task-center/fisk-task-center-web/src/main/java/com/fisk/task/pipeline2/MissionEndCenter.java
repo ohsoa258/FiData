@@ -57,7 +57,8 @@ import java.util.*;
 public class MissionEndCenter {
     @Value("${consumer-server-enable}")
     private Boolean consumerServerEnable;
-
+    @Value("${pipeline-async-switch}")
+    private Boolean pipelineAsyncSwitch;
     @Resource
     IOlap iOlap;
     @Resource
@@ -114,7 +115,6 @@ public class MissionEndCenter {
                         nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
                     }
                     TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceive.pipelTraceId);
-//                    List<NifiPortsHierarchyNextDTO> nextList = nifiPortHierarchy.nextList;
                     NifiCustomWorkflowDetailDTO itselfPort = nifiPortHierarchy.itselfPort;
                     DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(itselfPort.id));
                     Map<Integer, Object> taskMap = new HashMap<>();
@@ -142,60 +142,159 @@ public class MissionEndCenter {
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
 
-                    //查找当前组件内的最后一个task(因为最后一个节点的nextList会有下一个组件第一个任务)
-                    TaskHierarchyDTO lastTaskHierarchyDTO = null;
-                    Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
-                    boolean flag = true;
-                    Iterator<Map.Entry<Object, Object>> taskNodeMap = hmTask.entrySet().iterator();
-                    while (taskNodeMap.hasNext()) {
-                        Map.Entry<Object, Object> next = taskNodeMap.next();
-                        TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
-                        if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDto.itselfPort.pid){
-                            log.info("任务结束中心本job节点task状态:{}", taskNodeHierarchyDTO);
-                            if (taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.tasknorun ||
-                                    taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.taskstart){
-                                flag = false;
-                            }
-                            if (taskNodeHierarchyDTO.pipeEndFlag){
-                                lastTaskHierarchyDTO = taskNodeHierarchyDTO;
+                    if (pipelineAsyncSwitch){
+                        //查找当前组件内的最后一个task(因为最后一个节点的nextList会有下一个组件第一个任务)
+                        TaskHierarchyDTO lastTaskHierarchyDTO = null;
+                        Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                        boolean flag = true;
+                        Iterator<Map.Entry<Object, Object>> taskNodeMap = hmTask.entrySet().iterator();
+                        while (taskNodeMap.hasNext()) {
+                            Map.Entry<Object, Object> next = taskNodeMap.next();
+                            TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
+                            if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDto.itselfPort.pid){
+                                log.info("任务结束中心本job节点task状态:{}", taskNodeHierarchyDTO);
+                                if (taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.tasknorun ||
+                                        taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.taskstart){
+                                    flag = false;
+                                }
+                                if (taskNodeHierarchyDTO.pipeEndFlag){
+                                    lastTaskHierarchyDTO = taskNodeHierarchyDTO;
+                                }
                             }
                         }
-                    }
-                    //判断组件内任务是否全部执行完毕
-                    if (flag){
-                        //记录本节点的job的结束
-                        Map<Integer, Object> jobMap = new HashMap<>();
-                        if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-                        } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
-                        } else if (!dispatchJobHierarchy.forbidden) {
-                            //job禁止运行
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
-                        } else {
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
-                        }
-                        iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
-                        //判断当前组件后面是否还有组件
-                        if (CollectionUtils.isNotEmpty(lastTaskHierarchyDTO.nextList)){
+                        //判断组件内任务是否全部执行完毕
+                        if (flag){
                             //记录本节点的job的结束
-                            Map<Integer, Object> jobNodeMap = new HashMap<>();
-                            log.info("任务结束中心本节点所在组状态:{},{}", dispatchJobHierarchy.id, dispatchJobHierarchy.jobStatus);
+                            Map<Integer, Object> jobMap = new HashMap<>();
                             if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
-                                jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
                             } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
-                                jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
                             } else if (!dispatchJobHierarchy.forbidden) {
                                 //job禁止运行
-                                jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
                             } else {
-                                jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
                             }
-                            iPipelJobLog.savePipelJobLog(pipelTraceId, jobNodeMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
-                            //发送消息给任务发布中心  topic是 : task.build.task.publish
+                            iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
+                            //判断当前组件后面是否还有组件
+                            if (CollectionUtils.isNotEmpty(lastTaskHierarchyDTO.nextList)){
+                                //记录本节点的job的结束
+                                Map<Integer, Object> jobNodeMap = new HashMap<>();
+                                log.info("任务结束中心本节点所在组状态:{},{}", dispatchJobHierarchy.id, dispatchJobHierarchy.jobStatus);
+                                if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
+                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                                } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
+                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                                } else if (!dispatchJobHierarchy.forbidden) {
+                                    //job禁止运行
+                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                } else {
+                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                                }
+                                iPipelJobLog.savePipelJobLog(pipelTraceId, jobNodeMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
+                                //发送消息给任务发布中心  topic是 : task.build.task.publish
+                                log.info("任务结束中心发送给任务发布中心的参数:{}", JSON.toJSONString(kafkaReceive));
+                                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaReceive));
+                            }else {
+                                //记录管道结束
+                                log.info("尝试记录管道结束");
+                                Map<Integer, Object> pipelMap = new HashMap<>();
+                                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
+                                boolean success = true;
+                                boolean ifNext = true;
+                                Long jobId = 0L;
+                                Iterator<Map.Entry<Object, Object>> jobNodeMap = hmget.entrySet().iterator();
+                                while (jobNodeMap.hasNext()) {
+                                    Map.Entry<Object, Object> next = jobNodeMap.next();
+                                    DispatchJobHierarchyDTO jobHierarchy = JSON.parseObject(next.getValue().toString(), DispatchJobHierarchyDTO.class);
+                                    if (Objects.equals(jobHierarchy.jobStatus, NifiStageTypeEnum.PASS) || Objects.equals(jobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
+                                        success = false;
+                                    }
+                                    //判断所有组件是否全部执行完毕
+                                    if (!jobHierarchy.jobProcessed) {
+                                        ifNext = false;
+                                        jobId = jobHierarchy.id;
+                                        break;
+                                    }
+                                }
+                                if (ifNext){
+                                    log.info("开始记录管道结束");
+                                    if (success) {
+                                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    } else {
+                                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    }
+                                    log.info("consumerServerEnable参数，{}", consumerServerEnable);
+                                    if (consumerServerEnable) {
+                                        // 通过管道id,查询关联表服务
+                                        ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
+                                        if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
+                                            List<BuildTableServiceDTO> list = result.data;
+                                            for (BuildTableServiceDTO buildTableService : list) {
+                                                KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
+                                                kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + buildTableService.id;
+                                                kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
+                                                kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                                                kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
+                                                kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
+                                                kafkaRkeceive.ifTaskStart = true;
+                                                kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                                                //pc.universalPublish(kafkaRkeceiveDTO);
+                                                log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
+                                                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                                            }
+                                        }
+                                    }
+                                    iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                }else {
+                                    log.info("管道尚未结束:jobId:{}", jobId);
+                                }
+                            }
+                        }else {
+                            log.info("组件内其余任务未执行完毕,当前任务:pipelTraceId:{},pipelJobTraceId:{},pipelTaskTraceId:{}",kafkaReceive.pipelTraceId,kafkaReceive.pipelJobTraceId,kafkaReceive.pipelTaskTraceId);
+                        }
+                    }else {
+                        //同步顺序按执行管道的方法
+                        // 先检查本级状态,判断是否应该记本级所在job的结束,或者管道结束
+                        List<NifiPortsHierarchyNextDTO> nextList = nifiPortHierarchy.nextList;
+                        if (CollectionUtils.isNotEmpty(nextList)) {
+                            NifiPortsHierarchyNextDTO nifiPortsHierarchyNext = nextList.get(0);
+                            TaskHierarchyDTO taskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(nifiPortsHierarchyNext.itselfPort));
+                            NifiCustomWorkflowDetailDTO itselfPort1 = taskHierarchy.itselfPort;
+                            if (!Objects.equals(itselfPort1.pid, itselfPort.pid)) {
+                                //记录本节点的job的结束
+                                Map<Integer, Object> jobMap = new HashMap<>();
+                                log.info("任务结束中心本节点所在组状态:{},{}", dispatchJobHierarchy.id, dispatchJobHierarchy.jobStatus);
+                                if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
+                                    jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                                } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
+                                    jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                                } else if (!dispatchJobHierarchy.forbidden) {
+                                    //job禁止运行
+                                    jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                } else {
+                                    jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                                }
+                                iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
+                            }
+                            // 第三步 发送消息给任务发布中心  topic是 : task.build.task.publish
                             log.info("任务结束中心发送给任务发布中心的参数:{}", JSON.toJSONString(kafkaReceive));
                             kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaReceive));
-                        }else {
+                        } else {
+                            //记录本节点的job的结束
+                            Map<Integer, Object> jobMap = new HashMap<>();
+                            if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                            } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
+                            } else if (!dispatchJobHierarchy.forbidden) {
+                                //job禁止运行
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
+                            } else {
+                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                            }
+                            iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
                             //记录管道结束
                             log.info("尝试记录管道结束");
                             Map<Integer, Object> pipelMap = new HashMap<>();
@@ -203,21 +302,20 @@ public class MissionEndCenter {
                             boolean success = true;
                             boolean ifNext = true;
                             Long jobId = 0L;
-                            Iterator<Map.Entry<Object, Object>> jobNodeMap = hmget.entrySet().iterator();
-                            while (jobNodeMap.hasNext()) {
-                                Map.Entry<Object, Object> next = jobNodeMap.next();
+                            Iterator<Map.Entry<Object, Object>> nodeMap = hmget.entrySet().iterator();
+                            while (nodeMap.hasNext()) {
+                                Map.Entry<Object, Object> next = nodeMap.next();
                                 DispatchJobHierarchyDTO jobHierarchy = JSON.parseObject(next.getValue().toString(), DispatchJobHierarchyDTO.class);
                                 if (Objects.equals(jobHierarchy.jobStatus, NifiStageTypeEnum.PASS) || Objects.equals(jobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
                                     success = false;
                                 }
-                                //判断所有组件是否全部执行完毕
                                 if (!jobHierarchy.jobProcessed) {
                                     ifNext = false;
                                     jobId = jobHierarchy.id;
                                     break;
                                 }
                             }
-                            if (ifNext){
+                            if (ifNext) {
                                 log.info("开始记录管道结束");
                                 if (success) {
                                     pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
@@ -246,105 +344,11 @@ public class MissionEndCenter {
                                     }
                                 }
                                 iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
-                            }else {
+                            } else {
                                 log.info("管道尚未结束:jobId:{}", jobId);
                             }
                         }
-                    }else {
-                        log.info("组件内其余任务未执行完毕,当前任务:pipelTraceId:{},pipelJobTraceId:{},pipelTaskTraceId:{}",kafkaReceive.pipelTraceId,kafkaReceive.pipelJobTraceId,kafkaReceive.pipelTaskTraceId);
                     }
-                    /*   同步顺序按执行管道的方法
-                    // 先检查本级状态,判断是否应该记本级所在job的结束,或者管道结束
-                    if (CollectionUtils.isNotEmpty(nextList)) {
-                        NifiPortsHierarchyNextDTO nifiPortsHierarchyNext = nextList.get(0);
-                        TaskHierarchyDTO taskHierarchy = iPipelineTaskPublishCenter.getTaskHierarchy(pipelTraceId, String.valueOf(nifiPortsHierarchyNext.itselfPort));
-                        NifiCustomWorkflowDetailDTO itselfPort1 = taskHierarchy.itselfPort;
-                        if (!Objects.equals(itselfPort1.pid, itselfPort.pid)) {
-                            //记录本节点的job的结束
-                            Map<Integer, Object> jobMap = new HashMap<>();
-                            log.info("任务结束中心本节点所在组状态:{},{}", dispatchJobHierarchy.id, dispatchJobHierarchy.jobStatus);
-                            if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
-                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-                            } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
-                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
-                            } else if (!dispatchJobHierarchy.forbidden) {
-                                //job禁止运行
-                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
-                            } else {
-                                jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
-                            }
-                            iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
-                        }
-                        // 第三步 发送消息给任务发布中心  topic是 : task.build.task.publish
-                        log.info("任务结束中心发送给任务发布中心的参数:{}", JSON.toJSONString(kafkaReceive));
-                        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaReceive));
-                    } else {
-                        //记录本节点的job的结束
-                        Map<Integer, Object> jobMap = new HashMap<>();
-                        if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-                        } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
-                        } else if (!dispatchJobHierarchy.forbidden) {
-                            //job禁止运行
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
-                        } else {
-                            jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
-                        }
-                        iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
-                        //记录管道结束
-                        log.info("尝试记录管道结束");
-                        Map<Integer, Object> pipelMap = new HashMap<>();
-                        Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
-                        boolean success = true;
-                        boolean ifNext = true;
-                        Long jobId = 0L;
-                        Iterator<Map.Entry<Object, Object>> nodeMap = hmget.entrySet().iterator();
-                        while (nodeMap.hasNext()) {
-                            Map.Entry<Object, Object> next = nodeMap.next();
-                            DispatchJobHierarchyDTO jobHierarchy = JSON.parseObject(next.getValue().toString(), DispatchJobHierarchyDTO.class);
-                            if (Objects.equals(jobHierarchy.jobStatus, NifiStageTypeEnum.PASS) || Objects.equals(jobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
-                                success = false;
-                            }
-                            if (!jobHierarchy.jobProcessed) {
-                                ifNext = false;
-                                jobId = jobHierarchy.id;
-                                break;
-                            }
-                        }
-                        if (ifNext) {
-                            log.info("开始记录管道结束");
-                            if (success) {
-                                pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
-                            } else {
-                                pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-                            }
-                            log.info("consumerServerEnable参数，{}", consumerServerEnable);
-                            if (consumerServerEnable) {
-                                // 通过管道id,查询关联表服务
-                                ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
-                                if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
-                                    List<BuildTableServiceDTO> list = result.data;
-                                    for (BuildTableServiceDTO buildTableService : list) {
-                                        KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
-                                        kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + buildTableService.id;
-                                        kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
-                                        kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
-                                        kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
-                                        kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
-                                        kafkaRkeceive.ifTaskStart = true;
-                                        kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-                                        //pc.universalPublish(kafkaRkeceiveDTO);
-                                        log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
-                                        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
-                                    }
-                                }
-                            }
-                            iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
-                        } else {
-                            log.info("管道尚未结束:jobId:{}", jobId);
-                        }
-                    }*/
                 } else if (split.length == 6) {
                     if (Objects.equals(kafkaReceive.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
                         Map<Integer, Object> taskMap = new HashMap<>();

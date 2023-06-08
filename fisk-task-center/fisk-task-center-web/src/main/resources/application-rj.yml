@@ -106,3 +106,4 @@ spring:
   redis:
     host: 172.17.1.248
     port: 6379
+pipeline-async-switch: true

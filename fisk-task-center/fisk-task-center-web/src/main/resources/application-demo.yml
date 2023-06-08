@@ -103,3 +103,4 @@ spring:
 mybatis-plus:
   configuration:
     cache-enabled: true
+pipeline-async-switch: true

@@ -106,3 +106,4 @@ spring:
     host: 10.178.188.31
     password: redis@test
     port: 6379
+pipeline-async-switch: true
