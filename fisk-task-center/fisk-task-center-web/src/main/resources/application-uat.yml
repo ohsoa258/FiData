@@ -101,3 +101,4 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
   redis:
     host: 192.168.21.13
+pipeline-async-switch: true

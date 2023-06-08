@@ -829,6 +829,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             List<TableTopicDTO> tableTopicList = tableTopic.getTableTopicList(topicDTO);
             String consumerTopicName = tableTopicList.stream().map(e -> e.topicName).collect(Collectors.joining(","));
             //------------------------------------------------------
+            log.info("组件id:{},表id:{},表type:{}",processorId,tableId,tableType);
             ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorId);
             Map<String, String> properties = processor.getComponent().getConfig().getProperties();
             String id = processor.getId();

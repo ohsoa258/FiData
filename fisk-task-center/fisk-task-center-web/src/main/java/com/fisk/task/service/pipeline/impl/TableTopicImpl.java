@@ -14,6 +14,7 @@ import com.fisk.task.mapper.TableTopicMapper;
 import com.fisk.task.po.TableTopicPO;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -29,6 +30,9 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
 
     @Resource
     TableTopicMapper tableTopicMapper;
+
+    @Value("${pipeline-async-switch}")
+    private Boolean pipelineAsyncSwitch;
     @Resource
     RedisUtil redisUtil;
 
@@ -150,20 +154,25 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
             } else {
                 TableTopicPO tableTopic = this.query().eq("table_id", tableId).eq("table_type", tableType)
                         .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).one();
-                //查找当前组件内所有任务的topic
-                List<Long> componentIds = new ArrayList<>();
-                Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
-                TaskHierarchyDTO taskHierarchyDTO = JSON.parseObject(hmTask.get(tableTopic.componentId.toString()).toString(), TaskHierarchyDTO.class);
-                Iterator<Map.Entry<Object, Object>> nodeMap = hmTask.entrySet().iterator();
-                while (nodeMap.hasNext()) {
-                    Map.Entry<Object, Object> next = nodeMap.next();
-                    TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
-                    //查找组件内的成员
-                    if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDTO.itselfPort.pid){
-                        componentIds.add(taskNodeHierarchyDTO.itselfPort.id);
+                if (pipelineAsyncSwitch){
+                    //查找当前组件内所有任务的topic
+                    List<Long> componentIds = new ArrayList<>();
+                    Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                    TaskHierarchyDTO taskHierarchyDTO = JSON.parseObject(hmTask.get(tableTopic.componentId.toString()).toString(), TaskHierarchyDTO.class);
+                    Iterator<Map.Entry<Object, Object>> nodeMap = hmTask.entrySet().iterator();
+                    while (nodeMap.hasNext()) {
+                        Map.Entry<Object, Object> next = nodeMap.next();
+                        TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
+                        //查找组件内的成员
+                        if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDTO.itselfPort.pid){
+                            componentIds.add(taskNodeHierarchyDTO.itselfPort.id);
+                        }
                     }
+                    tableTopicPOList = this.query().eq("del_flag", 1).in("component_id", componentIds).list();
+                }else {
+                    tableTopicPOList.add(tableTopic);
                 }
-                 tableTopicPOList = this.query().eq("del_flag", 1).in("component_id", componentIds).list();
+
             }
             tableTopics.addAll(tableTopicPOList);
         }

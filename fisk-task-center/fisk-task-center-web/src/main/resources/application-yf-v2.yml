@@ -106,3 +106,4 @@ spring:
     host: 10.195.135.248
     password: 80405390
     port: 6379
+pipeline-async-switch: true

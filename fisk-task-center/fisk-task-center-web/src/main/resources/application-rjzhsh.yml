@@ -110,3 +110,4 @@ spring:
     env:
       timeouts:
         connect: 5000
+pipeline-async-switch: true
