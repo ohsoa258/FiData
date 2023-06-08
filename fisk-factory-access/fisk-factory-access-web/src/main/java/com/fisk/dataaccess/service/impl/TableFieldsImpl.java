@@ -13,15 +13,13 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
-import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
-import com.fisk.common.service.factorycodepreview.impl.FactoryCodePreviewSqlServerImpl;
-import com.fisk.common.service.factorycodepreview.impl.FactoryCodePreviewPgSqlImpl;
-import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
-import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
+import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
@@ -1604,12 +1602,23 @@ public class TableFieldsImpl
             }
         }
 
-        if (appRegistrationPO.whetherSchema) {
-            stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
-            odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
-        } else {
-            stgTableName = "[dbo]." + "[" + stgTableName + "]";
-            odsTableName = "[dbo]." + "[" + odsTableName + "]";
+        //根据conType数据库连接类型，拼接对应的表名和架构名
+        if (conType.getValue() == com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getValue()) {
+            if (appRegistrationPO.whetherSchema) {
+                stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+                odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
+            } else {
+                stgTableName = "[dbo]." + "[" + stgTableName + "]";
+                odsTableName = "[dbo]." + "[" + odsTableName + "]";
+            }
+        } else if (conType.getValue() == POSTGRESQL.getValue()) {
+            if (appRegistrationPO.whetherSchema) {
+                stgTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + stgTableName + "\"";
+                odsTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + odsTableName + "\"";
+            } else {
+                stgTableName = "\"dbo\"." + "\"" + stgTableName + "\"";
+                odsTableName = "\"dbo\"." + "\"" + odsTableName + "\"";
+            }
         }
 
         //List<ModelPublishFieldDTO> ==> List<AccessPublishFieldDTO>
