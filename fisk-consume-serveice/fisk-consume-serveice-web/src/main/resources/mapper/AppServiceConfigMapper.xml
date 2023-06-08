@@ -16,6 +16,8 @@
             t2.api_desc as ServiceDesc,
             1 as displayName,
             t2.datasource_id as dataSourceId,
+            t2.create_api_type as createApiType,
+            t2.api_proxy_url as apiProxyUrl,
             t1.create_time AS create_time,
             t2.create_time AS t2create_time,
             t3.create_time AS t3create_time

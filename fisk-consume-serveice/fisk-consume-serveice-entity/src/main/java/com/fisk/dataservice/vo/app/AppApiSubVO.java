@@ -60,4 +60,16 @@ public class AppApiSubVO {
      */
     @ApiModelProperty(value = "数据源ID")
     public Integer dataSourceId;
+
+    /**
+     * 创建api类型
+     */
+    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api 3 代理API")
+    public Integer createApiType;
+
+    /**
+     * api代理地址
+     */
+    @ApiModelProperty(value = "api代理地址")
+    public String apiProxyUrl;
 }
