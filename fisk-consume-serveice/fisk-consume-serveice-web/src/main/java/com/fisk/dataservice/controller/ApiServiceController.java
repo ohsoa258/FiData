@@ -19,7 +19,7 @@ import javax.annotation.Resource;
 /**
  * @author dick
  * @version v1.0
- * @description api应用服务控制器
+ * @description 本地服务控制器
  * @date 2022/1/6 14:51
  */
 

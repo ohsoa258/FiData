@@ -297,7 +297,9 @@ public enum ResultEnum {
     DS_DATA_PAGE_SHOULD_BE_GREATER_THAN_0(10038,"页码（current）应为大于0的正整数"),
     DS_DATA_SIZE_SHOULD_BE_GREATER_THAN_0(10039,"页数（size）应为大于0的正整数"),
     DS_DATA_SIZE_CANNOT_BE_GREATER_THAN_100(10040,"最大只能返回100行数据"),
-
+    DS_MISSING_APICODE_IN_URL(10041,"url中缺少apiCode"),
+    DS_ILLEGAL_REQUEST(10042,"非法的请求"),
+    DS_PROXY_FORWARDING_ERROR(10043,"代理转发错误"),
 
     /**
      * 数据质量

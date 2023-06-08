@@ -18,4 +18,6 @@ public class SystemConstants {
     public static final String CLAIM_ATTR_ID = "id";
 
     public static final String CLAIM_ATTR_USERINFO = "user";
+
+    public static  final String DATA_SERVICE_PROXY="/dataservice/proxy";
 }

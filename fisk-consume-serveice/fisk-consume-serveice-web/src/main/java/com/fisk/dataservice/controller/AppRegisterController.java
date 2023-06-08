@@ -115,12 +115,12 @@ public class AppRegisterController {
     @ApiOperation("查询应用API参数")
     @PostMapping("/getParmAll")
     public ResultEntity<List<AppApiParmVO>> getParmAll(@Validated @RequestBody AppApiParmQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getParmAll(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getParamAll(dto));
     }
 
     @ApiOperation("设置内置参数")
     @PostMapping("/setParm")
     public ResultEntity<Object> setParm(@Validated @RequestBody AppApiBuiltinParmEditDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setParm(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setParam(dto));
     }
 }

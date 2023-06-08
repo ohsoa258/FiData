@@ -98,7 +98,7 @@ public class ApiConfigDTO
     /**
      * 创建api类型
      */
-    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api")
+    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api 3 代理API")
     public Integer createApiType = 0;
 
     /**
@@ -107,4 +107,9 @@ public class ApiConfigDTO
     @ApiModelProperty(value = "现有api地址")
     public String apiAddress;
 
+    /**
+     * api代理地址
+     */
+    @ApiModelProperty(value = "api代理地址")
+    public String apiProxyUrl;
 }

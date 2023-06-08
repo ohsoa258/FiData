@@ -52,4 +52,29 @@ public class LogPO extends BasePO {
      * 业务状态：成功、失败
      */
     public String businessState;
+
+    /**
+     * 请求开始时间
+     */
+    public String requestStartDate;
+
+    /**
+     * 参数校验时间
+     */
+    public String paramCheckDate;
+
+    /**
+     * 请求结束时间
+     */
+    public String requestEndDate;
+
+    /**
+     * 响应的状态
+     */
+    public String responseStatus;
+
+    /**
+     * 应用id，逗号分隔
+     */
+    public String appIds;
 }

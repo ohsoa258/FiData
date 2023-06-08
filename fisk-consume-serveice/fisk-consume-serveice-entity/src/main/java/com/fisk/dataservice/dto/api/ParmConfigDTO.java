@@ -25,7 +25,6 @@ public class ParmConfigDTO
      * 参数名称
      */
     @ApiModelProperty(value = "参数名称")
-    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String parmName;
 

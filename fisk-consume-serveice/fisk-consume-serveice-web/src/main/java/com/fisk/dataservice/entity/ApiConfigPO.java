@@ -75,12 +75,17 @@ public class ApiConfigPO extends BasePO
     public String createCountSql;
 
     /**
+     * 创建api类型：1 创建新api 2 使用现有api 3 代理API
+     */
+    public Integer createApiType;
+
+    /**
      * api地址
      */
     public String apiAddress;
 
     /**
-     * 创建api类型：1 创建新api 2 使用现有api
+     * api代理地址
      */
-    public Integer createApiType;
+    public String apiProxyUrl;
 }

@@ -4,6 +4,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * api服务接口
  * @author dick
@@ -23,4 +26,10 @@ public interface IApiServiceManageService {
      * @return 数据
      */
     ResultEntity<Object> getData(RequstDTO dto);
+
+    /**
+     * API代理
+     * @return 数据
+     */
+    void proxy(HttpServletRequest request, HttpServletResponse response);
 }

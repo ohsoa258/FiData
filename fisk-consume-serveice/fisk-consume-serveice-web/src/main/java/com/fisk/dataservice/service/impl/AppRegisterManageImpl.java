@@ -32,6 +32,7 @@ import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,10 +106,10 @@ public class AppRegisterManageImpl
     @Override
     public List<FilterFieldDTO> getColumn() {
         MetaDataConfigDTO dto = new MetaDataConfigDTO();
-        dto.url = getConfig.url;
-        dto.userName = getConfig.username;
-        dto.password = getConfig.password;
-        dto.driver = getConfig.driver;
+        dto.url = getConfig.getUrl();
+        dto.userName = getConfig.getUsername();
+        dto.password = getConfig.getPassword();
+        dto.driver = getConfig.getDriver();
         dto.tableName = "tb_app_config";
         dto.filterSql = FilterSqlConstants.DS_APP_REGISTRATION_SQL;
         return getMetadata.getMetadataList(dto);
@@ -135,47 +136,47 @@ public class AppRegisterManageImpl
     @Override
     public ResultEnum addData(AppRegisterDTO dto) {
         QueryWrapper<AppConfigPO> queryWrapper = new QueryWrapper<>();
-        // and(appName = '' or appAccount = '')
-        queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.appName).
-                        or().eq(AppConfigPO::getAppAccount, dto.appAccount))
+        queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.getAppName()).
+                        or().eq(AppConfigPO::getAppAccount, dto.getAppAccount()))
                 .eq(AppConfigPO::getDelFlag, 1);
         List<AppConfigPO> selectList = baseMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(selectList)) {
-            Optional<AppConfigPO> appConfigOptional = selectList.stream().filter(item -> item.getAppName().equals(dto.appName)).findFirst();
-            if (appConfigOptional.isPresent()) {
+            Optional<AppConfigPO> appConfigOptional = selectList.stream().filter(item -> item.getAppName().equals(dto.getAppName())).findFirst();
+            if (StringUtils.isNotEmpty(dto.getAppName()) && appConfigOptional.isPresent()) {
                 return ResultEnum.DS_APP_NAME_EXISTS;
             }
-            appConfigOptional = selectList.stream().filter(item -> item.getAppAccount().equals(dto.appAccount)).findFirst();
-            if (appConfigOptional.isPresent()) {
+            appConfigOptional = selectList.stream().filter(item -> item.getAppAccount().equals(dto.getAppAccount())).findFirst();
+            if (StringUtils.isNotEmpty(dto.getAppAccount()) && appConfigOptional.isPresent()) {
                 return ResultEnum.DS_APP_ACCOUNT_EXISTS;
             }
         }
         AppConfigPO model = AppRegisterMap.INSTANCES.dtoToPo(dto);
-        byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
-        model.setAppPassword(new String(base64Encrypt));
+        if (StringUtils.isNotEmpty(dto.getAppPassword())) {
+            byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.getAppPassword());
+            model.setAppPassword(new String(base64Encrypt));
+        }
         return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
     public ResultEnum editData(AppRegisterEditDTO dto) {
-        AppConfigPO model = baseMapper.selectById(dto.id);
+        AppConfigPO model = baseMapper.selectById(dto.getId());
         if (model == null) {
             return ResultEnum.DS_APP_EXISTS;
         }
         QueryWrapper<AppConfigPO> queryWrapper = new QueryWrapper<>();
-        // and(appName = '' or appAccount = '')
-        queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.appName).
-                        or().eq(AppConfigPO::getAppAccount, dto.appAccount))
+        queryWrapper.lambda().and(wq -> wq.eq(AppConfigPO::getAppName, dto.getAppName()).
+                        or().eq(AppConfigPO::getAppAccount, dto.getAppAccount()))
                 .eq(AppConfigPO::getDelFlag, 1)
-                .ne(AppConfigPO::getId, dto.id);
+                .ne(AppConfigPO::getId, dto.getId());
         List<AppConfigPO> selectList = baseMapper.selectList(queryWrapper);
         if (CollectionUtils.isNotEmpty(selectList)) {
-            Optional<AppConfigPO> appConfigOptional = selectList.stream().filter(item -> item.getAppName().equals(dto.appName)).findFirst();
-            if (appConfigOptional.isPresent()) {
+            Optional<AppConfigPO> appConfigOptional = selectList.stream().filter(item -> item.getAppName().equals(dto.getAppName())).findFirst();
+            if (StringUtils.isNotEmpty(dto.getAppName()) && appConfigOptional.isPresent()) {
                 return ResultEnum.DS_APP_NAME_EXISTS;
             }
-            appConfigOptional = selectList.stream().filter(item -> item.getAppAccount().equals(dto.appAccount)).findFirst();
-            if (appConfigOptional.isPresent()) {
+            appConfigOptional = selectList.stream().filter(item -> item.getAppAccount().equals(dto.getAppAccount())).findFirst();
+            if (StringUtils.isNotEmpty(dto.getAppAccount()) && appConfigOptional.isPresent()) {
                 return ResultEnum.DS_APP_ACCOUNT_EXISTS;
             }
         }
@@ -390,41 +391,40 @@ public class AppRegisterManageImpl
 //    }
 
     @Override
-    public List<AppApiParmVO> getParmAll(AppApiParmQueryDTO dto) {
-        List<AppApiParmVO> appApiParmList = new ArrayList<>();
+    public List<AppApiParmVO> getParamAll(AppApiParmQueryDTO dto) {
+        List<AppApiParmVO> appApiParamList = new ArrayList<>();
         QueryWrapper<ParmConfigPO> query = new QueryWrapper<>();
         query.lambda()
                 .eq(ParmConfigPO::getApiId, dto.apiId)
                 .eq(ParmConfigPO::getDelFlag, 1);
         List<ParmConfigPO> selectList = apiParmMapper.selectList(query);
         if (CollectionUtils.isNotEmpty(selectList)) {
-            // selectList = selectList.stream().filter(t -> !t.getParmName().equals("current") && !t.getParmName().equals("size")).collect(Collectors.toList());
             // 查询已设置内置参数
-            QueryWrapper<BuiltinParmPO> builtinParmQuery = new QueryWrapper<>();
-            builtinParmQuery.lambda()
+            QueryWrapper<BuiltinParmPO> builtinParamQuery = new QueryWrapper<>();
+            builtinParamQuery.lambda()
                     .eq(BuiltinParmPO::getApiId, dto.apiId)
                     .eq(BuiltinParmPO::getAppId, dto.appId)
                     .eq(BuiltinParmPO::getDelFlag, 1);
-            List<BuiltinParmPO> builtinParmList = apiBuiltinParmMapper.selectList(builtinParmQuery);
-            if (CollectionUtils.isNotEmpty(builtinParmList)) {
+            List<BuiltinParmPO> builtinParamList = apiBuiltinParmMapper.selectList(builtinParamQuery);
+            if (CollectionUtils.isNotEmpty(builtinParamList)) {
                 for (ParmConfigPO parmConfigPO : selectList) {
-                    Optional<BuiltinParmPO> builtinParmOptional = builtinParmList.stream().filter(item -> item.getParmId() == parmConfigPO.id).findFirst();
-                    if (builtinParmOptional.isPresent()) {
+                    Optional<BuiltinParmPO> builtinParamOptional = builtinParamList.stream().filter(item -> item.getParmId() == parmConfigPO.id).findFirst();
+                    if (builtinParamOptional.isPresent()) {
                         // 存在
-                        BuiltinParmPO builtinParm = builtinParmOptional.get();
-                        parmConfigPO.setParmValue(builtinParm.parmValue);
-                        parmConfigPO.setParmDesc(builtinParm.parmDesc);
-                        parmConfigPO.setParmIsbuiltin(builtinParm.parmIsbuiltin);
+                        BuiltinParmPO builtinParam = builtinParamOptional.get();
+                        parmConfigPO.setParmValue(builtinParam.parmValue);
+                        parmConfigPO.setParmDesc(builtinParam.parmDesc);
+                        parmConfigPO.setParmIsbuiltin(builtinParam.parmIsbuiltin);
                     }
                 }
             }
-            appApiParmList = ApiParmMap.INSTANCES.listPoToAppApiParmVo(selectList);
+            appApiParamList = ApiParmMap.INSTANCES.listPoToAppApiParmVo(selectList);
         }
-        return appApiParmList;
+        return appApiParamList;
     }
 
     @Override
-    public ResultEnum setParm(AppApiBuiltinParmEditDTO dto) {
+    public ResultEnum setParam(AppApiBuiltinParmEditDTO dto) {
         ApiConfigPO apiModel = apiRegisterMapper.selectById(dto.apiId);
         if (apiModel == null)
             return ResultEnum.DS_API_EXISTS;
@@ -435,9 +435,9 @@ public class AppRegisterManageImpl
         // 删除此应用API下的所有内置参数，再新增
         int updateCount = apiBuiltinParmMapper.updateBySearch(dto.appId, dto.apiId);
 
-        List<BuiltinParmPO> builtinParmList = ApiBuiltinParmMap.INSTANCES.listDtoToPo(dto.parmList);
-        if (CollectionUtils.isNotEmpty(builtinParmList)) {
-            return apiBuiltinParmImpl.saveBatch(builtinParmList) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        List<BuiltinParmPO> builtinParamList = ApiBuiltinParmMap.INSTANCES.listDtoToPo(dto.parmList);
+        if (CollectionUtils.isNotEmpty(builtinParamList)) {
+            return apiBuiltinParmImpl.saveBatch(builtinParamList) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         return ResultEnum.SAVE_DATA_ERROR;
     }

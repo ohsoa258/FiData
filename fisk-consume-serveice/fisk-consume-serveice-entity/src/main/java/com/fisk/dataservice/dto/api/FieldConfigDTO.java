@@ -26,7 +26,6 @@ public class FieldConfigDTO
      * 字段名称
      */
     @ApiModelProperty(value = "字段名称")
-    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String fieldName;
 
@@ -41,7 +40,6 @@ public class FieldConfigDTO
      * 字段类型
      */
     @ApiModelProperty(value = "字段类型")
-    @NotNull()
     @Length(min = 0, max = 50, message = "长度最多50")
     public String fieldType;
 

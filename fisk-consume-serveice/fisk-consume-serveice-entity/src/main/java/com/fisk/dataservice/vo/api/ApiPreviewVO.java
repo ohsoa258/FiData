@@ -22,10 +22,28 @@ public class ApiPreviewVO
     public JSONArray dataArray;
 
     /**
-     * 数据总条数
+     * 当前页，起始页为第一页
      */
-    @ApiModelProperty(value = "数据总条数")
-    public int totalCount;
+    @ApiModelProperty(value = "当前页")
+    public Integer current;
+
+    /**
+     * 每页大小
+     */
+    @ApiModelProperty(value = "每页大小")
+    public Integer size;
+
+    /**
+     * 总条数
+     */
+    @ApiModelProperty(value = "total")
+    public Integer total;
+
+    /**
+     * 总页数
+     */
+    @ApiModelProperty(value = "page")
+    public Integer page;
 
     /**
      * 表字段集合

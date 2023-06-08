@@ -16,6 +16,8 @@
         table_business_type,
         create_sql,
         create_count_sql,
+        api_proxy_url,
+        create_api_type,
         api.create_time,
         api.create_user
         -- userinfo.user_account as create_user
@@ -27,6 +29,9 @@
             and (api_name like concat('%', #{query.keyword}, '%')
             or api_desc like concat('%', #{query.keyword}, '%')
             or api_code like concat('%', #{query.keyword}, '%'))
+        </if>
+        <if test="query.createApiType !=null and query.createApiType!=0 ">
+            and api.create_api_type = #{query.createApiType}
         </if>
     </select>
     <select id="getList" resultType="com.fisk.dataservice.entity.ApiConfigPO">
@@ -42,6 +47,8 @@
         table_business_type,
         create_sql,
         create_count_sql,
+        api_proxy_url,
+        create_api_type,
         api.create_time,
         create_user
         FROM
@@ -51,6 +58,9 @@
         <if test="keyword !=null and keyword.length()>0 ">
             and (api_name like concat('%', #{keyword}, '%')
             or api_desc like concat('%', #{keyword}, '%'))
+        </if>
+        <if test="createApiType !=null and createApiType!=0 ">
+            and api.create_api_type = #{createApiType}
         </if>
         ORDER BY
         api.create_time DESC
