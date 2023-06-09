@@ -1,6 +1,7 @@
 package com.fisk.dataservice.vo.app;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 
 /**
@@ -9,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 应用订阅API VO
  * @date 2022/1/10 17:51
  */
+@Data
 public class AppApiSubVO {
     /**
      * Id
@@ -38,7 +40,7 @@ public class AppApiSubVO {
      * 服务名称名称
      */
     @ApiModelProperty(value = "服务名称名称")
-    public String ServiceName;
+    public String serviceName;
 
     /**
      * api标识
@@ -50,8 +52,11 @@ public class AppApiSubVO {
      * 服务描述
      */
     @ApiModelProperty(value = "服务描述")
-    public String ServiceDesc;
+    public String serviceDesc;
 
+    /**
+     * 类型：1api服务 2表服务 3 文件服务
+     */
     @ApiModelProperty(value = "类型：1api服务 2表服务 3 文件服务")
     public Integer type;
 
@@ -68,8 +73,14 @@ public class AppApiSubVO {
     public Integer createApiType;
 
     /**
-     * api代理地址
+     * api代理转发地址
      */
-    @ApiModelProperty(value = "api代理地址")
+    @ApiModelProperty(value = "api代理转发地址")
     public String apiProxyUrl;
+
+    /**
+     * api代理调用地址
+     */
+    @ApiModelProperty(value = "api代理调用地址")
+    public String apiProxyCallUrl;
 }

@@ -35,6 +35,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,6 +96,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Resource
     private UserClient userClient;
 
+    @Value("${dataservice.proxyservice.api_address}")
+    private String proxyServiceApiAddress;
+
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
@@ -113,6 +117,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                             .filter(user -> user.getId().toString().equals(e.createUser))
                             .findFirst()
                             .ifPresent(user -> e.createUser = user.userAccount);
+                    e.setApiProxyCallUrl(proxyServiceApiAddress + "/" + e.getApiCode());
                 });
             }
         }
