@@ -170,8 +170,9 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
                             componentIds.add(taskNodeHierarchyDTO.itselfPort.id);
                         }
                     }
-                    tableTopicPOList = this.query().eq("del_flag", 1).in("component_id", componentIds)
-                            .eq("table_type", tableType).eq("topic_type", topicType).list();
+                    tableTopicPOList = this.query().eq("del_flag", 1)
+                            .in("component_id", componentIds)
+                            .eq("topic_type", topicType).list();
                 }else {
                     tableTopicPOList.add(tableTopic);
                 }
