@@ -127,7 +127,9 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
     @Override
     public List<TableTopicDTO> getTableTopicDTOByComponentId(List<Long> componentId) {
         LambdaQueryWrapper<TableTopicPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(TableTopicPO::getDelFlag,1).in(TableTopicPO::getComponentId,componentId);
+        queryWrapper.eq(TableTopicPO::getDelFlag,1)
+                .eq(TableTopicPO::getTopicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())
+                .in(TableTopicPO::getComponentId,componentId);
         List<TableTopicPO> tableTopicPOS = tableTopicMapper.selectList(queryWrapper);
         List<TableTopicDTO> tableTopicDtos = TableTopicMap.INSTANCES.listPoToDto(tableTopicPOS);
         return tableTopicDtos;
@@ -168,7 +170,8 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
                             componentIds.add(taskNodeHierarchyDTO.itselfPort.id);
                         }
                     }
-                    tableTopicPOList = this.query().eq("del_flag", 1).in("component_id", componentIds).list();
+                    tableTopicPOList = this.query().eq("del_flag", 1).in("component_id", componentIds)
+                            .eq("table_type", tableType).eq("topic_type", topicType).list();
                 }else {
                     tableTopicPOList.add(tableTopic);
                 }

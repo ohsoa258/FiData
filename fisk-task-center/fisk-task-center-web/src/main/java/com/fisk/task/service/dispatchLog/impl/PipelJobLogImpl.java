@@ -297,8 +297,6 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 } else {
                     log.info("单次发布无需修改状态,或未找到redis内相关数据");
                 }
-
-
             }
         }
         //job日志
