@@ -122,34 +122,48 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
 
     public List<WeChatUserDTO> searchWechatUser(int serverConfigId, String recipients )
     {
-        //获取配置信息
-        EmailServerVO byId = baseMapper.getById(serverConfigId);
-        //获取企业微信AccessToken
-        String accessTokenUrl  = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + byId.wechatCorpId + "&corpsecret=" + byId.wechatAppSecret + "";
-        String stringAccessToken = HttpGet(accessTokenUrl);
-        JSONObject json = JSONObject.parseObject(stringAccessToken);
-        String accessToken = json.getString("access_token");
-        //获取部门用户 部门ID为1 表示整个部门
-        String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
-        String stringUserList = HttpGet(userListUrl);
-        JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
-        JSONArray userListArray = jsonUserList.getJSONArray("userlist");
-
         List<WeChatUserDTO> weChatUserList = new ArrayList<>();
-        for (int i = 0; i < userListArray.size(); i++) {
-            JSONObject userObject = userListArray.getJSONObject(i);
-            String userid = userObject.getString("userid");
-            String name = userObject.getString("name");
-            WeChatUserDTO weChatUser = new WeChatUserDTO();
-            weChatUser.setUserid(userid);
-            weChatUser.setName(name);
-            weChatUserList.add(weChatUser);
+        try{
+            //获取配置信息
+            EmailServerVO byId = baseMapper.getById(serverConfigId);
+            //获取企业微信AccessToken
+            String accessTokenUrl  = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + byId.wechatCorpId + "&corpsecret=" + byId.wechatAppSecret + "";
+            String stringAccessToken = HttpGet(accessTokenUrl);
+            JSONObject json = JSONObject.parseObject(stringAccessToken);
+            String accessToken = json.getString("access_token");
+            if (accessToken == null)
+            {
+                log.debug(stringAccessToken);
+            }
+            //获取部门用户 部门ID为1 表示整个部门
+            String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
+            String stringUserList = HttpGet(userListUrl);
+            JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
+            JSONArray userListArray = jsonUserList.getJSONArray("userlist");
+            if (userListArray == null)
+            {
+                log.debug(stringUserList);
+            }
+            for (int i = 0; i < userListArray.size(); i++) {
+                JSONObject userObject = userListArray.getJSONObject(i);
+                String userid = userObject.getString("userid");
+                String name = userObject.getString("name");
+                WeChatUserDTO weChatUser = new WeChatUserDTO();
+                weChatUser.setUserid(userid);
+                weChatUser.setName(name);
+                weChatUserList.add(weChatUser);
+            }
+            if (recipients!=null)
+            {
+                weChatUserList = weChatUserList.stream()
+                        .filter(u -> u.name.toLowerCase().contains(recipients.toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+
         }
-        if (recipients!=null)
+        catch (Exception e)
         {
-            weChatUserList = weChatUserList.stream()
-                    .filter(u -> u.name.toLowerCase().contains(recipients.toLowerCase()))
-                    .collect(Collectors.toList());
+            e.printStackTrace();
         }
         return  weChatUserList;
     }
