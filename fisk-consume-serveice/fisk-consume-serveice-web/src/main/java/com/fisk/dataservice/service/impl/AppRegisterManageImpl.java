@@ -92,6 +92,8 @@ public class AppRegisterManageImpl
     private String templatePath;
     @Value("${dataservice.pdf.api_address}")
     private String api_address;
+    @Value("${dataservice.proxyservice.api_address}")
+    private String proxyServiceApiAddress;
 
     @Override
     public Integer getAppCount() {
@@ -207,7 +209,13 @@ public class AppRegisterManageImpl
 
     @Override
     public Page<AppApiSubVO> getSubscribeAll(AppApiSubQueryDTO dto) {
-        return appApiMapper.getSubscribeAll(dto.page, dto);
+        Page<AppApiSubVO> all = appApiMapper.getSubscribeAll(dto.page, dto);
+        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            all.getRecords().forEach(e -> {
+                e.setApiProxyCallUrl(proxyServiceApiAddress + "/" + e.getApiCode());
+            });
+        }
+        return all;
     }
 
     @Override

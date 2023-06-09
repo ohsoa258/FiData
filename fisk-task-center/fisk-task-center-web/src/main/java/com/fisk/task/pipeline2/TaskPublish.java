@@ -325,7 +325,7 @@ public class TaskPublish {
                                                 HashMap<Integer, Object> taskMap = new HashMap<>();
                                                 taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                                                 log.info("第三处调用保存task日志");
-                                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, nextJobTraceId, taskHierarchy.taskTraceId, taskMap, String.valueOf(taskHierarchy.itselfPort.id), String.valueOf(taskHierarchy.itselfPort.tableId), OlapTableEnum.getNameByValue(topicDTO.tableType).getValue());
+                                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, nextJobTraceId, taskHierarchy.taskTraceId, taskMap, String.valueOf(taskHierarchy.itselfPort.id), taskHierarchy.itselfPort.tableId, OlapTableEnum.getNameByValue(topicDTO.tableType).getValue());
                                             }
                                         }
                                     }

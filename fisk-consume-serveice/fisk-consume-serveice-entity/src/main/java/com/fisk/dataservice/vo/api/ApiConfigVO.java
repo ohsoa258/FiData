@@ -110,10 +110,16 @@ public class ApiConfigVO {
     public String apiAddress;
 
     /**
-     * api代理地址
+     * api代理转发地址
      */
-    @ApiModelProperty(value = "api代理地址")
+    @ApiModelProperty(value = "api代理转发地址")
     public String apiProxyUrl;
+
+    /**
+     * api代理调用地址
+     */
+    @ApiModelProperty(value = "api代理调用地址")
+    public String apiProxyCallUrl;
 
     /**
      * 创建时间

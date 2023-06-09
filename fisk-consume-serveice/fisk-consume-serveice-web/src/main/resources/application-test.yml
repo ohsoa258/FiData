@@ -16,6 +16,8 @@ dataservice:
     schedule: 0/30 * * * * ?
     enabled: true
     api_address: http://192.168.11.130:8083
+  proxyservice:
+    api_address: http://192.168.11.130:8083
 spring:
   hikari:
     maximum-pool-size: 60
