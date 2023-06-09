@@ -271,7 +271,19 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     for (int j = 0; j < lastCellNum; j++) {
                         //System.out.println("坐标:"+i+","+j);
                         Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j), physicalNumberOfRows);
+
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
+//                        //如果获取到的单元格数据是日期类型，就格式化后再存储 todo:
+//                        if (obj instanceof Date) {
+//                            String date = simpleDateFormat.format((Date) obj);
+//                            col.add(date);
+//                        }else if (obj instanceof String){
+//                            //如果获取到的单元格数据是字符串类型，就用字符串接收，防止科学计数法
+//                            String s = (String) obj;
+//                        }else {
+//                            //目前其他类型直接存
+//                            col.add(obj);
+//                        }
                         col.add(obj);
                     }
                     long count = col.stream().count();

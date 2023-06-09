@@ -1774,6 +1774,7 @@ public class TableFieldsImpl
         //List<AccessPublishFieldDTO>   ==>   List<PublishFieldDTO>
         List<PublishFieldDTO> fieldList = AccessCodePreviewMapper.INSTANCES.tableFieldsToPublishFields(fields);
 
+        //根据数据库的不同连接类型，获取不同的sqlHelper实现类
         IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
         //根据覆盖方式决定返回的sql

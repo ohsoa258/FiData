@@ -1405,15 +1405,28 @@ public class BusinessAreaImpl
         DataSourceTypeEnum sourceType = overLoadCodeDTO.dataSourceType;
         //获取同步方式
         int syncMode = configDTO.targetDsConfig.syncMode;
-        //获取表名
-        String tableName = "[" + configDTO.processorConfig.targetTableName + "]";
+        String tableName = "";
+        String tempTableName ="";
 
-        String tableName1 = configDTO.processorConfig.targetTableName;
+        //根据数据库的不同连接类型，获取不同的表名格式
+        if (sourceType.getValue() == DataSourceTypeEnum.SQLSERVER.getValue()){
+            //获取表名
+            tableName = "[" + configDTO.processorConfig.targetTableName + "]";
+            String tableName1 = configDTO.processorConfig.targetTableName;
+            //获取临时表前缀
+            String prefixTempName = buildNifiFlow.prefixTempName;
+            //拼接临时表名称
+            tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
+        }else if (sourceType.getValue() == DataSourceTypeEnum.POSTGRESQL.getValue()){
+            //获取表名
+            tableName = "\"" + configDTO.processorConfig.targetTableName + "\"";
+            String tableName1 = configDTO.processorConfig.targetTableName;
+            //获取临时表前缀
+            String prefixTempName = buildNifiFlow.prefixTempName;
+            //拼接临时表名称
+            tempTableName = "\"" + prefixTempName + "_" + tableName1 + "\"";
+        }
 
-        //获取临时表前缀
-        String prefixTempName = buildNifiFlow.prefixTempName;
-        //拼接临时表名称
-        String tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
         //获取前端传递的表字段集合
         List<ModelPublishFieldDTO> fields = originalDTO.modelPublishFieldDTOList;
         //ModelPublishFieldDTO List ==> PublishFieldDTO List
@@ -1421,6 +1434,7 @@ public class BusinessAreaImpl
         //获取集合大小（字段数量）
         int size = fieldList.size();
 
+        //根据数据库的不同连接类型，获取不同的sqlHelper实现类
         IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
         //根据覆盖方式决定返回的sql
