@@ -129,6 +129,7 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             //获取企业微信AccessToken
             String accessTokenUrl  = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + byId.wechatCorpId + "&corpsecret=" + byId.wechatAppSecret + "";
             String stringAccessToken = HttpGet(accessTokenUrl);
+            log.debug( "企业微信获取token结果集: "+stringAccessToken);
             JSONObject json = JSONObject.parseObject(stringAccessToken);
             String accessToken = json.getString("access_token");
             if (accessToken == null)
@@ -138,6 +139,7 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             //获取部门用户 部门ID为1 表示整个部门
             String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
             String stringUserList = HttpGet(userListUrl);
+            log.debug( "企业微信获取token结果集: "+stringUserList);
             JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
             JSONArray userListArray = jsonUserList.getJSONArray("userlist");
             if (userListArray == null)
