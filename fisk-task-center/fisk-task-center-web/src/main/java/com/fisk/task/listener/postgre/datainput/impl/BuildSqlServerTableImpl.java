@@ -383,7 +383,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 stgSqlFileds.append("[" + l.fieldEnName + "] nvarchar(4000),");
             }
             if (l.isPrimaryKey == 1) {
-                pksql.append("").append(l.fieldEnName).append(" ,");
+                pksql.append("")
+                        .append("[")
+                        .append(l.fieldEnName)
+                        .append("]")
+                        .append(" ,");
             }
 
         });
