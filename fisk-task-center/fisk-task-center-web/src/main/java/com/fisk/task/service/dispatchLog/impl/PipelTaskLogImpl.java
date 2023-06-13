@@ -78,9 +78,9 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             pipelTaskLog.taskTraceId = pipelTaskTraceId;
             pipelTaskLog.taskId = taskId;
             pipelTaskLog.type = next.getKey();
-            if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
+            /*if (Objects.equals(pipelTaskLog.type, DispatchLogEnum.taskend.getValue())) {
                 //pipelTaskLogMapper.updateByPipelTraceId(pipelTaskTraceId, pipelTaskLog.type);
-            }
+            }*/
             //修改dag图的task的状态
             try {
                 if (StringUtils.isNotEmpty(pipelTraceId)) {

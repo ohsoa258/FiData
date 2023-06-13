@@ -144,6 +144,11 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         List<NifiStageMessageDTO> nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
         for (NifiStageMessageDTO nifiStageMessageDTO : nifiStageMessages) {
             try {
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
+                List<BulletinEntity> bulletins = processGroup.getBulletins();
+                if (bulletins != null && bulletins.size() != 0) {
+                    nifiStageMessageDTO.message = bulletins.get(0).getBulletin().getMessage();
+                }
                 String topicName = nifiStageMessageDTO.topic;
                 if (StringUtils.isEmpty(nifiStageMessageDTO.pipelStageTraceId)) {
                     nifiStageMessageDTO.pipelStageTraceId = UUID.randomUUID().toString();
@@ -193,36 +198,28 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
                 }
 
-                if (nifiStageMessageDTO.message == null || "".equals(nifiStageMessageDTO.message)) {
-                    nifiStagePO.comment = "运行成功";
-                    nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                    nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                    nifiStagePO.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+
+                nifiStagePO.comment = nifiStageMessageDTO.message;
+                if (nifiStageMessageDTO.nifiStageDTO != null) {
+                    NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
+                    nifiStagePO = NifiStageMap.INSTANCES.dtoToPo(nifiStageDTO);
                 } else {
-                    nifiStagePO.comment = nifiStageMessageDTO.message;
-                    if (nifiStageMessageDTO.nifiStageDTO != null) {
-                        NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
-                        nifiStagePO = NifiStageMap.INSTANCES.dtoToPo(nifiStageDTO);
-                    } else {
-                        ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
-                        List<BulletinEntity> bulletins = processGroup.getBulletins();
-                        if (bulletins != null && bulletins.size() != 0) {
-                            String sourceId = bulletins.get(bulletins.size() - 1).getSourceId();
-                            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(sourceId);
-                            String description = processor.getComponent().getConfig().getComments();
-                            if (Objects.equals(description, NifiStageTypeEnum.QUERY_PHASE.getName())) {
-                                nifiStagePO.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-                                nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
-                                nifiStagePO.transitionPhase = NifiStageTypeEnum.NOT_RUN.getValue();
-                            } else if (Objects.equals(description, NifiStageTypeEnum.TRANSITION_PHASE.getName())) {
-                                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                                nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
-                                nifiStagePO.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-                            } else if (Objects.equals(description, NifiStageTypeEnum.INSERT_PHASE.getName())) {
-                                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                                nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
-                                nifiStagePO.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
-                            }
+                    if (bulletins != null && bulletins.size() != 0) {
+                        String sourceId = bulletins.get(0).getSourceId();
+                        ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(sourceId);
+                        String description = processor.getComponent().getConfig().getComments();
+                        if (Objects.equals(description, NifiStageTypeEnum.QUERY_PHASE.getName())) {
+                            nifiStagePO.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                            nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                            nifiStagePO.transitionPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                        } else if (Objects.equals(description, NifiStageTypeEnum.TRANSITION_PHASE.getName())) {
+                            nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                            nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                            nifiStagePO.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                        } else if (Objects.equals(description, NifiStageTypeEnum.INSERT_PHASE.getName())) {
+                            nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                            nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                            nifiStagePO.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
                         }
                     }
                 }
