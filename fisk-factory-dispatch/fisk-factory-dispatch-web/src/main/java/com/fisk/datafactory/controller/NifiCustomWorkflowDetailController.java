@@ -154,4 +154,9 @@ public class NifiCustomWorkflowDetailController {
 
         return ResultEntityBuild.build(service.forbiddenTask(dto));
     }
+    @GetMapping("/runOnce")
+    @ApiOperation(value = "执行一次管道")
+    public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
+        return ResultEntityBuild.build(service.runOnce(id));
+    }
 }

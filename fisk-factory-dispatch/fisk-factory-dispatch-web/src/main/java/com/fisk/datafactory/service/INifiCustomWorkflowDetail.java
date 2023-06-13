@@ -134,5 +134,11 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     ResultEnum forbiddenTask(List<ForbiddenTaskDTO> dto);
-
+    /**
+     * 立即执行一次管道
+     *
+     * @param id
+     * @return 执行结果
+     */
+    ResultEnum runOnce(Long id);
 }

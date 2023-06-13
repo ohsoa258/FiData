@@ -1,6 +1,7 @@
 package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
@@ -26,6 +27,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.po.TableNifiSettingPO;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -452,4 +454,12 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/createBatchApproval")
     public ResultEntity<Object> createBatchApproval(@RequestBody BuildBatchApprovalDTO dto);
+
+    /**
+     * 执行一次管道
+     * @param id
+     * @return
+     */
+    @GetMapping("/nifi/runOnce")
+    public ResultEntity<Object> runOnce(@RequestParam("id") Long id);
 }
