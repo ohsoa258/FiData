@@ -123,7 +123,7 @@ public class MissionEndCenter {
                     log.info("任务结束中心本节点状态:{},{}", taskHierarchyDto.id, taskHierarchyDto.taskStatus);
                     if (Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskfailure)) {
 
-                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format);
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + kafkaReceive.getMessage());
 
                     } else if (Objects.equals(taskHierarchyDto.taskStatus, DispatchLogEnum.taskpass)) {
 
@@ -138,7 +138,7 @@ public class MissionEndCenter {
                         log.info(itselfPort.id + "拿打印条数89" + JSON.toJSONString(pipelTask));
                         Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
                         Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
-                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.nonNull(kafkaReceive.numbers) ? (Objects.isNull(count) ? 0 : count) : kafkaReceive.numbers));
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.nonNull(kafkaReceive.numbers) ? (Objects.isNull(count) || "null".equals(count) ? 0 : count) : kafkaReceive.numbers));
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
 
