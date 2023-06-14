@@ -643,7 +643,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                     .append(" ");
         }
         //拼接分号，拼成最终的sql
-        String finalSql = String.valueOf(matchAgain.append("   "));
+        String finalSql = String.valueOf(matchAgain.append(";   "));
 
         //返回的sql前加上需要的前缀finalSql
         StringBuilder delInsertSql = suffixSql.insert(0, finalSql);
@@ -997,6 +997,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         //开始拼接第三段
         StringBuilder endSql = middleSql;
         endSql.append("WHEN NOT MATCHED THEN insert")
+                .append(tableName)
                 .append("(");
 
         //遍历字段集合,拼接 insert(.....)
@@ -1184,7 +1185,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                     .append(businessRange)
                     .append(",")
                     .append("getdate())")
-                    .append("   ");
+                    .append(";   ");
 
             //拼接tailSql
             tailSql.append("DATEADD(MINUTE, CAST(left(")
@@ -1241,7 +1242,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                     .append(businessRangeStandby)
                     .append(",")
                     .append("getdate()) END)")
-                    .append("   ");
+                    .append(";   ");
 
             //拼接tailSql
             tailSql.append("DATEADD(MINUTE, CAST(left(")

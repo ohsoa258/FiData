@@ -13,7 +13,6 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
-import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -1342,9 +1341,8 @@ public class BusinessAreaImpl
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
         dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
-        //固定连接类型：sqlServer
-        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
-        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
+        //获取连接类型
+        dataModel.dataSourceType = getTargetDbInfo(targetDbId).conType;
 
         //2023-04-21李世纪注释掉   ：下面是生成存储过程的数仓建模sql预览
 //        ResultEntity<Object> objectResultEntity = publishTaskClient.overlayCodePreview(dataModel);
@@ -1465,6 +1463,29 @@ public class BusinessAreaImpl
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
+    }
+
+    /**
+     * 获取数据源信息
+     *
+     * @param id
+     * @return
+     */
+    public DataSourceDTO getTargetDbInfo(Integer id) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            dataSourceConfig = userClient.getFiDataDataSourceById(id);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            if (Objects.isNull(dataSourceConfig.data)) {
+                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+            }
+        } catch (Exception e) {
+            log.error("调用userClient服务获取数据源失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return dataSourceConfig.data;
     }
 
 }

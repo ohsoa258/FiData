@@ -4,6 +4,7 @@ import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,56 +45,62 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
+            if ("DATE".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" CASE WHEN CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append(")")
-                        .append(" AS numeric) <=0 THEN ")
+                        .append(" AS numeric) <=0 THEN TO_DATE(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append("ELSE to_timestamp(")
-                        .append("CAST(left(")
+                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date END")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END AS ")
+                        .append("\"")
+                        .append(f.fieldEnName)
+                        .append("\"")
                         .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
+            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" CASE WHEN CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append(")")
-                        .append(" AS numeric) <=0 THEN ")
+                        .append(" AS numeric) <=0 THEN CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append("ELSE (to_timestamp(")
-                        .append("CAST(left(")
+                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::time without time zone END")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END AS ")
+                        .append("\"")
+                        .append(f.fieldEnName)
+                        .append("\"")
                         .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" CASE WHEN CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append(")")
-                        .append(" AS numeric) <=0 THEN ")
+                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append("ELSE (to_timestamp(")
-                        .append("CAST(left(")
+                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
                         .append("\"")
                         .append(f.fieldEnName)
                         .append("\"")
-                        .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::timestamp without time zone END")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') END AS ")
+                        .append("\"")
+                        .append(f.fieldEnName)
+                        .append("\"")
                         .append(",");
             }
 //            else if (f.fieldType.equalsIgnoreCase("INT") || f.fieldType.equalsIgnoreCase("BIGINT")) {
@@ -202,62 +209,59 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
             for (PublishFieldDTO pkField : pkFields) {
-                if (pkField.fieldType.equalsIgnoreCase("DATE")) {
+                if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
                     pkFieldNames.append(" CASE WHEN CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append(")")
-                            .append(" AS numeric) <=0 THEN ")
+                            .append(" AS numeric) <=0 THEN TO_DATE(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append("ELSE to_timestamp(")
-                            .append("CAST(left(")
+                            .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
+                            .append("CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date END AS ")
+                            .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END AS ")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
                             .append(",");
-                } else if (pkField.fieldType.equalsIgnoreCase("TIME")) {
+                } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
                     pkFieldNames.append(" CASE WHEN CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append(")")
-                            .append(" AS numeric) <=0 THEN ")
+                            .append(" AS numeric) <=0 THEN CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append("ELSE (to_timestamp(")
-                            .append("CAST(left(")
+                            .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+                            .append("CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::time without time zone END AS ")
+                            .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END AS ")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
                             .append(",");
-                } else if (pkField.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+                } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
                     pkFieldNames.append(" CASE WHEN CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append(")")
-                            .append(" AS numeric) <=0 THEN ")
+                            .append(" AS numeric) <=0 THEN TO_TIMESTAMP(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append("ELSE (to_timestamp(")
-                            .append("CAST(left(")
+                            .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(TO_CHAR(TIMESTAMP 'epoch' + ")
+                            .append("CAST(")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
-                            .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::timestamp without time zone END AS ")
+                            .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') END AS ")
                             .append("\"")
                             .append(pkField.fieldEnName)
                             .append("\"")
@@ -281,56 +285,53 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         //替换第二个占位符 ??
         for (PublishFieldDTO pkField : pkFields) {
 
-            if (pkField.fieldType.equalsIgnoreCase("DATE")) {
+            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
                 pkFieldNames1.append(" CASE WHEN CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append(")")
-                        .append(" AS numeric) <=0 THEN ")
+                        .append(" AS numeric) <=0 THEN TO_DATE(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append("ELSE to_timestamp(")
-                        .append("CAST(left(")
+                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::date END")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END")
                         .append(",");
-            } else if (pkField.fieldType.equalsIgnoreCase("TIME")) {
+            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
                 pkFieldNames1.append(" CASE WHEN CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append(")")
-                        .append(" AS numeric) <=0 THEN ")
+                        .append(" AS numeric) <=0 THEN CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append("ELSE (to_timestamp(")
-                        .append("CAST(left(")
+                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::time without time zone END")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END")
                         .append(",");
-            } else if (pkField.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
                 pkFieldNames1.append(" CASE WHEN CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append(")")
-                        .append(" AS numeric) <=0 THEN ")
+                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append("ELSE (to_timestamp(")
-                        .append("CAST(left(")
+                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
                         .append("\"")
                         .append(pkField.fieldEnName)
                         .append("\"")
-                        .append(",10) AS bigint)/60,'epoch') AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Shanghai')::timestamp without time zone END")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') END")
                         .append(",");
             } else {
                 pkFieldNames1.append("\"")
@@ -385,256 +386,44 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      */
     @Override
     public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
-        //拼接第一段...  前段
-        StringBuilder startSql = new StringBuilder("MERGE ");
-        startSql.append(tableName)
-                .append(" AS TARGET USING (SELECT ");
+        String startSql = insertAndSelectSql(tableName, sourceTableName, fieldList);
+        startSql = startSql.substring(0, startSql.lastIndexOf(sourceTableName));
+        StringBuilder firstSql = new StringBuilder(startSql);
+        firstSql.append(sourceTableName)
+                .append(" AS source WHERE source.fidata_batch_code = '${fidata_batch_code}' AND source.fidata_flow_batch_code = '${fragment.index}' ")
+                .append("ON CONFLICT (");
+
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
-                startSql.append(" CASE WHEN CAST(isnumeric(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append("ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",10) AS bigint)/60,'1970-01-01'),112) AS ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-                ;
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-                startSql.append(" CASE WHEN CAST(isnumeric(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append("ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",10) AS bigint)/60,'08:00:00'),112) AS ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-                startSql.append(" CASE WHEN CAST(isnumeric(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append("ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-                startSql.append(" CASE WHEN CAST(isnumeric(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(")")
-                        .append(" AS int) <=0 THEN ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append("ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) AS ")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            } else {
-                startSql.append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            }
+            firstSql.append("\"")
+                    .append(f.fieldEnName)
+                    .append("\"")
+                    .append(",");
         }
         //删除最后一个多余的逗号
-        startSql.deleteCharAt(startSql.lastIndexOf(","));
-        //继续拼接
-        startSql.append(" FROM ")
-                .append(sourceTableName)
-                .append(" WITH(nolock) WHERE fidata_batch_code='${fidata_batch_code}'AND fidata_flow_batch_code='${fragment.index}') AS SOURCE ON ");
-        //获取业务标识覆盖方式标识的字段
-        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
-        //拼接开始：TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
-        if (!CollectionUtils.isEmpty(pkFields)) {
-            //遍历前端传递的字段集合--只包含主键
-            for (PublishFieldDTO pkField : pkFields) {
-                startSql.append("TARGET.")
-                        .append("[")
-                        .append(pkField.fieldEnName)
-                        .append("]")
-                        .append(" = SOURCE.")
-                        .append("[")
-                        .append(pkField.fieldEnName)
-                        .append("]")
-                        .append(" AND ");
-            }
-        }
-        //删除多余的AND
-        startSql.delete(startSql.lastIndexOf("A"), startSql.lastIndexOf("D") + 1);
-        //第一段sql与第二段sql隔开
-        startSql.append("   ");
+        firstSql.deleteCharAt(firstSql.lastIndexOf(","));
+        //补上最后一个括号
+        firstSql.append(") ");
 
-        //开始拼接第二段  中段
-        StringBuilder middleSql = startSql;
-        middleSql.append("WHEN MATCHED THEN UPDATE SET ");
+        //继续拼接
+        //开始拼接后半段
+        StringBuilder endSql = firstSql;
+        endSql.append("DO UPDATE ")
+                .append("SET ");
 
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
-                middleSql.append("TARGET.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-                middleSql.append("TARGET.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'08:00:00'),112)")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-                middleSql.append("TARGET.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-                middleSql.append("TARGET.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-                        .append(",");
-            } else {
-                middleSql.append("TARGET.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(" = SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            }
-
+            endSql.append("\"")
+                    .append(f.fieldEnName)
+                    .append("\"")
+                    .append(" = EXCLUDED.")
+                    .append("\"")
+                    .append(f.fieldEnName)
+                    .append("\"")
+                    .append(",");
         }
-        middleSql.append("TARGET.fi_updatetime=GETDATE()");
-        //第二段sql与第三段sql隔开
-        middleSql.append("   ");
+        endSql.append("\"fi_updatetime\"=NOW();");
 
-        //开始拼接第三段
-        StringBuilder endSql = middleSql;
-        endSql.append("WHEN NOT MATCHED THEN insert")
-                .append("(");
-
-        //遍历字段集合,拼接 insert(.....)
-        for (PublishFieldDTO f : fieldList) {
-            if (f.sourceFieldName != null && f.attributeType == 0) {
-                endSql.append("[")
-                        .append(f.sourceFieldName)
-                        .append("]")
-                        .append(",");
-            } else {
-                endSql.append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            }
-        }
-        endSql.append("fi_createtime, fi_updatetime, fidata_batch_code) Values(");
-
-        //遍历字段集合,拼接values...
-        for (PublishFieldDTO f : fieldList) {
-            if (f.fieldType.equalsIgnoreCase("DATE")) {
-                endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-                endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'08:00:00'),112)")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-                endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-                        .append(",");
-            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-                endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-                        .append(",");
-            } else {
-                endSql.append("SOURCE.")
-                        .append("[")
-                        .append(f.fieldEnName)
-                        .append("]")
-                        .append(",");
-            }
-
-        }
-        endSql.append("GETDATE(),")
-                .append("GETDATE(),")
-                .append("'${fidata_batch_code}'")
-                .append(");");
-        //返回返回拼接完整的merge覆盖sql
         return String.valueOf(endSql);
     }
 
@@ -654,13 +443,22 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
 //        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //获取页面选择的逻辑类型：1普通模式    2高级模式
         Integer otherLogic = previewTableBusinessDTO.otherLogic;
+        if (otherLogic==0){
+            return "'请选择业务时间覆盖方式!'";
+        }
 
         //业务覆盖单位,Year,Month,Day,Hour
         String rangeDateUnit = previewTableBusinessDTO.rangeDateUnit;
         //业务覆盖时间范围
         Long businessRange = previewTableBusinessDTO.businessRange;
+        if (businessRange != 0) {
+            businessRange = Long.valueOf(businessRange.toString().split("-")[1]);
+        }
         //业务时间覆盖字段
         String businessTimeField = previewTableBusinessDTO.businessTimeField;
+        if (StringUtils.isEmpty(businessTimeField)){
+            return "'请选择业务时间覆盖字段!'";
+        }
         //>,>=,=,<=,<  (条件符号)
         String businessOperator = previewTableBusinessDTO.businessOperator;
         StringBuilder startSQL = new StringBuilder("DELETE FROM ");
@@ -669,34 +467,68 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
 
         //最后加上这个tailSql
         StringBuilder tailSql = new StringBuilder(" AND ");
-        if (otherLogic == 1) {
-            //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
-            startSQL.append("[")
-                    .append(businessTimeField)
-                    .append("]")
-                    .append(businessOperator)
-                    .append("DATEADD(")
-                    .append(rangeDateUnit)
-                    .append(",")
-                    .append(businessRange)
-                    .append(",")
-                    .append("getdate())")
-                    .append("   ");
 
-            //拼接tailSql
-            tailSql.append("DATEADD(MINUTE, CAST(left(")
-                    .append("[")
-                    .append(businessTimeField)
-                    .append("]")
-                    .append(", 10) AS bigint)/60, '1970-01-01 08:00:00')")
-                    .append(businessOperator)
-                    .append("DATEADD(")
-                    .append(rangeDateUnit)
-                    .append(",")
-                    .append(businessRange)
-                    .append(",")
-                    .append("getdate())")
-                    .append(";   ");
+        PublishFieldDTO field = new PublishFieldDTO();
+
+        for (PublishFieldDTO publishFieldDTO : fieldList) {
+            if (publishFieldDTO.fieldEnName.equals(businessTimeField)) {
+                field = publishFieldDTO;
+                break;
+            }
+        }
+
+        if (otherLogic == 1) {
+
+
+            if ("TIME".equalsIgnoreCase(field.fieldType)) {
+                //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
+                startSQL.append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append(businessOperator)
+                        .append("(CURRENT_TIME - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("');   ");
+
+                tailSql.append("CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
+                        .append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME)")
+                        .append(businessOperator)
+                        .append("(CURRENT_TIME - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("')")
+                        .append(";   ");
+            } else {
+                //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
+                startSQL.append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append(businessOperator)
+                        .append("(NOW() - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("');   ");
+
+                tailSql.append("TO_TIMESTAMP(CAST(left(")
+                        .append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append(", 10) AS bigint))")
+                        .append(businessOperator)
+                        .append("(NOW() - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("');   ");
+            }
         } else {
             //具体日期
             Long businessDate = previewTableBusinessDTO.businessDate;
@@ -715,57 +547,110 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
             Long businessRangeStandby = previewTableBusinessDTO.businessRangeStandby;
             //业务覆盖单位,Year,Month,Day,Hour预备值
             String rangeDateUnitStandby = previewTableBusinessDTO.rangeDateUnitStandby;
-            startSQL.append("[")
-                    .append(businessTimeField)
-                    .append("]")
-                    .append(businessOperator)
-                    .append("(")
-                    .append("CASE WHEN ")
-                    .append(businessTimeFlag)
-                    .append("(Getdate())<")
-                    .append(businessDate)
-                    .append(" THEN ")
-                    .append("DATEADD(")
-                    .append(rangeDateUnit)
-                    .append(",")
-                    .append(businessRange)
-                    .append(",")
-                    .append("getdate())")
-                    .append(" ELSE ")
-                    .append("DATEADD(")
-                    .append(rangeDateUnitStandby)
-                    .append(",")
-                    .append(businessRangeStandby)
-                    .append(",")
-                    .append("getdate()) END)")
-                    .append("   ");
 
-            //拼接tailSql
-            tailSql.append("DATEADD(MINUTE, CAST(left(")
-                    .append("[")
-                    .append(businessTimeField)
-                    .append("]")
-                    .append(", 10) AS bigint)/60, '1970-01-01 08:00:00')")
-                    .append(businessOperator)
-                    .append("(CASE WHEN ")
-                    .append(businessTimeFlag)
-                    .append("(Getdate())<")
-                    .append(businessDate)
-                    .append(" THEN ")
-                    .append("DATEADD(")
-                    .append(rangeDateUnit)
-                    .append(",")
-                    .append(businessRange)
-                    .append(",")
-                    .append("getdate())")
-                    .append(" ELSE ")
-                    .append("DATEADD(")
-                    .append(rangeDateUnitStandby)
-                    .append(",")
-                    .append(businessRangeStandby)
-                    .append(",")
-                    .append("getdate()) END)")
-                    .append(";   ");
+            if (businessRangeStandby != 0) {
+                businessRangeStandby = Long.valueOf(businessRangeStandby.toString().split("-")[1]);
+            }
+
+
+            if ("TIME".equalsIgnoreCase(field.fieldType)) {
+                startSQL.append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append(businessOperator)
+                        .append("(")
+                        .append("CASE WHEN EXTRACT(")
+                        .append(businessTimeFlag)
+                        .append(" FROM CURRENT_TIMESTAMP)<")
+                        .append(businessDate)
+                        .append(" THEN ")
+                        .append("(CURRENT_TIME - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("')")
+                        .append(" ELSE ")
+                        .append("(CURRENT_TIME - INTERVAL '")
+                        .append(businessRangeStandby)
+                        .append(" ")
+                        .append(rangeDateUnitStandby.toLowerCase())
+                        .append("') END)")
+                        .append(";   ");
+
+                tailSql.append("CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(")
+                        .append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME)")
+                        .append(businessOperator)
+                        .append("(")
+                        .append("CASE WHEN EXTRACT(")
+                        .append(businessTimeFlag)
+                        .append(" FROM CURRENT_TIMESTAMP)<")
+                        .append(businessDate)
+                        .append(" THEN ")
+                        .append("(CURRENT_TIME - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("')")
+                        .append(" ELSE ")
+                        .append("(CURRENT_TIME - INTERVAL '")
+                        .append(businessRangeStandby)
+                        .append(" ")
+                        .append(rangeDateUnitStandby.toLowerCase())
+                        .append("') END)")
+                        .append(";   ");
+            } else {
+                startSQL.append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append(businessOperator)
+                        .append("(")
+                        .append("CASE WHEN EXTRACT(")
+                        .append(businessTimeFlag)
+                        .append(" FROM CURRENT_TIMESTAMP)<")
+                        .append(businessDate)
+                        .append(" THEN ")
+                        .append("(NOW() - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("')")
+                        .append(" ELSE ")
+                        .append("(NOW() - INTERVAL '")
+                        .append(businessRangeStandby)
+                        .append(" ")
+                        .append(rangeDateUnitStandby.toLowerCase())
+                        .append("') END)")
+                        .append(";   ");
+
+                tailSql.append("TO_TIMESTAMP(CAST(left(")
+                        .append("\"")
+                        .append(businessTimeField)
+                        .append("\"")
+                        .append(", 10) AS bigint))")
+                        .append(businessOperator)
+                        .append("(")
+                        .append("CASE WHEN EXTRACT(")
+                        .append(businessTimeFlag)
+                        .append(" FROM CURRENT_TIMESTAMP)<")
+                        .append(businessDate)
+                        .append(" THEN ")
+                        .append("(NOW() - INTERVAL '")
+                        .append(businessRange)
+                        .append(" ")
+                        .append(rangeDateUnit.toLowerCase())
+                        .append("')")
+                        .append(" ELSE ")
+                        .append("(NOW() - INTERVAL '")
+                        .append(businessRangeStandby)
+                        .append(" ")
+                        .append(rangeDateUnitStandby.toLowerCase())
+                        .append("') END)")
+                        .append(";   ");
+            }
         }
         //调用追加的sql方法，用于拼接
         String sql = insertAndSelectSql(tableName, sourceTableName, fieldList);

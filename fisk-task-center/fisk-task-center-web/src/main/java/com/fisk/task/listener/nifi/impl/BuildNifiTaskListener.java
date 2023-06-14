@@ -82,7 +82,6 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-
 public class BuildNifiTaskListener implements INifiTaskListener {
 
     @Value("${datamodeldorisconstr.url}")
@@ -751,7 +750,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param appId 配置的id
      * @return 数据接入配置
      */
-    private DataAccessConfigDTO getConfigData(long id, long appId, SynchronousTypeEnum synchronousTypeEnum, OlapTableEnum type, DataClassifyEnum dataClassifyEnum, String tableName, String selectSql, BuildNifiFlowDTO buildNifiFlowDTO) {
+    public DataAccessConfigDTO getConfigData(long id, long appId, SynchronousTypeEnum synchronousTypeEnum, OlapTableEnum type, DataClassifyEnum dataClassifyEnum, String tableName, String selectSql, BuildNifiFlowDTO buildNifiFlowDTO) {
         DataAccessConfigDTO data = new DataAccessConfigDTO();
         GroupConfig groupConfig = new GroupConfig();
         DataSourceConfig targetDbPoolConfig = new DataSourceConfig();
@@ -959,7 +958,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             }
 
         }
-
 
         data.targetDsConfig = targetDbPoolConfig;
         data.sourceDsConfig = sourceDsConfig;
