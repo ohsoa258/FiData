@@ -1,6 +1,7 @@
 package com.fisk.datafactory.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -1049,6 +1050,22 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum runOnce(Long id) {
+        NifiCustomWorkflowPO nifiCustomWorkflowPO = nifiCustomWorkflowImpl.getById(id);
+        LambdaQueryWrapper<NifiCustomWorkflowDetailPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NifiCustomWorkflowDetailPO::getWorkflowId,nifiCustomWorkflowPO.getWorkflowId())
+                .eq(NifiCustomWorkflowDetailPO::getComponentType,ChannelDataEnum.SCHEDULE_TASK.getName());
+        NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = this.getOne(queryWrapper);
+        ResultEntity<Object> objectResultEntity = publishTaskClient.runOnce(nifiCustomWorkflowDetail.getId());
+        if (objectResultEntity.getCode() != ResultEnum.SUCCESS.getCode() || objectResultEntity.getData() == null) {
+            log.error("task模块调用runOnce失败，[{}]", objectResultEntity.getMsg());
+            return ResultEnum.REMOTE_SERVICE_CALLFAILED;
+        }else {
+            return ResultEnum.SUCCESS;
+        }
     }
 
 }

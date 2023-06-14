@@ -20,6 +20,7 @@ import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.INifiSchedulingComponentService;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,6 +53,8 @@ public class NifiController {
     DataAccessClient dataAccessClient;
     @Resource
     ISftpDataUploadListener iSftpDataUploadListener;
+    @Resource
+    INifiSchedulingComponentService iNifiSchedulingComponentService;
     @ApiOperation("修改调度")
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
@@ -191,5 +194,9 @@ public class NifiController {
         return ResultEntityBuild.build(iSftpDataUploadListener.buildSftpDataUploadListener(JSON.toJSONString(kafkaReceive)));
     }
 
-
+    @GetMapping("/runOnce")
+    @ApiOperation(value = "执行一次管道")
+    public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
+        return ResultEntityBuild.build(iNifiSchedulingComponentService.runOnce(id));
+    }
 }
