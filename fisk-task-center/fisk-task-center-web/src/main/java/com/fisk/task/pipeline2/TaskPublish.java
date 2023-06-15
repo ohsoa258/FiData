@@ -301,7 +301,7 @@ public class TaskPublish {
                                     List<Long> upPortList = nifiPortsHierarchyNext.upPortList;
                                     //下一组件所有任务的topic
                                     List<TableTopicDTO> topicDTOs = iTableTopicService.getTableTopicDTOByComponentId(componentIds);
-                                    log.info("topicDTOs:{}",topicDTOs);
+                                    log.info("topicDTOs:{}",JSON.toJSONString(topicDTOs));
                                     if (!CollectionUtils.isEmpty(upPortList)) {
                                         boolean goNext = true;
                                         for (Long upId : upPortList) {

@@ -147,21 +147,27 @@ public class MissionEndCenter {
                         TaskHierarchyDTO lastTaskHierarchyDTO = null;
                         Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
                         boolean flag = true;
+                        int num = 0;
+                        List<String> ds = new ArrayList<>();
+
                         Iterator<Map.Entry<Object, Object>> taskNodeMap = hmTask.entrySet().iterator();
                         while (taskNodeMap.hasNext()) {
                             Map.Entry<Object, Object> next = taskNodeMap.next();
                             TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
                             if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDto.itselfPort.pid){
+                                num++;
                                 log.info("任务结束中心本job节点task状态:{}", taskNodeHierarchyDTO);
                                 if (taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.tasknorun ||
                                         taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.taskstart){
                                     flag = false;
+                                    ds.add(String.valueOf(taskNodeHierarchyDTO.itselfPort.id));
                                 }
                                 if (taskNodeHierarchyDTO.pipeEndFlag){
                                     lastTaskHierarchyDTO = taskNodeHierarchyDTO;
                                 }
                             }
                         }
+                        log.info("当前组件TaskTraceId:{} 执行进度:{},未执行管道详情id:{}",kafkaReceive.pipelTaskTraceId,(num-ds.size())+"/"+num,JSON.toJSONString(ds));
                         //判断组件内任务是否全部执行完毕
                         if (flag){
                             //记录本节点的job的结束
