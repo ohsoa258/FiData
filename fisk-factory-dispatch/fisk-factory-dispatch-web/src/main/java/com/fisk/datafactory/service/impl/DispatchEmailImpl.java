@@ -72,6 +72,11 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     @Override
     public ResultEnum saveOrupdate(DispatchEmailDTO dispatchEmail) {
         if (Objects.nonNull(dispatchEmail)) {
+            List<DispatchEmailPO> poList = this.query().eq("nifi_custom_workflow_id",dispatchEmail.nifiCustomWorkflowId).list();
+            for (DispatchEmailPO p: poList) {
+                this.removeById(p.id);
+            }
+            //this.removeById(poList.id);
             this.saveOrUpdate(DispatchEmailMap.INSTANCES.dtoToPo(dispatchEmail));
             return ResultEnum.SUCCESS;
         } else {
@@ -212,12 +217,14 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     @Override
     public ResultEnum setNotification(RecipientsDTO dto)
     {
+
         List<DispatchEmailPO> dispatchList = new ArrayList<>();
         List<RecipientsPO> recipientsList = new ArrayList<>();
         if (dto != null)
         {
             //删除已配置的告警通知重新添加
             this.removeById(dto.dispatchEmailId);
+
             //查出所有已配置的收件人 然后进行删除重新添加
             List<RecipientsPO> poList = recipients.query().eq("dispatch_email_id",dto.dispatchEmailId).list();
             for (RecipientsPO r: poList) {
