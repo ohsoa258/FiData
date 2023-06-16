@@ -6,6 +6,9 @@ import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishF
 
 import java.util.List;
 
+/**
+ * @author lishiji
+ */
 public interface IBuildFactoryCodePreview {
 
     /**

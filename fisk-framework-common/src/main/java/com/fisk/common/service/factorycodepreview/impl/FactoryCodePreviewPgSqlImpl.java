@@ -478,8 +478,6 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         }
 
         if (otherLogic == 1) {
-
-
             if ("TIME".equalsIgnoreCase(field.fieldType)) {
                 //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
                 startSQL.append("\"")

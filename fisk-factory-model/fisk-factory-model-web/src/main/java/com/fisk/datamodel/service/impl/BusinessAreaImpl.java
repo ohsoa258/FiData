@@ -31,6 +31,8 @@ import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
+import com.fisk.common.service.factorymodelkeyscript.IBuildFactoryModelKeyScript;
+import com.fisk.common.service.factorymodelkeyscript.impl.ModelKeyScriptHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -1179,76 +1181,24 @@ public class BusinessAreaImpl
         return list;
     }
 
+    /**
+     * 构建维度key脚本
+     *
+     * @param dto
+     * @return
+     */
     @Override
     public Object buildDimensionKeyScript(List<TableSourceRelationsDTO> dto) {
         if (CollectionUtils.isEmpty(dto)) {
             return "";
         }
+        //获取连接类型
+        DataSourceTypeEnum conType = getTargetDbInfo(targetDbId).conType;
 
-        StringBuilder str = new StringBuilder();
+        //获取对应连接类型的keyScriptHelper
+        IBuildFactoryModelKeyScript keyScriptHelper = ModelKeyScriptHelper.getKeyScriptHelperByConType(conType);
 
-        String tName = "[temp_" + dto.get(0).sourceTable + "].";
-
-        for (TableSourceRelationsDTO item : dto) {
-            str.append("update ")
-                    .append("[temp_");
-            str.append(item.sourceTable)
-                    .append("]");
-            str.append(" set ")
-                    .append("[temp_");
-            str.append(item.sourceTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
-                    .append("]");
-            str.append(" = ");
-            str.append("[")
-                    .append(item.targetTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
-                    .append("]");
-            str.append(" from ")
-                    .append("[temp_");
-            str.append(item.sourceTable)
-                    .append("]");
-            if (!StringUtils.isEmpty(item.joinType)) {
-                str.append(" ").append(item.joinType);
-                str.append(" ")
-                        .append("[")
-                        .append(item.targetTable)
-                        .append("]");
-            }
-            str.append(" on ")
-                    .append("[temp_");
-
-            str.append(item.sourceTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(item.sourceColumn)
-                    .append("]");
-            str.append(" = ");
-            str.append("[")
-                    .append(item.targetTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(item.targetColumn)
-                    .append("]")
-                    .append(" WHERE ")
-                    .append(tName)
-                    .append("fidata_batch_code=")
-                    .append("'${fidata_batch_code}' AND ")
-                    .append(tName)
-                    .append("fidata_flow_batch_code=")
-                    .append("'${fragment.index}'");
-            str.append(";");
-        }
-
-        return str.toString();
+        return keyScriptHelper.buildKeyScript(dto);
     }
 
     @Override
@@ -1258,17 +1208,21 @@ public class BusinessAreaImpl
             return new JSONObject();
         }
 
-        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
-        if (all.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-        }
+        //不使用系统配置--平台数据源表里的第一条数据作为数据库的连接类型
+//        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
+//        if (all.code != ResultEnum.SUCCESS.getCode()) {
+//            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+//        }
+//
+//        Optional<DataSourceDTO> first = all.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
+//        if (!first.isPresent()) {
+//            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+//        }
 
-        Optional<DataSourceDTO> first = all.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
-        if (!first.isPresent()) {
-            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
-        }
+        //改用配置文件中指定的数据源id的连接类型
+        DataSourceTypeEnum conType = getTargetDbInfo(dwSource).conType;
 
-        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(first.get().conType);
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(conType);
         return command.dataTypeList();
 
 
@@ -1471,7 +1425,7 @@ public class BusinessAreaImpl
      * @param id
      * @return
      */
-    public DataSourceDTO getTargetDbInfo(Integer id) {
+    private DataSourceDTO getTargetDbInfo(Integer id) {
         ResultEntity<DataSourceDTO> dataSourceConfig = null;
         try {
             dataSourceConfig = userClient.getFiDataDataSourceById(id);
