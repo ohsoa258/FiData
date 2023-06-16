@@ -46,6 +46,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 任务结束中心
@@ -114,6 +115,12 @@ public class MissionEndCenter {
                         //没有表id就把任务id扔进去
                         nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
                     }
+                    Boolean setnx;
+                    do {
+                        Thread.sleep(200);
+                        log.info("missionEndCenter获取锁TaskLock:{}",kafkaReceive.pipelTaskTraceId);
+                        setnx = redisUtil.setnx("TaskLock:"+kafkaReceive.pipelTaskTraceId, 30, TimeUnit.SECONDS);
+                    } while (!setnx);
                     TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceive.pipelTraceId);
                     NifiCustomWorkflowDetailDTO itselfPort = nifiPortHierarchy.itselfPort;
                     DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(itselfPort.id));
@@ -141,7 +148,7 @@ public class MissionEndCenter {
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.nonNull(kafkaReceive.numbers) ? (Objects.isNull(count) || "null".equals(count) ? 0 : count) : kafkaReceive.numbers));
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
-
+                    redisUtil.del("TaskLock:"+kafkaReceive.pipelTaskTraceId);
                     if (pipelineAsyncSwitch){
                         //查找当前组件内的最后一个task(因为最后一个节点的nextList会有下一个组件第一个任务)
                         TaskHierarchyDTO lastTaskHierarchyDTO = null;

@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -166,6 +167,11 @@ public class HeartbeatService {
                     redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceive.pipelTraceId, map1, Long.parseLong(maxTime));
                     sendKafka(topicPO, kafkaReceive, msg.size());
                 }else if (split.length == 6){
+                    String state = (String) redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
+                    if (state.equals(MyTopicStateEnum.RUNNING.getName())) {
+                        continue;
+                    }
+                    redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, MyTopicStateEnum.RUNNING.getName(), Long.parseLong(maxTime));
                     sendKafka(topicPO, kafkaReceive, msg.size());
                 }
 

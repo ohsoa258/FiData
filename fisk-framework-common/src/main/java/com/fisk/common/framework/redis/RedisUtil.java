@@ -758,4 +758,15 @@ public class RedisUtil {
         return entries;
     }
 
+    /**
+     * 加锁
+     * @param key 锁值
+     * @param time 时间
+     * @param timeUnit 单位
+     * @return
+     */
+    public Boolean setnx(String key,Integer time,TimeUnit timeUnit) {
+        Boolean lock = redisTemplate.opsForValue().setIfAbsent(key, "1", time, timeUnit);
+        return lock;
+    }
 }
