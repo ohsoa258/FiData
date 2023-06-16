@@ -206,6 +206,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
                     String send = HttpPost(url,JSON.toJSONString(params));
                     JSONObject jsonSend = JSONObject.parseObject(send);
                 } catch (Exception e) {
+                    log.debug("【pipelineSendEmails】 e：" + e);
                     throw new FkException(ResultEnum.ERROR,e.getMessage());
                 }
             }

@@ -163,10 +163,12 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
                         .filter(u -> u.name.toLowerCase().contains(recipients.toLowerCase()))
                         .collect(Collectors.toList());
             }
-
+            String name = weChatUserList.stream().map(String::valueOf).collect(Collectors.joining(","));
+            log.info("企业微信用户名和用户Id: " + name);
         }
         catch (Exception e)
         {
+            log.debug("【searchWechatUser】 ex：" + e);
             e.printStackTrace();
         }
         return  weChatUserList;
@@ -178,6 +180,7 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");
+            con.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
