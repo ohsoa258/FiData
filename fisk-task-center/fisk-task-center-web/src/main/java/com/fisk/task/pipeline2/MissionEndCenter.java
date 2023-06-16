@@ -46,6 +46,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 任务结束中心
@@ -114,6 +115,12 @@ public class MissionEndCenter {
                         //没有表id就把任务id扔进去
                         nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
                     }
+                    Boolean setnx;
+                    do {
+                        Thread.sleep(200);
+                        log.info("missionEndCenter获取锁TaskLock:{}",kafkaReceive.pipelTaskTraceId);
+                        setnx = redisUtil.setnx("TaskLock:"+kafkaReceive.pipelTaskTraceId, 30, TimeUnit.SECONDS);
+                    } while (!setnx);
                     TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceive.pipelTraceId);
                     NifiCustomWorkflowDetailDTO itselfPort = nifiPortHierarchy.itselfPort;
                     DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(itselfPort.id));
@@ -141,27 +148,33 @@ public class MissionEndCenter {
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.nonNull(kafkaReceive.numbers) ? (Objects.isNull(count) || "null".equals(count) ? 0 : count) : kafkaReceive.numbers));
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
-
+                    redisUtil.del("TaskLock:"+kafkaReceive.pipelTaskTraceId);
                     if (pipelineAsyncSwitch){
                         //查找当前组件内的最后一个task(因为最后一个节点的nextList会有下一个组件第一个任务)
                         TaskHierarchyDTO lastTaskHierarchyDTO = null;
                         Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
                         boolean flag = true;
+                        int num = 0;
+                        List<String> ds = new ArrayList<>();
+
                         Iterator<Map.Entry<Object, Object>> taskNodeMap = hmTask.entrySet().iterator();
                         while (taskNodeMap.hasNext()) {
                             Map.Entry<Object, Object> next = taskNodeMap.next();
                             TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
                             if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDto.itselfPort.pid){
+                                num++;
                                 log.info("任务结束中心本job节点task状态:{}", taskNodeHierarchyDTO);
                                 if (taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.tasknorun ||
                                         taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.taskstart){
                                     flag = false;
+                                    ds.add(String.valueOf(taskNodeHierarchyDTO.itselfPort.id));
                                 }
                                 if (taskNodeHierarchyDTO.pipeEndFlag){
                                     lastTaskHierarchyDTO = taskNodeHierarchyDTO;
                                 }
                             }
                         }
+                        log.info("当前组件TaskTraceId:{} 执行进度:{},未执行管道详情id:{}",kafkaReceive.pipelTaskTraceId,(num-ds.size())+"/"+num,JSON.toJSONString(ds));
                         //判断组件内任务是否全部执行完毕
                         if (flag){
                             //记录本节点的job的结束

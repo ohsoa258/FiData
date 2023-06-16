@@ -39,6 +39,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -142,29 +143,40 @@ public class HeartbeatService {
                     kafkaReceive.pipelTraceId = UUID.randomUUID().toString();
                     MDCHelper.setPipelTraceId(kafkaReceive.pipelTraceId);
                 }
-
-                Map<String, Object> map = new HashMap<>();
-                map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
-                log.info("打印条数81" + JSON.toJSONString(map));
-                redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, map, 3600);
-                // 获取redis中TASK任务
-                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                String[] split = topic.split("\\.");
                 LambdaQueryWrapper<TableTopicPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(TableTopicPO::getTopicName, topic).eq(TableTopicPO::getDelFlag, 1);
                 TableTopicPO topicPO = tableTopicService.getOne(queryWrapper);
-                //获取my-topic运行状态
-                TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(topicPO.getComponentId().toString()).toString(), TaskHierarchyDTO.class);
-                if (taskHierarchy.myTopicState.equals(MyTopicStateEnum.RUNNING)) {
-                    continue;
+                if (split.length == 7){
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                    map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
+                    log.info("打印条数81" + JSON.toJSONString(map));
+                    redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, map, 3600);
+                    // 获取redis中TASK任务
+                    Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                    //获取my-topic运行状态
+                    TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(topicPO.getComponentId().toString()).toString(), TaskHierarchyDTO.class);
+                    if (taskHierarchy.myTopicState.equals(MyTopicStateEnum.RUNNING)) {
+                        continue;
+                    }
+                    taskHierarchy.setMyTopicState(MyTopicStateEnum.RUNNING);
+                    HashMap<Object, Object> map1 = new HashMap<>();
+                    map1.put(topicPO.getComponentId().toString(), JSON.toJSONString(taskHierarchy));
+                    //更新my-topic运行状态
+                    redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceive.pipelTraceId, map1, Long.parseLong(maxTime));
+                    sendKafka(topicPO, kafkaReceive, msg.size());
+                }else if (split.length == 6){
+                    String state = (String) redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
+                    if (state.equals(MyTopicStateEnum.RUNNING.getName())) {
+                        continue;
+                    }
+                    redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, MyTopicStateEnum.RUNNING.getName(), Long.parseLong(maxTime));
+                    sendKafka(topicPO, kafkaReceive, msg.size());
                 }
-                taskHierarchy.setMyTopicState(MyTopicStateEnum.RUNNING);
-                HashMap<Object, Object> map1 = new HashMap<>();
-                map1.put(topicPO.getComponentId().toString(), JSON.toJSONString(taskHierarchy));
-                //更新my-topic运行状态
-                redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceive.pipelTraceId, map1, Long.parseLong(maxTime));
+
                 //发送kafka消息
-                sendKafka(topicPO, kafkaReceive, msg.size());
+
                 //记报错日志
                 if (!StringUtils.isEmpty(kafkaReceive.message)) {
                     // 第三步  如果有报错,记录报错信息

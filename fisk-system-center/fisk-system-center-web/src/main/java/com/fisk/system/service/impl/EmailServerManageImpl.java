@@ -15,6 +15,7 @@ import com.fisk.system.map.EmailServerMap;
 import com.fisk.system.mapper.EmailServerMapper;
 import com.fisk.system.service.IEmailServerManageService;
 import com.fisk.system.vo.emailserver.EmailServerVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
  * @description 邮件配置实现类
  * @date 2022/3/23 12:56
  */
+@Slf4j
 @Service
 public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailServerPO> implements IEmailServerManageService {
 
@@ -129,22 +131,22 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             //获取企业微信AccessToken
             String accessTokenUrl  = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + byId.wechatCorpId + "&corpsecret=" + byId.wechatAppSecret + "";
             String stringAccessToken = HttpGet(accessTokenUrl);
-            log.debug( "企业微信获取token结果集: "+stringAccessToken);
+            log.info( "企业微信获取token结果集: "+stringAccessToken);
             JSONObject json = JSONObject.parseObject(stringAccessToken);
             String accessToken = json.getString("access_token");
             if (accessToken == null)
             {
-                log.debug(stringAccessToken);
+                log.info(stringAccessToken);
             }
             //获取部门用户 部门ID为1 表示整个部门
             String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
             String stringUserList = HttpGet(userListUrl);
-            log.debug( "企业微信获取token结果集: "+stringUserList);
+            log.info( "企业微信获取token结果集: "+stringUserList);
             JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
             JSONArray userListArray = jsonUserList.getJSONArray("userlist");
             if (userListArray == null)
             {
-                log.debug(stringUserList);
+                log.info(stringUserList);
             }
             for (int i = 0; i < userListArray.size(); i++) {
                 JSONObject userObject = userListArray.getJSONObject(i);
@@ -161,10 +163,12 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
                         .filter(u -> u.name.toLowerCase().contains(recipients.toLowerCase()))
                         .collect(Collectors.toList());
             }
-
+            String name = weChatUserList.stream().map(String::valueOf).collect(Collectors.joining(","));
+            log.info("企业微信用户名和用户Id: " + name);
         }
         catch (Exception e)
         {
+            log.debug("【searchWechatUser】 ex：" + e);
             e.printStackTrace();
         }
         return  weChatUserList;
@@ -176,6 +180,7 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");
+            con.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {

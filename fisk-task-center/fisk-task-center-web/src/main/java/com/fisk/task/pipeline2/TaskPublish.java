@@ -24,6 +24,7 @@ import com.fisk.task.dto.task.SftpCopyDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
+import com.fisk.task.enums.MyTopicStateEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.pipeline.IPipelineTaskPublishCenter;
@@ -79,6 +80,9 @@ public class TaskPublish {
     DataAccessClient dataAccessClient;
     @Value("${pipeline-async-switch}")
     private Boolean pipelineAsyncSwitch;
+
+    @Value("${nifi.pipeline.maxTime}")
+    public String maxTime;
     /**
      * 接收到的本节点,需要找所有下游,根据下游状态调用
      */
@@ -237,6 +241,7 @@ public class TaskPublish {
                         log.info("打印topic内容:" + dailyNifiMsg);
                         HashMap<Integer, Object> taskMap = new HashMap<>();
                         taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
+                        redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceiveDTO.pipelTaskTraceId, MyTopicStateEnum.NOT_RUNNING.getName(), Long.parseLong(maxTime));
                         log.info("第二处调用保存task日志");
                         iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
                         //任务中心发布任务,通知任务开始执行
@@ -301,7 +306,7 @@ public class TaskPublish {
                                     List<Long> upPortList = nifiPortsHierarchyNext.upPortList;
                                     //下一组件所有任务的topic
                                     List<TableTopicDTO> topicDTOs = iTableTopicService.getTableTopicDTOByComponentId(componentIds);
-                                    log.info("topicDTOs:{}",topicDTOs);
+                                    log.info("topicDTOs:{}",JSON.toJSONString(topicDTOs));
                                     if (!CollectionUtils.isEmpty(upPortList)) {
                                         boolean goNext = true;
                                         for (Long upId : upPortList) {
