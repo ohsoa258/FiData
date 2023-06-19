@@ -24,6 +24,7 @@ import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
 import java.util.*;
 
@@ -41,17 +42,17 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     private UserClient userClient;
 
     @Resource
-    private  IRecipients recipients;
+    private IRecipients recipients;
+
     @Override
     public DispatchEmailDTO getDispatchEmail(int nifiCustomWorkflowId) {
 
         //获取单个管道邮件配置
         DispatchEmailPO dispatchEmail = this.query().eq("nifi_custom_workflow_id", nifiCustomWorkflowId).one();
-        if (dispatchEmail != null)
-        {
+        if (dispatchEmail != null) {
             //根据管道邮件配置的id查出收件人
-            List<RecipientsPO> re = recipients.query().select("wechat_user_id","wechat_user_name","user_id","user_name").eq("dispatch_email_id",dispatchEmail.id).list();
-            DispatchEmailDTO emailDTO =  DispatchEmailMap.INSTANCES.poToDto(dispatchEmail);
+            List<RecipientsPO> re = recipients.query().select("wechat_user_id", "wechat_user_name", "user_id", "user_name").eq("dispatch_email_id", dispatchEmail.id).list();
+            DispatchEmailDTO emailDTO = DispatchEmailMap.INSTANCES.poToDto(dispatchEmail);
             List<UserInfoDTO> userInfoList = new ArrayList<>();
             for (RecipientsPO recipientsPO : re) {
                 UserInfoDTO userInfoDTO = new UserInfoDTO();
@@ -72,8 +73,8 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     @Override
     public ResultEnum saveOrupdate(DispatchEmailDTO dispatchEmail) {
         if (Objects.nonNull(dispatchEmail)) {
-            List<DispatchEmailPO> poList = this.query().eq("nifi_custom_workflow_id",dispatchEmail.nifiCustomWorkflowId).list();
-            for (DispatchEmailPO p: poList) {
+            List<DispatchEmailPO> poList = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).list();
+            for (DispatchEmailPO p : poList) {
                 this.removeById(p.id);
             }
             //this.removeById(poList.id);
@@ -97,7 +98,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
         // 发邮件
         DispatchEmailPO email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
         //根据管道邮件配置的id查出收件人
-        List<RecipientsPO> userList = recipients.query().select("wechat_user_id","wechat_user_name","user_id","user_name").eq("dispatch_email_id",email.id).list();
+        List<RecipientsPO> userList = recipients.query().select("wechat_user_id", "wechat_user_name", "user_id", "user_name").eq("dispatch_email_id", email.id).list();
         //第一步：查询邮件服务器设置
         ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.emailserverConfigId);
         if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
@@ -126,11 +127,10 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             }
         }
 
-        if (email.type == 1)
-        {
+        if (email.type == 1) {
             EmailServerVO emailServerVO = emailServerById.getData();
             MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
-            mailServeiceDTO.setOpenAuth(false);
+            mailServeiceDTO.setOpenAuth(true);
             mailServeiceDTO.setOpenDebug(true);
             mailServeiceDTO.setHost(emailServerVO.getEmailServer());
             mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
@@ -155,15 +155,16 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             //mailSenderDTO.setCompanyLogoPath("公司logo地址");
             try {
                 //第二步：调用邮件发送方法
+                log.info("pipelineSendEmails-mailServeiceDTO：" + JSON.toJSONString(mailServeiceDTO));
+                log.info("pipelineSendEmails-mailSenderDTO：" + JSON.toJSONString(mailSenderDTO));
                 MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
             } catch (Exception ex) {
                 throw new FkException(ResultEnum.ERROR, ex.getMessage());
             }
-        }
-        else if (email.type == 2) //发送企业微信
+        } else if (email.type == 2) //发送企业微信
         {
             //获取企业微信token
-            String accessTokenUrl  = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + emailServerById.data.wechatCorpId + "&corpsecret=" + emailServerById.data.wechatAppSecret + "";
+            String accessTokenUrl = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + emailServerById.data.wechatCorpId + "&corpsecret=" + emailServerById.data.wechatAppSecret + "";
             String stringAccessToken = HttpGet(accessTokenUrl);
             JSONObject json = JSONObject.parseObject(stringAccessToken);
             String accessToken = json.getString("access_token");
@@ -183,8 +184,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             }
             String content = sb.toString();
 
-            for (RecipientsPO user :userList)
-            {
+            for (RecipientsPO user : userList) {
                 //构造卡片消息内容
                 Map<String, Object> params = new HashMap<>();
                 params.put("touser", user.wechatUserId);
@@ -203,11 +203,11 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
                 try {
                     //发送企业微信
                     String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + accessToken;
-                    String send = HttpPost(url,JSON.toJSONString(params));
+                    String send = HttpPost(url, JSON.toJSONString(params));
                     JSONObject jsonSend = JSONObject.parseObject(send);
                 } catch (Exception e) {
                     log.debug("【pipelineSendEmails】 e：" + e);
-                    throw new FkException(ResultEnum.ERROR,e.getMessage());
+                    throw new FkException(ResultEnum.ERROR, e.getMessage());
                 }
             }
         }
@@ -216,19 +216,17 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     }
 
     @Override
-    public ResultEnum setNotification(RecipientsDTO dto)
-    {
+    public ResultEnum setNotification(RecipientsDTO dto) {
 
         List<DispatchEmailPO> dispatchList = new ArrayList<>();
         List<RecipientsPO> recipientsList = new ArrayList<>();
-        if (dto != null)
-        {
+        if (dto != null) {
             //删除已配置的告警通知重新添加
             this.removeById(dto.dispatchEmailId);
 
             //查出所有已配置的收件人 然后进行删除重新添加
-            List<RecipientsPO> poList = recipients.query().eq("dispatch_email_id",dto.dispatchEmailId).list();
-            for (RecipientsPO r: poList) {
+            List<RecipientsPO> poList = recipients.query().eq("dispatch_email_id", dto.dispatchEmailId).list();
+            for (RecipientsPO r : poList) {
                 recipients.removeById(r.id);
             }
             //添加
@@ -240,13 +238,13 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             dispatchList.add(emailPO);
             this.saveBatch(dispatchList);
             //添加收件人(收件人单独一张表)
-            for (UserInfoDTO user:dto.userInfo) {
+            for (UserInfoDTO user : dto.userInfo) {
                 RecipientsPO po = new RecipientsPO();
                 po.dispatchEmailId = (int) emailPO.id;
                 po.wechatUserId = user.wechatUserId;
-                po.wechatUserName =user.wechatUserName;
+                po.wechatUserName = user.wechatUserName;
                 po.userId = user.userId;
-                po.userName  = user.usetName;
+                po.userName = user.usetName;
                 recipientsList.add(po);
             }
             recipients.saveBatch(recipientsList);
