@@ -61,11 +61,13 @@ public class NifiController {
         return ResultEntityBuild.build(iNiFiHelper.modifyScheduling(groupId, ProcessorId, schedulingStrategy, schedulingPeriod));
 
     }
+
     @ApiOperation("删除Nifi流")
     @PostMapping("/deleteNifiFlow")
     public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO) {
         return ResultEntityBuild.build(iNiFiHelper.deleteNifiFlow(dataModelVO));
     }
+
     @ApiOperation("获取NIFI表设置")
     @PostMapping("/getTableNifiSetting")
     public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto) {
@@ -75,6 +77,7 @@ public class NifiController {
         return objectResultEntity;
 
     }
+
     @ApiOperation("获取Pg Ods的Sql")
     @PostMapping("/getSqlForPgOds")
     public ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO) {
@@ -83,6 +86,7 @@ public class NifiController {
         SqlForPgOds.code = 0;
         return SqlForPgOds;
     }
+
     @ApiOperation("删除自定义工作Nifi流程")
     @PostMapping("/deleteCustomWorkNifiFlow")
     public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {

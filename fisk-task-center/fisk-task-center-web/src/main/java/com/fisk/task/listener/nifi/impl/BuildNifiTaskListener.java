@@ -1804,7 +1804,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //查询条数
         String fullTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
         config.processorConfig.targetTableName = fullTableName;
-        ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId);
+        ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId ,buildTableService.syncModeDTO.customScriptAfter);
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //连接器
         componentConnector(groupId, putDatabaseRecord.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -2795,9 +2795,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
-    private ProcessorEntity queryNumbers(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
+    private ProcessorEntity queryNumbers(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId ,String afterSql) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query numbers Field";
+        querySqlDto.preSql = afterSql;
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         //接入需要数据校验,查的是ods表,其他的不变

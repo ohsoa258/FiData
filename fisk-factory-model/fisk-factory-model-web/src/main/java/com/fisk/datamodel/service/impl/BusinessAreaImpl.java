@@ -1393,7 +1393,7 @@ public class BusinessAreaImpl
         switch (syncMode) {
             //如果是0的话，不拼接任何sql
             case 0:
-                return "";
+                return "'请选择覆盖方式...'";
             //全量
             case 1:
                 //调用封装的全量覆盖方式拼接sql方法并返回
