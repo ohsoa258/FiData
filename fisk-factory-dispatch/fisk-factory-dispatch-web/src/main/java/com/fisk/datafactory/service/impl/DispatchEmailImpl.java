@@ -13,10 +13,12 @@ import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.RecipientsDTO;
 import com.fisk.datafactory.dto.UserInfoDTO;
 import com.fisk.datafactory.entity.DispatchEmailPO;
+import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.entity.RecipientsPO;
 import com.fisk.datafactory.enums.SendModeEnum;
 import com.fisk.datafactory.map.DispatchEmailMap;
 import com.fisk.datafactory.mapper.DispatchEmailMapper;
+import com.fisk.datafactory.mapper.NifiCustomWorkflowMapper;
 import com.fisk.datafactory.service.IDispatchEmail;
 import com.fisk.datafactory.service.IRecipients;
 import com.fisk.system.client.UserClient;
@@ -44,9 +46,11 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
     @Resource
     private IRecipients recipients;
 
+    @Resource
+    private NifiCustomWorkflowMapper nifiCustomWorkflowMapper;
+
     @Override
     public DispatchEmailDTO getDispatchEmail(int nifiCustomWorkflowId) {
-
         //获取单个管道邮件配置
         DispatchEmailPO dispatchEmail = this.query().eq("nifi_custom_workflow_id", nifiCustomWorkflowId).one();
         if (dispatchEmail != null) {
@@ -95,6 +99,11 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
 
     @Override
     public ResultEnum pipelineSendEmails(DispatchEmailDTO dispatchEmail) {
+        //获取单个管道配置
+        NifiCustomWorkflowPO nifiCustomWorkflowPO = nifiCustomWorkflowMapper.selectById(dispatchEmail.nifiCustomWorkflowId);
+        if (nifiCustomWorkflowPO != null) {
+            dispatchEmail.body.put("管道名称", nifiCustomWorkflowPO.getWorkflowName());
+        }
         // 发邮件
         DispatchEmailPO email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
         //根据管道邮件配置的id查出收件人

@@ -91,7 +91,7 @@ public class MailSenderUtils {
         // 1. 创建邮件对象
         Message mimeMessage = new MimeMessage(session);
         // 2. 发件人
-        mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(), "fiskColud@fisksoft.com")); //senderDTO.getUser()
+        mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(), "fidata@fisksoft.com")); //senderDTO.getUser()
         // 3. 收件人
         if (senderDTO.getToAddress() != null && senderDTO.getToAddress() != "") {
             String to = senderDTO.getToAddress()
