@@ -62,7 +62,9 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -163,7 +165,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("database-driver-locations", data.driverLocation);
         map.put("Database User", data.user);
         map.put("Password", data.pwd);
-        map.put("Max Total Connections", "100");
+        map.put("Max Total Connections", "500");
+        map.put("Max Wait Time", "30000 millis");
         if (StringUtils.isNotEmpty(data.dbcpMaxIdleConns)) {
             map.put("dbcp-max-idle-conns", data.dbcpMaxIdleConns);
         }
@@ -549,6 +552,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("HTTP Method", data.httpMethod);
         map.put("Remote URL", data.remoteUrl);
         map.put("Authorization", data.nifiToken);
+        map.put("Socket Connect Timeout", data.socketConnectTimeout);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setProperties(map);
@@ -1428,7 +1432,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             try {
                 NifiHelper.getOutputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
             } catch (Exception e) {
-                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+                log.error("系统异常,暂停OutputStatus失败" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
 
@@ -1446,7 +1450,7 @@ public class NiFiHelperImpl implements INiFiHelper {
             try {
                 NifiHelper.getInputPortsApi().updateRunStatus(portEntity.getId(), portRunStatusEntity);
             } catch (ApiException e) {
-                log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+                log.error("系统异常，暂停InputStatus失败" + StackTraceHelper.getStackTraceInfo(e));
             }
         }
         return ResultEnum.SUCCESS;
@@ -1478,26 +1482,40 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
     }
 
-    /*
-     * deleteNifiFlow       删除nifi流程
-     * nifiRemoveDTOList
-     * */
+    /**
+     * 删除nifi流程
+     * 数接数仓重新发布时，涉及到的删除原流程都走这个方法
+     *
+     * @param dataModelVO dataModelVO
+     * @return
+     */
     @Override
     public ResultEnum deleteNifiFlow(DataModelVO dataModelVO) {
+        int count = 0;
+        String processorGroupId = "";
+        log.info("删除nifi流程参数：{}", JSON.toJSONString(dataModelVO));
         try {
-            List<NifiRemoveDTO> nifiRemoveDTOList = createNifiRemoveDTOs(dataModelVO);
-
+            //调用封装的方法，获取待删除nifi工作流的表（维度表，事实表，物理表，指标表）集合
+            List<NifiRemoveDTO> nifiRemoveDTOList = createNifiRemoveDTOs(dataModelVO, count);
+            count++;
             for (NifiRemoveDTO nifiRemoveDTO : nifiRemoveDTOList) {
                 List<ProcessorEntity> processorEntities = new ArrayList<>();
                 List<PortEntity> inputPortEntities = new ArrayList<>();
                 List<PortEntity> outputPortEntities = new ArrayList<>();
+
+                //获取待删除的组件id
+                List<String> processorIds = new ArrayList<>();
                 for (String ProcessId : nifiRemoveDTO.ProcessIds) {
-                    if (ProcessId != null && ProcessId != "") {
+                    if (ProcessId != null && !ProcessId.equals("")) {
                         ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessId);
                         processorEntities.add(processor);
+                        processorIds.add(processor.getId());
                     }
                 }
-                //暂停13个组件
+
+                log.info("待删除的组件id:{}", JSON.toJSONString(processorIds));
+
+                //暂停13个组件   暂停所有组件
                 this.stopProcessor(nifiRemoveDTO.groupId, processorEntities);
                 ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
                 scheduleComponentsEntity.setId(nifiRemoveDTO.groupId);
@@ -1506,17 +1524,25 @@ public class NiFiHelperImpl implements INiFiHelper {
                 NifiHelper.getFlowApi().scheduleComponents(nifiRemoveDTO.groupId, scheduleComponentsEntity);
                 for (ProcessorEntity processorEntity : processorEntities) {
                     //terminateProcessorCall
+                    //Terminates a processor, essentially "deleting" its threads and any active tasks
+                    //终止处理器，实质上“删除”其线程和任何活动任务
                     NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
                 }
+
                 //清空队列
                 this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
+
                 //禁用2个控制器服务 ,分开写是因为有时候禁用不及时,导致删除的时候还没禁用,删除失败
+                //禁用所有控制器服务 ,分开写是因为有时候禁用不及时,导致删除的时候还没禁用,删除失败
+                //并非禁用最外层的，而是禁用这张表所在group内的仅供自身使用的控制器服务
                 for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
                     if (controllerServicesId != null) {
                         //禁用
                         this.controllerServicesRunStatus(controllerServicesId);
                     }
                 }
+                //删除所有控制器服务
+                //并非删除最外层的，而是删除这张表所在group内的仅供自身使用的控制器服务
                 for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
                     if (controllerServicesId != null) {
                         //删除
@@ -1524,14 +1550,17 @@ public class NiFiHelperImpl implements INiFiHelper {
                         NifiHelper.getControllerServicesApi().removeControllerService(controllerServicesId, controllerService.getRevision().getVersion().toString(), "", false);
                     }
                 }
+
                 //暂停,删除input和output,删除任务组
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
                 //操作input与output组件
                 operatePorts(nifiRemoveDTO, inputPortEntities, outputPortEntities);
+
                 //删除13个组件
                 for (ProcessorEntity processorEntity : processorEntities) {
                     //因为版本变了,所以要再查一遍
                     ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorEntity.getId());
+                    processorGroupId = processor.getId();
                     NifiHelper.getProcessorsApi().deleteProcessor(processor.getId(), String.valueOf(processor.getRevision().getVersion()), null, null);
                 }
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
@@ -1545,19 +1574,92 @@ public class NiFiHelperImpl implements INiFiHelper {
             }
             //删除应用
             if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
-                //禁用2个控制器服务
-
                 ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
                 NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
                 appNifiSettingService.removeById(dataModelVO.businessId);
             }
             return ResultEnum.SUCCESS;
         } catch (ApiException e) {
-            log.error("nifi删除失败，【" + e.getResponseBody() + "】: ", e);
-            return ResultEnum.TASK_NIFI_DELETE_FLOW;
+            return handleException(dataModelVO, count, processorGroupId);
         }
     }
 
+    /**
+     * 专门处理 deleteNifiFlow 调用nifi的api方法中抛出的ApiException
+     * deleteNifiFlow方法在以下情况会抛出异常从而导致nifi组流程删除不干净：
+     * 当某个组的组件引用失效的控制器服务时，删除该失效组件会报错，解决方案是使用catch块捕获错误，多次执行nifi api的删除该组的方法，并且同时删除组后的操作继续执行
+     * 目前执行5次
+     *
+     * @param dataModelVO
+     * @param count            计数
+     * @param processorGroupId 组id
+     */
+    private ResultEnum handleException(DataModelVO dataModelVO, int count, String processorGroupId) {
+        //删除nifi表流程的重试次数 暂定为5次
+        int maxRetries = 5;
+        //计数器
+        int myCount = 1;
+        //是否继续
+        boolean ifGoOn = false;
+        while (!ifGoOn && myCount <= maxRetries) {
+            myCount++;
+            //调用封装的方法
+            ifGoOn = tryDelNiFiFlow(dataModelVO, myCount, processorGroupId);
+        }
+
+        return ifGoOn ? ResultEnum.SUCCESS : ResultEnum.TASK_NIFI_DELETE_FLOW;
+    }
+
+    /**
+     * 删除nifi组
+     *
+     * @param dataModelVO
+     * @param processorGroupId
+     * @return
+     */
+    private boolean tryDelNiFiFlow(DataModelVO dataModelVO, int round, String processorGroupId) {
+        //ifStopKafka = 1:不停止consumeKafka  ifStopKafka = 0,停止consumeKafka
+        int ifStopKafka = 1;
+        try {
+            doDelNiFiFlowAndGoOn(dataModelVO, ifStopKafka);
+        } catch (ApiException ex) {
+            log.error("第" + round + "次删除nifi删除失败，【" + ex.getResponseBody() + "】: " + "组件id:" + processorGroupId, ex);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 相同方法提取封装
+     *
+     * @param dataModelVO
+     * @param count
+     * @throws ApiException
+     */
+    private void doDelNiFiFlowAndGoOn(DataModelVO dataModelVO, int count) throws ApiException {
+        // 创建 NifiRemoveDTO 对象列表
+        List<NifiRemoveDTO> nifiRemoveDTOList = createNifiRemoveDTOs(dataModelVO, count);
+        // 循环遍历 NifiRemoveDTO 对象列表
+        for (NifiRemoveDTO nifiRemoveDTO : nifiRemoveDTOList) {
+            // 获取具有指定组 ID 的nifi组实体对象
+            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
+            // 删除该组
+            NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+            if (!Objects.equals(OlapTableEnum.PHYSICS, nifiRemoveDTO.olapTableEnum)) {
+                QueryWrapper<TableNifiSettingPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.lambda()
+                        .eq(TableNifiSettingPO::getTableAccessId, nifiRemoveDTO.tableId)
+                        .eq(TableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
+                tableNifiSettingService.remove(queryWrapper);
+            }
+        }
+        //删除应用 根据页面是否直接删除应用判断
+        if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
+            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
+            NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
+            appNifiSettingService.removeById(dataModelVO.businessId);
+        }
+    }
 
     /*
      * deleteNifiFlow       删除nifi流程
@@ -1683,20 +1785,20 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
     }
 
-    private List<NifiRemoveDTO> createNifiRemoveDTOs(DataModelVO dataModelVO) {
+    private List<NifiRemoveDTO> createNifiRemoveDTOs(DataModelVO dataModelVO, int count) {
         List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
         AppNifiSettingPO appNifiSettingPO = appNifiSettingService.query().eq("app_id", dataModelVO.businessId).eq("type", dataModelVO.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
         //维度表
-        List<NifiRemoveDTO> nifiRemoveList1 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.dimensionIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        List<NifiRemoveDTO> nifiRemoveList1 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.dimensionIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
         nifiRemoveDTOS.addAll(nifiRemoveList1);
         //事实表
-        List<NifiRemoveDTO> nifiRemoveList2 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.factIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        List<NifiRemoveDTO> nifiRemoveList2 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.factIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
         nifiRemoveDTOS.addAll(nifiRemoveList2);
         //物理表
-        List<NifiRemoveDTO> nifiRemoveList3 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        List<NifiRemoveDTO> nifiRemoveList3 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.physicsIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
         nifiRemoveDTOS.addAll(nifiRemoveList3);
         //指标表
-        List<NifiRemoveDTO> nifiRemoveList4 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.indicatorIdList, appNifiSettingPO, dataModelVO.delBusiness);
+        List<NifiRemoveDTO> nifiRemoveList4 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.indicatorIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
         nifiRemoveDTOS.addAll(nifiRemoveList4);
         return nifiRemoveDTOS;
     }
@@ -1713,7 +1815,7 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
     //mdm
 
-    private List<NifiRemoveDTO> createNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, AppNifiSettingPO appNifiSettingPO, Boolean delApp) {
+    private List<NifiRemoveDTO> createNifiRemoveList(String businessId, DataModelTableVO dataModelTableVO, AppNifiSettingPO appNifiSettingPO, Boolean delApp, int count) {
         List<NifiRemoveDTO> nifiRemoveDTOS = new ArrayList<>();
         NifiRemoveDTO nifiRemoveDTO = new NifiRemoveDTO();
         if (dataModelTableVO != null && dataModelTableVO.ids != null) {
@@ -1725,13 +1827,17 @@ public class NiFiHelperImpl implements INiFiHelper {
                 List<String> inputportConnectIds = new ArrayList<>();
                 List<String> outputportConnectIds = new ArrayList<>();
                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
-                //无论是否成功删除任务组,都先暂停接收卡夫卡组件
-                try {
-                    ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.consumeKafkaProcessorId);
-                    this.stopProcessor(processor.getComponent().getParentGroupId(), processor);
-                } catch (ApiException e) {
-                    log.error("停止卡夫卡消息接收组件报错" + StackTraceHelper.getStackTraceInfo(e));
+
+                if (count == 0) {
+                    try {
+                        //无论是否成功删除任务组,都先暂停接收卡夫卡组件
+                        ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.consumeKafkaProcessorId);
+                        this.stopProcessor(processor.getComponent().getParentGroupId(), processor);
+                    } catch (ApiException e) {
+                        log.error("停止卡夫卡消息接收组件报错" + StackTraceHelper.getStackTraceInfo(e));
+                    }
                 }
+
 
                 //删除topic_name
                 TableTopicDTO topicDTO = new TableTopicDTO();
@@ -2739,7 +2845,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("database-driver-locations", data.driverLocation);
         map.put("Database User", data.user);
         map.put("Password", data.pwd);
-        map.put("Max Total Connections", "100");
+        map.put("Max Total Connections", "500");
+        map.put("Max Wait Time", "30000 millis");
         if (StringUtils.isNotEmpty(data.dbcpMaxIdleConns)) {
             map.put("dbcp-max-idle-conns", data.dbcpMaxIdleConns);
         }
