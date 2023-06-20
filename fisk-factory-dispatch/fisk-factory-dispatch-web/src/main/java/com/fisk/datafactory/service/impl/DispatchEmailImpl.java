@@ -106,15 +106,12 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
         }
         // 发邮件
         DispatchEmailPO email = this.query().eq("nifi_custom_workflow_id", dispatchEmail.nifiCustomWorkflowId).one();
-        //根据管道邮件配置的id查出收件人
-        List<RecipientsPO> userList = recipients.query().select("wechat_user_id", "wechat_user_name", "user_id", "user_name").eq("dispatch_email_id", email.id).list();
         //第一步：查询邮件服务器设置
         ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.emailserverConfigId);
         if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
                 emailServerById.getData() == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
-
         //true是失败
         boolean contains = dispatchEmail.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName());
         Integer sendMode = email.sendMode;
@@ -172,12 +169,13 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             }
         } else if (email.type == 2) //发送企业微信
         {
+            //根据tb_dispatch_email的id查出收件人
+            List<RecipientsPO> userList = recipients.query().select("wechat_user_id", "wechat_user_name", "user_id", "user_name").eq("dispatch_email_id", email.id).list();
             //获取企业微信token
             String accessTokenUrl = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + emailServerById.data.wechatCorpId + "&corpsecret=" + emailServerById.data.wechatAppSecret + "";
             String stringAccessToken = HttpGet(accessTokenUrl);
             JSONObject json = JSONObject.parseObject(stringAccessToken);
             String accessToken = json.getString("access_token");
-
             //取出dispatchEmail.body的key和value值并将key和value拼接成一段 HTML 格式的字符串
             StringBuffer sb = new StringBuffer();
             int i = 0;
