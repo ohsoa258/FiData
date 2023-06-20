@@ -253,8 +253,8 @@ public class TaskPublish {
                         Boolean setnx;
                         do {
                             Thread.sleep(200);
-                            log.info("missionEndCenter获取锁PipelLock:{}",kafkaReceiveDTO.pipelTraceId);
-                            setnx = redisUtil.setnx("PipelLock:"+kafkaReceiveDTO.pipelTraceId, 30, TimeUnit.SECONDS);
+                            log.info("taskPublish获取锁PipelLock:{}",kafkaReceiveDTO.pipelTraceId);
+                            setnx = redisUtil.setnx("PipelLock:"+kafkaReceiveDTO.pipelTraceId, 100, TimeUnit.SECONDS);
                         } while (!setnx);
                         String tableId = "";
                         if (!Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&
