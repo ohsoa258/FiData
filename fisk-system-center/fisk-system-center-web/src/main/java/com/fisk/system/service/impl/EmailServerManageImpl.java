@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.system.dto.WeChatUserDTO;
 import com.fisk.system.dto.emailserver.EmailServerDTO;
 import com.fisk.system.dto.emailserver.EmailServerEditDTO;
@@ -16,14 +18,24 @@ import com.fisk.system.mapper.EmailServerMapper;
 import com.fisk.system.service.IEmailServerManageService;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.ParseException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -140,7 +152,7 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             }
             //获取部门用户 部门ID为1 表示整个部门
             String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
-            String stringUserList = HttpGet(userListUrl);
+            String stringUserList = sendGetRequest(userListUrl);
             log.info( "企业微信获取token结果集: "+stringUserList);
             JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
             JSONArray userListArray = jsonUserList.getJSONArray("userlist");
@@ -174,13 +186,14 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
         return  weChatUserList;
     }
 
-    public static String HttpGet(String url) {
+    public static String HttpGet(String url) throws UnsupportedEncodingException {
         StringBuilder response = new StringBuilder();
         try {
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             con.setRequestMethod("GET");
-            con.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+            //con.setRequestProperty("Content-Type", "charset=UTF-8");
+            con.setRequestProperty("Accept-Charset", "UTF-8");
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
@@ -190,6 +203,34 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return response.toString();
+        String decodedResponse = URLDecoder.decode(response.toString(), "UTF-8");
+        log.info("decodedResponse：" + decodedResponse);
+        return decodedResponse;
+    }
+
+    private String sendGetRequest(String url) throws IOException {
+        String result = null;
+        try {
+            HttpClient client = new DefaultHttpClient();
+            // get请求
+            HttpGet request = new HttpGet(url);
+            request.setHeader("Content-Type", "application/json; charset=utf-8");
+
+//            // 页面自定义的请求头信息
+//            if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(dto.headersParams)) {
+//                dto.headersParams.forEach(request::setHeader);
+//            }
+
+            HttpResponse response = client.execute(request);
+            HttpEntity entity = response.getEntity();
+            //解析返回数据
+            result = EntityUtils.toString(entity, "UTF-8");
+            log.info("执行httpRequest方法成功,【返回信息为：】,{}", result);
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+            log.error("AE92: 执行get请求失败,失败原因为: " + e);
+            throw new FkException(ResultEnum.SEND_GET_REQUEST_ERROR);
+        }
+        return result;
     }
 }
