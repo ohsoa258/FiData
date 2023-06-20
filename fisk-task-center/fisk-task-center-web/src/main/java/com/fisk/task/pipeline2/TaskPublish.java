@@ -48,6 +48,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 任务发布中心,管道调用的是这里 task.build.task.publish
@@ -189,6 +190,7 @@ public class TaskPublish {
                             Map<Integer, Object> jobMap = new HashMap<>();
                             //任务依赖的组件
                             jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                            log.info("管道调度,记录管道开始日志,jobTrackId:{}",kafkaReceiveDTO.pipelJobTraceId);
                             iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                             //task日志
                             HashMap<Integer, Object> taskMap = new HashMap<>();
@@ -220,6 +222,7 @@ public class TaskPublish {
                                 TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                                 //任务依赖的组件
                                 jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                log.info("管道调度非实时api,记录管道开始日志,jobTrackId:{}",kafkaReceiveDTO.pipelJobTraceId);
                                 iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
                                 //task日志
                                 HashMap<Integer, Object> taskMap = new HashMap<>();
@@ -247,6 +250,12 @@ public class TaskPublish {
                         //任务中心发布任务,通知任务开始执行
                         kafkaTemplateHelper.sendMessageAsync(topicName, dailyNifiMsg);
                     } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
+                        Boolean setnx;
+                        do {
+                            Thread.sleep(200);
+                            log.info("missionEndCenter获取锁PipelLock:{}",kafkaReceiveDTO.pipelTraceId);
+                            setnx = redisUtil.setnx("PipelLock:"+kafkaReceiveDTO.pipelTraceId, 30, TimeUnit.SECONDS);
+                        } while (!setnx);
                         String tableId = "";
                         if (!Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue()) &&
                                 !Objects.equals(Integer.parseInt(split1[4]), OlapTableEnum.SFTPFILECOPYTASK.getValue()) &&
@@ -323,6 +332,7 @@ public class TaskPublish {
                                             Map<Integer, Object> jobMap = new HashMap<>();
                                             //任务依赖的组件
                                             jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                            log.info("组件调度,记录管道开始日志,jobTrackId:{}",kafkaReceiveDTO.pipelJobTraceId);
                                             iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, nextJobTraceId, String.valueOf(itselfPort1.pid));
                                             for (TableTopicDTO topicDTO : topicDTOs) {
                                                 TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmTask.get(topicDTO.componentId.toString()).toString(), TaskHierarchyDTO.class);
@@ -394,6 +404,7 @@ public class TaskPublish {
                                 }
                             }
                         }
+                        redisUtil.del("PipelLock:"+kafkaReceiveDTO.pipelTraceId);
                     }
                 }
             }

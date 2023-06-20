@@ -93,6 +93,12 @@ public class MissionEndCenter {
             for (String dto : msg) {
 
                 KafkaReceiveDTO kafkaReceive = JSON.parseObject(dto, KafkaReceiveDTO.class);
+                Boolean setnx;
+                do {
+                    Thread.sleep(200);
+                    log.info("missionEndCenter获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+                    setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 30, TimeUnit.SECONDS);
+                } while (!setnx);
                 String topic = kafkaReceive.topic;
                 String pipelTraceId = kafkaReceive.pipelTraceId;
                 String[] split = topic.split("\\.");
@@ -115,12 +121,6 @@ public class MissionEndCenter {
                         //没有表id就把任务id扔进去
                         nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(split[6]);
                     }
-                    Boolean setnx;
-                    do {
-                        Thread.sleep(200);
-                        log.info("missionEndCenter获取锁TaskLock:{}",kafkaReceive.pipelTaskTraceId);
-                        setnx = redisUtil.setnx("TaskLock:"+kafkaReceive.pipelTaskTraceId, 30, TimeUnit.SECONDS);
-                    } while (!setnx);
                     TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceive.pipelTraceId);
                     NifiCustomWorkflowDetailDTO itselfPort = nifiPortHierarchy.itselfPort;
                     DispatchJobHierarchyDTO dispatchJobHierarchy = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(pipelTraceId, String.valueOf(itselfPort.id));
@@ -148,7 +148,6 @@ public class MissionEndCenter {
                         taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.nonNull(kafkaReceive.numbers) ? (Objects.isNull(count) || "null".equals(count) ? 0 : count) : kafkaReceive.numbers));
                     }
                     iPipelTaskLog.savePipelTaskLog(pipelTraceId, pipelJobTraceId, nifiPortHierarchy.taskTraceId, taskMap, String.valueOf(nifiPortHierarchy.id), itselfPort.tableId, Integer.parseInt(split[4]));
-                    redisUtil.del("TaskLock:"+kafkaReceive.pipelTaskTraceId);
                     if (pipelineAsyncSwitch){
                         //查找当前组件内的最后一个task(因为最后一个节点的nextList会有下一个组件第一个任务)
                         TaskHierarchyDTO lastTaskHierarchyDTO = null;
@@ -174,7 +173,7 @@ public class MissionEndCenter {
                                 }
                             }
                         }
-                        log.info("当前组件TaskTraceId:{} 执行进度:{},未执行管道详情id:{}",kafkaReceive.pipelTaskTraceId,(num-ds.size())+"/"+num,JSON.toJSONString(ds));
+                        log.info("当前组件JobTraceId:{} 执行进度:{},当前任务taskTraceId:{},未执行管道详情id:{}",kafkaReceive.pipelJobTraceId,(num-ds.size())+"/"+num,kafkaReceive.pipelTaskTraceId,JSON.toJSONString(ds));
                         //判断组件内任务是否全部执行完毕
                         if (flag){
                             //记录本节点的job的结束
@@ -189,23 +188,10 @@ public class MissionEndCenter {
                             } else {
                                 jobMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
                             }
+                            log.info("记录本节点的job的结束,JobTraceId:{}",kafkaReceive.pipelJobTraceId);
                             iPipelJobLog.savePipelJobLog(pipelTraceId, jobMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
                             //判断当前组件后面是否还有组件
                             if (CollectionUtils.isNotEmpty(lastTaskHierarchyDTO.nextList)){
-                                //记录本节点的job的结束
-                                Map<Integer, Object> jobNodeMap = new HashMap<>();
-                                log.info("任务结束中心本节点所在组状态:{},{}", dispatchJobHierarchy.id, dispatchJobHierarchy.jobStatus);
-                                if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.RUN_FAILED)) {
-                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
-                                } else if (Objects.equals(dispatchJobHierarchy.jobStatus, NifiStageTypeEnum.PASS)) {
-                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.PASS.getName() + " - " + simpleDateFormat.format(new Date()));
-                                } else if (!dispatchJobHierarchy.forbidden) {
-                                    //job禁止运行
-                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.FORBIDDEN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                } else {
-                                    jobNodeMap.put(DispatchLogEnum.jobend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
-                                }
-                                iPipelJobLog.savePipelJobLog(pipelTraceId, jobNodeMap, pipelineId, dispatchJobHierarchy.jobTraceId, String.valueOf(dispatchJobHierarchy.id));
                                 //发送消息给任务发布中心  topic是 : task.build.task.publish
                                 log.info("任务结束中心发送给任务发布中心的参数:{}", JSON.toJSONString(kafkaReceive));
                                 kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaReceive));
@@ -400,6 +386,7 @@ public class MissionEndCenter {
                         //-------------------------------------------------------------
                     }
                 }
+                redisUtil.del("PipelLock:"+kafkaReceive.pipelTraceId);
             }
         } catch (Exception e) {
             log.error("任务结束中心报错:{}", StackTraceHelper.getStackTraceInfo(e));

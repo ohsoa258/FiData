@@ -136,6 +136,12 @@ public class HeartbeatService {
             log.info("my-topic接收条数{}", msg.size());
             for (String message : msg) {
                 KafkaReceiveDTO kafkaReceive = JSON.parseObject(message, KafkaReceiveDTO.class);
+                Boolean setnx;
+                do {
+                    Thread.sleep(200);
+                    log.info("missionEndCenter获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+                    setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 30, TimeUnit.SECONDS);
+                } while (!setnx);
                 String topic = kafkaReceive.topic;
                 String pipelTraceId = kafkaReceive.pipelTraceId;
                 //管道总的pipelTraceId
@@ -175,8 +181,6 @@ public class HeartbeatService {
                     sendKafka(topicPO, kafkaReceive, msg.size());
                 }
 
-                //发送kafka消息
-
                 //记报错日志
                 if (!StringUtils.isEmpty(kafkaReceive.message)) {
                     // 第三步  如果有报错,记录报错信息
@@ -184,6 +188,7 @@ public class HeartbeatService {
                     errorMap.put(DispatchLogEnum.stagestate.getValue(), kafkaReceive.message);
                     iPipelStageLog.savePipelTaskStageLog(kafkaReceive.pipelStageTraceId, kafkaReceive.pipelTaskTraceId, errorMap);
                 }
+                redisUtil.del("PipelLock:"+kafkaReceive.pipelTraceId);
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));

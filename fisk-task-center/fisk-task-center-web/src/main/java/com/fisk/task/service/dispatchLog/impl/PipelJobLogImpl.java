@@ -95,11 +95,6 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             //修改dag图的job的状态
             try {
                 if (org.apache.commons.lang3.StringUtils.isNotEmpty(pipelTraceId)) {
-                    Boolean setnx;
-                    do {
-                        log.info("savePipelJobLog获取锁JobLock:{}",jobTraceId);
-                        setnx = redisUtil.setnx("JobLock" + jobTraceId, 30, TimeUnit.SECONDS);
-                    }while (!setnx);
                     Map<Object, Object> jobMap = new HashMap<>();
                     Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId);
                     DispatchJobHierarchyDTO dto = JSON.parseObject(hmget.get(componentId).toString(), DispatchJobHierarchyDTO.class);
@@ -121,7 +116,6 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                         jobMap.put(componentId, JSON.toJSONString(dto));
                     }
                     redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, jobMap, Long.parseLong(maxTime));
-                    redisUtil.del("JobLock" + jobTraceId);
                 }
             } catch (Exception e) {
                 log.error("redis中task集合数据不存在:" + pipelTraceId, e);
