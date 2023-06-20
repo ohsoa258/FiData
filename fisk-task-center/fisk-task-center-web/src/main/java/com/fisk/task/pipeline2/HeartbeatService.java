@@ -164,6 +164,7 @@ public class HeartbeatService {
                     //获取my-topic运行状态
                     TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(topicPO.getComponentId().toString()).toString(), TaskHierarchyDTO.class);
                     if (taskHierarchy.myTopicState.equals(MyTopicStateEnum.RUNNING)) {
+                        redisUtil.del("PipelLock:"+kafkaReceive.pipelTraceId);
                         continue;
                     }
                     taskHierarchy.setMyTopicState(MyTopicStateEnum.RUNNING);
