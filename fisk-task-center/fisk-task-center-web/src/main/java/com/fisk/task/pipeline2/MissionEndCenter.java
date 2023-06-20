@@ -96,7 +96,7 @@ public class MissionEndCenter {
                 Boolean setnx;
                 do {
                     Thread.sleep(200);
-                    log.info("missionEndCenter获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+//                    log.info("missionEndCenter获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
                     setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
                 } while (!setnx);
                 String topic = kafkaReceive.topic;

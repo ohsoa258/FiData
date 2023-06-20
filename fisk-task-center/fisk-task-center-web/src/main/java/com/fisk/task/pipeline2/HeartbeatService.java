@@ -151,7 +151,7 @@ public class HeartbeatService {
                     Boolean setnx;
                     do {
                         Thread.sleep(200);
-                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+//                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
                         setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
                     } while (!setnx);
                     Map<String, Object> map = new HashMap<>();
@@ -188,7 +188,7 @@ public class HeartbeatService {
                     Boolean setnx;
                     do {
                         Thread.sleep(200);
-                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+//                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
                         setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
                     } while (!setnx);
                     // 第三步  如果有报错,记录报错信息
@@ -253,7 +253,7 @@ public class HeartbeatService {
                 Boolean setnx;
                 do {
                     Thread.sleep(200);
-                    log.info("sendKafka获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+//                    log.info("sendKafka获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
                     setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
                 } while (!setnx);
                 DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);

@@ -253,7 +253,7 @@ public class TaskPublish {
                         Boolean setnx;
                         do {
                             Thread.sleep(200);
-                            log.info("taskPublish获取锁PipelLock:{}",kafkaReceiveDTO.pipelTraceId);
+//                            log.info("taskPublish获取锁PipelLock:{}",kafkaReceiveDTO.pipelTraceId);
                             setnx = redisUtil.setnx("PipelLock:"+kafkaReceiveDTO.pipelTraceId, 100, TimeUnit.SECONDS);
                         } while (!setnx);
                         String tableId = "";
