@@ -154,7 +154,6 @@ public interface DataFactoryClient {
     @PostMapping("/nifiCustomWorkflowDetail/getJobList")
     public ResultEntity<List<DispatchJobHierarchyDTO>> getJobList(@RequestBody QueryJobHierarchyDTO dto);
 
-
     /**
      * 调用邮件服务器发邮件的方法
      *
@@ -165,7 +164,6 @@ public interface DataFactoryClient {
     @ApiOperation(value = "管道异常发邮件")
     public ResultEntity<Object> pipelineSendEmails(@RequestBody DispatchEmailDTO dispatchEmail);
 
-
     /**
      * 获取所有管道
      *
@@ -174,7 +172,6 @@ public interface DataFactoryClient {
     @GetMapping("/nifiCustomWorkflow/getNifiCustomWorkFlowDrop")
     @ApiOperation(value = "获取所有管道")
     ResultEntity<Object> getNifiCustomWorkFlowDrop();
-
 
     /**
      * 依据taskId获取当前任务下的所有配置列表信息

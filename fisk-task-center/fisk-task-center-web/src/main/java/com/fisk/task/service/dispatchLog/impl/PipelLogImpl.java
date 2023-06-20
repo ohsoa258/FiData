@@ -86,8 +86,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                     }
                 }
 
-                dispatchEmail.url = "【"+ dispatchEmailUrlPrefix +"/#/DataFactory/pipelineSettings?pipelTraceId="
-                        + dispatchEmail.pipelTraceId+"】";
+                dispatchEmail.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
+                        + dispatchEmail.pipelTraceId + "】";
                 try {
                     Map<String, String> hashMap = new HashMap<>();
                     hashMap.put("运行结果", dispatchEmail.result);
@@ -98,7 +98,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                     dispatchEmail.body = hashMap;
                     dataFactoryClient.pipelineSendEmails(dispatchEmail);
                 } catch (Exception e) {
-                    log.error("发邮件出错,但是不影响主流程");
+                    log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
                 }
 
             }
@@ -210,21 +210,22 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
             }
         }
         // 处理超过50分钟的失败任务-把和当前时间比超过50分钟并且没有结束时间的任务指定为失败是不合理的，先注释；
-       // handleIsFailStatus(pipelMergeLogs);
+        // handleIsFailStatus(pipelMergeLogs);
         return pipelMergeLogs;
     }
 
     /**
      * 把和当前时间比并且结束时间是空的日志直接改为已失败；
+     *
      * @param pipelMergeLogs
      */
-    private void handleIsFailStatus(List<PipelMergeLog> pipelMergeLogs){
-        for (PipelMergeLog item : pipelMergeLogs){
+    private void handleIsFailStatus(List<PipelMergeLog> pipelMergeLogs) {
+        for (PipelMergeLog item : pipelMergeLogs) {
             Date endTime = item.getEndTime();
-            if (endTime == null){
+            if (endTime == null) {
                 Date currDate = new Date();
                 long totalTime = (currDate.getTime() - item.startTime.getTime()) / (1000 * 60);
-                if (totalTime >= 50){
+                if (totalTime >= 50) {
                     item.result = "失败";
                     item.pipelStatu = "已失败";
                 }
