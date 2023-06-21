@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
+import com.fisk.dataservice.vo.tableservice.TableRecipientsVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 
 import java.util.List;
@@ -124,4 +125,20 @@ public interface ITableService {
      * @return
      */
     ResultEnum editTableServiceSync(long tableId);
+
+    /**
+     * 查询表服务应用告警通知配置
+     *
+     * @param tableAppId
+     * @return
+     */
+    TableRecipientsVO getTableServiceAlarmNoticeByAppId(int tableAppId);
+
+    /**
+     * 保存表服务应用告警通知配置
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum saveTableServiceAlarmNotice(TableRecipientsDTO dto);
 }
