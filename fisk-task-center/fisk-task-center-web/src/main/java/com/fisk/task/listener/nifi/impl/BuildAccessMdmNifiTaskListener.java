@@ -3,8 +3,8 @@ package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
-import com.davis.client.model.*;
 import com.davis.client.model.ProcessorRunStatusEntity;
+import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
@@ -32,9 +32,8 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
-import com.fisk.task.dto.mdmconfig.*;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
-import com.fisk.task.dto.mdmconfig.AccessMdmConfigDTO;
+import com.fisk.task.dto.mdmconfig.*;
 import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
 import com.fisk.task.dto.nifi.*;
 import com.fisk.task.dto.task.TableTopicDTO;
@@ -196,7 +195,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
                 List<Long> ids = new ArrayList<>();
                 ids.add(dto.entityId);
                 dataModelTableVO.ids = ids;
-                dataModelVO.physicsIdList = dataModelTableVO;
+                dataModelVO.mdmIdList = dataModelTableVO;
                 TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
                 if (dto.workflowDetailId != null) {
                     tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.modelId).eq("nifi_custom_workflow_detail_id", dto.workflowDetailId).eq("table_access_id", dto.entityId).eq("type", dto.type.getValue()).one();
@@ -206,7 +205,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
 
                 }
                 if (tableNifiSettingPO != null && tableNifiSettingPO.tableComponentId != null) {
-                    componentsBuild.deleteMdmNifiFlow(dataModelVO);
+                    componentsBuild.deleteNifiFlow(dataModelVO);
                 }
                 ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
@@ -697,13 +696,13 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             }
         } else {
             if (config.groupConfig.newApp) {
-                NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.MDM_NIFI_FLOW_GROUP_ID.getName()).one();
+                NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName()).one();
                 if (nifiConfigPO != null) {
                     dto.groupId = nifiConfigPO.componentId;
                 } else {
                     BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
-                    buildProcessGroupDTO.name = ComponentIdTypeEnum.MDM_NIFI_FLOW_GROUP_ID.getName();
-                    buildProcessGroupDTO.details = ComponentIdTypeEnum.MDM_NIFI_FLOW_GROUP_ID.getName();
+                    buildProcessGroupDTO.name = ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName();
+                    buildProcessGroupDTO.details = ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName();
                     int groupCount = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
                     buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(groupCount);
                     BusinessResult<ProcessGroupEntity> processGroupEntityBusinessResult = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
@@ -711,7 +710,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
                         dto.groupId = processGroupEntityBusinessResult.data.getId();
                         NifiConfigPO nifiConfigPO1 = new NifiConfigPO();
                         nifiConfigPO1.componentId = dto.groupId;
-                        nifiConfigPO1.componentKey = ComponentIdTypeEnum.MDM_NIFI_FLOW_GROUP_ID.getName();
+                        nifiConfigPO1.componentKey = ComponentIdTypeEnum.DAILY_NIFI_FLOW_GROUP_ID.getName();
                         nifiConfigService.save(nifiConfigPO1);
                     } else {
                         throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processGroupEntityBusinessResult.msg);

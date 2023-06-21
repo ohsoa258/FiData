@@ -93,6 +93,19 @@ public class BuildTableServiceDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "表类别")
     public OlapTableEnum olapTableEnum = OlapTableEnum.DATASERVICES;
-
-
+    /**
+     * 表应用ID
+     */
+    @ApiModelProperty(value = "表应用ID")
+    public Integer tableAppId;
+    /**
+     * 表应用名称
+     */
+    @ApiModelProperty(value = "表应用名称")
+    public String tableAppName;
+    /**
+     * 表应用描述
+     */
+    @ApiModelProperty(value = "表应用描述")
+    public String tableAppDesc;
 }

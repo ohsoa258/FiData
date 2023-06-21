@@ -1,6 +1,7 @@
 package com.fisk.dataservice.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -17,6 +18,7 @@ import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
+import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.entity.TableServicePO;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
@@ -73,6 +75,9 @@ public class TableServiceImpl
 
     @Resource
     private AppServiceConfigMapper appServiceConfigMapper;
+
+    @Resource
+    private TableAppManageImpl tableAppManage;
 
     @Override
     public Page<TableServicePageDataDTO> getTableServiceListData(TableServicePageQueryDTO dto) {
@@ -191,6 +196,7 @@ public class TableServiceImpl
         BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
         List<Long> ids = new ArrayList<>();
         ids.add(id);
+        buildDeleteTableService.appId = String.valueOf(appServiceConfigPOS.get(0).getAppId());
         buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
         buildDeleteTableService.ids = ids;
         buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
@@ -344,6 +350,17 @@ public class TableServiceImpl
         data.sqlScript = dto.tableService.sqlScript;
         data.targetTable = dto.tableService.targetTable;
 
+        LambdaQueryWrapper<AppServiceConfigPO> configQueryWrapper = new LambdaQueryWrapper<>();
+        configQueryWrapper.eq(AppServiceConfigPO::getServiceId,dto.tableService.id);
+        AppServiceConfigPO appServiceConfigPO = appServiceConfigMapper.selectOne(configQueryWrapper);
+
+        LambdaQueryWrapper<TableAppPO> appQueryWrapper = new LambdaQueryWrapper<>();
+        appQueryWrapper.eq(TableAppPO::getId,appServiceConfigPO.getAppId());
+        TableAppPO tableAppPO = tableAppManage.getOne(appQueryWrapper);
+        //添加app信息
+        data.tableAppId = (int) tableAppPO.getId();
+        data.tableAppName = tableAppPO.getAppName();
+        data.tableAppDesc = tableAppPO.appDesc;
         if (data.targetTable.indexOf(".") > 1) {
             String[] str = data.targetTable.split("\\.");
             data.schemaName = str[0];

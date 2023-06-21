@@ -1662,86 +1662,6 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     /*
-     * deleteNifiFlow       删除nifi流程
-     * nifiRemoveDTOList
-     * */
-    @Override
-    public ResultEnum deleteMdmNifiFlow(DataModelVO dataModelVO) {
-        try {
-            List<NifiRemoveDTO> nifiRemoveDTOList = createMdmNifiRemoveDTOs(dataModelVO);
-
-            for (NifiRemoveDTO nifiRemoveDTO : nifiRemoveDTOList) {
-                List<ProcessorEntity> processorEntities = new ArrayList<>();
-                List<PortEntity> inputPortEntities = new ArrayList<>();
-                List<PortEntity> outputPortEntities = new ArrayList<>();
-                for (String ProcessId : nifiRemoveDTO.ProcessIds) {
-                    if (ProcessId != null && ProcessId != "") {
-                        ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(ProcessId);
-                        processorEntities.add(processor);
-                    }
-                }
-                //暂停组件
-                this.stopProcessor(nifiRemoveDTO.groupId, processorEntities);
-                ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
-                scheduleComponentsEntity.setId(nifiRemoveDTO.groupId);
-                scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
-                scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
-                NifiHelper.getFlowApi().scheduleComponents(nifiRemoveDTO.groupId, scheduleComponentsEntity);
-                for (ProcessorEntity processorEntity : processorEntities) {
-                    //terminateProcessorCall
-                    NifiHelper.getProcessorsApi().terminateProcessor(processorEntity.getId());
-                }
-                //清空队列
-                this.emptyNifiConnectionQueue(nifiRemoveDTO.groupId);
-                //禁用2个控制器服务 ,分开写是因为有时候禁用不及时,导致删除的时候还没禁用,删除失败
-                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
-                    if (controllerServicesId != null) {
-                        //禁用
-                        this.controllerServicesRunStatus(controllerServicesId);
-                    }
-                }
-                for (String controllerServicesId : nifiRemoveDTO.controllerServicesIds.subList(0, 7)) {
-                    if (controllerServicesId != null) {
-                        //删除
-                        ControllerServiceEntity controllerService = NifiHelper.getControllerServicesApi().getControllerService(controllerServicesId);
-                        NifiHelper.getControllerServicesApi().removeControllerService(controllerServicesId, controllerService.getRevision().getVersion().toString(), "", false);
-                    }
-                }
-                //暂停,删除input和output,删除任务组
-                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTO.groupId);
-                //操作input与output组件
-                operatePorts(nifiRemoveDTO, inputPortEntities, outputPortEntities);
-                //删除组件
-                for (ProcessorEntity processorEntity : processorEntities) {
-                    //因为版本变了,所以要再查一遍
-                    ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(processorEntity.getId());
-                    NifiHelper.getProcessorsApi().deleteProcessor(processor.getId(), String.valueOf(processor.getRevision().getVersion()), null, null);
-                }
-                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
-                if (!Objects.equals(OlapTableEnum.MDM_DATA_ACCESS, nifiRemoveDTO.olapTableEnum)) {
-                    QueryWrapper<TableNifiSettingPO> queryWrapper = new QueryWrapper<>();
-                    queryWrapper.lambda()
-                            .eq(TableNifiSettingPO::getTableAccessId, nifiRemoveDTO.tableId)
-                            .eq(TableNifiSettingPO::getType, nifiRemoveDTO.olapTableEnum);
-                    tableNifiSettingService.remove(queryWrapper);
-                }
-            }
-            //删除应用
-            if (nifiRemoveDTOList.size() != 0 && nifiRemoveDTOList.get(0).delApp) {
-                //禁用2个控制器服务
-
-                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiRemoveDTOList.get(0).appId);
-                NifiHelper.getProcessGroupsApi().removeProcessGroup(processGroup.getId(), String.valueOf(processGroup.getRevision().getVersion()), null, null);
-                appNifiSettingService.removeById(dataModelVO.businessId);
-            }
-            return ResultEnum.SUCCESS;
-        } catch (ApiException e) {
-            log.error("nifi删除失败，【" + e.getResponseBody() + "】: ", e);
-            return ResultEnum.TASK_NIFI_DELETE_FLOW;
-        }
-    }
-
-    /*
      * 删除inputoutput组件
      * */
     private void operatePorts(NifiRemoveDTO nifiRemoveDTO, List<PortEntity> inputPortEntities, List<PortEntity> outputPortEntities) {
@@ -1800,6 +1720,12 @@ public class NiFiHelperImpl implements INiFiHelper {
         //指标表
         List<NifiRemoveDTO> nifiRemoveList4 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.indicatorIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
         nifiRemoveDTOS.addAll(nifiRemoveList4);
+        //主数据表
+        List<NifiRemoveDTO> nifiRemoveList5 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.mdmIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
+        nifiRemoveDTOS.addAll(nifiRemoveList5);
+        //表服务
+        List<NifiRemoveDTO> nifiRemoveList6 = createNifiRemoveList(dataModelVO.businessId, dataModelVO.tableServerIdList, appNifiSettingPO, dataModelVO.delBusiness, count);
+        nifiRemoveDTOS.addAll(nifiRemoveList6);
         return nifiRemoveDTOS;
     }
 

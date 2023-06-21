@@ -12,6 +12,12 @@ import java.util.List;
  */
 @Data
 public class BuildDeleteTableServiceDTO extends MQBaseDTO {
+
+    /**
+     * 应用Id
+     */
+    @ApiModelProperty(value = "应用Id")
+    public String appId;
     /**
      * 表类别
      */

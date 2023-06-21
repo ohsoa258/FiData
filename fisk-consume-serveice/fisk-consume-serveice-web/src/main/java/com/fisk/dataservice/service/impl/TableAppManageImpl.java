@@ -230,6 +230,7 @@ public class TableAppManageImpl
                 if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
                     tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
                     BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+                    buildDeleteTableService.appId = String.valueOf(id);
                     buildDeleteTableService.ids = tableServiceIdList;
                     buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
                     buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
