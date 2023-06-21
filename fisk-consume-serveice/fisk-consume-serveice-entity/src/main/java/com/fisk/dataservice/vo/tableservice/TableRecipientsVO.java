@@ -37,4 +37,10 @@ public class TableRecipientsVO {
      */
     @ApiModelProperty(value = "用户邮箱，多个分号分隔")
     public String userEmails;
+
+    /**
+     * 告警条件：1 成功、2 失败、3 完成
+     */
+    @ApiModelProperty(value = "告警条件：1 成功、2 失败、3 完成")
+    public int alarmConditions;
 }

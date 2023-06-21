@@ -327,6 +327,7 @@ public class TableServiceImpl
             tableRecipientsVO = new TableRecipientsVO();
             tableRecipientsVO.setTableAppId(tableRecipientsPOList.get(0).getTableAppId());
             tableRecipientsVO.setNoticeServerId(tableRecipientsPOList.get(0).getNoticeServerId());
+            tableRecipientsVO.setAlarmConditions(tableRecipientsPOList.get(0).getAlarmConditions());
             tableRecipientsVO.setUserEmails(tableRecipientsPOList.get(0).getUserEmails());
             tableRecipientsVO.setWechatUserList(wechatUserList);
         }
@@ -341,6 +342,7 @@ public class TableServiceImpl
             TableRecipientsPO tableRecipientsPO = new TableRecipientsPO();
             tableRecipientsPO.setTableAppId(dto.getTableAppId());
             tableRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
+            tableRecipientsPO.setAlarmConditions(dto.getAlarmConditions());
             tableRecipientsPO.setUserEmails(dto.getUserEmails());
             tableRecipientsPOS.add(tableRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
@@ -348,6 +350,7 @@ public class TableServiceImpl
                 TableRecipientsPO tableRecipientsPO = new TableRecipientsPO();
                 tableRecipientsPO.setTableAppId(dto.getTableAppId());
                 tableRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
+                tableRecipientsPO.setAlarmConditions(dto.getAlarmConditions());
                 tableRecipientsPO.setWechatUserId(t.getWechatUserId());
                 tableRecipientsPO.setWechatUserName(t.getWechatUserName());
                 tableRecipientsPOS.add(tableRecipientsPO);
