@@ -188,36 +188,28 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 incrementalMapper.insert(ETLIncremental);
             }
             //先创建大组.创建的时候要判断大组是否存在
-            String tableServerGroupId = "";
+            String tableServerGroupId = getGroupId(buildTableService);
             String sourceControllerServiceId = "";
             String targetControllerServiceId = "";
             String cfgControllerServiceId = "";
-            NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName()).one();
-            if (nifiConfigPO != null) {
-                tableServerGroupId = nifiConfigPO.componentId;
-            } else {
-                BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
-                buildProcessGroupDTO.name = ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName();
-                buildProcessGroupDTO.details = ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName();
-                int groupCount = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
-                buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(groupCount);
-                BusinessResult<ProcessGroupEntity> processGroupEntityBusinessResult = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
-                if (processGroupEntityBusinessResult.success) {
-                    tableServerGroupId = processGroupEntityBusinessResult.data.getId();
-                    NifiConfigPO nifiConfigPO1 = new NifiConfigPO();
-                    nifiConfigPO1.componentId = tableServerGroupId;
-                    nifiConfigPO1.componentKey = ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName();
-                    nifiConfigService.save(nifiConfigPO1);
-                } else {
-                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processGroupEntityBusinessResult.msg);
-                }
-            }
-            // 每次发布删除小组,如果有的话
-            TableNifiSettingPO one = tableNifiSettingService.query().eq("type", buildTableService.olapTableEnum.getValue()).eq("table_access_id", buildTableService.id).one();
-            if (Objects.nonNull(one)) {
-                deleteGroup(one.tableComponentId);
-            }
 
+            //4. 创建任务组创建时要把原任务组删掉,防止重复发布带来影响
+            DataModelVO dataModelVO = new DataModelVO();
+            dataModelVO.dataClassifyEnum = buildTableService.dataClassifyEnum;
+            dataModelVO.delBusiness = false;
+            dataModelVO.businessId = String.valueOf(buildTableService.getTableAppId());
+            dataModelVO.userId = buildTableService.userId;
+            DataModelTableVO dataModelTableVO = new DataModelTableVO();
+            dataModelTableVO.type = buildTableService.olapTableEnum;
+            List<Long> ids = new ArrayList<>();
+            ids.add(buildTableService.id);
+            dataModelTableVO.ids = ids;
+            dataModelVO.tableServerIdList = dataModelTableVO;
+            TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("type", buildTableService.olapTableEnum.getValue()).eq("app_id", buildTableService.getTableAppId()).eq("table_access_id", buildTableService.id).one();
+
+            if (tableNifiSettingPO != null && tableNifiSettingPO.tableComponentId != null) {
+                componentsBuild.deleteNifiFlow(dataModelVO);
+            }
             // 创建小组
             DataAccessConfigDTO dataAccessConfig = new DataAccessConfigDTO();
             TaskGroupConfig taskGroupConfig = new TaskGroupConfig();
@@ -296,22 +288,82 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return ResultEnum.SUCCESS;
     }
 
+    private String getGroupId(BuildTableServiceDTO buildTableService){
+        NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName()).one();
+        if (nifiConfigPO != null) {
+            AppNifiSettingPO one = appNifiSettingService.query().eq("app_id", buildTableService.tableAppId).eq("type", buildTableService.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
+            if (one != null){
+                return one.getAppComponentId();
+            }else {
+                BuildProcessGroupDTO groupDTO = new BuildProcessGroupDTO();
+                groupDTO.name = buildTableService.tableAppName;
+                groupDTO.details = buildTableService.tableAppDesc;
+                groupDTO.groupId = nifiConfigPO.componentId;
+                int count = componentsBuild.getGroupCount(nifiConfigPO.componentId);
+                groupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+                //创建组件
+                BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(groupDTO);
+                if (res.success) {
+                    AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
+                    appNifiSettingPO.appId = String.valueOf(buildTableService.tableAppId);
+                    appNifiSettingPO.appComponentId = res.data.getId();
+                    appNifiSettingPO.type = buildTableService.dataClassifyEnum.getValue();
+                    appNifiSettingService.save(appNifiSettingPO);
+                    return res.data.getId();
+                } else {
+                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+                }
+            }
+        } else {
+            BuildProcessGroupDTO buildProcessGroupDTO = new BuildProcessGroupDTO();
+            buildProcessGroupDTO.name = ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName();
+            buildProcessGroupDTO.details = ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName();
+            int groupCount = componentsBuild.getGroupCount(NifiConstants.ApiConstants.ROOT_NODE);
+            buildProcessGroupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(groupCount);
+            BusinessResult<ProcessGroupEntity> processGroupEntityBusinessResult = componentsBuild.buildProcessGroup(buildProcessGroupDTO);
+            if (processGroupEntityBusinessResult.success) {
+                NifiConfigPO nifiConfigPO1 = new NifiConfigPO();
+                nifiConfigPO1.componentId = processGroupEntityBusinessResult.data.getId();
+                nifiConfigPO1.componentKey = ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName();
+                nifiConfigService.save(nifiConfigPO1);
+                BuildProcessGroupDTO groupDTO = new BuildProcessGroupDTO();
+                groupDTO.name = buildTableService.tableAppName;
+                groupDTO.details = buildTableService.tableAppDesc;
+                groupDTO.groupId = nifiConfigPO.componentId;
+                int count = componentsBuild.getGroupCount(nifiConfigPO.componentId);
+                groupDTO.positionDTO = NifiPositionHelper.buildXPositionDTO(count);
+                //创建组件
+                BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(groupDTO);
+                if (res.success) {
+                    AppNifiSettingPO appNifiSettingPO = new AppNifiSettingPO();
+                    appNifiSettingPO.appId = String.valueOf(buildTableService.tableAppId);
+                    appNifiSettingPO.appComponentId = res.data.getId();
+                    appNifiSettingPO.type = buildTableService.dataClassifyEnum.getValue();
+                    appNifiSettingService.save(appNifiSettingPO);
+                    return res.data.getId();
+                } else {
+                    throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+                }
+            } else {
+                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, processGroupEntityBusinessResult.msg);
+            }
+        }
+    }
     @Override
     public ResultEnum buildDeleteDataServices(String dataInfo, Acknowledgment acke) {
         log.info("表服务删除nifi流程参数:{}", dataInfo);
         try {
             BuildDeleteTableServiceDTO buildDeleteTableService = JSON.parseObject(dataInfo, BuildDeleteTableServiceDTO.class);
-            List<Long> ids = buildDeleteTableService.ids;
-            if (!CollectionUtils.isEmpty(ids)) {
-                for (Long id : ids) {
-                    // 每次发布删除小组,如果有的话
-                    TableNifiSettingPO one = tableNifiSettingService.query().eq("type", buildDeleteTableService.olapTableEnum.getValue()).eq("table_access_id", id).one();
-                    if (Objects.nonNull(one)) {
-                        deleteGroup(one.tableComponentId);
-                    }
-                }
-            }
-            return ResultEnum.SUCCESS;
+            DataModelVO dataModelVO = new DataModelVO();
+            dataModelVO.delBusiness=true;
+            DataModelTableVO dataModelTableVO = new DataModelTableVO();
+            dataModelTableVO.ids=buildDeleteTableService.ids;
+            dataModelTableVO.type= buildDeleteTableService.olapTableEnum;
+            dataModelVO.tableServerIdList=dataModelTableVO;
+            dataModelVO.businessId=buildDeleteTableService.appId;
+            dataModelVO.dataClassifyEnum= DataClassifyEnum.DATASERVICES;
+            dataModelVO.userId=buildDeleteTableService.userId;
+            return componentsBuild.deleteNifiFlow(dataModelVO);
         } catch (Exception e) {
             log.error("表服务流程删除失败" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
@@ -469,6 +521,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return null;
     }
 
+    @Deprecated
     public void deleteGroup(String tableCompconentId) {
         try {
             NifiHelper.getProcessGroupsApi().createEmptyAllConnectionsRequest(tableCompconentId);
@@ -1677,6 +1730,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             tableNifiSettingPO = tableNifiSettingPO1;
         }
         tableNifiSettingPO.tableComponentId = groupId;
+        tableNifiSettingPO.appId = buildTableService.tableAppId;
         tableNifiSettingPO.tableAccessId = Math.toIntExact(dto.id);
         tableNifiSettingPO.type = dto.type.getValue();
         tableNifiSettingPO.tableName = config.targetDsConfig.targetTableName;

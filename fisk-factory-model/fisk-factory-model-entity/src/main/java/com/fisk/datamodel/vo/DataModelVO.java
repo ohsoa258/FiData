@@ -47,6 +47,15 @@ public class DataModelVO {
     public DataModelTableVO indicatorIdList;
 
     /**
+     * 主数据id集合
+     */
+    public DataModelTableVO mdmIdList;
+
+    /**
+     * 表服务id集合
+     */
+    public DataModelTableVO tableServerIdList;
+    /**
      * userid
      */
     public Long userId;
