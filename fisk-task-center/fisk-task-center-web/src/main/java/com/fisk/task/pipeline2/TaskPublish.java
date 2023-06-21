@@ -123,6 +123,12 @@ public class TaskPublish {
                         //创建redis里本次调度版本
                         NifiGetPortHierarchyDTO hierarchy = new NifiGetPortHierarchyDTO();
                         hierarchy.workflowId = pipelineId;
+                        Boolean setnx;
+                        do {
+                            Thread.sleep(200);
+//                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+                            setnx = redisUtil.setnx("PipelLock:"+pipelTraceId, 100, TimeUnit.SECONDS);
+                        } while (!setnx);
                         iPipelineTaskPublishCenter.getPipeDagDto(hierarchy, pipelTraceId);
 
                         //管道开始,job开始,task开始
@@ -238,6 +244,7 @@ public class TaskPublish {
                         log.info("第一处调用保存job日志");
                         iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                        redisUtil.del("PipelLock:" + pipelTraceId);
                     } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
                         //卡夫卡的内容在发布时就定义好了
                         String dailyNifiMsg = JSON.toJSONString(kafkaReceiveDTO);

@@ -126,7 +126,11 @@ public class BuildSftpCopyListener implements ISftpCopyListener {
             dispatchExceptionHandling.pipelJobTraceId = dto.pipelJobTraceId;
             dispatchExceptionHandling.pipelStageTraceId = dto.pipelStageTraceId;
             dispatchExceptionHandling.comment = "执行脚本组件报错";
-            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             throw new FkException(ResultEnum.ERROR);
         } finally {
             if (acke != null) {

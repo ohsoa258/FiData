@@ -32,11 +32,9 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -47,7 +45,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Lock
@@ -104,6 +101,15 @@ public class UserServiceImpl implements IUserService {
         return mapper.userList(dto.page, dto);
     }
 
+    /**
+     * 如果以后该接口在使用时报错，因为逻辑删除以及目前索引改为user_account字段的原因，
+     * 例如，我第一次配置的用户名是李世纪  用户账号是ohsoa1,但是我把这个账号又删除了（页面点删除）
+     * 如果我再次配置的用户名是李世纪，用户账号还是ohsoa1，页面就会弹出系统报错，报错原因就是因为user_account
+     * 字段上加了唯一索引
+     *
+     * @param dto
+     * @return
+     */
     @Override
     public ResultEnum register(UserDTO dto) {
         //1.判断用户账号是否已存在
@@ -114,14 +120,16 @@ public class UserServiceImpl implements IUserService {
         if (data != null) {
             return ResultEnum.NAME_EXISTS;
         }
-        // 判断用户名是否已存在
-        queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
-                .eq(UserPO::getUsername, dto.username);
-        UserPO userPO = mapper.selectOne(queryWrapper);
-        if (userPO != null){
-            return ResultEnum.USERNAME_EXISTS;
-        }
+
+        // 判断用户名是否已存在   2023-06-21李世纪注释掉，用户名允许重复  用户账号不允许重复，对应的表索引已经修改
+//        queryWrapper = new QueryWrapper<>();
+//        queryWrapper.lambda()
+//                .eq(UserPO::getUsername, dto.username);
+//        UserPO userPO = mapper.selectOne(queryWrapper);
+//        if (userPO != null){
+//            return ResultEnum.USERNAME_EXISTS;
+//        }
+
         // 2.对密码进行加密
         dto.password = passwordEncoder.encode(dto.getPassword());
         UserPO po = UserMap.INSTANCES.dtoToPo(dto);
@@ -175,8 +183,8 @@ public class UserServiceImpl implements IUserService {
         queryWrapper.lambda()
                 .eq(UserPO::getUsername, dto.username);
         UserPO userPO = mapper.selectOne(queryWrapper);
-        if(userPO!=null){
-            if((dto.getUsername()).equals(userPO.getUsername())&&(dto.getEmail()).equals(userPO.getEmail())){
+        if (userPO != null) {
+            if ((dto.getUsername()).equals(userPO.getUsername()) && (dto.getEmail()).equals(userPO.getEmail())) {
                 return ResultEnum.USERNAME_EXISTS;
             }
         }
@@ -473,13 +481,14 @@ public class UserServiceImpl implements IUserService {
     @Override
     public List<Integer> getUserIdByUserName(String userName) {
         List<Integer> userId = mapper.getUserIdByUserName(userName);
-        if (userId == null){
+        if (userId == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return userId;
     }
+
     @Override
-    public Boolean verifyPageByUserId(int userId,String pageUrl) {
+    public Boolean verifyPageByUserId(int userId, String pageUrl) {
         int count = mapper.verifyPageByUserId(userId, pageUrl);
         return count > 0;
     }

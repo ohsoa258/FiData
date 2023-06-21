@@ -182,22 +182,6 @@ public class HeartbeatService {
                     redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, MyTopicStateEnum.RUNNING.getName(), Long.parseLong(maxTime));
                     sendKafka(topicPO, kafkaReceive, msg.size());
                 }
-
-                //记报错日志
-                if (!StringUtils.isEmpty(kafkaReceive.message)) {
-                    Boolean setnx;
-                    do {
-                        Thread.sleep(200);
-//                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
-                        setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
-                    } while (!setnx);
-                    // 第三步  如果有报错,记录报错信息
-                    Map<Integer, Object> errorMap = new HashMap<>();
-                    errorMap.put(DispatchLogEnum.stagestate.getValue(), kafkaReceive.message);
-                    iPipelStageLog.savePipelTaskStageLog(kafkaReceive.pipelStageTraceId, kafkaReceive.pipelTaskTraceId, errorMap);
-                    redisUtil.del("PipelLock:"+kafkaReceive.pipelTraceId);
-                }
-
             }
         } catch (Exception e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
@@ -250,18 +234,11 @@ public class HeartbeatService {
                 log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
             } while (activeThreadCount != 0 && flowFilesQueued != 0);
             if (!StringUtils.isEmpty(kafkaReceive.message)) {
-                Boolean setnx;
-                do {
-                    Thread.sleep(200);
-//                    log.info("sendKafka获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
-                    setnx = redisUtil.setnx("PipelLock:"+kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
-                } while (!setnx);
                 DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);
                 iPipelJobLog.exceptionHandlingLog(dto);
                 Map<Object, Object> hmJob = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + dto.pipelTraceId);
                 Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId);
                 log.info("修改完的job与task结构:{},{}", JSON.toJSONString(hmJob), JSON.toJSONString(hmTask));
-                redisUtil.del("PipelLock:"+kafkaReceive.pipelTraceId);
             }
             // 任务结束中心的topic为 : task.build.task.over
             log.info("my-topic服务发送到任务:{}", JSON.toJSONString(kafkaReceive));

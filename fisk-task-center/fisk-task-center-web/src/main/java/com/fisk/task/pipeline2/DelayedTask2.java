@@ -162,7 +162,11 @@ public class DelayedTask2 extends TimerTask {
         }
         if (StringUtils.isNotEmpty(kafkaReceive.message)) {
             DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);
-            iPipelJobLog.exceptionHandlingLog(dto);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dto);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             Map<Object, Object> hmJob = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + dto.pipelTraceId);
             Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId);
             log.info("修改完的job与task结构:{},{}", JSON.toJSONString(hmJob), JSON.toJSONString(hmTask));
