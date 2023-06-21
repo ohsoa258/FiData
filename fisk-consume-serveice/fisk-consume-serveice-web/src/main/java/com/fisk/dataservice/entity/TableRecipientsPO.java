@@ -1,0 +1,40 @@
+package com.fisk.dataservice.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fisk.common.core.baseObject.entity.BasePO;
+import lombok.Data;
+
+/**
+ * @author dick
+ * @version 1.0
+ * @description 表服务通知收件人
+ * @date 2023/6/21 13:36
+ */
+@Data
+@TableName("tb_table_recipients")
+public class TableRecipientsPO extends BasePO {
+    /**
+     * 表服务应用Id
+     */
+    public int tableAppId;
+
+    /**
+     * 通知服务器Id
+     */
+    public int noticeServerId;
+
+    /**
+     * 企业微信用户Id
+     */
+    public String wechatUserId;
+
+    /**
+     * 企业微信用户名称
+     */
+    public String wechatUserName;
+
+    /**
+     * 用户邮箱，多个分号分隔
+     */
+    public String userEmails;
+}

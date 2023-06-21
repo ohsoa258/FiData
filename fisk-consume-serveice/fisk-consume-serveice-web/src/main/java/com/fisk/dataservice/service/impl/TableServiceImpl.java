@@ -19,16 +19,21 @@ import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.entity.TableAppPO;
+import com.fisk.dataservice.entity.TableRecipientsPO;
 import com.fisk.dataservice.entity.TableServicePO;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.map.TableServiceMap;
 import com.fisk.dataservice.mapper.AppServiceConfigMapper;
+import com.fisk.dataservice.mapper.TableRecipientsMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableService;
+import com.fisk.dataservice.vo.tableservice.TableRecipientsVO;
+import com.fisk.dataservice.vo.tableservice.WechatUserVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
@@ -45,6 +50,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -59,25 +65,31 @@ public class TableServiceImpl
     private PublishTaskClient publishTaskClient;
 
     @Resource
-    TableFieldImpl tableField;
+    private TableFieldImpl tableField;
 
     @Resource
-    TableSyncModeImpl tableSyncMode;
+    private TableSyncModeImpl tableSyncMode;
 
     @Resource
-    UserClient client;
+    private UserClient userClient;
 
     @Resource
     private UserHelper userHelper;
 
     @Resource
-    TableServiceMapper mapper;
+    private TableServiceMapper mapper;
 
     @Resource
     private AppServiceConfigMapper appServiceConfigMapper;
 
     @Resource
     private TableAppManageImpl tableAppManage;
+
+    @Resource
+    private TableRecipientsMapper tableRecipientsMapper;
+
+    @Resource
+    private TableRecipientsManageImpl tableRecipientsManage;
 
     @Override
     public Page<TableServicePageDataDTO> getTableServiceListData(TableServicePageQueryDTO dto) {
@@ -109,7 +121,7 @@ public class TableServiceImpl
     @Override
     public List<DataSourceConfigInfoDTO> getDataSourceConfig() {
 
-        ResultEntity<List<DataSourceDTO>> allExternalDataSource = client.getAllExternalDataSource();
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = userClient.getAllExternalDataSource();
         if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -120,7 +132,7 @@ public class TableServiceImpl
     @Override
     public List<DataSourceConfigInfoDTO> getAllDataSourceConfig() {
 
-        ResultEntity<List<DataSourceDTO>> all = client.getAll();
+        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
         if (all.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -281,10 +293,80 @@ public class TableServiceImpl
 
         //参数配置完毕，远程调用接口，发送参数，执行同步
         ResultEntity<Object> resultEntity = publishTaskClient.universalPublish(kafkaReceiveDTO);
-        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()){
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public TableRecipientsVO getTableServiceAlarmNoticeByAppId(int tableAppId) {
+        TableRecipientsVO tableRecipientsVO = null;
+        QueryWrapper<TableRecipientsPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableRecipientsPO::getDelFlag, 1)
+                .eq(TableRecipientsPO::getTableAppId, tableAppId);
+        List<TableRecipientsPO> tableRecipientsPOList = tableRecipientsMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(tableRecipientsPOList)) {
+            ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(tableRecipientsPOList.get(0).getNoticeServerId());
+            if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() || emailServerById.getData() == null) {
+                throw new FkException(ResultEnum.DS_THE_MESSAGE_NOTIFICATION_METHOD_DOES_NOT_EXIST);
+            }
+
+            int noticeServerType = emailServerById.getData().getServerConfigType();
+            List<WechatUserVO> wechatUserList = new ArrayList<>();
+            if (noticeServerType == 2) {
+                tableRecipientsPOList.forEach(t -> {
+                    if (org.apache.commons.lang.StringUtils.isNotEmpty(t.getWechatUserId())) {
+                        WechatUserVO wechatUserVO = new WechatUserVO();
+                        wechatUserVO.setWechatUserId(t.getWechatUserId());
+                        wechatUserVO.setWechatUserName(t.getWechatUserName());
+                        wechatUserList.add(wechatUserVO);
+                    }
+                });
+            }
+            tableRecipientsVO = new TableRecipientsVO();
+            tableRecipientsVO.setTableAppId(tableRecipientsPOList.get(0).getTableAppId());
+            tableRecipientsVO.setNoticeServerId(tableRecipientsPOList.get(0).getNoticeServerId());
+            tableRecipientsVO.setUserEmails(tableRecipientsPOList.get(0).getUserEmails());
+            tableRecipientsVO.setWechatUserList(wechatUserList);
+        }
+        return tableRecipientsVO;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum saveTableServiceAlarmNotice(TableRecipientsDTO dto) {
+        List<TableRecipientsPO> tableRecipientsPOS = new ArrayList<>();
+        if (dto.getNoticeServerType() == 1) {
+            TableRecipientsPO tableRecipientsPO = new TableRecipientsPO();
+            tableRecipientsPO.setTableAppId(dto.getTableAppId());
+            tableRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
+            tableRecipientsPO.setUserEmails(dto.getUserEmails());
+            tableRecipientsPOS.add(tableRecipientsPO);
+        } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
+            dto.getWechatUserList().forEach(t -> {
+                TableRecipientsPO tableRecipientsPO = new TableRecipientsPO();
+                tableRecipientsPO.setTableAppId(dto.getTableAppId());
+                tableRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
+                tableRecipientsPO.setWechatUserId(t.getWechatUserId());
+                tableRecipientsPO.setWechatUserName(t.getWechatUserName());
+                tableRecipientsPOS.add(tableRecipientsPO);
+            });
+        }
+        if (CollectionUtils.isNotEmpty(tableRecipientsPOS)) {
+            // 先删再插
+            QueryWrapper<TableRecipientsPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(TableRecipientsPO::getDelFlag, 1)
+                    .eq(TableRecipientsPO::getTableAppId, dto.getTableAppId());
+            List<TableRecipientsPO> tableRecipientsPOList = tableRecipientsMapper.selectList(queryWrapper);
+            if (CollectionUtils.isNotEmpty(tableRecipientsPOList)) {
+                List<Long> idList = tableRecipientsPOList.stream().map(TableRecipientsPO::getId).collect(Collectors.toList());
+                // 修改的是del_flag状态
+                tableRecipientsManage.removeByIds(idList);
+            }
+            return tableRecipientsManage.saveBatch(tableRecipientsPOS) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        }
+        return ResultEnum.SAVE_DATA_ERROR;
     }
 
     /**
@@ -351,11 +433,11 @@ public class TableServiceImpl
         data.targetTable = dto.tableService.targetTable;
 
         LambdaQueryWrapper<AppServiceConfigPO> configQueryWrapper = new LambdaQueryWrapper<>();
-        configQueryWrapper.eq(AppServiceConfigPO::getServiceId,dto.tableService.id);
+        configQueryWrapper.eq(AppServiceConfigPO::getServiceId, dto.tableService.id);
         AppServiceConfigPO appServiceConfigPO = appServiceConfigMapper.selectOne(configQueryWrapper);
 
         LambdaQueryWrapper<TableAppPO> appQueryWrapper = new LambdaQueryWrapper<>();
-        appQueryWrapper.eq(TableAppPO::getId,appServiceConfigPO.getAppId());
+        appQueryWrapper.eq(TableAppPO::getId, appServiceConfigPO.getAppId());
         TableAppPO tableAppPO = tableAppManage.getOne(appQueryWrapper);
         //添加app信息
         data.tableAppId = (int) tableAppPO.getId();

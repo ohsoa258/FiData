@@ -494,7 +494,11 @@ public class DelayedTask extends TimerTask {
             dto.comment = "查找下一级报错";
             dto.pipleName = pipelName;
             dto.jobName = JobName;
-            iPipelJobLog.exceptionHandlingLog(dto);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dto);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 

@@ -294,7 +294,11 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                 dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
                 dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
                 log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
-                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+                try {
+                    iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
 
             } finally {
                 if (acke != null) {
@@ -326,7 +330,11 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessage.pipelJobTraceId;
         dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessage.pipelStageTraceId;
         dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessage.pipelTaskTraceId;
-        iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+        try {
+            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         kafkaTemplateHelper.sendMessageAsync("my-topic", param);
     }
 

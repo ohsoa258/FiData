@@ -6,6 +6,7 @@ import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -32,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author cfk
@@ -49,6 +51,8 @@ public class BuildExecScriptListener implements IExecScriptListener {
     KafkaTemplateHelper kafkaTemplateHelper;
     @Resource
     IPipelJobLog iPipelJobLog;
+    @Resource
+    RedisUtil redisUtil;
 
 
     @Override
@@ -107,7 +111,11 @@ public class BuildExecScriptListener implements IExecScriptListener {
             dto.pipelJobTraceId = exec.pipelJobTraceId;
             dto.pipelStageTraceId = exec.pipelStageTraceId;
             dto.comment = "执行脚本组件报错";
-            iPipelJobLog.exceptionHandlingLog(dto);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dto);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             log.error("执行脚本组件报错" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.ERROR);
         } finally {

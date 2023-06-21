@@ -509,7 +509,11 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
         } catch (Exception e) {
             DispatchExceptionHandlingDTO dispatchExceptionHandling = getDispatchExceptionHandling(kafkaReceiveDTO, pipelName, jobName);
             log.error("管道调度报错" + StackTraceHelper.getStackTraceInfo(e));
-            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
 
         } finally {
             if (acke != null) {

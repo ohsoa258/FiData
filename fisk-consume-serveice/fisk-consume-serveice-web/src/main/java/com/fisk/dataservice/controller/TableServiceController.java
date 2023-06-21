@@ -14,6 +14,7 @@ import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
+import com.fisk.dataservice.vo.tableservice.TableRecipientsVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -42,7 +43,6 @@ public class TableServiceController {
     @Resource
     DataFactoryClient dataFactoryClient;
 
-    // 测试提交合并到日建v2分支
     @ApiOperation(value = "应用过滤字段")
     @GetMapping("/getFilterColumn")
     public ResultEntity<Object> getFilterColumn() {
@@ -199,4 +199,15 @@ public class TableServiceController {
         return ResultEntityBuild.build(service.editTableServiceSync(id));
     }
 
+    @ApiOperation("根据应用Id查询表服务应用告警通知配置")
+    @GetMapping("/getTableServiceAlarmNoticeByAppId/{tableAppId}")
+    public ResultEntity<Object> getTableServiceAlarmNoticeByAppId(@PathVariable("tableAppId") int tableAppId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableServiceAlarmNoticeByAppId(tableAppId));
+    }
+
+    @ApiOperation("保存表服务应用告警通知配置")
+    @PostMapping("/saveTableServiceAlarmNotice")
+    public ResultEntity<Object> saveTableServiceAlarmNotice(@RequestBody TableRecipientsDTO dto) {
+        return ResultEntityBuild.build(service.saveTableServiceAlarmNotice(dto));
+    }
 }
