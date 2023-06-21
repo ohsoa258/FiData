@@ -11,7 +11,7 @@ import lombok.Data;
  * @date 2023/6/21 13:36
  */
 @Data
-@TableName("tb_table_field")
+@TableName("tb_table_recipients")
 public class TableRecipientsPO extends BasePO {
     /**
      * 表服务应用Id

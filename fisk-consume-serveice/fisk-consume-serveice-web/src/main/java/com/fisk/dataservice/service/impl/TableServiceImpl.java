@@ -301,7 +301,7 @@ public class TableServiceImpl
 
     @Override
     public TableRecipientsVO getTableServiceAlarmNoticeByAppId(int tableAppId) {
-        TableRecipientsVO tableRecipientsVO = new TableRecipientsVO();
+        TableRecipientsVO tableRecipientsVO = null;
         QueryWrapper<TableRecipientsPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(TableRecipientsPO::getDelFlag, 1)
                 .eq(TableRecipientsPO::getTableAppId, tableAppId);
@@ -316,12 +316,15 @@ public class TableServiceImpl
             List<WechatUserVO> wechatUserList = new ArrayList<>();
             if (noticeServerType == 2) {
                 tableRecipientsPOList.forEach(t -> {
-                    WechatUserVO wechatUserVO = new WechatUserVO();
-                    wechatUserVO.setWechatUserId(t.getWechatUserId());
-                    wechatUserVO.setWechatUserName(t.getWechatUserName());
-                    wechatUserList.add(wechatUserVO);
+                    if (org.apache.commons.lang.StringUtils.isNotEmpty(t.getWechatUserId())) {
+                        WechatUserVO wechatUserVO = new WechatUserVO();
+                        wechatUserVO.setWechatUserId(t.getWechatUserId());
+                        wechatUserVO.setWechatUserName(t.getWechatUserName());
+                        wechatUserList.add(wechatUserVO);
+                    }
                 });
             }
+            tableRecipientsVO = new TableRecipientsVO();
             tableRecipientsVO.setTableAppId(tableRecipientsPOList.get(0).getTableAppId());
             tableRecipientsVO.setNoticeServerId(tableRecipientsPOList.get(0).getNoticeServerId());
             tableRecipientsVO.setUserEmails(tableRecipientsPOList.get(0).getUserEmails());
@@ -340,7 +343,7 @@ public class TableServiceImpl
             tableRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
             tableRecipientsPO.setUserEmails(dto.getUserEmails());
             tableRecipientsPOS.add(tableRecipientsPO);
-        } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty( dto.getWechatUserList())) {
+        } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
                 TableRecipientsPO tableRecipientsPO = new TableRecipientsPO();
                 tableRecipientsPO.setTableAppId(dto.getTableAppId());
