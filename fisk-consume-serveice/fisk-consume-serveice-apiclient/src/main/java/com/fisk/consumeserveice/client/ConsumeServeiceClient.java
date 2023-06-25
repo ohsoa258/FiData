@@ -3,14 +3,12 @@ package com.fisk.consumeserveice.client;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -63,4 +61,12 @@ public interface ConsumeServeiceClient {
     @GetMapping("/apiTableViewService/synchronizationAPIAppRegistration")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAPIAppRegistration();
 
+
+    /**
+     * 发送表服务应用告警通知
+     * @param dto
+     * @return
+     */
+    @PostMapping("/tableService/tableServiceSendEmails")
+    ResultEntity<Object> tableServiceSendEmails(@RequestBody TableServiceEmailDTO dto);
 }

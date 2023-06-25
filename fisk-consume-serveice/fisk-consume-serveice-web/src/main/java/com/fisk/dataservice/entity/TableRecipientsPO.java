@@ -24,6 +24,11 @@ public class TableRecipientsPO extends BasePO {
     public int noticeServerId;
 
     /**
+     * 发送类型 1.邮箱 2.企业微信
+     */
+    public int type;
+
+    /**
      * 企业微信用户Id
      */
     public String wechatUserId;

@@ -14,7 +14,6 @@ import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
-import com.fisk.dataservice.vo.tableservice.TableRecipientsVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -210,4 +209,16 @@ public class TableServiceController {
     public ResultEntity<Object> saveTableServiceAlarmNotice(@RequestBody TableRecipientsDTO dto) {
         return ResultEntityBuild.build(service.saveTableServiceAlarmNotice(dto));
     }
+    @ApiOperation("删除表服务应用告警通知件配置")
+    @PostMapping("/deleteTableServiceEmail")
+    public ResultEntity<Object> deleteTableServiceEmail(@RequestBody TableServiceEmailDTO dto) {
+        return ResultEntityBuild.build(service.deleteTableServiceEmail(dto));
+    }
+
+    @ApiOperation("发送表服务应用告警通知")
+    @PostMapping("/tableServiceSendEmails")
+    public ResultEntity<Object> tableServiceSendEmails(@RequestBody TableServiceEmailDTO dto) {
+        return ResultEntityBuild.build(service.tableServiceSendEmails(dto));
+    }
+
 }

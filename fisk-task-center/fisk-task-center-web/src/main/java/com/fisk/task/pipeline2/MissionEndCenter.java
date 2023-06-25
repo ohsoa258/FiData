@@ -15,10 +15,12 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
+import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
+import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -44,6 +46,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +85,8 @@ public class MissionEndCenter {
     ITableNifiSettingService iTableNifiSettingService;
     @Resource
     IJdbcBuild iJdbcBuild;
+    @Value("${nifi.pipeline.dispatch-email-url-prefix}")
+    private String dispatchEmailUrlPrefix;
 
 
     public void missionEndCenter(String data, Acknowledgment acke) {
@@ -381,6 +386,39 @@ public class MissionEndCenter {
 
                             } else {
                                 log.info("没有aftersql或者查询错误");
+                            }
+                            TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
+                            tableServiceEmailDTO.appId = Integer.parseInt(split[4]);
+                            tableServiceEmailDTO.msg = taskMap.get(DispatchLogEnum.taskend.getValue()).toString();
+                            tableServiceEmailDTO.result = "【运行成功】";
+                            tableServiceEmailDTO.pipelTraceId = pipelTraceId;
+                            List<PipelLogPO> pos = iPipelLog.query().eq("pipel_trace_id", pipelTraceId).list();
+
+                            if (CollectionUtils.isNotEmpty(pos)) {
+                                PipelLogPO pipelLogPo = pos.get(0);
+                                try {
+                                    Date date = new Date();
+                                    Date parse = simpleDateFormat.parse(pipelLogPo.msg.substring(7, 26));
+                                    Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                                    Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                                    tableServiceEmailDTO.duration = minutes + "m " + second + "s";
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            tableServiceEmailDTO.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
+                                    + tableServiceEmailDTO.pipelTraceId + "】";
+                            try {
+                                Map<String, String> hashMap = new HashMap<>();
+                                hashMap.put("运行结果", tableServiceEmailDTO.result);
+                                hashMap.put("运行时长", tableServiceEmailDTO.duration);
+                                hashMap.put("运行详情", tableServiceEmailDTO.msg);
+                                hashMap.put("TraceID", tableServiceEmailDTO.pipelTraceId);
+                                hashMap.put("页面地址", tableServiceEmailDTO.url);
+                                tableServiceEmailDTO.body = hashMap;
+                                consumeServeiceClient.tableServiceSendEmails(tableServiceEmailDTO);
+                            } catch (Exception e) {
+                                log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
                             }
                         }
                         //-------------------------------------------------------------

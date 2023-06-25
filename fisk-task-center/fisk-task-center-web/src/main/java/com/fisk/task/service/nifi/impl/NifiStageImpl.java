@@ -10,6 +10,7 @@ import com.davis.client.model.ProcessorEntity;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -20,6 +21,7 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
@@ -28,6 +30,7 @@ import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
+import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -40,6 +43,7 @@ import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
+import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
@@ -47,11 +51,14 @@ import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,6 +95,12 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     KafkaTemplateHelper kafkaTemplateHelper;
     @Resource
     UserClient userClient;
+    @Value("${nifi.pipeline.dispatch-email-url-prefix}")
+    String dispatchEmailUrlPrefix;
+    @Resource
+    ConsumeServeiceClient consumeServeiceClient;
+    @Resource
+    IPipelLog iPipelLog;
 
 
     @Override
@@ -162,6 +175,42 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     tableAccessId = Integer.valueOf(topic[5]);
                     type = Integer.parseInt(topic[3]);
                     appId = Integer.valueOf(topic[4]);
+                    if (Objects.equals(type, OlapTableEnum.DATASERVICES.getValue())){
+                        TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
+                        tableServiceEmailDTO.appId = appId;
+                        tableServiceEmailDTO.msg = nifiStageMessageDTO.message;
+                        tableServiceEmailDTO.result = "【运行失败】";
+                        tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                        List<PipelLogPO> pos = iPipelLog.query().eq("pipel_trace_id", nifiStageMessageDTO.pipelTraceId).list();
+
+                        if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(pos)) {
+                            PipelLogPO pipelLogPo = pos.get(0);
+                            try {
+                                Date date = new Date();
+                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                Date parse = simpleDateFormat.parse(pipelLogPo.msg.substring(7, 26));
+                                Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                                Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                                tableServiceEmailDTO.duration = minutes + "m " + second + "s";
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        tableServiceEmailDTO.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
+                                + tableServiceEmailDTO.pipelTraceId + "】";
+                        try {
+                            Map<String, String> hashMap = new HashMap<>();
+                            hashMap.put("运行结果", tableServiceEmailDTO.result);
+                            hashMap.put("运行时长", tableServiceEmailDTO.duration);
+                            hashMap.put("运行详情", tableServiceEmailDTO.msg);
+                            hashMap.put("TraceID", tableServiceEmailDTO.pipelTraceId);
+                            hashMap.put("页面地址", tableServiceEmailDTO.url);
+                            tableServiceEmailDTO.body = hashMap;
+                            consumeServeiceClient.tableServiceSendEmails(tableServiceEmailDTO);
+                        } catch (Exception e) {
+                            log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
+                        }
+                    }
                 } else if (topic.length == 7) {
                     String pipelineId = topic[3];
                     //通过应用简称+表类别+表id,查到组件id

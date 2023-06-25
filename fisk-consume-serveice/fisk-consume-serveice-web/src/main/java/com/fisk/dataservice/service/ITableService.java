@@ -141,4 +141,21 @@ public interface ITableService {
      * @return
      */
     ResultEnum saveTableServiceAlarmNotice(TableRecipientsDTO dto);
+
+    /**
+     * 删除
+     *
+     * @param tableServiceEmail
+     * @return
+     */
+    ResultEnum deleteTableServiceEmail(TableServiceEmailDTO tableServiceEmail);
+
+
+    /**
+     * 调用邮件服务器发邮件的方法
+     *
+     * @param tableServiceEmail
+     * @return
+     */
+    ResultEnum tableServiceSendEmails(TableServiceEmailDTO tableServiceEmail);
 }

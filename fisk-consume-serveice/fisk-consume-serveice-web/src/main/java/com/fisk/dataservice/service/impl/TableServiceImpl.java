@@ -1,6 +1,7 @@
 package com.fisk.dataservice.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -13,7 +14,11 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.email.dto.MailSenderDTO;
+import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
+import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datafactory.enums.SendModeEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
@@ -38,6 +43,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
+import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,11 +52,11 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.fisk.dataservice.util.HttpUtils.HttpGet;
+import static com.fisk.dataservice.util.HttpUtils.HttpPost;
 
 /**
  * @author JianWenYang
@@ -202,7 +208,12 @@ public class TableServiceImpl
         List<AppServiceConfigPO> appServiceConfigPOS = appServiceConfigMapper.selectList(appServiceConfigPOQueryWrapper);
         if (CollectionUtils.isNotEmpty(appServiceConfigPOS)) {
             if (appServiceConfigMapper.deleteByIdWithFill(appServiceConfigPOS.get(0)) <= 0) {
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+                throw new FkException(ResultEnum.DELETE_ERROR);
+            }
+            LambdaQueryWrapper<TableRecipientsPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(TableRecipientsPO::getTableAppId,appServiceConfigPOS.get(0).appId);
+            if (tableRecipientsManage.remove(queryWrapper)){
+                throw new FkException(ResultEnum.DELETE_ERROR);
             }
         }
         BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
@@ -370,6 +381,144 @@ public class TableServiceImpl
             return tableRecipientsManage.saveBatch(tableRecipientsPOS) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
         }
         return ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    public ResultEnum deleteTableServiceEmail(TableServiceEmailDTO tableServiceEmail) {
+        LambdaQueryWrapper<TableRecipientsPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableRecipientsPO::getTableAppId,tableServiceEmail.appId);
+        boolean remove = tableRecipientsManage.remove(queryWrapper);
+        if(remove){
+            return ResultEnum.SUCCESS;
+        }else {
+            return ResultEnum.DELETE_ERROR;
+        }
+    }
+
+    @Override
+    public ResultEnum tableServiceSendEmails(TableServiceEmailDTO tableServiceEmail) {
+        //获取单个管道配置
+        TableAppPO tableAppPO = tableAppManage.getById(tableServiceEmail.appId);
+        if (tableAppPO != null) {
+            tableServiceEmail.body.put("表服务名称", tableAppPO.getAppName());
+        }
+        // 发邮件
+        List<TableRecipientsPO>  email = tableRecipientsManage.query().eq("table_app_id", tableServiceEmail.appId).list();
+        //第一步：查询邮件服务器设置
+        if (!CollectionUtils.isNotEmpty(email)){
+            return ResultEnum.ERROR;
+        }
+        ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.get(0).noticeServerId);
+        if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() ||
+                emailServerById.getData() == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        //true是失败
+        boolean contains = tableServiceEmail.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName());
+        Integer sendMode = tableServiceEmail.sendMode;
+        if (Objects.equals(SendModeEnum.failure.getValue(), sendMode)) {
+            if (contains) {
+                log.info("满足模式,并且msg报错");
+            } else {
+                log.info("满足模式,但是msg没报错");
+                return ResultEnum.SUCCESS;
+            }
+        } else if (Objects.equals(SendModeEnum.finish.getValue(), sendMode)) {
+            log.info("所有模式都发通知");
+        } else if (Objects.equals(SendModeEnum.success.getValue(), sendMode)) {
+            if (!contains) {
+                log.info("满足模式,并且msg没报错");
+            } else {
+                log.info("满足模式,但是msg报错");
+                return ResultEnum.SUCCESS;
+            }
+        }
+
+        if (email.get(0).type == 1) {
+            EmailServerVO emailServerVO = emailServerById.getData();
+            MailServeiceDTO mailServeiceDTO = new MailServeiceDTO();
+            mailServeiceDTO.setOpenAuth(true);
+            mailServeiceDTO.setOpenDebug(true);
+            mailServeiceDTO.setHost(emailServerVO.getEmailServer());
+            mailServeiceDTO.setProtocol(emailServerVO.getEmailServerType().getName());
+            mailServeiceDTO.setUser(emailServerVO.getEmailServerAccount());
+            mailServeiceDTO.setPassword(emailServerVO.getEmailServerPwd());
+            mailServeiceDTO.setPort(emailServerVO.getEmailServerPort());
+            MailSenderDTO mailSenderDTO = new MailSenderDTO();
+            mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
+            //邮件标题
+            mailSenderDTO.setSubject("FiData数据管道运行结果通知");
+            //邮件正文
+            String body = "";
+
+            mailSenderDTO.setBody(JSON.toJSONString(tableServiceEmail.body));
+            //邮件收件人
+            mailSenderDTO.setToAddress(email.get(0).userEmails);
+            //mailSenderDTO.setToCc("邮件抄送人");
+            //mailSenderDTO.setSendAttachment("是否发送附件");
+            //mailSenderDTO.setAttachmentName("附件名称");
+            //mailSenderDTO.setAttachmentPath("附件地址");
+            //mailSenderDTO.setAttachmentActualName("附件实际名称");
+            //mailSenderDTO.setCompanyLogoPath("公司logo地址");
+            try {
+                //第二步：调用邮件发送方法
+                log.info("pipelineSendEmails-mailServeiceDTO：" + JSON.toJSONString(mailServeiceDTO));
+                log.info("pipelineSendEmails-mailSenderDTO：" + JSON.toJSONString(mailSenderDTO));
+                MailSenderUtils.send(mailServeiceDTO, mailSenderDTO);
+            } catch (Exception ex) {
+                throw new FkException(ResultEnum.ERROR, ex.getMessage());
+            }
+        } else if (email.get(0).type == 2) //发送企业微信
+        {
+            //获取企业微信token
+            String accessTokenUrl = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=" + emailServerById.data.wechatCorpId + "&corpsecret=" + emailServerById.data.wechatAppSecret + "";
+            String stringAccessToken = HttpGet(accessTokenUrl);
+            JSONObject json = JSONObject.parseObject(stringAccessToken);
+            String accessToken = json.getString("access_token");
+            //取出dispatchEmail.body的key和value值并将key和value拼接成一段 HTML 格式的字符串
+            StringBuffer sb = new StringBuffer();
+            int i = 0;
+            for (Map.Entry<String, String> entry : tableServiceEmail.body.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                sb.append(key).append(": ").append(value);
+                //如果是最后一条数据不加br
+                if (i != tableServiceEmail.body.size() - 1) {
+                    sb.append("<br>");
+                }
+                i++;
+            }
+            String content = sb.toString();
+
+            for (TableRecipientsPO user : email) {
+                //构造卡片消息内容
+                Map<String, Object> params = new HashMap<>();
+                params.put("touser", user.wechatUserId);
+                params.put("msgtype", "textcard");
+                params.put("agentid", emailServerById.data.wechatAgentId.trim());
+                Map<String, Object> textcard = new HashMap<>();
+                textcard.put("title", "管道告警通知");
+                textcard.put("description", content);
+                textcard.put("url", tableServiceEmail.url);
+                textcard.put("btntxt", "更多");
+                params.put("textcard", textcard);
+                params.put("enable_id_trans", 0);
+                params.put("enable_duplicate_check", 0);
+                params.put("duplicate_check_interval", 1800);
+
+                try {
+                    //发送企业微信
+                    String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + accessToken;
+                    String send = HttpPost(url, JSON.toJSONString(params));
+                    JSONObject jsonSend = JSONObject.parseObject(send);
+                } catch (Exception e) {
+                    log.debug("【pipelineSendEmails】 e：" + e);
+                    throw new FkException(ResultEnum.ERROR, e.getMessage());
+                }
+            }
+        }
+
+        return ResultEnum.SUCCESS;
     }
 
     /**
