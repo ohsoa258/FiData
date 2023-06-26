@@ -121,10 +121,10 @@ public interface ITableService {
     /**
      * 数据库同步服务-新增同步按钮,手动同步表服务
      *
-     * @param tableId
+     * @param tableServiceSyncDTO
      * @return
      */
-    ResultEnum editTableServiceSync(long tableId);
+    ResultEnum editTableServiceSync(TableServiceSyncDTO tableServiceSyncDTO);
 
     /**
      * 查询表服务应用告警通知配置

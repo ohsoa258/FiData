@@ -193,9 +193,9 @@ public class TableServiceController {
     }
 
     @ApiOperation("数据库同步服务-新增同步按钮,手动同步表服务")
-    @PostMapping("/editTableServiceSync/{id}")
-    public ResultEntity<Object> editTableServiceSync(@PathVariable("id") long id) {
-        return ResultEntityBuild.build(service.editTableServiceSync(id));
+    @PostMapping("/editTableServiceSync")
+    public ResultEntity<Object> editTableServiceSync(@RequestBody TableServiceSyncDTO tableServiceSyncDTO) {
+        return ResultEntityBuild.build(service.editTableServiceSync(tableServiceSyncDTO));
     }
 
     @ApiOperation("根据应用Id查询表服务应用告警通知配置")

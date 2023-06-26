@@ -211,8 +211,8 @@ public class TableServiceImpl
                 throw new FkException(ResultEnum.DELETE_ERROR);
             }
             LambdaQueryWrapper<TableRecipientsPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(TableRecipientsPO::getTableAppId,appServiceConfigPOS.get(0).appId);
-            if (tableRecipientsManage.remove(queryWrapper)){
+            queryWrapper.eq(TableRecipientsPO::getTableAppId, appServiceConfigPOS.get(0).appId);
+            if (tableRecipientsManage.remove(queryWrapper)) {
                 throw new FkException(ResultEnum.DELETE_ERROR);
             }
         }
@@ -291,15 +291,15 @@ public class TableServiceImpl
     }
 
     @Override
-    public ResultEnum editTableServiceSync(long tableId) {
-        TableServicePO tableServicePO = mapper.selectById(tableId);
+    public ResultEnum editTableServiceSync(TableServiceSyncDTO tableServiceSyncDTO) {
+        TableServicePO tableServicePO = mapper.selectById(tableServiceSyncDTO.getTableId());
         //判断表状态是否已发布
         if (tableServicePO.getPublish() != 1) {
             log.info("手动同步失败，原因：表未发布");
             return ResultEnum.TABLE_NOT_PUBLISHED;
         }
         //获取远程调用接口中需要的参数KafkaReceiveDTO
-        KafkaReceiveDTO kafkaReceiveDTO = getKafkaReceive(tableId);
+        KafkaReceiveDTO kafkaReceiveDTO = getKafkaReceive(tableServiceSyncDTO);
         log.info(JSON.toJSONString(kafkaReceiveDTO));
 
         //参数配置完毕，远程调用接口，发送参数，执行同步
@@ -386,11 +386,11 @@ public class TableServiceImpl
     @Override
     public ResultEnum deleteTableServiceEmail(TableServiceEmailDTO tableServiceEmail) {
         LambdaQueryWrapper<TableRecipientsPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(TableRecipientsPO::getTableAppId,tableServiceEmail.appId);
+        queryWrapper.eq(TableRecipientsPO::getTableAppId, tableServiceEmail.appId);
         boolean remove = tableRecipientsManage.remove(queryWrapper);
-        if(remove){
+        if (remove) {
             return ResultEnum.SUCCESS;
-        }else {
+        } else {
             return ResultEnum.DELETE_ERROR;
         }
     }
@@ -403,9 +403,9 @@ public class TableServiceImpl
             tableServiceEmail.body.put("表服务名称", tableAppPO.getAppName());
         }
         // 发邮件
-        List<TableRecipientsPO>  email = tableRecipientsManage.query().eq("table_app_id", tableServiceEmail.appId).list();
+        List<TableRecipientsPO> email = tableRecipientsManage.query().eq("table_app_id", tableServiceEmail.appId).list();
         //第一步：查询邮件服务器设置
-        if (!CollectionUtils.isNotEmpty(email)){
+        if (!CollectionUtils.isNotEmpty(email)) {
             return ResultEnum.ERROR;
         }
         ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.get(0).noticeServerId);
@@ -526,9 +526,10 @@ public class TableServiceImpl
      *
      * @return
      */
-    public static KafkaReceiveDTO getKafkaReceive(Long tableId) {
+    public static KafkaReceiveDTO getKafkaReceive(TableServiceSyncDTO dto) {
+
         //拼接所需的topic
-        String topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + tableId;
+        String topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + "." + dto.appId + "." + dto.tableId;
         //获取当前时间并格式化
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateTime = formatter.format(LocalDateTime.now());
@@ -583,6 +584,7 @@ public class TableServiceImpl
         data.tableName = dto.tableService.tableName;
         data.sqlScript = dto.tableService.sqlScript;
         data.targetTable = dto.tableService.targetTable;
+        data.openTransmission = dto.openTransmission;
 
         LambdaQueryWrapper<AppServiceConfigPO> configQueryWrapper = new LambdaQueryWrapper<>();
         configQueryWrapper.eq(AppServiceConfigPO::getServiceId, dto.tableService.id);
