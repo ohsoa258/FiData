@@ -355,7 +355,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         try {
             BuildDeleteTableServiceDTO buildDeleteTableService = JSON.parseObject(dataInfo, BuildDeleteTableServiceDTO.class);
             DataModelVO dataModelVO = new DataModelVO();
-            dataModelVO.delBusiness=true;
+            dataModelVO.delBusiness=buildDeleteTableService.delBusiness;
             DataModelTableVO dataModelTableVO = new DataModelTableVO();
             dataModelTableVO.ids=buildDeleteTableService.ids;
             dataModelTableVO.type= buildDeleteTableService.olapTableEnum;

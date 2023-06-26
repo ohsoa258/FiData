@@ -234,6 +234,7 @@ public class TableAppManageImpl
                     buildDeleteTableService.ids = tableServiceIdList;
                     buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
                     buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+                    buildDeleteTableService.delBusiness = true;
                     publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
                 }
             }
