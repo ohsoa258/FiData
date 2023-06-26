@@ -1661,27 +1661,18 @@ public class TableFieldsImpl
         }
 
         //        //判断是否是全量覆盖方式 todo:全量覆盖,快照
-//        if (dto.syncMode==1){
-//            //判断全量覆盖方式是否生成快照  1使用  0不使用
-//            int snapshotFlag = dto.snapshotDTO.ifEnableSnapshot;
-//            if (snapshotFlag == 1){
-//                String fullVolumeSql = finalSql.substring(finalSql.indexOf(";"));
-//            }else {
-//                log.info("全量覆盖未选择生成版本快照...");
-//            }
-//        }
-
         //返回最终拼接好的sql
-        return finalSql;
+        return getSnapshotSql(dto.snapshotDTO, finalSql, odsTableName);
     }
 
     /**
      * 获取全量覆盖方式，使用快照时的sql
+     * 如果页面选择使用快照，则修改sql,如果没选择，则不修改
      *
      * @param snapshotDTO
      * @return
      */
-    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO, String finalSql) {
+    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO, String finalSql, String odsTableName) {
         //判断全量覆盖方式是否生成快照  1使用  0不使用
         int snapshotFlag = snapshotDTO.ifEnableSnapshot;
         //新建变量预装载拼装前的sql
@@ -1698,7 +1689,8 @@ public class TableFieldsImpl
 
             //获取参数...
             //获取快照时间范围
-            int dateRange = snapshotDTO.dateRange;
+//            int dateRange = snapshotDTO.dateRange;
+
             /*
              * 快照时间单位：
              *  年:YEAR
@@ -1708,6 +1700,7 @@ public class TableFieldsImpl
              *  日:DAY
              */
             String dateUnit = snapshotDTO.dateUnit;
+
             /*
              * 版本号生成逻辑：
              *  0:当前年/季/月/周/日
@@ -1715,28 +1708,37 @@ public class TableFieldsImpl
              */
             int logicType = snapshotDTO.logicType;
 
-
             //todo:生成版本号
+            String versionType = "";
             if ("YEAR".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "YEAR(GetDate())";
             } else if ("QUARTER".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "CONCAT(YEAR(GETDATE()), '/Q0', CEILING(MONTH(GETDATE()) / 3.0))";
             } else if ("MONTH".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "FORMAT(GETDATE(), 'yyyy/MM')";
             } else if ("WEEK".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "CONCAT(YEAR(GETDATE()), '/W', DATEPART(WEEK, GETDATE()))";
             } else if ("DAY".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "day(GETDATE())";
             }
 
             //如果使用自定义版本号
             if (logicType == 1) {
                 //获取自定义版本号的sql
                 String snapshotCostumeSql = snapshotDTO.snapshotCostumeSql;
+                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=(" + snapshotCostumeSql + ");";
+
             } else {
-                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=";
+                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=(" + versionType + ");";
             }
 
+            startSql = startSql + "Delete From " + odsTableName + " where [fi_version]=@Version;";
+            finalSql = startSql + halfSql;
+
+            // 在 fi_createtime 前添加 fi_version
+            finalSql = finalSql.replaceFirst("fi_createtime", "fi_version, fi_createtime");
+            // 在第一个 getdate() 前添加 @Version,
+            finalSql = finalSql.replaceFirst("getdate\\(\\)", "@Version, getdate()");
             return finalSql;
         } else {
             log.info("全量覆盖未选择生成版本快照...");

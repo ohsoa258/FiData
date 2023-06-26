@@ -262,6 +262,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorConfig.targetTableName = buildTableService.targetTable;
             dataAccessConfig.processorConfig = processorConfig;
             buildNifiFlow.appId = 0L;
+            /**
+             * 创建表服务组件！！！
+             */
             List<ProcessorEntity> processorEntities = buildProcessorVersion3(taskGroupId, dataAccessConfig, taskGroupId, sourceControllerServiceId, targetControllerServiceId, cfgControllerServiceId, buildNifiFlow, buildTableService);
 
             // 启动,保存

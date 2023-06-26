@@ -67,6 +67,11 @@ public class PublishTaskController {
                 data);
     }
 
+    /**
+     * 发布表服务
+     * @param data
+     * @return
+     */
     @PostMapping("/publishBuildDataServices")
     @ApiOperation(value = "表服务同步")
     public ResultEntity<Object> publishBuildDataServices(@RequestBody BuildTableServiceDTO data) {
