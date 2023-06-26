@@ -1,6 +1,7 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -31,6 +32,7 @@ import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelLogPO;
+import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -176,39 +178,59 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     type = Integer.parseInt(topic[3]);
                     appId = Integer.valueOf(topic[4]);
                     if (Objects.equals(type, OlapTableEnum.DATASERVICES.getValue())){
-                        TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
-                        tableServiceEmailDTO.appId = appId;
-                        tableServiceEmailDTO.msg = nifiStageMessageDTO.message;
-                        tableServiceEmailDTO.result = "【运行失败】";
-                        tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
-                        List<PipelLogPO> pos = iPipelLog.query().eq("pipel_trace_id", nifiStageMessageDTO.pipelTraceId).list();
 
-                        if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(pos)) {
-                            PipelLogPO pipelLogPo = pos.get(0);
-                            try {
-                                Date date = new Date();
-                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                                Date parse = simpleDateFormat.parse(pipelLogPo.msg.substring(7, 26));
-                                Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
-                                Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
-                                tableServiceEmailDTO.duration = minutes + "m " + second + "s";
-                            } catch (ParseException e) {
-                                e.printStackTrace();
+                        //错误日志修复
+                        LambdaQueryWrapper<PipelTaskLogPO> queryWrapper = new LambdaQueryWrapper<>();
+                        queryWrapper.eq(PipelTaskLogPO::getTaskTraceId,nifiStageMessageDTO.pipelTaskTraceId)
+                                        .eq(PipelTaskLogPO::getType,DispatchLogEnum.taskend.getValue())
+                                                .eq(PipelTaskLogPO::getTableType,OlapTableEnum.DATASERVICES.getValue());
+                        PipelTaskLogPO pipelTaskLogPO = iPipelTaskLog.getOne(queryWrapper);
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String format = simpleDateFormat.format(new Date());
+                        if(pipelTaskLogPO != null){
+                            pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                            iPipelTaskLog.updateById(pipelTaskLogPO);
+                        }else {
+                            TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
+                            tableServiceEmailDTO.appId = appId;
+                            tableServiceEmailDTO.msg = NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message;
+                            tableServiceEmailDTO.result = "【运行失败】";
+                            tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                            List<PipelLogPO> pos = iPipelLog.query().eq("pipel_trace_id", nifiStageMessageDTO.pipelTraceId).list();
+
+                            if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(pos)) {
+                                PipelLogPO pipelLogPo = pos.get(0);
+                                try {
+                                    Date date = new Date();
+                                    Date parse = simpleDateFormat.parse(pipelLogPo.msg.substring(7, 26));
+                                    Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                                    Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                                    tableServiceEmailDTO.duration = minutes + "m " + second + "s";
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
-                        tableServiceEmailDTO.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
-                                + tableServiceEmailDTO.pipelTraceId + "】";
-                        try {
-                            Map<String, String> hashMap = new HashMap<>();
-                            hashMap.put("运行结果", tableServiceEmailDTO.result);
-                            hashMap.put("运行时长", tableServiceEmailDTO.duration);
-                            hashMap.put("运行详情", tableServiceEmailDTO.msg);
-                            hashMap.put("TraceID", tableServiceEmailDTO.pipelTraceId);
-                            hashMap.put("页面地址", tableServiceEmailDTO.url);
-                            tableServiceEmailDTO.body = hashMap;
-                            consumeServeiceClient.tableServiceSendEmails(tableServiceEmailDTO);
-                        } catch (Exception e) {
-                            log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
+                            tableServiceEmailDTO.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
+                                    + tableServiceEmailDTO.pipelTraceId + "】";
+                            try {
+                                Map<String, String> hashMap = new HashMap<>();
+                                hashMap.put("运行结果", tableServiceEmailDTO.result);
+                                hashMap.put("运行时长", tableServiceEmailDTO.duration);
+                                hashMap.put("运行详情", tableServiceEmailDTO.msg);
+                                hashMap.put("TraceID", tableServiceEmailDTO.pipelTraceId);
+                                hashMap.put("页面地址", tableServiceEmailDTO.url);
+                                tableServiceEmailDTO.body = hashMap;
+                                consumeServeiceClient.tableServiceSendEmails(tableServiceEmailDTO);
+                            } catch (Exception e) {
+                                log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
+                            }
+                            PipelTaskLogPO pipelTaskLogPO1 = new PipelTaskLogPO();
+                            pipelTaskLogPO1.setTaskTraceId(nifiStageMessageDTO.pipelTaskTraceId);
+                            pipelTaskLogPO1.setType(DispatchLogEnum.taskend.getValue());
+                            pipelTaskLogPO1.setTableId(tableAccessId);
+                            pipelTaskLogPO1.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + tableServiceEmailDTO.msg);
+                            pipelTaskLogPO1.setTableType(type);
+                            iPipelTaskLog.save(pipelTaskLogPO1);
                         }
                     }
                 } else if (topic.length == 7) {

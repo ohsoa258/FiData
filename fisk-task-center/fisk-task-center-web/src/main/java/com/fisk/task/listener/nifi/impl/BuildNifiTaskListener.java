@@ -241,6 +241,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             buildNifiFlow.selectSql = buildTableService.sqlScript;
             buildNifiFlow.fetchSize = syncMode.fetchSize;
             buildNifiFlow.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
+            buildNifiFlow.appId = Long.valueOf(buildTableService.tableAppId);
             DataSourceConfig targetDsConfig = new DataSourceConfig();
             targetDsConfig.targetTableName = buildTableService.targetTable;
             targetDsConfig.tableFieldsList = JSON.parseArray(JSON.toJSONString(buildTableService.fieldDtoList), TableFieldsDTO.class);
@@ -358,7 +359,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         try {
             BuildDeleteTableServiceDTO buildDeleteTableService = JSON.parseObject(dataInfo, BuildDeleteTableServiceDTO.class);
             DataModelVO dataModelVO = new DataModelVO();
-            dataModelVO.delBusiness=true;
+            dataModelVO.delBusiness=buildDeleteTableService.delBusiness;
             DataModelTableVO dataModelTableVO = new DataModelTableVO();
             dataModelTableVO.ids=buildDeleteTableService.ids;
             dataModelTableVO.type= buildDeleteTableService.olapTableEnum;
