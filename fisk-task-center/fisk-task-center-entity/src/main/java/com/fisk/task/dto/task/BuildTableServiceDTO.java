@@ -108,4 +108,10 @@ public class BuildTableServiceDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "表应用描述")
     public String tableAppDesc;
+
+    /**
+     * 是否同步
+     */
+    @ApiModelProperty(value = "是否同步")
+    public boolean openTransmission;
 }
