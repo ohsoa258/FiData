@@ -241,6 +241,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             buildNifiFlow.selectSql = buildTableService.sqlScript;
             buildNifiFlow.fetchSize = syncMode.fetchSize;
             buildNifiFlow.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile;
+            buildNifiFlow.appId = Long.valueOf(buildTableService.tableAppId);
             DataSourceConfig targetDsConfig = new DataSourceConfig();
             targetDsConfig.targetTableName = buildTableService.targetTable;
             targetDsConfig.tableFieldsList = JSON.parseArray(JSON.toJSONString(buildTableService.fieldDtoList), TableFieldsDTO.class);
@@ -261,7 +262,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorConfig.sourceExecSqlQuery = buildTableService.sqlScript;
             processorConfig.targetTableName = buildTableService.targetTable;
             dataAccessConfig.processorConfig = processorConfig;
-            buildNifiFlow.appId = 0L;
             List<ProcessorEntity> processorEntities = buildProcessorVersion3(taskGroupId, dataAccessConfig, taskGroupId, sourceControllerServiceId, targetControllerServiceId, cfgControllerServiceId, buildNifiFlow, buildTableService);
 
             // 启动,保存
@@ -3662,7 +3662,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         str.append(" from ").append(NifiConstants.AttrConstants.INCREMENT_DB_TABLE_NAME);
         str.append(" where object_name = '").append(targetDbName).append("'");*/
         KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
-        kafkaRkeceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + ".0." + dto.id;
+        kafkaRkeceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() +"."+ dto.appId +"."+ dto.id;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
         kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();

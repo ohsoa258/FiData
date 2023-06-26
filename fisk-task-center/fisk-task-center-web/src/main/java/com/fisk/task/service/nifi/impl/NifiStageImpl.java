@@ -1,6 +1,7 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -31,6 +32,7 @@ import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
 import com.fisk.task.entity.PipelLogPO;
+import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.entity.PipelineTableLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -209,6 +211,26 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                             consumeServeiceClient.tableServiceSendEmails(tableServiceEmailDTO);
                         } catch (Exception e) {
                             log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
+                        }
+                        //错误日志修复
+                        LambdaQueryWrapper<PipelTaskLogPO> queryWrapper = new LambdaQueryWrapper<>();
+                        queryWrapper.eq(PipelTaskLogPO::getTaskTraceId,nifiStageMessageDTO.pipelTaskTraceId)
+                                        .eq(PipelTaskLogPO::getType,DispatchLogEnum.taskend.getValue())
+                                                .eq(PipelTaskLogPO::getTableType,OlapTableEnum.DATASERVICES.getValue());
+                        PipelTaskLogPO pipelTaskLogPO = iPipelTaskLog.getOne(queryWrapper);
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String format = simpleDateFormat.format(new Date());
+                        if(pipelTaskLogPO != null){
+                            pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + tableServiceEmailDTO.msg);
+                            iPipelTaskLog.updateById(pipelTaskLogPO);
+                        }else {
+                            PipelTaskLogPO pipelTaskLogPO1 = new PipelTaskLogPO();
+                            pipelTaskLogPO1.setTaskTraceId(nifiStageMessageDTO.pipelTaskTraceId);
+                            pipelTaskLogPO1.setType(DispatchLogEnum.taskend.getValue());
+                            pipelTaskLogPO1.setTableId(tableAccessId);
+                            pipelTaskLogPO1.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + tableServiceEmailDTO.msg);
+                            pipelTaskLogPO1.setTableType(type);
+                            iPipelTaskLog.save(pipelTaskLogPO1);
                         }
                     }
                 } else if (topic.length == 7) {

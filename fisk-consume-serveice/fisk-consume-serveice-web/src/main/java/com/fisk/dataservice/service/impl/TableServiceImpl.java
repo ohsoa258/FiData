@@ -355,6 +355,7 @@ public class TableServiceImpl
             tableRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
             tableRecipientsPO.setAlarmConditions(dto.getAlarmConditions());
             tableRecipientsPO.setUserEmails(dto.getUserEmails());
+            tableRecipientsPO.setType(dto.getNoticeServerType());
             tableRecipientsPOS.add(tableRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
@@ -364,6 +365,7 @@ public class TableServiceImpl
                 tableRecipientsPO.setAlarmConditions(dto.getAlarmConditions());
                 tableRecipientsPO.setWechatUserId(t.getWechatUserId());
                 tableRecipientsPO.setWechatUserName(t.getWechatUserName());
+                tableRecipientsPO.setType(dto.getNoticeServerType());
                 tableRecipientsPOS.add(tableRecipientsPO);
             });
         }
@@ -415,7 +417,7 @@ public class TableServiceImpl
         }
         //true是失败
         boolean contains = tableServiceEmail.msg.contains(NifiStageTypeEnum.RUN_FAILED.getName());
-        Integer sendMode = tableServiceEmail.sendMode;
+        Integer sendMode = email.get(0).alarmConditions;
         if (Objects.equals(SendModeEnum.failure.getValue(), sendMode)) {
             if (contains) {
                 log.info("满足模式,并且msg报错");
