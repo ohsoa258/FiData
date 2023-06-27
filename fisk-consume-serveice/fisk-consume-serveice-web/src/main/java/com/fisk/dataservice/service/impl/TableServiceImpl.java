@@ -357,6 +357,7 @@ public class TableServiceImpl
             tableRecipientsPO.setAlarmConditions(dto.getAlarmConditions());
             tableRecipientsPO.setUserEmails(dto.getUserEmails());
             tableRecipientsPO.setType(dto.getNoticeServerType());
+            tableRecipientsPO.setEnable(dto.enable);
             tableRecipientsPOS.add(tableRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
@@ -366,6 +367,7 @@ public class TableServiceImpl
                 tableRecipientsPO.setAlarmConditions(dto.getAlarmConditions());
                 tableRecipientsPO.setWechatUserId(t.getWechatUserId());
                 tableRecipientsPO.setWechatUserName(t.getWechatUserName());
+                tableRecipientsPO.setEnable(dto.enable);
                 tableRecipientsPO.setType(dto.getNoticeServerType());
                 tableRecipientsPOS.add(tableRecipientsPO);
             });
@@ -409,6 +411,12 @@ public class TableServiceImpl
         List<TableRecipientsPO> email = tableRecipientsManage.query().eq("table_app_id", tableServiceEmail.appId).list();
         //第一步：查询邮件服务器设置
         if (!CollectionUtils.isNotEmpty(email)) {
+            return ResultEnum.ERROR;
+        }
+        if (email.get(0).enable == 2){
+            return ResultEnum.SUCCESS;
+        }
+        if (email.get(0).enable != 1){
             return ResultEnum.ERROR;
         }
         ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.get(0).noticeServerId);
