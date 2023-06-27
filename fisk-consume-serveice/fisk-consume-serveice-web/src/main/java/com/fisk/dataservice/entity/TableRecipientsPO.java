@@ -28,6 +28,12 @@ public class TableRecipientsPO extends BasePO {
      */
     public int type;
 
+
+    /**
+     * 启用状态 1、启用 2、禁用
+     */
+    public int enable;
+
     /**
      * 企业微信用户Id
      */

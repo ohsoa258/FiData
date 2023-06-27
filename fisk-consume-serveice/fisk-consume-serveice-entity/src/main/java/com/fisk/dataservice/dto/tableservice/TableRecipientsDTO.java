@@ -32,6 +32,12 @@ public class TableRecipientsDTO {
     public int noticeServerType;
 
     /**
+     * 启用状态 1、启用 2、禁用
+     */
+    @ApiModelProperty(value = "启用状态")
+    public int enable;
+
+    /**
      * 企业微信用户列表
      */
     @ApiModelProperty(value = "企业微信用户列表")
