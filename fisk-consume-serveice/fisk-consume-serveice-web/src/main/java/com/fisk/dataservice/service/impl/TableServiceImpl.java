@@ -589,7 +589,7 @@ public class TableServiceImpl
         BuildTableServiceDTO data = new BuildTableServiceDTO();
         //表信息
         data.id = dto.tableService.id;
-        data.addType = dto.tableService.addType;
+        data.addType = dto.tableService.addType ;
         data.dataSourceId = dto.tableService.sourceDbId;
         data.targetDbId = dto.tableService.targetDbId;
         data.tableName = dto.tableService.tableName;
