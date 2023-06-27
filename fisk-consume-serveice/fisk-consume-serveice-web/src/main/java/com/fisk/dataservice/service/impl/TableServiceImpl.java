@@ -589,13 +589,12 @@ public class TableServiceImpl
         BuildTableServiceDTO data = new BuildTableServiceDTO();
         //表信息
         data.id = dto.tableService.id;
-        data.addType = dto.tableService.addType;
+        data.addType = dto.tableService.addType ;
         data.dataSourceId = dto.tableService.sourceDbId;
         data.targetDbId = dto.tableService.targetDbId;
         data.tableName = dto.tableService.tableName;
         data.sqlScript = dto.tableService.sqlScript;
         data.targetTable = dto.tableService.targetTable;
-        data.openTransmission = dto.openTransmission;
 
         LambdaQueryWrapper<AppServiceConfigPO> configQueryWrapper = new LambdaQueryWrapper<>();
         configQueryWrapper.eq(AppServiceConfigPO::getServiceId, dto.tableService.id);
