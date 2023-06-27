@@ -43,4 +43,10 @@ public class TableRecipientsVO {
      */
     @ApiModelProperty(value = "告警条件：1 成功、2 失败、3 完成")
     public int alarmConditions;
+
+    /**
+     * 启用状态 1、启用 2、禁用
+     */
+    @ApiModelProperty(value = "启用状态")
+    public int enable;
 }

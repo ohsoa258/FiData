@@ -341,6 +341,7 @@ public class TableServiceImpl
             tableRecipientsVO.setNoticeServerId(tableRecipientsPOList.get(0).getNoticeServerId());
             tableRecipientsVO.setAlarmConditions(tableRecipientsPOList.get(0).getAlarmConditions());
             tableRecipientsVO.setUserEmails(tableRecipientsPOList.get(0).getUserEmails());
+            tableRecipientsVO.setEnable(tableRecipientsPOList.get(0).getEnable());
             tableRecipientsVO.setWechatUserList(wechatUserList);
         }
         return tableRecipientsVO;
