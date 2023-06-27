@@ -595,7 +595,6 @@ public class TableServiceImpl
         data.tableName = dto.tableService.tableName;
         data.sqlScript = dto.tableService.sqlScript;
         data.targetTable = dto.tableService.targetTable;
-        data.openTransmission = dto.openTransmission;
 
         LambdaQueryWrapper<AppServiceConfigPO> configQueryWrapper = new LambdaQueryWrapper<>();
         configQueryWrapper.eq(AppServiceConfigPO::getServiceId, dto.tableService.id);

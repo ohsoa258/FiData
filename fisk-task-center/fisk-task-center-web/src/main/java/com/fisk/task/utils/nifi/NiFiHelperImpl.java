@@ -552,7 +552,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("HTTP Method", data.httpMethod);
         map.put("Remote URL", data.remoteUrl);
         map.put("Authorization", data.nifiToken);
-        map.put("Socket Connect Timeout", data.socketConnectTimeout);
+        map.put("Connection Timeout", data.socketConnectTimeout);
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setProperties(map);
