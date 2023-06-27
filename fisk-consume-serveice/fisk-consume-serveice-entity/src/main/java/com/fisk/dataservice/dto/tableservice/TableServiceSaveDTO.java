@@ -22,10 +22,4 @@ public class TableServiceSaveDTO {
     @ApiModelProperty(value = "表同步方式", required = true)
     public TableSyncModeDTO tableSyncMode;
 
-    /**
-     * 是否同步
-     */
-    @ApiModelProperty(value = "是否同步")
-    public boolean openTransmission;
-
 }

@@ -3543,6 +3543,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;*/
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        //验证执行结果
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
 
