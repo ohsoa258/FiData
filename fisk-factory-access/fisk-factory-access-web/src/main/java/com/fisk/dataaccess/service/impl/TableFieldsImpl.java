@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -275,7 +276,7 @@ public class TableFieldsImpl
         }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys, null);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys, null, null);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -302,9 +303,17 @@ public class TableFieldsImpl
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
+        //获取修改前的字段集合
+        LambdaQueryWrapper<TableFieldsPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TableFieldsPO::getTableAccessId, dto.id).select(TableFieldsPO::getSourceFieldName);
+        List<TableFieldsPO> tableFieldsBeforeUpdate = list(wrapper);
+        List<String> sourceFieldNames = new ArrayList<>();
+        tableFieldsBeforeUpdate.forEach(tableFieldsPO -> {
+            sourceFieldNames.add(tableFieldsPO.sourceFieldName);
+        });
+
         // 保存tb_table_fields
         boolean success;
-
         success = this.saveOrUpdateBatch(TableFieldsMap.INSTANCES.listDtoToPo(list));
         if (!success) {
             return ResultEnum.UPDATE_DATA_ERROR;
@@ -383,7 +392,7 @@ public class TableFieldsImpl
 
         // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
-                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys, null);
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys, null, sourceFieldNames);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -549,7 +558,8 @@ public class TableFieldsImpl
                          TableSyncmodeDTO syncMode,
                          Integer appDataSourceId,
                          List<TableHistoryDTO> dto,
-                         String currUserName) {
+                         String currUserName,
+                         List<String> sourceFieldNames) {
         //获取应用数据源
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         //获取不到则抛出异常
@@ -659,6 +669,11 @@ public class TableFieldsImpl
                 data.coverScript = accessPo.coverScript;
                 //todo:当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句 默认5day
                 data.deleteStgScript = accessPo.deleteStgScript;
+
+                //获取修改前的源字段集合
+                if (!sourceFieldNames.isEmpty() && sourceFieldNames!=null) {
+                    data.sourceFieldNames = sourceFieldNames;
+                }
 
                 List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
@@ -1403,7 +1418,7 @@ public class TableFieldsImpl
                     TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
                     accessPo.appDataSourceId,
                     dto.tableHistorys,
-                    dto.currUserName);
+                    dto.currUserName, null);
         }
         return ResultEnum.SUCCESS;
     }
@@ -1616,8 +1631,8 @@ public class TableFieldsImpl
                 stgTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + stgTableName + "\"";
                 odsTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + odsTableName + "\"";
             } else {
-                stgTableName = "\"dbo\"." + "\"" + stgTableName + "\"";
-                odsTableName = "\"dbo\"." + "\"" + odsTableName + "\"";
+                stgTableName = "\"public\"." + "\"" + stgTableName + "\"";
+                odsTableName = "\"public\"." + "\"" + odsTableName + "\"";
             }
         }
 

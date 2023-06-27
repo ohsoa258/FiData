@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -98,5 +99,10 @@ public class KafkaReceiveDTO extends MQBaseDTO {
     @ApiModelProperty(value = "失败信息")
     public String message;
 
+    /**
+     * 修改前的源字段
+     */
+    @ApiModelProperty(value = "修改前的源字段")
+    public List<String> sourceFieldNames;
 
 }

@@ -3114,7 +3114,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         map.put("topic", "${kafka.topic}");
         //放入大批次号
         map.put("fidata_batch_code", "${fidata_batch_code}");
-
+        //放入修改前的源字段
+        map.put("sourceFieldNames",dto.sourceFieldNames);
 
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
         buildReplaceTextProcessorDTO.details = "query_phase";

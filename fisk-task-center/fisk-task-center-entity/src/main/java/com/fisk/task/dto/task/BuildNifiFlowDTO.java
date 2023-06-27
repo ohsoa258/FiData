@@ -205,5 +205,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
      */
     public String deleteScript;
 
+    /**
+     * 修改前的源字段
+     */
+    @ApiModelProperty(value = "修改前的源字段")
+    public List<String> sourceFieldNames;
 
 }

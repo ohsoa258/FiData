@@ -72,9 +72,13 @@ public class InsertExcelData implements ISftpDataUploadListener {
             //获取大批次号
             String fidata_batch_code = kafkaReceive.fidata_batch_code;
             log.info("大批次号：{}", fidata_batch_code);
+            //获取修改前的源字段
+            List<String> sourceFieldNames = kafkaReceive.sourceFieldNames;
 
             String[] topicParameter = topic.split("\\.");
+            //应用id
             String appId = "";
+            //表id
             String tableId = "";
             if (Objects.equals(topicParameter.length, 6)) {
                 appId = topicParameter[4];
@@ -96,6 +100,22 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 targetDsConfig.targetTableName = one.tableName;
                 //获取物理表字段集合
                 List<TableFieldsDTO> tableFieldsList = targetDsConfig.tableFieldsList;
+                //获取当前目标字段对应的源字段集合
+                List<String> currentSourceFieldNames = new ArrayList<>();
+                tableFieldsList.forEach(tableFieldsDTO -> {
+                    currentSourceFieldNames.add(tableFieldsDTO.sourceFieldName);
+                });
+                //重新给tableFieldsList排序
+                Map<String, TableFieldsDTO> map = new HashMap<>();
+                for (int i = 0; i < sourceFieldNames.size(); i++) {
+                    map.put(sourceFieldNames.get(i),tableFieldsList.get(i));
+                }
+
+                List<TableFieldsDTO> tableFieldsList1 = new ArrayList<>();
+                for (String currentSourceFieldName : currentSourceFieldNames) {
+                    tableFieldsList1.add(map.get(currentSourceFieldName));
+                }
+
                 //获取列总数
                 Integer columnCount = tableFieldsList.size();
                 //获取sftp/ftp配置信息
@@ -125,17 +145,18 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(targetDsConfig.targetTableName);
                 //stgAndTableName.get(0) 是stg表名，即 sqlBuilder 语句是往stg表里面插入数据
                 StringBuilder sqlBuilder = new StringBuilder("INSERT INTO " + stgAndTableName.get(0) + " (fidata_batch_code,");
-                //fori循环，目的是遍历tableFieldsList，获取每个字段的字段名
+                //fori循环，目的是遍历tableFieldsList1，获取每个字段的字段名
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
                         sqlBuilder.append(", ");
                     }
-                    sqlBuilder.append("[" + tableFieldsList.get(i).fieldName + "]");
+                    sqlBuilder.append("[" + tableFieldsList1.get(i).fieldName + "]");
                 }
                 sqlBuilder.append(") VALUES ('")
                         .append(fidata_batch_code)
                         .append("',");
-                ////fori循环，目的是遍历tableFieldsList，将要插入的数据以占位符 ? 替代
+
+                //将要插入的数据以占位符 ? 替代
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
                         sqlBuilder.append(", ");
