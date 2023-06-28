@@ -276,7 +276,7 @@ public class TableFieldsImpl
         }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys, null, null);
+        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys, null, new ArrayList<>());
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -400,7 +400,7 @@ public class TableFieldsImpl
     /**
      * 新增ods元数据信息
      *
-     * @param appId
+     * @param   appId
      * @param sql
      */
     public void odsMetaDataInfo(long appId, String sql) {
@@ -1418,7 +1418,7 @@ public class TableFieldsImpl
                     TableSyncModeMap.INSTANCES.poToDto(tableSyncmodePo),
                     accessPo.appDataSourceId,
                     dto.tableHistorys,
-                    dto.currUserName, null);
+                    dto.currUserName, new ArrayList<>());
         }
         return ResultEnum.SUCCESS;
     }
@@ -1677,7 +1677,12 @@ public class TableFieldsImpl
 
         //        //判断是否是全量覆盖方式 todo:全量覆盖,快照
         //返回最终拼接好的sql
-        return getSnapshotSql(dto.snapshotDTO, finalSql, odsTableName);
+        if (dto.snapshotDTO!=null){
+            return getSnapshotSql(dto.snapshotDTO, finalSql, odsTableName);
+        }else {
+            return finalSql;
+        }
+
     }
 
     /**
