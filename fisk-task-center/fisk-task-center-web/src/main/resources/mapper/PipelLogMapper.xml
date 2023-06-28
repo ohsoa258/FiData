@@ -10,7 +10,7 @@
             and pipel_trace_id=#{pipelLog.pipelTraceId}
         </if>
         <if test="pipelLog.lookday != null and pipelLog.lookday != '' ">
-            and create_time >= DATE_SUB( CURDATE( ), INTERVAL #{pipelLog.lookday} DAY )
+            and create_time >= DATE_SUB( CURDATE( ), INTERVAL #{pipelLog.lookday}-1 DAY )
         </if>
         order by create_time desc
 
