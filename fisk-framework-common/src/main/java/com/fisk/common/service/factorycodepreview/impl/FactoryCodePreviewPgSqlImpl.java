@@ -386,6 +386,8 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      */
     @Override
     public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+        //获取业务标识覆盖方式标识的字段
+        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
         String startSql = insertAndSelectSql(tableName, sourceTableName, fieldList);
         startSql = startSql.substring(0, startSql.lastIndexOf(sourceTableName));
         StringBuilder firstSql = new StringBuilder(startSql);
@@ -393,8 +395,8 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
                 .append(" AS source WHERE source.fidata_batch_code = '${fidata_batch_code}' AND source.fidata_flow_batch_code = '${fragment.index}' ")
                 .append("ON CONFLICT (");
 
-        //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldList) {
+        //遍历业务标识覆盖方式标识的字段集合
+        for (PublishFieldDTO f : pkFields) {
             firstSql.append("\"")
                     .append(f.fieldEnName)
                     .append("\"")
