@@ -26,8 +26,8 @@ public class KeepNumberPgImpl implements IBuildKeepNumber {
             stgTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + stgTableName + "\"";
             odsTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + odsTableName + "\"";
         } else {
-            stgTableName = "\"dbo\"." + "\"" + stgTableName + "\"";
-            odsTableName = "\"dbo\"." + "\"" + odsTableName + "\"";
+            stgTableName = "\"public\"." + "\"" + stgTableName + "\"";
+            odsTableName = "\"public\"." + "\"" + odsTableName + "\"";
         }
 
         //获取keepNumber
