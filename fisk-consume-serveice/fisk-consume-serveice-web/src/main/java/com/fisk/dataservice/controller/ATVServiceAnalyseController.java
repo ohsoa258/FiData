@@ -4,12 +4,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
+import com.fisk.dataservice.dto.atvserviceanalyse.AtvServiceMonitoringQueryDTO;
 import com.fisk.dataservice.service.IATVServiceAnalyseService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -55,5 +54,35 @@ public class ATVServiceAnalyseController {
     public ResultEntity<Object> scanDataServiceApiIsFuSing() {
         analyseService.scanDataServiceApiIsFuSing();
         return ResultEntityBuild.build(ResultEnum.SUCCESS, true);
+    }
+
+    @ApiOperation(value = "服务监控应用以及API下拉框数据")
+    @PostMapping("/getAtvServiceDropdownCard")
+    public ResultEntity<Object> getAtvServiceDropdownCard(@RequestBody AtvServiceMonitoringQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvServiceDropdownCard(dto));
+    }
+
+    @ApiOperation(value = "API当天调用时长TOP20：接口调用耗时排名")
+    @PostMapping("/getAtvApiTimeConsumingRanking")
+    public ResultEntity<Object> getAtvApiTimeConsumingRanking(@RequestBody AtvServiceMonitoringQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvApiTimeConsumingRanking(dto));
+    }
+
+    @ApiOperation(value = "API当天调用趋势：接口调用成功失败的数量排名")
+    @PostMapping("/getAtvApiSuccessFailureRanking")
+    public ResultEntity<Object> getAtvApiSuccessFailureRanking(@RequestBody AtvServiceMonitoringQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvApiSuccessFailureRanking(dto));
+    }
+
+    @ApiOperation(value = "API申请人明细：负责人创建的应用下绑定的API")
+    @PostMapping("/getAtvApiPrincipalDetailAppBindApi")
+    public ResultEntity<Object> getAtvApiPrincipalDetailAppBindApi(@RequestBody AtvServiceMonitoringQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvApiPrincipalDetailAppBindApi(dto));
+    }
+
+    @ApiOperation(value = "API申请次数TOP20：API所绑定的应用排名")
+    @PostMapping("/getAtvApiSqCountApiBindAppRanking")
+    public ResultEntity<Object> getAtvApiSqCountApiBindAppRanking(@RequestBody AtvServiceMonitoringQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, analyseService.getAtvApiSqCountApiBindAppRanking(dto));
     }
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.app.AppApiSubQueryDTO;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
+import com.fisk.dataservice.vo.app.AppApiBindVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppWhiteListVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -117,4 +118,19 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tAND t3.del_flag = 1 \n" +
             "\tAND t3.app_type = 2")
     List<AppWhiteListVO> getAppWhiteListByServiceId(@Param("serviceId") long serviceId);
+
+    /**
+     * @return java.util.List<com.fisk.dataservice.vo.app.AppApiBindVO>
+     * @description 查询应用API绑定信息
+     * @author dick
+     * @date 2023/6/19 16:17
+     * @version v1.0
+     * @params createApiType
+     * @params appId
+     * @params apiId
+     */
+    List<AppApiBindVO> getAppApiBindList(@Param("createApiType") int createApiType,
+                                         @Param("appId") int appId, @Param("apiId") int apiId);
+
+
 }
