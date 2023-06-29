@@ -192,30 +192,40 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             String content = sb.toString();
 
             for (RecipientsPO user : userList) {
-                //构造卡片消息内容
-                Map<String, Object> params = new HashMap<>();
-                params.put("touser", user.wechatUserId);
-                params.put("msgtype", "textcard");
-                params.put("agentid", emailServerById.data.wechatAgentId.trim());
-                Map<String, Object> textcard = new HashMap<>();
-                textcard.put("title", "管道告警通知");
-                textcard.put("description", content);
-                textcard.put("url", dispatchEmail.url);
-                textcard.put("btntxt", "更多");
-                params.put("textcard", textcard);
-                params.put("enable_id_trans", 0);
-                params.put("enable_duplicate_check", 0);
-                params.put("duplicate_check_interval", 1800);
+                if (user.wechatUserId!=null && user.wechatUserId!="")
+                {
+                    //构造卡片消息内容
+                    Map<String, Object> params = new HashMap<>();
+                    params.put("touser", user.wechatUserId);
+                    params.put("msgtype", "textcard");
+                    params.put("agentid", emailServerById.data.wechatAgentId.trim());
+                    Map<String, Object> textcard = new HashMap<>();
+                    textcard.put("title", "管道告警通知");
+                    textcard.put("description", content);
+                    textcard.put("url", dispatchEmail.url);
+                    textcard.put("btntxt", "更多");
+                    params.put("textcard", textcard);
+                    params.put("enable_id_trans", 0);
+                    params.put("enable_duplicate_check", 0);
+                    params.put("duplicate_check_interval", 1800);
 
-                try {
-                    //发送企业微信
-                    String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + accessToken;
-                    String send = HttpPost(url, JSON.toJSONString(params));
-                    JSONObject jsonSend = JSONObject.parseObject(send);
-                } catch (Exception e) {
-                    log.debug("【pipelineSendEmails】 e：" + e);
-                    throw new FkException(ResultEnum.ERROR, e.getMessage());
+                    try {
+                        //发送企业微信
+                        String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + accessToken;
+                        String send = HttpPost(url, JSON.toJSONString(params));
+                        JSONObject jsonSend = JSONObject.parseObject(send);
+                    } catch (Exception e) {
+                        log.debug("【pipelineSendEmails】 e：" + e);
+                        throw new FkException(ResultEnum.ERROR, e.getMessage());
+                    }
+
                 }
+                else
+                {
+
+                    return null;
+                }
+
             }
         }
 
