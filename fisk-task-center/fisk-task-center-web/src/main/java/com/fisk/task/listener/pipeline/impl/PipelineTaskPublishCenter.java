@@ -133,7 +133,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         log.info("打印topic内容:" + msg);
                         if (kafkaReceiveDTO.ifTaskStart) {
                             HashMap<Integer, Object> taskMap = new HashMap<>();
-                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getValue() + " - " + simpleDateFormat.format(new Date()));
+                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             log.info("第二处调用保存task日志");
                             iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
                             //任务中心发布任务,通知任务开始执行
