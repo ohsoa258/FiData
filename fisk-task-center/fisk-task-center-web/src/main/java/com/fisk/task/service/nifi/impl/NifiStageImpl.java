@@ -197,7 +197,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                             tableServiceEmailDTO.result = "【运行失败】";
                             tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
                             List<PipelTaskLogPO> pos = iPipelTaskLog.query()
-                                    .eq("pipel_task_trace_id", nifiStageMessageDTO.pipelTaskTraceId)
+                                    .eq("task_trace_id", nifiStageMessageDTO.pipelTaskTraceId)
                                     .eq("type", DispatchLogEnum.taskstart.getValue())
                                     .list();
 

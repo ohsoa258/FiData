@@ -394,7 +394,7 @@ public class MissionEndCenter {
                             tableServiceEmailDTO.result = "【运行成功】";
                             tableServiceEmailDTO.pipelTraceId = pipelTraceId;
                             List<PipelTaskLogPO> pos = iPipelTaskLog.query()
-                                    .eq("pipel_task_trace_id", kafkaReceive.pipelTaskTraceId)
+                                    .eq("task_trace_id", kafkaReceive.pipelTaskTraceId)
                                     .eq("type", DispatchLogEnum.taskstart.getValue())
                                     .list();
                             if (CollectionUtils.isNotEmpty(pos)) {
