@@ -106,22 +106,25 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 //重新给目标字段排序  如果页面修改了源字段与目标字段的映射关系（或者说因为excel表结构的修改，而导致页面修改了映射关系）
                 //就需要我们在插入数据到stg表时，在不修改表字段顺序的前提下，将页面映射的字段关系作为数据插入的准则
                 //开始排序⬇
-                List<String> currentSourceFieldNames = new ArrayList<>();
-                tableFieldsList.forEach(tableFieldsDTO -> {
-                    currentSourceFieldNames.add(tableFieldsDTO.sourceFieldName);
-                });
-                //重新给tableFieldsList排序
-                Map<String, TableFieldsDTO> map = new HashMap<>();
-                for (int i = 0; i < sourceFieldNames.size(); i++) {
-                    map.put(sourceFieldNames.get(i),tableFieldsList.get(i));
-                }
-
                 List<TableFieldsDTO> tableFieldsList1 = new ArrayList<>();
-                for (String currentSourceFieldName : currentSourceFieldNames) {
-                    tableFieldsList1.add(map.get(currentSourceFieldName));
-                }
-                //⬆排序完毕
+                if (!sourceFieldNames.isEmpty()) {
+                    List<String> currentSourceFieldNames = new ArrayList<>();
+                    tableFieldsList.forEach(tableFieldsDTO -> {
+                        currentSourceFieldNames.add(tableFieldsDTO.sourceFieldName);
+                    });
+                    //重新给tableFieldsList排序
+                    Map<String, TableFieldsDTO> map = new HashMap<>();
+                    for (int i = 0; i < sourceFieldNames.size(); i++) {
+                        map.put(sourceFieldNames.get(i), tableFieldsList.get(i));
+                    }
+                    for (String currentSourceFieldName : currentSourceFieldNames) {
+                        tableFieldsList1.add(map.get(currentSourceFieldName));
+                    }
+                    //⬆排序完毕
 
+                } else {
+                    tableFieldsList1 = tableFieldsList;
+                }
 
                 //获取列总数
                 Integer columnCount = tableFieldsList.size();

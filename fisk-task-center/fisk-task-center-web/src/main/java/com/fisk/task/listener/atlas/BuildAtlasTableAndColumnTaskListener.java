@@ -10,12 +10,12 @@ import com.cronutils.parser.CronParser;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
-import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.task.entity.TBETLIncrementalPO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.enums.DataClassifyEnum;
@@ -139,6 +139,7 @@ public class BuildAtlasTableAndColumnTaskListener
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
                 log.info("开始执行nifi创建数据同步");
 
+                log.info("流程前参数校验：[{}]",JSON.toJSONString(buildPhysicalTableDTO));
                 //nifi流程组件的属性设置开始.........
                 BuildNifiFlowDTO bfd = new BuildNifiFlowDTO();
                 bfd.userId = buildPhysicalTableDTO.userId;
@@ -166,13 +167,18 @@ public class BuildAtlasTableAndColumnTaskListener
                 bfd.buildTableSql = buildPhysicalTableDTO.buildTableSql;
                 // stg抽取数据加载到ods的sql语句
                 bfd.syncStgToOdsSql = buildPhysicalTableDTO.syncStgToOdsSql;
+
                 //设置stg保存时间的sql
                 bfd.deleteScript = buildPhysicalTableDTO.deleteStgScript;
                 //发布历史id
                 bfd.tableHistoryId = buildPhysicalTableDTO.tableHistoryId;
-                log.info("修改前的源字段：[{}]",buildPhysicalTableDTO.sourceFieldNames.toString());
+                log.info("修改前的源字段：[{}]", buildPhysicalTableDTO.sourceFieldNames);
                 //修改前的源字段
-                bfd.sourceFieldNames = buildPhysicalTableDTO.sourceFieldNames;
+                if (buildPhysicalTableDTO.sourceFieldNames != null) {
+                    bfd.sourceFieldNames = buildPhysicalTableDTO.sourceFieldNames;
+                } else {
+                    bfd.sourceFieldNames = new ArrayList<>();
+                }
 
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 //统一traceid,让流程串起来,原来traceid各自步骤的traceid是各自的,未了让流程能串起来,所以改成一样的,
