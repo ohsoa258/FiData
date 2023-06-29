@@ -414,10 +414,10 @@ public class TableServiceImpl
         if (!CollectionUtils.isNotEmpty(email)) {
             return ResultEnum.ERROR;
         }
-        if (email.get(0).enable == 2){
+        if (email.get(0).enable == 2) {
             return ResultEnum.SUCCESS;
         }
-        if (email.get(0).enable != 1){
+        if (email.get(0).enable != 1) {
             return ResultEnum.ERROR;
         }
         ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(email.get(0).noticeServerId);
@@ -459,7 +459,7 @@ public class TableServiceImpl
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject("FiData数据管道运行结果通知");
+            mailSenderDTO.setSubject(String.format("FiData数据管道(%s)运行结果通知", tableAppPO.getAppName()));
             //邮件正文
             String body = "";
 
@@ -590,7 +590,7 @@ public class TableServiceImpl
         BuildTableServiceDTO data = new BuildTableServiceDTO();
         //表信息
         data.id = dto.tableService.id;
-        data.addType = dto.tableService.addType ;
+        data.addType = dto.tableService.addType;
         data.dataSourceId = dto.tableService.sourceDbId;
         data.targetDbId = dto.tableService.targetDbId;
         data.tableName = dto.tableService.tableName;

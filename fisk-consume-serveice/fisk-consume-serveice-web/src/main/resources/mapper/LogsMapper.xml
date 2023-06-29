@@ -44,10 +44,10 @@
             OR log.business_state like concat('%', #{keyword}, '%')
         </if>
         <if test="callCycleStartDate !=null and callCycleStartDate!=''">
-            AND log.request_start_date &gt;= callCycleStartDate
+            AND log.request_start_date &gt;= #{callCycleStartDate}
         </if>
         <if test="callCycleEndDate !=null and callCycleEndDate!=''">
-            AND log.request_end_date &lt; callCycleEndDate
+            AND log.request_end_date &lt; #{callCycleEndDate}
         </if>
     </select>
 

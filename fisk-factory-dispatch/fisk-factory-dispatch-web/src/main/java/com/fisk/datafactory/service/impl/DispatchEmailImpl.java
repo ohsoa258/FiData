@@ -146,7 +146,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject("FiData数据管道运行结果通知");
+            mailSenderDTO.setSubject(String.format("FiData数据管道(%s)运行结果通知", nifiCustomWorkflowPO.getWorkflowName()));
             //邮件正文
             String body = "";
 
