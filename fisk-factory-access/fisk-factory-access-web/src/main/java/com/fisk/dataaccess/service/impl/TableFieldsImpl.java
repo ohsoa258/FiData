@@ -671,7 +671,7 @@ public class TableFieldsImpl
                 data.deleteStgScript = accessPo.deleteStgScript;
 
                 //获取修改前的源字段集合
-                if (!sourceFieldNames.isEmpty() && sourceFieldNames!=null) {
+                if (!sourceFieldNames.isEmpty()) {
                     data.sourceFieldNames = sourceFieldNames;
                 }
 
