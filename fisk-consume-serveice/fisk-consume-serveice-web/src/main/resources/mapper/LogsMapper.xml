@@ -14,8 +14,12 @@
         log.log_info,
         log.business_state,
         log.create_time AS create_time,
+        log.request_start_date,
+        log.request_end_date,
+        log.response_status,
         api.api_name,
         api.api_code,
+        api.create_api_type,
         app.app_name,
         app.app_account
         FROM
@@ -24,16 +28,174 @@
         LEFT JOIN tb_api_config AS api ON log.api_id = api.id
         WHERE
         log.del_flag = 1
-        <if test="apiId !=null ">
+        <if test="apiId !=null and apiId!=0">
             AND log.api_id = #{apiId}
         </if>
-        <if test="appId !=null ">
+        <if test="appId !=null and appId!=0">
             AND log.app_id = #{appId}
+        </if>
+        <if test="createApiType !=null and createApiType!=0">
+            AND api.create_api_type = #{createApiType}
         </if>
         <if test="keyword !=null and keyword!='' ">
             AND api.api_name like concat('%', #{keyword}, '%')
+            OR api.api_code like concat('%', #{keyword}, '%')
             OR app.app_account like concat('%', #{keyword}, '%')
             OR log.business_state like concat('%', #{keyword}, '%')
         </if>
+        <if test="callCycleStartDate !=null and callCycleStartDate!=''">
+            AND log.request_start_date &gt;= callCycleStartDate
+        </if>
+        <if test="callCycleEndDate !=null and callCycleEndDate!=''">
+            AND log.request_end_date &lt; callCycleEndDate
+        </if>
+    </select>
+
+    <select id="getAtvApiTimeConsumingRanking"
+            resultType="com.fisk.dataservice.vo.atvserviceanalyse.AtvApiTimeConsumingRankingVO">
+        SELECT
+        api.api_name AS apiName,
+        t.timeConsuming
+        FROM
+        (-- ROW_NUMBER() 是一个窗口函数，用于为结果集中的每一行分配一个唯一的序号
+        -- PARTITION BY api_id 指定了对 api_id 列进行分组，即每个不同的 api_id 值将形成一个独立的分组，然后根据指定字段排序
+        SELECT
+        api_id,
+        TIMESTAMPDIFF( SECOND, request_start_date, request_end_date ) AS timeConsuming,
+        ROW_NUMBER() OVER ( PARTITION BY api_id ORDER BY TIMESTAMPDIFF( SECOND, request_start_date, request_end_date )
+        DESC ) AS row_num
+        FROM
+        tb_logs
+        WHERE
+        del_flag = 1
+        AND request_start_date &gt;= CURDATE()
+        AND request_start_date &lt; CURDATE() + INTERVAL 1 DAY
+        ) t
+        LEFT JOIN tb_app_service_config appApi ON t.api_id = appApi.service_id
+        LEFT JOIN tb_app_config app ON app.id = appApi.app_id
+        LEFT JOIN tb_api_config api ON api.id = appApi.service_id
+        WHERE
+        appApi.del_flag = 1
+        AND app.del_flag = 1
+        AND api.del_flag = 1
+        AND row_num = 1
+        AND appApi.type = 1
+        <if test="createApiType != 0">
+            AND api.create_api_type = #{createApiType}
+        </if>
+        <if test="appId != 0">
+            AND app.id = #{appId}
+        </if>
+        <if test="apiId != 0">
+            AND api.id = #{apiId}
+        </if>
+        GROUP BY
+        apiName,
+        timeConsuming
+        ORDER BY
+        timeConsuming DESC
+        LIMIT 0,
+        20;
+    </select>
+    <select id="getAtvApiSuccessFailureRanking"
+            resultType="com.fisk.dataservice.vo.atvserviceanalyse.AtvApiSuccessFailureRankingVO">
+        SELECT
+        api.api_name AS apiName,
+        DATE_FORMAT( request_start_date, '%Y-%m-%d' ) AS dateSlot,
+        DATE_FORMAT( request_start_date, '%H:00' ) AS timeSlot,
+        SUM( CASE WHEN business_state = '成功' THEN 1 ELSE 0 END ) AS successCount,
+        SUM( CASE WHEN business_state = '失败' THEN 1 ELSE 0 END ) AS failureCount
+        FROM
+        tb_logs log
+        LEFT JOIN tb_app_service_config appApi ON log.api_id = appApi.service_id
+        LEFT JOIN tb_app_config app ON app.id = appApi.app_id
+        LEFT JOIN tb_api_config api ON api.id = appApi.service_id
+        WHERE
+        log.del_flag = 1
+        AND appApi.del_flag = 1
+        AND app.del_flag = 1
+        AND api.del_flag = 1
+        AND request_start_date &gt;= CURDATE()
+        AND request_start_date &lt; CURDATE() + INTERVAL 1 DAY
+        AND appApi.type = 1
+        <if test="createApiType != 0">
+            AND api.create_api_type = #{createApiType}
+        </if>
+        <if test="appId != 0">
+            AND app.id = #{appId}
+        </if>
+        <if test="apiId != 0">
+            AND api.id = #{apiId}
+        </if>
+        GROUP BY
+        apiName,
+        dateSlot,
+        timeSlot
+        ORDER BY
+        timeSlot ASC;
+    </select>
+    <select id="getAtvApiPrincipalDetailAppBindApi"
+            resultType="com.fisk.dataservice.vo.atvserviceanalyse.AtvApiPrincipalDetailAppBindApiVO">
+        SELECT
+        CASE
+
+        WHEN
+        api.create_api_type = 3 THEN
+        '代理' ELSE '本地'
+        END AS createApiType,
+        app.app_principal AS appPrincipal,
+        app.app_name AS appName,
+        api.api_name AS apiName,
+        appApi.create_time AS applyTime
+        FROM
+        tb_app_service_config appApi
+        LEFT JOIN tb_app_config app ON app.id = appApi.app_id
+        LEFT JOIN tb_api_config api ON api.id = appApi.service_id
+        WHERE
+        appApi.del_flag = 1
+        AND app.del_flag = 1
+        AND api.del_flag = 1
+        AND appApi.type = 1
+        <if test="createApiType != 0">
+            AND api.create_api_type = #{createApiType}
+        </if>
+        <if test="appId != 0">
+            AND app.id = #{appId}
+        </if>
+        <if test="apiId != 0">
+            AND api.id = #{apiId}
+        </if>
+        ORDER BY
+        applyTime DESC;
+    </select>
+    <select id="getAtvApiSqCountApiBindAppRanking"
+            resultType="com.fisk.dataservice.vo.atvserviceanalyse.AtvApiSqCountApiBindAppRankingVO">
+        SELECT
+        api.api_name AS apiName,
+        count(*) AS apiBindAppCount
+        FROM
+        tb_app_service_config appApi
+        LEFT JOIN tb_app_config app ON app.id = appApi.app_id
+        LEFT JOIN tb_api_config api ON api.id = appApi.service_id
+        WHERE
+        appApi.del_flag = 1
+        AND app.del_flag = 1
+        AND api.del_flag = 1
+        AND appApi.type = 1
+        <if test="createApiType != 0">
+            AND api.create_api_type = #{createApiType}
+        </if>
+        <if test="appId != 0">
+            AND app.id = #{appId}
+        </if>
+        <if test="apiId != 0">
+            AND api.id = #{apiId}
+        </if>
+        GROUP BY
+        api.id
+        ORDER BY
+        apiBindAppCount DESC
+        LIMIT 0,
+        20;
     </select>
 </mapper>

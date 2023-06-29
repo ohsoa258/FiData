@@ -1,5 +1,6 @@
 package com.fisk.system.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -18,26 +19,31 @@ import com.fisk.system.mapper.EmailServerMapper;
 import com.fisk.system.service.IEmailServerManageService;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -150,33 +156,34 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             {
                 log.info(stringAccessToken);
             }
+            String  department ="https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token="+accessToken;
+
+            String StringDepartment= sendGetRequest(department);
+
+            JSONObject jsonDepartmentList = JSONObject.parseObject(StringDepartment);
+
             //获取部门用户 部门ID为1 表示整个部门
             String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
-            String stringUserList = sendGetRequest(userListUrl);
+            String user = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserid?access_token="+accessToken;
+            Map<String, Object> params = new HashMap<>();
+            params.put("mobile", recipients);
+            String stringUserList = HttpPost(user, JSON.toJSONString(params));
             log.info( "企业微信获取token结果集: "+stringUserList);
             JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
-            JSONArray userListArray = jsonUserList.getJSONArray("userlist");
-            if (userListArray == null)
+            String userString = jsonUserList.getString("userid");
+
+            if(userString != null &&  userString != "")
             {
-                log.info(stringUserList);
+                WeChatUserDTO wechat = new WeChatUserDTO();
+                wechat.name = recipients;
+                wechat.userid =  userString;
+                weChatUserList.add(wechat);
+
             }
-            for (int i = 0; i < userListArray.size(); i++) {
-                JSONObject userObject = userListArray.getJSONObject(i);
-                String userid = userObject.getString("userid");
-                String name = userObject.getString("name");
-                WeChatUserDTO weChatUser = new WeChatUserDTO();
-                weChatUser.setUserid(userid);
-                weChatUser.setName(name);
-                weChatUserList.add(weChatUser);
+            else{
+                return null;
             }
-            if (recipients!=null)
-            {
-                weChatUserList = weChatUserList.stream()
-                        .filter(u -> u.name.toLowerCase().contains(recipients.toLowerCase()))
-                        .collect(Collectors.toList());
-            }
-            String name = weChatUserList.stream().map(String::valueOf).collect(Collectors.joining(","));
-            log.info("企业微信用户名和用户Id: " + name);
+
         }
         catch (Exception e)
         {
@@ -208,6 +215,29 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
         return decodedResponse;
     }
 
+
+    public static String HttpPost(String url, String param) throws Exception {
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Accept", "text/html, application/xhtml+xml, */*");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] postData = param.getBytes(StandardCharsets.UTF_8);
+            os.write(postData);
+            os.flush();
+        }
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+            StringBuilder response = new StringBuilder();
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            return response.toString();
+        }
+    }
+
     private String sendGetRequest(String url) throws IOException {
         String result = null;
         try {
@@ -233,4 +263,6 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
         }
         return result;
     }
+
+
 }

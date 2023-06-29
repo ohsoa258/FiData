@@ -140,6 +140,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
         try {
             // 开始记录日志
+            logPO.setRequestStartDate(DateTimeUtils.getNow());
             logPO.setLogLevel(LogLevelTypeEnum.INFO.getName());
             logPO.setLogRequest(JSON.toJSONString(dto));
             logPO.setLogType(LogTypeEnum.API.getValue());
@@ -299,6 +300,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
 
             // 第十步：判断数据源类型，加载数据库驱动，执行SQL
+            logPO.setParamCheckDate(DateTimeUtils.getNow());
             conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             assert st != null;
@@ -341,9 +343,11 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             dataArray = null;
             logPO.setLogResponseInfo(String.valueOf(totalCount));
             logPO.setBusinessState("成功");
+            logPO.setResponseStatus(HttpStatus.OK.getReasonPhrase());
         } catch (Exception e) {
             logPO.setLogLevel(LogLevelTypeEnum.ERROR.getName());
             logPO.setLogInfo(e.getMessage());
+            logPO.setResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
             resultEnum = ResultEnum.DS_APISERVICE_QUERY_ERROR;
             throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR, e.getMessage());
         } finally {
@@ -351,13 +355,14 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             AbstractCommonDbHelper.closeConnection(conn);
             if (resultEnum != ResultEnum.REQUEST_SUCCESS) {
                 if (resultEnum == ResultEnum.DS_APISERVICE_QUERY_ERROR) {
-                    logPO.setLogInfo(ResultEnum.DS_APISERVICE_QUERY_ERROR.getMsg() + "。错误信息：" + logPO.logInfo);
+                    logPO.setLogInfo(ResultEnum.DS_APISERVICE_QUERY_ERROR.getMsg() + "。错误信息：" + logPO.getLogInfo());
                 } else {
                     logPO.setLogInfo(resultEnum.getMsg());
                 }
             }
             try {
                 log.info("开始记录数据服务调用日志");
+                logPO.setRequestEndDate(DateTimeUtils.getNow());
                 logsManageImpl.saveLog(logPO);
             } catch (Exception exs) {
                 log.error("数据服务调用日志保存异常：" + exs);
@@ -434,6 +439,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
             List<Integer> appIds = appWhiteList.stream().map(AppWhiteListVO::getAppId).collect(Collectors.toList());
             logPO.setAppIds(Joiner.on(",").join(appIds));
+            logPO.setAppId(appIds.get(0));
 
             logPO.setParamCheckDate(DateTimeUtils.getNow());
             String query = request.getQueryString();

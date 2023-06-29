@@ -129,7 +129,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         PageDTO<ApiSubVO> pageDTO = new PageDTO<>();
 
         List<ApiSubVO> apiSubVOS = new ArrayList<>();
-        Integer createApiType = dto.getAppType() == 2 ? 3 : 0;
+        Integer createApiType = dto.getAppType() == 2 ? 3 : dto.getAppType() ;
         List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.getKeyword(), createApiType);
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
