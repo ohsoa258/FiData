@@ -156,21 +156,22 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             {
                 log.info(stringAccessToken);
             }
-            String  department ="https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token="+accessToken;
-
-            String StringDepartment= sendGetRequest(department);
-
-            JSONObject jsonDepartmentList = JSONObject.parseObject(StringDepartment);
+            //String  department ="https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token="+accessToken;
+            //String StringDepartment= sendGetRequest(department);
+            //JSONObject jsonDepartmentList = JSONObject.parseObject(StringDepartment);
 
             //获取部门用户 部门ID为1 表示整个部门
-            String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
+            //String userListUrl = "https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=" + accessToken + "&department_id=1&fetch_child=1";
+
+            //通过手机号 获取用户Id
             String user = "https://qyapi.weixin.qq.com/cgi-bin/user/getuserid?access_token="+accessToken;
             Map<String, Object> params = new HashMap<>();
             params.put("mobile", recipients);
             String stringUserList = HttpPost(user, JSON.toJSONString(params));
-            log.info( "企业微信获取token结果集: "+stringUserList);
+            log.info( "企业微信通过手机号获取用户Id结果集: "+stringUserList);
             JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
             String userString = jsonUserList.getString("userid");
+            log.info( "取出用户Id: "+stringUserList);
 
             if(userString != null &&  userString != "")
             {
@@ -178,9 +179,9 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
                 wechat.name = recipients;
                 wechat.userid =  userString;
                 weChatUserList.add(wechat);
-
             }
             else{
+                log.info( "用户Id为空: " + userString);
                 return null;
             }
 
