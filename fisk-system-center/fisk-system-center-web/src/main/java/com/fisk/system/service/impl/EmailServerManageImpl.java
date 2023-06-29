@@ -171,10 +171,19 @@ public class EmailServerManageImpl extends ServiceImpl<EmailServerMapper, EmailS
             log.info( "企业微信获取token结果集: "+stringUserList);
             JSONObject jsonUserList = JSONObject.parseObject(stringUserList);
             String userString = jsonUserList.getString("userid");
-            WeChatUserDTO wechat = new WeChatUserDTO();
-            wechat.name = recipients;
-            wechat.userid =  userString;
-            weChatUserList.add(wechat);
+
+            if(userString != null &&  userString != "")
+            {
+                WeChatUserDTO wechat = new WeChatUserDTO();
+                wechat.name = recipients;
+                wechat.userid =  userString;
+                weChatUserList.add(wechat);
+
+            }
+            else{
+                return null;
+            }
+
         }
         catch (Exception e)
         {
