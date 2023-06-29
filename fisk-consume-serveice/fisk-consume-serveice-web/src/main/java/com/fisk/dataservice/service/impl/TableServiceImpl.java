@@ -464,7 +464,7 @@ public class TableServiceImpl
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("FiData表服务运行结果通知",tableAppPO.getAppName()));
+            mailSenderDTO.setSubject(String.format("FiData表服务(%s)运行结果通知", tableAppPO.getAppName()));
             //邮件正文
             String body = "";
 
