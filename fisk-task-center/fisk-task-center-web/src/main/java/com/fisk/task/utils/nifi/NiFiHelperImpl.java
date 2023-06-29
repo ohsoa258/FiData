@@ -540,11 +540,11 @@ public class NiFiHelperImpl implements INiFiHelper {
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd) {
         //流程分支，是否自动结束
-        autoEnd.add("failure");
-        autoEnd.add("no retry");
-        autoEnd.add("original");
-        autoEnd.add("retry");
-        autoEnd.add("response");
+        autoEnd.add("Failure");
+        autoEnd.add("No Retry");
+        autoEnd.add("Original");
+        autoEnd.add("Retry");
+        autoEnd.add("Response");
         //组件属性
         Map<String, String> map = new HashMap<>(5);
         map.put("Attributes to Send", data.attributesToSend);

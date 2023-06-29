@@ -291,13 +291,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return ResultEnum.SUCCESS;
     }
 
-    private String getGroupId(BuildTableServiceDTO buildTableService){
+    private String getGroupId(BuildTableServiceDTO buildTableService) {
         NifiConfigPO nifiConfigPO = nifiConfigService.query().eq("component_key", ComponentIdTypeEnum.TABLE_SERVICE_NIFI_FLOW_GROUP_ID.getName()).one();
         if (nifiConfigPO != null) {
             AppNifiSettingPO one = appNifiSettingService.query().eq("app_id", buildTableService.tableAppId).eq("type", buildTableService.dataClassifyEnum.getValue()).eq("del_flag", 1).one();
-            if (one != null){
+            if (one != null) {
                 return one.getAppComponentId();
-            }else {
+            } else {
                 BuildProcessGroupDTO groupDTO = new BuildProcessGroupDTO();
                 groupDTO.name = buildTableService.tableAppName;
                 groupDTO.details = buildTableService.tableAppDesc;
@@ -352,20 +352,21 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             }
         }
     }
+
     @Override
     public ResultEnum buildDeleteDataServices(String dataInfo, Acknowledgment acke) {
         log.info("表服务删除nifi流程参数:{}", dataInfo);
         try {
             BuildDeleteTableServiceDTO buildDeleteTableService = JSON.parseObject(dataInfo, BuildDeleteTableServiceDTO.class);
             DataModelVO dataModelVO = new DataModelVO();
-            dataModelVO.delBusiness=buildDeleteTableService.delBusiness;
+            dataModelVO.delBusiness = buildDeleteTableService.delBusiness;
             DataModelTableVO dataModelTableVO = new DataModelTableVO();
-            dataModelTableVO.ids=buildDeleteTableService.ids;
-            dataModelTableVO.type= buildDeleteTableService.olapTableEnum;
-            dataModelVO.tableServerIdList=dataModelTableVO;
-            dataModelVO.businessId=buildDeleteTableService.appId;
-            dataModelVO.dataClassifyEnum= DataClassifyEnum.DATASERVICES;
-            dataModelVO.userId=buildDeleteTableService.userId;
+            dataModelTableVO.ids = buildDeleteTableService.ids;
+            dataModelTableVO.type = buildDeleteTableService.olapTableEnum;
+            dataModelVO.tableServerIdList = dataModelTableVO;
+            dataModelVO.businessId = buildDeleteTableService.appId;
+            dataModelVO.dataClassifyEnum = DataClassifyEnum.DATASERVICES;
+            dataModelVO.userId = buildDeleteTableService.userId;
             return componentsBuild.deleteNifiFlow(dataModelVO);
         } catch (Exception e) {
             log.error("表服务流程删除失败" + StackTraceHelper.getStackTraceInfo(e));
@@ -1513,11 +1514,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
         //supervisionId指的是nifi组件中报错后连接的第一个组件：queryForPipelineSupervision组件的id
-        componentConnector(groupId, processorEntity1.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
+        componentConnector(groupId, processorEntity1.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
 
         //2023-06-28李世纪新增
         //新增自己连自己 为了解决管道调度该组件时，偶发性的失败问题，失败就retry
-        componentConnector(groupId, processorEntity1.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RETRY);
+        componentConnector(groupId, processorEntity1.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RETRY2);
 
         String lastId = "";
         Boolean isLastId = true;
@@ -1867,7 +1868,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //查询条数
         String fullTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
         config.processorConfig.targetTableName = fullTableName;
-        ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId ,buildTableService.syncModeDTO.customScriptAfter);
+        ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId, buildTableService.syncModeDTO.customScriptAfter);
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //连接器
         componentConnector(groupId, putDatabaseRecord.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -2596,7 +2597,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param targetId 连接器下方组件id
      * @param type     连接类型
      */
-
     private void componentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
         BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId, sourceId, targetId, type);
         verifyProcessorResult(sqlToPutRes);
@@ -2610,7 +2610,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param targetId 连接器下方组件id
      * @param type     连接类型
      */
-
     private void componentsConnector(String groupId, String sourceId, String targetId, List<AutoEndBranchTypeEnum> type) {
         BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessor(groupId, sourceId, targetId, type);
         verifyProcessorResult(sqlToPutRes);
@@ -2858,7 +2857,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
-    private ProcessorEntity queryNumbers(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId ,String afterSql) {
+    private ProcessorEntity queryNumbers(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId, String afterSql) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query numbers Field";
         querySqlDto.preSql = afterSql;
@@ -3121,7 +3120,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //放入大批次号
         map.put("fidata_batch_code", "${fidata_batch_code}");
         //放入修改前的源字段
-        map.put("sourceFieldNames",dto.sourceFieldNames);
+        map.put("sourceFieldNames", dto.sourceFieldNames);
 
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -3673,7 +3672,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         str.append(" from ").append(NifiConstants.AttrConstants.INCREMENT_DB_TABLE_NAME);
         str.append(" where object_name = '").append(targetDbName).append("'");*/
         KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
-        kafkaRkeceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() +"."+ dto.appId +"."+ dto.id;
+        kafkaRkeceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
         kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
