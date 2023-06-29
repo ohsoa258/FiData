@@ -159,10 +159,13 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         List<NifiStageMessageDTO> nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
         for (NifiStageMessageDTO nifiStageMessageDTO : nifiStageMessages) {
             try {
-                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
-                List<BulletinEntity> bulletins = processGroup.getBulletins();
-                if (bulletins != null && bulletins.size() != 0) {
-                    nifiStageMessageDTO.message = bulletins.get(0).getBulletin().getMessage();
+                List<BulletinEntity> bulletins = new ArrayList<>();
+                if (nifiStageMessageDTO.groupId != null){
+                    ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
+                    bulletins = processGroup.getBulletins();
+                    if (bulletins != null && bulletins.size() != 0) {
+                        nifiStageMessageDTO.message = bulletins.get(0).getBulletin().getMessage();
+                    }
                 }
                 String topicName = nifiStageMessageDTO.topic;
                 if (StringUtils.isEmpty(nifiStageMessageDTO.pipelStageTraceId)) {
