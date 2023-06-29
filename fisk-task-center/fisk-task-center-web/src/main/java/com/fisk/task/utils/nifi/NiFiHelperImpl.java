@@ -540,11 +540,11 @@ public class NiFiHelperImpl implements INiFiHelper {
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd) {
         //流程分支，是否自动结束
-        autoEnd.add("Failure");
-        autoEnd.add("No Retry");
-        autoEnd.add("Original");
-        autoEnd.add("Retry");
-        autoEnd.add("Response");
+        autoEnd.add("failure");
+        autoEnd.add("no retry");
+        autoEnd.add("original");
+        autoEnd.add("retry");
+        autoEnd.add("response");
         //组件属性
         Map<String, String> map = new HashMap<>(5);
         map.put("Attributes to Send", data.attributesToSend);
@@ -556,6 +556,8 @@ public class NiFiHelperImpl implements INiFiHelper {
         //组件配置信息
         ProcessorConfigDTO config = new ProcessorConfigDTO();
         config.setProperties(map);
+        //这里是把组件所有的relationships设置为terminate，为什么呢？因为创建完组建后，在buildProcessorVersion2中会配置该组件的连接线，
+        //比如说配置了Response，那么在nifi里面该组件的relationships中，Response就不是terminate状态
         config.setAutoTerminatedRelationships(autoEnd);
         config.setComments(data.details);
         //组件整体配置
@@ -2470,11 +2472,11 @@ public class NiFiHelperImpl implements INiFiHelper {
         List<String> SqlForPgOds = new ArrayList<>();
         String name = config.processorConfig.targetTableName;
         String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), null);
-        config.processorConfig.targetTableName = "stg_" + name;
+        //config.processorConfig.targetTableName = "stg_" + name;
         String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), null);
         SqlForPgOds.add(deleteSql);
         SqlForPgOds.add(toOdaSql);
-        return SqlForPgOds;
+        return JSON.parseArray(JSON.toJSONString(SqlForPgOds).toLowerCase(), String.class);
     }
 
     @Override

@@ -1512,7 +1512,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             processorEntity1 = executeSQLRecord;
         }
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
-        componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
+        //supervisionId指的是nifi组件中报错后连接的第一个组件：queryForPipelineSupervision组件的id
+        componentConnector(groupId, processorEntity1.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
+
+        //2023-06-28李世纪新增
+        //新增自己连自己 为了解决管道调度该组件时，偶发性的失败问题，失败就retry
+        componentConnector(groupId, processorEntity1.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RETRY);
+
         String lastId = "";
         Boolean isLastId = true;
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
