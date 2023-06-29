@@ -196,13 +196,16 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                             tableServiceEmailDTO.msg = NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message;
                             tableServiceEmailDTO.result = "【运行失败】";
                             tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
-                            List<PipelLogPO> pos = iPipelLog.query().eq("pipel_trace_id", nifiStageMessageDTO.pipelTraceId).list();
+                            List<PipelTaskLogPO> pos = iPipelTaskLog.query()
+                                    .eq("pipel_task_trace_id", nifiStageMessageDTO.pipelTaskTraceId)
+                                    .eq("type", DispatchLogEnum.taskstart.getValue())
+                                    .list();
 
                             if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(pos)) {
-                                PipelLogPO pipelLogPo = pos.get(0);
+                                PipelTaskLogPO taskLogPO = pos.get(0);
                                 try {
                                     Date date = new Date();
-                                    Date parse = simpleDateFormat.parse(pipelLogPo.msg.substring(7, 26));
+                                    Date parse = simpleDateFormat.parse(taskLogPO.msg.substring(7, 26));
                                     Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
                                     Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
                                     tableServiceEmailDTO.duration = minutes + "m " + second + "s";
@@ -214,6 +217,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                     + tableServiceEmailDTO.pipelTraceId + "】";
                             try {
                                 Map<String, String> hashMap = new HashMap<>();
+                                hashMap.put("表服务名称","");
+                                hashMap.put("表名", String.valueOf(tableAccessId));
                                 hashMap.put("运行结果", tableServiceEmailDTO.result);
                                 hashMap.put("运行时长", tableServiceEmailDTO.duration);
                                 hashMap.put("运行详情", tableServiceEmailDTO.msg);

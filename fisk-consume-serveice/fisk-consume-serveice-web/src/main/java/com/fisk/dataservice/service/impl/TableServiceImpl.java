@@ -408,6 +408,11 @@ public class TableServiceImpl
         if (tableAppPO != null) {
             tableServiceEmail.body.put("表服务名称", tableAppPO.getAppName());
         }
+        String tableId = tableServiceEmail.body.get("表名");
+        LambdaQueryWrapper<TableServicePO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableServicePO::getId, tableId);
+        TableServicePO tableServicePO = this.getOne(queryWrapper);
+        tableServiceEmail.body.put("表名", tableServicePO.getTableName());
         // 发邮件
         List<TableRecipientsPO> email = tableRecipientsManage.query().eq("table_app_id", tableServiceEmail.appId).list();
         //第一步：查询邮件服务器设置
@@ -459,7 +464,7 @@ public class TableServiceImpl
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject("FiData数据管道运行结果通知");
+            mailSenderDTO.setSubject("FiData表服务运行结果通知");
             //邮件正文
             String body = "";
 
@@ -509,7 +514,7 @@ public class TableServiceImpl
                 params.put("msgtype", "textcard");
                 params.put("agentid", emailServerById.data.wechatAgentId.trim());
                 Map<String, Object> textcard = new HashMap<>();
-                textcard.put("title", "管道告警通知");
+                textcard.put("title", "表服务告警通知");
                 textcard.put("description", content);
                 textcard.put("url", tableServiceEmail.url);
                 textcard.put("btntxt", "更多");

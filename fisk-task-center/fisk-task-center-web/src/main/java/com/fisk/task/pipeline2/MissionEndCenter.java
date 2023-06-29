@@ -21,6 +21,7 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.entity.PipelLogPO;
+import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -392,13 +393,15 @@ public class MissionEndCenter {
                             tableServiceEmailDTO.msg = taskMap.get(DispatchLogEnum.taskend.getValue()).toString();
                             tableServiceEmailDTO.result = "【运行成功】";
                             tableServiceEmailDTO.pipelTraceId = pipelTraceId;
-                            List<PipelLogPO> pos = iPipelLog.query().eq("pipel_trace_id", pipelTraceId).list();
-
+                            List<PipelTaskLogPO> pos = iPipelTaskLog.query()
+                                    .eq("pipel_task_trace_id", kafkaReceive.pipelTaskTraceId)
+                                    .eq("type", DispatchLogEnum.taskstart.getValue())
+                                    .list();
                             if (CollectionUtils.isNotEmpty(pos)) {
-                                PipelLogPO pipelLogPo = pos.get(0);
+                                PipelTaskLogPO taskLogPO = pos.get(0);
                                 try {
                                     Date date = new Date();
-                                    Date parse = simpleDateFormat.parse(pipelLogPo.msg.substring(7, 26));
+                                    Date parse = simpleDateFormat.parse(taskLogPO.msg.substring(7, 26));
                                     Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
                                     Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
                                     tableServiceEmailDTO.duration = minutes + "m " + second + "s";
@@ -410,6 +413,8 @@ public class MissionEndCenter {
                                     + tableServiceEmailDTO.pipelTraceId + "】";
                             try {
                                 Map<String, String> hashMap = new HashMap<>();
+                                hashMap.put("表服务名称","");
+                                hashMap.put("表名", String.valueOf(Integer.valueOf(split[5])));
                                 hashMap.put("运行结果", tableServiceEmailDTO.result);
                                 hashMap.put("运行时长", tableServiceEmailDTO.duration);
                                 hashMap.put("运行详情", tableServiceEmailDTO.msg);

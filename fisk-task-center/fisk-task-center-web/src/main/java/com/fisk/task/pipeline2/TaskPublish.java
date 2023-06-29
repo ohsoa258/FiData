@@ -250,7 +250,7 @@ public class TaskPublish {
                         String dailyNifiMsg = JSON.toJSONString(kafkaReceiveDTO);
                         log.info("打印topic内容:" + dailyNifiMsg);
                         HashMap<Integer, Object> taskMap = new HashMap<>();
-                        taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
+                        taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getValue() + " - " + simpleDateFormat.format(new Date()));
                         redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceiveDTO.pipelTaskTraceId, MyTopicStateEnum.NOT_RUNNING.getName(), Long.parseLong(maxTime));
                         log.info("第二处调用保存task日志");
                         iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
