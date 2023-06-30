@@ -79,6 +79,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     OlapImpl olap;
     @Resource
     DataFactoryClient dataFactoryClient;
+    @Value("${consumer-server-enable}")
+    private Boolean consumerServerEnable;
     @Resource
     PipelineTableLogMapper pipelineTableLog;
     @Resource
@@ -180,7 +182,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                     tableAccessId = Integer.valueOf(topic[5]);
                     type = Integer.parseInt(topic[3]);
                     appId = Integer.valueOf(topic[4]);
-                    if (Objects.equals(type, OlapTableEnum.DATASERVICES.getValue())){
+                    if (consumerServerEnable && Objects.equals(type, OlapTableEnum.DATASERVICES.getValue())){
 
                         //错误日志修复
                         LambdaQueryWrapper<PipelTaskLogPO> queryWrapper = new LambdaQueryWrapper<>();
