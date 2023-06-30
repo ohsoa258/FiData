@@ -49,6 +49,7 @@ import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,6 +89,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     UserClient userClient;
     @Resource
     ITaskSetting taskSetting;
+
+    @Value("${pipeline-async-switch}")
+    private Boolean pipelineAsyncSwitch;
 
 
     @Override
@@ -460,8 +464,22 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 if (CollectionUtils.isEmpty(list)) {
                     continue;
                 }
-                NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO2 = list.get(0);
-                buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO2)));
+                if (pipelineAsyncSwitch) {
+                    for (NifiCustomWorkflowDetailPO workflowDetailPo : list) {
+                        if (Objects.equals(workflowDetailPo.componentType, ChannelDataEnum.DATALAKE_API_TASK)) {
+                            buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(workflowDetailPo)));
+                        }
+                    }
+                    if (Objects.equals(list.get(0).componentType, ChannelDataEnum.DATALAKE_API_TASK)){
+                        buildNifiCustomWorkFlows.remove(0);
+                    }
+                    NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO2 = list.get(0);
+                    buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO2)));
+                } else {
+                    NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO2 = list.get(0);
+                    buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(nifiCustomWorkflowDetailPO2)));
+                }
+
             }
 
         }
@@ -776,6 +794,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
     /**
      * 2023-05-24 lsj  该管道删除方法目前不再调用task模块处理tb_table_topic表的主题了
+     *
      * @param dto dto
      * @return
      */
@@ -794,7 +813,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 dtoList.forEach(e -> mapper.deleteByIdWithFill(NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(e)));
                 //再删除（逻辑删除）节点下面挂载的任务
                 UpdateWrapper<NifiCustomWorkflowDetailPO> updateWrapper = new UpdateWrapper<>();
-                updateWrapper.eq("pid",one.id).set("del_flag",0);
+                updateWrapper.eq("pid", one.id).set("del_flag", 0);
                 nifiCustomWorkflowDetailImpl.update(updateWrapper);
             }
         } catch (Exception e) {
@@ -1056,14 +1075,14 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     public ResultEnum runOnce(Long id) {
         NifiCustomWorkflowPO nifiCustomWorkflowPO = nifiCustomWorkflowImpl.getById(id);
         LambdaQueryWrapper<NifiCustomWorkflowDetailPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(NifiCustomWorkflowDetailPO::getWorkflowId,nifiCustomWorkflowPO.getWorkflowId())
-                .eq(NifiCustomWorkflowDetailPO::getComponentType,ChannelDataEnum.SCHEDULE_TASK.getName());
+        queryWrapper.eq(NifiCustomWorkflowDetailPO::getWorkflowId, nifiCustomWorkflowPO.getWorkflowId())
+                .eq(NifiCustomWorkflowDetailPO::getComponentType, ChannelDataEnum.SCHEDULE_TASK.getName());
         NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = this.getOne(queryWrapper);
         ResultEntity<Object> objectResultEntity = publishTaskClient.runOnce(nifiCustomWorkflowDetail.getId());
         if (objectResultEntity.getCode() != ResultEnum.SUCCESS.getCode() || objectResultEntity.getData() == null) {
             log.error("task模块调用runOnce失败，[{}]", objectResultEntity.getMsg());
             return ResultEnum.REMOTE_SERVICE_CALLFAILED;
-        }else {
+        } else {
             return ResultEnum.SUCCESS;
         }
     }
