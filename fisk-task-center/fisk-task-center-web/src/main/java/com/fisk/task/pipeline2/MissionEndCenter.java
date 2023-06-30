@@ -372,22 +372,7 @@ public class MissionEndCenter {
                         log.info("开始执行脚本");
                         log.info("consumerServerEnable参数，{}", consumerServerEnable);
                         if (consumerServerEnable && Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
-                            // 通过表id查询下半执行语句
                             log.info("确定是表服务");
-                            ResultEntity<BuildTableServiceDTO> buildTableService = consumeServeiceClient.getBuildTableServiceById(Long.parseLong(split[5]));
-                            log.info("请求afteraql返回结果:{}", JSON.toJSONString(buildTableService));
-                            if (Objects.nonNull(buildTableService)) {
-                                BuildTableServiceDTO tableService = buildTableService.data;
-                                if (tableService != null && tableService.syncModeDTO != null && !StringUtils.isEmpty(tableService.syncModeDTO.customScriptAfter)) {
-                                    String customScriptAfter = tableService.syncModeDTO.customScriptAfter;
-                                    Integer targetDbId = tableService.targetDbId;
-                                    log.info("开始执行脚本:{},{}", customScriptAfter, targetDbId);
-                                    execSql(customScriptAfter, targetDbId);
-                                }
-
-                            } else {
-                                log.info("没有aftersql或者查询错误");
-                            }
                             TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
                             tableServiceEmailDTO.appId = Integer.parseInt(split[4]);
                             tableServiceEmailDTO.msg = taskMap.get(DispatchLogEnum.taskend.getValue()).toString();
