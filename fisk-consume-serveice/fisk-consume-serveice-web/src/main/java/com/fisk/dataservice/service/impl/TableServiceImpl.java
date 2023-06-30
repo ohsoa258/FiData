@@ -210,11 +210,6 @@ public class TableServiceImpl
             if (appServiceConfigMapper.deleteByIdWithFill(appServiceConfigPOS.get(0)) <= 0) {
                 throw new FkException(ResultEnum.DELETE_ERROR);
             }
-            LambdaQueryWrapper<TableRecipientsPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(TableRecipientsPO::getTableAppId, appServiceConfigPOS.get(0).appId);
-            if (tableRecipientsManage.remove(queryWrapper)) {
-                throw new FkException(ResultEnum.DELETE_ERROR);
-            }
         }
         BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
         List<Long> ids = new ArrayList<>();
