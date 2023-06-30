@@ -361,11 +361,71 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
                     .append("\"")
                     .append(pkField.fieldEnName)
                     .append("\"")
-                    .append(" = SOURCE.")
-                    .append("\"")
-                    .append(pkField.fieldEnName)
-                    .append("\"")
-                    .append(" ");
+                    .append(" = ");
+
+            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
+                matchAgain.append(" CASE WHEN CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(" AS numeric) <=0 THEN TO_DATE(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END")
+                        .append(" ");
+            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
+                matchAgain.append(" CASE WHEN CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(" AS numeric) <=0 THEN CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END")
+                        .append(" ");
+            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
+                matchAgain.append(" CASE WHEN CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(TO_CHAR(TIMESTAMP 'epoch' + ")
+                        .append("CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') END")
+                        .append(" ");
+            } else if ("INT4".equalsIgnoreCase(pkField.fieldType) || "INT8".equalsIgnoreCase(pkField.fieldType) || "FLOAT4".equalsIgnoreCase(pkField.fieldType)) {
+                matchAgain.append("CAST(SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(" AS ")
+                        .append(pkField.fieldType)
+                        .append(") ");
+            } else {
+                matchAgain.append("SOURCE.")
+                        .append("\"")
+                        .append(pkField.fieldEnName)
+                        .append("\"")
+                        .append(" ");
+            }
         }
         //拼接分号，拼成最终的sql
         String finalSql = String.valueOf(matchAgain.append(";   "));
@@ -445,7 +505,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
 //        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //获取页面选择的逻辑类型：1普通模式    2高级模式
         Integer otherLogic = previewTableBusinessDTO.otherLogic;
-        if (otherLogic==0){
+        if (otherLogic == 0) {
             return "'请选择业务时间覆盖方式!'";
         }
 
@@ -458,7 +518,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         }
         //业务时间覆盖字段
         String businessTimeField = previewTableBusinessDTO.businessTimeField;
-        if (StringUtils.isEmpty(businessTimeField)){
+        if (StringUtils.isEmpty(businessTimeField)) {
             return "'请选择业务时间覆盖字段!'";
         }
         //>,>=,=,<=,<  (条件符号)
