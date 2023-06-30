@@ -641,6 +641,88 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                     .append(pkField.fieldEnName)
                     .append("]")
                     .append(" ");
+
+//            matchAgain.append("AND TARGET.")
+//                    .append("[")
+//                    .append(pkField.fieldEnName)
+//                    .append("]")
+//                    .append(" = ");
+//
+//            if (pkField.fieldType.equalsIgnoreCase("DATE")) {
+//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(")")
+//                        .append(" AS int) <=0 THEN SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(" ELSE convert(date,DATEADD(MINUTE,CAST(LEFT(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(",10) AS bigint)/60,'1970-1-1'),112) END ");
+//            } else if (pkField.fieldType.equalsIgnoreCase("TIME")) {
+//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(")")
+//                        .append(" AS int) <=0 THEN SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(" ELSE convert(time,DATEADD(MINUTE,CAST(LEFT(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(",10) AS bigint)/60,'08:00:00'),112) END ");
+//            } else if (pkField.fieldType.equalsIgnoreCase("TIMESTAMP")) {
+//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(")")
+//                        .append(" AS int) <=0 THEN ")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END ");
+//            } else if (pkField.fieldType.equalsIgnoreCase("DATETIME")) {
+//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(")")
+//                        .append(" AS int) <=0 THEN SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END ");
+//            } else if (pkField.fieldType.equalsIgnoreCase("INT") || pkField.fieldType.equalsIgnoreCase("BIGINT")) {
+//                suffix.append("CAST(CONVERT(FLOAT,SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("])")
+//                        .append(" AS ")
+//                        .append(pkField.fieldType)
+//                        .append(") ");
+//            } else {
+//                suffix.append("SOURCE.")
+//                        .append("[")
+//                        .append(pkField.fieldEnName)
+//                        .append("]")
+//                        .append(" ");
+//            }
         }
         //拼接分号，拼成最终的sql
         String finalSql = String.valueOf(matchAgain.append(";   "));
