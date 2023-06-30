@@ -72,8 +72,9 @@ public class InsertExcelData implements ISftpDataUploadListener {
             //获取大批次号
             String fidata_batch_code = kafkaReceive.fidata_batch_code;
             log.info("大批次号：{}", fidata_batch_code);
-            //获取修改前的源字段
-            List<String> sourceFieldNames = kafkaReceive.sourceFieldNames;
+
+//            //获取修改前的源字段
+//            List<String> sourceFieldNames = kafkaReceive.sourceFieldNames;
 
             String[] topicParameter = topic.split("\\.");
             //应用id
@@ -101,30 +102,30 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 //获取物理表字段集合
                 List<TableFieldsDTO> tableFieldsList = targetDsConfig.tableFieldsList;
 
-                //2023-06-28李世纪修改
-                //获取当前目标字段对应的源字段集合
-                //重新给目标字段排序  如果页面修改了源字段与目标字段的映射关系（或者说因为excel表结构的修改，而导致页面修改了映射关系）
-                //就需要我们在插入数据到stg表时，在不修改表字段顺序的前提下，将页面映射的字段关系作为数据插入的准则
-                //开始排序⬇
-                List<TableFieldsDTO> tableFieldsList1 = new ArrayList<>();
-                if (!sourceFieldNames.isEmpty()) {
-                    List<String> currentSourceFieldNames = new ArrayList<>();
-                    tableFieldsList.forEach(tableFieldsDTO -> {
-                        currentSourceFieldNames.add(tableFieldsDTO.sourceFieldName);
-                    });
-                    //重新给tableFieldsList排序
-                    Map<String, TableFieldsDTO> map = new HashMap<>();
-                    for (int i = 0; i < sourceFieldNames.size(); i++) {
-                        map.put(sourceFieldNames.get(i), tableFieldsList.get(i));
-                    }
-                    for (String currentSourceFieldName : currentSourceFieldNames) {
-                        tableFieldsList1.add(map.get(currentSourceFieldName));
-                    }
-                    //⬆排序完毕
-
-                } else {
-                    tableFieldsList1 = tableFieldsList;
-                }
+//                //2023-06-28李世纪修改
+//                //获取当前目标字段对应的源字段集合
+//                //重新给目标字段排序  如果页面修改了源字段与目标字段的映射关系（或者说因为excel表结构的修改，而导致页面修改了映射关系）
+//                //就需要我们在插入数据到stg表时，在不修改表字段顺序的前提下，将页面映射的字段关系作为数据插入的准则
+//                //开始排序⬇
+//                List<TableFieldsDTO> tableFieldsList1 = new ArrayList<>();
+//                if (!sourceFieldNames.isEmpty()) {
+//                    List<String> currentSourceFieldNames = new ArrayList<>();
+//                    tableFieldsList.forEach(tableFieldsDTO -> {
+//                        currentSourceFieldNames.add(tableFieldsDTO.sourceFieldName);
+//                    });
+//                    //重新给tableFieldsList排序
+//                    Map<String, TableFieldsDTO> map = new HashMap<>();
+//                    for (int i = 0; i < sourceFieldNames.size(); i++) {
+//                        map.put(sourceFieldNames.get(i), tableFieldsList.get(i));
+//                    }
+//                    for (String currentSourceFieldName : currentSourceFieldNames) {
+//                        tableFieldsList1.add(map.get(currentSourceFieldName));
+//                    }
+//                    //⬆排序完毕
+//
+//                } else {
+//                    tableFieldsList1 = tableFieldsList;
+//                }
 
                 //获取列总数
                 Integer columnCount = tableFieldsList.size();
@@ -160,7 +161,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     if (i > 0) {
                         sqlBuilder.append(", ");
                     }
-                    sqlBuilder.append("[" + tableFieldsList1.get(i).fieldName + "]");
+                    sqlBuilder.append("[" + tableFieldsList.get(i).fieldName + "]");
                 }
                 sqlBuilder.append(") VALUES ('")
                         .append(fidata_batch_code)
