@@ -607,6 +607,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     @Override
     public ResultEnum msg(String data, Acknowledgment ack) {
+        log.info("进入接入，建模的创建NIFI流程！！！");
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
