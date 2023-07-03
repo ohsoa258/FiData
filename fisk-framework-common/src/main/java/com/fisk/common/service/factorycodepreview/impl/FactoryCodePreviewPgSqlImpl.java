@@ -203,7 +203,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
         StringBuilder pkFieldNames = new StringBuilder();
-        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ??
+        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  <?>
         StringBuilder pkFieldNames1 = new StringBuilder();
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
@@ -280,7 +280,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         //                            .append("[")
         //                            .append(pkField.fieldEnName)
         //                            .append("] ");
-        //替换第二个占位符 ??
+        //替换第二个占位符 <?>
         for (PublishFieldDTO pkField : pkFields) {
 
             if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
@@ -360,55 +360,56 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
                     .append("\"")
                     .append(" = ");
 
-            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
-                matchAgain.append(" CASE WHEN CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN TO_DATE(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
-                        .append("CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END")
-                        .append(" ");
-            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
-                matchAgain.append(" CASE WHEN CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
-                        .append("CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END")
-                        .append(" ");
-            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
-                matchAgain.append(" CASE WHEN CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(")
-                        .append("SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("::bigint / 1000) AT TIME ZONE 'Asia/Shanghai' END")
-                        .append(" ");
-            } else if ("INT4".equalsIgnoreCase(pkField.fieldType) || "INT8".equalsIgnoreCase(pkField.fieldType) || "FLOAT4".equalsIgnoreCase(pkField.fieldType)) {
+//            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
+//                matchAgain.append(" CASE WHEN CAST(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append(" AS numeric) <=0 THEN TO_DATE(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
+//                        .append("CAST(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END")
+//                        .append(" ");
+//            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
+//                matchAgain.append(" CASE WHEN CAST(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append(" AS numeric) <=0 THEN CAST(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
+//                        .append("CAST(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END")
+//                        .append(" ");
+//            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
+//                matchAgain.append(" CASE WHEN CAST(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(")
+//                        .append("SOURCE.")
+//                        .append("\"")
+//                        .append(pkField.fieldEnName)
+//                        .append("\"")
+//                        .append("::bigint / 1000) AT TIME ZONE 'Asia/Shanghai' END")
+//                        .append(" ");
+//            }
+            if ("INT4".equalsIgnoreCase(pkField.fieldType) || "INT8".equalsIgnoreCase(pkField.fieldType) || "FLOAT4".equalsIgnoreCase(pkField.fieldType)) {
                 matchAgain.append("CAST(SOURCE.")
                         .append("\"")
                         .append(pkField.fieldEnName)
