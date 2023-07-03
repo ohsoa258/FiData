@@ -35,12 +35,12 @@ public class NifiSchedulingComponentImpl extends ServiceImpl<NifiSchedulingCompo
             ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
             processorRunStatusEntity.setRevision(processorEntity.getRevision());
             processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
-            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
-            NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(),processorRunStatusEntity);
+//            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
+//            NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(),processorRunStatusEntity);
             processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUN_ONCE);
             NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(),processorRunStatusEntity);
-            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUNNING);
-            NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(),processorRunStatusEntity);
+//            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUNNING);
+//            NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(),processorRunStatusEntity);
         } catch (ApiException e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             throw new FkException(ResultEnum.TASK_PUBLISH_ERROR);

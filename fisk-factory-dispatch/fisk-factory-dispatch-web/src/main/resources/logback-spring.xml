@@ -75,21 +75,6 @@
     </appender>
     -->
 
-    <!-- 根据application.yml文件中的spring.profile.active配置，设置日志输出 -->
-    <springProfile name="dev">
-        <!--
-        logger: 指定java包的输出级别
-        -->
-
-        <logger name="org" level="info">
-            <appender-ref ref="Console"/>
-        </logger>
-
-        <logger name="com.fisk">
-            <level value="DEBUG"/>
-            <appender-ref ref="Console"/>
-        </logger>
-
         <!--
         root: 设置输出级别，只有一个level属性
         root.level: 输出级别，默认是debug
@@ -97,9 +82,8 @@
             <appender-ref ref="Console"/>
         </root>
         -->
-    </springProfile>
 
-    <springProfile name="uat,test,pd,demo,yf,rj,sd,dev">
+    <springProfile name="dev,uat,test,pd,demo,yf,rj,sd,rjzhsh">
         <logger name="org" level="info">
             <appender-ref ref="Console"/>
             <appender-ref ref="FILE"/>
