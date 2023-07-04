@@ -323,6 +323,10 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             return ResultEnum.API_NOT_EXIST;
                         }
                     }
+                case OPENEDGE:
+                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }

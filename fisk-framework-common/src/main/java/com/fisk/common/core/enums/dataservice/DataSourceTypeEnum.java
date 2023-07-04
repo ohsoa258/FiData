@@ -35,7 +35,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     FTP(10,"FTP","",""),
 
-    SFTP(11,"SFTP","","");
+    SFTP(11,"SFTP","",""),
+
+    OPENEDGE(12,"OPENEDGE","com.ddtek.jdbc.openedge.OpenEdgeDriver","opt/nifi/nifi-current/jdbcdriver/openedge.jar");
 
     DataSourceTypeEnum(int value, String name, String driverName, String driverLocation) {
         this.driverName = driverName;
