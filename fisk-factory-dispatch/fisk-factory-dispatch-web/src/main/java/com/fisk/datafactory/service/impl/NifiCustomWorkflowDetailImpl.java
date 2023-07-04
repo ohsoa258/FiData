@@ -1079,7 +1079,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 .eq(NifiCustomWorkflowDetailPO::getComponentType, ChannelDataEnum.SCHEDULE_TASK.getName());
         NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail = this.getOne(queryWrapper);
         ResultEntity<Object> objectResultEntity = publishTaskClient.runOnce(nifiCustomWorkflowDetail.getId());
-        if (objectResultEntity.getCode() != ResultEnum.SUCCESS.getCode() || objectResultEntity.getData() == null) {
+        if (objectResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
             log.error("task模块调用runOnce失败，[{}]", objectResultEntity.getMsg());
             return ResultEnum.REMOTE_SERVICE_CALLFAILED;
         } else {
