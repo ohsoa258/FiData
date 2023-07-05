@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.datamanagement.mapper.MetadataEntityMapper">
 
     <select id="selectMetadataEntity" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
-        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and (description IS NULL or description != 'stg') and del_flag=1
+        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1
     </select>
 
     <!--查询抽取详情，和输入输出源-->
@@ -19,7 +19,12 @@
         </collection>
     </resultMap>
     <select id="getProcess" resultMap="processMap">
-        SELECT tb1.id,tb1.name tbname,tb1.description tbdes,lmr.from_entity_id fromid,lmr.to_entity_id toid,lmr.id lmid
+        SELECT tb1.id,
+               tb1.name tbname,
+               tb1.description tbdes,
+               lmr.from_entity_id fromid,
+               lmr.to_entity_id toid,
+               lmr.id lmid
         FROM tb_metadata_entity tb1
         LEFT JOIN tb_lineage_map_relation lmr on tb1.id = lmr.metadata_entity_id
         WHERE tb1.id=#{guid} AND tb1.del_flag=1

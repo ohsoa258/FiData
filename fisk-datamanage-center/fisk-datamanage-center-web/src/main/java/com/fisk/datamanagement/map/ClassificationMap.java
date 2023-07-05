@@ -1,7 +1,9 @@
 package com.fisk.datamanagement.map;
 
+import com.fisk.datamanagement.dto.businessclassification.FirstBusinessClassificationSummaryDto;
 import com.fisk.datamanagement.dto.classification.ClassificationDefContentDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationTreeDTO;
+import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
@@ -32,4 +34,11 @@ public interface ClassificationMap {
      */
     ClassificationTreeDTO poToDto(ClassificationDefContentDTO po);
 
+
+    /**
+     * po ==> FirstBusinessClassificationSummaryDto
+     * @param po
+     * @return
+     */
+    FirstBusinessClassificationSummaryDto poToFirstBusinessClassificationSummaryDto(BusinessClassificationPO po);
 }

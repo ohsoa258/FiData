@@ -187,7 +187,7 @@ public class MetadataEntityImpl
 
     public List<EntityTreeDTO> getMetadataEntityTree() {
         List<EntityTreeDTO> list = new ArrayList<>();
-
+        //获取所有实体
         List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntity(EntityTypeEnum.PROCESS.getValue());
         if (CollectionUtils.isEmpty(poList)) {
             return list;
@@ -201,61 +201,60 @@ public class MetadataEntityImpl
         HashMap<Long, Integer> idList = new HashMap<>();
         idList.put(0L, 0);
 
-        //获取实体关联业务分类数据
-        List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
-        if (!CollectionUtils.isEmpty(classificationMap)) {
-            //根据业务分类名称分组
-            Map<String, List<MetadataClassificationMapInfoDTO>> collect2 = classificationMap.stream().collect(Collectors.groupingBy(MetadataClassificationMapInfoDTO::getName));
-
-            for (String classification : collect2.keySet()) {
-                MetadataEntityPO po = new MetadataEntityPO();
-                po.id = GenerationRandomUtils.generateRandom6DigitNumber();
-                po.displayName = classification;
-                po.name = classification;
-                po.typeId = EntityTypeEnum.DB_NAME.getValue();
-
-                List<MetadataClassificationMapInfoDTO> mapInfoDTOS = collect2.get(classification);
-                if (CollectionUtils.isEmpty(mapInfoDTOS)) {
-                    continue;
-                }
-
-                List<Integer> collect1 = mapInfoDTOS.stream()
-                        .map(e -> e.metadataEntityId)
-                        .collect(Collectors.toList());
-
-                List<Long> collect4 = collect1.stream().map(Long::valueOf).collect(Collectors.toList());
-
-                List<MetadataEntityPO> collect3 = poList.stream()
-                        .filter(e -> collect4.contains(e.id))
-                        .collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(collect3)) {
-                    continue;
-                }
-
-                int parentId = collect3.get(0).parentId;
-
-                for (MetadataEntityPO table : collect3) {
-                    Integer integer = idList.get(table.id);
-                    if (integer != null && integer != 0) {
-                        parentId = integer;
-                        MetadataEntityPO po1 = new MetadataEntityPO();
-                        po1.typeId = table.typeId;
-                        po1.id = table.id;
-                        po1.name = table.name;
-                        po1.displayName = table.displayName;
-                        po1.qualifiedName = table.qualifiedName;
-                        po1.owner = table.owner;
-                        po1.parentId = (int) po.id;
-                        poList.add(po1);
-                        continue;
-                    }
-                    table.parentId = (int) po.id;
-                    idList.put(table.id, parentId);
-                }
-                po.parentId = parentId;
-                poList.add(po);
-            }
-        }
+//获取实体关联业务分类数据
+//        List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
+//        if (!CollectionUtils.isEmpty(classificationMap)) {
+//            //根据业务分类名称分组
+//            Map<String, List<MetadataClassificationMapInfoDTO>> collect2 = classificationMap.stream().collect(Collectors.groupingBy(MetadataClassificationMapInfoDTO::getName));
+//            //循环业务分类
+//            for (String classification : collect2.keySet()) {
+//                MetadataEntityPO po = new MetadataEntityPO();
+//                po.id = GenerationRandomUtils.generateRandom6DigitNumber();
+//                po.displayName = classification;
+//                po.name = classification;
+//                po.typeId = EntityTypeEnum.DB_NAME.getValue();
+//
+//                List<MetadataClassificationMapInfoDTO> mapInfoDTOS = collect2.get(classification);
+//                if (CollectionUtils.isEmpty(mapInfoDTOS)) {
+//                    continue;
+//                }
+//                //获取业务分类下的实体ID
+//                List<Integer> collect1 = mapInfoDTOS.stream()
+//                        .map(e -> e.metadataEntityId)
+//                        .collect(Collectors.toList());
+//                List<Long> collect4 = collect1.stream().map(Long::valueOf).collect(Collectors.toList());
+//                //获取业务分类下的元数据
+//                List<MetadataEntityPO> collect3 = poList.stream()
+//                        .filter(e -> collect4.contains(e.id))
+//                        .collect(Collectors.toList());
+//                if (CollectionUtils.isEmpty(collect3)) {
+//                    continue;
+//                }
+//
+//                int parentId = collect3.get(0).parentId;
+//
+//                for (MetadataEntityPO table : collect3) {
+//                    Integer integer = idList.get(table.id);
+//                    if (integer != null && integer != 0) {
+//                        parentId = integer;
+//                        MetadataEntityPO po1 = new MetadataEntityPO();
+//                        po1.typeId = table.typeId;
+//                        po1.id = table.id;
+//                        po1.name = table.name;
+//                        po1.displayName = table.displayName;
+//                        po1.qualifiedName = table.qualifiedName;
+//                        po1.owner = table.owner;
+//                        po1.parentId = (int) po.id;
+//                        poList.add(po1);
+//                        continue;
+//                    }
+//                    table.parentId = (int) po.id;
+//                    idList.put(table.id, parentId);
+//                }
+//                po.parentId = parentId;
+//                poList.add(po);
+//            }
+//        }
 
         for (MetadataEntityPO item : parentList) {
             EntityTreeDTO dto = new EntityTreeDTO();
@@ -971,7 +970,7 @@ public class MetadataEntityImpl
 
         List<LineageMapRelationPO> poList = new ArrayList<>();
         poList.addAll(list);
-
+        //循环获取
         for (LineageMapRelationPO po : list) {
             boolean flat = true;
             List<Integer> ids = new ArrayList<>();
@@ -1101,8 +1100,8 @@ public class MetadataEntityImpl
         }
         //搜索术语
         else if (!StringUtils.isEmpty(dto.termName)) {
-            String[] split = dto.termName.split("@");
-            GlossaryPO infoByName = glossary.getInfoByName(split[0]);
+            //String[] split = dto.termName.split("@");
+            GlossaryPO infoByName = glossary.getInfoByName(dto.termName);
             // metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
             metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id);
         }

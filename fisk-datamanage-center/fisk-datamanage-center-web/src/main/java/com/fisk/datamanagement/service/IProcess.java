@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.process.AddProcessDTO;
+import com.fisk.datamanagement.dto.process.EditProcessDto;
 import com.fisk.datamanagement.dto.process.ProcessDTO;
 
 /**
@@ -29,7 +30,7 @@ public interface IProcess {
      * @param dto
      * @return
      */
-    ResultEnum updateProcess(ProcessDTO dto);
+    ResultEnum updateProcess(EditProcessDto dto);
 
     /**
      * 删除process

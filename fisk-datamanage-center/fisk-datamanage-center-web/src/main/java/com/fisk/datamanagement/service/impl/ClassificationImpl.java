@@ -12,6 +12,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
+import com.fisk.datamanagement.dto.businessclassification.FirstBusinessClassificationSummaryDto;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.entity.*;
@@ -30,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -308,15 +306,17 @@ public class ClassificationImpl
         if (CollectionUtils.isEmpty(list)) {
             return ResultEnum.SUCCESS;
         }
-        List<Integer> collect = list.stream().map(e -> e.getAttributeTypeId()).collect(Collectors.toList());
 
+        HashMap attributes= dto.getClassification().getAttributes();
+        //
         List<MetadataEntityClassificationAttributePO> dataList = new ArrayList<>();
-        for (Integer id : collect) {
+        for (ClassificationPO item : list) {
             MetadataEntityClassificationAttributePO po = new MetadataEntityClassificationAttributePO();
-            po.attributeTypeId = id;
+            //通过key值 ，获取属性配置信息
+            po.attributeId = (int)item.getId();
             po.metadataEntityId = Integer.parseInt(dto.entityGuids.get(0));
             po.classificationId = (int) bcPo.id;
-
+            po.value=attributes.get(item.getAttributeName()).toString();
             dataList.add(po);
         }
 
@@ -377,7 +377,7 @@ public class ClassificationImpl
         //是否删除
         if (dto.delete) {
            deleteClassification(dto.name);
-      }
+        }
         ClassificationDefsDTO data = new ClassificationDefsDTO();
         List<ClassificationDefContentDTO> list = new ArrayList<>();
         //同步主数据业务分类
@@ -587,9 +587,66 @@ public class ClassificationImpl
         return po;
     }
 
+    /**
+     * 获取业务分类的汇总数据
+     * @return
+     */
+    @Override
+    public  List<FirstBusinessClassificationSummaryDto> getBusinessClassificationSummary(){
+        //获取所有业务分类
+        List<BusinessClassificationPO> allClassificationPOList=this.query().list();
+        //获取业务分类下元数据
+        QueryWrapper<MetadataClassificationMapPO> queryWrapper =new QueryWrapper<>();
+        List<MetadataClassificationMapPO> allMetadataClassificationMapPOList= metaDataClassificationMapMapper.selectList(queryWrapper);
+        //获取第一级业务分类
+        List<BusinessClassificationPO> firstClassificationList=allClassificationPOList.stream().filter(e->e.getPid()==null).collect(Collectors.toList());
+        //过滤掉第一级的业务分类
+        List<BusinessClassificationPO> noFirstClassificationList=allClassificationPOList.stream().filter(e->e.getPid()!=null).collect(Collectors.toList());
+        //返回结果集
+        List<FirstBusinessClassificationSummaryDto> firstBusinessClassificationSummaryDtoList=new ArrayList<>();
+        for (BusinessClassificationPO firstClassification:  firstClassificationList){
 
+            FirstBusinessClassificationSummaryDto firstBusinessClassificationSummaryDto= ClassificationMap.INSTANCES.poToFirstBusinessClassificationSummaryDto(firstClassification);
+           /*************************************汇总一级分类下的业务系统（二级分类）*******************************************************/
+            List<BusinessClassificationPO>  twoClassificationList= noFirstClassificationList.stream()
+                    .filter(e->e.getPid()==firstClassification.getId())
+                    .collect(Collectors.toList());
+            firstBusinessClassificationSummaryDto.setSystemBusinessSummary(twoClassificationList.size());
 
+           /***************************************递归获取一级分类下所有业务分类id的ID***************************************************/
+            List<Long> businessClassificationChildrenIdList= getBusinessClassificationChildrenIdList(firstClassification.getId()
+                    ,noFirstClassificationList);
+            /***************************************根据业务分类id获取下的元数据***************************************************/
+            if (businessClassificationChildrenIdList.size()>0){
+                firstBusinessClassificationSummaryDto.setMetaEntitySummary(
+                        allMetadataClassificationMapPOList.stream()
+                                .filter(e-> businessClassificationChildrenIdList.contains(Long.valueOf(e.getBusinessClassificationId())))
+                                .count()
+                );
+            }
+            firstBusinessClassificationSummaryDtoList.add(firstBusinessClassificationSummaryDto);
+        }
+        return firstBusinessClassificationSummaryDtoList;
 
+    }
 
+    /**
+     * 获取业务分类下所有子集的ID
+     * @param pid
+     * @param allClassificationPOList
+     * @return
+     */
+    public List<Long> getBusinessClassificationChildrenIdList(long pid ,List<BusinessClassificationPO> allClassificationPOList){
+        List<Long> idList=new ArrayList<>();
+        log.info("pid："+pid);
+        List<BusinessClassificationPO> businessClassificationPOS =allClassificationPOList.stream().filter(e->e.getPid()==pid).collect(Collectors.toList());
+        if(businessClassificationPOS.stream().count()>0){
+            idList.addAll(businessClassificationPOS.stream().map(e->e.getId()).collect(Collectors.toList()));
+            businessClassificationPOS.forEach(e->{
+                idList.addAll(getBusinessClassificationChildrenIdList(e.getId(),allClassificationPOList));
+            });
+        }
+        return  idList;
+    }
 
 }

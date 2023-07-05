@@ -2,11 +2,14 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
+import com.fisk.datamanagement.dto.glossary.FirstGlossaryCategorySummaryDto;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
  */
-public interface ICategory {
+public interface IGlossaryCategory {
 
     /**
      * 添加类别
@@ -35,5 +38,11 @@ public interface ICategory {
      * @return
      */
     ResultEnum updateCategory(CategoryDTO dto);
+
+    /**
+     * 获取术语库下的汇总数据
+     * @return
+     */
+    List<FirstGlossaryCategorySummaryDto> getGlossaryCategorySummary();
 
 }

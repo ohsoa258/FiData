@@ -6,12 +6,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
+ * 属性分类
  * @author JianWenYang
  */
 @Data
 @TableName("tb_category")
 @EqualsAndHashCode(callSuper = true)
-public class CategoryPO extends BasePO {
+public class LabelCategoryPO extends BasePO {
     /**
      * 类目code
      */

@@ -59,7 +59,7 @@ public class MetadataEntityClassificationAttributeMapImpl
             if (!CollectionUtils.isEmpty(collect)) {
                 Map map1 = new HashMap();
                 for (MetadataEntityClassificationAttributeMapDTO data : collect) {
-                    map1.put(data.name, data.value == null ? "" : data.value);
+                    map1.put(data.attributeName, data.value == null ? "" : data.value);
                 }
                 map.put("attributes", map1);
             }

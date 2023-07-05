@@ -2,21 +2,27 @@ package com.fisk.datamanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.category.ChildrenCategoryDetailsDTO;
+import com.fisk.datamanagement.dto.glossary.FirstGlossaryCategorySummaryDto;
 import com.fisk.datamanagement.dto.glossary.GlossaryAnchorDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryCategoryPathDto;
 import com.fisk.datamanagement.dto.term.TermDetailsDTO;
-import com.fisk.datamanagement.entity.CategoryPO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
+import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
+import com.fisk.datamanagement.map.GlossaryCategoryMap;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
-import com.fisk.datamanagement.mapper.LabelCategoryMapper;
-import com.fisk.datamanagement.service.ICategory;
+import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
+import com.fisk.datamanagement.service.IGlossaryCategory;
 import lombok.extern.slf4j.Slf4j;
+import org.jfree.util.Log;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -27,13 +33,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * 术语分类
  * @author JianWenYang
  */
 @Service
 @Slf4j
-public class CategoryImpl
-        extends ServiceImpl<LabelCategoryMapper, CategoryPO>
-        implements ICategory {
+public class GlossaryCategoryImpl
+        extends ServiceImpl<GlossaryLibraryMapper, GlossaryLibraryPO>
+        implements IGlossaryCategory {
 
     @Resource
     GlossaryLibraryMapper glossaryLibraryMapper;
@@ -41,6 +48,12 @@ public class CategoryImpl
     UserHelper userHelper;
     @Resource
     GlossaryMapper glossaryMapper;
+    @Resource
+    GlossaryImpl glossary;
+    @Resource
+    MetadataEntityImpl metadataEntity;
+    @Resource
+    MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
 
     @Override
     public ResultEnum addCategory(CategoryDTO dto)
@@ -238,8 +251,84 @@ public class CategoryImpl
         }else{
             throw new FkException(ResultEnum.ERROR, "术语分类修改失败");
         }
+
+
+    }
+
+    /**
+     * 模糊查询术语分类
+     * @param keyword
+     * @return
+     */
+    public List<GlossaryLibraryPO> queryLikeGlossaryLibrary(String keyword){
+        return this.query().like(org.apache.commons.lang.StringUtils.isNotEmpty(keyword),"name", keyword).list();
     }
 
 
+    /**
+     * 获取术语分类的路径
+     * @return
+     */
+    public List<GlossaryCategoryPathDto> getGlossaryCategoryPath(){
+        return  glossaryLibraryMapper.getGlossaryCategoryPath();
+    }
 
+    /**
+     * 获取术语分类汇总
+     */
+    @Override
+    public List<FirstGlossaryCategorySummaryDto> getGlossaryCategorySummary(){
+        //获取所有术语库
+        List<GlossaryLibraryPO> allGlossaryCategoryPO= this.query().list();
+        //获取所有术语
+        List<GlossaryPO> allGlossaryPOList=glossary.query().list();
+        //获取第一级术语分类,第一级术语分类为术语库，且术语不能挂在术语库上。
+        List<GlossaryLibraryPO> firstPOList= allGlossaryCategoryPO.stream().filter(e->e.getPid()==null).collect(Collectors.toList());
+        //定义返回结果集
+        List<FirstGlossaryCategorySummaryDto> firstGlossaryCategorySummaryDtoList=new ArrayList<>();
+        //循环设置汇总数据
+        for (GlossaryLibraryPO firstPO:firstPOList){
+            FirstGlossaryCategorySummaryDto firstGlossaryCategorySummaryDto =GlossaryCategoryMap.INSTANCES.poToFirstGlossaryCategorySummaryDtoList(firstPO);
+            //递归获取术语库下的分类id
+            List<Long> childrenGlossaryCategoryIdList= getChildrenGlossaryCategoryIdList(firstPO.getId()
+                    ,allGlossaryCategoryPO.stream().filter(e->e.getPid()!=null).collect(Collectors.toList()));
+            /******************************获取术语库下所有的术语汇总数据********************************/
+            //根据术语分类Id获取分类下术语
+            List<Long> glossaryIdList= allGlossaryPOList.stream()
+                    .filter(e-> childrenGlossaryCategoryIdList.contains(Long.valueOf(e.getGlossaryLibraryId())))
+                    .map(BasePO::getId).collect(Collectors.toList());
+            //汇总术语库下所有的术语
+            firstGlossaryCategorySummaryDto.setGlossarySummary(glossaryIdList.stream().count());
+            /******************************获取术语库下所有术语关联的元数据汇总数据********************************/
+            List<MetaDataGlossaryMapPO> metaEntityIdlist = new ArrayList<>();
+            if(glossaryIdList.stream().count()>0){
+                QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
+                queryWrapper.select("metadata_entity_id").lambda().in(MetaDataGlossaryMapPO::getGlossaryId, glossaryIdList);
+                metaEntityIdlist= metaDataGlossaryMapMapper.selectList(queryWrapper);
+            }
+            firstGlossaryCategorySummaryDto.setMetaDataSummary(metaEntityIdlist.stream().count());
+            /****************添加到集合****************/
+            firstGlossaryCategorySummaryDtoList.add(firstGlossaryCategorySummaryDto);
+        }
+        return firstGlossaryCategorySummaryDtoList;
+    }
+
+    /**
+     * 根据术语分类ID获取所有子集的ID
+     * @param pid
+     * @param allGlossaryCategoryPO
+     * @return
+     */
+    public List<Long> getChildrenGlossaryCategoryIdList(long pid ,List<GlossaryLibraryPO> allGlossaryCategoryPO){
+        List<Long> idList=new ArrayList<>();
+        log.info("pid："+pid);
+        List<GlossaryLibraryPO> libraryPOS =allGlossaryCategoryPO.stream().filter(e->e.getPid()==pid).collect(Collectors.toList());
+        if(libraryPOS.stream().count()>0){
+            idList.addAll(libraryPOS.stream().map(e->e.getId()).collect(Collectors.toList()));
+            libraryPOS.forEach(e->{
+                idList.addAll(getChildrenGlossaryCategoryIdList(e.getId(),allGlossaryCategoryPO));
+            });
+        }
+        return  idList;
+    }
 }

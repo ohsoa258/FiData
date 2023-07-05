@@ -15,4 +15,7 @@ public class LabelInfoDTO {
     @ApiModelProperty(value = "标签中文名")
     public String labelCnName;
 
+    @ApiModelProperty(value = "标签分类id")
+    public String categoryId;
+
 }

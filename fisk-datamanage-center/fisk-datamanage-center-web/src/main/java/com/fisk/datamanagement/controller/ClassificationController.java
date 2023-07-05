@@ -111,4 +111,10 @@ public class ClassificationController {
     public ResultEntity<Object> delClassificationAttribute(@RequestParam(value = "guid", defaultValue = "0") Integer guid) {
         return ResultEntityBuild.build(service.delClassificationAttribute(guid));
     }
+
+    @ApiOperation("查询业务分类下的汇总数据")
+    @GetMapping("/getBusinessClassificationSummary")
+    public ResultEntity<Object> getBusinessClassificationSummary() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessClassificationSummary());
+    }
 }

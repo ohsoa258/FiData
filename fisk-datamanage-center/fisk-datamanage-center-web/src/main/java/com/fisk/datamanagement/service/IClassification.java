@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
+import com.fisk.datamanagement.dto.businessclassification.FirstBusinessClassificationSummaryDto;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.vo.AttributeTypeVO;
 
@@ -108,4 +109,11 @@ public interface IClassification {
      * @return
      */
     ResultEnum updateClassificationAttribute(UpdateClassificationAttributeDTO dto);
+
+
+    /**
+     * 获取业务分类下的汇总数据
+     * @return
+     */
+    List<FirstBusinessClassificationSummaryDto> getBusinessClassificationSummary();
 }

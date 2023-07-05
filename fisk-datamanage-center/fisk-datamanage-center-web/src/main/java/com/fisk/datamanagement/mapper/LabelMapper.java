@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.mapper;
 
+import com.alibaba.druid.sql.visitor.functions.If;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.dto.label.LabelDataDTO;
@@ -29,7 +30,14 @@ public interface LabelMapper extends FKBaseMapper<LabelPO> {
      *
      * @return
      */
-    @Select("select id,label_cn_name from tb_label where del_flag = 1  order by create_time desc ")
-    List<LabelInfoDTO> getLabelList();
+    @Select("<script>" +
+            "select id,label_cn_name,category_id from tb_label where " +
+            "del_flag = 1" +
+            " <if test='keyword != null and keyword.trim().length() > 0'>" +
+            " and label_cn_name like concat('%', #{keyword}, '%')" +
+            "</if>" +
+            " order by create_time desc "
+            + " </script>")
+    List<LabelInfoDTO> getLabelList(@Param("keyword") String keyword);
 
 }

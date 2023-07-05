@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
-import com.fisk.datamanagement.entity.CategoryPO;
+import com.fisk.datamanagement.entity.LabelCategoryPO;
 import com.fisk.datamanagement.entity.LabelPO;
 import com.fisk.datamanagement.entity.MetadataLabelMapPO;
 import com.fisk.datamanagement.mapper.MetadataLabelMapper;
@@ -29,7 +29,7 @@ public class MetadataLabelMapImpl
     @Resource
     MetadataLabelMapper mapper;
     @Resource
-    CategoryImpl category;
+    LabelCategoryImpl category;
     @Resource
     LabelImpl label;
 
@@ -97,7 +97,7 @@ public class MetadataLabelMapImpl
     }
 
     public List<Integer> getEntityLabelIdList(String labelName, Integer offset, Integer pageSize) {
-        List<CategoryPO> poList = category.query().eq("category_cn_name", labelName).list();
+        List<LabelCategoryPO> poList = category.query().eq("category_cn_name", labelName).list();
         if (CollectionUtils.isEmpty(poList)) {
             return new ArrayList<>();
         }
@@ -116,7 +116,7 @@ public class MetadataLabelMapImpl
 
     }
     public List<Integer> getEntityLabelIdList(String labelName) {
-        List<CategoryPO> poList = category.query().eq("category_cn_name", labelName).list();
+        List<LabelCategoryPO> poList = category.query().eq("category_cn_name", labelName).list();
         if (CollectionUtils.isEmpty(poList)) {
             return new ArrayList<>();
         }

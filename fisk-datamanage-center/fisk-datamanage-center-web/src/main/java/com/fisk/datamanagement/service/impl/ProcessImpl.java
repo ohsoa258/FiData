@@ -3,7 +3,10 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityDTO;
@@ -12,16 +15,22 @@ import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.process.*;
+import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
+import com.fisk.datamanagement.entity.MetadataLineageMapPO;
 import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.enums.ProcessTypeEnum;
+import com.fisk.datamanagement.mapper.LineageMapRelationMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
+import com.fisk.datamanagement.mapper.MetadataLineageMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IProcess;
 import com.fisk.datamanagement.synchronization.pushmetadata.impl.MetaDataImpl;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Convert;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -50,9 +59,14 @@ public class ProcessImpl implements IProcess {
     @Resource
     MetadataEntityMapper metadataEntityMapper;
 
+    @Resource
+    LineageMapRelationImpl lineageMapRelation;
 
     @Resource
     EntityImpl entityImpl;
+
+    @Resource
+    MetadataEntityImpl metadataEntity;
 
     @Value("${atlas.entity}")
     private String entity;
@@ -140,123 +154,56 @@ public class ProcessImpl implements IProcess {
     @Override
     public ResultEnum addProcess(AddProcessDTO dto)
     {
-        //获取实体详情
-        ResultDataDTO<String> getDetail = atlasClient.get(entityByGuid + "/" + dto.outGuid);
-        if (getDetail.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            return ResultEnum.DATA_NOTEXISTS;
+        //创建中间流程节点
+        MetadataEntityPO metadataEntityPO=new MetadataEntityPO();
+        metadataEntityPO.setName(dto.processName);
+        metadataEntityPO.setDescription(dto.description);
+        metadataEntityPO.setQualifiedName(dto.description);
+        metadataEntityPO.setTypeId(7);
+        metadataEntityMapper.insert(metadataEntityPO);
+        //创建流程连线
+        List<LineageMapRelationPO> lineageMapRelationPOS=new ArrayList<>();
+        for(EntityIdAndTypeDTO entityIdAndTypeDTO: dto.inputList){
+            LineageMapRelationPO lineageMapRelationPO =new LineageMapRelationPO();
+            lineageMapRelationPO.setMetadataEntityId((int)metadataEntityPO.id);
+            lineageMapRelationPO.setFromEntityId(Integer.parseInt(entityIdAndTypeDTO.guid));
+            lineageMapRelationPO.setToEntityId(Integer.parseInt(dto.outGuid));
+            lineageMapRelationPO.setProcessType(ProcessTypeEnum.SQL_PROCESS.getValue());
+            lineageMapRelationPOS.add(lineageMapRelationPO);
         }
-        //解析数据
-        JSONObject jsonObj = JSON.parseObject(getDetail.data);
-        JSONObject entityObject = JSON.parseObject(jsonObj.getString("entity"));
-        JSONObject relationShip = JSON.parseObject(entityObject.getString("relationshipAttributes"));
-        JSONArray relationShipAttribute = JSON.parseArray(relationShip.getString("outputFromProcesses"));
-        //条数为0,则添加process
-        //if (relationShipAttribute.size() == 0) {
-        return process(dto);
-        //}
-        //return ResultEnum.SUCCESS;
+
+        lineageMapRelation.saveBatch(lineageMapRelationPOS);
+        return ResultEnum.SUCCESS;
     }
 
-    public ResultEnum process(AddProcessDTO dto)
-    {
-        //组装参数
-        EntityDTO entityDTO=new EntityDTO();
-        EntityTypeDTO entityTypeDTO=new EntityTypeDTO();
-        entityTypeDTO.typeName= EntityTypeEnum.PROCESS.getName();
-        EntityAttributesDTO attributesDTO=new EntityAttributesDTO();
-        attributesDTO.comment=dto.processName;
-        attributesDTO.description=dto.description;
-        attributesDTO.owner = "root";
-        attributesDTO.qualifiedName = UUID.randomUUID().toString();
-        attributesDTO.contact_info = dto.contactInfo;
-        attributesDTO.name=dto.processName;
-        //输入参数
-        attributesDTO.inputs=dto.inputList;
-        //输出参数
-        List<EntityIdAndTypeDTO> dtoList=new ArrayList<>();
-        EntityIdAndTypeDTO out=new EntityIdAndTypeDTO();
-        out.typeName=dto.entityTypeEnum.getName().toLowerCase();
-        out.guid=dto.outGuid;
-        dtoList.add(out);
-        attributesDTO.outputs=dtoList;
-        entityTypeDTO.attributes=attributesDTO;
-        //检验输入和输出参数是否有值
-        if (CollectionUtils.isEmpty(attributesDTO.inputs) || CollectionUtils.isEmpty(attributesDTO.outputs)) {
-            return ResultEnum.PARAMTER_ERROR;
-        }
-        entityDTO.entity=entityTypeDTO;
-        String jsonParameter= JSONArray.toJSON(entityDTO).toString();
-        //调用atlas添加血缘
-        ResultDataDTO<String> addResult = atlasClient.post(entity, jsonParameter);
-        return addResult.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
-    }
+
 
     @Override
-    public ResultEnum updateProcess(ProcessDTO dto)
+    public ResultEnum updateProcess(EditProcessDto dto)
     {
-        //判断input输入是否添加
-        List<String> inputGuid=dto.entity.attributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
-        List<String> relationInputGuid=dto.entity.relationshipAttributes.inputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
-        //获取差集
-        inputGuid.removeAll(relationInputGuid);
-        if (!CollectionUtils.isEmpty(inputGuid)) {
-            dto = editProcessParameter(dto, 1, inputGuid);
-        }
-        //判断input输入是否添加
-        List<String> outGuid=dto.entity.attributes.outputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
-        List<String> relationOutGuid=dto.entity.relationshipAttributes.outputs.stream().map(e->e.getGuid()).collect(Collectors.toList());
-        //获取差集
-        outGuid.removeAll(relationOutGuid);
-        if (!CollectionUtils.isEmpty(outGuid)) {
-            dto = editProcessParameter(dto, 2, outGuid);
-        }
-        //修改process
-        String jsonParameter= JSONArray.toJSON(dto).toString();
-        //调用atlas修改实例
-        ResultDataDTO<String> result = atlasClient.post(entity, jsonParameter);
-        return result.code==AtlasResultEnum.REQUEST_SUCCESS?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
-    }
+        LambdaUpdateWrapper<MetadataEntityPO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(MetadataEntityPO::getId,dto.guid)
+                .set(MetadataEntityPO::getName,dto.getProcessName())
+                .set(MetadataEntityPO::getDisplayName,dto.getDescription());
+        metadataEntity.update(updateWrapper);
 
-    public ProcessDTO editProcessParameter(ProcessDTO dto,int parameterType,List<String> guidList){
-        for (String guid : guidList) {
-            //获取新增input限定名称信息
-            Optional<ProcessAttributesPutDTO> first = null;
-            if (parameterType == 1) {
-                first = dto.entity.attributes.inputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
-            } else {
-                first = dto.entity.attributes.outputs.stream().filter(e -> e.guid.equals(guid)).findFirst();
-            }
-            if (!first.isPresent()) {
-                continue;
-            }
-            //添加血缘关系连线
-            String relationShipGuid = metaData.addRelationShip(dto.entity.guid,
-                    dto.entity.attributes.qualifiedName,
-                    guid,
-                    first.get().uniqueAttributes.qualifiedName);
-            if (relationShipGuid == "") {
-                continue;
-            }
-            ProcessRelationshipAttributesPutDTO inputDTO=new ProcessRelationshipAttributesPutDTO();
-            inputDTO.guid=guid;
-            inputDTO.typeName=first.get().typeName;
-            inputDTO.entityStatus=EntityTypeEnum.ACTIVE.getName();
-            //表、字段名称
-            inputDTO.displayText=first.get().tableName;
-            inputDTO.relationshipType=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
-            //生成的relationShip
-            inputDTO.relationshipGuid=relationShipGuid;
-            inputDTO.relationshipStatus=EntityTypeEnum.ACTIVE.getName();
-            ProcessRelationShipAttributesTypeNameDTO attributesDTO=new ProcessRelationShipAttributesTypeNameDTO();
-            attributesDTO.typeName=EntityTypeEnum.DATASET_PROCESS_INPUTS.getName();
-            inputDTO.relationshipAttributes = attributesDTO;
-            if (parameterType == 1) {
-                dto.entity.relationshipAttributes.inputs.add(inputDTO);
-            } else {
-                dto.entity.relationshipAttributes.outputs.add(inputDTO);
-            }
+        LambdaQueryWrapper<LineageMapRelationPO> deleteWrapper=new LambdaQueryWrapper<>();
+        deleteWrapper.eq(LineageMapRelationPO::getMetadataEntityId,dto.guid);
+        lineageMapRelation.remove(deleteWrapper);
+
+        List<LineageMapRelationPO> lineageMapRelationPOS=new ArrayList<>();
+        for(String inputId: dto.inputList){
+            LineageMapRelationPO lineageMapRelationPO =new LineageMapRelationPO();
+            lineageMapRelationPO.setMetadataEntityId(Integer.parseInt(dto.getGuid()));
+            lineageMapRelationPO.setFromEntityId(Integer.parseInt(inputId));
+            lineageMapRelationPO.setToEntityId(Integer.parseInt(dto.outGuid));
+            lineageMapRelationPO.setProcessType(ProcessTypeEnum.SQL_PROCESS.getValue());
+            lineageMapRelationPOS.add(lineageMapRelationPO);
         }
-        return dto;
+
+        lineageMapRelation.saveBatch(lineageMapRelationPOS);
+
+        return ResultEnum.SUCCESS;
     }
 
     @Override

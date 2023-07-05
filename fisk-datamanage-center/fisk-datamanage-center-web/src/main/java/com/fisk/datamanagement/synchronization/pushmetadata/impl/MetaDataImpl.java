@@ -154,14 +154,16 @@ public class MetaDataImpl implements IMetaData {
                 continue;
             }
             for (MetaDataDbAttributeDTO db : instance.dbList) {
+                //判断是否已同步库元数据，有则修改无则新增
                 String dbGuid = metaDataDb(db, instanceGuid);
                 if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
                     continue;
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
                     String tableName = table.name;
+                    //元数据对参观：数据表 新增/修改 表新增/修改, 并且添加业务分类和表元数据的关联
                     String tableGuid = metaDataTable(table, dbGuid, db.name);
-                    //新增stg表
+                    //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
                     String stgTableGuid = null;
                     if (!stg.equals(table.getComment())) {
                         stgTableGuid = metaDataStgTable(table, dbGuid);
@@ -171,6 +173,7 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
+                        //新增表字段
                         metaDataField(field, tableGuid,("").equals(currUserName)||currUserName==null?instance.currUserName:currUserName);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
@@ -178,7 +181,7 @@ public class MetaDataImpl implements IMetaData {
                             metaDataStgField(field, stgTableGuid);
                         }
                     }
-                    //删除
+                    //删除历史元数据
                     deleteMetaData(qualifiedNames, tableGuid);
                     //同步血缘
                     synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
@@ -221,7 +224,7 @@ public class MetaDataImpl implements IMetaData {
     }
 
     /**
-     * 元数据对参观：数据表 新增/修改 表新增/修改
+     * 元数据对参观：数据表 新增/修改 表新增/修改 如果不是STG表则添加元数据和业务分类的关联
      *
      * @param dto
      * @param parentEntityId
@@ -237,7 +240,7 @@ public class MetaDataImpl implements IMetaData {
         }
 
         if (!"stg".equals(dto.description)) {
-            //同步业务分类
+            //同步业务分类和元数据的关联
             associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
             //同步业务元数据
             associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);

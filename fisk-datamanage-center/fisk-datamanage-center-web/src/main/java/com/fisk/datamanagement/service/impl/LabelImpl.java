@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamanagement.dto.label.LabelDTO;
-import com.fisk.datamanagement.dto.label.LabelDataDTO;
-import com.fisk.datamanagement.dto.label.LabelInfoDTO;
-import com.fisk.datamanagement.dto.label.LabelQueryDTO;
-import com.fisk.datamanagement.entity.CategoryPO;
+import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
+import com.fisk.datamanagement.dto.label.*;
+import com.fisk.datamanagement.entity.GlossaryPO;
+import com.fisk.datamanagement.entity.LabelCategoryPO;
 import com.fisk.datamanagement.entity.LabelPO;
+import com.fisk.datamanagement.map.GlossaryMap;
 import com.fisk.datamanagement.map.LabelMap;
 import com.fisk.datamanagement.mapper.LabelCategoryMapper;
 import com.fisk.datamanagement.mapper.LabelMapper;
@@ -19,6 +19,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -91,7 +92,7 @@ public class LabelImpl
         }
         LabelDTO dto = LabelMap.INSTANCES.poToDto(po);
         dto.moduleIds = Arrays.asList(dto.applicationModule.split(","));
-        CategoryPO categoryPo=categoryMapper.selectById(po.categoryId);
+        LabelCategoryPO categoryPo=categoryMapper.selectById(po.categoryId);
         dto.categoryName=categoryPo==null?"":categoryPo.categoryCnName;
         return dto;
     }
@@ -110,8 +111,22 @@ public class LabelImpl
     }
 
     @Override
-    public List<LabelInfoDTO> atlasGetLabel() {
-        return mapper.getLabelList();
+    public List<LabelInfoDTO> getLabelList(String keyword) {
+        return mapper.getLabelList(keyword);
     }
 
+    @Override
+    public List<LabelDataDTO> queryLabelListById(GlobalSearchDto dto){
+        List<LabelPO> listPo=new ArrayList<>();
+        switch (dto.type){
+            case LABEL:
+                listPo= this.query().eq("id",dto.id).list();
+                break;
+            case LABEL_CATEGORY:
+                listPo= this.query().eq("category_id",dto.id).list();
+            default:
+                break;
+        }
+        return LabelMap.INSTANCES.poToLabelDataDtoList(listPo);
+    }
 }
