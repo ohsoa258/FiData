@@ -296,6 +296,7 @@ public class BusinessProcessImpl
 
                 //获取自定义脚本
                 CustomScriptQueryDTO customScriptDto = new CustomScriptQueryDTO();
+                //2 事实表
                 customScriptDto.type = 2;
                 customScriptDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 customScriptDto.execType = 1;

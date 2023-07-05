@@ -66,11 +66,11 @@
 
         <!-- openedge驱动 -->
         <dependency>
-            <groupId>com.progress.openedge </groupId>
-            <artifactId>openedge-jdbc </artifactId>
-            <version>11.7.0</version>
+            <groupId>com.example</groupId>
+            <artifactId>openedgewp</artifactId>
+            <version>1.0.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/openedge.jar</systemPath>
+            <systemPath>${basedir}/src/main/resources/lib/openedgewp.jar</systemPath>
         </dependency>
 
         <!-- feign接口调用 -->
