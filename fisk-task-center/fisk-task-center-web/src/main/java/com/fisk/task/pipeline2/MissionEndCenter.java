@@ -21,7 +21,6 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
-import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -172,7 +171,7 @@ public class MissionEndCenter {
                                 TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
                                 if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDto.itselfPort.pid) {
                                     num++;
-                                    log.info("任务结束中心本job节点task状态:{}", taskNodeHierarchyDTO);
+//                                    log.info("任务结束中心本job节点task状态:{}", taskNodeHierarchyDTO);
                                     if (taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.tasknorun ||
                                             taskNodeHierarchyDTO.taskStatus == DispatchLogEnum.taskstart) {
                                         flag = false;
