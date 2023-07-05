@@ -2,10 +2,10 @@ package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ddtek.jdbc.openedge.OpenEdgeDriver;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
@@ -1012,6 +1012,12 @@ public class AppRegistrationImpl
                     conn = DbConnectionHelper.connection(dto.connectStr, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
                     allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                     break;
+                case OPENEDGE:
+                    // 注册OpenEdge驱动程序
+                    DriverManager.registerDriver(new OpenEdgeDriver());
+//                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                 default:
                     break;
             }
