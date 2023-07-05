@@ -127,6 +127,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     @Value("${nifi-data-security-enable}")
     private boolean enable;
 
+    @Value("${nifi-data-validation-enable}")
+    private boolean dataValidation;
+
 
     @Resource
     INiFiHelper componentsBuild;
@@ -1296,6 +1299,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             case ORACLE:
                 dto.driverLocation = NifiConstants.DriveConstants.ORACLE_DRIVE_PATH;
                 break;
+            case OPENEDGE:
+                dto.driverLocation = NifiConstants.DriveConstants.OPENEDGE_DRIVE_PATH;
+                break;
             default:
                 break;
         }
@@ -1574,24 +1580,27 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //用组件,调存储过程把stg里的数据向ods里面插入
             ProcessorEntity invokeHTTP = new ProcessorEntity();
-            if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                //---------------------------------
-                // todo 数据验证
-               /* ProcessorEntity generateFlowFile = new ProcessorEntity();
-                if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                    generateFlowFile = replaceTextProcess(config, groupId, dto);
-                } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                    generateFlowFile = replaceTextForDwProcess(config, groupId, dto);
-                }
 
-                tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
-                componentConnector(groupId, putDatabaseRecord.getId(), generateFlowFile.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                //invokeHTTP = invokeHTTPProcessor(groupId);
-                //componentConnector(groupId, generateFlowFile.getId(), invokeHTTP.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                //tableNifiSettingPO.invokeHttpProcessorId = invokeHTTP.getId();
-                res.add(generateFlowFile);*/
-                //res.add(invokeHTTP);
-                //-----------------------------------
+            if (dataValidation) {
+                if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                    //---------------------------------
+                    // todo 数据验证
+                    ProcessorEntity generateFlowFile = new ProcessorEntity();
+                    if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                        generateFlowFile = replaceTextProcess(config, groupId, dto);
+                    } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                        generateFlowFile = replaceTextForDwProcess(config, groupId, dto);
+                    }
+
+                    tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
+                    componentConnector(groupId, putDatabaseRecord.getId(), generateFlowFile.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    invokeHTTP = invokeHTTPProcessor(groupId);
+                    componentConnector(groupId, generateFlowFile.getId(), invokeHTTP.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                    tableNifiSettingPO.invokeHttpProcessorId = invokeHTTP.getId();
+                    res.add(generateFlowFile);
+                    res.add(invokeHTTP);
+                    //-----------------------------------
+                }
             }
 
             tableNifiSettingPO.odsToStgProcessorId = processorEntity1.getId();
@@ -3301,7 +3310,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/task/nifi/sftpDataUploadListener?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
-        buildInvokeHttpProcessorDTO.socketConnectTimeout = "30 secs";
+        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
+        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
         List<String> autoEnd = new ArrayList<>();
         autoEnd.add("Response");
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, autoEnd);
