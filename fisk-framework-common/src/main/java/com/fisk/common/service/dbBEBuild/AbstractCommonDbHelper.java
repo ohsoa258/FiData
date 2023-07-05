@@ -259,7 +259,7 @@ public class AbstractCommonDbHelper {
             return connection;
         } catch (SQLException e) {
             log.error("【connection】数据库连接获取失败, ex", e);
-            if(e.getErrorCode()==1045){
+            if (e.getErrorCode() == 1045) {
                 //抛出密码不正确异常
                 throw new FkException(ResultEnum.USER_ACCOUNTPASSWORD_ERROR, e.getLocalizedMessage());
             }
@@ -325,6 +325,32 @@ public class AbstractCommonDbHelper {
         log.info("【execCreate】【" + code + "】执行sql: 【" + sql + "】");
         statement = connection.createStatement();
         statement.execute(sql);
+    }
+
+    /**
+     * 执行sql
+     *
+     * @param sql
+     * @param connection
+     * @return
+     */
+    public static void executeSql_Close(String sql, Connection connection) {
+        Statement statement = null;
+        StopWatch stopWatch = new StopWatch();
+        String code = UUID.randomUUID().toString();
+        try {
+            stopWatch.start();
+            log.info("【executeSql_Close】【" + code + "】执行sql: 【" + sql + "】");
+            statement = connection.createStatement();
+            statement.execute(sql);
+        } catch (Exception ex) {
+            log.error("【executeSql_Close】系统异常：" + ex);
+        } finally {
+            closeStatement(statement);
+            closeConnection(connection);
+            stopWatch.stop();
+            log.info("【executeSql_Close】【" + code + "】执行时间: 【" + stopWatch.getTotalTimeMillis() + "毫秒】");
+        }
     }
 
     /**

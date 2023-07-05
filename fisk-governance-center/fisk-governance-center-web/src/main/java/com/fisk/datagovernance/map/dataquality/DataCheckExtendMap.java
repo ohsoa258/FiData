@@ -2,8 +2,9 @@ package com.fisk.datagovernance.map.dataquality;
 
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckExtendDTO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckExtendPO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -26,13 +27,11 @@ public interface DataCheckExtendMap {
      * @param dto source
      * @return target
      */
+    @Mappings({
+            @Mapping(source = "rangeCheckType.value", target = "rangeCheckType"),
+            @Mapping(source = "standardCheckType.value", target = "standardCheckType"),
+            @Mapping(source = "fluctuateCheckType.value", target = "fluctuateCheckType"),
+            @Mapping(source = "parentageCheckType.value", target = "parentageCheckType")
+    })
     List<DataCheckExtendPO> dtoToPo(List<DataCheckExtendDTO> dto);
-
-    /**
-     * po => vo
-     *
-     * @param dto source
-     * @return target
-     */
-    List<DataCheckExtendVO> poToVo(List<DataCheckExtendPO> dto);
 }

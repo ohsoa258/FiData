@@ -10,29 +10,22 @@ import java.util.HashMap;
 /**
  * @author dick
  * @version 1.0
- * @description 数据校验_页面DTO
+ * @description 数据校验DTO_同步前
  * @date 2022/5/16 20:44
  */
 @Data
 public class DataCheckWebDTO {
     /**
-     * 服务器IP
+     * FiData平台数据源ID
      */
-    @ApiModelProperty(value = "服务器IP")
+    @ApiModelProperty(value = "FiData平台数据源ID")
     @NotNull()
-    public String ip;
-
-    /**
-     * 数据库名称
-     */
-    @ApiModelProperty(value = "数据库名称")
-    @NotNull()
-    public String dbName;
+    public int fiDataDataSourceId;
 
     /**
      * key:表名称 value:验证的数据，json数组
      */
-    @ApiModelProperty(value = "key:表id/表名称 value:验证的数据，json数组")
+    @ApiModelProperty(value = "key：表id/表名称，value：验证的数据")
     @NotNull()
     public HashMap<String, JSONArray> body;
 }

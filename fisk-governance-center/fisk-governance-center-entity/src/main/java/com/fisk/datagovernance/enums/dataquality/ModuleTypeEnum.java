@@ -10,10 +10,9 @@ import com.fisk.common.core.enums.BaseEnum;
  */
 public enum ModuleTypeEnum implements BaseEnum {
     NONE(0, "空"),
-    DATACHECK_MODULE(100, "数据校验"),
-    BIZCHECK_MODULE(200, "业务清洗"),
-    LIFECYCLE_MODULE(300, "生命周期"),
-    WARNNOTICE_MODULE(400, "告警通知");
+    DATA_CHECK_MODULE(100, "数据校验"),
+    BIZ_CHECK_MODULE(200, "业务清洗"),
+    LIFE_CYCLE_MODULE(300, "生命周期");
 
     ModuleTypeEnum(int value, String name) {
         this.name = name;

@@ -2,7 +2,6 @@ package com.fisk.datagovernance.dto.dataquality.datasource;
 
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

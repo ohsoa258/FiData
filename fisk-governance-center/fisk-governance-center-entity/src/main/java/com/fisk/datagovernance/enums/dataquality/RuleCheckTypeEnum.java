@@ -5,10 +5,10 @@ import com.fisk.common.core.enums.BaseEnum;
 /**
  * @author dick
  * @version 1.0
- * @description 校验规则
+ * @description 规则检查类型
  * @date 2022/5/18 19:59
  */
-public enum CheckRuleEnum implements BaseEnum {
+public enum RuleCheckTypeEnum implements BaseEnum {
     /**
      * 校验规则
      */
@@ -16,7 +16,7 @@ public enum CheckRuleEnum implements BaseEnum {
     STRONG_RULE(1, "强规则"),
     WEAK_RULE(2, "弱规则");
 
-    CheckRuleEnum(int value, String name) {
+    RuleCheckTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
     }
@@ -34,11 +34,11 @@ public enum CheckRuleEnum implements BaseEnum {
         return name;
     }
 
-    public static CheckRuleEnum  getEnum(int value){
-        for (CheckRuleEnum e:CheckRuleEnum.values()) {
+    public static RuleCheckTypeEnum  getEnum(int value){
+        for (RuleCheckTypeEnum e:RuleCheckTypeEnum.values()) {
             if(e.getValue() == value)
                 return e;
         }
-        return CheckRuleEnum.NONE;
+        return RuleCheckTypeEnum.NONE;
     }
 }

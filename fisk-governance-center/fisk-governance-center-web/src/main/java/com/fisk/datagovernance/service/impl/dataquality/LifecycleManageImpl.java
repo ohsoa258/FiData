@@ -77,10 +77,12 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                 queryTableParam.setTableType(query.getLevelType());
                 queryTableParam.setTableBusinessType(query.getTableBusinessType());
                 queryTableParam.setSourceId(query.getDatasourceId());
-                queryTableParam.setSourceType(query.getSourceTypeEnum());
+                queryTableParam.setSourceType(query.getSourceType());
                 queryTableParams.add(queryTableParam);
-            } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER || query.getLevelType() == LevelTypeEnum.DATABASE || query.getLevelType() == LevelTypeEnum.FOLDER) {
-                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.sourceTypeEnum, query.getUniqueId());
+            } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
+                    || query.getLevelType() == LevelTypeEnum.DATABASE
+                    || query.getLevelType() == LevelTypeEnum.FOLDER) {
+                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.getSourceType(), query.getUniqueId());
                 if (CollectionUtils.isNotEmpty(treeTableNodes)) {
                     queryTableParams.addAll(treeTableNodes);
                 }
@@ -105,13 +107,13 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                         // 通过数据源ID+表类型+表业务类型+表ID 定位到表的规则
                         rules = allRule.stream().filter(t -> t.getFiDataSourceId() == dto.getSourceId() &&
                                 t.getTableType() == finalTableType &&
-                                t.getTableBusinessType() == dto.getTableBusinessType() &&
+                                t.getTableBusinessType() == dto.getTableBusinessType().getValue() &&
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     } else if (dto.getSourceType() == SourceTypeEnum.custom) {
                         // 通过数据源ID+表类型+表业务类型+表名称 定位到表的规则
                         rules = allRule.stream().filter(t -> t.getDatasourceId() == dto.getSourceId() &&
                                 t.getTableType() == finalTableType &&
-                                t.getTableBusinessType() == dto.getTableBusinessType() &&
+                                t.getTableBusinessType() == dto.getTableBusinessType().getValue() &&
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     }
                     if (CollectionUtils.isNotEmpty(rules)) {
