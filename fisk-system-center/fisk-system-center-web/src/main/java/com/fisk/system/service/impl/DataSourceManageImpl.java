@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ddtek.jdbc.openedge.OpenEdgeDriver;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -324,7 +325,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                         }
                     }
                 case OPENEDGE:
-                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+                    // 注册OpenEdge驱动程序
+                    DriverManager.registerDriver(new OpenEdgeDriver());
+//                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 default:
