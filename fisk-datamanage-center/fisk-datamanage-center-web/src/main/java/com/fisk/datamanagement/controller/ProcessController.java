@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.process.AddProcessDTO;
+import com.fisk.datamanagement.dto.process.EditProcessDto;
 import com.fisk.datamanagement.dto.process.ProcessDTO;
 import com.fisk.datamanagement.service.IProcess;
 import io.swagger.annotations.Api;
@@ -39,7 +40,7 @@ public class ProcessController {
 
     @ApiOperation("更新process")
     @PostMapping("/updateProcess")
-    public ResultEntity<Object> updateProcess(@Validated @RequestBody ProcessDTO dto) {
+    public ResultEntity<Object> updateProcess(@Validated @RequestBody EditProcessDto dto) {
         return ResultEntityBuild.build(service.updateProcess(dto));
     }
 

@@ -1,25 +1,30 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.MetadataEntityClassificationAttributeMapDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
-import com.fisk.datamanagement.dto.glossary.GlossaryTermAttributeDTO;
+import com.fisk.datamanagement.dto.glossary.GlossaryCategoryPathDto;
+import com.fisk.datamanagement.dto.label.LabelInfoDTO;
+import com.fisk.datamanagement.dto.label.GlobalSearchDto;
+import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDTO;
+import com.fisk.datamanagement.dto.labelcategory.LabelCategoryPathDto;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchDslDTO;
+import com.fisk.datamanagement.entity.GlossaryLibraryPO;
+import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
-import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.map.GlossaryCategoryMap;
+import com.fisk.datamanagement.map.GlossaryMap;
+import com.fisk.datamanagement.map.LabelCategoryMap;
+import com.fisk.datamanagement.map.LabelMap;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IGlobalSearch;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
-import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +46,7 @@ public class GlobalSearchImpl implements IGlobalSearch {
     @Resource
     MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
 
+
     @Resource
     AtlasClient atlasClient;
     @Resource
@@ -51,6 +57,12 @@ public class GlobalSearchImpl implements IGlobalSearch {
     GlossaryImpl glossary;
     @Resource
     UserClient userClient;
+    @Resource
+    LabelImpl label;
+    @Resource
+    GlossaryCategoryImpl glossaryCategory;
+    @Resource
+    LabelCategoryImpl labelCategory;
 
 
     @Value("${atlas.searchQuick}")
@@ -75,13 +87,39 @@ public class GlobalSearchImpl implements IGlobalSearch {
     }
 
     @Override
-    public JSONObject searchSuggestions(String prefixString) {
-        ResultDataDTO<String> result = atlasClient.get(searchSuggestions + "?prefixString=" + prefixString);
-        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
-            JSONObject msg = JSON.parseObject(result.data);
-            throw new FkException(ResultEnum.BAD_REQUEST, msg.getString("errorMessage"));
-        }
-        return JSON.parseObject(result.data);
+    public List<GlobalSearchDto> searchSuggestions(String prefixString) {
+        //获取标签分类
+        List<LabelCategoryDTO> labelcategory =labelCategory.queryLikeLabelCategory(prefixString);
+        //获取标签
+        List<LabelInfoDTO>  labels=label.getLabelList(prefixString);
+        //转换为同一结构
+        List<GlobalSearchDto> categoryDtos= LabelCategoryMap.INSTANCES.labelCategoryDtoToTermDtoList(labelcategory);
+        List<GlobalSearchDto> labelDtos= LabelMap.INSTANCES.labelDtoToTermDtoList(labels);
+        //获取属性分类路径
+        List<LabelCategoryPathDto> pathDtos= labelCategory.getLabelCategoryPathDto();
+        //设置标签分类的路径
+        categoryDtos.stream().forEach(dto->{
+            pathDtos.stream()
+                    .filter(pathDto->pathDto.getCategoryCode().equals(dto.getCategoryParentCode()))
+                    .findFirst()
+                    .ifPresent(pathDto -> dto.setPath(pathDto.getPath()));
+        });
+        //设置标签的路径
+        labelDtos.stream().forEach(dto->{
+            pathDtos.stream()
+                    .filter(pathDto->pathDto.getId() ==dto.getPid())
+                    .findFirst()
+                    .ifPresent(pathDto -> dto.setPath(pathDto.getPath()));
+        });
+
+        categoryDtos.addAll(labelDtos);
+        return categoryDtos;
+//        ResultDataDTO<String> result = atlasClient.get(searchSuggestions + "?prefixString=" + prefixString);
+//        if (result.code != AtlasResultEnum.REQUEST_SUCCESS) {
+//            JSONObject msg = JSON.parseObject(result.data);
+//            throw new FkException(ResultEnum.BAD_REQUEST, msg.getString("errorMessage"));
+//        }
+//        return JSON.parseObject(result.data);
     }
 
     @Override
@@ -96,25 +134,48 @@ public class GlobalSearchImpl implements IGlobalSearch {
     }
 
     @Override
-    public List<GlossaryAttributeDTO> searchTerms(String keyword) {
+    public List<GlobalSearchDto> searchTerms(String keyword) {
         //获取术语库列表
-        List<GlossaryAttributeDTO> glossaryList = glossary.getGlossaryList();
-        List<GlossaryAttributeDTO> list = new ArrayList<>();
-        for (GlossaryAttributeDTO item : glossaryList) {
-            if (CollectionUtils.isEmpty(item.terms)) {
-                continue;
-            }
-            List<GlossaryTermAttributeDTO> filterTerms = item.terms.stream()
-                    .filter(e -> e.displayText.contains(keyword.toLowerCase())||e.displayText.contains(keyword.toUpperCase()))
-                    .collect(Collectors.toList());
-            //过滤是否存在术语
-            if (CollectionUtils.isEmpty(filterTerms)) {
-                continue;
-            }
-            item.terms = filterTerms;
-            list.add(item);
-        }
-        return list;
+       List<GlossaryLibraryPO> glossaryLibraryPOS= glossaryCategory.queryLikeGlossaryLibrary(keyword);
+       List<GlossaryPO> glossaryPOS= glossary.queryLikeGlossaryList(keyword);
+       List<GlobalSearchDto> glossaryLibraryDtos= GlossaryCategoryMap.INSTANCES.poToGlobalSearchDtoList(glossaryLibraryPOS);
+       List<GlobalSearchDto> glossaryDtos= GlossaryMap.INSTANCES.poToGlobalSearchDtoList(glossaryPOS);
+       //获取术语分类的路径
+       List<GlossaryCategoryPathDto> glossaryCategoryPathDtoList=glossaryCategory.getGlossaryCategoryPath();
+       //设置术语分类的路径
+        glossaryLibraryDtos.stream().forEach(dto->{
+            glossaryCategoryPathDtoList.stream()
+                    .filter(pathDto->pathDto.getId()==dto.getPid())
+                    .findFirst()
+                    .ifPresent(pathDto -> dto.setPath(pathDto.getPath()));
+
+        });
+        //设置术语的路径
+        glossaryDtos.stream().forEach(dto->{
+            glossaryCategoryPathDtoList.stream()
+                    .filter(pathDto->pathDto.getId() ==dto.getPid())
+                    .findFirst()
+                    .ifPresent(pathDto -> dto.setPath(pathDto.getPath()));
+        });
+        //合并集合
+       glossaryLibraryDtos.addAll(glossaryDtos);
+       return glossaryLibraryDtos;
+//        List<GlossaryAttributeDTO> glossaryList = glossary.getGlossaryList();
+//        List<GlossaryTermAttributeDTO> list = new ArrayList<>();
+//        for (GlossaryAttributeDTO item : glossaryList) {
+//            if (CollectionUtils.isEmpty(item.terms)) {
+//                continue;
+//            }
+//            List<GlossaryTermAttributeDTO> filterTerms = item.terms.stream()
+//                    .filter(e -> e.displayText.contains(keyword.toLowerCase())||e.displayText.contains(keyword.toUpperCase()))
+//                    .collect(Collectors.toList());
+//            //过滤是否存在术语
+//            if (CollectionUtils.isEmpty(filterTerms)) {
+//                continue;
+//            }
+//            list.addAll(filterTerms);
+//        }
+//        return list;
     }
 
     @Override
@@ -129,7 +190,7 @@ public class GlobalSearchImpl implements IGlobalSearch {
         List<MetadataEntityPO> collect = list.stream().skip(dto.offset).limit(dto.limit).collect(Collectors.toList());
         List<Map> data = new ArrayList<>();
 
-        List<String> userList = list.stream().map(e -> e.createUser).collect(Collectors.toList());
+        List<String> userList = list.stream().map(e -> e.createUser).filter(e -> e != null).distinct().collect(Collectors.toList());
         ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userList.stream().map(Long::parseLong).collect(Collectors.toList()));
         if (userListByIds.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);

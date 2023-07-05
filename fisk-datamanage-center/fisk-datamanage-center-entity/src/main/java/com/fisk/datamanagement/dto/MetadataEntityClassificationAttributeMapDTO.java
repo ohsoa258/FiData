@@ -19,7 +19,7 @@ public class MetadataEntityClassificationAttributeMapDTO {
     public String value;
 
     @ApiModelProperty(value = "名称")
-    public String name;
+    public String attributeName;
     @ApiModelProperty(value = "分类名称")
     public String classificationName;
 

@@ -20,6 +20,9 @@ public enum EntityTypeEnum implements BaseEnum {
     DELETED(9, "DELETED"),
     ACTIVE(10, "ACTIVE"),
     DB_NAME(11, "db_name"),
+    APPLICATION(12,"application"),
+    VIEW(13,"view"),
+    DATABASE_SYNC(14,"database_sync"),
     OTHER(-1, "other");
 
     EntityTypeEnum(int value, String name) {

@@ -2,10 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamanagement.dto.label.LabelDTO;
-import com.fisk.datamanagement.dto.label.LabelDataDTO;
-import com.fisk.datamanagement.dto.label.LabelInfoDTO;
-import com.fisk.datamanagement.dto.label.LabelQueryDTO;
+import com.fisk.datamanagement.dto.label.*;
 
 import java.util.List;
 
@@ -54,6 +51,12 @@ public interface ILabel {
      *
      * @return
      */
-    List<LabelInfoDTO> atlasGetLabel();
+    List<LabelInfoDTO> getLabelList(String keyword);
 
+    /**
+     * 通过catearyid和id获取标签
+     * @param dto
+     * @return
+     */
+    List<LabelDataDTO> queryLabelListById(GlobalSearchDto dto);
 }

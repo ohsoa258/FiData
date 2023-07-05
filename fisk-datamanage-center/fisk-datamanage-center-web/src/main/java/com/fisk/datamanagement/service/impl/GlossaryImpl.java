@@ -8,11 +8,14 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.category.CategoryDetailsDTO;
 import com.fisk.datamanagement.dto.glossary.*;
+import com.fisk.datamanagement.dto.label.GlobalSearchDto;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
+import com.fisk.datamanagement.enums.DataAssetsTypeEnum;
+import com.fisk.datamanagement.map.GlossaryMap;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
@@ -285,7 +288,6 @@ public class GlossaryImpl
     }
 
     public List<Integer> getClassificationByEntityId(Integer glossaryId, Integer offset, Integer pageSize) {
-
         QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
         List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
@@ -299,7 +301,6 @@ public class GlossaryImpl
     }
 
     public List<Integer> getClassificationByEntityId(Integer glossaryId) {
-
         QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
         List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
@@ -309,4 +310,28 @@ public class GlossaryImpl
         return list.stream().map(e -> e.metadataEntityId).collect(Collectors.toList());
     }
 
+    /**
+     * 模糊查询术语
+     * @param keyword
+     * @return
+     */
+    public List<GlossaryPO> queryLikeGlossaryList(String keyword){
+        return this.query().like(org.apache.commons.lang.StringUtils.isNotEmpty(keyword),"name", keyword).list();
+    }
+
+    @Override
+    public List<GlossaryDTO> queryGlossaryListById(GlobalSearchDto dto){
+        List<GlossaryPO> listPo=new ArrayList<>();
+        switch (dto.type){
+            case GLOSSARY:
+                listPo= this.query().eq("del_flag",1).eq("id",dto.id).list();
+                break;
+            case GLOSSARY_CATEGORY:
+                listPo= this.query().eq("del_flag",1).eq("glossary_library_id",dto.id).list();
+            default:
+                break;
+        }
+        //listPo=this.query().list();
+        return GlossaryMap.INSTANCES.poToDtoList(listPo);
+    }
 }

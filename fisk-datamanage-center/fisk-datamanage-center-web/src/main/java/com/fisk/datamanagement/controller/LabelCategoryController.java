@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.labelcategory.FirstLabelCategorySummaryDto;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDTO;
 import com.fisk.datamanagement.service.ILabelCategory;
 import io.swagger.annotations.Api;
@@ -13,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -55,6 +57,9 @@ public class LabelCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getLabelCategoryList(queryName));
     }
 
-
-
+    @ApiOperation("获取第一级属性分类下的汇总数据")
+    @GetMapping("/getFirstLabelCategorySummary")
+    public ResultEntity<Object> getFirstLabelCategorySummary() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFirstLabelCategorySummary());
+    }
 }

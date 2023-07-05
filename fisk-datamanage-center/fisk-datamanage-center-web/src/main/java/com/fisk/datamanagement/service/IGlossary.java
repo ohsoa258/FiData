@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.glossary.GlossaryAttributeDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
+import com.fisk.datamanagement.dto.label.GlobalSearchDto;
 import com.fisk.datamanagement.dto.term.TermDTO;
 
 import java.util.List;
@@ -48,5 +49,12 @@ public interface IGlossary {
      * @return
      */
     List<TermDTO> getTermList(String guid, Boolean parent);
+
+    /**
+     * 通过catearyid获取术语
+     * @param dto
+     * @return
+     */
+    List<GlossaryDTO> queryGlossaryListById(GlobalSearchDto dto);
 
 }

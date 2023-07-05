@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.labelcategory.FirstLabelCategorySummaryDto;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDTO;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDataDTO;
 
@@ -45,5 +46,12 @@ public interface ILabelCategory {
      * @return
      */
     List<LabelCategoryDataDTO> getLabelCategoryList(String queryName);
+
+
+    /**
+     * 获取第一级属性分类下的汇总数据
+     * @return
+     */
+    List<FirstLabelCategorySummaryDto> getFirstLabelCategorySummary();
 
 }

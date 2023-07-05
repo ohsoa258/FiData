@@ -48,7 +48,7 @@ public interface MetaDataClassificationMapMapper extends FKBaseMapper<MetadataCl
             "\tLEFT JOIN tb_business_classification b ON a.business_classification_id = b.id\n" +
             "WHERE\n" +
             "\ta.del_flag = 1 \n" +
-            "\ta.metadata_entity_id = #{entityId} \n" +
+            "\tAND a.metadata_entity_id = #{entityId} \n" +
             "\tAND b.del_flag = 1 \n" +
             "\tAND b.pid IS NOT NULL\n")
     List<MetadataClassificationMapInfoDTO> getMetaDataClassificationMap(@Param("entityId") Integer entityId);

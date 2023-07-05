@@ -41,12 +41,13 @@ public interface MetadataEntityClassificationAttributeMapper
     @Select("SELECT\n" +
             "\ta.classification_id,\n" +
             "\ta.metadata_entity_id,\n" +
-            "\tc.`name`\n" +
+            "\ta.value,\n" +
+            "\tc.`attribute_name`\n" +
             "FROM\n" +
-            "\t`tb_metadata_entity_classification_attribute` a\n" +
-            "\tLEFT JOIN tb_attribute_type c ON a.attribute_type_id = c.type_id\n" +
+            "\t`tb_classification` c\n" +
+            "\tLEFT JOIN tb_metadata_entity_classification_attribute a ON a.attribute_id = c.id\n" +
             "\t\n" +
-            "\twhere a.classification_id = #{classificationId} and a.metadata_entity_id = #{metadataEntityId} and a.del_flag = 1 \n")
+            "\twhere c.business_classification_id = #{classificationId} and a.metadata_entity_id = #{metadataEntityId} and a.del_flag = 1 \n")
     List<MetadataEntityClassificationAttributeMapDTO> selectClassificationAttributes(@Param("metadataEntityId") Integer metadataEntityId,
                                                                                      @Param("classificationId") Integer classificationId);
 

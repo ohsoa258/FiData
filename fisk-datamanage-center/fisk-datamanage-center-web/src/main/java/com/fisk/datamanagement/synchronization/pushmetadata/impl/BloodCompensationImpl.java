@@ -5,9 +5,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
+import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -104,12 +106,14 @@ public class BloodCompensationImpl
         synchronousDataModelTableSourceMetaData(currUserName);
 
         log.info("*******三.开始同步API网关服务相关元数据信息********");
-        log.info("********1.开始API网关服务的应用接入的业务分类******************");
+        log.info("********1.开始API网关服务、数据库同步服务、视图服务应用接入的业务分类******************");
         ResultEntity<List<AppBusinessInfoDTO>> apiTableViewAppList = serveiceClient.getApiTableViewService();
         synchronousClassification(apiTableViewAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
         log.info("********2.开始API网关服务的元数据******************");
         synchronousAPIServiceMetaData(currUserName);
         return ResultEnum.SUCCESS;
+
+
     }
     //region 内置实现方法
     /**
@@ -187,7 +191,7 @@ public class BloodCompensationImpl
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(item.name);
             classificationInfoDto.setDescription(item.appDes);
-            classificationInfoDto.setSourceType(classificationTypeEnum.getValue());
+            classificationInfoDto.setSourceType(item.getSourceType());
             classificationInfoDto.setDelete(false);
             try {
                 classification.appSynchronousClassification(classificationInfoDto);
@@ -254,6 +258,17 @@ public class BloodCompensationImpl
                 table.setComment(String.valueOf(accessTable.appId));
                 table.setDisplayName(item.name);
                 table.setComment("stg");
+                List<MetaDataColumnAttributeDTO> fieldList=new ArrayList<>();
+                for (FieldMetaDataObject fieldItem:item.getFields()){
+                    MetaDataColumnAttributeDTO field=new MetaDataColumnAttributeDTO();
+                    field.setName(fieldItem.name);
+                    field.setQualifiedName(table.getQualifiedName()+"_"+fieldItem.name);
+                    field.setDisplayName(fieldItem.name);
+                    field.setDataType("");
+                    field.setOwner("");
+                    fieldList.add(field);
+                }
+                table.setColumnList(fieldList);
                 tableList.add(table);
             }
             first.get().dbList.get(0).tableList.addAll(tableList);
