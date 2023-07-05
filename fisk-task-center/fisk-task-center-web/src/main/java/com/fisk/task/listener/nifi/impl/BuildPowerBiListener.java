@@ -122,7 +122,11 @@ public class BuildPowerBiListener implements IpowerBiListener {
             dispatchExceptionHandling.pipelJobTraceId = powerBiDataSetRefresh.pipelJobTraceId;
             dispatchExceptionHandling.pipelStageTraceId = powerBiDataSetRefresh.pipelStageTraceId;
             dispatchExceptionHandling.comment = "执行POWERBI数据集刷新任务报错";
-            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
             refreshPowerbiToDispatch(powerBiDataSetRefresh);
             throw new FkException(ResultEnum.ERROR);
         } finally {

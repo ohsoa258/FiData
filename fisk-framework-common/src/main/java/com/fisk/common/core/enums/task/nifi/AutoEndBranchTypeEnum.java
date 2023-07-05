@@ -25,7 +25,9 @@ public enum AutoEndBranchTypeEnum implements BaseEnum {
     NOTFOUND(11,"not.found"),
     PERMISSIONDENIED(12,"permission.denied"),
     NO_RETRY(13, "no retry"),
-    RESPONSE(14, "Response");
+    RESPONSE(14, "Response"),
+    FAILURE2(15,"Failure"),
+    RETRY2(16, "Retry");
 
     AutoEndBranchTypeEnum(int value, String name) {
         this.value = value;

@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -13,12 +14,13 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
+import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
+import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
@@ -32,6 +34,7 @@ import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.access.OperateMsgDTO;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
+import com.fisk.dataaccess.dto.api.ApiConfigDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
@@ -141,6 +144,8 @@ public class TableFieldsImpl
     private UserClient userClient;
     @Resource
     private IAppDataSource iAppDataSource;
+    @Resource
+    private IApiConfig iApiConfig;
 
     @Resource
     FlinkConfigDTO flinkConfig;
@@ -271,7 +276,7 @@ public class TableFieldsImpl
         }
 
         // 发布
-        publish(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys, null);
+        publish1(success, accessPo.appId, accessPo.id, accessPo.tableName, dto.flag, dto.openTransmission, null, false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, dto.appDataSourceId, dto.tableHistorys, null);
 
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
@@ -298,12 +303,28 @@ public class TableFieldsImpl
             return ResultEnum.PARAMTER_NOTNULL;
         }
 
+        //获取修改前的字段集合
+        LambdaQueryWrapper<TableFieldsPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TableFieldsPO::getTableAccessId, dto.id).select(TableFieldsPO::getSourceFieldName);
+        List<TableFieldsPO> tableFieldsBeforeUpdate = list(wrapper);
+
         // 保存tb_table_fields
         boolean success;
-
-        success = this.saveOrUpdateBatch(TableFieldsMap.INSTANCES.listDtoToPo(list));
+        List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+        success = this.saveOrUpdateBatch(tableFieldsPOS);
         if (!success) {
             return ResultEnum.UPDATE_DATA_ERROR;
+        }
+
+        List<String> sourceFieldNames = new ArrayList<>();
+        if (!tableFieldsBeforeUpdate.isEmpty()) {
+            tableFieldsBeforeUpdate.forEach(tableFieldsPO -> {
+                sourceFieldNames.add(tableFieldsPO.sourceFieldName);
+            });
+        } else {
+            tableFieldsPOS.forEach(tableFieldsPO -> {
+                sourceFieldNames.add(tableFieldsPO.sourceFieldName);
+            });
         }
 
         // 删除字段
@@ -377,10 +398,11 @@ public class TableFieldsImpl
             odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
         }
 
-        // 发布
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
-                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId, dto.tableHistorys, null);
+                false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId,
+                dto.tableHistorys, null, sourceFieldNames);
 
+        // 发布
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -545,7 +567,8 @@ public class TableFieldsImpl
                          TableSyncmodeDTO syncMode,
                          Integer appDataSourceId,
                          List<TableHistoryDTO> dto,
-                         String currUserName) {
+                         String currUserName,
+                         List<String> sourceFieldNames) {
         //获取应用数据源
         AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
         //获取不到则抛出异常
@@ -656,6 +679,187 @@ public class TableFieldsImpl
                 //todo:当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句 默认5day
                 data.deleteStgScript = accessPo.deleteStgScript;
 
+                //获取修改前的源字段集合
+                if (!sourceFieldNames.isEmpty()) {
+                    data.sourceFieldNames = sourceFieldNames;
+                }else {
+                    data.sourceFieldNames = new ArrayList<>();
+                }
+
+                List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
+                // 实时--RestfulAPI类型  or  非实时--api类型
+                //0实时
+                if ((registration.appType == 0
+                        && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType))
+                        || (registration.appType == 1
+                        && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
+                    // 传入apiId和api下所有表
+                    List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
+                    // api下所有表
+                    data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
+                    data.appType = registration.appType;
+                    data.apiId = accessPo.apiId;
+                    // 创建表流程
+                    publishTaskClient.publishBuildPhysicsTableTask(data);
+                    // 构建元数据实时同步数据对象
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 1, currUserName);
+                } else if (registration.appType == 1) {
+                    if (DataSourceTypeEnum.FTP.getName().equals(dataSourcePo.driveType) || data.sftpFlow) {
+                        data.excelFlow = true;
+                    }
+                    // 非实时物理表发布
+                    // 创建表流程
+                    data.popout = true;
+                    publishTaskClient.publishBuildPhysicsTableTask(data);
+                    // 生成nifi流程
+                    //log.info(JSON.toJSONString(data));
+                    //publishTaskClient.publishBuildAtlasTableTask(data);
+                    //构建元数据实时同步数据对象
+                    metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2, currUserName);
+                }
+                if (openMetadata) { //
+                    //同步元数据
+                    consumeMetaData(metaDataList);
+                }
+
+            } catch (Exception e) {
+                log.info("发布失败", e);
+                log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
+                throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
+            }
+        }
+
+        //oracle-cdc类型需要上传脚本
+        if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
+            cdcScriptUploadFlink(cdcDto, accessId);
+        }
+    }
+
+    private void publish1(boolean success,
+                          long appId,
+                          long accessId,
+                          String tableName,
+                          int flag,
+                          boolean openTransmission,
+                          CdcJobScriptDTO cdcDto,
+                          boolean useExistTable,
+                          List<DeltaTimeDTO> deltaTimes,
+                          String versionSql,
+                          TableSyncmodeDTO syncMode,
+                          Integer appDataSourceId,
+                          List<TableHistoryDTO> dto,
+                          String currUserName) {
+        //获取应用数据源
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
+        //获取不到则抛出异常
+        if (dataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        //获取应用信息
+        AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
+        //获取不到则抛出异常
+        if (appRegistrationPo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        Long tableHistoryId = 0L;
+        //如果发布历史不为空
+        if (!CollectionUtils.isEmpty(dto)) {
+            log.info("开始记录发布日志");
+            for (TableHistoryDTO tableHistory : dto) {
+                if (tableHistory.tableId.longValue() == accessId) {
+                    log.info("记录发布日志的表id:{}", accessId);
+                    List<TableHistoryDTO> list = new ArrayList<>();
+                    list.add(tableHistory);
+                    tableHistoryId = iTableHistory.addTableHistory(list);
+                }
+            }
+        }
+
+        if (success && flag == 1 && !useExistTable) {
+            UserInfo userInfo = userHelper.getLoginUserInfo();
+
+            //调用方法：封装参数给nifi
+            ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
+
+            BuildPhysicalTableDTO data = result.data;
+            //装载应用id
+            data.appId = String.valueOf(appId);
+            //数据库id为什么传物理表id???????????
+            data.dbId = String.valueOf(accessId);
+            //用户id
+            data.userId = userInfo.id;
+            //是否发布
+            data.openTransmission = openTransmission;
+            //接入的增量时间参数
+            data.deltaTimes = deltaTimes;
+
+            //来源和目标数据源id
+            data.dataSourceDbId = dataSourcePo.systemDataSourceId;
+            //目标ods数据源id
+            data.targetDbId = appRegistrationPo.targetDbId;
+
+            // 拼接删除ods的sql
+            String tbName = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationPo.appAbbreviation, appRegistrationPo.whetherSchema);
+
+            // pg库则将表名转换为小写
+            //调用方法，获取数据源
+            boolean typeFlag = getTargetDbType(data.targetDbId);
+            //如果可以获取到
+            if (typeFlag) {
+                //表名小写
+                data.tableName = data.tableName.toLowerCase();
+                // 将字段集合转换为小写
+                List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
+                data.tableFieldsDTOS = tableFieldsDTOList.stream().map(item -> {
+                    item.fieldName = item.fieldName.toLowerCase();
+                    return item;
+                }).collect(Collectors.toList());
+                tbName = tbName.toLowerCase();
+            }
+            //同步方式
+            int syncType = syncMode.syncMode;
+            log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
+
+            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+                data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
+                log.info("删除ods表的sql，{}", data.whereScript);
+            }
+
+            // 版本号入库、调用存储存储过程
+            //获取物理表字段集合
+            List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
+            //获取应用信息
+            AppRegistrationPO registration = iAppRegistration.getById(appId);
+
+            //拼接ods表名
+            String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
+
+            //调用方法 封装版本号和修改表结构的参数
+            data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
+            //是否使用应用简称
+            data.whetherSchema = registration.whetherSchema;
+            //版本sql
+            data.generateVersionSql = versionSql;
+
+            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
+            data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
+            data.tableHistoryId = tableHistoryId;
+
+            // 执行发布
+            try {
+                //获取指定id的物理表信息
+                TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
+                data.sheetName = accessPo.sheet;
+                //覆盖sql脚本
+                data.syncStgToOdsSql = accessPo.coverScript;
+                data.coverScript = accessPo.coverScript;
+                //todo:当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句 默认5day
+                data.deleteStgScript = accessPo.deleteStgScript;
+                //凑数用
+                data.sourceFieldNames = new ArrayList<>();
                 List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
                 //0实时
@@ -1386,7 +1590,7 @@ public class TableFieldsImpl
 
             List<DeltaTimeDTO> systemVariable = systemVariables.getSystemVariable(id);
 
-            publish(true,
+            publish1(true,
                     accessPo.appId,
                     accessPo.id,
                     accessPo.tableName,
@@ -1520,21 +1724,42 @@ public class TableFieldsImpl
             log.info("表信息不存在...");
             return "";
         }
+        //提取ApiConfigDTO data
+        ApiConfigDTO data = null;
 
         // 查询物理表数据
         //从tb_table_access表获取物理表信息
         TableAccessPO tableAccessPO = tableAccessMapper.selectById(dto.id);
-        //获取不到，抛出异常
+        //如果前面从tb_table_access表获取不到信息，则认为是实时api
         if (Objects.isNull(tableAccessPO)) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
+            //调用方法，获取tb_api_config表的指定信息
+            ResultEntity<ApiConfigDTO> apiConfig = iApiConfig.getOneApiById(dto.id);
+            data = apiConfig.getData();
+
+            //如果是实时api，则通过前端传参的物理表id获取物理表信息
+            tableAccessPO = tableAccessMapper.selectById(dto.modelPublishFieldDTOList.get(0).tableAccessId);
+            //如果获取实时api失败或获取不到物理表信息，则抛出异常
+            if (apiConfig.getCode() != ResultEnum.SUCCESS.getCode() || tableAccessPO == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，表信息不存在");
+            }
         }
 
-        // 查询app应用信息
-        AppRegistrationPO appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
+        AppRegistrationPO appRegistrationPO = null;
+
+        //判断是否是实时api,如果data == null，则不是实时api
+        if (data == null) {
+            //如果不是实时api，则通过tableAccessPO.appId获取物理表所在的app应用信息
+            appRegistrationPO = appRegistrationMapper.selectById(tableAccessPO.appId);
+        } else {
+            //如果是实时api，则使用data.appId获取实时api所在的app应用信息
+            appRegistrationPO = appRegistrationMapper.selectById(data.appId);
+
+        }
         //获取不到应用信息，则抛出异常
         if (Objects.isNull(appRegistrationPO)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "预览SQL失败，应用不存在");
         }
+
         //获取应用的目标数据源信息
         DataSourceDTO dataSourceDTO = getTargetDbInfo(appRegistrationPO.getTargetDbId());
         com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = dataSourceDTO.conType;
@@ -1577,12 +1802,23 @@ public class TableFieldsImpl
             }
         }
 
-        if (appRegistrationPO.whetherSchema) {
-            stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
-            odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
-        } else {
-            stgTableName = "[dbo]." + "[" + stgTableName + "]";
-            odsTableName = "[dbo]." + "[" + odsTableName + "]";
+        //根据conType数据库连接类型，拼接对应的表名和架构名
+        if (conType.getValue() == com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getValue()) {
+            if (appRegistrationPO.whetherSchema) {
+                stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
+                odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
+            } else {
+                stgTableName = "[dbo]." + "[" + stgTableName + "]";
+                odsTableName = "[dbo]." + "[" + odsTableName + "]";
+            }
+        } else if (conType.getValue() == POSTGRESQL.getValue()) {
+            if (appRegistrationPO.whetherSchema) {
+                stgTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + stgTableName + "\"";
+                odsTableName = "\"" + appRegistrationPO.appAbbreviation + "\"" + "." + "\"" + odsTableName + "\"";
+            } else {
+                stgTableName = "\"public\"." + "\"" + stgTableName + "\"";
+                odsTableName = "\"public\"." + "\"" + odsTableName + "\"";
+            }
         }
 
         //List<ModelPublishFieldDTO> ==> List<AccessPublishFieldDTO>
@@ -1593,8 +1829,8 @@ public class TableFieldsImpl
         //遍历==>手动转换，属性不多，并未使用mapStruct
         for (TableFieldsDTO m : dtoList) {
             AccessPublishFieldDTO a = new AccessPublishFieldDTO();
-            //数据接入，直接使用fieldName拼接sql
-            a.sourceFieldName = m.fieldName;
+            //不论是数接还是数仓，建成的temp/stg表和目标表（ods,dw库里的目标表）都是使用的目标字段
+            a.fieldEnName = m.fieldName;
             a.fieldLength = Math.toIntExact(m.fieldLength);
             a.fieldType = m.fieldType;
             a.isBusinessKey = m.isPrimarykey;
@@ -1616,7 +1852,7 @@ public class TableFieldsImpl
         String finalSql = codePreviewBySyncMode(stgTableName, odsTableName, previewDTO, conType);
 
         //如果连接类型是非数据库类型，移除sql中的小批次号
-        if (driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getName())||
+        if (driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.FTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.API.getName()) ||
                 driverTypes.contains(RESTFULAPI.getName())) {
@@ -1625,27 +1861,23 @@ public class TableFieldsImpl
         }
 
         //        //判断是否是全量覆盖方式 todo:全量覆盖,快照
-//        if (dto.syncMode==1){
-//            //判断全量覆盖方式是否生成快照  1使用  0不使用
-//            int snapshotFlag = dto.snapshotDTO.ifEnableSnapshot;
-//            if (snapshotFlag == 1){
-//                String fullVolumeSql = finalSql.substring(finalSql.indexOf(";"));
-//            }else {
-//                log.info("全量覆盖未选择生成版本快照...");
-//            }
-//        }
-
         //返回最终拼接好的sql
-        return finalSql;
+        if (dto.snapshotDTO != null) {
+            return getSnapshotSql(dto.snapshotDTO, finalSql, odsTableName);
+        } else {
+            return finalSql;
+        }
+
     }
 
     /**
      * 获取全量覆盖方式，使用快照时的sql
+     * 如果页面选择使用快照，则修改sql,如果没选择，则不修改
      *
      * @param snapshotDTO
      * @return
      */
-    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO, String finalSql) {
+    private String getSnapshotSql(AccessFullVolumeSnapshotDTO snapshotDTO, String finalSql, String odsTableName) {
         //判断全量覆盖方式是否生成快照  1使用  0不使用
         int snapshotFlag = snapshotDTO.ifEnableSnapshot;
         //新建变量预装载拼装前的sql
@@ -1662,7 +1894,8 @@ public class TableFieldsImpl
 
             //获取参数...
             //获取快照时间范围
-            int dateRange = snapshotDTO.dateRange;
+//            int dateRange = snapshotDTO.dateRange;
+
             /*
              * 快照时间单位：
              *  年:YEAR
@@ -1672,6 +1905,7 @@ public class TableFieldsImpl
              *  日:DAY
              */
             String dateUnit = snapshotDTO.dateUnit;
+
             /*
              * 版本号生成逻辑：
              *  0:当前年/季/月/周/日
@@ -1679,28 +1913,37 @@ public class TableFieldsImpl
              */
             int logicType = snapshotDTO.logicType;
 
-
             //todo:生成版本号
+            String versionType = "";
             if ("YEAR".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "YEAR(GetDate())";
             } else if ("QUARTER".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "CONCAT(YEAR(GETDATE()), '/Q0', CEILING(MONTH(GETDATE()) / 3.0))";
             } else if ("MONTH".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "FORMAT(GETDATE(), 'yyyy/MM')";
             } else if ("WEEK".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "CONCAT(YEAR(GETDATE()), '/W', DATEPART(WEEK, GETDATE()))";
             } else if ("DAY".equalsIgnoreCase(dateUnit)) {
-
+                versionType = "day(GETDATE())";
             }
 
             //如果使用自定义版本号
             if (logicType == 1) {
                 //获取自定义版本号的sql
                 String snapshotCostumeSql = snapshotDTO.snapshotCostumeSql;
+                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=(" + snapshotCostumeSql + ");";
+
             } else {
-                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=";
+                startSql = startSql + "DECLARE @Version nvarchar(4000)  SET @Version=(" + versionType + ");";
             }
 
+            startSql = startSql + "Delete From " + odsTableName + " where [fi_version]=@Version;";
+            finalSql = startSql + halfSql;
+
+            // 在 fi_createtime 前添加 fi_version
+            finalSql = finalSql.replaceFirst("fi_createtime", "fi_version, fi_createtime");
+            // 在第一个 getdate() 前添加 @Version,
+            finalSql = finalSql.replaceFirst("getdate\\(\\)", "@Version, getdate()");
             return finalSql;
         } else {
             log.info("全量覆盖未选择生成版本快照...");
@@ -1738,42 +1981,38 @@ public class TableFieldsImpl
         //List<AccessPublishFieldDTO>   ==>   List<PublishFieldDTO>
         List<PublishFieldDTO> fieldList = AccessCodePreviewMapper.INSTANCES.tableFieldsToPublishFields(fields);
 
-        //根据覆盖方式决定返回的sql
-        switch (sourceType) {
-            case SQLSERVER:
-                switch (syncMode) {
-                    //如果是0的话，不拼接任何sql
-                    case 0:
-                        return "";
-                    //全量
-                    case 1:
-                        //调用封装的全量覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
-                    //追加
-                    case 2:
-                        //调用封装的追加覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
-                    //业务标识覆盖（业务主键覆盖）---merge覆盖
-                    case 3:
-                        //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.merge(tableName, tempTableName, fieldList);
-                    //业务时间覆盖
-                    case 4:
-                        //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
-                    //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
-                    case 5:
-                        //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.delAndInsert(tableName, tempTableName, fieldList);
-                    default:
-                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-                }
-                //todo:暂时搁置
-            case POSTGRESQL:
+        //根据数据库的不同连接类型，获取不同的sqlHelper实现类
+        IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
+        //根据覆盖方式决定返回的sql
+        switch (syncMode) {
+            //如果是0的话，不拼接任何sql
+            case 0:
+                return "'请选择覆盖方式...'";
+            //全量
+            case 1:
+                //调用封装的全量覆盖方式拼接sql方法并返回
+                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
+            //追加
+            case 2:
+                //调用封装的追加覆盖方式拼接sql方法并返回
+                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
+            //业务标识覆盖（业务主键覆盖）---merge覆盖
+            case 3:
+                //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
+                return sqlHelper.merge(tableName, tempTableName, fieldList);
+            //业务时间覆盖
+            case 4:
+                //调用封装的业务时间覆盖方式的拼接sql方法并返回
+                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
+            //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
+            case 5:
+                //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
+
     }
 
     /**

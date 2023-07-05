@@ -2,10 +2,9 @@ package com.fisk.dataservice.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.dataservice.dto.atvserviceanalyse.AtvServiceMonitoringQueryDTO;
 import com.fisk.dataservice.entity.LogPO;
-import com.fisk.dataservice.vo.atvserviceanalyse.AtvCallApiFuSingAnalyseVO;
-import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
-import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
+import com.fisk.dataservice.vo.atvserviceanalyse.*;
 import com.fisk.dataservice.vo.logs.ApiLogVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -22,14 +21,21 @@ import java.util.List;
 public interface LogsMapper extends FKBaseMapper<LogPO> {
 
     /**
-     * 筛选器分页功能
-     *
-     * @param page  分页对象
-     * @param apiId apiIds
-     * @param appId appId
-     * @return 查询结果
+     * @return com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.fisk.dataservice.vo.logs.ApiLogVO>
+     * @description 筛选器分页功能
+     * @author dick
+     * @date 2023/6/19 10:29
+     * @version v1.0
+     * @params page
+     * @params apiId
+     * @params appId
+     * @params keyword
+     * @params callCycleStartDate
+     * @params callCycleEndDate
      */
-    Page<ApiLogVO> filter(Page<ApiLogVO> page, @Param("apiId") Integer apiId, @Param("appId") Integer appId, @Param("keyword") String keyword);
+    Page<ApiLogVO> filter(Page<ApiLogVO> page, @Param("apiId") Integer apiId, @Param("appId") Integer appId,
+                          @Param("keyword") String keyword, @Param("createApiType") Integer createApiType, @Param("callCycleStartDate") String callCycleStartDate,
+                          @Param("callCycleEndDate") String callCycleEndDate);
 
     /**
      * 统计昨天和今天API在各个时间节点的调用情况
@@ -82,4 +88,17 @@ public interface LogsMapper extends FKBaseMapper<LogPO> {
             "\tLIMIT 0,\n" +
             "\t20")
     List<AtvTopCallApiAnalyseVO> getAtvTopCallApiAnalyse();
+
+
+    List<AtvApiTimeConsumingRankingVO> getAtvApiTimeConsumingRanking(@Param("createApiType") int createApiType,
+                                                                     @Param("appId") int appId, @Param("apiId") int apiId);
+
+    List<AtvApiSuccessFailureRankingVO> getAtvApiSuccessFailureRanking(@Param("createApiType") int createApiType,
+                                                                       @Param("appId") int appId, @Param("apiId") int apiId);
+
+    List<AtvApiPrincipalDetailAppBindApiVO> getAtvApiPrincipalDetailAppBindApi(@Param("createApiType") int createApiType,
+                                                                               @Param("appId") int appId, @Param("apiId") int apiId);
+
+    List<AtvApiSqCountApiBindAppRankingVO> getAtvApiSqCountApiBindAppRanking(@Param("createApiType") int createApiType,
+                                                                             @Param("appId") int appId, @Param("apiId") int apiId);
 }

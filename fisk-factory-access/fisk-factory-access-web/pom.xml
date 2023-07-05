@@ -167,6 +167,15 @@
             <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
         </dependency>
 
+        <!-- openedge驱动 -->
+        <dependency>
+            <groupId>com.progress.openedge </groupId>
+            <artifactId>openedge-jdbc </artifactId>
+            <version>11.7.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/openedge.jar</systemPath>
+        </dependency>
+
         <!-- ftp -->
         <dependency>
             <groupId>commons-net</groupId>

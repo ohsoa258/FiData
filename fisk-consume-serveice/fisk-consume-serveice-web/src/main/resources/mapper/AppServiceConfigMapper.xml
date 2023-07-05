@@ -11,11 +11,13 @@
             t1.service_id,
             t1.api_state,
             t1.type,
-            t2.api_code,
-            t2.api_name as ServiceName,
-            t2.api_desc as ServiceDesc,
+            t2.api_code as apiCode,
+            t2.api_name as serviceName,
+            t2.api_desc as serviceDesc,
             1 as displayName,
             t2.datasource_id as dataSourceId,
+            t2.create_api_type as createApiType,
+            t2.api_proxy_url as apiProxyUrl,
             t1.create_time AS create_time,
             t2.create_time AS t2create_time,
             t3.create_time AS t3create_time
@@ -89,5 +91,41 @@
             </if>
         </if>
 
+    </select>
+
+    <select id="getAppApiBindList" resultType="com.fisk.dataservice.vo.app.AppApiBindVO">
+        SELECT
+            app.id AS appId,
+            app.app_name AS appName,
+            api.id AS apiId,
+            api.api_name AS apiName,
+            api.api_code AS apiCode,
+            api.create_time AS sortCreateTime
+        FROM
+            tb_app_service_config appApiService
+                LEFT JOIN tb_app_config app ON appApiService.app_id = app.id
+                LEFT JOIN tb_api_config api ON appApiService.service_id = api.id
+        WHERE
+            appApiService.del_flag = 1
+          AND app.del_flag = 1
+          AND api.del_flag = 1
+          AND appApiService.type = 1
+        <if test="createApiType!=null and createApiType != 0">
+            AND api.create_api_type = #{createApiType}
+        </if>
+        <if test="appId!=null and appId != 0">
+            AND appApiService.app_id = #{appId}
+        </if>
+        <if test="apiId!=null and apiId != 0">
+            AND appApiService.service_id = #{apiId}
+        </if>
+        GROUP BY
+            appId,
+            appName,
+            apiId,
+            apiName,
+            apiCode
+        ORDER BY
+            sortCreateTime DESC
     </select>
 </mapper>

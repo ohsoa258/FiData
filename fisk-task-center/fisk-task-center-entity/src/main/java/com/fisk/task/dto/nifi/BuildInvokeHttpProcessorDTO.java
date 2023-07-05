@@ -37,4 +37,16 @@ public class BuildInvokeHttpProcessorDTO extends BaseProcessorDTO {
     @ApiModelProperty(value = "nifi令牌")
     public String nifiToken;
 
+    /*
+     * Socket Connect Timeout
+     * */
+    @ApiModelProperty(value = "Socket Connect Timeout")
+    public String socketConnectTimeout;
+
+    /*
+     * Socket Read Timeout
+     * */
+    @ApiModelProperty(value = "Socket Read Timeout")
+    public String socketReadTimeout;
+
 }

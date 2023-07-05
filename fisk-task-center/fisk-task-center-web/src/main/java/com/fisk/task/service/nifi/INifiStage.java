@@ -27,7 +27,7 @@ public interface INifiStage {
      * @param nifiStagePO nifiStagePO
      * @return NifiStagePO
      */
-    NifiStagePO saveNifiStage(String nifiStagePO, Acknowledgment acke);
+    void saveNifiStage(String nifiStagePO, Acknowledgment acke);
 
     /**
      * 建模覆盖方式代码预览

@@ -62,20 +62,14 @@ public class SystemLogImpl implements SystemLog {
                 String name = log.getName();
                 //对比传入的时间参数，判断是否需要的是当天的日志
                 if (now.equals(date)) {
-                    //如果是，则获取当天的日志
-                    File dailyLog = new File(logName);
-                    //这里的逻辑意为：先假设当天只有一份日志，如果没查询到，则认为当天存在多份日志，此策略来源于logback.xml里面设置的回滚策略
-                    //如果按当天日志名没有查询到日志
-                    if (dailyLog.length() == 0) {
-                        //则获取日志名中包含dto.date日期的日志名
-                        if (name.contains(date)) logNames.add(log.getName());
-                    } else {
-                        //反之则直接获取当天日志名存在的日志即可
-                        String finalLogName = logName.substring(logName.lastIndexOf("/") + 1);
-                        if (name.contains(date) || name.equals(finalLogName)) {
-                            logNames.add(log.getName());
-                            break;
-                        }
+                    //如果是获取当天日志，获取当前所有日志名称
+                    String finalLogName = logName.substring(logName.lastIndexOf("/") + 1);
+                    //获取名字不带日期的日志
+                    if (name.equals(finalLogName)) {
+                        logNames.add(log.getName());
+                    }else if (name.contains(date)){
+                        //获取名字带日期的日志
+                        logNames.add(log.getName());
                     }
                 } else {
                     //若不是查询当天日志，直接获取包含要查询日期的日志名即可

@@ -1,7 +1,6 @@
 package com.fisk.dataservice.vo.app;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -35,9 +34,9 @@ public class AppRegisterVO
     public String appDesc;
 
     /**
-     * 应用负责人
+     * 应用申请人
      */
-    @ApiModelProperty(value = "应用负责人")
+    @ApiModelProperty(value = "应用申请人")
     public String appPrincipal;
 
     /**
@@ -45,6 +44,24 @@ public class AppRegisterVO
      */
     @ApiModelProperty(value = "应用账号")
     public String appAccount;
+
+    /**
+     * 应用类型：1本地应用、2代理应用
+     */
+    @ApiModelProperty(value = "应用类型：1本地应用、2代理应用")
+    public int appType;
+
+    /**
+     * 应用白名单，多个逗号分隔
+     */
+    @ApiModelProperty(value = "应用白名单，多个逗号分隔")
+    public String appWhiteList;
+
+    /**
+     * 应用白名单状态：1启用、2禁用
+     */
+    @ApiModelProperty(value = "应用白名单状态：1启用、2禁用")
+    public int appWhiteListState;
 
     /**
      * 密码/加密

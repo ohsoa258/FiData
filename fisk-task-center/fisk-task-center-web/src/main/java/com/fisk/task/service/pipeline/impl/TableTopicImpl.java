@@ -1,14 +1,20 @@
 package com.fisk.task.service.pipeline.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.map.TableTopicMap;
 import com.fisk.task.mapper.TableTopicMapper;
 import com.fisk.task.po.TableTopicPO;
 import com.fisk.task.service.pipeline.ITableTopicService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -24,6 +30,11 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
 
     @Resource
     TableTopicMapper tableTopicMapper;
+
+    @Value("${pipeline-async-switch}")
+    private Boolean pipelineAsyncSwitch;
+    @Resource
+    RedisUtil redisUtil;
 
 
     @Override
@@ -114,10 +125,23 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
     }
 
     @Override
-    public List<TableTopicDTO> getByTopicName(String topicName) {
+    public List<TableTopicDTO> getTableTopicDTOByComponentId(List<Long> componentId) {
+        LambdaQueryWrapper<TableTopicPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableTopicPO::getDelFlag,1)
+                .eq(TableTopicPO::getTopicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())
+                .in(TableTopicPO::getComponentId,componentId);
+        List<TableTopicPO> tableTopicPOS = tableTopicMapper.selectList(queryWrapper);
+        List<TableTopicDTO> tableTopicDtos = TableTopicMap.INSTANCES.listPoToDto(tableTopicPOS);
+        return tableTopicDtos;
+    }
+
+    @Override
+    public List<TableTopicDTO> getByTopicName(String topicName,String pipelTraceId) {
         List<TableTopicPO> tableTopics = new ArrayList<>();
+
         List<TableTopicPO> list = this.query().eq("topic_name", topicName).eq("del_flag", 1).list();
         for (TableTopicPO dto : list) {
+            List<TableTopicPO> tableTopicPOList = new ArrayList<>();
             int tableId = dto.tableId;
             int tableType = dto.tableType;
             int topicType = dto.topicType;
@@ -125,20 +149,36 @@ public class TableTopicImpl extends ServiceImpl<TableTopicMapper, TableTopicPO> 
                 topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
             }
             int taskId = dto.componentId;
-            List<TableTopicPO> list1 = new ArrayList<>();
+            //无表的组件走if里面
             if (Objects.equals(tableId, 0)) {
-                list1 = this.query().eq("table_id", tableId).eq("table_type", tableType).eq("component_id", taskId)
-                        .eq("del_flag", 1).like("topic_name", topicName).list();
-            } else {
-                list1 = this.query().eq("table_id", tableId).eq("table_type", tableType)
+                tableTopicPOList = this.query().eq("table_type", tableType).eq("component_id", taskId)
                         .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).list();
-            }
-
-            for (TableTopicPO dto1 : list1) {
-                if (!Objects.equals(dto.topicName, dto1.topicName)) {
-                    tableTopics.add(dto1);
+            } else {
+                TableTopicPO tableTopic = this.query().eq("table_id", tableId).eq("table_type", tableType)
+                        .eq("topic_type", topicType).eq("del_flag", 1).like("topic_name", topicName).one();
+                if (pipelineAsyncSwitch){
+                    //查找当前组件内所有任务的topic
+                    List<Long> componentIds = new ArrayList<>();
+                    Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                    TaskHierarchyDTO taskHierarchyDTO = JSON.parseObject(hmTask.get(tableTopic.componentId.toString()).toString(), TaskHierarchyDTO.class);
+                    Iterator<Map.Entry<Object, Object>> nodeMap = hmTask.entrySet().iterator();
+                    while (nodeMap.hasNext()) {
+                        Map.Entry<Object, Object> next = nodeMap.next();
+                        TaskHierarchyDTO taskNodeHierarchyDTO = JSON.parseObject(next.getValue().toString(), TaskHierarchyDTO.class);
+                        //查找组件内的成员
+                        if (taskNodeHierarchyDTO.itselfPort.pid.intValue() == taskHierarchyDTO.itselfPort.pid){
+                            componentIds.add(taskNodeHierarchyDTO.itselfPort.id);
+                        }
+                    }
+                    tableTopicPOList = this.query().eq("del_flag", 1)
+                            .in("component_id", componentIds)
+                            .eq("topic_type", topicType).list();
+                }else {
+                    tableTopicPOList.add(tableTopic);
                 }
+
             }
+            tableTopics.addAll(tableTopicPOList);
         }
         return TableTopicMap.INSTANCES.listPoToDto(tableTopics);
     }

@@ -225,7 +225,7 @@ public class BusinessProcessImpl
             data.businessAreaId=businessAreaPo.getId();
             data.businessAreaName=businessAreaPo.getBusinessName();
             data.userId=userHelper.getLoginUserInfo().id;
-            List<ModelPublishTableDTO> factList=new ArrayList<>();
+
             //获取表增量配置信息
             QueryWrapper<SyncModePO> syncModePoQueryWrapper=new QueryWrapper<>();
             syncModePoQueryWrapper.lambda().eq(SyncModePO::getTableType, TableHistoryTypeEnum.TABLE_FACT.getValue());
@@ -337,8 +337,9 @@ public class BusinessProcessImpl
                     e.sourceFieldName = e.fieldEnName;
                     e.fieldLength = 200;
                 });
-
                 pushDto.fieldList=fieldList;
+
+                List<ModelPublishTableDTO> factList=new ArrayList<>();
                 factList.add(pushDto);
                 data.dimensionList=factList;
                 data.openTransmission=dto.openTransmission;

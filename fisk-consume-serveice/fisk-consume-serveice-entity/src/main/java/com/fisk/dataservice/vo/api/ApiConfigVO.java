@@ -98,6 +98,30 @@ public class ApiConfigVO {
     public String createCountSql;
 
     /**
+     * 创建api类型
+     */
+    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api 3 代理API")
+    public Integer createApiType;
+
+    /**
+     * api地址
+     */
+    @ApiModelProperty(value = "api地址")
+    public String apiAddress;
+
+    /**
+     * api代理转发地址
+     */
+    @ApiModelProperty(value = "api代理转发地址")
+    public String apiProxyUrl;
+
+    /**
+     * api代理调用地址
+     */
+    @ApiModelProperty(value = "api代理调用地址")
+    public String apiProxyCallUrl;
+
+    /**
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")

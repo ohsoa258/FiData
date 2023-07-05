@@ -85,6 +85,7 @@ public class NifiCustomWorkflowDetailController {
             Map<Map, Map> structure = workListDTO.structure;
             workListDTO.externalStructure1 = externalStructure.toString();
             workListDTO.structure1 = structure.toString();
+            log.info("task前管道参数：{}",JSON.toJSONString(workListDTO));
             publishTaskClient.publishBuildNifiCustomWorkFlowTask(workListDTO);
             log.info(JSON.toJSONString(workListDTO));
             log.info("nifi: 管道创建成功");
@@ -152,5 +153,10 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<Object> forbiddenTask(@RequestBody List<ForbiddenTaskDTO> dto) {
 
         return ResultEntityBuild.build(service.forbiddenTask(dto));
+    }
+    @GetMapping("/runOnce")
+    @ApiOperation(value = "执行一次管道")
+    public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
+        return ResultEntityBuild.build(service.runOnce(id));
     }
 }

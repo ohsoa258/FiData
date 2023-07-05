@@ -42,7 +42,6 @@ public class TableServiceController {
     @Resource
     DataFactoryClient dataFactoryClient;
 
-    // 测试提交合并到日建v2分支
     @ApiOperation(value = "应用过滤字段")
     @GetMapping("/getFilterColumn")
     public ResultEntity<Object> getFilterColumn() {
@@ -194,9 +193,32 @@ public class TableServiceController {
     }
 
     @ApiOperation("数据库同步服务-新增同步按钮,手动同步表服务")
-    @PostMapping("/editTableServiceSync/{id}")
-    public ResultEntity<Object> editTableServiceSync(@PathVariable("id") long id) {
-        return ResultEntityBuild.build(service.editTableServiceSync(id));
+    @PostMapping("/editTableServiceSync")
+    public ResultEntity<Object> editTableServiceSync(@RequestBody TableServiceSyncDTO tableServiceSyncDTO) {
+        return ResultEntityBuild.build(service.editTableServiceSync(tableServiceSyncDTO));
+    }
+
+    @ApiOperation("根据应用Id查询表服务应用告警通知配置")
+    @GetMapping("/getTableServiceAlarmNoticeByAppId/{tableAppId}")
+    public ResultEntity<Object> getTableServiceAlarmNoticeByAppId(@PathVariable("tableAppId") int tableAppId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableServiceAlarmNoticeByAppId(tableAppId));
+    }
+
+    @ApiOperation("保存表服务应用告警通知配置")
+    @PostMapping("/saveTableServiceAlarmNotice")
+    public ResultEntity<Object> saveTableServiceAlarmNotice(@RequestBody TableRecipientsDTO dto) {
+        return ResultEntityBuild.build(service.saveTableServiceAlarmNotice(dto));
+    }
+    @ApiOperation("删除表服务应用告警通知件配置")
+    @PostMapping("/deleteTableServiceEmail")
+    public ResultEntity<Object> deleteTableServiceEmail(@RequestBody TableServiceEmailDTO dto) {
+        return ResultEntityBuild.build(service.deleteTableServiceEmail(dto));
+    }
+
+    @ApiOperation("发送表服务应用告警通知")
+    @PostMapping("/tableServiceSendEmails")
+    public ResultEntity<Object> tableServiceSendEmails(@RequestBody TableServiceEmailDTO dto) {
+        return ResultEntityBuild.build(service.tableServiceSendEmails(dto));
     }
 
 }

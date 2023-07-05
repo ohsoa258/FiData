@@ -349,4 +349,10 @@ public class AppRegistrationController {
     public ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBatchTargetDbIdByAppIds(appIds));
     }
+
+    @GetMapping("/getAppNameById")
+    @ApiOperation(value = "根据appId获取app应用名称")
+    public ResultEntity<AppRegistrationDTO> getAppNameById(@RequestParam("id") Long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppNameById(id));
+    }
 }

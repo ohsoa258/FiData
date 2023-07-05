@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
+import com.fisk.dataservice.vo.tableservice.TableRecipientsVO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 
 import java.util.List;
@@ -120,8 +121,41 @@ public interface ITableService {
     /**
      * 数据库同步服务-新增同步按钮,手动同步表服务
      *
-     * @param tableId
+     * @param tableServiceSyncDTO
      * @return
      */
-    ResultEnum editTableServiceSync(long tableId);
+    ResultEnum editTableServiceSync(TableServiceSyncDTO tableServiceSyncDTO);
+
+    /**
+     * 查询表服务应用告警通知配置
+     *
+     * @param tableAppId
+     * @return
+     */
+    TableRecipientsVO getTableServiceAlarmNoticeByAppId(int tableAppId);
+
+    /**
+     * 保存表服务应用告警通知配置
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum saveTableServiceAlarmNotice(TableRecipientsDTO dto);
+
+    /**
+     * 删除
+     *
+     * @param tableServiceEmail
+     * @return
+     */
+    ResultEnum deleteTableServiceEmail(TableServiceEmailDTO tableServiceEmail);
+
+
+    /**
+     * 调用邮件服务器发邮件的方法
+     *
+     * @param tableServiceEmail
+     * @return
+     */
+    ResultEnum tableServiceSendEmails(TableServiceEmailDTO tableServiceEmail);
 }

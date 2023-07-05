@@ -218,7 +218,11 @@ public class TestController {
                 .pipelTraceId("9a99737b-9e83-49b9-8f9d-bdf62fcd4b9e")
                 .comment("java.io.IOException: java.io.IOException: Could not obtain next record from ResultSet")
                 .build();
-        iPipelJobLog.exceptionHandlingLog(build);
+        try {
+            iPipelJobLog.exceptionHandlingLog(build);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

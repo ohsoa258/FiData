@@ -35,6 +35,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,6 +96,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Resource
     private UserClient userClient;
 
+    @Value("${dataservice.proxyservice.api_address}")
+    private String proxyServiceApiAddress;
+
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
@@ -113,6 +117,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                             .filter(user -> user.getId().toString().equals(e.createUser))
                             .findFirst()
                             .ifPresent(user -> e.createUser = user.userAccount);
+                    e.setApiProxyCallUrl(proxyServiceApiAddress + "/" + e.getApiCode());
                 });
             }
         }
@@ -124,7 +129,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         PageDTO<ApiSubVO> pageDTO = new PageDTO<>();
 
         List<ApiSubVO> apiSubVOS = new ArrayList<>();
-        List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.keyword);
+        Integer createApiType = dto.getAppType() == 2 ? 3 : dto.getAppType() ;
+        List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.getKeyword(), createApiType);
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
             List<AppServiceConfigPO> subscribeListByAppId = appServiceConfigMapper.getSubscribeListByAppId(dto.appId);
@@ -132,13 +138,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 apiSubVOS.forEach(e -> {
                     subscribeListByAppId
                             .stream()
-                            .filter(item -> item.getServiceId() == e.id
+                            .filter(item -> item.getServiceId() == e.getId()
                                     && item.getType() == AppServiceTypeEnum.API.getValue())
                             .findFirst()
                             .ifPresent(user -> e.apiSubState = 1);
                 });
             }
-            pageDTO.setTotal(Long.valueOf(apiSubVOS.size()));
+            pageDTO.setTotal((long) apiSubVOS.size());
             dto.current = dto.current - 1;
             apiSubVOS = apiSubVOS.stream().sorted(Comparator.comparing(ApiSubVO::getApiSubState).reversed()).skip((dto.current - 1 + 1) * dto.size).limit(dto.size).collect(Collectors.toList());
             List<Long> userIds = apiSubVOS.stream()
@@ -346,7 +352,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         return ResultEnum.SUCCESS;
     }
 
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(ApiRegisterDTO dto) {
@@ -356,9 +361,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         ApiConfigPO apiConfigPO = ApiRegisterMap.INSTANCES.dtoToPo(dto.apiDTO);
         if (apiConfigPO == null)
             return ResultEnum.SAVE_DATA_ERROR;
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiConfigPO.getDatasourceId());
-        if (dataSourceConPO == null)
-            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+        if (apiConfigPO.getCreateApiType() != 3) {
+            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(apiConfigPO.getDatasourceId());
+            if (dataSourceConPO == null)
+                return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+        }
         String apiCode = UUID.randomUUID().toString().replace("-", "").toLowerCase();
         apiConfigPO.setApiCode(apiCode);
         apiConfigPO.setCreateTime(LocalDateTime.now());
@@ -368,6 +375,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
         apiId = (int) apiConfigPO.getId();
+
+        // API代理只需要保存API的基本信息
+        if (apiConfigPO.getCreateApiType() == 3) {
+            return ResultEnum.SUCCESS;
+        }
 
         // 第二步：保存字段信息
         List<FieldConfigPO> fieldConfigPOS = ApiFieldMap.INSTANCES.listDtoToPo_Add(dto.fieldDTO);
@@ -394,12 +406,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
 
         // 第四步：保存输入参数信息
-        List<ParmConfigPO> parmConfigPOS = ApiParmMap.INSTANCES.listDtoToPo(dto.parmDTO);
-        if (CollectionUtils.isNotEmpty(parmConfigPOS)) {
-            parmConfigPOS.forEach(e -> {
+        List<ParmConfigPO> paramConfigPOS = ApiParmMap.INSTANCES.listDtoToPo(dto.parmDTO);
+        if (CollectionUtils.isNotEmpty(paramConfigPOS)) {
+            paramConfigPOS.forEach(e -> {
                 e.apiId = apiId;
             });
-            isInsert = apiParmManageImpl.saveBatch(parmConfigPOS);
+            isInsert = apiParmManageImpl.saveBatch(paramConfigPOS);
             if (!isInsert)
                 return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -420,9 +432,13 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (model == null) {
             return ResultEnum.DS_API_EXISTS;
         }
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
-        if (dataSourceConPO == null)
-            return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+
+        if (model.getCreateApiType() != 3) {
+            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
+            if (dataSourceConPO == null)
+                return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+        }
+
         int apiId;
         boolean isUpdate = false;
         // 第一步：编辑保存api信息
@@ -433,6 +449,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;
         apiId = (int) apiConfigPO.getId();
+
+        // API代理只需要保存API的基本信息
+        if (apiConfigPO.getCreateApiType() == 3) {
+            return ResultEnum.SUCCESS;
+        }
 
         // 第二步：编辑保存字段信息[数据库可能修改表字段描述，此处直接全量更新]
         apiFieldMapper.updateByApiId(apiId);
@@ -460,8 +481,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
          * 2、修改参数
          * 3、新增参数
          * */
-        if (CollectionUtils.isNotEmpty(dto.parmDTO)){
-            dto.parmDTO.forEach(t->{
+        if (CollectionUtils.isNotEmpty(dto.parmDTO)) {
+            dto.parmDTO.forEach(t -> {
                 t.setApiId(apiId);
             });
         }
@@ -503,8 +524,10 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (model == null)
             return ResultEntityBuild.buildData(ResultEnum.DS_API_EXISTS, apiRegisterDetailVO);
         apiRegisterDetailVO.apiVO = ApiRegisterMap.INSTANCES.poToVo(model);
-        DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(model.getDatasourceId());
-        apiRegisterDetailVO.apiVO.setDatasourceType(dataSourceConPO.getDatasourceType());
+        if (model.getDatasourceId() != 0) {
+            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(model.getDatasourceId());
+            apiRegisterDetailVO.apiVO.setDatasourceType(dataSourceConPO.getDatasourceType());
+        }
 
         // 第二步：查询字段信息
         QueryWrapper<FieldConfigPO> fieldQueryWrapper = new QueryWrapper<>();
@@ -667,18 +690,20 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             //获取数据集
             apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS);
             rs.close();
-            if (StringUtils.isNotEmpty(countSql))
-            {
+            int totalCount = 0;
+            if (StringUtils.isNotEmpty(countSql)) {
                 ResultSet countRs = st.executeQuery(countSql);
-                int totalCount = 0;
                 if (countRs.next()) {
                     Object count = countRs.getObject(1);
                     if (count != null && RegexUtils.isNumeric(count) != null)
                         totalCount = RegexUtils.isNumeric(count);
                 }
                 countRs.close();
-                apiPreviewVO.setTotalCount(totalCount);
+                apiPreviewVO.setTotal(totalCount);
             }
+            apiPreviewVO.setCurrent(current);
+            apiPreviewVO.setSize(size);
+            apiPreviewVO.setPage((int) Math.ceil(1.0 * totalCount / size));
         } catch (Exception e) {
             log.error("【preview】系统异常：" + e);
             throw new FkException(ResultEnum.DS_API_PV_QUERY_ERROR, e.getMessage());
@@ -716,8 +741,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
         List<FieldConfigVO> fieldConfigVOS = new ArrayList<>();
-        int count = 1;
-        while (rs.next() && count <= 10) {
+        while (rs.next()) {
             JSONObject jsonObj = new JSONObject();
             // 遍历每一列
             for (int i = 1; i <= columnCount; i++) {
@@ -726,7 +750,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 String value = rs.getString(columnName);
                 jsonObj.put(columnName, value);
             }
-            count++;
             array.add(jsonObj);
         }
 

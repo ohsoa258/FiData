@@ -27,6 +27,7 @@ import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelStageLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.enums.MyTopicStateEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -96,7 +97,8 @@ public class DataFactoryImpl implements IDataFactory {
 
             // 填充当前task的其他属性(管道名称、组件名称、表名等信息)
             buildAttribute(taskHierarchyDto);
-
+            //初始化MyTopic运行状态
+            taskHierarchyDto.setMyTopicState(MyTopicStateEnum.NOT_RUNNING);
             return ResultEntityBuild.build(ResultEnum.SUCCESS, taskHierarchyDto);
         } else {
             //之所以会进这里是因为任务id是空的,但是执行脚本任务是一定有任务id的
@@ -139,7 +141,10 @@ public class DataFactoryImpl implements IDataFactory {
             log.info("第二次操作该对象之后的值" + JSON.toJSONString(taskHierarchyDto));
             // 填充当前task的其他属性(管道名称、组件名称、表名等信息)
             buildAttribute(taskHierarchyDto);
+            //加入nifi流程中my-topic发送状态
+            taskHierarchyDto.setMyTopicState(MyTopicStateEnum.NOT_RUNNING);
             log.info("第三次操作该对象之后的值" + JSON.toJSONString(taskHierarchyDto));
+            //nifi流程结束状态
             return ResultEntityBuild.build(ResultEnum.SUCCESS, taskHierarchyDto);
         }
 

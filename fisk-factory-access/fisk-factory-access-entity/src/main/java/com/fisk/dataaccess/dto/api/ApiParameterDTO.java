@@ -42,4 +42,25 @@ public class ApiParameterDTO {
     @ApiModelProperty(value = "参数类型为表达式,表达式的类型为聚合函数,聚合字段所属的表id")
     public Integer tableAccessId;
 
+    @ApiModelProperty(value = "当选择body时: 1字段，2表")
+    public Integer attributeType;
+
+    @ApiModelProperty(value = "当选择body时: 字段名称")
+    public String attributeFieldName;
+
+    @ApiModelProperty(value = "当选择body时: 值类型，值数组，字符串，对象组")
+    public String attributeFieldType;
+
+    @ApiModelProperty(value = "当选择body时: 推送规则")
+    public String attributeFieldRule;
+
+    @ApiModelProperty(value = "当选择body时: 描述")
+    public String attributeFieldDesc;
+
+    @ApiModelProperty(value = "当选择body时: 字段的样例数据")
+    public String attributeFieldSample;
+
+    @ApiModelProperty(value = "当选择body时: 字段的上一级字段")
+    public String attributeFieldParent;
+
 }

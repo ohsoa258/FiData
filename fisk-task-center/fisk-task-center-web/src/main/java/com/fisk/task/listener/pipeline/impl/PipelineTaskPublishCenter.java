@@ -133,7 +133,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         log.info("打印topic内容:" + msg);
                         if (kafkaReceiveDTO.ifTaskStart) {
                             HashMap<Integer, Object> taskMap = new HashMap<>();
-                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN + " - " + simpleDateFormat.format(new Date()));
+                            taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                             log.info("第二处调用保存task日志");
                             iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceiveDTO.pipelTaskTraceId, taskMap, null, split1[5], Integer.parseInt(split1[3]));
                             //任务中心发布任务,通知任务开始执行
@@ -169,7 +169,7 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
                         iPipelineTaskPublishCenter.getPipeDagDto(Hierarchy, pipelTraceId);
 
                         //管道开始,job开始,task开始
-                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName);
+                        List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName,pipelTraceId);
                         for (TableTopicDTO topic : topicNames) {
                             String[] split = topic.topicName.split("\\.");
                             NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.valueOf(split[6]));
@@ -509,7 +509,11 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
         } catch (Exception e) {
             DispatchExceptionHandlingDTO dispatchExceptionHandling = getDispatchExceptionHandling(kafkaReceiveDTO, pipelName, jobName);
             log.error("管道调度报错" + StackTraceHelper.getStackTraceInfo(e));
-            iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandling);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
 
         } finally {
             if (acke != null) {
@@ -554,12 +558,6 @@ public class PipelineTaskPublishCenter implements IPipelineTaskPublishCenter {
             }
         } else {
             log.error("调度模块无此调度的dag图");
-        }
-        if (Objects.isNull(nifiPortsHierarchy) || Objects.isNull(nifiPortsHierarchy.itselfPort)) {
-            ResultEntity<TaskHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
-            if (Objects.equals(nifiPortHierarchy.code, ResultEnum.SUCCESS.getCode())) {
-                nifiPortsHierarchy = nifiPortHierarchy.data;
-            }
         }
         //去除ftp分类影响
         String dagPart = JSON.toJSONString(nifiPortsHierarchy);

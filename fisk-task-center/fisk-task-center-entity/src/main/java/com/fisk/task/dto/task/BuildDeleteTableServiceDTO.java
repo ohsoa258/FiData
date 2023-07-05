@@ -12,11 +12,23 @@ import java.util.List;
  */
 @Data
 public class BuildDeleteTableServiceDTO extends MQBaseDTO {
+
+    /**
+     * 应用Id
+     */
+    @ApiModelProperty(value = "应用Id")
+    public String appId;
     /**
      * 表类别
      */
     @ApiModelProperty(value = "表类别")
     public OlapTableEnum olapTableEnum;
+
+    /**
+     * 是否删除业务域/应用/模型
+     */
+    @ApiModelProperty(value = "是否删除业务域/应用/模型")
+    public boolean delBusiness;
     /**
      * 表id集合
      */

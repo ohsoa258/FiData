@@ -1,31 +1,29 @@
 package com.fisk.dataservice.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
+import com.fisk.dataservice.dto.atvserviceanalyse.AtvServiceMonitoringQueryDTO;
 import com.fisk.dataservice.dto.serviceanalyse.ATVServiceAnalyseDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
-import com.fisk.dataservice.enums.LogLevelTypeEnum;
-import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IATVServiceAnalyseService;
 import com.fisk.dataservice.util.HttpUtils;
-import com.fisk.dataservice.vo.atvserviceanalyse.AtvCallApiFuSingAnalyseVO;
-import com.fisk.dataservice.vo.atvserviceanalyse.AtvYasCallApiAnalyseVO;
-import com.fisk.dataservice.vo.atvserviceanalyse.AtvTopCallApiAnalyseVO;
+import com.fisk.dataservice.vo.app.AppApiBindVO;
+import com.fisk.dataservice.vo.atvserviceanalyse.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -39,7 +37,7 @@ import java.util.List;
 public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
 
     @Resource
-    private AppRegisterMapper appRegisterMapper; //api 应用
+    private AppRegisterMapper appRegisterMapper; //app 应用
 
     @Resource
     private TableAppMapper tableAppMapper; //数据库同步 table 应用
@@ -168,13 +166,13 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
         return logsMapper.getAtvTopCallApiAnalyse();
     }
 
-    @Async
     @Override
-    public boolean scanDataServiceApiIsFuSing() {
+    public void scanDataServiceApiIsFuSing() {
         AtvCallApiFuSingAnalyseVO atvCallApiFuSingAnalyseVO = new AtvCallApiFuSingAnalyseVO();
         atvCallApiFuSingAnalyseVO.setLastScanDateTime(DateTimeUtils.getNow());
         try {
             String url = scanApiAddress + "/dataservice/apiService/getToken";
+            log.info("【scanDataServiceApiIsFuSing-url】:" + url);
             TokenDTO tokenDTO = new TokenDTO();
             tokenDTO.setAppAccount("fiData_DataService_ScanTest_Account");
             tokenDTO.setAppPassword("fiData_DataService_ScanTest_Password");
@@ -198,6 +196,62 @@ public class IATVServiceAnalyseImpl implements IATVServiceAnalyseService {
                 log.error("定时扫描数据服务API是否熔断，redis写入异常：" + se);
             }
         }
-        return true;
+    }
+
+    @Override
+    public AtvServiceDropdownCardVO getAtvServiceDropdownCard(AtvServiceMonitoringQueryDTO dto) {
+        AtvServiceDropdownCardVO atvServiceDropdownCardVO = new AtvServiceDropdownCardVO();
+
+        HashMap<Integer, String> createApiTypeList = new HashMap<>();
+        createApiTypeList.put(0, "ALL");
+        createApiTypeList.put(1, "本地API");
+        createApiTypeList.put(3, "代理API");
+        atvServiceDropdownCardVO.setCreateApiTypeList(createApiTypeList);
+
+        HashMap<Integer, String> appNameList = new HashMap<>();
+        appNameList.put(0, "ALL");
+        HashMap<Integer, String> apiNameList = new HashMap<>();
+        apiNameList.put(0, "ALL");
+
+        List<AppApiBindVO> appApiBindList = serviceConfigMapper.getAppApiBindList(dto.getCreateApiType(), dto.getAppId(), dto.getApiId());
+        if (CollectionUtils.isNotEmpty(appApiBindList)) {
+            appApiBindList.forEach(t -> {
+                if (!appNameList.containsKey(t.getAppId())) {
+                    appNameList.put(t.getAppId(), t.getAppName());
+                }
+                if (!apiNameList.containsKey(t.getApiId())) {
+                    apiNameList.put(t.getApiId(), t.getApiName());
+                }
+            });
+        }
+
+        atvServiceDropdownCardVO.setAppNameList(appNameList);
+        atvServiceDropdownCardVO.setApiNameList(apiNameList);
+
+        return atvServiceDropdownCardVO;
+    }
+
+    @Override
+    public List<AtvApiTimeConsumingRankingVO> getAtvApiTimeConsumingRanking(AtvServiceMonitoringQueryDTO dto) {
+        return logsMapper.getAtvApiTimeConsumingRanking(dto.getCreateApiType(),
+                dto.getAppId(), dto.getApiId());
+    }
+
+    @Override
+    public List<AtvApiSuccessFailureRankingVO> getAtvApiSuccessFailureRanking(AtvServiceMonitoringQueryDTO dto) {
+        return logsMapper.getAtvApiSuccessFailureRanking(dto.getCreateApiType(),
+                dto.getAppId(), dto.getApiId());
+    }
+
+    @Override
+    public List<AtvApiPrincipalDetailAppBindApiVO> getAtvApiPrincipalDetailAppBindApi(AtvServiceMonitoringQueryDTO dto) {
+        return logsMapper.getAtvApiPrincipalDetailAppBindApi(dto.getCreateApiType(),
+                dto.getAppId(), dto.getApiId());
+    }
+
+    @Override
+    public List<AtvApiSqCountApiBindAppRankingVO> getAtvApiSqCountApiBindAppRanking(AtvServiceMonitoringQueryDTO dto) {
+        return logsMapper.getAtvApiSqCountApiBindAppRanking(dto.getCreateApiType(),
+                dto.getAppId(), dto.getApiId());
     }
 }

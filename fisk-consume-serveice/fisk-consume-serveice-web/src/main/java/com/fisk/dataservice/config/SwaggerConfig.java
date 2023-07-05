@@ -35,12 +35,13 @@ public class SwaggerConfig {
 public static final String TAG_1 = "数据源接口";
     public static final String TAG_2 = "应用接口";
     public static final String TAG_3 = "API接口";
-    public static final String TAG_4 = "API服务接口";
+    public static final String TAG_4 = "本地服务接口";
     public static final String TAG_5 = "数据服务日志";
     public static final String TAG_6 = "视图服务接口";
     public static final String TAG_7 = "表服务接口";
     public static final String TAG_8 = "数据分析服务";
     public static final String TAG_9 = "数据服务元数据调用";
+    public static final String TAG_10 = "代理服务接口";
 
     @Bean
     public Docket createRestApi() {
@@ -50,12 +51,13 @@ public static final String TAG_1 = "数据源接口";
                 .tags(new Tag(TAG_1,"数据源接口"))
                 .tags(new Tag(TAG_2,"应用接口"))
                 .tags(new Tag(TAG_3,"API接口"))
-                .tags(new Tag(TAG_4,"API服务接口"))
+                .tags(new Tag(TAG_4,"本地服务接口"))
                 .tags(new Tag(TAG_5,"数据服务日志"))
                 .tags(new Tag(TAG_8,"服务数据分析"))
                 .tags(new Tag(TAG_6,"视图服务接口"))
                 .tags(new Tag(TAG_7,"表服务接口"))
                 .tags(new Tag(TAG_9,"数据服务元数据调用"))
+                .tags(new Tag(TAG_10,"代理服务接口"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

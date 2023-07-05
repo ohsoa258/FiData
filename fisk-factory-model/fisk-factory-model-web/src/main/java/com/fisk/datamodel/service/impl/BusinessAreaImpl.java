@@ -13,7 +13,6 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
-import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -24,13 +23,16 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.accessAndTask.FactoryCodePreviewSqlHelper;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PreviewTableBusinessDTO;
-import com.fisk.common.service.accessAndTask.factorycodepreviewdto.PublishFieldDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
+import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
+import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
+import com.fisk.common.service.factorymodelkeyscript.IBuildFactoryModelKeyScript;
+import com.fisk.common.service.factorymodelkeyscript.impl.ModelKeyScriptHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
@@ -1179,76 +1181,24 @@ public class BusinessAreaImpl
         return list;
     }
 
+    /**
+     * 构建维度key脚本
+     *
+     * @param dto
+     * @return
+     */
     @Override
     public Object buildDimensionKeyScript(List<TableSourceRelationsDTO> dto) {
         if (CollectionUtils.isEmpty(dto)) {
             return "";
         }
+        //获取连接类型
+        DataSourceTypeEnum conType = getTargetDbInfo(targetDbId).conType;
 
-        StringBuilder str = new StringBuilder();
+        //获取对应连接类型的keyScriptHelper
+        IBuildFactoryModelKeyScript keyScriptHelper = ModelKeyScriptHelper.getKeyScriptHelperByConType(conType);
 
-        String tName = "[temp_" + dto.get(0).sourceTable + "].";
-
-        for (TableSourceRelationsDTO item : dto) {
-            str.append("update ")
-                    .append("[temp_");
-            str.append(item.sourceTable)
-                    .append("]");
-            str.append(" set ")
-                    .append("[temp_");
-            str.append(item.sourceTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
-                    .append("]");
-            str.append(" = ");
-            str.append("[")
-                    .append(item.targetTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
-                    .append("]");
-            str.append(" from ")
-                    .append("[temp_");
-            str.append(item.sourceTable)
-                    .append("]");
-            if (!StringUtils.isEmpty(item.joinType)) {
-                str.append(" ").append(item.joinType);
-                str.append(" ")
-                        .append("[")
-                        .append(item.targetTable)
-                        .append("]");
-            }
-            str.append(" on ")
-                    .append("[temp_");
-
-            str.append(item.sourceTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(item.sourceColumn)
-                    .append("]");
-            str.append(" = ");
-            str.append("[")
-                    .append(item.targetTable)
-                    .append("]")
-                    .append(".")
-                    .append("[")
-                    .append(item.targetColumn)
-                    .append("]")
-                    .append(" WHERE ")
-                    .append(tName)
-                    .append("fidata_batch_code=")
-                    .append("'${fidata_batch_code}' AND ")
-                    .append(tName)
-                    .append("fidata_flow_batch_code=")
-                    .append("'${fragment.index}'");
-            str.append(";");
-        }
-
-        return str.toString();
+        return keyScriptHelper.buildKeyScript(dto);
     }
 
     @Override
@@ -1258,17 +1208,21 @@ public class BusinessAreaImpl
             return new JSONObject();
         }
 
-        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
-        if (all.code != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
-        }
+        //不使用系统配置--平台数据源表里的第一条数据作为数据库的连接类型
+//        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
+//        if (all.code != ResultEnum.SUCCESS.getCode()) {
+//            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+//        }
+//
+//        Optional<DataSourceDTO> first = all.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
+//        if (!first.isPresent()) {
+//            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
+//        }
 
-        Optional<DataSourceDTO> first = all.data.stream().filter(e -> e.sourceBusinessType == SourceBusinessTypeEnum.DW).findFirst();
-        if (!first.isPresent()) {
-            throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
-        }
+        //改用配置文件中指定的数据源id的连接类型
+        DataSourceTypeEnum conType = getTargetDbInfo(dwSource).conType;
 
-        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(first.get().conType);
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(conType);
         return command.dataTypeList();
 
 
@@ -1341,9 +1295,8 @@ public class BusinessAreaImpl
         dataModel.buildNifiFlow = buildNifiFlow;
         dataModel.config = data;
         dataModel.funcName = FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_OUTPUT.getName();
-        //固定连接类型：sqlServer
-        dataModel.dataSourceType = DataSourceTypeEnum.SQLSERVER;
-        dataModel.synchronousTypeEnum = SynchronousTypeEnum.PGTOPG;
+        //获取连接类型
+        dataModel.dataSourceType = getTargetDbInfo(targetDbId).conType;
 
         //2023-04-21李世纪注释掉   ：下面是生成存储过程的数仓建模sql预览
 //        ResultEntity<Object> objectResultEntity = publishTaskClient.overlayCodePreview(dataModel);
@@ -1404,15 +1357,28 @@ public class BusinessAreaImpl
         DataSourceTypeEnum sourceType = overLoadCodeDTO.dataSourceType;
         //获取同步方式
         int syncMode = configDTO.targetDsConfig.syncMode;
-        //获取表名
-        String tableName = "[" + configDTO.processorConfig.targetTableName + "]";
+        String tableName = "";
+        String tempTableName ="";
 
-        String tableName1 = configDTO.processorConfig.targetTableName;
+        //根据数据库的不同连接类型，获取不同的表名格式
+        if (sourceType.getValue() == DataSourceTypeEnum.SQLSERVER.getValue()){
+            //获取表名
+            tableName = "[" + configDTO.processorConfig.targetTableName + "]";
+            String tableName1 = configDTO.processorConfig.targetTableName;
+            //获取临时表前缀
+            String prefixTempName = buildNifiFlow.prefixTempName;
+            //拼接临时表名称
+            tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
+        }else if (sourceType.getValue() == DataSourceTypeEnum.POSTGRESQL.getValue()){
+            //获取表名
+            tableName = "\"" + configDTO.processorConfig.targetTableName + "\"";
+            String tableName1 = configDTO.processorConfig.targetTableName;
+            //获取临时表前缀
+            String prefixTempName = buildNifiFlow.prefixTempName;
+            //拼接临时表名称
+            tempTableName = "\"" + prefixTempName + "_" + tableName1 + "\"";
+        }
 
-        //获取临时表前缀
-        String prefixTempName = buildNifiFlow.prefixTempName;
-        //拼接临时表名称
-        String tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
         //获取前端传递的表字段集合
         List<ModelPublishFieldDTO> fields = originalDTO.modelPublishFieldDTOList;
         //ModelPublishFieldDTO List ==> PublishFieldDTO List
@@ -1420,39 +1386,60 @@ public class BusinessAreaImpl
         //获取集合大小（字段数量）
         int size = fieldList.size();
 
-        //根据覆盖方式决定返回的sql
-        switch (sourceType) {
-            case SQLSERVER:
-                switch (syncMode) {
-                    //全量
-                    case 1:
-                        //调用封装的全量覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
-                    //追加
-                    case 2:
-                        //调用封装的追加覆盖方式拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
-                    //业务标识覆盖（业务主键覆盖）---merge覆盖
-                    case 3:
-                        //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.merge(tableName, tempTableName, fieldList);
-                    //业务时间覆盖
-                    case 4:
-                        //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
-                    //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
-                    case 5:
-                        //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                        return FactoryCodePreviewSqlHelper.delAndInsert(tableName, tempTableName, fieldList);
-                    default:
-                        throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
-                }
-                //todo:暂时搁置
-            case POSTGRESQL:
+        //根据数据库的不同连接类型，获取不同的sqlHelper实现类
+        IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
+        //根据覆盖方式决定返回的sql
+        switch (syncMode) {
+            //如果是0的话，不拼接任何sql
+            case 0:
+                return "'请选择覆盖方式...'";
+            //全量
+            case 1:
+                //调用封装的全量覆盖方式拼接sql方法并返回
+                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
+            //追加
+            case 2:
+                //调用封装的追加覆盖方式拼接sql方法并返回
+                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
+            //业务标识覆盖（业务主键覆盖）---merge覆盖
+            case 3:
+                //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
+                return sqlHelper.merge(tableName, tempTableName, fieldList);
+            //业务时间覆盖
+            case 4:
+                //调用封装的业务时间覆盖方式的拼接sql方法并返回
+                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
+            //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
+            case 5:
+                //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
+    }
+
+    /**
+     * 获取数据源信息
+     *
+     * @param id
+     * @return
+     */
+    private DataSourceDTO getTargetDbInfo(Integer id) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            dataSourceConfig = userClient.getFiDataDataSourceById(id);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            if (Objects.isNull(dataSourceConfig.data)) {
+                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+            }
+        } catch (Exception e) {
+            log.error("调用userClient服务获取数据源失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return dataSourceConfig.data;
     }
 
 }

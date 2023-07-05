@@ -63,6 +63,8 @@ import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.utils.keepnumberfactory.IBuildKeepNumber;
+import com.fisk.dataaccess.utils.keepnumberfactory.impl.BuildKeepNumberSqlHelper;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
 import com.fisk.dataaccess.utils.sql.SqlServerConUtils;
@@ -1714,7 +1716,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //2023-04-26李世纪修改，数据接入编辑物理表时，设置默认的stg保存时间
         //如果前端传递的参数没有app id(应用id),则认为并不是要设置默认stg保存时间的操作，就不进行stg默认保存时间的操作
         Long appId = dto.appId;
-
         if (appId != null) {
             po.setKeepNumber("5 day");
             // 查询app应用信息
@@ -1738,33 +1739,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 targetTableName = "ods_" + appRegistrationPO.getAppAbbreviation() + "_" + po.getTableName();
             }
             List<String> stgAndTableName = tableFieldsImpl.getStgAndTableName(targetTableName, appRegistrationPO);
-            //临时表
-            String stgTableName = "";
-            //目标表
-            String odsTableName = "";
-            for (int i = 0; i < 2; i++) {
-                if (i == 0) {
-                    stgTableName = stgAndTableName.get(i);
-                } else {
-                    odsTableName = stgAndTableName.get(i);
-                }
-            }
 
-            if (appRegistrationPO.whetherSchema) {
-                stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
-                odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
-            } else {
-                stgTableName = "[dbo]." + "[" + stgTableName + "]";
-                odsTableName = "[dbo]." + "[" + odsTableName + "]";
-            }
+            TableKeepNumberDTO tableKeepNumberDTO = new TableKeepNumberDTO();
+            //默认五天
+            tableKeepNumberDTO.setKeepNumber(po.keepNumber);
 
-            StringBuilder delSql = new StringBuilder("DELETE FROM ");
-            delSql.append(stgTableName)
-                    .append(" WHERE fi_createtime<DATEADD(")
-                    .append("DAY")
-                    .append(",")
-                    .append("-5")
-                    .append(",getdate())");
+            //根据数据库连接类型获取对应的stg保存时间的sql语句
+            String delSql = BuildKeepNumberSqlHelper.getKeepNumberSqlHelperByConType(dataSourceDTO.conType).setKeepNumberSql(tableKeepNumberDTO, appRegistrationPO, stgAndTableName);
 
             //设置删除stg表时的默认保存时间 5day 的del_stg_sql
             po.setDeleteStgScript(String.valueOf(delSql));
@@ -2485,45 +2466,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         List<String> stgAndTableName = tableFieldsImpl.getStgAndTableName(targetTableName, appRegistrationPO);
 
-        //临时表
-        String stgTableName = "";
-        //目标表
-        String odsTableName = "";
-        for (int i = 0; i < 2; i++) {
-            if (i == 0) {
-                stgTableName = stgAndTableName.get(i);
-            } else {
-                odsTableName = stgAndTableName.get(i);
-            }
-        }
-
-        if (appRegistrationPO.whetherSchema) {
-            stgTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + stgTableName + "]";
-            odsTableName = "[" + appRegistrationPO.appAbbreviation + "]" + "." + "[" + odsTableName + "]";
-        } else {
-            stgTableName = "[dbo]." + "[" + stgTableName + "]";
-            odsTableName = "[dbo]." + "[" + odsTableName + "]";
-        }
-
-        //获取keepNumber
-        String keepNumber = dto.keepNumber;
-        //日期范围
-        String[] kNumber = keepNumber.split(" ");
-        String dateRange = kNumber[0];
-        //日期单位   去除头尾空格,变为大写
-        String dateUnit = kNumber[1].toUpperCase();
-
-        StringBuilder delSql = new StringBuilder("DELETE FROM ");
-        //为sql拼接stg表名和where条件
-        delSql.append(stgTableName)
-                .append(" WHERE fi_createtime<DATEADD(")
-                .append(dateUnit)
-                .append(",")
-                .append("-")
-                .append(dateRange)
-                .append(",getdate())");
-
-        return baseMapper.setKeepNumber(dto.id, keepNumber, String.valueOf(delSql)) > 0 ? ResultEnum.SUCCESS : ResultEnum.SET_KEEP_NUMBER_ERROR;
+        //获取连接类型 根据连接类型的不同，生成不同的stg保存时间对应的sql
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = dataSourceDTO.conType;
+        //根据连接类型，获取对应连接类型的keepNumberSql实现类
+        IBuildKeepNumber keepNumberSqlHelper = BuildKeepNumberSqlHelper.getKeepNumberSqlHelperByConType(conType);
+        //获取keepNumberSql
+        String keepNumberSql = keepNumberSqlHelper.setKeepNumberSql(dto,appRegistrationPO,stgAndTableName);
+        return baseMapper.setKeepNumber(dto.id, dto.keepNumber, String.valueOf(keepNumberSql)) > 0 ? ResultEnum.SUCCESS : ResultEnum.SET_KEEP_NUMBER_ERROR;
     }
 
     @Override

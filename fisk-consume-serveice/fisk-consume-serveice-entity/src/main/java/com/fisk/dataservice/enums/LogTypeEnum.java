@@ -13,8 +13,8 @@ public enum LogTypeEnum implements BaseEnum {
     /**
      * 日志类型
      */
-    API(100, "数据服务API"),
-    SCAN_API(200, "扫描数据服务API");
+    API(100, "本地服务"),
+    AGENT_API(200, "代理服务");
 
     LogTypeEnum(int value, String name) {
         this.name = name;

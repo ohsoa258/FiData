@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ddtek.jdbc.openedge.OpenEdgeDriver;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
@@ -172,7 +173,7 @@ public class AppRegistrationImpl
         Boolean aBoolean = checkSourcesTypeIfOk(data);
         if (!aBoolean){
             log.error("当前应用选择的数据源类型存在冲突！");
-            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR);
+            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR,"当前应用选择的数据源类型存在冲突");
         }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -1011,6 +1012,12 @@ public class AppRegistrationImpl
                     conn = DbConnectionHelper.connection(dto.connectStr, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
                     allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                     break;
+                case OPENEDGE:
+                    // 注册OpenEdge驱动程序
+                    DriverManager.registerDriver(new OpenEdgeDriver());
+//                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                 default:
                     break;
             }
@@ -2031,6 +2038,19 @@ public class AppRegistrationImpl
 //                        ArrayList::new));
         //调用封装的筛选方法
         return chooseDriveType(data, appDriveTypeDTOS);
+    }
+
+    /**
+     * 根据appId获取app应用名称
+     * @param id
+     * @return
+     */
+    @Override
+    public AppRegistrationDTO getAppNameById(Long id) {
+        QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
+        wrapper.eq("id",id).select("app_name");
+        AppRegistrationPO one = getOne(wrapper);
+        return AppRegistrationMap.INSTANCES.poToDto(one);
     }
 
     /**

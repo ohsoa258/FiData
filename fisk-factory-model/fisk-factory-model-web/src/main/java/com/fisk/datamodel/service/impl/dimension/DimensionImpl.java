@@ -3,6 +3,7 @@ package com.fisk.datamodel.service.impl.dimension;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -14,6 +15,8 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.IBuildDataModelSqlCommand;
+import com.fisk.common.service.dimensionquerysql.IBuildDimensionQuerySql;
+import com.fisk.common.service.dimensionquerysql.impl.DimensionQuerySqlHelper;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
@@ -62,10 +65,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -106,6 +106,8 @@ public class DimensionImpl
     DataSourceConfigUtil dataSourceConfigUtil;
     @Resource
     SystemVariablesImpl systemVariables;
+    @Value("${fiData-data-dw-source}")
+    private Integer dwSource;
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
@@ -130,51 +132,12 @@ public class DimensionImpl
 
         //判断是否为生成时间维度表
         if (dto.timeTable) {
-            String startTime = dto.startTime.replace("-", "");
-            String endTime = dto.endTime.replace("-", "");
-            // 生成查询语句
-            String selSql = "DECLARE @StartDate DATETIME = '" + startTime + "';\n" +
-                    "\n" +
-                    "DECLARE @EndDate DATETIME = '" + endTime + "';\n" +
-                    "\n" +
-                    "\n" +
-                    "\n" +
-                    "WITH DateList AS (\n" +
-                    "\n" +
-                    "  SELECT TOP (DATEDIFF(DAY, @StartDate, @EndDate) + 1)\n" +
-                    "\n" +
-                    "    [Date] = DATEADD(DAY, ROW_NUMBER() OVER(ORDER BY a.object_id) - 1, @StartDate)\n" +
-                    "\n" +
-                    "  FROM sys.all_objects a\n" +
-                    "\n" +
-                    "  CROSS JOIN sys.all_objects b\n" +
-                    "\n" +
-                    ")\n" +
-                    "\n" +
-                    "SELECT\n" +
-                    "\n" +
-                    "  [Date] as FullDateAlternateKey,\n" +
-                    "\n" +
-                    "  DATEPART(WEEKDAY, [Date]) as DayNumberOfWeek,\n" +
-                    "\n" +
-                    "  DATENAME(WEEKDAY, [Date]) COLLATE SQL_Latin1_General_CP1_CS_AS as EnglishDayNameOfWeek,\n" +
-                    "\n" +
-                    "  DAY([Date]) as DayNumberOfMonth,\n" +
-                    "\n" +
-                    "  DATEPART(DAYOFYEAR, [Date]) as DayNumberOfYear,\n" +
-                    "\n" +
-                    "  DATEPART(WEEK, [Date]) as WeekNumberOfYear,\n" +
-                    "\n" +
-                    "  DATENAME(MONTH, [Date]) as EnglishMonthName,\n" +
-                    "\n" +
-                    "  DATEPART(MONTH, [Date]) as MonthNumberOfYear,\n" +
-                    "\n" +
-                    "  DATEPART(QUARTER, [Date]) as CalendarQuarter,\n" +
-                    "\n" +
-                    "  YEAR([Date]) as CalendarYear\n" +
-                    "\n" +
-                    "FROM DateList";
-            model.setSqlScript(selSql);
+
+            DataSourceTypeEnum conType = getTargetDbInfo(dwSource).conType;
+            IBuildDimensionQuerySql dimensionQuerySqlHelper = DimensionQuerySqlHelper.getDimensionQuerySqlHelperByConType(conType);
+            String sql = dimensionQuerySqlHelper.buildDimensionQuerySql(dto.startTime, dto.endTime);
+
+            model.setSqlScript(sql);
             //标识此表为时间表
             model.setIsDimDateTbl(true);
 
@@ -1002,6 +965,29 @@ public class DimensionImpl
             columnList.add(column);
         }
         return columnList;
+    }
+
+    /**
+     * 获取数据源信息
+     *
+     * @param id
+     * @return
+     */
+    private DataSourceDTO getTargetDbInfo(Integer id) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            dataSourceConfig = userClient.getFiDataDataSourceById(id);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            if (Objects.isNull(dataSourceConfig.data)) {
+                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+            }
+        } catch (Exception e) {
+            log.error("调用userClient服务获取数据源失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return dataSourceConfig.data;
     }
 
 }

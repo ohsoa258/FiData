@@ -31,6 +31,7 @@ import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author cfk
@@ -267,8 +268,14 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     }
 
     @Override
-    public void exceptionHandlingLog(DispatchExceptionHandlingDTO dto) {
+    public void exceptionHandlingLog(DispatchExceptionHandlingDTO dto) throws InterruptedException {
         log.info("管道异常修补参数:{}", JSON.toJSONString(dto));
+        Boolean setnx;
+        do {
+            Thread.sleep(200);
+//                    log.info("exceptionHandlingLog获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
+            setnx = redisUtil.setnx("PipelLock:"+dto.pipelTraceId, 100, TimeUnit.SECONDS);
+        } while (!setnx);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         //1.从小到大保存
         //任务日志
@@ -297,8 +304,6 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
                 } else {
                     log.info("单次发布无需修改状态,或未找到redis内相关数据");
                 }
-
-
             }
         }
         //job日志
@@ -324,6 +329,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             //this.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
             //iPipelLog.savePipelLog(dto.pipelTraceId, pipelMap, list.get(0).pipelId);
         }
+        redisUtil.del("PipelLock:"+dto.pipelTraceId);
     }
 
     public void updateTaskStatus(String id, String pipelTraceId, int i) {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ddtek.jdbc.openedge.OpenEdgeDriver;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -20,6 +21,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.app.DbConnectionDTO;
 import com.fisk.system.dto.GetConfigDTO;
 import com.fisk.system.dto.datasource.*;
@@ -103,8 +105,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     @Override
     public Page<DataSourceDTO> getAllDataSource(DataSourceQueryDTO queryDTO) {
         StringBuilder querySql = new StringBuilder();
+        List<FilterQueryDTO> filterQueryDTOS = null;
         if (CollectionUtils.isNotEmpty(queryDTO.getDto())) {
-            List<FilterQueryDTO> filterQueryDTOS = queryDTO.getDto().stream().filter(t -> t.columnName.contains("con_type")).collect(Collectors.toList());
+            filterQueryDTOS = queryDTO.getDto().stream().filter(t -> t.columnName.contains("con_type")).collect(Collectors.toList());
             if (CollectionUtils.isNotEmpty(filterQueryDTOS)) {
                 filterQueryDTOS.forEach(filterQueryDTO -> {
                     if (StringUtils.isNotEmpty(filterQueryDTO.getColumnValue())) {
@@ -121,14 +124,29 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("5");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("ORACLE")) {
                             filterQueryDTO.setColumnValue("6");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("REDSHIFT")) {
+                            filterQueryDTO.setColumnValue("7");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("RESTFULAPI")) {
+                            filterQueryDTO.setColumnValue("8");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("API")) {
+                            filterQueryDTO.setColumnValue("9");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("FTP")) {
+                            filterQueryDTO.setColumnValue("10");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("SFTP")) {
+                            filterQueryDTO.setColumnValue("11");
                         }
                     }
                 });
             }
         }
 
-        // 拼接原生筛选条件
-        querySql.append(generateCondition.getCondition(queryDTO.getDto()));
+        if (filterQueryDTOS != null) {
+            // 拼接原生筛选条件
+            querySql.append(generateCondition.getCondition(filterQueryDTOS));
+        } else {
+            querySql.append(generateCondition.getCondition(queryDTO.dto));
+        }
+
         DataSourcePageDTO data = new DataSourcePageDTO();
         data.page = queryDTO.getPage();
         // 筛选器左边的模糊搜索查询SQL拼接
@@ -173,15 +191,43 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEnum deleteDataSource(int id) {
+    public ResultEntity<Object> deleteDataSource(int id) {
+        ResultEnum resultEnum = null;
         DataSourcePO model = baseMapper.selectById(id);
         if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 //        if (model.getSourceType() == 1) {
 //            return ResultEnum.SYSTEM_DATA_SOURCE_NOT_OPERATION;
 //        }
-        return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+        //系统配置--平台数据源删除数据源时，需要校验数据接入是否仍有应用引用要删除的数据源，如果有，禁止删除，并提醒有哪些应用正引用当前数据源
+        ResultEntity<List<AppDataSourceDTO>> sources = dataAccessClient.getDataSourcesBySystemDataSourceId(id);
+        if (sources.getCode() != ResultEnum.SUCCESS.getCode()) {
+            return ResultEntityBuild.build(ResultEnum.GET_ACCESS_DATA_SOURCE_ERROR);
+        } else {
+            List<AppDataSourceDTO> data = sources.getData();
+            //新建集合预装载数据接入的app应用名称
+            List<String> appNames = new ArrayList<>();
+            appNames.add("引用该数据源的应用为：");
+            for (AppDataSourceDTO datum : data) {
+                Long appId = datum.appId;
+                ResultEntity<AppRegistrationDTO> appRegistration = dataAccessClient.getAppNameById(appId);
+                if (appRegistration.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    log.error("获取应用信息失败");
+                    return ResultEntityBuild.build(ResultEnum.APP_IS_NOT_EXISTS, "获取应用信息失败");
+                } else {
+                    String appName = appRegistration.getData().appName;
+                    appNames.add("[" + appName + "]");
+                }
+            }
+            if (CollectionUtils.isNotEmpty(data)) {
+                log.info("当前数据源仍有数据接入的app应用在引用！");
+                return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_IS_USING, appNames);
+            } else {
+                resultEnum = baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.DELETE_ERROR;
+            }
+        }
+        return ResultEntityBuild.build(resultEnum);
     }
 
     @Override
@@ -254,18 +300,18 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     //为了测试ftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
                     DbConnectionDTO ftpDTO = saveDtoToConDto(dto);
                     ResultEntity<Object> connectFtp = dataAccessClient.connectFtp(ftpDTO);
-                    if (connectFtp.getCode() == ResultEnum.SUCCESS.getCode()){
+                    if (connectFtp.getCode() == ResultEnum.SUCCESS.getCode()) {
                         return ResultEnum.SUCCESS;
-                    }else {
+                    } else {
                         return ResultEnum.FTP_CONNECTION_ERROR;
                     }
                 case SFTP:
                     //为了测试sftp连接，先将DataSourceSaveDTO对象转为DbConnectionDTO对象
                     DbConnectionDTO sftpDTO = saveDtoToConDto(dto);
                     ResultEntity<Object> connectSftp = dataAccessClient.connectSftp(sftpDTO);
-                    if (connectSftp.getCode() == ResultEnum.SUCCESS.getCode()){
+                    if (connectSftp.getCode() == ResultEnum.SUCCESS.getCode()) {
                         return ResultEnum.SUCCESS;
-                    }else {
+                    } else {
                         return ResultEnum.SFTP_CONNECTION_ERROR;
                     }
                 case API:
@@ -278,6 +324,12 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             return ResultEnum.API_NOT_EXIST;
                         }
                     }
+                case OPENEDGE:
+                    // 注册OpenEdge驱动程序
+                    DriverManager.registerDriver(new OpenEdgeDriver());
+//                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }

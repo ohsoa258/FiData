@@ -1,5 +1,6 @@
 package com.fisk.task.utils;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -18,6 +19,7 @@ import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -25,6 +27,7 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -90,10 +93,11 @@ public class TaskPgTableStructureHelper
     /**
      * 保存建模相关表结构数据(保存版本号)
      *
-     * @param dto 版本号和修改表结构的参数
-     * @param version 时间戳版本号
+     * @param dto            版本号和修改表结构的参数
+     * @param version        时间戳版本号
      * @param dataSourceType 数据源连接类型
      */
+//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = FkException.class)
     public ResultEnum saveTableStructure(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
@@ -143,27 +147,25 @@ public class TaskPgTableStructureHelper
                     poList.add(po2);
                 }
             }
-            //保存成功,调用存储过程,获取修改表结构SQL语句
-            if (!this.saveBatch(poList.stream().distinct().collect(Collectors.toList()))) {
+            //保存表结构到tb_task_pg_table_structure
+            List<TaskPgTableStructurePO> pos = poList.stream().distinct().collect(Collectors.toList());
+            boolean saveResult = this.saveBatch(pos);
+            log.info("保存表结构到tb_task_pg_table_structure保存结果：{}", saveResult);
+            if (!saveResult) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
-            //执行存储过程
+            //保存成功,调用存储过程,获取修改表结构SQL语句
             String sql = execProcedure(version, type, dataSourceType);
             log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
             //判断是否有修改语句
             return updatePgTableStructure(sql, version, dto.createType);
         } catch (Exception ex) {
+            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             log.error("saveTableStructure:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
     }
-
-    /*@Test
-    public void  tests()throws Exception
-    {
-        String aa=execProcedure("20211203140317267",1);
-        String bb="";
-    }*/
 
     /**
      * 执行存储过程,获取更改表结构SQL语句
@@ -171,6 +173,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
+//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
     public String execProcedure(String version, int type, DataSourceTypeEnum dataSourceType) throws Exception {
         //配置数据库参数
         Class.forName(driverClassName);
@@ -185,8 +188,11 @@ public class TaskPgTableStructureHelper
             List<String> sqlList = new ArrayList<>();
             CallableStatement cs = null;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSourceType);
+            //dbCommand.prepareCallSql() = "call pg_check_table_structure_sqlserver(?,?)"
             cs = (CallableStatement) conn.prepareCall(dbCommand.prepareCallSql());
+            //第一个参数为前面我们生成的版本号
             cs.setString(1, version);
+            //第二个参数为数据库连接类型，type=2--ods,也是前面获取的
             cs.setInt(2, type);
             cs.execute();
             ResultSet rs = cs.getResultSet();
@@ -218,6 +224,7 @@ public class TaskPgTableStructureHelper
                         }
                     } catch (SQLException e) {
                         log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                     }
                 }
             }
@@ -227,8 +234,13 @@ public class TaskPgTableStructureHelper
             return str.toString();
         } catch (SQLException e) {
             log.error("execProcedure:" + e);
-            conn.close();
+//            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
+//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return "";
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
     }
 
@@ -239,6 +251,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
+//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = FkException.class)
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
@@ -307,6 +320,8 @@ public class TaskPgTableStructureHelper
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
+            //如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
+            taskPgTableStructureMapper.updatevalidVersion(version);
             throw new FkException(ResultEnum.SQL_ERROR, StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (st != null) {

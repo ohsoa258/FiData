@@ -24,12 +24,6 @@ public class LogQueryBasicsDTO {
     public int tableServiceId;
 
     /**
-     * 文件服务ID
-     */
-    @ApiModelProperty(value = "文件服务ID")
-    public int fileServiceId;
-
-    /**
      * keyword
      */
     @ApiModelProperty(value = "keyword")

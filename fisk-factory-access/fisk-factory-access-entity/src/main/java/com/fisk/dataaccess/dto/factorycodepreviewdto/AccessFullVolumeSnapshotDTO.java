@@ -20,7 +20,7 @@ public class AccessFullVolumeSnapshotDTO {
     /**
      * 快照时间范围
      */
-    @ApiModelProperty(value = "全量覆盖方式：是否开启快照:0否 1是")
+    @ApiModelProperty(value = "快照时间范围")
     public int dateRange;
 
     /**

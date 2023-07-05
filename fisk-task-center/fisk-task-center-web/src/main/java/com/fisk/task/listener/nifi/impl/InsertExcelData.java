@@ -25,6 +25,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.NumberToTextConverter;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -72,8 +73,13 @@ public class InsertExcelData implements ISftpDataUploadListener {
             String fidata_batch_code = kafkaReceive.fidata_batch_code;
             log.info("大批次号：{}", fidata_batch_code);
 
+//            //获取修改前的源字段
+//            List<String> sourceFieldNames = kafkaReceive.sourceFieldNames;
+
             String[] topicParameter = topic.split("\\.");
+            //应用id
             String appId = "";
+            //表id
             String tableId = "";
             if (Objects.equals(topicParameter.length, 6)) {
                 appId = topicParameter[4];
@@ -95,6 +101,32 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 targetDsConfig.targetTableName = one.tableName;
                 //获取物理表字段集合
                 List<TableFieldsDTO> tableFieldsList = targetDsConfig.tableFieldsList;
+
+//                //2023-06-28李世纪修改
+//                //获取当前目标字段对应的源字段集合
+//                //重新给目标字段排序  如果页面修改了源字段与目标字段的映射关系（或者说因为excel表结构的修改，而导致页面修改了映射关系）
+//                //就需要我们在插入数据到stg表时，在不修改表字段顺序的前提下，将页面映射的字段关系作为数据插入的准则
+//                //开始排序⬇
+//                List<TableFieldsDTO> tableFieldsList1 = new ArrayList<>();
+//                if (!sourceFieldNames.isEmpty()) {
+//                    List<String> currentSourceFieldNames = new ArrayList<>();
+//                    tableFieldsList.forEach(tableFieldsDTO -> {
+//                        currentSourceFieldNames.add(tableFieldsDTO.sourceFieldName);
+//                    });
+//                    //重新给tableFieldsList排序
+//                    Map<String, TableFieldsDTO> map = new HashMap<>();
+//                    for (int i = 0; i < sourceFieldNames.size(); i++) {
+//                        map.put(sourceFieldNames.get(i), tableFieldsList.get(i));
+//                    }
+//                    for (String currentSourceFieldName : currentSourceFieldNames) {
+//                        tableFieldsList1.add(map.get(currentSourceFieldName));
+//                    }
+//                    //⬆排序完毕
+//
+//                } else {
+//                    tableFieldsList1 = tableFieldsList;
+//                }
+
                 //获取列总数
                 Integer columnCount = tableFieldsList.size();
                 //获取sftp/ftp配置信息
@@ -124,7 +156,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(targetDsConfig.targetTableName);
                 //stgAndTableName.get(0) 是stg表名，即 sqlBuilder 语句是往stg表里面插入数据
                 StringBuilder sqlBuilder = new StringBuilder("INSERT INTO " + stgAndTableName.get(0) + " (fidata_batch_code,");
-                //fori循环，目的是遍历tableFieldsList，获取每个字段的字段名
+                //fori循环，目的是遍历tableFieldsList1，获取每个字段的字段名
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
                         sqlBuilder.append(", ");
@@ -134,7 +166,8 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 sqlBuilder.append(") VALUES ('")
                         .append(fidata_batch_code)
                         .append("',");
-                ////fori循环，目的是遍历tableFieldsList，将要插入的数据以占位符 ? 替代
+
+                //将要插入的数据以占位符 ? 替代
                 for (int i = 0; i < columnCount; i++) {
                     if (i > 0) {
                         sqlBuilder.append(", ");
@@ -157,16 +190,16 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     // 循环插入数据
                     int batchSize = 1000; // 每批次插入的数据条数
                     int count = 0;
-                    int excelRowCount = 1;
+//                    int excelRowCount = 1;
                     assert lists != null;
                     for (List list : lists) {
 
-                        log.info("excel第" + excelRowCount + "行数据个数：{}", list.size());
+//                        log.info("excel第" + excelRowCount + "行数据个数：{}", list.size());
                         for (int i = 0; i < list.size(); i++) {
                             //列数和占位符必须匹配
                             if (i >= columnCount) break;
                             Object object = list.get(i);
-                            excelRowCount++;
+
                             if (object != null) {
                                 pstmt.setString(i + 1, object.toString());
                             } else {
@@ -174,6 +207,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             }
                         }
                         pstmt.addBatch();
+//                        excelRowCount++;
                         count++;
                         if (count % batchSize == 0) {
                             pstmt.executeBatch();
@@ -183,7 +217,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
 
                 } else {
                     log.error("userclient无法查询到ods库的连接信息");
-                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "userclient无法查询到ods库的连接信息");
                 }
             }
         } catch (Exception e) {
@@ -242,14 +276,16 @@ public class InsertExcelData implements ISftpDataUploadListener {
         if (wb != null) {
             try {
                 List<List<Object>> content = new ArrayList<>();
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                //指定时区为东八区，避免时区偏移的现象出现
+                simpleDateFormat.setTimeZone(TimeZone.getTimeZone("GMT+8"));
                 Sheet sheet = wb.getSheet(sheetName);
                 // 获取行数
                 int getRow = 0;
                 short lastCellNum = (short) config.targetDsConfig.tableFieldsList.size();
                 //解决最大行数一直变的问题,拿第一次得到的行数
                 int physicalNumberOfRows = sheet.getPhysicalNumberOfRows();
-                for (int i = 0; i <= physicalNumberOfRows; i++) {
+                for (int i = 0; i < physicalNumberOfRows; i++) {
                     //2023-05-19李世纪修改
                     //开始读取的行数不再加1
                     if (getRow < startRow) {
@@ -266,8 +302,20 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     List<Object> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
                         //System.out.println("坐标:"+i+","+j);
-                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j));
+                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j), physicalNumberOfRows);
+
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
+//                        //如果获取到的单元格数据是日期类型，就格式化后再存储 todo:
+//                        if (obj instanceof Date) {
+//                            String date = simpleDateFormat.format((Date) obj);
+//                            col.add(date);
+//                        }else if (obj instanceof String){
+//                            //如果获取到的单元格数据是字符串类型，就用字符串接收，防止科学计数法
+//                            String s = (String) obj;
+//                        }else {
+//                            //目前其他类型直接存
+//                            col.add(obj);
+//                        }
                         col.add(obj);
                     }
                     long count = col.stream().count();
@@ -290,7 +338,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @version v1.0
      * @params cell excel单元格对象
      */
-    private static Object getCellFormatValue(Cell cell) {
+    private static Object getCellFormatValue(Cell cell, int physicalNumberOfRows) {
         Object cellvalue = "";
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -299,9 +347,33 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     break;
                 case NUMERIC:
                     if (DateUtil.isCellDateFormatted(cell)) {
+//                        //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
+//                        //获取excel单元格的日期值和1900年1月1日0时0分相差的天数，带小数点 例：44561.99999999191
+//                        double excelValue = cell.getNumericCellValue();
+//                        //excel日期起始日期为1900年1月1日0时0分0秒 java Date起始日期为1970年1月1日0时0分0秒
+//                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+//                        //+1毫秒可以保证4500条数据不出现精度损失问题，
+//                        //那么这里就加个判断，如果数据小于4500条，就加2，是4500条的二倍时就+4，以此类推,不足二倍则+3
+//                        if (physicalNumberOfRows < 4500) {
+//                            timeInMilliSeconds = timeInMilliSeconds + 1;
+//                        } else {
+//                            //整除
+//                            int i = physicalNumberOfRows / 4500;
+//                            //保留小数
+//                            double v = (double) physicalNumberOfRows / 4500d;
+//                            //如果保留小数的商(v)大于整除的i且小于整除的i+1,则多加1
+//                            if (v>i && v<i+1) {
+//                                i = i+1;
+//                            }
+//                            timeInMilliSeconds = timeInMilliSeconds + physicalNumberOfRows / 4500 + i;
+//                        }
+//                        cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+
                         cellvalue = cell.getDateCellValue();
                     } else {
-                        cellvalue = cell.getNumericCellValue();
+                        //浮点数，excel是什么值，就存储什么值
+                        cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+//                        cellvalue = cell.getNumericCellValue();
                     }
                     break;
                 case BOOLEAN:
@@ -314,9 +386,33 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
+//                        //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
+//                        //获取excel单元格的日期值和1900年1月1日0时0分相差的天数，带小数点 例：44561.99999999191
+//                        double excelValue = cell.getNumericCellValue();
+//                        //excel日期起始日期为1900年1月1日0时0分0秒 java Date起始日期为1970年1月1日0时0分0秒
+//                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+//                        //+1毫秒可以保证4500条数据不出现精度损失问题，
+//                        //那么这里就加个判断，如果数据小于4500条，就加2，是4500条的二倍时就+4，以此类推,不足二倍则+3
+//                        if (physicalNumberOfRows < 4500) {
+//                            timeInMilliSeconds = timeInMilliSeconds + 1;
+//                        } else {
+//                            //整除
+//                            int i = physicalNumberOfRows / 4500;
+//                            //保留小数
+//                            double v = (double) physicalNumberOfRows / 4500d;
+//                            //如果保留小数的商(v)大于整除的i且小于整除的i+1,则多加1
+//                            if (v>i && v<i+1) {
+//                                i = i+1;
+//                            }
+//                            timeInMilliSeconds = timeInMilliSeconds + physicalNumberOfRows / 4500 + i;
+//                        }
+//                        cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+
                                 cellvalue = cell.getDateCellValue();
                             } else {
-                                cellvalue = cell.getNumericCellValue();
+                                //浮点数，excel是什么值，就存储什么值
+                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+//                                cellvalue = cell.getNumericCellValue();
                             }
                             break;
                         case BOOLEAN:
@@ -349,6 +445,9 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @params ext 文件后缀名
      */
     private static Workbook readFromInputStream(InputStream inputStream, String ext) {
+        //因为传参前使用split方法去掉了".",因此这里需要加上 "." 才能获取正确的工作簿对象
+        //2023-06-01 李世纪添加
+        ext = "." + ext;
         try {
             if (EXCEL2003_SUFFIX_NAME.equals(ext)) {
                 // Excel 2003

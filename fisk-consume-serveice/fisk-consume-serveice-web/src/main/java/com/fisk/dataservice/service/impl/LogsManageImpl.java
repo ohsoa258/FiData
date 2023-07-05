@@ -57,7 +57,8 @@ public class LogsManageImpl extends ServiceImpl<LogsMapper, LogPO> implements IL
 
     @Override
     public Page<ApiLogVO> pageFilter(LogQueryDTO query) {
-        return baseMapper.filter(query.page, query.apiId, query.appId, query.keyword);
+        return baseMapper.filter(query.getPage(), query.getApiId(), query.getAppId(),
+                query.getKeyword(),query.getCreateApiType(), query.getCallCycleStartDate(), query.getCallCycleEndDate());
     }
 
     @Async

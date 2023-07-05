@@ -22,6 +22,7 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -321,6 +322,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 12) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
         }
         return dataSourceDTOS;
     }
@@ -358,6 +365,119 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
         wrapper.select("Distinct drive_type").lambda().eq(AppDataSourcePO::getAppId, id);
         return list(wrapper);
+    }
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public Boolean editDataSource(DataSourceSaveDTO dto) {
+        try {
+            //获取平台配置那边修改的数据源的id
+            Integer systemDataSourceId = dto.id;
+            QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+            wrapper.eq("system_data_source_id", systemDataSourceId);
+            //通过平台配置--数据源id获取
+            List<AppDataSourcePO> list = list(wrapper);
+
+            //新建集合预装载批量更新参数
+            List<AppDataSourcePO> appDataSourcePOS = new ArrayList<>();
+            //遍历装载预更新的po
+            for (AppDataSourcePO appDataSourcePO : list) {
+                //新建AppDataSourcePO对象，预装载参数
+                AppDataSourcePO dataSourcePO = new AppDataSourcePO();
+                //1、将从数据库里查询到的po对象赋予给我们的dataSourcePO
+                dataSourcePO = appDataSourcePO;
+
+                //2、再给 dataSourcePO 装载页面修改的数值（也就是task那边传来的参数）
+                dataSourcePO.connectStr = dto.conStr;
+                dataSourcePO.host = dto.conIp;
+                dataSourcePO.port = String.valueOf(dto.conPort);
+                dataSourcePO.dbName = dto.conDbname;
+
+                String driverName = dto.conType.getName();
+
+                dataSourcePO.driveType = changeEnum(driverName);
+
+                dataSourcePO.connectAccount = dto.conAccount;
+                dataSourcePO.connectPwd = dto.conPassword;
+                dataSourcePO.serviceType = dto.serviceType;
+                dataSourcePO.serviceName = dto.serviceName;
+                dataSourcePO.domainName = dto.domainName;
+                dataSourcePO.fileSuffix = dto.fileSuffix;
+                dataSourcePO.fileBinary = dto.fileBinary;
+                dataSourcePO.pdbName = dto.pdbName;
+                dataSourcePO.signatureMethod = dto.signatureMethod;
+                dataSourcePO.consumerKey = dto.consumerKey;
+                dataSourcePO.consumerSecret = dto.consumerSecret;
+                dataSourcePO.accessToken = dto.accessToken;
+                dataSourcePO.tokenSecret = dto.tokenSecret;
+                dataSourcePO.accountKey = dto.accountKey;
+                dataSourcePO.pwdKey = dto.pwdKey;
+                dataSourcePO.expirationTime = dto.expirationTime;
+                dataSourcePO.token = dto.token;
+                dataSourcePO.authenticationMethod = dto.authenticationMethod;
+                appDataSourcePOS.add(dataSourcePO);
+            }
+            return updateBatchById(appDataSourcePOS);
+        } catch (Exception e) {
+            log.error("平台配置修改系统数据源时，连带修改数据接入引用的数据源失败！");
+            throw new FkException(ResultEnum.SAVE_ACCESS_DATA_SOURCE_ERROR, "平台配置修改系统数据源时，连带修改数据接入引用的数据源失败！报错明细：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 仅供task模块远程调用--引用需谨慎！
+     * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public List<AppDataSourceDTO> getDataSourcesBySystemDataSourceId(Integer id) {
+        try {
+            QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+            wrapper.eq("system_data_source_id", id);
+            List<AppDataSourcePO> list = list(wrapper);
+            //通过平台配置--数据源id获取
+            return AppDataSourceMap.INSTANCES.listPoToDto(list);
+        } catch (Exception e) {
+            log.error("根据SystemDataSourceId获取数据接入引用的数据源信息失败！");
+            throw new FkException(ResultEnum.GET_ACCESS_DATA_SOURCE_ERROR, "根据SystemDataSourceId获取数据接入引用的数据源信息失败,报错详情：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 枚举数值转换
+     *
+     * @param driverName
+     * @return
+     */
+    private String changeEnum(String driverName) {
+        if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.MYSQL.getName();
+        } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.SQLSERVER.getName();
+        } else if (DataSourceTypeEnum.FTP.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.FTP.getName();
+        } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.ORACLE.getName();
+        } else if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.RestfulAPI.getName();
+        } else if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.API.getName();
+        } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.POSTGRESQL.getName();
+        } else if (DataSourceTypeEnum.ORACLE_CDC.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.ORACLE_CDC.getName();
+        } else if (DataSourceTypeEnum.SFTP.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.SFTP.getName();
+        }
+        return driverName;
     }
 
     public AppDataSourceDTO getDataSourceByAppId(long appId) {

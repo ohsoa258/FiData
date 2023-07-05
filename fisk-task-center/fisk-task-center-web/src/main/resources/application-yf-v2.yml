@@ -39,6 +39,8 @@ fiData-data-dw-source: 1
 fiData-data-mdm-source: 3
 # 是否调用数据质量接口
 nifi-data-security-enable: false
+# 是否启用数据验证
+nifi-data-validation-enable: false
 # consumeServer启动控制
 consumer-server-enable: false
 
@@ -106,3 +108,4 @@ spring:
     host: 10.195.135.248
     password: 80405390
     port: 6379
+pipeline-async-switch: true

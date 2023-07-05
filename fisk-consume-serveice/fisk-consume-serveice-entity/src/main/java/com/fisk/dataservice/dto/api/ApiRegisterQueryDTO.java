@@ -19,6 +19,12 @@ public class ApiRegisterQueryDTO {
     public String keyword;
 
     /**
+     * 创建api类型
+     */
+    @ApiModelProperty(value = "创建api类型：1 创建新api 2 使用现有api 3 代理API")
+    public Integer createApiType;
+
+    /**
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")

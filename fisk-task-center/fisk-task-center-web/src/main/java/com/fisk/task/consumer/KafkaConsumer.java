@@ -181,7 +181,7 @@ public class KafkaConsumer {
     public void consumer(String message, Acknowledgment ack) {
         //iPipelineTaskPublishCenter.msg(message, ack);
         message = "[" + message + "]";
-        heartbeatService.heartbeatService(message, ack);
+        heartbeatService.endService(message, ack);
     }
 
     /**
@@ -211,7 +211,7 @@ public class KafkaConsumer {
     }
 
     /**
-     * task.build.nifi.flow
+     * task.build.nifi.flow 接入,建模nifi流程
      *
      * @param data
      * @param ack
@@ -239,7 +239,7 @@ public class KafkaConsumer {
     }
 
     /**
-     * task.build.table.server.flow
+     * task.build.table.server.flow 发布表服务
      *
      * @param data
      * @param ack

@@ -89,6 +89,7 @@ public class BuildDataInputPgTableListener {
             log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         }
+        log.info("连接类型:{}",conType);
         //分辨库的类别，获取对应数据库的建表
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(conType);
         log.info("开始保存ods版本号,参数为{}", dto);
@@ -99,9 +100,9 @@ public class BuildDataInputPgTableListener {
         String version = df.format(calendar.getTime());
         ResultEnum resultEnum = ResultEnum.SQL_ERROR;
         try {
-            //保存建模相关表结构数据(保存版本号)
+            //保存接入相关表结构数据(保存版本号)
             resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
-            log.info("执行修改语句返回结果:" + resultEnum);
+            log.info("数接执行修改表结构的存储过程返回结果:" + resultEnum);
 
             log.info("保存版本号方法执行成功");
 

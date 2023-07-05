@@ -59,7 +59,7 @@ public interface IPipelJobLog extends IService<PipelJobLogPO> {
      * @param dto dto
      * @return
      */
-    void exceptionHandlingLog(DispatchExceptionHandlingDTO dto);
+    void exceptionHandlingLog(DispatchExceptionHandlingDTO dto) throws InterruptedException;
 
 
 }

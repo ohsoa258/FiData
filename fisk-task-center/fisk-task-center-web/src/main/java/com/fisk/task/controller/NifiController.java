@@ -5,6 +5,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -19,6 +21,7 @@ import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.INifiSchedulingComponentService;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -48,18 +51,24 @@ public class NifiController {
     @Resource
     UserClient userClient;
     @Resource
+    DataAccessClient dataAccessClient;
+    @Resource
     ISftpDataUploadListener iSftpDataUploadListener;
+    @Resource
+    INifiSchedulingComponentService iNifiSchedulingComponentService;
     @ApiOperation("修改调度")
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
         return ResultEntityBuild.build(iNiFiHelper.modifyScheduling(groupId, ProcessorId, schedulingStrategy, schedulingPeriod));
 
     }
+
     @ApiOperation("删除Nifi流")
     @PostMapping("/deleteNifiFlow")
     public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO) {
         return ResultEntityBuild.build(iNiFiHelper.deleteNifiFlow(dataModelVO));
     }
+
     @ApiOperation("获取NIFI表设置")
     @PostMapping("/getTableNifiSetting")
     public ResultEntity<TableNifiSettingPO> getTableNifiSetting(@RequestBody DataAccessIdDTO dto) {
@@ -69,6 +78,7 @@ public class NifiController {
         return objectResultEntity;
 
     }
+
     @ApiOperation("获取Pg Ods的Sql")
     @PostMapping("/getSqlForPgOds")
     public ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO) {
@@ -77,6 +87,7 @@ public class NifiController {
         SqlForPgOds.code = 0;
         return SqlForPgOds;
     }
+
     @ApiOperation("删除自定义工作Nifi流程")
     @PostMapping("/deleteCustomWorkNifiFlow")
     public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
@@ -142,6 +153,17 @@ public class NifiController {
                 log.error("system服务修改数据源失败，[{}]", resultEntity.getMsg());
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
             }
+            //在修改数据源的同时，连带修改数据接入引用了平台配置数据源的app应用的数据源信息
+            //远程调用数据接入的方法
+            ResultEntity<List<AppDataSourceDTO>> sources = dataAccessClient.getDataSourcesBySystemDataSourceId(dto.id);
+            if (!sources.getData().isEmpty()){
+                ResultEntity<Boolean> booleanResultEntity = dataAccessClient.editDataSourceByTask(dto);
+                if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    log.error("数据接入服务修改数据源失败，[{}]", booleanResultEntity.getMsg());
+                    return ResultEntityBuild.build(ResultEnum.SAVE_ACCESS_DATA_SOURCE_ERROR);
+                }
+            }
+
         } catch (Exception e) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
@@ -179,5 +201,9 @@ public class NifiController {
         return ResultEntityBuild.build(iSftpDataUploadListener.buildSftpDataUploadListener(JSON.toJSONString(kafkaReceive)));
     }
 
-
+    @GetMapping("/runOnce")
+    @ApiOperation(value = "执行一次管道")
+    public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
+        return ResultEntityBuild.build(iNifiSchedulingComponentService.runOnce(id));
+    }
 }

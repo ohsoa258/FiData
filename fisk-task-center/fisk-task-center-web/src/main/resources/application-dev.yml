@@ -37,6 +37,8 @@ fiData-data-dw-source: 1
 fiData-data-mdm-source: 3
 # 是否调用数据质量接口
 nifi-data-security-enable: true
+# 是否启用数据验证
+nifi-data-validation-enable: false
 # consumeServer启动控制
 consumer-server-enable: true
 pgsql-datamodel:
@@ -99,3 +101,4 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
   redis:
     host: 192.168.11.130
+pipeline-async-switch: true
