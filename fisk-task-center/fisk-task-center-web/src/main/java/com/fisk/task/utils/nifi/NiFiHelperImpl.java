@@ -551,9 +551,15 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("Content-Type", data.contentType);
         map.put("HTTP Method", data.httpMethod);
         map.put("Remote URL", data.remoteUrl);
-        map.put("Authorization", data.nifiToken);
+
+        //202306-202307 李世纪修改
+        //设置等待超时时间  目前设为300秒
         if (StringUtils.isNotEmpty(data.socketConnectTimeout)){
             map.put("Connection Timeout", data.socketConnectTimeout);
+        }
+        //设置读取超时时间  目前设为300秒
+        if (StringUtils.isNotEmpty(data.socketReadTimeout)){
+            map.put("Read Timeout", data.socketReadTimeout);
         }
 
         //组件配置信息
