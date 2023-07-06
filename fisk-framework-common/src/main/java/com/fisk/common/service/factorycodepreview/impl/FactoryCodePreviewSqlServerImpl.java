@@ -1079,7 +1079,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         //开始拼接第三段
         StringBuilder endSql = middleSql;
         endSql.append("WHEN NOT MATCHED THEN insert")
-                .append(tableName)
                 .append("(");
 
         //遍历字段集合,拼接 insert(.....)

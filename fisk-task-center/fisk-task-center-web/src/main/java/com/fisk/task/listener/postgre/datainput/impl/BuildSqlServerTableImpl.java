@@ -404,9 +404,12 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         } else {
             sql1 += sql2 + sql3;
         }
-        String havePk = pksql.toString();
-        if (havePk.length() != 14) {
-            sql1 += "," + havePk.substring(0, havePk.length() - 1) + ")";
+
+        if (modelPublishTableDTO.synMode==3){
+            String havePk = pksql.toString();
+            if (havePk.length() != 14) {
+                sql1 += "," + havePk.substring(0, havePk.length() - 1) + ")";
+            }
         }
         sql1 += ")";
         //创建表
