@@ -18,7 +18,7 @@ dataservice:
     enabled: true
     api_address: http://172.17.1.248:7002
   proxyservice:
-    api_address: http://172.17.1.248:7002
+    api_address: http://172.17.1.248:7002/dataservice/proxy
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
