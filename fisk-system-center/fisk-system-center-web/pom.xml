@@ -66,11 +66,11 @@
 
         <!-- openedge驱动 -->
         <dependency>
-            <groupId>com.example</groupId>
+            <groupId>com.ddtek</groupId>
             <artifactId>openedgewp</artifactId>
-            <version>1.0.0</version>
+            <version>12.7</version>
             <scope>system</scope>
-            <systemPath>${basedir}/src/main/resources/lib/openedgewp.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/lib/openedgewp.jar</systemPath>
         </dependency>
 
         <!-- feign接口调用 -->
@@ -110,6 +110,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <fork>true</fork>
+                    <!-- 将本地lib引入的jar包打包到项目的lib中 -->
+                    <includeSystemScope>true</includeSystemScope>
+                </configuration>
             </plugin>
         </plugins>
     </build>

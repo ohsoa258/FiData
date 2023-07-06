@@ -325,9 +325,13 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                         }
                     }
                 case OPENEDGE:
-                    // 注册OpenEdge驱动程序
-                    DriverManager.registerDriver(new OpenEdgeDriver());
-//                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+
+                    log.info("注册OpenEdge驱动程序前...");
+//                    // 注册OpenEdge驱动程序
+//                    DriverManager.registerDriver(new OpenEdgeDriver());
+                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+                    log.info("注册OpenEdge驱动程序后...");
+
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 default:
