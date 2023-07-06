@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
@@ -46,6 +47,15 @@ public interface MdmClient {
      */
     @GetMapping("/model/getEntityById")
     ResultEntity<ModelInfoVO> getEntityById(@RequestParam("id") Integer id);
+
+    /**
+     * 根据modelId和entityId 获取modelName和entityName
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/model/getModelNameAndEntityName")
+    ResultEntity<Object> getModelNameAndEntityName(@RequestBody DataAccessIdsDTO dto);
 
     /**
      * 审批

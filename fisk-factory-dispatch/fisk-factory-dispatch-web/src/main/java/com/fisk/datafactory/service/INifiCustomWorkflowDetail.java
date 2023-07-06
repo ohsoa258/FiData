@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
+import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
@@ -93,6 +94,8 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return tree
      */
     List<ChannelDataDTO> getTableIds(NifiComponentsDTO dto);
+
+    List<ChannelDataChildDTO> getTableList(ChannelDataDTO dto);
 
     /**
      * 查询当前任务下的组件详情集合

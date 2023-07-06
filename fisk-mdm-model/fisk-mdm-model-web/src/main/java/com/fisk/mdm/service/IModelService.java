@@ -6,6 +6,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelDTO;
@@ -73,4 +75,11 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     boolean setDataStructure(FiDataMetaDataReqDTO reqDto);
+
+    /**
+     * 获取模型名称和实体名称
+     * @param dto
+     * @return
+     */
+    ResultEntity<ComponentIdDTO> getModelNameAndEntityName(DataAccessIdsDTO dto);
 }

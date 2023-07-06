@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -72,30 +73,30 @@ public class DataFactoryImpl implements IDataFactory {
             switch (dataFactoryEnum) {
                 case NUMBER_DIMENSION:
                     List<DimensionPO> dimensionPo = dimensionPoList.stream()
-                            .filter(e -> e.businessId == item.id && (e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
+                            .filter(e -> e.businessId == item.id && e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue())
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelDimensionData(dimensionPo);
+                    dataDTO.list = getChannelDimensionData(dimensionPo,TableBusinessTypeEnum.DW_DIMENSION);
                     dataDTO.type = ChannelDataEnum.DW_DIMENSION_TASK.getName();
                     break;
                 case ANALYSIS_DIMENSION:
                     List<DimensionPO> dimensionPoStreamList = dimensionPoList.stream()
-                            .filter(e -> e.businessId == item.id && (e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
+                            .filter(e -> e.businessId == item.id && e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue())
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelDimensionData(dimensionPoStreamList);
+                    dataDTO.list = getChannelDimensionData(dimensionPoStreamList,TableBusinessTypeEnum.NONE);
                     dataDTO.type = ChannelDataEnum.OLAP_DIMENSION_TASK.getName();
                     break;
                 case NUMBER_FACT:
                     List<FactPO> factPo = factPoList.stream()
                             .filter(e -> e.businessId == item.id && (e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelFactData(factPo);
+                    dataDTO.list = getChannelFactData(factPo,TableBusinessTypeEnum.DW_FACT);
                     dataDTO.type = ChannelDataEnum.DW_FACT_TASK.getName();
                     break;
                 case ANALYSIS_FACT:
                     List<FactPO> factPoStreamList = factPoList.stream()
                             .filter(e -> e.businessId == item.id && (e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelFactData(factPoStreamList);
+                    dataDTO.list = getChannelFactData(factPoStreamList,TableBusinessTypeEnum.NONE);
                     dataDTO.type = ChannelDataEnum.OLAP_FACT_TASK.getName();
                     break;
                 case WIDE_TABLE:
@@ -120,13 +121,14 @@ public class DataFactoryImpl implements IDataFactory {
      * @param dimensionPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo) {
+    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo,TableBusinessTypeEnum tableBusinessTypeEnum) {
         List<ChannelDataChildDTO> data = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dimensionPo)) {
             for (DimensionPO dimPo : dimensionPo) {
                 ChannelDataChildDTO child = new ChannelDataChildDTO();
                 child.id = dimPo.id;
                 child.tableName = dimPo.dimensionTabName;
+                child.tableBusinessType = tableBusinessTypeEnum.getValue();
                 data.add(child);
             }
         }
@@ -139,13 +141,14 @@ public class DataFactoryImpl implements IDataFactory {
      * @param factPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo) {
+    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo,TableBusinessTypeEnum tableBusinessTypeEnum) {
         List<ChannelDataChildDTO> data = new ArrayList<>();
         if (!CollectionUtils.isEmpty(factPo)) {
             for (FactPO fact : factPo) {
                 ChannelDataChildDTO child = new ChannelDataChildDTO();
                 child.id = fact.id;
                 child.tableName = fact.factTabName;
+                child.tableBusinessType = tableBusinessTypeEnum.getValue();
                 data.add(child);
             }
         }

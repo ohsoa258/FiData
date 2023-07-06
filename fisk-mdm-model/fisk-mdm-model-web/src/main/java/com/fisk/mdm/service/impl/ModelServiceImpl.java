@@ -18,6 +18,9 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
@@ -337,6 +340,34 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
         }
         return true;
+    }
+
+    /**
+     * 获取模型名称和实体名称
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEntity<ComponentIdDTO> getModelNameAndEntityName(DataAccessIdsDTO dto) {
+        ModelPO modelPO = modelService.query().eq("id", dto.appId).one();
+
+        ComponentIdDTO componentIdDTO = new ComponentIdDTO();
+        componentIdDTO.appName = modelPO == null ? "" : modelPO.name;
+        if (dto.tableId != null) {
+            ChannelDataEnum type = ChannelDataEnum.getName(dto.flag);
+            switch (type) {
+                // 主数据
+                case MDM_TABLE_TASK:
+                    QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.eq("id",dto.tableId);
+                    EntityPO entityPO = entityMapper.selectOne(queryWrapper);
+                    componentIdDTO.tableName = entityPO == null ? "" : entityPO.getName();
+                    break;
+                default:
+                    break;
+            }
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 
     /**

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datafactory.config.SwaggerConfig;
+import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
@@ -119,6 +120,12 @@ public class NifiCustomWorkflowDetailController {
     @PostMapping("/getTableId")
     public ResultEntity<Object> getTableId(@RequestBody NifiComponentsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableIds(dto));
+    }
+
+    @ApiOperation(value = "根据不同的应用,获取不同表")
+    @PostMapping("/getTableList")
+    public ResultEntity<Object> getTableList(@RequestBody ChannelDataDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableList(dto));
     }
 
 

@@ -73,6 +73,7 @@ import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
+import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
@@ -1396,7 +1397,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //                        .eq(TableAccessPO::getPublish, 3)
                         .eq(TableAccessPO::getPublish, 1)
                         .select(TableAccessPO::getId, TableAccessPO::getTableName));
-                dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+                List<ChannelDataChildDTO> channelDataChildDTOS = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
+                List<ChannelDataChildDTO> collect = channelDataChildDTOS.stream().map(i -> {
+                    i.tableBusinessType = ChannelDataEnum.getValue(dto.type).getValue();
+                    return i;
+                }).collect(Collectors.toList());
+                dto.list = collect;
             } else if (dto.type.equalsIgnoreCase(ChannelDataEnum.DATALAKE_API_TASK.getName())) {
                 List<ApiConfigPO> apiConfigPoList = apiConfigImpl.list(Wrappers.<ApiConfigPO>lambdaQuery()
 //                        .or()
@@ -1406,7 +1412,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                         .eq(ApiConfigPO::getPublish, 1)
                         .select(ApiConfigPO::getId, ApiConfigPO::getApiName));
                 // list: po->dto 并赋值给dto.list
-                dto.list = TableAccessMap.INSTANCES.listApiConfigPoToChannelDataChildDTO(apiConfigPoList);
+                List<ChannelDataChildDTO> channelDataChildDTOS = TableAccessMap.INSTANCES.listApiConfigPoToChannelDataChildDTO(apiConfigPoList);
+                List<ChannelDataChildDTO> collect = channelDataChildDTOS.stream().map(i -> {
+                    i.tableBusinessType = ChannelDataEnum.getValue(dto.type).getValue();
+                    return i;
+                }).collect(Collectors.toList());
+                dto.list = collect;
             }
 
         });
@@ -2293,16 +2304,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ComponentIdDTO componentIdDTO = new ComponentIdDTO();
         componentIdDTO.appName = registrationPo == null ? "" : registrationPo.appName;
         if (dto.tableId != null) {
-            switch (dto.flag) {
+            ChannelDataEnum type = ChannelDataEnum.getName(dto.flag);
+            switch (type) {
                 // 数据湖表任务
-                case 3:
+                case DATALAKE_TASK:
                     // 数据湖ftp任务
-                case 9:
+                case DATALAKE_FTP_TASK:
                     TableAccessPO accessPo = this.query().eq("id", dto.tableId).one();
                     componentIdDTO.tableName = accessPo == null ? "" : accessPo.tableName;
                     break;
                 // 数据湖非实时api任务
-                case 10:
+                case DATALAKE_API_TASK:
                     ApiConfigPO apiConfigPo = this.apiConfigImpl.query().eq("id", dto.tableId).one();
                     componentIdDTO.tableName = apiConfigPo == null ? "" : apiConfigPo.apiName;
                     break;

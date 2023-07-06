@@ -21,6 +21,7 @@ import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.GetConfigDTO;
 import com.fisk.datafactory.dto.customworkflow.*;
+import com.fisk.datafactory.dto.customworkflowdetail.ChildrenWorkflowDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
@@ -38,16 +39,17 @@ import com.fisk.datafactory.service.ITaskSetting;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.annotations.ResultMap;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -84,6 +86,10 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
     IDispatchEmail iDispatchEmail;
     @Resource
     ITaskSetting iTaskSetting;
+    @Resource
+    UserClient userClient;
+    @Resource
+    MdmClient mdmClient;
 
 
     @Override
@@ -150,12 +156,17 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                         if (e.appId == null || "".equals(e.appId)) {
                             break;
                         }
-                        getDataAccessIdsDtoAccess(e, channelDataEnum.getValue());
+                        getDataAccessIdsDtoAccess(e, e.tableType);
                         break;
-                    // 数仓维度表任务组
+
+                        //数仓表任务
+                    case DW_TASK:
+                        // 数仓维度表任务组
                     case DW_DIMENSION_TASK:
                         // 数仓事实表任务组
                     case DW_FACT_TASK:
+                        //分析模型任务
+                    case OLAP_TASK:
                         //分析模型事实表任务
                     case OLAP_FACT_TASK:
                         // 分析模型维度表任务
@@ -165,7 +176,16 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                         if (e.appId == null || "".equals(e.appId)) {
                             break;
                         }
-                        getDataAccessIdsDtoModel(e, channelDataEnum.getValue());
+                        getDataAccessIdsDtoModel(e, e.tableType);
+                        break;
+                    case MDM_TABLE_TASK:
+                        getDataAccessIdsDtoMdmModel(e, e.tableType);
+                    case SFTP_FILE_COPY_TASK:
+                    case CUSTOMIZE_SCRIPT_TASK:
+                        if (e.dataSourceId == null) {
+                            break;
+                        }
+                        getDataSourceName(e);
                         break;
                     default:
                         break;
@@ -178,7 +198,14 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
                             || e.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())
                             || e.componentType.equals(ChannelDataEnum.POWERBI_DATA_SET_REFRESH_TASK.getName())) &&
                             e.pid != 0)).collect(Collectors.toList());
-            vo.list = collect;
+            List<NifiCustomWorkflowDetailDTO> nifiCustomWorkflowDetailDTOS = collect.stream().filter(i -> i.pid == 0).collect(Collectors.toList());
+            nifiCustomWorkflowDetailDTOS = nifiCustomWorkflowDetailDTOS.stream().map(i->{
+                List<NifiCustomWorkflowDetailDTO> childrenWorkflowDetailList = collect.stream().filter(v -> v.pid == i.id).collect(Collectors.toList());
+                List<ChildrenWorkflowDetailDTO> childrenWorkflowDetailDTOS = NifiCustomWorkflowDetailMap.INSTANCES.listChildrenDtoToDto(childrenWorkflowDetailList);
+                i.setChildrenWorkflowDetailList(childrenWorkflowDetailDTOS);
+                return i;
+            }).collect(Collectors.toList());
+            vo.list = nifiCustomWorkflowDetailDTOS;
         }
         return vo;
     }
@@ -234,6 +261,55 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
             e.tableName = null;
         }
     }
+
+    /**
+     * 组装主数据实体名称和表名
+     *
+     * @param e    task
+     * @param flag 对应主数据
+     * @author Lock
+     * @date 2022/3/18 18:27
+     */
+    private void getDataAccessIdsDtoMdmModel(NifiCustomWorkflowDetailDTO e, int flag) {
+
+        DataAccessIdsDTO dto = new DataAccessIdsDTO();
+        dto.appId = e.appId == null ? null : Long.valueOf(e.appId);
+        dto.tableId = e.tableId == null ? null : Long.valueOf(e.tableId);
+        dto.flag = flag;
+        ResultEntity<Object> result = null;
+        try {
+            result = mdmClient.getModelNameAndEntityName(dto);
+            getName(e, result);
+        } catch (Exception ex) {
+            log.error("远程调用失败，方法名：【data-model:getAppNameAndTableName】");
+            e.appName = null;
+            e.tableName = null;
+        }
+    }
+    /**
+     * 组装数据源名称
+     *
+     * @param e    task
+     * @author Lock
+     * @date 2022/3/18 18:27
+     */
+    private void getDataSourceName(NifiCustomWorkflowDetailDTO e) {
+
+        ResultEntity<DataSourceDTO> result = null;
+        try {
+            result = userClient.getFiDataDataSourceById(e.dataSourceId);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }else {
+                e.appName = result.data.name;
+            }
+        } catch (Exception ex) {
+            log.error("远程调用失败，方法名：【data-model:getDataSourceName】");
+            e.appName = null;
+            e.tableName = null;
+        }
+    }
+
 
     /**
      * feign接口调用,封装名称

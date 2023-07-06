@@ -4,7 +4,10 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import java.io.Serializable;
 
 /**
  * @author Lock
@@ -17,4 +20,10 @@ public interface NifiCustomWorkflowDetailMapper extends FKBaseMapper<NifiCustomW
 
     @Update("update tb_nifi_custom_workflow_detail set forbidden = #{nifiCustomWorkflowDetail.forbidden} where id = #{nifiCustomWorkflowDetail.id}")
     void forbiddenTask(@Param("nifiCustomWorkflowDetail")NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail);
+
+    @Override
+    @Select("select * from tb_nifi_custom_workflow_detail where id = #{id}")
+    NifiCustomWorkflowDetailPO selectById(Serializable id);
+
+    int updateByDetailId(@Param("nifiCustomWorkflowDetail")NifiCustomWorkflowDetailPO nifiCustomWorkflowDetail);
 }
