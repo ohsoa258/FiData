@@ -1014,8 +1014,8 @@ public class AppRegistrationImpl
                     break;
                 case OPENEDGE:
                     // 注册OpenEdge驱动程序
-                    DriverManager.registerDriver(new OpenEdgeDriver());
-//                    Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
+//                    DriverManager.registerDriver(new OpenEdgeDriver());
+                    Class.forName(DataSourceTypeEnum.OPENEDGE.getName());
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     allDatabases.addAll(oracleUtils.getAllDatabases(conn));
                 default:
