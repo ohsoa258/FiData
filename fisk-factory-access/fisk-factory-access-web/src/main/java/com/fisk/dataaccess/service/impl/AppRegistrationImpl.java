@@ -171,9 +171,9 @@ public class AppRegistrationImpl
         List<AppDataSourceDTO> data = appRegistrationDTO.getAppDatasourceDTO();
         //调用封装的方法，校验当前应用选择的数据源类型是否存在冲突！
         Boolean aBoolean = checkSourcesTypeIfOk(data);
-        if (!aBoolean){
+        if (!aBoolean) {
             log.error("当前应用选择的数据源类型存在冲突！");
-            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR,"当前应用选择的数据源类型存在冲突");
+            throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR, "当前应用选择的数据源类型存在冲突");
         }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -485,7 +485,7 @@ public class AppRegistrationImpl
         List<AppDataSourceDTO> data = dto.getAppDatasourceDTO();
         //调用封装的方法，校验当前应用选择的数据源类型是否存在冲突！
         Boolean aBoolean = checkSourcesTypeIfOk(data);
-        if (!aBoolean){
+        if (!aBoolean) {
             log.error("当前应用选择的数据源类型存在冲突！");
             throw new FkException(ResultEnum.DATASOURCE_TYPE_ERROR);
         }
@@ -2022,7 +2022,7 @@ public class AppRegistrationImpl
         //PO --> DTO
         List<AppDriveTypeDTO> appDriveTypeDTOS = AppDriveTypeDTO.convertEntityList(list);
         //appid==0表示该应用是第一次接入数据源，因此返回全部的数据源类型给前端
-        if (appid == 0){
+        if (appid == 0) {
             return appDriveTypeDTOS;
         }
         //获取当前应用所拥有的数据源类型
@@ -2042,13 +2042,14 @@ public class AppRegistrationImpl
 
     /**
      * 根据appId获取app应用名称
+     *
      * @param id
      * @return
      */
     @Override
     public AppRegistrationDTO getAppNameById(Long id) {
         QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
-        wrapper.eq("id",id).select("app_name");
+        wrapper.eq("id", id).select("app_name");
         AppRegistrationPO one = getOne(wrapper);
         return AppRegistrationMap.INSTANCES.poToDto(one);
     }
@@ -2068,12 +2069,14 @@ public class AppRegistrationImpl
             if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) ||
                     AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) ||
                     AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) ||
-                    AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)) {
+                    AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType) ||
+                    AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
                 originDriveType.forEach(d -> {
                     if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(d.name) ||
                             AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(d.name) ||
                             AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(d.name) ||
-                            AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(d.name)) {
+                            AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(d.name) ||
+                            AppDriveTypeEnum.OPENEDGE.getName().equals(d.name)) {
                         result.add(d);
                     }
                 });

@@ -14,7 +14,8 @@ public enum AppDriveTypeEnum implements BaseEnum {
     RESTFULAPI(5,"RESTFULAPI"),
     API(6,"API"),
     FTP(7,"FTP"),
-    SFTP(8,"SFTP");
+    SFTP(8,"SFTP"),
+    OPENEDGE(9,"OPEDEDGE");
 
     AppDriveTypeEnum(int value, String name) {
         this.name = name;

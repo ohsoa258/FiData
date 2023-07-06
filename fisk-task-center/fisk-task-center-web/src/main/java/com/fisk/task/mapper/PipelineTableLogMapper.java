@@ -34,6 +34,13 @@ public interface PipelineTableLogMapper extends FKBaseMapper<PipelineTableLogPO>
     @Update("update tb_pipeline_table_log set state=3 where component_id=#{componentId} and table_id=#{tableId} and table_type=#{tableType} and del_flag=1")
     Long updateByComponentId(@Param("componentId") Integer componentId, @Param("tableId") Integer tableId, @Param("tableType") Integer tableType);
 
+    /**
+     * 日志数据补全
+     * @param tableId
+     * @param tableType
+     * @param keyword
+     * @return
+     */
     List<PipelineTableLogVO> getPipelineTableLogs(@Param("tableId") Integer tableId, @Param("tableType") Integer tableType, @Param("keyword") String keyword);
 
     /**
