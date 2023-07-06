@@ -1,0 +1,33 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datafactory.mapper.NifiCustomWorkflowDetailMapper">
+    <!-- 更新操作 -->
+    <update id="updateByDetailId" parameterType="com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO">
+        UPDATE tb_nifi_custom_workflow_detail SET
+          pid = #{nifiCustomWorkflowDetail.pid},
+          workflow_id = #{nifiCustomWorkflowDetail.workflowId},
+          components_id = #{nifiCustomWorkflowDetail.componentsId},
+          app_id = #{nifiCustomWorkflowDetail.appId},
+          table_id = #{nifiCustomWorkflowDetail.tableId},
+          table_order = #{nifiCustomWorkflowDetail.tableOrder},
+          component_name = #{nifiCustomWorkflowDetail.componentName},
+          component_type = #{nifiCustomWorkflowDetail.componentType},
+          component_desc = #{nifiCustomWorkflowDetail.componentDesc},
+          component_x = #{nifiCustomWorkflowDetail.componentX},
+          component_y = #{nifiCustomWorkflowDetail.componentY},
+          metadata_obj = #{nifiCustomWorkflowDetail.metadataObj},
+          schedule = #{nifiCustomWorkflowDetail.schedule},
+          script = #{nifiCustomWorkflowDetail.script},
+          inport = #{nifiCustomWorkflowDetail.inport},
+          outport = #{nifiCustomWorkflowDetail.outport},
+          flag = #{nifiCustomWorkflowDetail.flag},
+          custom_script = #{nifiCustomWorkflowDetail.customScript},
+          data_source_id = #{nifiCustomWorkflowDetail.dataSourceId},
+          forbidden = #{nifiCustomWorkflowDetail.forbidden},
+          update_user = #{nifiCustomWorkflowDetail.updateUser},
+          update_time = #{nifiCustomWorkflowDetail.updateTime},
+          del_flag = 1
+        WHERE id = #{nifiCustomWorkflowDetail.id}
+    </update>
+</mapper>

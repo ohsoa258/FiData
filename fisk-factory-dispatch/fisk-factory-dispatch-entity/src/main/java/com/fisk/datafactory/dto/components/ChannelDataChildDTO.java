@@ -27,6 +27,19 @@ public class ChannelDataChildDTO {
      */
     @ApiModelProperty(value = "表业务类型")
     public int tableBusinessType;
+
+    /**
+     * 管道表类型
+     */
+    @ApiModelProperty(value = "管道表类型")
+    public int tableType;
+
+
+    /**
+     * 管道表类型
+     */
+    @ApiModelProperty(value = "组件表类型")
+    public String componentType;
     /**
      * 数据源id
      * 1、dmp_dw

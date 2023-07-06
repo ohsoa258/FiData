@@ -6,6 +6,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
+import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.service.IModelService;
@@ -83,5 +85,10 @@ public class ModelController {
     public ResultEntity<List<FiDataMetaDataDTO>> getDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getDataStructure(dto));
     }
-
+    @ApiOperation("根据modelId和entityId 获取modelName和entityName")
+    @PostMapping("/getModelNameAndEntityName")
+    public ResultEntity<Object> getModelNameAndEntityName(@RequestBody DataAccessIdsDTO dto) {
+        ResultEntity<ComponentIdDTO> result = service.getModelNameAndEntityName(dto);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
+    }
 }

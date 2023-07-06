@@ -3,21 +3,18 @@ package com.fisk.datafactory.dto.customworkflowdetail;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.List;
 import java.util.Map;
 
 /**
  * @author Lock
  */
 @Data
-public class NifiCustomWorkflowDetailDTO {
+public class ChildrenWorkflowDetailDTO {
 
     @ApiModelProperty(value = "id")
     public long id;
     @ApiModelProperty(value = "pid")
     public Long pid;
-    @ApiModelProperty(value = "管道保存使用uuid")
-    public String uuid;
     @ApiModelProperty(value = "管道id")
     public String workflowId;
     @ApiModelProperty(value = "管道名称")
@@ -68,22 +65,16 @@ public class NifiCustomWorkflowDetailDTO {
     public String script;
     @ApiModelProperty(value = "输入")
     public String inport;
-
     @ApiModelProperty(value = "输入UUID")
     public String inportUuid;
     @ApiModelProperty(value = "输出")
     public String outport;
-
     @ApiModelProperty(value = "输出UUID")
     public String outportUuid;
-
     @ApiModelProperty(value = "标记")
     public Boolean flag;
-
     @ApiModelProperty(value = "task表类型")
     public int tableType;
-    @ApiModelProperty(value = "删除状态")
-    public int delFlag;
     /**
      * 是否禁用,true不禁用,false 禁用
      */
@@ -98,7 +89,4 @@ public class NifiCustomWorkflowDetailDTO {
 
     @ApiModelProperty(value = "组件参数", required = true)
     public Map<String,String> taskSetting;
-
-    @ApiModelProperty(value = "组件子集", required = true)
-    public List<ChildrenWorkflowDetailDTO> childrenWorkflowDetailList;
 }
