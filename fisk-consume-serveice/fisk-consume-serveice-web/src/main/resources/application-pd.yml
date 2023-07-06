@@ -16,7 +16,7 @@ dataservice:
     enabled: true
     api_address: http://10.220.108.140:10089
   proxyservice:
-    api_address: http://10.220.108.140:10089
+    api_address: http://10.220.108.140:10089/dataservice/proxy
 spring:
   hikari:
     maximum-pool-size: 60
