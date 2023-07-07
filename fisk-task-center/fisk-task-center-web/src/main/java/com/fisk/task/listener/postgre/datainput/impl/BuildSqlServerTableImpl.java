@@ -268,16 +268,16 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
             querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName;
         } else {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " with (nolock) where  fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + stgAndTableName.get(1) + " with (nolock) where  fidata_batch_code='${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}'";
             } else {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
             }
 
         }
@@ -290,7 +290,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         String mdmTableName = "mdm_" + dto.getModelName() + "_" + dto.getEntityName();
         String querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                 "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + mdmTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
+                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + mdmTableName + " with (nolock) where fidata_batch_code='${fidata_batch_code}'";
         return querySql;
     }
 
@@ -310,16 +310,16 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
             querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName;
         } else {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName;
             } else {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,convert(varchar(100),getdate(),120) as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName;
             }
 
         }

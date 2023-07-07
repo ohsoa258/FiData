@@ -35,7 +35,7 @@ nifi:
 nifi-ConcurrentTasks: 1
 nifi-FetchSize: 10000
 nifi-MaxRowsPerFlowFile: 10000
-nifi-OutputBatchSize: 1
+nifi-OutputBatchSize: 0
 fiData-data-ods-source: 2
 fiData-data-dw-source: 1
 fiData-data-mdm-source: 3

@@ -259,16 +259,16 @@ public class BuildPgTableImpl implements IbuildTable {
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
             querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName;
         } else {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + stgAndTableName.get(1) + " where fidata_batch_code='${fidata_batch_code}'";
             } else {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
             }
 
         }
@@ -280,7 +280,7 @@ public class BuildPgTableImpl implements IbuildTable {
         String mdmTableName = "mdm_" + dto.getModelName() + "_" + dto.getEntityName();
         String querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                 "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from \"" + mdmTableName + "\" where fidata_batch_code='${fidata_batch_code}'";
+                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from \"" + mdmTableName + "\" where fidata_batch_code='${fidata_batch_code}'";
         return querySql;
     }
 
@@ -298,16 +298,16 @@ public class BuildPgTableImpl implements IbuildTable {
         if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
             querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,now() as end_time," +
                     "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+                    "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName;
         } else {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
             } else {
                 querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss') as end_time," +
                         "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+                        "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType,${fragment.count} as fileCount,${fragment.index} as fileIndex  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
             }
 
         }
