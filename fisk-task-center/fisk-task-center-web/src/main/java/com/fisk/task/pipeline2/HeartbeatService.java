@@ -136,12 +136,6 @@ public class HeartbeatService {
             log.info("my-topic接收条数{}", msg.size());
             for (String message : msg) {
                 KafkaReceiveDTO kafkaReceive = JSON.parseObject(message, KafkaReceiveDTO.class);
-                if (kafkaReceive.fileCount != null && kafkaReceive.fileCount != 0
-                && kafkaReceive.fileIndex != null && kafkaReceive.fileIndex != 0){
-                    if (!kafkaReceive.fileIndex.equals(kafkaReceive.fileCount-1)){
-                        continue;
-                    }
-                }
                 try {
                     String topic = kafkaReceive.topic;
                     String pipelTraceId = kafkaReceive.pipelTraceId;

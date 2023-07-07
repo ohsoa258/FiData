@@ -1,5 +1,6 @@
 package com.fisk.task.dto.kafka;
 
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -103,14 +104,5 @@ public class KafkaReceiveDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "修改前的源字段")
     public List<String> sourceFieldNames;
-    /**
-     * 本次nifi流程中流文件总数
-     */
-    @ApiModelProperty(value = "流文件数量")
-    public Integer fileCount;
-    /**
-     * 流文件下标从0开始
-     */
-    @ApiModelProperty(value = "流文件下标")
-    public Integer fileIndex;
+
 }
