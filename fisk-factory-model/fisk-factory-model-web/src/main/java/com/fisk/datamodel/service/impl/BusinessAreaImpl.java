@@ -1389,6 +1389,10 @@ public class BusinessAreaImpl
         //根据数据库的不同连接类型，获取不同的sqlHelper实现类
         IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
+        if(fields.isEmpty()){
+            return "请检查字段映射...";
+        }
+
         //根据覆盖方式决定返回的sql
         switch (syncMode) {
             //如果是0的话，不拼接任何sql
