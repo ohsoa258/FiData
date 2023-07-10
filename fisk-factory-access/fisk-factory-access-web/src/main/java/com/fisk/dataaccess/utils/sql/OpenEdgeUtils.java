@@ -72,6 +72,33 @@ public class OpenEdgeUtils {
     }
 
     /**
+     * 获取OpenEdge数据库下的所有架构名+表名
+     *
+     * @param conn   连接驱动
+     * @return java.util.Map<java.lang.String, java.lang.String>
+     * @return 表名及架构名的映射
+     * @description 获取OpenEdge架构名 + 表名
+     */
+    public static Map<String, String> getTablesAndSchema(Connection conn) {
+        Map<String, String> tableMap = new LinkedHashMap<>();
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery("SELECT TBL as TABLE_NAME, OWNER as TABLE_SCHEMA FROM sysprogress.systables");
+            while (resultSet.next()) {
+                // TABLE_NAME
+                String tableName = resultSet.getString("TABLE_NAME");
+                // 架构名
+                String schemaName = resultSet.getString("TABLE_SCHEMA");
+                tableMap.put(tableName, schemaName);
+            }
+        } catch (SQLException e) {
+            log.error("【getTablesPlus】获取表名及架构名失败, ex", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
+        }
+        return tableMap;
+    }
+
+    /**
      * 获取OpenEdge指定架构(数据库)下的所有表详情(表名+字段)
      *
      * @return java.util.List<com.fisk.dataaccess.table.TablePyhNameDTO>
@@ -80,18 +107,16 @@ public class OpenEdgeUtils {
      * @param dbName
      * @return
      */
-    public List<TablePyhNameDTO> getTableNameAndColumnsPlus(Connection conn, String dbName) {
+    public static List<TablePyhNameDTO> getTableNameAndColumnsPlus(Connection conn, String dbName) {
         List<TablePyhNameDTO> list = null;
         Statement stmt = null;
         try {
             stmt = conn.createStatement();
             list = new ArrayList<>();
             // 获取指定数据库所有表
-            Map<String, String> mapList = this.getTablesPlus(conn, dbName);
+            Map<String, String> mapList = getTablesAndSchema(conn);
             List<TablePyhNameDTO> finalList = list;
-            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<String, String> entry = iterator.next();
+            for (Map.Entry<String, String> entry : mapList.entrySet()) {
                 // 根据表名获取字段
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());

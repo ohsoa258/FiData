@@ -67,9 +67,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
             // 查询缓存里有没有redis的数据
             boolean flag = redisUtil.hasKey(RedisKeyBuild.buildDataSoureKey(dataSource.id));
+            DataSourceDTO dataSourceDTO = new DataSourceDTO();
             if (!flag) {
                 // 将表和视图的结构存入redis
-                setDataSourceMeta(appId);
+                dataSourceDTO = setDataSourceMeta(appId);
             }
 
             try {
@@ -79,7 +80,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 }
             } catch (Exception e) {
                 log.error("redis中获取数据失败");
-                dataSource = null;
+                //在测试openedge数据库时发现，如果库内表过多，导致存不进redis里面时，会导致返回空数据
+                dataSource = dataSourceDTO;
             }
             result.add(dataSource);
         }
@@ -90,12 +92,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Override
     public DataSourceDTO setDataSourceMeta(long appId) {
         try {
-            DataSourceDTO dataSource = mapper.getDataSourceById(appId);
+            DataSourceDTO dataSource = mapper.getDataSource(appId);
             if (dataSource == null) {
                 log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
                 return null;
             }
-            AppDataSourcePO po = this.query().eq("id", appId).one();
+            AppDataSourcePO po = this.query().eq("app_id", appId).one();
             dataSource.appName = po.dbName;
             if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
@@ -128,9 +130,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 // 表结构
                 dataSource.tableDtoList = oracleUtils.getTableNameList(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
             } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(dataSource.driveType)) {
-                OpenEdgeUtils openEdgeUtils = new OpenEdgeUtils();
                 // 表结构
-                dataSource.tableDtoList = openEdgeUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE), po.dbName);
+                Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
+                dataSource.tableDtoList = OpenEdgeUtils.getTableNameAndColumnsPlus(con, po.dbName);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
