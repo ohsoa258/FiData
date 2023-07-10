@@ -25,7 +25,8 @@ public enum DbTypeEnum implements BaseEnum {
      */
     api(6, "api"),
     oracle_cdc(8, "oracle-cdc"),
-    sftp(9, "sftp");
+    sftp(9, "sftp"),
+    openedge(10,"openedge");
 
     DbTypeEnum(int value, String name) {
         this.value = value;
