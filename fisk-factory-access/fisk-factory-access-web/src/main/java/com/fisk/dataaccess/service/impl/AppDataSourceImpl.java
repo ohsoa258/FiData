@@ -169,6 +169,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
             Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
             return dto.queryType == 1 ? pgsqlUtils.getTableColumnName(conn, dto.name) : null;
+        } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(dataSource.driveType)) {
+            // 表结构
+            Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
+            return OpenEdgeUtils.getColumnsName(con, dto.name);
         }
         return null;
     }
