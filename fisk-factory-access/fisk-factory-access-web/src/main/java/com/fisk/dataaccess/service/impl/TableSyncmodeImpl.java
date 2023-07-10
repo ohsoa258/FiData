@@ -54,23 +54,23 @@ public class TableSyncmodeImpl extends ServiceImpl<TableSyncmodeMapper, TableSyn
         List<TableSyncmodeDTO> tableSyncmodeDTOList = TableSyncModeMap.INSTANCES.listPoToDto(tableSyncmodePOList);
 
         //预装载表同步类型
-        //追加 1
+        //追加
         int appendCoverCount = 0;
-        //全量 2
+        //全量
         int fullCoverCount = 0;
-        //业务覆盖 3
+        //业务主键覆盖
         int businessKeyCoverCount = 0;
-        //业务时间 4
+        //业务时间
         int businessTimeCoverCount = 0;
 
         for (TableSyncmodeDTO t : tableSyncmodeDTOList) {
             //这里不要关心枚举类型的对错，关心数值即可
             if (t.getSyncMode() == syncModeTypeEnum.FULL_VOLUME.getValue()) {
-                //追加
-                appendCoverCount++;
-            } else if (t.getSyncMode() == syncModeTypeEnum.ADD.getValue()) {
                 //全量
                 fullCoverCount++;
+            } else if (t.getSyncMode() == syncModeTypeEnum.ADD.getValue()) {
+                //追加
+                appendCoverCount++;
             } else if (t.getSyncMode() == syncModeTypeEnum.INCREMENT_MERGE.getValue() || t.getSyncMode() == syncModeTypeEnum.INCREMENT_DELINSERT.getValue()) {
                 //业务主键覆盖
                 businessKeyCoverCount++;
