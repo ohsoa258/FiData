@@ -127,6 +127,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 OracleUtils oracleUtils = new OracleUtils();
                 // 表结构
                 dataSource.tableDtoList = oracleUtils.getTableNameList(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE), po.dbName);
+            } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(dataSource.driveType)) {
+                OpenEdgeUtils openEdgeUtils = new OpenEdgeUtils();
+                // 表结构
+                dataSource.tableDtoList = openEdgeUtils.getTableNameAndColumnsPlus(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE), po.dbName);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {

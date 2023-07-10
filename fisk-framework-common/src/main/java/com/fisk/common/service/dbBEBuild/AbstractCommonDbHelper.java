@@ -303,6 +303,7 @@ public class AbstractCommonDbHelper {
             case MYSQL:
             case DORIS:
             case ORACLE:
+            case OPENEDGE:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             default:
                 return null;
