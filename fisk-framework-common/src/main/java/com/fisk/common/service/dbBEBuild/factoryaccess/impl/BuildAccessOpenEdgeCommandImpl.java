@@ -148,7 +148,18 @@ public class BuildAccessOpenEdgeCommandImpl  implements IBuildAccessSqlCommand {
 
     @Override
     public JSONObject dataTypeList() {
-        return null;
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("字符串型", "CHAR");
+        jsonObject.put("整型", "INTEGER");
+        jsonObject.put("位数据类型", "LOGICAL");
+        jsonObject.put("大整型", "DECIMAL");
+        jsonObject.put("日期类型", "DATE");
+        jsonObject.put("时间类型", "CHAR"); // OpenEdge中没有独立的时间类型，可以使用CHAR来表示时间
+        jsonObject.put("日期时间类型", "DATETIME");
+        jsonObject.put("时间戳类型", "TIMESTAMP");
+        jsonObject.put("浮点型", "FLOAT");
+        jsonObject.put("文本型", "LONGCHAR");
+        return jsonObject;
     }
 
     @Override
