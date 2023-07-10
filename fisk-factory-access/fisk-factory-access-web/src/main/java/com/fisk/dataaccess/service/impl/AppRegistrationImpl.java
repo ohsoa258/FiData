@@ -1019,7 +1019,7 @@ public class AppRegistrationImpl
                     Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE.getDriverName());
                     log.info("注册OpenEdge驱动程序后...");
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
-                    allDatabases.addAll(oracleUtils.getAllDatabases(conn));
+                    allDatabases.addAll(OpenEdgeUtils.getAllDatabases(conn));
                 default:
                     break;
             }
