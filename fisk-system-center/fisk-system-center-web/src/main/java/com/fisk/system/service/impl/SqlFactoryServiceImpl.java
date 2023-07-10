@@ -29,7 +29,21 @@ public class SqlFactoryServiceImpl implements SqlFactoryService {
     public List<TableMetaDataObject> sqlCheck(SqlCheckDTO sqlCheckDTO) {
         String dbType = sqlCheckDTO.dbType;
         String sql = sqlCheckDTO.sql;
-        boolean flag = ("mysql").equals(dbType) || (("oracle").equals(dbType) || (("postgresql").equals(dbType) || (("sqlserver").equals(dbType))));
+
+        boolean flag;
+        switch (dbType) {
+            case "mysql":
+            case "oracle":
+            case "postgresql":
+            case "sqlserver":
+            case "openedge":
+                flag = true;
+                break;
+            default:
+                flag = false;
+                break;
+        }
+
         if (StringUtils.isEmpty(sql) || StringUtils.isEmpty(dbType))
             throw new FkException(ResultEnum.SQL_PARAMETER_NOTNULL);
         else if (!flag)
