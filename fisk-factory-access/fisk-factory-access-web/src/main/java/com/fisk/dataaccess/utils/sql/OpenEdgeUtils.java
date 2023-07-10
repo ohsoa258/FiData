@@ -26,19 +26,40 @@ public class OpenEdgeUtils {
      * @return tableName中的表字段
      */
     public static List<TableStructureDTO> getColumnsName(Connection conn, String tableName) {
-        List<TableStructureDTO> colNameList = null;
+        List<TableStructureDTO> colNameList = new ArrayList<>();
+        PreparedStatement statement = null;
+        ResultSet resultSet = null;
         try {
-            colNameList = new ArrayList<>();
-            DatabaseMetaData metaData = conn.getMetaData();
-            ResultSet resultSet = metaData.getColumns(null, null, tableName, null);
+            String query = "SELECT COL FROM sysprogress.syscolumns WHERE tbl = ?";
+            statement = conn.prepareStatement(query);
+            if (tableName.contains(".")){
+                tableName = tableName.split("\\.")[1];
+            }
+            statement.setString(1, tableName);
+            resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
-                dto.fieldName = resultSet.getString("COLUMN_NAME");
+                dto.fieldName = resultSet.getString("COL");
                 colNameList.add(dto);
             }
         } catch (Exception e) {
             log.error("【getColumnsName】获取表字段报错, ex", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    log.error("JDBC: openEdge关闭ResultSet失败...", e);
+                }
+            }
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    log.error("JDBC: openEdge关闭PreparedStatement失败...", e);
+                }
+            }
         }
         return colNameList;
     }
