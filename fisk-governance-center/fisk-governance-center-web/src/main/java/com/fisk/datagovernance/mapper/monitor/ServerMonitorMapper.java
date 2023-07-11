@@ -1,0 +1,31 @@
+package com.fisk.datagovernance.mapper.monitor;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.datagovernance.dto.monitor.ServerMonitorPageDTO;
+import com.fisk.datagovernance.entity.monitor.ServerMonitorPO;
+import com.fisk.datagovernance.vo.monitor.DelayPingVO;
+import com.fisk.datagovernance.vo.monitor.ServerMonitorDetailVO;
+import com.fisk.datagovernance.vo.monitor.ServerMonitorVO;
+import com.fisk.datagovernance.vo.monitor.ServerTableVO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+
+@Mapper
+public interface ServerMonitorMapper extends BaseMapper<ServerMonitorPO> {
+
+    List<DelayPingVO> getDelayPingTotal(@Param("number") Integer number, @Param("type") Integer type);
+    ServerMonitorVO getAllTotal();
+    List<ServerTableVO> getServerTable(@Param("number") Integer number, @Param("type") Integer type);
+
+    List<DelayPingVO> getServerDelayPingVO(@Param("number") Integer number, @Param("type") Integer type,
+                                           @Param("name") String name,@Param("port") Integer port);
+    ServerMonitorDetailVO getRunningStatus(@Param("name") String name, @Param("port") Integer port);
+
+    ServerMonitorDetailVO getStatus(@Param("name") String name, @Param("port") Integer port);
+    Page<ServerTableVO> getServerTableDetail(Page<ServerTableVO> serverTableVOPage, @Param("query") ServerMonitorPageDTO query);
+
+}
