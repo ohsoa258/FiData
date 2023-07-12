@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableKeepNumberDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
@@ -86,7 +87,7 @@ public class TableAccessController {
      */
     @GetMapping("/getAccessTableByTableName")
     @ApiOperation(value = "通过表名（带架构）获取表信息")
-    public ResultEntity<Object> getAccessTableByTableName(@RequestParam("tableName") String tableName) {
+    public ResultEntity<TableAccessDTO> getAccessTableByTableName(@RequestParam("tableName") String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAccessTableByTableName(tableName));
     }
 
