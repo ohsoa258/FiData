@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl.dimension;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -43,6 +44,7 @@ import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.service.IDimension;
 import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.SystemVariablesImpl;
+import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
@@ -106,6 +108,8 @@ public class DimensionImpl
     DataSourceConfigUtil dataSourceConfigUtil;
     @Resource
     SystemVariablesImpl systemVariables;
+    @Resource
+    private FactImpl factImpl;
     @Value("${fiData-data-dw-source}")
     private Integer dwSource;
 
@@ -147,7 +151,7 @@ public class DimensionImpl
             //2023-05-04 李世纪注释，目前日期维度表和普通表走相同流程，不再通过JDBC直接建表和插入数据
             // 在ods库下生成数据源表，用于nifi发布流程后查找数据使用
 //            editDateDimension(dto, dto.dimensionTabName);
-        }else {
+        } else {
             model.setIsDimDateTbl(false);
         }
         // 设置临时表名称
@@ -917,6 +921,23 @@ public class DimensionImpl
         }
 
         return data;
+    }
+
+    /**
+     * 根据表名获取事实或维度表id
+     *
+     * @param tblName
+     * @return
+     */
+    @Override
+    public Long getFactOrDimTable(String tblName) {
+        Long tblId = null;
+        if (tblName.contains("dim_")) {
+            tblId = getOne(new LambdaQueryWrapper<DimensionPO>().eq(DimensionPO::getDimensionTabName, tblName)).id;
+        } else {
+            tblId = factImpl.getFactIdByFactName(tblName);
+        }
+        return tblId;
     }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,

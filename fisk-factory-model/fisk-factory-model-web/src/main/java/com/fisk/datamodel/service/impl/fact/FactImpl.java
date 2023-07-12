@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl.fact;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -27,6 +28,7 @@ import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.*;
@@ -537,6 +539,15 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             columnList.add(column);
         }
         return columnList;
+    }
+
+    /**
+     * 根据事实表名获取事实表id
+     * @param tblName
+     * @return
+     */
+    public Long getFactIdByFactName(String tblName){
+        return getOne(new LambdaQueryWrapper<FactPO>().eq(FactPO::getFactTabName, tblName)).id;
     }
 
 }

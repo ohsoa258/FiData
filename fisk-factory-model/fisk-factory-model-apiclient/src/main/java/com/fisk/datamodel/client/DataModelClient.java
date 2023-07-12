@@ -351,4 +351,14 @@ public interface DataModelClient {
     @ApiOperation(value = "获取数据建模所有元数据")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData();
 
+    /**
+     * 根据表名获取事实或维度表
+     *
+     * @param tblName
+     * @return
+     */
+    @ApiOperation("根据表名获取事实或维度表")
+    @GetMapping("/getFactOrDimTable")
+    ResultEntity<Long> getFactOrDimTable(@RequestParam("tblName") String tblName);
+
 }

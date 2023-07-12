@@ -89,5 +89,17 @@ public class DimensionController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessDimTable(businessId));
     }
 
+    /**
+     * 根据表名获取事实或维度表
+     *
+     * @param tblName
+     * @return
+     */
+    @ApiOperation("根据表名获取事实或维度表")
+    @GetMapping("/getFactOrDimTable")
+    public ResultEntity<Long> getFactOrDimTable(@RequestParam("tblName") String tblName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactOrDimTable(tblName));
+    }
+
 
 }

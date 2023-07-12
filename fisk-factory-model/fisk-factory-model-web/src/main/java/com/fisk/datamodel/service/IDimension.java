@@ -20,6 +20,7 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 添加维度表
+     *
      * @param dto
      * @return
      */
@@ -27,6 +28,7 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 获取维度表详情
+     *
      * @param id
      * @return
      */
@@ -34,6 +36,7 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 修改维度表
+     *
      * @param dto
      * @return
      */
@@ -41,6 +44,7 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 删除维度表
+     *
      * @param id
      * @return
      */
@@ -48,6 +52,7 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 更新维度脚本数据
+     *
      * @param dto
      * @return
      */
@@ -55,13 +60,15 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 根据筛选条件获取维度名称列表
+     *
      * @param dto
      * @return
      */
-    List<DimensionMetaDTO>getDimensionNameList(DimensionQueryDTO dto);
+    List<DimensionMetaDTO> getDimensionNameList(DimensionQueryDTO dto);
 
     /**
      * 设置维度日期属性
+     *
      * @param dto
      * @return
      */
@@ -69,6 +76,7 @@ public interface IDimension extends IService<DimensionPO> {
 
     /**
      * 根据业务域id,获取时间维度表以及字段
+     *
      * @param businessId
      * @return
      */
@@ -96,6 +104,14 @@ public interface IDimension extends IService<DimensionPO> {
      * @return
      */
     List<TableNameDTO> getPublishSuccessDimTable(Integer businessId);
+
+    /**
+     * 根据表名获取事实或维度表
+     *
+     * @param tblName
+     * @return
+     */
+    Long getFactOrDimTable(String tblName);
 
     //void asyncSynchronousMetadata(DimensionPO model);
 
