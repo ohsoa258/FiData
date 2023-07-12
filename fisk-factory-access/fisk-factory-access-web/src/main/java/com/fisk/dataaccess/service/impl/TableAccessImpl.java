@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -171,6 +172,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private Boolean openMetadata;
     @Resource
     TableHistoryMapper tableHistoryMapper;
+    @Resource
+    private AppRegistrationImpl appRegistration;
 
     /**
      * 数据库连接
@@ -2483,7 +2486,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //根据连接类型，获取对应连接类型的keepNumberSql实现类
         IBuildKeepNumber keepNumberSqlHelper = BuildKeepNumberSqlHelper.getKeepNumberSqlHelperByConType(conType);
         //获取keepNumberSql
-        String keepNumberSql = keepNumberSqlHelper.setKeepNumberSql(dto,appRegistrationPO,stgAndTableName);
+        String keepNumberSql = keepNumberSqlHelper.setKeepNumberSql(dto, appRegistrationPO, stgAndTableName);
         return baseMapper.setKeepNumber(dto.id, dto.keepNumber, String.valueOf(keepNumberSql)) > 0 ? ResultEnum.SUCCESS : ResultEnum.SET_KEEP_NUMBER_ERROR;
     }
 
@@ -2497,6 +2500,33 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.tableName = po.tableName;
         dto.fieldNameDTOList = tableFieldsImpl.getTableFileInfo(tableAccessId);
         return dto;
+    }
+
+    /**
+     * 通过表名（带架构）获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @Override
+    public TableAccessDTO getAccessTableByTableName(String tableName) {
+        //如果表名包含架构名，分别截取表名和架构名作为查询条件
+        if (tableName.contains("\\.")) {
+            String schemaName = tableName.split("\\.")[0];
+            String tblName = tableName.split("\\.")[1];
+            AppRegistrationPO app = appRegistration.getAppBySchemaName(schemaName);
+            //获取表对应的应用id
+            long id = app.getId();
+            LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TableAccessPO::getAppId, id)
+                    .eq(TableAccessPO::getTableName, tblName);
+            return TableAccessMap.INSTANCES.poToDto(getOne(wrapper));
+        }else {
+            //如果表名不包含架构名，则直接用表名作为条件查询物理表
+            LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TableAccessPO::getTableName, tableName);
+            return TableAccessMap.INSTANCES.poToDto(getOne(wrapper));
+        }
     }
 
 }

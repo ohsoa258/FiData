@@ -2,10 +2,10 @@ package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.ddtek.jdbc.openedge.OpenEdgeDriver;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
@@ -2198,6 +2198,18 @@ public class AppRegistrationImpl
         tableList.add(table);
 
         return tableList;
+    }
+
+    /**
+     * 通过表名（带架构）获取表信息
+     *
+     * @param schemaName
+     * @return
+     */
+    public AppRegistrationPO getAppBySchemaName(String schemaName){
+        LambdaQueryWrapper<AppRegistrationPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AppRegistrationPO::getAppAbbreviation,schemaName);
+        return getOne(wrapper);
     }
 
 

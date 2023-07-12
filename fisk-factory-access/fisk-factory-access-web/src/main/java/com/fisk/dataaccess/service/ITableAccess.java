@@ -356,4 +356,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     ApiColumnInfoDTO getTableColumnInfo(long tableAccessId);
 
+    /**
+     * 通过表名（带架构）获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    TableAccessDTO getAccessTableByTableName(String tableName);
 }

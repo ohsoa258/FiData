@@ -452,4 +452,14 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/getAppNameById")
     @ApiOperation(value = "根据appId获取app应用名称")
     ResultEntity<AppRegistrationDTO> getAppNameById(@RequestParam("id") Long id);
+
+    /**
+     * 通过表名（带架构）获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @GetMapping("/getAccessTableByTableName")
+    @ApiOperation(value = "通过表名（带架构）获取表信息")
+    ResultEntity<Object> getAccessTableByTableName(@RequestParam("tableName") String tableName);
 }
