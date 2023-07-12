@@ -78,4 +78,17 @@ public class TableAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setKeepNumber(dto));
     }
 
+    /**
+     * 通过表名（带架构）获取表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @GetMapping("/getAccessTableByTableName")
+    @ApiOperation(value = "通过表名（带架构）获取表信息")
+    public ResultEntity<Object> getAccessTableByTableName(@RequestParam("tableName") String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAccessTableByTableName(tableName));
+    }
+
+
 }
