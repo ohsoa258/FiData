@@ -149,17 +149,17 @@ public class HeartbeatService {
                     queryWrapper.eq(TableTopicPO::getTopicName, topic).eq(TableTopicPO::getDelFlag, 1);
                     TableTopicPO topicPO = tableTopicService.getOne(queryWrapper);
                     if (split.length == 7) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
+                        map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
+                        log.info("打印条数81" + JSON.toJSONString(map));
+                        redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, map, 3600);
                         Boolean setnx;
                         do {
                             Thread.sleep(200);
 //                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
                             setnx = redisUtil.setnx("PipelLock:" + kafkaReceive.pipelTraceId, 100, TimeUnit.SECONDS);
                         } while (!setnx);
-                        Map<String, Object> map = new HashMap<>();
-                        map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
-                        map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
-                        log.info("打印条数81" + JSON.toJSONString(map));
-                        redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, map, 3600);
                         // 获取redis中TASK任务
                         Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
                         //获取my-topic运行状态

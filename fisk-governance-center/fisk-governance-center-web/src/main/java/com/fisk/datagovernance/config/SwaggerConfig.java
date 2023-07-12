@@ -59,6 +59,8 @@ public class SwaggerConfig {
     public static final String COLUMN_User_Assignment = "列用户分配";
     public static final String Row_User_Assignment = "行用户分配";
 
+    public static final String SYSTEM_MONITOR = "系统监控";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataGovernanceApplication.class.getPackage().getName();
@@ -82,6 +84,7 @@ public class SwaggerConfig {
                 .tags(new Tag(COLUMN_SECURITY_CONFIG, "列级安全"))
                 .tags(new Tag(COLUMN_User_Assignment, "列用户分配"))
                 .tags(new Tag(Row_User_Assignment, "行用户分配"))
+                .tags(new Tag(SYSTEM_MONITOR, "系统监控"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

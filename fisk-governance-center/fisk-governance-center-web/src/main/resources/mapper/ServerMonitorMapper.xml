@@ -1,0 +1,152 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.monitor.ServerMonitorMapper">
+    <select id="getDelayPingTotal" resultType="com.fisk.datagovernance.vo.monitor.DelayPingVO">
+        SELECT
+        <choose>
+            <when test="type == 1">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:%i') AS timestamp,
+            </when>
+            <when test="type == 2">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:00') AS timestamp,
+            </when>
+            <when test="type == 3">
+                DATE_FORMAT(create_time, '%Y-%m-%d') AS timestamp,
+            </when>
+        </choose>
+            COUNT(*) AS total_count,
+	        SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS success_total,
+	        SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS failure_total
+        FROM tb_server_monitor
+        <choose>
+            <when test="type == 1">
+                WHERE create_time >= NOW() - INTERVAL #{number} MINUTE
+                GROUP BY timestamp;
+            </when>
+            <when test="type == 2">
+                WHERE create_time >= NOW() - INTERVAL #{number} HOUR
+                GROUP BY timestamp;
+            </when>
+            <when test="type == 3">
+                WHERE create_time >= NOW() - INTERVAL #{number} DAY
+                GROUP BY timestamp;
+            </when>
+        </choose>
+    </select>
+
+    <select id="getAllTotal" resultType="com.fisk.datagovernance.vo.monitor.ServerMonitorVO">
+        SELECT
+            COUNT(*) AS totalCount,
+            SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS successTotal,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS failureTotal
+        FROM
+            tb_server_monitor
+        WHERE
+            create_time = (SELECT MAX(create_time) FROM tb_server_monitor);
+    </select>
+    <select id="getServerTable" resultType="com.fisk.datagovernance.vo.monitor.ServerTableVO">
+        SELECT *
+        FROM (
+                 SELECT
+                     server_name, status,CONCAT('http://', server_ip,':',server_port) as serverUrl,server_port as port, create_time as date,
+                     ROW_NUMBER() OVER (PARTITION BY server_name ORDER BY create_time DESC) AS rn
+                 FROM tb_server_monitor
+        <choose>
+            <when test="type == 1">
+                WHERE create_time >= NOW() - INTERVAL #{number} MINUTE
+            </when>
+            <when test="type == 2">
+                WHERE create_time >= NOW() - INTERVAL #{number} HOUR
+            </when>
+            <when test="type == 3">
+                WHERE create_time >= NOW() - INTERVAL #{number} DAY
+            </when>
+        </choose>
+             ) AS subquery
+        WHERE rn = 1;
+    </select>
+
+    <select id="getServerDelayPingVO" resultType="com.fisk.datagovernance.vo.monitor.DelayPingVO">
+        SELECT
+        <choose>
+            <when test="type == 1">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:%i') AS timestamp,
+            </when>
+            <when test="type == 2">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:00') AS timestamp,
+            </when>
+            <when test="type == 3">
+                DATE_FORMAT(create_time, '%Y-%m-%d') AS timestamp,
+            </when>
+        </choose>
+            COUNT(*) AS total_count,
+	        SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) AS success_total,
+	        SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) AS failure_total
+        FROM tb_server_monitor
+        <choose>
+            <when test="type == 1">
+                WHERE create_time >= NOW() - INTERVAL #{number} MINUTE
+                and server_name = #{name} and server_port = #{port}
+                GROUP BY server_name, timestamp;
+            </when>
+            <when test="type == 2">
+                WHERE create_time >= NOW() - INTERVAL #{number} HOUR
+                and server_name = #{name} and server_port = #{port}
+                GROUP BY server_name, timestamp;
+            </when>
+            <when test="type == 3">
+                WHERE create_time >= NOW() - INTERVAL #{number} DAY
+                and server_name = #{name} and server_port = #{port}
+                GROUP BY server_name, timestamp;
+            </when>
+        </choose>
+    </select>
+    <select id="getRunningStatus" resultType="com.fisk.datagovernance.vo.monitor.ServerMonitorDetailVO">
+        SELECT
+            last_status_change_time as statusDate,
+            TIMESTAMPDIFF(SECOND, last_status_change_time, NOW()) AS persistentDate
+        FROM (
+                 SELECT MAX(create_time) AS last_status_change_time
+                 FROM tb_server_monitor
+                 WHERE server_name = #{name} AND server_port = #{port}
+                   AND status != (
+                     SELECT status
+                     FROM tb_server_monitor
+                     WHERE server_name = #{name} AND server_port = #{port}
+                     ORDER BY create_time DESC
+                     LIMIT 1
+                 )
+                 ORDER BY create_time DESC
+                 LIMIT 1
+             ) AS subquery;
+    </select>
+    <select id="getStatus" resultType="com.fisk.datagovernance.vo.monitor.ServerMonitorDetailVO">
+        SELECT
+            MIN(create_time) AS statusDate,
+            TIMESTAMPDIFF(SECOND, MIN(create_time), NOW()) AS persistentDate
+        FROM tb_server_monitor
+        WHERE server_name =  #{name} AND server_port = #{port};
+    </select>
+
+    <select id="getServerTableDetail" resultType="com.fisk.datagovernance.vo.monitor.ServerTableVO">
+        SELECT
+            server_name, status,CONCAT('http://', server_ip,':',server_port) as serverUrl,server_port, create_time as date
+        FROM tb_server_monitor
+        <choose>
+            <when test="query.type == 1">
+                WHERE create_time >= NOW() - INTERVAL #{query.number} MINUTE
+                and server_name = #{query.name} and server_port = #{query.port}
+            </when>
+            <when test="query.type == 2">
+                WHERE create_time >= NOW() - INTERVAL #{query.number} HOUR
+                and server_name = #{query.name} and server_port = #{query.port}
+            </when>
+            <when test="query.type == 3">
+                WHERE create_time >= NOW() - INTERVAL #{query.number} DAY
+                and server_name = #{query.name} and server_port = #{query.port}
+            </when>
+        </choose>
+
+    </select>
+</mapper>
