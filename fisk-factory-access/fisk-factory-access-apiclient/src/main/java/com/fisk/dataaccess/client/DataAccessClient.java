@@ -461,5 +461,5 @@ public interface DataAccessClient {
      */
     @GetMapping("/getAccessTableByTableName")
     @ApiOperation(value = "通过表名（带架构）获取表信息")
-    ResultEntity<Object> getAccessTableByTableName(@RequestParam("tableName") String tableName);
+    ResultEntity<TableAccessDTO> getAccessTableByTableName(@RequestParam("tableName") String tableName);
 }
