@@ -3,6 +3,7 @@ package com.fisk.datagovernance.map.monitor;
 import com.fisk.datagovernance.dto.monitor.ServerMonitorDTO;
 import com.fisk.datagovernance.entity.monitor.ServerMonitorPO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
