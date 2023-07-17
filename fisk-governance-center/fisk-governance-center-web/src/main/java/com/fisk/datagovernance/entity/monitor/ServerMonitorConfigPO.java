@@ -7,9 +7,14 @@ import lombok.Data;
 
 import java.io.Serializable;
 
-@TableName("tb_server_monitor")
+/**
+ * @author wangjian
+ * @date 2023-07-14 16:21:58
+ */
+@TableName("tb_server_monitor_config")
 @Data
-public class ServerMonitorPO extends BasePO implements Serializable {
+public class ServerMonitorConfigPO extends BasePO implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @ApiModelProperty(value = "服务名称")
     private String serverName;
@@ -19,8 +24,5 @@ public class ServerMonitorPO extends BasePO implements Serializable {
 
     @ApiModelProperty(value = "服务ip")
     private String serverIp;
-
-    @ApiModelProperty(value = "服务状态1:运行0:停止")
-    private Integer status;
 
 }
