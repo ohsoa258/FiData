@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author Lock
@@ -33,6 +34,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.datamodel.client"
 })
 @EnableHystrix
+@EnableScheduling
 public class FkDataGovernanceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FkDataGovernanceApplication.class, args);
