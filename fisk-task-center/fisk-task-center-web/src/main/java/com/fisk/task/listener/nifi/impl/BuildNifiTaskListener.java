@@ -699,9 +699,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).eq("type", dto.type.getValue()).one();
 
                 }
+
+                /**
+                 * 删除原流程！！！！！
+                 */
                 if (tableNifiSettingPO != null && tableNifiSettingPO.tableComponentId != null) {
                     componentsBuild.deleteNifiFlow(dataModelVO);
                 }
+
+                /**
+                 * 创建大组！！！！！
+                 */
                 ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
                 if (dto.nifiCustomWorkflowId != null && dto.nifiCustomWorkflowId != "") {
@@ -779,7 +787,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 client.updateTablePublishStatus(modelPublishStatusDTO);
             }
-            log.error("nifi流程创建失败" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("接入、建模nifi流程创建失败:" + StackTraceHelper.getStackTraceInfo(e));
             return resultEnum;
         } finally {
             if (ack != null) {
@@ -1537,6 +1545,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ProcessorEntity putDatabaseRecord = null;
             if (dto.excelFlow) {
                 ProcessorEntity IHP = new ProcessorEntity();
+                //如果开启数据校验，则新建两个组件
                 if (dataValidation) {
                     ProcessorEntity generateFlowFile = new ProcessorEntity();
 
@@ -3142,20 +3151,28 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity replaceTextProcessv1(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        //校验通过修改字段集合
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("fi_verify_type", "3");
         updateFieldMap_Y.put("fi_sync_type", "2");
+        //校验不通过修改字段集合
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
         updateFieldMap_N.put("fi_sync_type", 3);
         updateFieldMap_N.put("fi_verify_type", 2);
+        //校验不通过但校验规则为弱类型规则修改字段集合
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
+        //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
+        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
+        checkByFieldMap.put("primary_key", dto.pkName);
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "2";
-        dataCheckSyncDTO.msgField = "error_message";
+        //异常信息字段
+//        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
@@ -3166,7 +3183,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2,10);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3184,20 +3201,26 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity replaceTextProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        //校验通过修改字段集合
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("fi_verify_type", "3");
         updateFieldMap_Y.put("fi_sync_type", "2");
+        //校验不通过修改字段集合
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
         updateFieldMap_N.put("fi_sync_type", 3);
         updateFieldMap_N.put("fi_verify_type", 2);
+        //校验不通过但校验规则为弱类型规则修改字段集合
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
+        //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
+        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
         checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
+        checkByFieldMap.put("primary_key", dto.pkName);
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "2";
-        dataCheckSyncDTO.msgField = "error_message";
+        dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
@@ -3208,7 +3231,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2,12);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 12);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3307,17 +3330,24 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity replaceTextForDwProcessv1(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        //校验通过修改字段集合
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("fi_verify_type", "3");
         updateFieldMap_Y.put("fi_sync_type", "2");
+        //校验不通过修改字段集合
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
         updateFieldMap_N.put("fi_sync_type", 3);
         updateFieldMap_N.put("fi_verify_type", 2);
+        //校验不通过但校验规则为弱类型规则修改字段集合
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
+        //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
+        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
+        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
+        checkByFieldMap.put("primary_key", dto.pkName);
+//        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "1";
         dataCheckSyncDTO.msgField = "fi_error_message";
@@ -3325,13 +3355,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "stg_";
+        dataCheckSyncDTO.tablePrefix = "temp_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2,10);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3350,17 +3380,24 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        //校验通过修改字段集合
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("fi_verify_type", "3");
         updateFieldMap_Y.put("fi_sync_type", "2");
+        //校验不通过修改字段集合
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
         updateFieldMap_N.put("fi_sync_type", 3);
         updateFieldMap_N.put("fi_verify_type", 2);
+        //校验不通过但校验规则为弱类型规则修改字段集合
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
+        //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
+        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
+        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
+        checkByFieldMap.put("primary_key", dto.pkName);
+//        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
         dataCheckSyncDTO.dataSourceId = "1";
         dataCheckSyncDTO.msgField = "fi_error_message";
@@ -3368,13 +3405,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "stg_";
+        dataCheckSyncDTO.tablePrefix = "temp_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2,12);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 12);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3430,12 +3467,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessor";
         buildInvokeHttpProcessorDTO.details = "query_phase";
         buildInvokeHttpProcessorDTO.groupId = groupId;
-        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2,11);
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 11);
         buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
+        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
+        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }
@@ -3451,12 +3490,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessor";
         buildInvokeHttpProcessorDTO.details = "query_phase";
         buildInvokeHttpProcessorDTO.groupId = groupId;
-        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2,13);
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 13);
         buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
+        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
+        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }

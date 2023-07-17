@@ -158,7 +158,7 @@ public class BuildDataModelDorisTableListener
                 ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                 if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
-                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,"修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
                 }
                 log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
 
@@ -279,6 +279,20 @@ public class BuildDataModelDorisTableListener
                 bfd.deleteScript = modelPublishTableDTO.deleteTempScript;
                 //临时表(建模temp_tablename)建表语句
                 bfd.buildTableSql = pgdbTable2.get(0);
+
+                //获取表名 为了拼接临时表主键名称
+                String tableName = modelPublishTableDTO.tableName;
+                if (conType == DataSourceTypeEnum.POSTGRESQL){
+                    if (modelPublishTableDTO.createType == 0) {
+                        //临时表主键名称
+                        bfd.pkName = tableName.substring(4) + "key";
+                    } else {
+                        bfd.pkName = tableName.substring(5) + "key";
+                    }
+                }else {
+                    bfd.pkName = tableName.substring(tableName.indexOf("_") + 1) + "key";
+                }
+
                 if (modelPublishTableDTO.createType == 0) {
                     //类型为物理表
                     bfd.type = OlapTableEnum.DIMENSION;
