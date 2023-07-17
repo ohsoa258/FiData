@@ -89,11 +89,6 @@ public class DataCheckExtendPO extends BasePO {
     public int parentageCheckType;
 
     /**
-     * 血缘检查-类型值
-     */
-    public int parentageCheckValue;
-
-    /**
      * 正则表达式检查-表达式值
      */
     public String regexpCheckValue;

@@ -38,6 +38,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.sun.org.apache.bcel.internal.generic.LUSHR;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -71,19 +72,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private TemplateMapper templateMapper;
 
     @Resource
-    private DataSourceConMapper dataSourceConMapper;
-
-    @Resource
     private DataSourceConManageImpl dataSourceConManageImpl;
 
     @Resource
     private DataCheckExtendMapper dataCheckExtendMapper;
 
     @Resource
-    private DataCheckExtendManageImpl dataCheckExtendManageImpl;
+    private DataCheckLogsMapper dataCheckLogsMapper;
 
     @Resource
-    private UserClient userClient;
+    private DataCheckExtendManageImpl dataCheckExtendManageImpl;
 
     @Resource
     private UserHelper userHelper;
@@ -204,7 +202,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dto.getSourceType() == SourceTypeEnum.FiData) {
             int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
             if (idByDataSourceId == 0) {
-                return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
+                return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
             }
             dto.setDatasourceId(idByDataSourceId);
         }
@@ -228,9 +226,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         //第四步：保存数据校验扩展属性
         if (CollectionUtils.isNotEmpty(dto.getDataCheckExtends())) {
-            List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtends());
-            dataCheckExtends.forEach(t -> {
-                t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            List<DataCheckExtendPO> dataCheckExtends = new ArrayList<>();
+            dto.getDataCheckExtends().forEach(t -> {
+                DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(t);
+                dataCheckExtendPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                dataCheckExtends.add(dataCheckExtendPO);
             });
             dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
@@ -262,7 +262,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         //第四步：保存数据校验扩展属性
         if (CollectionUtils.isNotEmpty(dto.getDataCheckExtends())) {
             dataCheckExtendMapper.updateByRuleId(dto.getId());
-            List<DataCheckExtendPO> dataCheckExtends = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtends());
+            List<DataCheckExtendPO> dataCheckExtends = new ArrayList<>();
+            dto.getDataCheckExtends().forEach(t->{
+                DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(t);
+                dataCheckExtendPO.setRuleId(Math.toIntExact(dto.getId()));
+                dataCheckExtends.add(dataCheckExtendPO);
+            });
             dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
         }
         return ResultEnum.SUCCESS;
@@ -358,32 +363,54 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     continue;
                 }
 
+                // 获取表和字段信息，将其进行转义处理
+                String tableName = "";
+                String tableNameFormat = "";
+                if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
+                    tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
+                    tableName = dataSourceConVO.getConType() + ".";
+                }
+                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getTableName());
+                tableName += dataCheckPO.getTableName();
+
+                String fieldName = "";
+                String fieldNameFormat = "";
+                if (StringUtils.isNotEmpty(dataCheckExtendPO.getFieldName())) {
+                    fieldNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckExtendPO.getFieldName());
+                    fieldName = dataCheckExtendPO.getFieldName();
+                }
+                DataCheckSyncParamDTO dataCheckSyncParamDTO = new DataCheckSyncParamDTO();
+                dataCheckSyncParamDTO.setTableName(tableName);
+                dataCheckSyncParamDTO.setTableNameFormat(tableNameFormat);
+                dataCheckSyncParamDTO.setFieldName(fieldName);
+                dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
+
                 DataCheckResultVO dataCheckResult = null;
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 switch (templateType) {
                     case NULL_CHECK:
-                        dataCheckResult = interface_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case RANGE_CHECK:
-                        dataCheckResult = interface_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case STANDARD_CHECK:
-                        dataCheckResult = interface_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case DUPLICATE_DATA_CHECK:
-                        dataCheckResult = interface_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case FLUCTUATION_CHECK:
-                        dataCheckResult = interface_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case PARENTAGE_CHECK:
-                        dataCheckResult = interface_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case REGEX_CHECK:
-                        dataCheckResult = interface_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                     case SQL_SCRIPT_CHECK:
-                        dataCheckResult = interface_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                        dataCheckResult = interface_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                         break;
                 }
                 if (dataCheckResult != null) {
@@ -399,29 +426,32 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             }
         } catch (Exception ex) {
-            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
             log.error("【interfaceCheckData】执行异常：" + ex);
+            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
         }
         return ResultEntityBuild.buildData(resultEnum, dataCheckResults);
     }
 
-    public DataCheckResultVO interface_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                 DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
         List<String> fieldValues = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+            if (jsonObject.containsKey(fName)) {
+                fieldValues.add(jsonObject.getString(fName));
             }
         }
         if (fieldValues.size() != data.size()) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
+            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
             return dataCheckResultVO;
         }
 
@@ -429,43 +459,46 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         List<String> fieldValueFilters = fieldValues.stream().filter(item -> StringUtils.isEmpty(item)).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tableName, fieldName, TemplateTypeEnum.NULL_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(fieldValueFilters));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tableName, fieldName, TemplateTypeEnum.NULL_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                  DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
         List<String> fieldValues = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+            if (jsonObject.containsKey(fName)) {
+                fieldValues.add(jsonObject.getString(fName));
             }
         }
         if (fieldValues.size() != data.size()) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
+            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
             return dataCheckResultVO;
         }
 
         // 第三步：判断字段值是否通过值域验证
-        boolean isValid = true;
+        List<String> errorDataList = new ArrayList<>();
         RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
         switch (rangeCheckTypeEnum) {
             case SEQUENCE_RANGE:
                 // 序列范围
                 List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
-                list = RegexUtils.subtractValid(fieldValues, list, true);
-                isValid = CollectionUtils.isEmpty(list);
+                errorDataList = RegexUtils.subtractValid(fieldValues, list, true);
                 break;
             case VALUE_RANGE:
                 // 取值范围
@@ -475,12 +508,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (StringUtils.isNotEmpty(item)) {
                         Integer value = Integer.valueOf(item);
                         if (value < lowerBound_Int || value > upperBound_Int) {
-                            isValid = false;
-                            break;
+                            errorDataList.add(item);
                         }
                     } else {
-                        isValid = false;
-                        break;
+                        errorDataList.add(item);
                     }
                 }
                 break;
@@ -500,59 +531,59 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         LocalDateTime formattedDateTime = LocalDateTime.parse(formattedDate, formatter);
 
                         if (formattedDateTime.isBefore(startTime) || formattedDateTime.isAfter(endTime)) {
-                            isValid = false;
-                            break;
+                            errorDataList.add(item);
                         }
                     } else {
-                        isValid = false;
-                        break;
+                        errorDataList.add(item);
                     }
                 }
                 break;
         }
-        if (!isValid) {
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tableName, fieldName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tableName, fieldName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                     DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
         List<String> fieldValues = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+            if (jsonObject.containsKey(fName)) {
+                fieldValues.add(jsonObject.getString(fName));
             }
         }
         if (fieldValues.size() != data.size()) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
+            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
             return dataCheckResultVO;
         }
 
         // 第三步：判断字段值是否通过规范检查
-        boolean isValid = false;
+        List<String> errorDataList = new ArrayList<>();
         StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
         switch (standardCheckTypeEnum) {
             case DATE_FORMAT:
                 // 日期格式
                 List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
-                boolean hasValidDate = false;
-                for (String item : list) {
-                    hasValidDate = DateTimeUtils.isValidDate(fieldValues, item);
-                    if (hasValidDate) {
-                        isValid = true;
-                        break;
+                for (String dateStr : fieldValues) {
+                    boolean validDateFormat = DateTimeUtils.isValidDateFormat(dateStr, list);
+                    if (!validDateFormat) {
+                        errorDataList.add(dateStr);
                     }
                 }
                 break;
@@ -566,51 +597,62 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         if (values.stream().count() >= 2) {
                             String value = values.get(Math.toIntExact(values.stream().count() - 1));
                             if (value.length() < minFieldLength || value.length() > maxFieldLength) {
-                                isValid = false;
-                                break;
+                                errorDataList.add(item);
                             }
                         }
                     } else {
-                        isValid = false;
-                        break;
+                        errorDataList.add(item);
                     }
                 }
                 break;
             case BASE64_BYTE_STREAM:
-                // URL地址
-                isValid = RegexUtils.isValidURL(fieldValues, false);
+                for (String item : fieldValues) {
+                    // URL地址
+                    boolean validURL = RegexUtils.isValidURL(item, false);
+                    if (!validURL) {
+                        errorDataList.add(item);
+                    }
+                }
                 break;
             case CHARACTER_PRECISION_LENGTH_RANGE:
-                // BASE64字节流
-                isValid = RegexUtils.isBase64String(fieldValues, false);
+                for (String item : fieldValues) {
+                    // BASE64字节流
+                    boolean validBase64String = RegexUtils.isBase64String(item, false);
+                    if (!validBase64String) {
+                        errorDataList.add(item);
+                    }
+                }
                 break;
         }
 
-        if (!isValid) {
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tableName, fieldName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tableName, fieldName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_DuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_DuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                          DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：判断检查的字段是否存在，存在则获取字段值并判断是否重复
-        boolean isValid = true;
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
         List<String> fieldNames = Arrays.asList(dataCheckExtendPO.getFieldName().split(","));
         List<String> fieldValues = new ArrayList<>();
+        JSONArray jsonArray = new JSONArray();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             String value = "";
             for (String fieldName : fieldNames) {
                 if (jsonObject.containsKey(fieldName)) {
-                    value += jsonObject.getString(fieldName);
+                    value += jsonObject.getString(fieldName) + "_";
                 } else {
                     dataCheckResultVO.setCheckResult(FAIL);
                     dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
@@ -618,39 +660,46 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             }
             if (fieldValues.contains(value.toLowerCase())) {
-                isValid = false;
-                break;
+                JSONObject obj = new JSONObject();
+                for (String fieldName : fieldNames) {
+                    obj.put(fieldName, jsonObject.getString(fieldName));
+                }
+                jsonArray.add(obj);
             }
             fieldValues.add(value.toLowerCase());
         }
 
-        if (!isValid) {
+        if (CollectionUtils.isNotEmpty(jsonArray)) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                        DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
         List<String> fieldValues = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+            if (jsonObject.containsKey(fName)) {
+                fieldValues.add(jsonObject.getString(fName));
             }
         }
         if (fieldValues.size() != data.size()) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
+            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
             return dataCheckResultVO;
         }
 
@@ -731,15 +780,17 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         if (!isValid) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
+            dataCheckResultVO.setCheckErrorData(String.valueOf(realityValue));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                      DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
@@ -778,39 +829,51 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_RegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_RegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                  DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
         List<String> fieldValues = new ArrayList<>();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+            if (jsonObject.containsKey(fName)) {
+                fieldValues.add(jsonObject.getString(fName));
             }
         }
         if (fieldValues.size() != data.size()) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
+            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
             return dataCheckResultVO;
         }
 
         // 第三步：判断字段值是否通过正则表达式验证
-        boolean isValid = RegexUtils.isValidPattern(fieldValues, dataCheckExtendPO.getRegexpCheckValue(), false);
-        if (!isValid) {
+        List<String> errorDataList = new ArrayList<>();
+        for (String item : fieldValues) {
+            boolean isValid = RegexUtils.isValidPattern(item, dataCheckExtendPO.getRegexpCheckValue(), false);
+            if (!isValid) {
+                errorDataList.add(item);
+            }
+        }
+
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tableName, fieldName, TemplateTypeEnum.REGEX_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tableName, fieldName, TemplateTypeEnum.REGEX_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_SqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO, JSONArray data) {
+    public DataCheckResultVO interface_SqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                      DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
@@ -819,10 +882,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         List<Map<String, Object>> maps = AbstractCommonDbHelper.execQueryResultMaps(dataCheckExtendPO.getSqlCheckValue(), conn);
         // 固定返回checkstate，通过为1，未通过为0，取第一行的checkstate字段判断
         boolean isValid = false;
+        Object checkState = "";
         if (CollectionUtils.isNotEmpty(maps)) {
             Map<String, Object> objectMap = maps.get(0);
             if (objectMap.containsKey("checkstate")) {
-                Object checkState = objectMap.get("checkstate");
+                checkState = objectMap.get("checkstate");
                 if (checkState != null && checkState.toString().equals("1")) {
                     isValid = true;
                 }
@@ -832,6 +896,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
         if (!isValid) {
             dataCheckResultVO.setCheckResult(FAIL);
+            dataCheckResultVO.setCheckErrorData(String.valueOf(checkState));
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】未通过", tableName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
@@ -840,7 +905,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO interface_GetCheckResultBasisInfo(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO interface_GetCheckResultBasisInfo(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                               DataCheckExtendPO dataCheckExtendPO) {
         DataCheckResultVO dataCheckResultVO = new DataCheckResultVO();
         dataCheckResultVO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
         dataCheckResultVO.setRuleName(dataCheckPO.getRuleName());
@@ -858,7 +924,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public ResultEntity<List<DataCheckResultVO>> nifiSyncCheckData(DataCheckSyncDTO dto) {
-        List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
         try {
             // 第一步：查询数据源信息
             List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
@@ -870,7 +935,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS_STOP, null);
             }
             DataSourceTypeEnum dataSourceType = dataSourceConVO.getConType();
-            Connection connection = dataSourceConManageImpl.getStatement(dataSourceType, dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
 
             // 第二步：查询数据校验模块下的模板
             QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
@@ -910,22 +974,19 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
 
             // 第五步：根据请求参数拼接SQL语句
-            String tableName = dto.getTableName();
-            String tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceType, dto.getTableName());
-            List<String> requestParamsList = nifiSync_RequestParamsToSql(dto, dataSourceType);
-            String whereFieldSql = requestParamsList.get(0);
-            String successFieldSql = requestParamsList.get(1);
-            String failFieldSql = requestParamsList.get(2);
-            String warnFieldSql = requestParamsList.get(3);
-            String msgField = requestParamsList.get(4);
+            DataCheckSyncParamDTO dataCheckSyncParamDTO = nifiSync_RequestParamsToSql(dto, dataSourceType);
+            dataCheckSyncParamDTO.setTableNameFormat(nifiSync_GetSqlFieldFormat(dataSourceType, dto.getTableName()));
 
-            // 第五步：如果校验规则为空则无需进行数据校验，修改表状态字段为成功
+            // 第六步：如果校验规则为空则无需进行数据校验，修改表状态字段为成功
             if (CollectionUtils.isEmpty(ruleIds)) {
-                ResultEnum resultEnum = nifiSync_UpdateTableData_NoCheck(connection, tableNameFormat, successFieldSql, whereFieldSql, msgField);
+                ResultEnum resultEnum = nifiSync_UpdateTableData_NoCheck(dataSourceConVO, dataCheckSyncParamDTO);
                 return ResultEntityBuild.buildData(resultEnum, null);
             }
 
-            // 第六步：已配置校验规则，根据规则校验表数据
+            // 第七步：已配置校验规则，根据规则校验表数据并记录校验日志
+            List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
+            List<DataCheckLogsPO> dataCheckLogs = new ArrayList<>();
+
             for (DataCheckPO dataCheckPO : dataCheckPOList) {
                 TemplatePO templatePO = templatePOList.stream()
                         .filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst()
@@ -944,100 +1005,112 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     continue;
                 }
 
+                // 获取表和字段信息，将其进行转义处理
+                String tableName = "";
+                String tableNameFormat = "";
+                if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
+                    tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
+                    tableName = dataSourceConVO.getConType() + ".";
+                }
+                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getTableName());
+                tableName += dataCheckPO.getTableName();
+
+                String fieldName = "";
+                String fieldNameFormat = "";
+                if (StringUtils.isNotEmpty(dataCheckExtendPO.getFieldName())) {
+                    fieldNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckExtendPO.getFieldName());
+                    fieldName = dataCheckExtendPO.getFieldName();
+                }
+                dataCheckSyncParamDTO.setTableName(tableName);
+                dataCheckSyncParamDTO.setTableNameFormat(tableNameFormat);
+                dataCheckSyncParamDTO.setFieldName(fieldName);
+                dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
+
                 DataCheckResultVO dataCheckResult = null;
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 switch (templateType) {
                     case NULL_CHECK:
-                        dataCheckResult = nifiSync_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case RANGE_CHECK:
-                        dataCheckResult = nifiSync_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case STANDARD_CHECK:
-                        dataCheckResult = nifiSync_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case DUPLICATE_DATA_CHECK:
-                        List<String> fieldNameList = new ArrayList<>();
-                        List<String> list = Arrays.asList(dataCheckExtendPO.getFieldName().split(","));
-                        for (String item : list) {
-                            String fieldFormat = nifiSync_GetSqlFieldFormat(dataSourceType, item);
-                            fieldNameList.add(fieldFormat);
-                        }
-                        dataCheckResult = nifiSync_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case FLUCTUATION_CHECK:
-                        dataCheckResult = nifiSync_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case PARENTAGE_CHECK:
-                        dataCheckResult = nifiSync_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case REGEX_CHECK:
-                        dataCheckResult = nifiSync_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                     case SQL_SCRIPT_CHECK:
-                        dataCheckResult = nifiSync_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                        dataCheckResult = nifiSync_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
                 }
                 if (dataCheckResult != null) {
                     dataCheckResults.add(dataCheckResult);
+
+                    // 第八步：记录校验日志
+                    DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
+                    dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                    dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
+                    dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+                    dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.NIFI_SYNCHRONIZATION_DATA_CHECK_LOG.getValue());
+                    dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
+                    dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
+                    dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
+                    dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
+                    dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
+                    dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
+                    dataCheckLogsPO.setCheckTotalCount(dataCheckResult.getCheckTotalCount());
+                    dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
+                    dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
+                    dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
+                    dataCheckLogs.add(dataCheckLogsPO);
                 }
             }
 
-            // 第七步：根据校验结果修改表状态字段为成功、失败、警告
-            for (DataCheckPO dataCheckPO : dataCheckPOList) {
-                TemplatePO templatePO = templatePOList.stream().filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
-                TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                List<DataCheckExtendPO> dataCheckExtendFilters = dataCheckExtends.stream().filter(item -> item.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(dataCheckExtendFilters)) {
-                    continue;
-                }
+            // 第九步：判断校验结果是否存在不通过的，根据状态组装相应的SQL
+            String sql_UpdateTableState = "";
+            List<DataCheckResultVO> checkResult_Fail = dataCheckResults.stream().filter(t -> t.getCheckResult().equals(FAIL)).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(checkResult_Fail)) {
+                // 数据校验不通过，组装消息字段
 
-                List<String> fieldNames = new ArrayList<>();
-                for (int k = 0; k < dataCheckExtendFilters.size(); k++) {
-                    DataCheckExtendPO dataCheckExtendPO = dataCheckExtendFilters.get(k);
-                    if (StringUtils.isNotEmpty(dataCheckExtendPO.getFieldUnique())) {
-                        FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
-                                filter(f -> f.getId().equals(dataCheckExtendPO.getFieldUnique())).findFirst().orElse(null);
-                        if (fiDataMetaDataTree_Field != null) {
-                            fieldNames.add(fiDataMetaDataTree_Field.getLabel());
-                        }
-                    }
+                // 判断不通过的规则类型是强规则还是弱规则
+                checkResult_Fail = checkResult_Fail.stream().filter(t -> t.getCheckType().equals("强规则")).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(checkResult_Fail)) {
+                    // 强规则逻辑
+//                    sql_UpdateTableState = String.format("UPDATE %s SET %s WHERE %s", )
+                } else {
+                    // 弱规则逻辑
                 }
+            } else {
+                // 数据校验通过
+            }
+            // 第十步：保存数据检查日志
 
-                switch (templateType) {
-                    case FIELD_RULE_TEMPLATE:
-                        // 获取待校验的结果集合
-                        if (CollectionUtils.isEmpty(fieldNames)) {
-                            log.info("同步校验-" + dataCheckPO.getRuleName() + "-" + tableName + "-表字段名称为空");
-                            continue;
-                        }
-                        ResultEntity<List<SyncCheckInfoVO>> checkResultSqls = GetCheckFieldRule_Sync(templatePO, dataSourceInfo,
-                                dataSourceType, dataCheckPO, dataCheckExtendFilters.get(0), tableFullName, fieldNames.get(0));
-                        if (checkResultSqls != null && checkResultSqls.getCode() == ResultEnum.SUCCESS.getCode()) {
-                            checkResultSqlList.addAll(checkResultSqls.getData());
-                        }
-                        break;
-                }
-            }
-            if (CollectionUtils.isNotEmpty(checkResultSqlList)) {
-                result = UpdateTableData_Sync(connection, dataSourceType, dtoPramsList, checkResultSqlList);
-            }
-            if (connection != null) {
-                connection.close();
-            }
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
         } catch (Exception ex) {
             throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
         }
-        return result;
     }
 
-    public List<String> nifiSync_RequestParamsToSql(DataCheckSyncDTO dto, DataSourceTypeEnum dataSourceType) {
-        List<String> params = new ArrayList<>();
+    public DataCheckSyncParamDTO nifiSync_RequestParamsToSql(DataCheckSyncDTO dto, DataSourceTypeEnum dataSourceType) {
+        DataCheckSyncParamDTO params = new DataCheckSyncParamDTO();
 
         String checkFieldWhere = "",
                 updateField_Y = "",
                 updateField_N = "",
-                updateField_R = "";
+                updateField_R = "",
+                batchNumber = "",
+                smallBatchNumber = "";
 
         // 校验/更新依据字段
         if (CollectionUtils.isNotEmpty(dto.getCheckByFieldMap())) {
@@ -1048,6 +1121,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
                 sqlWhereStr = String.format(sqlWhereStr, entry.getKey(), entry.getValue());
                 checkFieldWhere += " AND " + sqlWhereStr;
+
+                // 批次号从依据字段中获取
+                if (entry.getKey().equals("batchNumber")) {
+                    batchNumber = entry.getValue().toString();
+                } else if (entry.getKey().equals("smallBatchNumber")) {
+                    smallBatchNumber = entry.getValue().toString();
+                }
             }
         }
 
@@ -1096,11 +1176,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
         }
 
-        params.add(checkFieldWhere);
-        params.add(updateField_Y);
-        params.add(updateField_N);
-        params.add(updateField_R);
-        params.add(nifiSync_GetSqlFieldFormat(dataSourceType, dto.getMsgField()));
+        params.setRequestDto(dto);
+        params.setBatchNumber(batchNumber);
+        params.setSmallBatchNumber(smallBatchNumber);
+        params.setWhereFieldSql(checkFieldWhere);
+        params.setSuccessFieldSql(updateField_Y);
+        params.setFailFieldSql(updateField_N);
+        params.setWarnFieldSql(updateField_R);
+        params.setMsgField(nifiSync_GetSqlFieldFormat(dataSourceType, dto.getMsgField()));
+        params.setUniqueField(nifiSync_GetSqlFieldFormat(dataSourceType, dto.getUniqueField()));
         return params;
     }
 
@@ -1128,18 +1212,19 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return sqlFieldStr;
     }
 
-    public ResultEnum nifiSync_UpdateTableData_NoCheck(Connection connection, String tableName, String fieldNames, String sqlWheres, String msgField) {
+    public ResultEnum nifiSync_UpdateTableData_NoCheck(DataSourceConVO dataSourceConVO, DataCheckSyncParamDTO paramDTO) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
-            if (StringUtils.isNotEmpty(msgField)) {
-                if (StringUtils.isNotEmpty(fieldNames)) {
-                    fieldNames += String.format(",%s='%s' ", msgField, "未配置同步校验规则，默认校验通过");
+            Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+            if (StringUtils.isNotEmpty(paramDTO.getMsgField())) {
+                if (StringUtils.isNotEmpty(paramDTO.getSuccessFieldSql())) {
+                    paramDTO.setSuccessFieldSql(paramDTO.getSuccessFieldSql() + String.format(",%s='%s' ", paramDTO.getMsgField(), "未配置同步校验规则，默认校验通过"));
                 } else {
-                    fieldNames += String.format("%s='%s' ", msgField, "未配置同步校验规则，默认校验通过");
+                    paramDTO.setSuccessFieldSql(paramDTO.getSuccessFieldSql() + String.format("%s='%s' ", paramDTO.getMsgField(), "未配置同步校验规则，默认校验通过"));
                 }
             }
-            String updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", tableName, fieldNames, sqlWheres);
-            log.info("【nifiSync_UpdateTableData】待执行SQL：" + updateSql);
+            String updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", paramDTO.getTableNameFormat(), paramDTO.getSuccessFieldSql(), paramDTO.getWhereFieldSql());
+            log.info("【nifiSync_UpdateTableData_NoCheck】待执行SQL：" + updateSql);
             AbstractCommonDbHelper.executeSql_Close(updateSql, connection);
         } catch (Exception ex) {
             resultEnum = ResultEnum.DATA_QUALITY_UPDATEDATA_ERROR;
@@ -1148,299 +1233,443 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return resultEnum;
     }
 
-    public DataCheckResultVO nifiSync_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public String nifiSync_getUpdateMsgFieldSql(DataSourceTypeEnum dataSourceTypeEnum, String msgField, String msg) {
+        String updateMsgFieldSql = "";
+        if (StringUtils.isEmpty(msgField) || StringUtils.isEmpty(msg))
+            return updateMsgFieldSql;
+        if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+            String caseSql = String.format("CASE \n" +
+                    "\tWHEN %s='' or %s is null THEN\n" +
+                    "\t\t%s\n" +
+                    "\tELSE\n" +
+                    "\t\t%s\n" +
+                    "END", "[" + msgField + "]", "[" + msgField + "]", "'" + msg + "'", "[" + msgField + "]+" + "'；" + msg + "'");
+            updateMsgFieldSql = String.format("[%s]" + "=" + "%s ", msgField, caseSql);
+
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+            String caseSql = String.format("CASE \n" +
+                    "\tWHEN %s='' or %s is null THEN\n" +
+                    "\t\t%s\n" +
+                    "\tELSE\n" +
+                    "\t\t%s\n" +
+                    "END", "\"" + msgField + "\"", "\"" + msgField + "\"", "'" + msg + "'", "\"" + msgField + "\"" + " || " + "'；" + msg + "'");
+            updateMsgFieldSql = String.format("\"%s\"" + "=" + "%s ", msgField, caseSql);
+        }
+        return updateMsgFieldSql;
+    }
+
+    public List<Map<String, Object>> nifiSync_CheckTableData(DataSourceConVO dataSourceConVO, String sql) {
+        // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
+        log.info("【nifiSync_UpdateTableData】待执行SQL：" + sql);
+        Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+        List<Map<String, Object>> mapList = AbstractCommonDbHelper.execQueryResultMaps(sql, connection);
+        return mapList;
+    }
+
+    public JSONArray nifiSync_QueryTableData(DataSourceConVO dataSourceConVO, String sql) {
+        // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
+        log.info("【nifiSync_QueryTableData】待执行SQL：" + sql);
+        Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+        JSONArray dataArray = AbstractCommonDbHelper.execQueryResultArrays(sql, connection);
+        return dataArray;
+    }
+
+    public DataCheckResultVO nifiSync_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
-        // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
-        List<String> fieldValues = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+        // 第二步：组装并执行SQL语句，获取校验结果
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
+        String sql_QueryTotalCount = String.format("SELECT COUNT(*) FROM %s WHERE 1=1 %s", t_Name, f_where);
+        String sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '')", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name),
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '')", f_uniqueIdName, t_Name, f_where, f_Name, f_Name);
+
+        List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            dataCheckResultVO.setCheckTotalCount(checkTotalCount);
+        }
+        JSONArray errorDataList = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
+        }
+
+        // 第三步：判断是否通过空值检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            // 组装修改语句
+            if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
+                updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), "空值检查未通过");
             }
-        }
-        if (fieldValues.size() != data.size()) {
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
+            } else {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
-            return dataCheckResultVO;
-        }
-
-        // 第三步：判断字段值是否通过空值检查
-        List<String> fieldValueFilters = fieldValues.stream().filter(item -> StringUtils.isEmpty(item)).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tableName, fieldName, TemplateTypeEnum.NULL_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.NULL_CHECK.getName()));
         } else {
+            // 组装修改语句
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tableName, fieldName, TemplateTypeEnum.NULL_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.NULL_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                 DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
-        // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
-        List<String> fieldValues = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
-            }
-        }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
-            return dataCheckResultVO;
-        }
+        // 第二步：组装并执行SQL语句，获取校验结果
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
+        String sql_QueryTotalCount = String.format("SELECT COUNT(*) FROM %s WHERE 1=1 %s", t_Name, f_where);
+        String sql_QueryCheckData = "", sql_UpdateErrorData = "";
 
-        // 第三步：判断字段值是否通过值域验证
-        boolean isValid = true;
+        DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
         switch (rangeCheckTypeEnum) {
             case SEQUENCE_RANGE:
                 // 序列范围
                 List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
-                list = RegexUtils.subtractValid(fieldValues, list, true);
-                isValid = CollectionUtils.isEmpty(list);
+                String sql_InString = list.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, sql_InString);
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_Name, t_Name, f_where, f_Name, sql_InString);
                 break;
             case VALUE_RANGE:
                 // 取值范围
                 Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
                 Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                for (String item : fieldValues) {
-                    if (StringUtils.isNotEmpty(item)) {
-                        Integer value = Integer.valueOf(item);
-                        if (value < lowerBound_Int || value > upperBound_Int) {
-                            isValid = false;
-                            break;
-                        }
-                    } else {
-                        isValid = false;
-                        break;
-                    }
+                String sql_BetweenAnd = String.format("CASE(%s AS NUMERIC) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                    sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                 }
+                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_Name, t_Name, f_where, sql_BetweenAnd);
                 break;
             case DATE_RANGE:
                 // 日期范围
-                for (String item : fieldValues) {
-                    if (StringUtils.isNotEmpty(item)) {
-                        LocalDateTime dateTime = LocalDateTime.parse(item, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                        String formattedDate = dateTime.format(formatter);
-
-                        String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
-                        String[] timeRange = timeRangeString.split("~");
-                        LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
-                        LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
-
-                        LocalDateTime formattedDateTime = LocalDateTime.parse(formattedDate, formatter);
-
-                        if (formattedDateTime.isBefore(startTime) || formattedDateTime.isAfter(endTime)) {
-                            isValid = false;
-                            break;
-                        }
-                    } else {
-                        isValid = false;
-                        break;
-                    }
-                }
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
+                String[] timeRange = timeRangeString.split("~");
+                LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
+                LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
+                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
+                        f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
+                        f_Name, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
                 break;
         }
-        if (!isValid) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tableName, fieldName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
-        } else {
-            dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tableName, fieldName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+
+        List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            dataCheckResultVO.setCheckTotalCount(checkTotalCount);
         }
+        JSONArray errorDataList = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
+        }
+
+        // 第三步：判断是否通过规范检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            // 组装修改语句
+            if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
+                updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), String.format("值域检查-%s检查未通过", rangeCheckTypeEnum.getName()));
+            }
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
+            } else {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
+            dataCheckResultVO.setCheckResult(FAIL);
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+        } else {
+            // 组装修改语句
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
+            dataCheckResultVO.setCheckResult(SUCCESS);
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+        }
+        // 设置具体的校验类型
+        dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                    DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
-        // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
-        List<String> fieldValues = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
-            }
-        }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
-            return dataCheckResultVO;
-        }
+        // 第二步：组装并执行SQL语句，查询待校验的数据
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                tName = dataCheckSyncParamDTO.getTableName(),
+                f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
+        String sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s", f_uniqueIdName, f_Name, t_Name, f_where);
 
-        // 第三步：判断字段值是否通过规范检查
-        boolean isValid = false;
+        // 第三步：查询待校验的数据
+        JSONArray errorDataList = new JSONArray();
         StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
-        switch (standardCheckTypeEnum) {
-            case DATE_FORMAT:
-                // 日期格式
-                List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
-                boolean hasValidDate = false;
-                for (String item : list) {
-                    hasValidDate = DateTimeUtils.isValidDate(fieldValues, item);
-                    if (hasValidDate) {
-                        isValid = true;
-                        break;
-                    }
-                }
-                break;
-            case URL_ADDRESS:
-                // 字符精度长度范围
-                int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
-                int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
-                for (String item : fieldValues) {
-                    if (StringUtils.isNotEmpty(item)) {
-                        List<String> values = Arrays.asList(item.split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
-                        if (values.stream().count() >= 2) {
-                            String value = values.get(Math.toIntExact(values.stream().count() - 1));
-                            if (value.length() < minFieldLength || value.length() > maxFieldLength) {
-                                isValid = false;
-                                break;
+        JSONArray data = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
+        if (data != null && data.size() == 0) {
+            for (int i = 0; i < data.size(); i++) {
+                JSONObject jsonObject = data.getJSONObject(i);
+                String fieldKey = jsonObject.getString(f_uniqueIdName);
+                Object fieldValue = jsonObject.get(fName);
+
+                // 第四步：检查数据是否符合规范
+                switch (standardCheckTypeEnum) {
+                    case DATE_FORMAT:
+                        // 日期格式
+                        List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
+                        if (fieldValue == null || fieldValue.toString().equals("")) {
+                            errorDataList.add(jsonObject);
+                        } else {
+                            boolean hasValidDate = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
+                            if (!hasValidDate) {
+                                errorDataList.add(jsonObject);
                             }
                         }
-                    } else {
-                        isValid = false;
                         break;
-                    }
+                    case URL_ADDRESS:
+                        // 字符精度长度范围
+                        int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
+                        int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
+                        if (fieldValue == null || fieldValue.toString().equals("")) {
+                            errorDataList.add(jsonObject);
+                        } else {
+                            List<String> values = Arrays.asList(fieldValue.toString().split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
+                            if (values.stream().count() >= 2) {
+                                String value = values.get(Math.toIntExact(values.stream().count() - 1));
+                                if (value.length() < minFieldLength || value.length() > maxFieldLength) {
+                                    errorDataList.add(jsonObject);
+                                }
+                            }
+                        }
+                        break;
+                    case BASE64_BYTE_STREAM:
+                        // URL地址
+                        if (fieldValue == null || fieldValue.toString().equals("")) {
+                            errorDataList.add(jsonObject);
+                        } else {
+                            boolean validURL = RegexUtils.isValidURL(fieldValue.toString(), false);
+                            if (!validURL) {
+                                errorDataList.add(jsonObject);
+                            }
+                        }
+                        break;
+                    case CHARACTER_PRECISION_LENGTH_RANGE:
+                        // BASE64字节流
+                        if (fieldValue == null || fieldValue.toString().equals("")) {
+                            errorDataList.add(jsonObject);
+                        } else {
+                            boolean validBase64String = RegexUtils.isBase64String(fieldValue.toString(), false);
+                            if (!validBase64String) {
+                                errorDataList.add(jsonObject);
+                            }
+                        }
+                        break;
                 }
-                break;
-            case BASE64_BYTE_STREAM:
-                // URL地址
-                isValid = RegexUtils.isValidURL(fieldValues, false);
-                break;
-            case CHARACTER_PRECISION_LENGTH_RANGE:
-                // BASE64字节流
-                isValid = RegexUtils.isBase64String(fieldValues, false);
-                break;
+                String checkTotalCount = String.valueOf(data.size());
+                dataCheckResultVO.setCheckTotalCount(checkTotalCount);
+            }
         }
+        String checkFailCount = String.valueOf(errorDataList.size());
+        dataCheckResultVO.setCheckFailCount(checkFailCount);
 
-        if (!isValid) {
+        // 第五步：判断字段值是否通过规范检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            // 组装修改语句
+            if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
+                updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), String.format("规范检查-%s检查未通过", standardCheckTypeEnum.getName()));
+            }
+            List<String> uniqueIdList = new ArrayList<>();
+            for (Object obj : errorDataList) {
+                JSONObject jsonObject = (JSONObject) obj;
+                String uniqueId = (String) jsonObject.get(f_uniqueIdName);
+                uniqueIdList.add(uniqueId);
+            }
+            String sql_InString = uniqueIdList.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
+            } else {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tableName, fieldName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         } else {
+            // 组装修改语句
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tableName, fieldName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         }
+        // 设置具体的校验类型
+        dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_DuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_DuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                         DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
-        // 第二步：判断检查的字段是否存在，存在则获取字段值并判断是否重复
-        boolean isValid = true;
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
+        // 第二步：组装并执行SQL语句，获取校验结果
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                tName = dataCheckSyncParamDTO.getTableName(),
+                f_Name = "",
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
+
         List<String> fieldNames = Arrays.asList(dataCheckExtendPO.getFieldName().split(","));
-        List<String> fieldValues = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            JSONObject jsonObject = data.getJSONObject(i);
-            String value = "";
-            for (String fieldName : fieldNames) {
-                if (jsonObject.containsKey(fieldName)) {
-                    value += jsonObject.getString(fieldName);
-                } else {
-                    dataCheckResultVO.setCheckResult(FAIL);
-                    dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
-                    return dataCheckResultVO;
-                }
+        String updateFieldWhereStr = "";
+        for (String item : fieldNames) {
+            String fieldFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), item);
+            f_Name += fieldFormat + ",";
+            updateFieldWhereStr += String.format(" AND sy.%s = %s.%s", fieldFormat, t_Name, fieldFormat);
+        }
+        HashMap<String, Object> checkByFieldMap = dataCheckSyncParamDTO.getRequestDto().getCheckByFieldMap();
+        if (CollectionUtils.isNotEmpty(checkByFieldMap)) {
+            for (Map.Entry<String, Object> entry : checkByFieldMap.entrySet()) {
+                String fieldFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), entry.getKey());
+                updateFieldWhereStr += String.format(" AND %s.%s='%s'", t_Name, fieldFormat, entry.getValue());
             }
-            if (fieldValues.contains(value.toLowerCase())) {
-                isValid = false;
-                break;
-            }
-            fieldValues.add(value.toLowerCase());
         }
 
-        if (!isValid) {
+        String sql_QueryTotalCount = String.format("SELECT COUNT(*) AS checkTotalCount FROM %s WHERE 1=1 %s", t_Name, f_where);
+        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
+                "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_where, f_Name);
+        List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            dataCheckResultVO.setCheckTotalCount(checkTotalCount);
+        }
+        JSONArray jsonArray = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
+        if (CollectionUtils.isNotEmpty(jsonArray)) {
+            dataCheckResultVO.setCheckFailCount(String.valueOf(maps.size()));
+        }
+
+        // 第三步：判断是否通过重复数据检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
+        if (!CollectionUtils.isNotEmpty(jsonArray)) {
+            // 组装修改语句
+            if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
+                updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), "重复数据检查未通过");
+            }
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s\n" +
+                        "SET %s\n" +
+                        "FROM (\n" +
+                        " SELECT %s FROM %s WHERE 1=1 %s\n" +
+                        " GROUP BY %s HAVING COUNT(*) > 1\n" +
+                        ") sy\n" +
+                        "WHERE 1=1 %s ", t_Name, sql_N + updateMsgFieldSql, f_Name, t_Name, f_where, f_Name, updateFieldWhereStr);
+            } else {
+                updateSql = String.format("UPDATE %s\n" +
+                        "SET %s\n" +
+                        "FROM (\n" +
+                        " SELECT %s FROM %s WHERE 1=1 %s\n" +
+                        " GROUP BY %s HAVING COUNT(*) > 1\n" +
+                        ") sy\n" +
+                        "WHERE 1=1 %s ", t_Name, sql_W + updateMsgFieldSql, f_Name, t_Name, f_where, f_Name, updateFieldWhereStr);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tName, fName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
         } else {
+            // 组装修改语句
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, fName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                       DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
-        // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
-        List<String> fieldValues = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
-            }
-        }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
-            return dataCheckResultVO;
-        }
+        // 第二步：组装并执行SQL语句，获取校验结果
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                tName = dataCheckSyncParamDTO.getTableName(),
+                f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
+        String sql_QueryTotalCount = String.format("SELECT COUNT(*) AS checkTotalCount FROM %s WHERE 1=1 %s", t_Name, f_where);
+        String sql_QueryCheckData = "";
 
-        // 第三步：获取字段聚合后的数据
         boolean isValid = true;
         double thresholdValue = dataCheckExtendPO.getFluctuateCheckValue();
         double realityValue = 0.0;
         FluctuateCheckTypeEnum fluctuateCheckTypeEnum = FluctuateCheckTypeEnum.getEnum(dataCheckExtendPO.getFluctuateCheckType());
         switch (fluctuateCheckTypeEnum) {
             case AVG:
-                List<Double> filterValues = fieldValues.stream()
-                        .filter(StringUtils::isNotEmpty)
-                        .map(Double::parseDouble)
-                        .collect(Collectors.toList());
-
-                if (CollectionUtils.isNotEmpty(filterValues)) {
-                    double sum = filterValues.stream().mapToDouble(Double::doubleValue).sum();
-                    realityValue = sum / filterValues.size();
-                }
+                sql_QueryCheckData = String.format("SELECT AVG(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case MIN:
-                Optional<Double> optionalMin = fieldValues.stream()
-                        .filter(StringUtils::isNotEmpty)
-                        .map(Double::parseDouble)
-                        .min(Double::compareTo);
-                if (optionalMin.isPresent()) {
-                    realityValue = optionalMin.get();
-                }
+                sql_QueryCheckData = String.format("SELECT MIN(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case MAX:
-                Optional<Double> optionalMax = fieldValues.stream()
-                        .filter(StringUtils::isNotEmpty)
-                        .map(Double::parseDouble)
-                        .max(Double::compareTo);
-                if (optionalMax.isPresent()) {
-                    realityValue = optionalMax.get();
-                }
+                sql_QueryCheckData = String.format("SELECT MAX(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case SUM:
-                realityValue = fieldValues.stream()
-                        .filter(StringUtils::isNotEmpty)
-                        .map(Double::parseDouble)
-                        .mapToDouble(Double::doubleValue).sum();
+                sql_QueryCheckData = String.format("SELECT SUM(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case COUNT:
-                realityValue = fieldValues.stream().count();
+                sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
+        }
+
+        List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            dataCheckResultVO.setCheckTotalCount(checkTotalCount);
+        }
+        maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryCheckData);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            realityValue = Double.parseDouble(maps.get(0).get("realityValue").toString());
         }
 
         // 第四步：判断字段值是否通过波动检查
@@ -1472,19 +1701,33 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
                 break;
         }
+
+        // 第五步：判断字段值是否通过波动检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
         if (!isValid) {
+            // 聚合类的验证，此版本修改表状态
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_N, f_where);
+            } else {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_W, f_where);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
+            dataCheckResultVO.setCheckErrorData(String.valueOf(realityValue));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
         } else {
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tableName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                     DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 调用元数据接口查询表上下游血缘信息
         String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
@@ -1521,69 +1764,132 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_RegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_RegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                 DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
-        // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
-        String fieldName = dataCheckExtendPO.getFieldName();
-        List<String> fieldValues = new ArrayList<>();
-        for (int i = 0; i < data.size(); i++) {
-            JSONObject jsonObject = data.getJSONObject(i);
-            if (jsonObject.containsKey(fieldName)) {
-                fieldValues.add(jsonObject.getString(fieldName));
+        // 第二步：组装并执行SQL语句，查询待校验的数据
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                tName = dataCheckSyncParamDTO.getTableName(),
+                f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
+        String sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s", f_uniqueIdName, f_Name, t_Name, f_where);
+
+        // 第三步：查询待校验的数据
+        JSONArray errorDataList = new JSONArray();
+        JSONArray data = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
+        if (CollectionUtils.isNotEmpty(data)) {
+            for (int i = 0; i < data.size(); i++) {
+                JSONObject jsonObject = data.getJSONObject(i);
+                // 第四步：判断字段值是否通过正则表达式验证
+                String fieldValue = jsonObject.getString(fName);
+                boolean isValid = RegexUtils.isValidPattern(fieldValue, dataCheckExtendPO.getRegexpCheckValue(), false);
+                if (!isValid) {
+                    errorDataList.add(jsonObject);
+                }
             }
+            String checkFailCount = String.valueOf(data.size());
+            dataCheckResultVO.setCheckFailCount(checkFailCount);
         }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fieldName + "】");
-            return dataCheckResultVO;
-        }
+        dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
 
-        // 第三步：判断字段值是否通过正则表达式验证
-        boolean isValid = RegexUtils.isValidPattern(fieldValues, dataCheckExtendPO.getRegexpCheckValue(), false);
-        if (!isValid) {
+        // 第三步：判断是否通过正则表达式检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            // 组装修改语句
+            if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
+                updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), "正则表达式检查未通过");
+            }
+            List<String> uniqueIdList = new ArrayList<>();
+            for (Object obj : errorDataList) {
+                JSONObject jsonObject = (JSONObject) obj;
+                String uniqueId = (String) jsonObject.get(f_uniqueIdName);
+                uniqueIdList.add(uniqueId);
+            }
+            String sql_InString = uniqueIdList.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
+            } else {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s)", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过", tableName, fieldName, TemplateTypeEnum.REGEX_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，正则表达式为：【%s】", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
         } else {
+            // 组装修改语句
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tableName, fieldName, TemplateTypeEnum.REGEX_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过，正则表达式为：【%s】", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_SqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_SqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                     DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+        DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
 
         // 第二步：建立数据库连接执行SQL查询语句
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
+                tName = dataCheckSyncParamDTO.getTableName(),
+                f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
+                fName = dataCheckSyncParamDTO.getFieldName(),
+                f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
+                f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
+                sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
+                sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
         Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         List<Map<String, Object>> maps = AbstractCommonDbHelper.execQueryResultMaps(dataCheckExtendPO.getSqlCheckValue(), conn);
         // 固定返回checkstate，通过为1，未通过为0，取第一行的checkstate字段判断
         boolean isValid = false;
+        String checkState = "0";
         if (CollectionUtils.isNotEmpty(maps)) {
             Map<String, Object> objectMap = maps.get(0);
             if (objectMap.containsKey("checkstate")) {
-                Object checkState = objectMap.get("checkstate");
-                if (checkState != null && checkState.toString().equals("1")) {
+                checkState = objectMap.get("checkstate").toString();
+                if (StringUtils.isNotEmpty(checkState) && checkState.equals("1")) {
                     isValid = true;
                 }
             }
         }
 
-        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
+        // 第三步：判断是否通过SQL检查，通过或者未通过都需要更新表状态
+        String updateSql = "", updateMsgFieldSql = "";
         if (!isValid) {
+            // 组装修改语句
+            if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
+                updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), "正则表达式检查未通过");
+            }
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_N + updateMsgFieldSql, f_where);
+            } else {
+                updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_W + updateMsgFieldSql, f_where);
+            }
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】未通过", tableName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
+            dataCheckResultVO.setCheckErrorData(checkState);
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】未通过", tName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
         } else {
+            // 组装修改语句
+            updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s", t_Name, sql_Y, f_where);
+            dataCheckResultVO.setUpdateSql(updateSql);
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】通过", tableName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】通过", tName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
 
-    public DataCheckResultVO nifiSync_GetCheckResultBasisInfo(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO) {
+    public DataCheckResultVO nifiSync_GetCheckResultBasisInfo(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                              DataCheckExtendPO dataCheckExtendPO) {
         DataCheckResultVO dataCheckResultVO = new DataCheckResultVO();
         dataCheckResultVO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
         dataCheckResultVO.setRuleName(dataCheckPO.getRuleName());
@@ -1597,393 +1903,5 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         dataCheckResultVO.setCheckTemplateName(templatePO.getTemplateName());
         dataCheckResultVO.setCheckTemplateDesc(templatePO.getTemplateDesc());
         return dataCheckResultVO;
-    }
-
-
-    /**
-     * @return com.fisk.common.core.response.ResultEntity<java.util.List < com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO>>
-     * @description 同步校验，修改表数据
-     * @author dick
-     * @date 2022/6/2 14:48
-     * @version v1.0
-     * @params connection
-     * @params dataSourceTypeEnum
-     * @params dtoPramsList
-     * @params checkResultSqlList
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public ResultEntity<List<DataCheckResultVO>> UpdateTableData_Sync(Connection connection, DataSourceTypeEnum dataSourceTypeEnum, List<String> dtoPramsList, List<SyncCheckInfoVO> checkResultSqlList) {
-        List<DataCheckResultVO> results = new ArrayList<>();
-        ResultEnum resultEnum = ResultEnum.SUCCESS;
-        try {
-            // @Transactional(rollbackFor = Exception.class) 开启事务，避免部分成功部分失败
-            // 第一步：获取需要校验的数据结果集
-            JSONArray jsonArray = GetCheckFieldRuleResult_Sync(connection, checkResultSqlList, dtoPramsList.get(0));
-            if (jsonArray == null || jsonArray.size() == 0) {
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
-            }
-            // 第二步：获取校验后的结果
-            CheckFieldRuleResult_Sync(checkResultSqlList, jsonArray);
-            // 第三步：是否存在校验失败的数据
-            List<SyncCheckInfoVO> dataCheckResults_N = checkResultSqlList.stream().filter(t -> !t.checkResult).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(dataCheckResults_N)) {
-                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
-            }
-            GetUpdateSql_Sync(dataCheckResults_N, dtoPramsList, dataSourceTypeEnum);
-            StringBuilder builder_UpdateSql = new StringBuilder();
-            if (StringUtils.isNotEmpty(dtoPramsList.get(1))) {
-                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; \n\n", checkResultSqlList.get(0).checkTable, dtoPramsList.get(1), dtoPramsList.get(0)));
-            }
-            for (SyncCheckInfoVO sqlInfo : dataCheckResults_N) {
-                builder_UpdateSql.append(sqlInfo.updateSql);
-            }
-            for (SyncCheckInfoVO syncCheckInfo : checkResultSqlList) {
-                if (resultEnum == ResultEnum.SUCCESS && syncCheckInfo.getCheckRule() == RuleCheckTypeEnum.STRONG_RULE &&
-                        !syncCheckInfo.checkResult) {
-                    resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
-                }
-                DataCheckResultVO dataCheckResult = new DataCheckResultVO();
-                dataCheckResult.setRuleId(syncCheckInfo.ruleId);
-                dataCheckResult.setRuleName(syncCheckInfo.ruleName);
-                dataCheckResult.setCheckDataBase(syncCheckInfo.checkDataBase);
-                dataCheckResult.setCheckTable(syncCheckInfo.tableName);
-                dataCheckResult.setCheckField(syncCheckInfo.fieldName);
-                dataCheckResult.setCheckType(syncCheckInfo.checkTypeName);
-                dataCheckResult.setCheckDesc(syncCheckInfo.checkDesc);
-                dataCheckResult.setCheckResult(syncCheckInfo.checkResult ? "success" : "fail");
-                dataCheckResult.setCheckResultMsg(syncCheckInfo.checkResultMsg);
-                dataCheckResult.setCheckRule(syncCheckInfo.checkRule.getValue());
-                results.add(dataCheckResult);
-            }
-            Statement st = null;
-            if (builder_UpdateSql != null && builder_UpdateSql.toString().length() > 0) {
-                st = connection.createStatement();
-                assert st != null;
-                st.execute(builder_UpdateSql.toString());
-            }
-            if (st != null) {
-                st.close();
-            }
-        } catch (Exception ex) {
-            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, ex);
-        }
-        return ResultEntityBuild.buildData(resultEnum, results);
-    }
-
-    /**
-     * @return com.fisk.common.core.response.ResultEnum
-     * @description 同步校验，修改表数据为成功状态
-     * @author dick
-     * @date 2022/6/6 16:08
-     * @version v1.0
-     * @params connection
-     * @params dtoPramsList
-     * @params tableName
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public ResultEnum UpdateTableDataToSuccess_Sync(Connection connection, DataSourceTypeEnum dataSourceType, List<String> dtoPramsList, String tableName) {
-        ResultEnum resultEnum = ResultEnum.SUCCESS;
-        try {
-            StringBuilder builder_UpdateSql = new StringBuilder();
-            String updateSetSql = "";
-            if (StringUtils.isNotEmpty(dtoPramsList.get(1))) {
-                updateSetSql = dtoPramsList.get(1);
-            }
-            if (StringUtils.isNotEmpty(dtoPramsList.get(4))) {
-                if (StringUtils.isNotEmpty(updateSetSql)) {
-                    updateSetSql += ",";
-                }
-                updateSetSql += getSqlMsgField(dataSourceType, dtoPramsList.get(4), "未配置校验规则，默认校验通过");
-            }
-            if (StringUtils.isNotEmpty(updateSetSql)) {
-                builder_UpdateSql.append(String.format("UPDATE %s SET %s WHERE 1=1 %s; \n\n", tableName, updateSetSql, dtoPramsList.get(0)));
-            }
-            Statement st = null;
-            if (builder_UpdateSql != null && builder_UpdateSql.toString().length() > 0) {
-                st = connection.createStatement();
-                assert st != null;
-                st.execute(builder_UpdateSql.toString());
-            }
-            if (st != null) {
-                st.close();
-            }
-        } catch (Exception ex) {
-            throw new FkException(ResultEnum.DATA_QUALITY_UPDATEDATA_ERROR, ex);
-        }
-        return resultEnum;
-    }
-
-    /**
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datacheck.SyncCheckInfoVO>
-     * @description 同步校验，查询组装校验规则
-     * @author dick
-     * @date 2022/6/2 14:49
-     * @version v1.0
-     * @params templatePO
-     * @params dataSourceConPO
-     * @params dataSourceTypeEnum
-     * @params dataCheckPO
-     * @params dataCheckExtendFilters
-     */
-    public ResultEntity<List<SyncCheckInfoVO>> GetCheckFieldRule_Sync(TemplatePO templatePO, DataSourceConVO dataSourceConPO,
-                                                                      DataSourceTypeEnum dataSourceTypeEnum, DataCheckPO dataCheckPO,
-                                                                      DataCheckExtendPO dataCheckExtend,
-                                                                      String tableFullNameReq, String fieldNameReq) {
-        List<SyncCheckInfoVO> checkResultSqls = new ArrayList<>();
-        String tableName = tableFullNameReq;
-        String fieldName = fieldNameReq;
-        String checkTableName = tableFullNameReq;
-        String checkFieldName = fieldNameReq;
-
-        if (StringUtils.isEmpty(tableName) || StringUtils.isEmpty(fieldName)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TABLECONFIGURATION_SENT_CHANGES, null);
-        }
-        if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            checkFieldName = "`" + checkFieldName + "`";
-            checkTableName = "`" + checkTableName + "`";
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-            checkFieldName = "[" + checkFieldName + "]";
-            checkTableName = "[" + checkTableName + "]";
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            checkFieldName = String.format("\"%s\"", checkFieldName);
-            checkFieldName = String.format("\"%s\"", checkFieldName);
-        }
-        String[] split = dataCheckExtend.checkType.split(",");
-        DataCheckTypeEnum dataCheckTypeEnum = DataCheckTypeEnum.getEnum(dataCheckExtend.dataCheckType);
-        for (String x : split) {
-            CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(x));
-            SyncCheckInfoVO checkResultSql = new SyncCheckInfoVO();
-            checkResultSql.setCheckType(checkTypeEnum);
-            checkResultSql.setCheckTypeName(checkTypeEnum.getName());
-            if (checkTypeEnum == CheckTypeEnum.DATA_CHECK) {
-                checkResultSql.setDataCheckType(dataCheckTypeEnum);
-                checkResultSql.setCheckTypeName(dataCheckTypeEnum.getName());
-            }
-            checkResultSql.setCheckTable(checkTableName);
-            checkResultSql.setCheckField(checkFieldName);
-            checkResultSql.setTableName(tableName);
-            checkResultSql.setFieldName(fieldName);
-            checkResultSql.setTableUnique(dataCheckPO.getTableUnique());
-            checkResultSql.setFieldUnique(dataCheckExtend.getFieldUnique());
-            checkResultSql.setCheckFieldWhere(dataCheckExtend.fieldWhere);
-            checkResultSql.setCheckRule(RuleCheckTypeEnum.getEnum(dataCheckPO.getCheckRule()));
-            checkResultSql.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-            checkResultSql.setRuleName(dataCheckPO.getRuleName());
-            checkResultSql.setCheckDesc(templatePO.templateDesc);
-            checkResultSql.setCheckDataBase(dataSourceConPO.conDbname);
-            checkResultSqls.add(checkResultSql);
-        }
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, checkResultSqls);
-    }
-
-    /**
-     * @return com.alibaba.fastjson.JSONArray
-     * @description 同步校验，获取校验数据
-     * @author dick
-     * @date 1 14:49
-     * @version v1.0
-     * @params conn
-     * @params checkResultSqlList
-     * @params checkFieldWhere
-     */
-    public JSONArray GetCheckFieldRuleResult_Sync(Connection conn, List<SyncCheckInfoVO> checkResultSqlList, String checkFieldWhere) {
-        String tableName = checkResultSqlList.get(0).getCheckTable();
-        List<String> fileds = checkResultSqlList.stream().map(SyncCheckInfoVO::getCheckField).distinct().collect(Collectors.toList());
-        String filedStr = SqlParmUtils.parseListToParamStr(fileds);
-        String query_SqlStr = String.format("SELECT %s FROM %s WHERE 1=1 %s;", filedStr, tableName, checkFieldWhere);
-        Statement st = null;
-        JSONArray array = new JSONArray();
-        try {
-            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-            assert st != null;
-            ResultSet rs = st.executeQuery(query_SqlStr);
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            while (rs.next()) {
-                JSONObject jsonObj = new JSONObject();
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = metaData.getColumnLabel(i);
-                    Object value = rs.getObject(columnName);
-                    jsonObj.put(columnName, value);
-                }
-                array.add(jsonObj);
-            }
-            if (rs != null) {
-                rs.close();
-            }
-            if (st != null) {
-                st.close();
-            }
-        } catch (Exception ex) {
-            throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR, ex);
-        }
-        return array;
-    }
-
-    /**
-     * @return void
-     * @description 同步校验，根据校验数据得到校验结果
-     * @author dick
-     * @date 2022/6/2 14:50
-     * @version v1.0
-     * @params checkResultSqlList
-     * @params data
-     */
-    public void CheckFieldRuleResult_Sync(List<SyncCheckInfoVO> checkResultSqlList, JSONArray data) {
-        HashMap<String, List<String>> fieldMap = new HashMap<>();
-        for (SyncCheckInfoVO fieldVo : checkResultSqlList) {
-            List<String> fieldValues = new ArrayList<>();
-            for (int i = 0; i < data.size(); i++) {
-                JSONObject jsonObject = data.getJSONObject(i);
-                if (jsonObject.containsKey(fieldVo.fieldName)) {
-                    fieldValues.add(jsonObject.getString(fieldVo.fieldName));
-                }
-            }
-            if (CollectionUtils.isNotEmpty(fieldValues))
-                fieldMap.put(fieldVo.fieldName, fieldValues);
-        }
-        for (SyncCheckInfoVO checkInfo : checkResultSqlList) {
-            List<String> fieldValues = fieldMap.get(checkInfo.fieldName);
-            List<String> fieldValueFilters = null;
-            boolean isValid = true;
-            String sqlInPram = "";
-            switch (checkInfo.checkType) {
-                case DATA_CHECK:
-                    if (checkInfo.dataCheckType == DataCheckTypeEnum.TEXTLENGTH_CHECK) {
-                        int fieldLength = Integer.parseInt(checkInfo.checkFieldWhere);
-                        fieldValueFilters = fieldValues.stream().filter(iter -> StringUtils.isNotEmpty(iter) && iter.length() > fieldLength).collect(Collectors.toList());
-                        if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
-                            isValid = false;
-                        }
-                    } else if (checkInfo.dataCheckType == DataCheckTypeEnum.DATEFORMAT_CHECK) {
-                        fieldValueFilters = DateTimeUtils.ValidDate(fieldValues, checkInfo.checkFieldWhere);
-                        if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
-                            isValid = false;
-                        }
-                    } else if (checkInfo.dataCheckType == DataCheckTypeEnum.SEQUENCERANGE_CHECK) {
-                        String[] splitArr = checkInfo.checkFieldWhere.split(",");
-                        List<String> whereList = new ArrayList<>();
-                        Collections.addAll(whereList, splitArr);
-                        fieldValueFilters = RegexUtils.subtractValid(fieldValues, whereList, true);
-                        if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
-                            isValid = false;
-                        }
-                    }
-                    if (!isValid) {
-                        sqlInPram = SqlParmUtils.getInParam(fieldValueFilters);
-                        checkInfo.setSqlWhere(sqlInPram);
-                    }
-                    break;
-                case NONEMPTY_CHECK:
-                    fieldValueFilters = fieldValues.stream().filter(iter -> StringUtils.isEmpty(iter)).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
-                        isValid = false;
-                        checkInfo.setSqlWhere("('',null)");
-                    }
-                    break;
-                case UNIQUE_CHECK:
-                    fieldValueFilters = fieldValues.stream().distinct().collect(Collectors.toList());
-                    if (fieldValueFilters.size() != data.size()) {
-                        isValid = false;
-                        fieldValueFilters = RegexUtils.subtractValid(fieldValues, fieldValueFilters, false);
-                        sqlInPram = SqlParmUtils.getInParam(fieldValueFilters);
-                        checkInfo.setSqlWhere(sqlInPram);
-                    }
-                    break;
-            }
-            if (!isValid) {
-                checkInfo.setCheckResult(false);
-                checkInfo.setCheckResultMsg(String.format("%s字段%s未通过", checkInfo.fieldName, checkInfo.getCheckTypeName()));
-            } else {
-                checkInfo.setCheckResult(true);
-                checkInfo.setCheckResultMsg(String.format("%s字段%s已通过", checkInfo.fieldName, checkInfo.getCheckTypeName()));
-            }
-        }
-    }
-
-    /**
-     * @return void
-     * @description 同步校验，根据校验结果组装修改SQL
-     * @author dick
-     * @date 2022/6/2 14:51
-     * @version v1.0
-     * @params dataCheckResults_N
-     * @params dtoPramsList
-     * @params dataSourceTypeEnum
-     */
-    public void GetUpdateSql_Sync(List<SyncCheckInfoVO> dataCheckResults_N, List<String> dtoPramsList, DataSourceTypeEnum dataSourceTypeEnum) {
-        // 校验不通过，根据参数调整表数据
-        List<SyncCheckInfoVO> checkList_Rule = new ArrayList<>();
-        String tableName = dataCheckResults_N.get(0).checkTable;
-        List<SyncCheckInfoVO> strong_Rule = dataCheckResults_N.stream().filter(t -> (t.getCheckRule() == RuleCheckTypeEnum.STRONG_RULE)).collect(Collectors.toList());
-        List<SyncCheckInfoVO> weak_Rule = dataCheckResults_N.stream().filter(t -> (t.getCheckRule() == RuleCheckTypeEnum.WEAK_RULE)).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(weak_Rule)) {
-            checkList_Rule.addAll(weak_Rule);
-        }
-        if (CollectionUtils.isNotEmpty(strong_Rule)) {
-            checkList_Rule.addAll(strong_Rule);
-        }
-        for (SyncCheckInfoVO t : checkList_Rule) {
-            String updateFieldSql = "";
-            String updateWhereSql = "";
-            String updateMsgFieldSql = getSqlMsgField(dataSourceTypeEnum, dtoPramsList.get(4), t.checkResultMsg);
-            // 判断是否是弱类型，弱类型则读取弱类型修改字段集合
-            if (t.checkRule == RuleCheckTypeEnum.WEAK_RULE) {
-                updateFieldSql = dtoPramsList.get(3);
-            } else if (t.checkRule == RuleCheckTypeEnum.STRONG_RULE) {
-                updateFieldSql = dtoPramsList.get(2);
-            }
-            if (StringUtils.isNotEmpty(updateMsgFieldSql)) {
-                if (StringUtils.isNotEmpty(updateFieldSql)) {
-                    updateMsgFieldSql = "," + updateMsgFieldSql;
-                }
-            }
-            if (StringUtils.isNotEmpty(dtoPramsList.get(0))) {
-                updateWhereSql = dtoPramsList.get(0);
-            }
-            if (StringUtils.isNotEmpty(t.sqlWhere)) {
-                updateWhereSql += String.format(" AND %s IN %s", t.checkField, t.sqlWhere);
-            }
-            String updateSql = String.format("UPDATE %s SET %s %s WHERE 1=1 %s; \n\n", tableName, updateFieldSql, updateMsgFieldSql, updateWhereSql);
-            t.setUpdateSql(updateSql);
-        }
-    }
-
-
-    /**
-     * @return java.lang.String
-     * @description 同步校验，组装消息字段
-     * @author dick
-     * @date 2022/6/2 14:52
-     * @version v1.0
-     * @params dataSourceTypeEnum
-     * @params msgField
-     * @params msg
-     */
-    public String getSqlMsgField(DataSourceTypeEnum dataSourceTypeEnum, String msgField, String msg) {
-        String updateMsgFieldSql = "";
-        if (StringUtils.isEmpty(msgField) || StringUtils.isEmpty(msg))
-            return updateMsgFieldSql;
-        if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            updateMsgFieldSql = String.format("`%s`" + "=" + "%s ", msgField, "CONCAT_WS(\"；\",`" + msgField + "`,'" + msg + "')");
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-            String caseSql = String.format("CASE \n" +
-                    "\tWHEN %s='' or %s is null THEN\n" +
-                    "\t\t%s\n" +
-                    "\tELSE\n" +
-                    "\t\t%s\n" +
-                    "END", "[" + msgField + "]", "[" + msgField + "]", "'" + msg + "'", "[" + msgField + "]+" + "'；" + msg + "'");
-            updateMsgFieldSql = String.format("[%s]" + "=" + "%s ", msgField, caseSql);
-
-        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            String caseSql = String.format("CASE \n" +
-                    "\tWHEN %s='' or %s is null THEN\n" +
-                    "\t\t%s\n" +
-                    "\tELSE\n" +
-                    "\t\t%s\n" +
-                    "END", "\"" + msgField + "\"", "\"" + msgField + "\"", "'" + msg + "'", "\"" + msgField + "\"" + " || " + "'；" + msg + "'");
-            updateMsgFieldSql = String.format("\"%s\"" + "=" + "%s ", msgField, caseSql);
-        }
-        return updateMsgFieldSql;
     }
 }

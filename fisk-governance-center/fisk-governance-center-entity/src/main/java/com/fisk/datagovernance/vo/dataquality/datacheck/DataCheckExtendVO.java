@@ -110,12 +110,6 @@ public class DataCheckExtendVO {
     public ParentageCheckTypeEnum parentageCheckType;
 
     /**
-     * 血缘检查-类型值
-     */
-    @ApiModelProperty(value = "血缘检查-类型值")
-    public int parentageCheckValue;
-
-    /**
      * 正则表达式检查-表达式值
      */
     @ApiModelProperty(value = "正则表达式检查-表达式值")

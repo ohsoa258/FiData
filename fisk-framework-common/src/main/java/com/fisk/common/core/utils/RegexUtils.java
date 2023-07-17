@@ -63,6 +63,7 @@ public class RegexUtils {
             list1 = list1.stream().distinct().collect(Collectors.toList());
             list2 = list2.stream().distinct().collect(Collectors.toList());
         }
+        // list1 - list2
         List<String> subtract = (List<String>) CollectionUtils.subtract(list1, list2);
         return subtract;
     }
@@ -188,15 +189,13 @@ public class RegexUtils {
      * @version v1.0
      * @params input
      */
-    public static boolean isBase64String(List<String> inputs, boolean isSkipNullCheck) {
+    public static boolean isBase64String(String input, boolean isSkipNullCheck) {
         try {
             // 尝试解码字符串，如果不抛出异常则说明是有效的 Base64 编码
-            for (String input : inputs) {
-                if (StringUtils.isEmpty(input) && !isSkipNullCheck) {
-                    return false;
-                } else {
-                    byte[] decodedBytes = Base64.getDecoder().decode(input);
-                }
+            if (StringUtils.isEmpty(input) && !isSkipNullCheck) {
+                return false;
+            } else {
+                byte[] decodedBytes = Base64.getDecoder().decode(input);
             }
             return true;
         } catch (IllegalArgumentException e) {
@@ -214,15 +213,13 @@ public class RegexUtils {
      * @params inputs
      * @params isSkipNullCheck
      */
-    public static boolean isValidURL(List<String> inputs, boolean isSkipNullCheck) {
+    public static boolean isValidURL(String input, boolean isSkipNullCheck) {
         try {
             // 尝试创建 URL 对象，如果不抛出异常则说明是有效的 URL。只验证URL格式
-            for (String input : inputs) {
-                if (StringUtils.isEmpty(input) && !isSkipNullCheck) {
-                    return false;
-                } else {
-                    new URL(input);
-                }
+            if (StringUtils.isEmpty(input) && !isSkipNullCheck) {
+                return false;
+            } else {
+                new URL(input);
             }
             return true;
         } catch (MalformedURLException e) {
@@ -240,10 +237,9 @@ public class RegexUtils {
      * @params inputs
      * @params isSkipNullCheck
      */
-    public static boolean isValidPattern(List<String> inputs, String regex, boolean isSkipNullCheck) {
+    public static boolean isValidPattern(String str, String regex, boolean isSkipNullCheck) {
         try {
             Pattern pattern = Pattern.compile(regex);
-            for (String str : inputs) {
                 if (StringUtils.isEmpty(str) && !isSkipNullCheck) {
                     return false;
                 } else {
@@ -252,7 +248,6 @@ public class RegexUtils {
                         return false;
                     }
                 }
-            }
             return true;
         } catch (PatternSyntaxException e) {
             return false;

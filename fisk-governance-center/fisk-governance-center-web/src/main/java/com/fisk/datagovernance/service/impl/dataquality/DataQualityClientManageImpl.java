@@ -111,7 +111,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         // 数据校验、业务清洗、生命周期所对应的Id
         List<Long> ruleIdList = new ArrayList<>();
-
+/*
         // 校验规则
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
@@ -559,7 +559,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
         }
         tableRuleInfoDTO.setFieldRules(fieldRules);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableRuleInfoDTO);
+        */
+//        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableRuleInfoDTO);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
     }
 
     @Override
@@ -637,7 +639,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 数据源信息
             List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
             if (!CollectionUtils.isNotEmpty(allDataSource)) {
-                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS, "");
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, "");
             }
 
             // 第一步：判断质量报告属于哪个业务模块 质量校验报告/数据清洗报告
@@ -735,7 +737,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 .eq(DataCheckPO::getDelFlag, 1)
                 .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
                 .in(DataCheckPO::getId, ruleIds)
-                .orderByAsc(DataCheckPO::getRuleSort);
+                .orderByAsc(DataCheckPO::getRuleExecuteSort);
         List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
         if (!CollectionUtils.isNotEmpty(dataCheckPOList)) {
             return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
@@ -827,9 +829,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 tableRuleSqlDTO.setFields(fields);
             }
             tableRuleSqlDTO.setTemplateTypeEnum(TemplateTypeEnum.getEnum(templatePO.getTemplateType()));
-            tableRuleSqlDTO.setFieldAggregate(dataCheckExtendPOs.get(0).getFieldAggregate());
-            tableRuleSqlDTO.setThresholdValue(dataCheckPO.getThresholdValue());
-            tableRuleSqlDTO.setSql(dataCheckPO.getCreateRule());
+//            tableRuleSqlDTO.setFieldAggregate(dataCheckExtendPOs.get(0).getFieldAggregate());
+//            tableRuleSqlDTO.setThresholdValue(dataCheckPO.getThresholdValue());
+//            tableRuleSqlDTO.setSql(dataCheckPO.getCreateRule());
             String roleSql = "";
             try {
                 roleSql = createRole(dataSourceConVO, tableRuleSqlDTO);
@@ -975,20 +977,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     public String createRole(DataSourceConVO dataSourceConVO, TableRuleSqlDTO tableRuleSqlDTO) {
         TemplateTypeEnum templateTypeEnum = tableRuleSqlDTO.getTemplateTypeEnum();
         String sql = "";
-        switch (templateTypeEnum) {
-            case DATA_MISSING_TEMPLATE:
-                // 数据缺失模板
-                sql = createData_MissingRule(dataSourceConVO, tableRuleSqlDTO);
-                break;
-            case FIELD_AGGREGATE_TEMPLATE:
-                // 字段聚合波动阈值模板
-                sql = createField_AggregateRule(dataSourceConVO, tableRuleSqlDTO);
-                break;
-            case BUSINESS_CHECK_TEMPLATE:
-                // 业务验证模板
-                sql = tableRuleSqlDTO.getSql();
-                break;
-        }
+//        switch (templateTypeEnum) {
+//            case DATA_MISSING_TEMPLATE:
+//                // 数据缺失模板
+//                sql = createData_MissingRule(dataSourceConVO, tableRuleSqlDTO);
+//                break;
+//            case FIELD_AGGREGATE_TEMPLATE:
+//                // 字段聚合波动阈值模板
+//                sql = createField_AggregateRule(dataSourceConVO, tableRuleSqlDTO);
+//                break;
+//            case BUSINESS_CHECK_TEMPLATE:
+//                // 业务验证模板
+//                sql = tableRuleSqlDTO.getSql();
+//                break;
+//        }
         return sql;
     }
 
@@ -1053,30 +1055,30 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 "FROM\n" +
                 "\t'%s';";
         String dataBase = dataSourceConVO.conDbname;
-        switch (tableRuleSqlDTO.getFieldAggregate()) {
-            case "SUM":
-                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "SUM", "SUM(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
-                break;
-            case "COUNT":
-                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "COUNT", "COUNT(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
-                break;
-            case "AVG":
-                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "AVG", "AVG(CAST(" + tableRuleSqlDTO.getFieldName() + " AS decimal(10, 2)))", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
-                break;
-            case "MAX":
-                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "MAX", "MAX(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
-                break;
-            case "MIN":
-                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
-                        "MIN", "MIN(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
-                break;
-            default:
-                return "";
-        }
+//        switch (tableRuleSqlDTO.getFieldAggregate()) {
+//            case "SUM":
+//                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+//                        "SUM", "SUM(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
+//                break;
+//            case "COUNT":
+//                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+//                        "COUNT", "COUNT(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
+//                break;
+//            case "AVG":
+//                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+//                        "AVG", "AVG(CAST(" + tableRuleSqlDTO.getFieldName() + " AS decimal(10, 2)))", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
+//                break;
+//            case "MAX":
+//                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+//                        "MAX", "MAX(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
+//                break;
+//            case "MIN":
+//                sql = String.format(sql, dataBase, tableRuleSqlDTO.getTableName(), tableRuleSqlDTO.getFieldName(), TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE.getName(),
+//                        "MIN", "MIN(" + tableRuleSqlDTO.getFieldName() + ")", tableRuleSqlDTO.getThresholdValue(), tableRuleSqlDTO.getTableName());
+//                break;
+//            default:
+//                return "";
+//        }
         return sql;
     }
 

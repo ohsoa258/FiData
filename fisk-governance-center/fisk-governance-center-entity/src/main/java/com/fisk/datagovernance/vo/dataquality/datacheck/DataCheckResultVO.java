@@ -79,6 +79,18 @@ public class DataCheckResultVO
     public String checkType;
 
     /**
+     * 检查数据的总条数
+     */
+    @ApiModelProperty(value = "检查数据的总条数")
+    public String checkTotalCount;
+
+    /**
+     * 检查数据不通过的条数
+     */
+    @ApiModelProperty(value = "检查数据不通过的条数")
+    public String checkFailCount;
+
+    /**
      * 检查的结果
      */
     @ApiModelProperty(value = "检查的结果")
@@ -89,4 +101,16 @@ public class DataCheckResultVO
      */
     @ApiModelProperty(value = "检查的结果消息")
     public String checkResultMsg;
+
+    /**
+     * 检查的错误Json数据
+     */
+    @ApiModelProperty(value = "检查的错误Json数据")
+    public String checkErrorData;
+
+    /**
+     * 修改SQL语句
+     */
+    @ApiModelProperty(value = "修改SQL语句")
+    public String updateSql;
 }

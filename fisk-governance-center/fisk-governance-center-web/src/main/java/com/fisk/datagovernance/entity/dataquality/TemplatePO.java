@@ -41,6 +41,11 @@ public class TemplatePO extends BasePO
     public int templateType;
 
     /**
+     * 模板展示顺序
+     */
+    public int templateSort;
+
+    /**
      * 模板名称
      */
     public String templateName;

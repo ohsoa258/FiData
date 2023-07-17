@@ -60,7 +60,7 @@ public class DataCheckDTO {
     /**
      * 表类型 1：表  2：视图
      */
-    @ApiModelProperty(value = "表类型 1：表  2：视图")
+    @ApiModelProperty(value = "表类型 TABLE/VIEW")
     public TableTypeEnum tableType;
 
     /**

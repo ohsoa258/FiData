@@ -72,4 +72,10 @@ public class DataCheckSyncDTO {
      */
     @ApiModelProperty(value = "消息字段，用于拼接消息内容")
     public String msgField;
+
+    /**
+     * 唯一标识字段，依据此字段回写表数据
+     */
+    @ApiModelProperty(value = "唯一标识字段，依据此字段回写表数据")
+    public String uniqueField;
 }

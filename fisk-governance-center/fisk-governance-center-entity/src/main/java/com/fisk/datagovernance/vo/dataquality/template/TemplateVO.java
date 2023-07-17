@@ -1,5 +1,7 @@
 package com.fisk.datagovernance.vo.dataquality.template;
 
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -21,7 +23,7 @@ public class TemplateVO {
      * 模块类型
      */
     @ApiModelProperty(value = "模块类型")
-    public int moduleType;
+    public ModuleTypeEnum moduleType;
 
     /**
      * 模块名称
@@ -33,7 +35,13 @@ public class TemplateVO {
      * 模板类型
      */
     @ApiModelProperty(value = "模板类型")
-    public int templateType;
+    public TemplateTypeEnum templateType;
+
+    /**
+     * 模板展示顺序
+     */
+    @ApiModelProperty(value = "模板展示顺序")
+    public int templateSort;
 
     /**
      * 模板名称

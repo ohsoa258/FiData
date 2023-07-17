@@ -54,17 +54,15 @@ public class DataCheckController {
         return ResultEntityBuild.build(service.deleteData(id));
     }
 
-//    @ApiOperation("界面/接口验证")
-//    @PostMapping("/interfaceCheckData")
-//    public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(@Validated @RequestBody DataCheckWebDTO dto) {
-//        return service.interfaceCheckData(dto);
-//        //return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
-//    }
-//
-//    @ApiOperation("同步验证")
-//    @PostMapping("/syncCheckData")
-//    public ResultEntity<List<DataCheckResultVO>> syncCheckData(@Validated @RequestBody DataCheckSyncDTO dto) {
-//        return service.syncCheckData(dto);
-//        //return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
-//    }
+    @ApiOperation("接口验证（同步前）")
+    @PostMapping("/interfaceCheckData")
+    public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(@Validated @RequestBody DataCheckWebDTO dto) {
+        return service.interfaceCheckData(dto);
+    }
+
+    @ApiOperation("NIFI同步验证（同步中）")
+    @PostMapping("/syncCheckData")
+    public ResultEntity<List<DataCheckResultVO>> syncCheckData(@Validated @RequestBody DataCheckSyncDTO dto) {
+        return service.nifiSyncCheckData(dto);
+    }
 }

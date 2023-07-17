@@ -48,17 +48,17 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      */
     ResultEnum deleteData(int id);
 
-//    /**
-//     * 界面/接口验证
-//     *
-//     * @return 执行结果
-//     */
-//    ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckWebDTO dto);
-//
-//    /**
-//     * 同步验证
-//     *
-//     * @return 执行结果
-//     */
-//    ResultEntity<List<DataCheckResultVO>> syncCheckData(DataCheckSyncDTO dto);
+    /**
+     * 界面/接口验证
+     *
+     * @return 执行结果
+     */
+    ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckWebDTO dto);
+
+    /**
+     * 同步验证
+     *
+     * @return 执行结果
+     */
+    ResultEntity<List<DataCheckResultVO>> nifiSyncCheckData(DataCheckSyncDTO dto);
 }

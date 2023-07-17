@@ -227,7 +227,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             if (dto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
                 int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceTypeEnum(), dto.getDatasourceId());
                 if (idByDataSourceId == 0)
-                    return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
+                    return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
                 dto.setDatasourceId(idByDataSourceId);
             }
             //第二步：转换DTO对象为PO对象

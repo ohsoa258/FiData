@@ -3058,13 +3058,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = "2";
+//        dataCheckSyncDTO.dataSourceId = "2";
         dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "stg_";
+//        dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
@@ -3182,13 +3182,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = "1";
+//        dataCheckSyncDTO.dataSourceId = "1";
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "stg_";
+//        dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
@@ -3223,7 +3223,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = null;
+//        dataCheckSyncDTO.dataSourceId = null;
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;

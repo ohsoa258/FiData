@@ -33,5 +33,5 @@ public interface DataCheckExtendMap {
             @Mapping(source = "fluctuateCheckType.value", target = "fluctuateCheckType"),
             @Mapping(source = "parentageCheckType.value", target = "parentageCheckType")
     })
-    List<DataCheckExtendPO> dtoToPo(List<DataCheckExtendDTO> dto);
+    DataCheckExtendPO dtoToPo(DataCheckExtendDTO dto);
 }
