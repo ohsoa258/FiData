@@ -40,6 +40,12 @@ public class DataCheckExtendVO {
     public String fieldName;
 
     /**
+     * 字段类型
+     */
+    @ApiModelProperty(value = "字段类型")
+    public String fieldType;
+
+    /**
      * 值域检查-类型：
      * 1、序列范围(枚举)
      * 2、取值范围(1~10)

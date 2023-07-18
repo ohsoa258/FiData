@@ -32,6 +32,12 @@ public class DataCheckExtendDTO {
     public String fieldName;
 
     /**
+     * 字段类型
+     */
+    @ApiModelProperty(value = "字段类型")
+    public String fieldType;
+
+    /**
      * 值域检查-类型：
      * 1、序列范围(枚举)
      * 2、取值范围(1~10)
@@ -112,4 +118,16 @@ public class DataCheckExtendDTO {
      */
     @ApiModelProperty(value = "SQL检查-脚本值(固定返回checkstate，通过为1，未通过为0)")
     public String sqlCheckValue;
+
+    /**
+     * 是否记录错误数据：0 不记录、1  记录
+     */
+    @ApiModelProperty(value = "是否记录错误数据：0 不记录、1  记录")
+    public int recordErrorData;
+
+    /**
+     * 错误数据保留时间：7天、14天、30天
+     */
+    @ApiModelProperty(value = "错误数据保留时间：7天、14天、30天")
+    public int errorDataRetentionTime;
 }

@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @author dick
  * @version 1.0
@@ -20,7 +22,7 @@ public class DataCheckLogsManageImpl extends ServiceImpl<DataCheckLogsMapper, Da
 
     @Async
     @Override
-    public void saveLog(DataCheckLogsPO po) {
-        baseMapper.insert(po);
+    public void saveLog(List<DataCheckLogsPO> pos) {
+        saveBatch(pos);
     }
 }

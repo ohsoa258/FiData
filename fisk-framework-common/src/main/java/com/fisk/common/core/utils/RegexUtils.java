@@ -111,6 +111,7 @@ public class RegexUtils {
 
         // 字符型
         List<String> charType = new ArrayList<>();
+        charType.add("nvarchar");
         charType.add("varchar");
         charType.add("char");
 

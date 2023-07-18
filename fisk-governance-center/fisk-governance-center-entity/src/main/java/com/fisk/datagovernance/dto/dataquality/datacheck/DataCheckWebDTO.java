@@ -23,6 +23,20 @@ public class DataCheckWebDTO {
     public int fiDataDataSourceId;
 
     /**
+     * 批次号
+     */
+    @ApiModelProperty(value = "批次号")
+    @NotNull()
+    public String batchNumber;
+
+    /**
+     * 小批次号
+     */
+    @ApiModelProperty(value = "小批次号")
+    @NotNull()
+    public String smallBatchNumber;
+
+    /**
      * key:表名称 value:验证的数据，json数组
      */
     @ApiModelProperty(value = "key：表id/表名称，value：验证的数据")
