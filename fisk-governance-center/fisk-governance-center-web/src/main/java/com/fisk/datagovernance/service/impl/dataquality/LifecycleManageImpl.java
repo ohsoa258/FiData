@@ -77,10 +77,12 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                 queryTableParam.setTableType(query.getLevelType());
                 queryTableParam.setTableBusinessType(query.getTableBusinessType());
                 queryTableParam.setSourceId(query.getDatasourceId());
-                queryTableParam.setSourceType(query.getSourceTypeEnum());
+                queryTableParam.setSourceType(query.getSourceType());
                 queryTableParams.add(queryTableParam);
-            } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER || query.getLevelType() == LevelTypeEnum.DATABASE || query.getLevelType() == LevelTypeEnum.FOLDER) {
-                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.sourceTypeEnum, query.getUniqueId());
+            } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
+                    || query.getLevelType() == LevelTypeEnum.DATABASE
+                    || query.getLevelType() == LevelTypeEnum.FOLDER) {
+                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.getSourceType(), query.getUniqueId());
                 if (CollectionUtils.isNotEmpty(treeTableNodes)) {
                     queryTableParams.addAll(treeTableNodes);
                 }
@@ -105,13 +107,13 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                         // 通过数据源ID+表类型+表业务类型+表ID 定位到表的规则
                         rules = allRule.stream().filter(t -> t.getFiDataSourceId() == dto.getSourceId() &&
                                 t.getTableType() == finalTableType &&
-                                t.getTableBusinessType() == dto.getTableBusinessType() &&
+                                t.getTableBusinessType() == dto.getTableBusinessType().getValue() &&
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     } else if (dto.getSourceType() == SourceTypeEnum.custom) {
                         // 通过数据源ID+表类型+表业务类型+表名称 定位到表的规则
                         rules = allRule.stream().filter(t -> t.getDatasourceId() == dto.getSourceId() &&
                                 t.getTableType() == finalTableType &&
-                                t.getTableBusinessType() == dto.getTableBusinessType() &&
+                                t.getTableBusinessType() == dto.getTableBusinessType().getValue() &&
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     }
                     if (CollectionUtils.isNotEmpty(rules)) {
@@ -143,7 +145,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
             // 第六步：表信息填充
             if (CollectionUtils.isNotEmpty(tableFields)) {
                 for (LifecycleVO ruleDto : filterRule) {
-                    ruleDto.setTemplateSceneName(ruleDto.getTemplateScene().getName());
+//                    ruleDto.setTemplateSceneName(ruleDto.getTemplateScene().getName());
                     FiDataMetaDataTreeDTO f_table = null;
                     if (ruleDto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
                         FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == ruleDto.getFiDataSourceId()).findFirst().orElse(null);
@@ -165,7 +167,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                     // 1.先按照表名称排正序
                     Comparator.comparing(LifecycleVO::getTableAlias, Comparator.naturalOrder())
                             // 2.再按照规则类型排正序
-                            .thenComparing(LifecycleVO::getTemplateScene, Comparator.naturalOrder())
+//                            .thenComparing(LifecycleVO::getTemplateScene, Comparator.naturalOrder())
             ).collect(Collectors.toList());
         } catch (Exception ex) {
             log.error("【getAllRule】回收规则列表异常：" + ex);
@@ -180,7 +182,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
             int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
             if (idByDataSourceId == 0) {
-                return ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS;
+                return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
             }
             dto.datasourceId = idByDataSourceId;
         }
@@ -294,18 +296,18 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         }
 
         ResultEntity<String> rule = null;
-        switch (templateTypeEnum) {
-            case EMPTY_TABLE_RECOVERY_TEMPLATE:
-                //空表回收模板
-                rule = createEmptyTable_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName);
-                break;
-            case NO_REFRESH_DATA_RECOVERY_TEMPLATE:
-                //数据无刷新回收模板
-                rule = createNoRefreshData_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
-                break;
-            default:
-                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
-        }
+//        switch (templateTypeEnum) {
+//            case EMPTY_TABLE_RECOVERY_TEMPLATE:
+//                //空表回收模板
+//                rule = createEmptyTable_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName);
+//                break;
+//            case NO_REFRESH_DATA_RECOVERY_TEMPLATE:
+//                //数据无刷新回收模板
+//                rule = createNoRefreshData_RecoveryRule(dataSourceConPO.conDbname, dataSourceTypeEnum, tableName, fieldName);
+//                break;
+//            default:
+//                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, "");
+//        }
         return rule;
     }
 
@@ -338,10 +340,10 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
                 "\t) T1";
         switch (dataSourceTypeEnum) {
             case MYSQL:
-                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE.getName(), "", tableName, "LIMIT 1 ");
+                //sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE.getName(), "", tableName, "LIMIT 1 ");
                 break;
             case SQLSERVER:
-                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE.getName(), "TOP 1 ", tableName, "");
+                //sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.EMPTY_TABLE_CHECK_TEMPLATE.getName(), "TOP 1 ", tableName, "");
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");
@@ -390,10 +392,10 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
         String format = DateTimeUtils.getNowToShortDate();
         switch (dataSourceTypeEnum) {
             case MYSQL:
-                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "", tableName, fieldName, format, "LIMIT 1 ");
+                //sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "", tableName, fieldName, format, "LIMIT 1 ");
                 break;
             case SQLSERVER:
-                sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "TOP 1 ", tableName, fieldName, format, "");
+                //sql = String.format(sql, dataBase, tableName, TemplateTypeEnum.UPDATE_TABLE_CHECK_TEMPLATE.getName(), "TOP 1 ", tableName, fieldName, format, "");
                 break;
             default:
                 return ResultEntityBuild.buildData(ResultEnum.SAVE_VERIFY_ERROR, "");

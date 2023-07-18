@@ -127,9 +127,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     @Value("${nifi-data-security-enable}")
     private boolean enable;
 
-    @Value("${nifi-data-validation-enable}")
-    private boolean dataValidation;
-
 
     @Resource
     INiFiHelper componentsBuild;
@@ -610,7 +607,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     @Override
     public ResultEnum msg(String data, Acknowledgment ack) {
-        log.info("进入接入，建模的创建NIFI流程！！！");
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
         modelPublishStatusDTO.publish = 1;
@@ -699,17 +695,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", dto.appId).eq("table_access_id", dto.id).eq("type", dto.type.getValue()).one();
 
                 }
-
-                /**
-                 * 删除原流程！！！！！
-                 */
                 if (tableNifiSettingPO != null && tableNifiSettingPO.tableComponentId != null) {
                     componentsBuild.deleteNifiFlow(dataModelVO);
                 }
-
-                /**
-                 * 创建大组！！！！！
-                 */
                 ProcessGroupEntity taskGroupEntity = buildTaskGroup(configDTO, groupEntity.getId());
 
                 if (dto.nifiCustomWorkflowId != null && dto.nifiCustomWorkflowId != "") {
@@ -787,7 +775,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                 client.updateTablePublishStatus(modelPublishStatusDTO);
             }
-            log.error("接入、建模nifi流程创建失败:" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("nifi流程创建失败" + StackTraceHelper.getStackTraceInfo(e));
             return resultEnum;
         } finally {
             if (ack != null) {
@@ -1307,9 +1295,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             case ORACLE:
                 dto.driverLocation = NifiConstants.DriveConstants.ORACLE_DRIVE_PATH;
                 break;
-            case OPENEDGE:
-                dto.driverLocation = NifiConstants.DriveConstants.OPENEDGE_DRIVE_PATH;
-                break;
             default:
                 break;
         }
@@ -1516,27 +1501,24 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             }
 
         }
-
         if (executeSQLRecord.getId() == null) {
             //连接器
             ProcessorEntity processorEntity = excelProcessorEntity.get(0);
             componentConnector(groupId, delSqlRes.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.SUCCESS);
             processorEntity1 = excelProcessorEntity.get(excelProcessorEntity.size() - 1);
-
-            //2023-06-28李世纪新增
-            //新增自己连自己 为了解决管道调度该组件时，偶发性的失败问题，失败就retry
-            componentConnector(groupId, processorEntity1.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RETRY2);
-
         } else {
             tableNifiSettingPO.executeSqlRecordProcessorId = executeSQLRecord.getId();
             //连接器
             componentConnector(groupId, delSqlRes.getId(), executeSQLRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
             processorEntity1 = executeSQLRecord;
         }
-
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
         //supervisionId指的是nifi组件中报错后连接的第一个组件：queryForPipelineSupervision组件的id
         componentConnector(groupId, processorEntity1.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
+
+        //2023-06-28李世纪新增
+        //新增自己连自己 为了解决管道调度该组件时，偶发性的失败问题，失败就retry
+        componentConnector(groupId, processorEntity1.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RETRY2);
 
         String lastId = "";
         Boolean isLastId = true;
@@ -1544,28 +1526,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
             if (dto.excelFlow) {
-                ProcessorEntity IHP = new ProcessorEntity();
-                //如果开启数据校验，则新建两个组件
-                if (dataValidation) {
-                    ProcessorEntity generateFlowFile = new ProcessorEntity();
-
-                    if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                        generateFlowFile = replaceTextProcessv1(config, groupId, dto);
-                    } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                        generateFlowFile = replaceTextForDwProcessv1(config, groupId, dto);
-                    }
-
-                    tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
-                    componentConnector(groupId, processorEntity1.getId(), generateFlowFile.getId(), AutoEndBranchTypeEnum.RESPONSE);
-                    IHP = invokeHTTPProcessorv1(groupId);
-
-                    componentConnector(groupId, IHP.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
-                    componentConnector(groupId, generateFlowFile.getId(), IHP.getId(), AutoEndBranchTypeEnum.SUCCESS);
-
-                    tableNifiSettingPO.invokeHttpProcessorId = IHP.getId();
-                    res.add(generateFlowFile);
-                    res.add(IHP);
-                }
 
 //                processorEntity3 = executeSqlRecordForKey(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
 
@@ -1573,13 +1533,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 /**
                  * CallDbProcedure
                  */
-                ProcessorEntity processorEntity2 = CallDbProcedurev1(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
-                if (IHP.getId() != null) {
-                    componentConnector(groupId, IHP.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.RESPONSE);
-                } else {
-                    componentConnector(groupId, processorEntity1.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.RESPONSE);
-                }
-
+                ProcessorEntity processorEntity2 = CallDbProcedure(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
+                componentConnector(groupId, processorEntity1.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.RESPONSE);
                 processorEntity1 = processorEntity2;
                 tableNifiSettingPO.updateFieldProcessorId = null;
                 tableNifiSettingPO.updateFieldForCodeProcessorId = null;
@@ -1601,9 +1556,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 componentConnector(groupId, updateField.getId(), updateField1.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 tableNifiSettingPO.updateFieldForCodeProcessorId = updateField1.getId();
                 //数据入库
-                /**
-                 * executeSQLRecord 数据插入到临时表
-                 */
                 putDatabaseRecord = createPutDatabaseRecord(appGroupId, config, groupId, dto, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
                 tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
                 //连接器
@@ -1611,9 +1563,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 componentsConnector(groupId, updateField1.getId(), supervisionId, autoEndBranchTypeEnums);
                 res.add(updateField);
                 res.add(updateField1);
-                /**
-                 * CallDbProcedure sql预览的sql
-                 */
                 processorEntity1 = CallDbProcedure(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
             }
 
@@ -1624,35 +1573,26 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //componentConnector(groupId, putDatabaseRecord.getId(), mergeRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
             //用组件,调存储过程把stg里的数据向ods里面插入
             ProcessorEntity invokeHTTP = new ProcessorEntity();
-
-            /**
-             * 20230706 sjli
-             * 是否开启数据校验
-             */
-            if (!dto.excelFlow) {
-                if (dataValidation) {
-                    if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                        //---------------------------------
-                        // todo 数据验证
-                        ProcessorEntity generateFlowFile = new ProcessorEntity();
-
-                        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
-                            generateFlowFile = replaceTextProcess(config, groupId, dto);
-                        } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
-                            generateFlowFile = replaceTextForDwProcess(config, groupId, dto);
-                        }
-
-                        tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
-                        componentConnector(groupId, putDatabaseRecord.getId(), generateFlowFile.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                        invokeHTTP = invokeHTTPProcessor(groupId);
-                        componentConnector(groupId, generateFlowFile.getId(), invokeHTTP.getId(), AutoEndBranchTypeEnum.SUCCESS);
-                        tableNifiSettingPO.invokeHttpProcessorId = invokeHTTP.getId();
-                        res.add(generateFlowFile);
-                        res.add(invokeHTTP);
-                        //-----------------------------------
-                    }
+            if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                //---------------------------------
+                // todo 数据验证
+               /* ProcessorEntity generateFlowFile = new ProcessorEntity();
+                if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                    generateFlowFile = replaceTextProcess(config, groupId, dto);
+                } else if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+                    generateFlowFile = replaceTextForDwProcess(config, groupId, dto);
                 }
+
+                tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFile.getId();
+                componentConnector(groupId, putDatabaseRecord.getId(), generateFlowFile.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                //invokeHTTP = invokeHTTPProcessor(groupId);
+                //componentConnector(groupId, generateFlowFile.getId(), invokeHTTP.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                //tableNifiSettingPO.invokeHttpProcessorId = invokeHTTP.getId();
+                res.add(generateFlowFile);*/
+                //res.add(invokeHTTP);
+                //-----------------------------------
             }
+
             tableNifiSettingPO.odsToStgProcessorId = processorEntity1.getId();
             //连接器
             if (invokeHTTP.getId() != null) {
@@ -1675,7 +1615,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, processorEntity1.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentsConnector(groupId, processorEntity1.getId(), supervisionId, autoEndBranchTypeEnums);
         //转json
-        ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 0, 15);
+        ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 0, 14);
         tableNifiSettingPO.convertNumbersToJsonProcessorId = numberToJsonRes.getId();
         //连接器
         componentConnector(groupId, queryNumbers.getId(), numberToJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -1692,7 +1632,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //连接器
         componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
         //componentsConnector(groupId, processorEntity.getId(), supervisionId, autoEndBranchTypeEnums);
-        ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(config, dto, groupId, 1, 17);
+        ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(config, dto, groupId, 16);
         tableNifiSettingPO.publishKafkaPipelineProcessorId = publishKafkaForPipelineProcessor.getId();
         //连接器
         componentConnector(groupId, evaluateJsons.getId(), publishKafkaForPipelineProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
@@ -1952,7 +1892,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //连接器
         componentConnector(groupId, evaluateJsons.getId(), processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
         //componentsConnector(groupId, processorEntity.getId(), supervisionId, autoEndBranchTypeEnums);
-        ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(config, dto, groupId, 1, 16);
+        ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(config, dto, groupId, 16);
         tableNifiSettingPO.publishKafkaPipelineProcessorId = publishKafkaForPipelineProcessor.getId();
         //连接器
         componentConnector(groupId, evaluateJsons.getId(), publishKafkaForPipelineProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
@@ -2487,7 +2427,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildUpdateRecordDTO.recordReader = avroReaderService.data.getId();
         buildUpdateRecordDTO.recordWriter = avroRecordSetWriterService.data.getId();
         buildUpdateRecordDTO.replacementValueStrategy = "literal-value";
-        buildUpdateRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
+        buildUpdateRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildUpdateRecord(buildUpdateRecordDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;
@@ -2578,7 +2518,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         putDatabaseRecordDTO.concurrentTasks = ConcurrentTasks;
         putDatabaseRecordDTO.synchronousTypeEnum = synchronousTypeEnum;
-        putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
+        putDatabaseRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildPutDatabaseRecordProcess(putDatabaseRecordDTO);
         verifyProcessorResult(res);
         return res.data;
@@ -2815,51 +2755,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    private ProcessorEntity CallDbProcedurev1(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
-        BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
-        callDbProcedureProcessorDTO.name = "CallDbProcedure";
-        callDbProcedureProcessorDTO.details = "insert_phase";
-        callDbProcedureProcessorDTO.groupId = groupId;
-        String executsql = "";
-        //config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
-        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
-        log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
-        executsql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), buildNifiFlow);
-        //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
-        callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
-
-        log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
-        log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
-        callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
-        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
-        callDbProcedureProcessorDTO.haveNextOne = true;
-
-        //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
-        log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
-        log.info("数仓自定义加载后语句：{}", JSON.toJSONString(buildNifiFlow.customScriptAfter));
-        //获取外键sql
-        String updateSql = buildNifiFlow.updateSql;
-        //声明自定义加载前sql
-        String customScriptBefore = buildNifiFlow.customScriptBefore;
-        //声明presql
-        String sqlPreQuery = null;
-        //通过判断 updateSql的值是否为空，决定最终的 sqlPreQuery
-        if (StringUtils.isNotBlank(updateSql) && StringUtils.isNotBlank(customScriptBefore)) {
-            sqlPreQuery = updateSql + customScriptBefore;
-        } else if (StringUtils.isNotBlank(updateSql) && StringUtils.isBlank(customScriptBefore)) {
-            sqlPreQuery = updateSql;
-        } else if (StringUtils.isNotBlank(customScriptBefore) && StringUtils.isBlank(updateSql)) {
-            sqlPreQuery = customScriptBefore;
-        }
-
-        callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
-        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
-
-        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
-        verifyProcessorResult(processorEntityBusinessResult);
-        return processorEntityBusinessResult.data;
-    }
-
     private ProcessorEntity CallDbProcedure(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbProcedure";
@@ -2876,7 +2771,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
         log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
-        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
+        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
 
         //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
@@ -2955,7 +2850,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             throw new FkException(ResultEnum.ERROR);
         }
         querySqlDto.dbConnectionId = targetDbPoolId;
-        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(14);
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -2999,7 +2894,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 "where object_name = '" + config.targetDsConfig.targetTableName + "' ;";
         callDbProcedureProcessorDTO.dbConnectionId = cfgDbPoolId;
         callDbProcedureProcessorDTO.executsql = executsql1;
-        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(17);
+        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(16);
         callDbProcedureProcessorDTO.haveNextOne = false;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -3056,7 +2951,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         strings.add(NifiConstants.AttrConstants.TABLE_TYPE);
         strings.add(NifiConstants.AttrConstants.TABLE_ID);
         dto.selfDefinedParameter = strings;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(16);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(15);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -3149,89 +3044,33 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity replaceTextProcessv1(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
-        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
-        //校验通过修改字段集合
-        HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("fi_verify_type", "3");
-        updateFieldMap_Y.put("fi_sync_type", "2");
-        //校验不通过修改字段集合
-        HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("fi_sync_type", 3);
-        updateFieldMap_N.put("fi_verify_type", 2);
-        //校验不通过但校验规则为弱类型规则修改字段集合
-        HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("fi_sync_type", 2);
-        updateFieldMap_R.put("fi_verify_type", 4);
-        //校验依据字段集合
-        HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
-        DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = "2";
-        //异常信息字段
-//        dataCheckSyncDTO.msgField = "error_message";
-        dataCheckSyncDTO.msgField = "fi_error_message";
-        dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
-        dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
-        dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
-        dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "stg_";
-        dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
-
-        buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
-        buildReplaceTextProcessorDTO.details = "query_phase";
-        buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 10);
-        //替换流文件
-        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
-        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
-        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(dataCheckSyncDTO);
-        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
-        return processorEntityBusinessResult.data;
-    }
-
-    /**
-     * 调用api参数组件
-     *
-     * @param config  数据接入配置
-     * @param groupId 组id
-     * @return 组件对象
-     */
     private ProcessorEntity replaceTextProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
-        //校验通过修改字段集合
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("fi_verify_type", "3");
         updateFieldMap_Y.put("fi_sync_type", "2");
-        //校验不通过修改字段集合
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
         updateFieldMap_N.put("fi_sync_type", 3);
         updateFieldMap_N.put("fi_verify_type", 2);
-        //校验不通过但校验规则为弱类型规则修改字段集合
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
-        //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
         checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = "2";
-        dataCheckSyncDTO.msgField = "fi_error_message";
+//        dataCheckSyncDTO.dataSourceId = "2";
+        dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "stg_";
+//        dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 12);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3256,7 +3095,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-1, 9);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3286,7 +3125,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildReplaceTextProcessorDTO.name = "replaceTextForFtpProcess";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3321,55 +3160,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return processorEntityBusinessResult.data;
     }
 
-    /**
-     * 调用api参数组件
-     *
-     * @param config  数据接入配置
-     * @param groupId 组id
-     * @return 组件对象
-     */
-    private ProcessorEntity replaceTextForDwProcessv1(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
-        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
-        //校验通过修改字段集合
-        HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
-        updateFieldMap_Y.put("fi_verify_type", "3");
-        updateFieldMap_Y.put("fi_sync_type", "2");
-        //校验不通过修改字段集合
-        HashMap<String, Object> updateFieldMap_N = new HashMap<>();
-        updateFieldMap_N.put("fi_sync_type", 3);
-        updateFieldMap_N.put("fi_verify_type", 2);
-        //校验不通过但校验规则为弱类型规则修改字段集合
-        HashMap<String, Object> updateFieldMap_R = new HashMap<>();
-        updateFieldMap_R.put("fi_sync_type", 2);
-        updateFieldMap_R.put("fi_verify_type", 4);
-        //校验依据字段集合
-        HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
-//        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
-        DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = "1";
-        dataCheckSyncDTO.msgField = "fi_error_message";
-        dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
-        dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
-        dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
-        dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "temp_";
-        dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
-
-        buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
-        buildReplaceTextProcessorDTO.details = "query_phase";
-        buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 10);
-        //替换流文件
-        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
-        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
-        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(dataCheckSyncDTO);
-        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
-        return processorEntityBusinessResult.data;
-    }
-
 
     /**
      * 调用api参数组件
@@ -3380,38 +3170,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private ProcessorEntity replaceTextForDwProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
-        //校验通过修改字段集合
         HashMap<String, Object> updateFieldMap_Y = new HashMap<>();
         updateFieldMap_Y.put("fi_verify_type", "3");
         updateFieldMap_Y.put("fi_sync_type", "2");
-        //校验不通过修改字段集合
         HashMap<String, Object> updateFieldMap_N = new HashMap<>();
         updateFieldMap_N.put("fi_sync_type", 3);
         updateFieldMap_N.put("fi_verify_type", 2);
-        //校验不通过但校验规则为弱类型规则修改字段集合
         HashMap<String, Object> updateFieldMap_R = new HashMap<>();
         updateFieldMap_R.put("fi_sync_type", 2);
         updateFieldMap_R.put("fi_verify_type", 4);
-        //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
-//        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
+        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = "1";
+//        dataCheckSyncDTO.dataSourceId = "1";
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-        dataCheckSyncDTO.tablePrefix = "temp_";
+//        dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
         buildReplaceTextProcessorDTO.groupId = groupId;
-        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 12);
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         //替换流文件
         buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
         buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
@@ -3440,7 +3223,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-        dataCheckSyncDTO.dataSourceId = null;
+//        dataCheckSyncDTO.dataSourceId = null;
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
@@ -3462,42 +3245,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity invokeHTTPProcessorv1(String groupId) {
-        BuildInvokeHttpProcessorDTO buildInvokeHttpProcessorDTO = new BuildInvokeHttpProcessorDTO();
-        buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessor";
-        buildInvokeHttpProcessorDTO.details = "query_phase";
-        buildInvokeHttpProcessorDTO.groupId = groupId;
-        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 11);
-        buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
-        buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
-        buildInvokeHttpProcessorDTO.httpMethod = "POST";
-        buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
-        buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
-        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
-        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
-        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
-        return processorEntityBusinessResult.data;
-    }
-
-    /**
-     * 调用api参数组件
-     *
-     * @param groupId 组id
-     * @return 组件对象
-     */
     private ProcessorEntity invokeHTTPProcessor(String groupId) {
         BuildInvokeHttpProcessorDTO buildInvokeHttpProcessorDTO = new BuildInvokeHttpProcessorDTO();
         buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessor";
         buildInvokeHttpProcessorDTO.details = "query_phase";
         buildInvokeHttpProcessorDTO.groupId = groupId;
-        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 13);
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/datagovernance/datacheck/syncCheckData?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
-        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
-        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }
@@ -3513,7 +3271,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessor";
         buildInvokeHttpProcessorDTO.details = "query_phase";
         buildInvokeHttpProcessorDTO.groupId = groupId;
-        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-2, 9);
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
         buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
@@ -3542,8 +3300,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/task/nifi/sftpDataUploadListener?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
-        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
-        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
+        buildInvokeHttpProcessorDTO.socketConnectTimeout = "30 secs";
         List<String> autoEnd = new ArrayList<>();
         autoEnd.add("Response");
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, autoEnd);
@@ -3594,7 +3351,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dto.name = "Set Increment Field";
         dto.details = "query_phase";
         dto.groupId = groupId;
-        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(6);
         dto.selfDefinedParameter = strings;
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
         verifyProcessorResult(querySqlRes);
@@ -3660,7 +3417,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildConsumeKafkaProcessorDTO.groupId = groupId;
         //管道id
         buildConsumeKafkaProcessorDTO.GroupId = "dmp.nifi.datafactory.pipeline";
-        buildConsumeKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        buildConsumeKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         Map<String, String> variable = new HashMap<>();
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
         componentsBuild.buildNifiGlobalVariable(variable);
@@ -3728,7 +3485,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param dto
      * @return 组件对象
      */
-    public ProcessorEntity createPublishKafkaForPipelineProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int x, int y) {
+    public ProcessorEntity createPublishKafkaForPipelineProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int position) {
         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
         Map<String, String> variable = new HashMap<>();
         variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
@@ -3739,7 +3496,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildPublishKafkaProcessorDTO.name = "PublishKafka";
         buildPublishKafkaProcessorDTO.details = "insert_phase";
         buildPublishKafkaProcessorDTO.UseTransactions = "false";
-        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(x, y);
+        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(position);
         buildPublishKafkaProcessorDTO.TopicName = pipelineTopicName;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);

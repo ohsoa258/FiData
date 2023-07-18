@@ -57,7 +57,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
-import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
+import com.fisk.datagovernance.enums.dataquality.RuleCheckTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
@@ -1385,8 +1385,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
             if (!CollectionUtils.isEmpty(targetTable)) {
                 DataCheckWebDTO dto = new DataCheckWebDTO();
-                dto.ip = dataQualityCheckIp;
-                dto.dbName = dataQualityCheckName;
+//                dto.ip = dataQualityCheckIp;
+//                dto.dbName = dataQualityCheckName;
 
                 HashMap<String, JSONArray> body = new HashMap<>();
                 for (JsonTableData jsonTableData : targetTable) {
@@ -1403,9 +1403,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                     if (!CollectionUtils.isEmpty(data)) {
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
-                            if (e.checkRule == CheckRuleEnum.STRONG_RULE.getValue()) {
+                            if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
                                 return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, e.checkResultMsg);
-                            } else if (e.checkRule == CheckRuleEnum.WEAK_RULE.getValue()) {
+                            } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                 checkResultMsg.append(e.checkResultMsg).append("；");
                             } else {
                                 return ResultEntityBuild.build(ResultEnum.getEnum(result.code), result.msg);

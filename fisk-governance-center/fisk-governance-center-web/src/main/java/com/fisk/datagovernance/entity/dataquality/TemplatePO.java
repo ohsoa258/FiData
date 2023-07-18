@@ -16,8 +16,9 @@ public class TemplatePO extends BasePO
 {
     /**
      * 模块类型
-     * 100、数据校验 200、业务清洗
-     * 300、生命周期 400、告警设置
+     * 100、数据校验
+     * 200、业务清洗
+     * 300、生命周期
      */
     public int moduleType;
 
@@ -27,28 +28,22 @@ public class TemplatePO extends BasePO
     public String moduleName;
 
     /**
-     * 模板应用场景
-     * 100、页面校验
-     * 101、同步校验
-     * 102、质量报告
-     * 200、同步清洗
-     * 201、清洗报告
-     * 300、生命周期报告
-     * 400、数据校验告警
-     * 401、业务清洗告警
-     * 402、生命周期告警
+     * 模板类型
+     * 101、空值检查
+     * 102、值域检查
+     * 103、规范检查
+     * 104、重复数据检查
+     * 105、波动检查
+     * 106、血缘检查
+     * 107、正则表达式检查
+     * 108、SQL脚本检查
      */
-    public  int templateScene;
+    public int templateType;
 
     /**
-     * 应用场景名称
+     * 模板展示顺序
      */
-    public String sceneName;
-
-    /**
-     * 应用场景描述
-     */
-    public String sceneDesc;
+    public int templateSort;
 
     /**
      * 模板名称
@@ -56,27 +51,18 @@ public class TemplatePO extends BasePO
     public String templateName;
 
     /**
-     * 模板类型
-     * 100、字段规则模板
-     * 101、字段聚合波动阈值模板
-     * 102、表行数波动阈值模板
-     * 103、空表校验模板
-     * 104、表更新校验模板
-     * 105、表血缘断裂校验模板
-     * 106、业务验证模板
-     * 200、业务清洗模板
-     * 300、指定时间回收模板
-     * 301、空表回收模板
-     * 302、数据无刷新回收模板
-     * 303、数据血缘断裂回收模板
-     * 400、邮件通知模板
-     * 401、站内消息模板
+     * 模板图标
      */
-    public int templateType;
+    public String templateIcon;
 
     /**
      * 模板描述
      */
     public String templateDesc;
+
+    /**
+     * 模板状态：1 启用、2 开发中、3 禁用
+     */
+    public int templateState;
 }
 

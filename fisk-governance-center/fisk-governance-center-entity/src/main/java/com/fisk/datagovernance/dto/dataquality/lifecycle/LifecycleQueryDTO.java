@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.lifecycle;
 
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class LifecycleQueryDTO {
      * 数据源类型
      */
     @ApiModelProperty(value = "数据源类型，选中节点必填")
-    public SourceTypeEnum sourceTypeEnum;
+    public SourceTypeEnum sourceType;
 
     /**
      * 选中的标识
@@ -44,5 +45,5 @@ public class LifecycleQueryDTO {
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
      */
     @ApiModelProperty(value = "表业务类型，选中表/视图节点必填")
-    public int tableBusinessType;
+    public TableBusinessTypeEnum tableBusinessType;
 }

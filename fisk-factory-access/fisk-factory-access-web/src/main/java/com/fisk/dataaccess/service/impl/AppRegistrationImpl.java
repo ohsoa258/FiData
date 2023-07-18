@@ -2030,7 +2030,7 @@ public class AppRegistrationImpl
         //获取当前应用所拥有的数据源类型
         List<AppDataSourcePO> data = iAppDataSource.getDataSourceDrivesTypeByAppId(appid);
         if (CollectionUtils.isEmpty(data)) {
-            throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+            throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS);
         }
 //        遇到数据量较大的情况，下面这种方式去重效率不高。
 //        List<AppDriveTypeDTO> result = chooseDriveType(data, appDriveTypeDTOS);

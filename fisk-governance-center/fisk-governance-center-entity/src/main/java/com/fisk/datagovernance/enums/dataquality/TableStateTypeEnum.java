@@ -9,8 +9,9 @@ import com.fisk.common.core.enums.BaseEnum;
  * @date 2022/3/22 14:02
  */
 public enum TableStateTypeEnum implements BaseEnum {
+
     NORMAL(1,"正常"),
-    RECGCLED(0,"已回收");
+    RECYCLED(0,"已回收");
 
     TableStateTypeEnum(int value, String name) {
         this.name = name;

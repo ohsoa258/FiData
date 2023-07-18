@@ -1,11 +1,7 @@
 package com.fisk.datagovernance.service.dataquality;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckExtendPO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-
-import java.util.List;
 
 /**
  * @author dick
@@ -19,5 +15,5 @@ public interface IDataCheckExtendManageService extends IService<DataCheckExtendP
      *
      * @return 字段规则列表
      */
-    List<DataCheckVO> setTableFieldName(List<DataCheckVO> source, List<FiDataMetaDataDTO> tableFields);
+//    List<DataCheckVO> setTableFieldName(List<DataCheckVO> source, List<FiDataMetaDataDTO> tableFields);
 }

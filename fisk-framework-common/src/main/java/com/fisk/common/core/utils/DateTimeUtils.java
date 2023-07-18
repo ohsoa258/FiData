@@ -129,26 +129,19 @@ public class DateTimeUtils {
      *
      * @return
      */
-    public static boolean isValidDate(List<String> dateList, String dateFormat) {
-        if (CollectionUtils.isEmpty(dateList) || StringUtils.isEmpty(dateFormat)) {
-            return false;
-        }
-        SimpleDateFormat format = new SimpleDateFormat(dateFormat);
-        for (String dateStr : dateList) {
+    public static boolean isValidDateFormat(String dateStr, List<String> patterns) {
+        for (String pattern : patterns) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
+            dateFormat.setLenient(false); // 禁用宽松模式，严格匹配日期格式
             try {
-                // yyyy-MM-dd HH:mm:ss ps：24小时和12小时制无法区分
-                Date date = format.parse(dateStr);
-                format.setLenient(false);
-                //由于上述方法只能验证正常的日期格式，像诸如 0001-01-01、11-01-01，10001-01-01等无法校验，此处再添加校验年份是否合法
-                String yearStr = dateStr.split("-")[0];
-                if (yearStr.startsWith("0") || yearStr.length() != 4) {
-                    return false;
-                }
+                dateFormat.parse(dateStr);
+                return true; // 如果解析成功，表示日期格式匹配
             } catch (Exception e) {
-                return false;
+                // 解析失败，继续尝试下一个日期格式
             }
         }
-        return true;
+
+        return false; // 日期格式不匹配
     }
 
     /**

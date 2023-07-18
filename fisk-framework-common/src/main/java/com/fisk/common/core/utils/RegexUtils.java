@@ -4,12 +4,15 @@ import com.fisk.common.core.constants.RegexPatterns;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 /**
@@ -60,6 +63,7 @@ public class RegexUtils {
             list1 = list1.stream().distinct().collect(Collectors.toList());
             list2 = list2.stream().distinct().collect(Collectors.toList());
         }
+        // list1 - list2
         List<String> subtract = (List<String>) CollectionUtils.subtract(list1, list2);
         return subtract;
     }
@@ -107,6 +111,7 @@ public class RegexUtils {
 
         // 字符型
         List<String> charType = new ArrayList<>();
+        charType.add("nvarchar");
         charType.add("varchar");
         charType.add("char");
 
@@ -174,6 +179,79 @@ public class RegexUtils {
             return Integer.parseInt(s.toString());
         } else {
             return null;
+        }
+    }
+
+    /**
+     * @return boolean
+     * @description 是否是Base64编码
+     * @author dick
+     * @date 2023/7/4 17:09
+     * @version v1.0
+     * @params input
+     */
+    public static boolean isBase64String(String input, boolean isSkipNullCheck) {
+        try {
+            // 尝试解码字符串，如果不抛出异常则说明是有效的 Base64 编码
+            if (StringUtils.isEmpty(input) && !isSkipNullCheck) {
+                return false;
+            } else {
+                byte[] decodedBytes = Base64.getDecoder().decode(input);
+            }
+            return true;
+        } catch (IllegalArgumentException e) {
+            // 解码失败，说明不是 Base64 编码
+            return false;
+        }
+    }
+
+    /**
+     * @return boolean
+     * @description 是否是URL格式
+     * @author dick
+     * @date 2023/7/4 17:16
+     * @version v1.0
+     * @params inputs
+     * @params isSkipNullCheck
+     */
+    public static boolean isValidURL(String input, boolean isSkipNullCheck) {
+        try {
+            // 尝试创建 URL 对象，如果不抛出异常则说明是有效的 URL。只验证URL格式
+            if (StringUtils.isEmpty(input) && !isSkipNullCheck) {
+                return false;
+            } else {
+                new URL(input);
+            }
+            return true;
+        } catch (MalformedURLException e) {
+            // URL 格式不正确，不是有效的 URL
+            return false;
+        }
+    }
+
+    /**
+     * @return boolean
+     * @description 是否满足正则表达式验证
+     * @author dick
+     * @date 2023/7/4 17:16
+     * @version v1.0
+     * @params inputs
+     * @params isSkipNullCheck
+     */
+    public static boolean isValidPattern(String str, String regex, boolean isSkipNullCheck) {
+        try {
+            Pattern pattern = Pattern.compile(regex);
+                if (StringUtils.isEmpty(str) && !isSkipNullCheck) {
+                    return false;
+                } else {
+                    Matcher matcher = pattern.matcher(str);
+                    if (!matcher.matches()) {
+                        return false;
+                    }
+                }
+            return true;
+        } catch (PatternSyntaxException e) {
+            return false;
         }
     }
 

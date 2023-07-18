@@ -6,7 +6,6 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckTypeV0;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 
 import java.util.List;
@@ -61,12 +60,5 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      *
      * @return 执行结果
      */
-    ResultEntity<List<DataCheckResultVO>> syncCheckData(DataCheckSyncDTO dto);
-
-    /**
-     * 获取校验类型
-     *
-     * @return 结果
-     */
-    List<DataCheckTypeV0> getDataCheckTypeList();
+    ResultEntity<List<DataCheckResultVO>> nifiSyncCheckData(DataCheckSyncDTO dto);
 }

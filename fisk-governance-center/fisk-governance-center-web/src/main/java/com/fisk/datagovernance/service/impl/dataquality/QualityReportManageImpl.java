@@ -478,22 +478,22 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 
         // 查询报告类型的模板
         List<Integer> moduleType = new ArrayList<>();
-        moduleType.add(ModuleTypeEnum.DATACHECK_MODULE.getValue());
-        moduleType.add(ModuleTypeEnum.BIZCHECK_MODULE.getValue());
+       // moduleType.add(ModuleTypeEnum.DATACHECK_MODULE.getValue());
+        //moduleType.add(ModuleTypeEnum.BIZCHECK_MODULE.getValue());
         List<Integer> templateScene = new ArrayList<>();
-        templateScene.add(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getValue());
-        templateScene.add(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getValue());
+        //templateScene.add(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getValue());
+      //  templateScene.add(TemplateSceneEnum.BUSINESSFILTER_FILTERREPORT.getValue());
         QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
         templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
-                .in(TemplatePO::getModuleType, moduleType)
-                .in(TemplatePO::getTemplateScene, templateScene);
+                .in(TemplatePO::getModuleType, moduleType);
+          //      .in(TemplatePO::getTemplateScene, templateScene);
         List<TemplatePO> templatePOS = templateMapper.selectList(templatePOQueryWrapper);
         if (CollectionUtils.isNotEmpty(templatePOS)) {
 
             List<DataTableFieldDTO> filterFiDataTableParams = new ArrayList<>();
 
             // 查询报告模板生成的质量校验报告规则
-            List<Long> templateIdList = templatePOS.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.DATACHECK_MODULE.getValue()).map(TemplatePO::getId).collect(Collectors.toList());
+            List<Long> templateIdList =null; // templatePOS.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.DATACHECK_MODULE.getValue()).map(TemplatePO::getId).collect(Collectors.toList());
             QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
             dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                     .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
@@ -574,9 +574,9 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
                     cRule.setId(t.getId());
                     cRule.setName(t.getRuleName());
-                    cRule.setTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
+                  //  cRule.setTypeName(TemplateSceneEnum.DATACHECK_QUALITYREPORT.getName());
                     cRule.setStateName(t.getRuleState() == 1 ? "启用" : "禁用");
-                    cRule.setSort(t.getRuleSort());
+                   // cRule.setSort(t.getRuleSort());
                     cRule.setIp(ip);
                     cRule.setDbName(dbName);
                     cRule.setSourceTypeName(sourceTypeName);

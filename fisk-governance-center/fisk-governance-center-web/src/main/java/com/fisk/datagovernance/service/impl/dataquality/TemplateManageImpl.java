@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datagovernance.entity.dataquality.TemplatePO;
 import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
-import com.fisk.datagovernance.enums.dataquality.TemplateSceneEnum;
 import com.fisk.datagovernance.enums.dataquality.TemplateTypeEnum;
 import com.fisk.datagovernance.mapper.dataquality.TemplateMapper;
 import com.fisk.datagovernance.service.dataquality.ITemplateManageService;
@@ -27,23 +26,23 @@ public class TemplateManageImpl extends ServiceImpl<TemplateMapper, TemplatePO> 
     public List<TemplateVO> getAll() {
         List<TemplateVO> templateVOS = new ArrayList<>();
         QueryWrapper<TemplatePO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TemplatePO::getDelFlag, 1);
+        queryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
+                .orderByAsc(TemplatePO::getTemplateSort);
         List<TemplatePO> templatePOS = baseMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(templatePOS)) {
             return templateVOS;
         }
         for (TemplatePO e : templatePOS) {
             TemplateVO templateVO = new TemplateVO();
+            templateVO.setId(Math.toIntExact(e.getId()));
             templateVO.setModuleType(ModuleTypeEnum.getEnum(e.getModuleType()));
             templateVO.setModuleName(e.getModuleName());
-            templateVO.setTemplateScene(TemplateSceneEnum.getEnum(e.getTemplateScene()));
-            templateVO.setSceneDesc(e.getSceneDesc());
-            templateVO.setId(Math.toIntExact(e.getId()));
-            templateVO.setTemplateName(e.getTemplateName());
             templateVO.setTemplateType(TemplateTypeEnum.getEnum(e.getTemplateType()));
+            templateVO.setTemplateName(e.getTemplateName());
+            templateVO.setTemplateIcon(e.getTemplateIcon());
             templateVO.setTemplateDesc(e.getTemplateDesc());
-            templateVO.setCreateTime(e.getCreateTime());
-            templateVO.setCreateUser(e.getCreateUser());
+            templateVO.setTemplateState(e.getTemplateState());
+            templateVO.setTemplateSort(e.getTemplateSort());
             templateVOS.add(templateVO);
         }
         return templateVOS;
