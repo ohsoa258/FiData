@@ -398,32 +398,36 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (dataCheckResult.getCheckResult().equals(FAIL)) {
                         resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
                     }
-                    // 记录数据校验日志
-                    DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
-                    dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-                    dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
-                    dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
-                    dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.INTERFACE_DATA_CHECK_LOG.getValue());
-                    dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
-                    dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
-                    dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
-                    dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
-                    dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
-                    dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
-                    dataCheckLogsPO.setCheckTotalCount(dataCheckResult.getCheckTotalCount());
-                    dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
-                    dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
-                    dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
-                    dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
-                    dataCheckLogs.add(dataCheckLogsPO);
-                    // 清空校验不通过的数据字段，减少返回的字节流
-                    dataCheckResult.checkErrorData = null;
+                    // 第七步：记录数据校验日志
+                    if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                        DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
+                        dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                        dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
+                        dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+                        dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.INTERFACE_DATA_CHECK_LOG.getValue());
+                        dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
+                        dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
+                        dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
+                        dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
+                        dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
+                        dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
+                        dataCheckLogsPO.setCheckTotalCount(dataCheckResult.getCheckTotalCount());
+                        dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
+                        dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
+                        dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
+                        dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
+                        dataCheckLogs.add(dataCheckLogsPO);
+                        // 清空校验不通过的数据字段，减少返回的字节流
+                        dataCheckResult.checkErrorData = null;
+                    }
                     dataCheckResults.add(dataCheckResult);
                 }
             }
 
-            // 第七步：保存数据检查日志
-            dataCheckLogsManage.saveLog(dataCheckLogs);
+            // 第八步：保存数据检查日志
+            if (CollectionUtils.isNotEmpty(dataCheckLogs)) {
+                dataCheckLogsManage.saveLog(dataCheckLogs);
+            }
         } catch (Exception ex) {
             log.error("【interfaceCheckData】执行异常：" + ex);
             throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
@@ -464,7 +468,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
             }
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(fieldValueFilters));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(fieldValueFilters));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
@@ -551,7 +557,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
             }
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
@@ -642,7 +650,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             }
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
@@ -691,7 +701,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             }
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
@@ -805,7 +817,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
             }
-            dataCheckResultVO.setCheckErrorData(String.valueOf(realityValue));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                JSONArray jsonArray = new JSONArray();
+                JSONObject jsonObject = new JSONObject();
+                // 字段名称
+                jsonObject.put("FieldName", fName);
+                // 聚合值
+                jsonObject.put("AggregateValue", realityValue);
+                // 波动阈值
+                jsonObject.put("ThresholdValue", thresholdValue);
+                jsonArray.add(jsonObject);
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
@@ -898,7 +921,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
             }
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】通过", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
@@ -936,7 +961,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据", tableName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
             }
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            }
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】通过", tableName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
@@ -1099,25 +1126,27 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
                     }
                     // 第九步：记录校验日志
-                    DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
-                    dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-                    dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
-                    dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
-                    dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.NIFI_SYNCHRONIZATION_DATA_CHECK_LOG.getValue());
-                    dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
-                    dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
-                    dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
-                    dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
-                    dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
-                    dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
-                    dataCheckLogsPO.setCheckTotalCount(dataCheckResult.getCheckTotalCount());
-                    dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
-                    dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
-                    dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
-                    dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
-                    dataCheckLogs.add(dataCheckLogsPO);
-                    // 清空校验不通过的数据字段，减少返回的字节流
-                    dataCheckResult.checkErrorData = null;
+                    if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                        DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
+                        dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                        dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
+                        dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+                        dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.NIFI_SYNCHRONIZATION_DATA_CHECK_LOG.getValue());
+                        dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
+                        dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
+                        dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
+                        dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
+                        dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
+                        dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
+                        dataCheckLogsPO.setCheckTotalCount(dataCheckResult.getCheckTotalCount());
+                        dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
+                        dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
+                        dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
+                        dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
+                        dataCheckLogs.add(dataCheckLogsPO);
+                        // 清空校验不通过的数据字段，减少返回的字节流
+                        dataCheckResult.checkErrorData = null;
+                    }
                     dataCheckResults.add(dataCheckResult);
                 }
             }
@@ -1152,7 +1181,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
             resultEnum = nifiSync_UpdateTableData_ByCheck(dataSourceConVO, updateSql_Builder.toString());
             // 第十一步：保存数据检查日志
-            dataCheckLogsManage.saveLog(dataCheckLogs);
+            if (CollectionUtils.isNotEmpty(dataCheckLogs)) {
+                dataCheckLogsManage.saveLog(dataCheckLogs);
+            }
         } catch (Exception ex) {
             throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
         }
@@ -1389,7 +1420,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，，但检查规则未设置强规则将继续放行数据", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.NULL_CHECK.getName()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             // 组装修改语句
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
@@ -1483,8 +1516,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
-
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             // 组装修改语句
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
@@ -1612,7 +1646,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             // 组装修改语句
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
@@ -1702,8 +1738,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
-
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            }
         } else {
             // 组装修改语句
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
@@ -1812,7 +1849,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckOperatorEnum));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-            dataCheckResultVO.setCheckErrorData(String.valueOf(realityValue));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                JSONArray jsonArray = new JSONArray();
+                JSONObject jsonObject = new JSONObject();
+                // 字段名称
+                jsonObject.put("FieldName", fName);
+                // 聚合值
+                jsonObject.put("AggregateValue", realityValue);
+                // 波动阈值
+                jsonObject.put("ThresholdValue", thresholdValue);
+                jsonArray.add(jsonObject);
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            }
         } else {
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
             dataCheckResultVO.setUpdateSql(updateSql);
@@ -1924,8 +1972,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：【%s】", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
         } else {
             // 组装修改语句
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
@@ -1987,7 +2036,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】未通过，但检查规则未设置强规则将继续放行数据", tName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
-            dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+            }
         } else {
             // 组装修改语句
             updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_Y, f_where);
