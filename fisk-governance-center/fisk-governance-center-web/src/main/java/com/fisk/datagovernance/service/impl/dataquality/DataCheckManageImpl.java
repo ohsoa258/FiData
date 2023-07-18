@@ -623,17 +623,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
                 break;
             case BASE64_BYTE_STREAM:
+                // URL地址
+                String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                 for (String item : fieldValues) {
-                    // URL地址
-                    boolean validURL = RegexUtils.isValidURL(item, false);
+                    boolean validURL = RegexUtils.isValidPattern(item, standardCheckTypeRegexpValue, false);
                     if (!validURL) {
                         errorDataList.add(item);
                     }
                 }
                 break;
             case CHARACTER_PRECISION_LENGTH_RANGE:
+                // BASE64字节流
                 for (String item : fieldValues) {
-                    // BASE64字节流
                     boolean validBase64String = RegexUtils.isBase64String(item, false);
                     if (!validBase64String) {
                         errorDataList.add(item);
@@ -1594,10 +1595,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         break;
                     case BASE64_BYTE_STREAM:
                         // URL地址
+                        String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
                         } else {
-                            boolean validURL = RegexUtils.isValidURL(fieldValue.toString(), false);
+                            boolean validURL = RegexUtils.isValidPattern(fieldValue.toString(), standardCheckTypeRegexpValue, false);
                             if (!validURL) {
                                 errorDataList.add(jsonObject);
                             }

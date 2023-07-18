@@ -241,14 +241,14 @@ public class RegexUtils {
     public static boolean isValidPattern(String str, String regex, boolean isSkipNullCheck) {
         try {
             Pattern pattern = Pattern.compile(regex);
-                if (StringUtils.isEmpty(str) && !isSkipNullCheck) {
+            if (StringUtils.isEmpty(str) && !isSkipNullCheck) {
+                return false;
+            } else {
+                Matcher matcher = pattern.matcher(str);
+                if (!matcher.matches()) {
                     return false;
-                } else {
-                    Matcher matcher = pattern.matcher(str);
-                    if (!matcher.matches()) {
-                        return false;
-                    }
                 }
+            }
             return true;
         } catch (PatternSyntaxException e) {
             return false;

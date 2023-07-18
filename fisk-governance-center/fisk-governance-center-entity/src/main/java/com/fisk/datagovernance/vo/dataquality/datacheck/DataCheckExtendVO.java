@@ -89,6 +89,12 @@ public class DataCheckExtendVO {
     public String standardCheckTypeLengthValue;
 
     /**
+     * 规范检查-正则表达式
+     */
+    @ApiModelProperty(value = "规范检查-正则表达式")
+    public String standardCheckTypeRegexpValue;
+
+    /**
      * 波动检查-类型：SUM、COUNT、AVG、MAX、MIN
      */
     @ApiModelProperty(value = "波动检查-类型：SUM、COUNT、AVG、MAX、MIN")
