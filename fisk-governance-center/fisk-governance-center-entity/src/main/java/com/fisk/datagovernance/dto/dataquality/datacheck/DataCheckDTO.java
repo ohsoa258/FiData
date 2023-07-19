@@ -109,5 +109,5 @@ public class DataCheckDTO {
      * 数据校验规则扩展属性
      */
     @ApiModelProperty(value = "数据校验规则扩展属性")
-    public List<DataCheckExtendDTO> dataCheckExtends;
+    public DataCheckExtendDTO dataCheckExtend;
 }

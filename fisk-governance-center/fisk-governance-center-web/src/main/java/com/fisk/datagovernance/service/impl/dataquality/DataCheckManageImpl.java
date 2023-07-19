@@ -201,14 +201,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第四步：保存数据校验扩展属性
-        if (CollectionUtils.isNotEmpty(dto.getDataCheckExtends())) {
-            List<DataCheckExtendPO> dataCheckExtends = new ArrayList<>();
-            dto.getDataCheckExtends().forEach(t -> {
-                DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(t);
-                dataCheckExtendPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-                dataCheckExtends.add(dataCheckExtendPO);
-            });
-            dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
+        if (dto.getDataCheckExtend() != null) {
+            DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+            dataCheckExtendPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            dataCheckExtendMapper.insert(dataCheckExtendPO);
         }
         return ResultEnum.SUCCESS;
     }
@@ -236,15 +232,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.SAVE_DATA_ERROR;
         }
         //第四步：保存数据校验扩展属性
-        if (CollectionUtils.isNotEmpty(dto.getDataCheckExtends())) {
+        if (dto.getDataCheckExtend() != null) {
             dataCheckExtendMapper.updateByRuleId(dto.getId());
-            List<DataCheckExtendPO> dataCheckExtends = new ArrayList<>();
-            dto.getDataCheckExtends().forEach(t -> {
-                DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(t);
-                dataCheckExtendPO.setRuleId(Math.toIntExact(dto.getId()));
-                dataCheckExtends.add(dataCheckExtendPO);
-            });
-            dataCheckExtendManageImpl.saveBatch(dataCheckExtends);
+            DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+            dataCheckExtendPO.setRuleId(dto.getId());
+            dataCheckExtendMapper.updateById(dataCheckExtendPO);
         }
         return ResultEnum.SUCCESS;
     }
@@ -623,17 +615,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
                 break;
             case BASE64_BYTE_STREAM:
+                // URL地址
+                String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                 for (String item : fieldValues) {
-                    // URL地址
-                    boolean validURL = RegexUtils.isValidURL(item, false);
+                    boolean validURL = RegexUtils.isValidPattern(item, standardCheckTypeRegexpValue, false);
                     if (!validURL) {
                         errorDataList.add(item);
                     }
                 }
                 break;
             case CHARACTER_PRECISION_LENGTH_RANGE:
+                // BASE64字节流
                 for (String item : fieldValues) {
-                    // BASE64字节流
                     boolean validBase64String = RegexUtils.isBase64String(item, false);
                     if (!validBase64String) {
                         errorDataList.add(item);
@@ -1387,14 +1380,22 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName(),
+                fType = dataCheckExtendPO.getFieldType(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
         String sql_QueryTotalCount = String.format("SELECT COUNT(*) FROM %s WHERE 1=1 %s", t_Name, f_where);
-        String sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '')", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name),
-                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '')", f_uniqueIdName, t_Name, f_where, f_Name, f_Name);
+        String sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '' OR %s = 'null')", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name, f_Name),
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '' OR %s = 'null')", f_uniqueIdName, t_Name, f_where, f_Name, f_Name, f_Name);
+
+        // 如果判断的字段非字符串类型，则只能判断是否为NULL
+        boolean charValid = RegexUtils.isCharValid(fType);
+        if (!charValid) {
+            sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND %s IS NULL", f_uniqueIdName, f_Name, t_Name, f_where, f_Name);
+            sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s IS NULL", f_uniqueIdName, t_Name, f_where, f_Name);
+        }
 
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
@@ -1601,10 +1602,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         break;
                     case BASE64_BYTE_STREAM:
                         // URL地址
+                        String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
                         } else {
-                            boolean validURL = RegexUtils.isValidURL(fieldValue.toString(), false);
+                            boolean validURL = RegexUtils.isValidPattern(fieldValue.toString(), standardCheckTypeRegexpValue, false);
                             if (!validURL) {
                                 errorDataList.add(jsonObject);
                             }

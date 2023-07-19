@@ -71,6 +71,11 @@ public class DataCheckExtendPO extends BasePO {
     public String standardCheckTypeLengthValue;
 
     /**
+     * 规范检查-正则表达式
+     */
+    public String standardCheckTypeRegexpValue;
+
+    /**
      * 波动检查-类型：SUM、COUNT、AVG、MAX、MIN
      */
     public int fluctuateCheckType;

@@ -205,14 +205,14 @@ public class BuildPowerBiListener implements IpowerBiListener {
         HttpClient httpClient = HttpClientBuilder.create().build();
 
         // 创建HttpGet请求对象，设置请求的URL
-        HttpGet httpGet = new HttpGet(url);
+        HttpPost httpPost = new HttpPost(url);
 
         // 设置Authorization头部
-        httpGet.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+        httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
 
         try {
             // 执行请求
-            httpClient.execute(httpGet);
+            httpClient.execute(httpPost);
         } catch (IOException e) {
             e.printStackTrace();
         }

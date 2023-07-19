@@ -48,9 +48,9 @@ public class QualityReportExt_RuleVO {
     public String sourceTypeName;
 
     /**
-     * IP
+     * 库IP
      */
-    @ApiModelProperty(value = "IP")
+    @ApiModelProperty(value = "库IP")
     public String ip;
 
     /**
@@ -64,16 +64,4 @@ public class QualityReportExt_RuleVO {
      */
     @ApiModelProperty(value = "表名称")
     public String tableName;
-
-    /**
-     * 表别名
-     */
-    @ApiModelProperty(value = "表别名")
-    public String tableAliasName;
-
-    /**
-     * 表类型
-     */
-    @ApiModelProperty(value = "表类型")
-    public String tableTypeName;
 }
