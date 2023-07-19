@@ -990,6 +990,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public ResultEntity<List<DataCheckResultVO>> nifiSyncCheckData(DataCheckSyncDTO dto) {
+        log.info("nifi流程进入数据校验...校验参数[{}]", JSONObject.toJSON(dto));
+
         List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
         List<DataCheckLogsPO> dataCheckLogs = new ArrayList<>();
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -1044,6 +1046,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
             // 第五步：根据请求参数拼接SQL语句
             DataCheckSyncParamDTO dataCheckSyncParamDTO = nifiSync_RequestParamsToSql(dto, dataSourceType);
+
             dataCheckSyncParamDTO.setTableNameFormat(nifiSync_GetSqlFieldFormat(dataSourceType, dto.getTableName()));
 
             // 第六步：如果校验规则为空则无需进行数据校验，修改表状态字段为成功
@@ -1076,9 +1079,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 String tableNameFormat = "";
                 if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
                     tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
-                    tableName = dataSourceConVO.getConType() + ".";
+                    tableName = dataCheckPO.getSchemaName() + ".";
                 }
-                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getTableName());
+                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dto.tablePrefix + dataCheckPO.getTableName());
                 tableName += dataCheckPO.getTableName();
 
                 String fieldName = "";
@@ -1211,9 +1214,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 checkFieldWhere += " AND " + sqlWhereStr;
 
                 // 批次号从依据字段中获取
-                if (entry.getKey().equals("batchNumber")) {
+                if (entry.getKey().equals("fidata_batch_code")) {
                     batchNumber = entry.getValue().toString();
-                } else if (entry.getKey().equals("smallBatchNumber")) {
+                } else if (entry.getKey().equals("fidata_flow_batch_code")) {
                     smallBatchNumber = entry.getValue().toString();
                 }
             }
@@ -1395,7 +1398,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
-            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
+            String checkTotalCount = null;
+            for (Map.Entry<String, Object> entry : entries) {
+                checkTotalCount = entry.getValue().toString();
+            }
             dataCheckResultVO.setCheckTotalCount(checkTotalCount);
         }
         JSONArray errorDataList = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);

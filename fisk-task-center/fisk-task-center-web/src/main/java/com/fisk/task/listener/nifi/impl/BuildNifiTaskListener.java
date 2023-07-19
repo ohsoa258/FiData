@@ -8,6 +8,7 @@ import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
@@ -3165,11 +3166,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         updateFieldMap_R.put("fi_verify_type", 4);
         //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
+//        checkByFieldMap.put("fidata_flow_batch_code", "${fragment.index}");
+        checkByFieldMap.put("fidata_batch_code", "${fidata_batch_code}");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-//        dataCheckSyncDTO.dataSourceId = "2";
+        dataCheckSyncDTO.fiDataDataSourceId = "2";
         //异常信息字段
 //        dataCheckSyncDTO.msgField = "error_message";
         dataCheckSyncDTO.msgField = "fi_error_message";
@@ -3177,8 +3177,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-//        dataCheckSyncDTO.tablePrefix = "stg_";
+        dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
+        dataCheckSyncDTO.tableName = dto.tableName;
+        dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
+        dataCheckSyncDTO.uniqueField = dto.pkName;
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -3215,18 +3218,20 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         updateFieldMap_R.put("fi_verify_type", 4);
         //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
+        checkByFieldMap.put("fidata_batch_code", "${fidata_batch_code}");
+        checkByFieldMap.put("fidata_flow_batch_code", "${fragment.index}");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-//        dataCheckSyncDTO.dataSourceId = "2";
+        dataCheckSyncDTO.fiDataDataSourceId = "2";
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-//        dataCheckSyncDTO.tablePrefix = "stg_";
+        dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
+        dataCheckSyncDTO.tableName = dto.tableName;
+        dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
+        dataCheckSyncDTO.uniqueField = dto.pkName;
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -3344,19 +3349,21 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         updateFieldMap_R.put("fi_verify_type", 4);
         //校验依据字段集合
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
-        checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
-//        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
+//        checkByFieldMap.put("fidata_flow_batch_code", "${fragment.index}");
+        checkByFieldMap.put("fidata_batch_code", "${fidata_batch_code}");
+//        checkByFieldMap.put("fidata_flow_batch_code", "${input.flowfile.uuid}");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-//        dataCheckSyncDTO.dataSourceId = "1";
+        dataCheckSyncDTO.fiDataDataSourceId = "1";
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-//        dataCheckSyncDTO.tablePrefix = "temp_";
+        dataCheckSyncDTO.tablePrefix = "temp_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
+        dataCheckSyncDTO.tableName = dto.tableName;
+        dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
+        dataCheckSyncDTO.uniqueField = dto.pkName;
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -3396,17 +3403,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("fidata_flow_batch_code", "'${fragment.index}'");
         checkByFieldMap.put("fidata_batch_code", "'${fidata_batch_code}'");
-        checkByFieldMap.put("primary_key", dto.pkName);
 //        checkByFieldMap.put("fidata_flow_batch_code", "'${input.flowfile.uuid}'");
         DataCheckSyncDTO dataCheckSyncDTO = new DataCheckSyncDTO();
-//        dataCheckSyncDTO.dataSourceId = "1";
+        dataCheckSyncDTO.fiDataDataSourceId = "1";
         dataCheckSyncDTO.msgField = "fi_error_message";
         dataCheckSyncDTO.updateFieldMap_Y = updateFieldMap_Y;
         dataCheckSyncDTO.updateFieldMap_N = updateFieldMap_N;
         dataCheckSyncDTO.updateFieldMap_R = updateFieldMap_R;
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
-//        dataCheckSyncDTO.tablePrefix = "temp_";
+        dataCheckSyncDTO.tablePrefix = "temp_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
+        dataCheckSyncDTO.tableName = dto.tableName;
+        dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
+        dataCheckSyncDTO.uniqueField = dto.pkName;
 
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";

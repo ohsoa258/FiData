@@ -23,6 +23,12 @@ public class DataCheckSyncDTO {
     public String fiDataDataSourceId;
 
     /**
+     * 表前缀
+     */
+    @ApiModelProperty(value = "表前缀")
+    public String tablePrefix;
+
+    /**
      * 表唯一标识：表ID
      */
     @ApiModelProperty(value = "表唯一标识：表ID")

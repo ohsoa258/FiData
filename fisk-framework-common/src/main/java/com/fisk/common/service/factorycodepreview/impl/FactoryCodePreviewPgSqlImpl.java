@@ -142,7 +142,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
                 .append("fidata_batch_code")
                 .append(" FROM ")
                 .append(sourceTableName)
-                .append(" SOURCE WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'");
+                .append(" SOURCE WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
         //拼接select完毕
 
         //返回拼接完成的追加覆盖方式拼接的sql
