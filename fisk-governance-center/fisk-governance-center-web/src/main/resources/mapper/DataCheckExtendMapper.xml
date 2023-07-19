@@ -18,7 +18,6 @@
         fluctuate_check_type AS fluctuateCheckType,
         fluctuate_check_value,
         parentage_check_type AS parentageCheckType,
-        parentage_check_value,
         regexp_check_value,
         sql_check_value
         FROM
@@ -27,7 +26,7 @@
         del_flag =1
         <if test="null != ruleIdList and ruleIdList.size > 0">
             AND rule_id IN
-            <foreach item="item" index="index" collection="parmIds" open="(" separator="," close=")">
+            <foreach item="item" index="index" collection="ruleIdList" open="(" separator="," close=")">
                 #{item}
             </foreach>
         </if>

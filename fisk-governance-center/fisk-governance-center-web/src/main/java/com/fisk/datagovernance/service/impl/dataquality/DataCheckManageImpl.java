@@ -134,25 +134,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (CollectionUtils.isEmpty(filterRule)) {
                 return filterRule;
             }
-            // 第五步：基于筛选后的表查询表字段详情
-//            List<DataTableFieldDTO> filterFiDataTables = new ArrayList<>();
-//            filterRule.forEach(t -> {
-//                if (t.getSourceType() == SourceTypeEnum.custom) {
-//                    return;
-//                }
-//                DataTableFieldDTO dto = new DataTableFieldDTO();
-//                dto.setId(t.getTableUnique());
-//                dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(t.getFiDataSourceId()));
-//                dto.setTableBusinessTypeEnum(t.getTableBusinessType());
-//                filterFiDataTables.add(dto);
-//            });
-//            List<FiDataMetaDataDTO> tableFields = null;
-//            if (CollectionUtils.isNotEmpty(filterFiDataTables)) {
-//                tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
-//            }
-            // 第六步：表字段信息填充
-//            filterRule = dataCheckExtendManageImpl.setTableFieldName(filterRule, tableFields);
-            List<Integer> ruleIds = filterRule.stream().map(DataCheckVO::getId).collect(Collectors.toList());
+            List<Integer> ruleIds = filterRule.stream().map(DataCheckVO::getId).distinct().collect(Collectors.toList());
             List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
             if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
                 filterRule.forEach(t -> {
@@ -162,12 +144,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
             // 第七步：排序设置
             filterRule = filterRule.stream().sorted(
-                    // 1.先按照表名称排正序
-                    Comparator.comparing(DataCheckVO::getTableAlias, Comparator.naturalOrder())
-                            // 2.再按照执行节点排正序
-                            .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.naturalOrder())
-                            // 3.再按照执行顺序排正序
-                            .thenComparing(DataCheckVO::getRuleExecuteSort, Comparator.naturalOrder())
+                    // 1.先按照表名称排正序，并处理tableAlias为空的情况
+                    Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 2.再按照执行节点排正序，并处理ruleExecuteNode为空的情况
+                            .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 3.再按照执行顺序排正序，并处理ruleExecuteSort为空的情况
+                            .thenComparing(DataCheckVO::getRuleExecuteSort, Comparator.nullsFirst(Comparator.naturalOrder()))
             ).collect(Collectors.toList());
         } catch (Exception ex) {
             log.error("【getAllRule】查询校验规则列表异常：" + ex);
