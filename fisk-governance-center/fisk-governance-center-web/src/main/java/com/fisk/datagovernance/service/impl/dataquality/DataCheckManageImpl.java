@@ -178,8 +178,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addData(DataCheckDTO dto)
-    {
+    public ResultEnum addData(DataCheckDTO dto) {
         // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
         if (dto.getSourceType() == SourceTypeEnum.FiData) {
             int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
@@ -1084,12 +1083,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 获取表和字段信息，将其进行转义处理
                 String tableName = "";
                 String tableNameFormat = "";
+                String tblName = dataCheckPO.tableName;
+                if (tblName.contains(".")) {
+                    tblName = tblName.split("\\.")[1];
+                }
                 if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
                     tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
                     tableName = dataCheckPO.getSchemaName() + ".";
                 }
-                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dto.tablePrefix + dataCheckPO.getTableName());
-                tableName += dataCheckPO.getTableName();
+                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dto.tablePrefix + tblName);
+                tableName += tblName;
 
                 String fieldName = "";
                 String fieldNameFormat = "";

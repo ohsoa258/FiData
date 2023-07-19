@@ -3179,7 +3179,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
         dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
-        dataCheckSyncDTO.tableName = dto.tableName;
+        String tableName = dto.tableName;
+        if (tableName.contains(".")) {
+            dataCheckSyncDTO.tableName = tableName.split("\\.")[1];
+        } else {
+            dataCheckSyncDTO.tableName = tableName;
+        }
+
         dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
         dataCheckSyncDTO.uniqueField = dto.pkName;
 
@@ -3229,7 +3235,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
         dataCheckSyncDTO.tablePrefix = "stg_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
-        dataCheckSyncDTO.tableName = dto.tableName;
+        String tableName = dto.tableName;
+        if (tableName.contains(".")) {
+            dataCheckSyncDTO.tableName = tableName.split("\\.")[1];
+        } else {
+            dataCheckSyncDTO.tableName = tableName;
+        }
+
         dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
         dataCheckSyncDTO.uniqueField = dto.pkName;
 
@@ -3361,7 +3373,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
         dataCheckSyncDTO.tablePrefix = "temp_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
-        dataCheckSyncDTO.tableName = dto.tableName;
+        String tableName = dto.tableName;
+        if (tableName.contains(".")) {
+            dataCheckSyncDTO.tableName = tableName.split("\\.")[1];
+        } else {
+            dataCheckSyncDTO.tableName = tableName;
+        }
+
         dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
         dataCheckSyncDTO.uniqueField = dto.pkName;
 
@@ -3413,7 +3431,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         dataCheckSyncDTO.checkByFieldMap = checkByFieldMap;
         dataCheckSyncDTO.tablePrefix = "temp_";
         dataCheckSyncDTO.tableUnique = String.valueOf(dto.id);
-        dataCheckSyncDTO.tableName = dto.tableName;
+        String tableName = dto.tableName;
+        if (tableName.contains(".")) {
+            dataCheckSyncDTO.tableName = tableName.split("\\.")[1];
+        } else {
+            dataCheckSyncDTO.tableName = tableName;
+        }
+
         dataCheckSyncDTO.tableBusinessType = TableBusinessTypeEnum.NONE;
         dataCheckSyncDTO.uniqueField = dto.pkName;
 
