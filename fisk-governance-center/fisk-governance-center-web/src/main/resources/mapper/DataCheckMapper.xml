@@ -11,7 +11,7 @@
         t1.schema_name,
         t1.table_unique,
         t1.table_name,
-        CONCAT(t1.schema_name,t1.table_name) AS tableAlias,
+        CONCAT(t1.schema_name,'.',t1.table_name) AS tableAlias,
         t1.table_type AS tableType,
         t1.table_business_type AS tableBusinessType,
         t1.rule_check_type AS ruleCheckType,

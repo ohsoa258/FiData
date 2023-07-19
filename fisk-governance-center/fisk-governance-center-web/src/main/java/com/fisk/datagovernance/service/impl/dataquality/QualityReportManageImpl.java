@@ -498,7 +498,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
             dataCheckPOList.forEach(t -> {
                 DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
-                if (dataSourceConVO==null){
+                if (dataSourceConVO == null) {
                     return;
                 }
                 QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
@@ -507,10 +507,10 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 cRule.setStateName(t.getRuleState() == 1 ? "启用" : "禁用");
                 cRule.setIp(dataSourceConVO.getConIp());
                 cRule.setDbName(dataSourceConVO.getConDbname());
-                cRule.setSourceTypeName(dataSourceConVO.getDatasourceType()== SourceTypeEnum.FiData?"FiData":"Customize");
+                cRule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
                 String tableNameFormat = "";
                 if (StringUtils.isNotEmpty(t.getSchemaName())) {
-                    tableNameFormat = dataSourceConVO.getConType() + ".";
+                    tableNameFormat = t.getSchemaName() + ".";
                 }
                 tableNameFormat += t.getTableName();
                 cRule.setTableName(tableNameFormat);
@@ -551,13 +551,13 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         if (CollectionUtils.isNotEmpty(qualityReportExtVO.getRules_c())) {
             qualityReportExtVO.rules_c = qualityReportExtVO.getRules_c().stream().sorted(
                     // 1.先按照IP排正序
-                    Comparator.comparing(QualityReportExt_RuleVO::getIp, Comparator.naturalOrder())
+                    Comparator.comparing(QualityReportExt_RuleVO::getIp, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 2.再按照数据库排正序
-                            .thenComparing(QualityReportExt_RuleVO::getDbName, Comparator.naturalOrder())
+                            .thenComparing(QualityReportExt_RuleVO::getDbName, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 3.再按照表名称排正序
-                            .thenComparing(QualityReportExt_RuleVO::getTableName, Comparator.naturalOrder())
+                            .thenComparing(QualityReportExt_RuleVO::getTableName, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 4.再按照规则执行顺序排正序
-                            .thenComparing(QualityReportExt_RuleVO::getSort, Comparator.naturalOrder())
+                            .thenComparing(QualityReportExt_RuleVO::getSort, Comparator.nullsFirst(Comparator.naturalOrder()))
             ).collect(Collectors.toList());
         }
         return qualityReportExtVO;
