@@ -1,6 +1,8 @@
 package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -282,5 +284,22 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             responseVO.setDataArray(array);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, responseVO);
+    }
+
+    @Override
+    public void updatePipelTaskLog(String pipelTaskTraceId) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        LambdaQueryWrapper<PipelTaskLogPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(PipelTaskLogPO::getTaskTraceId,pipelTaskTraceId).eq(PipelTaskLogPO::getType,DispatchLogEnum.taskend.getValue());
+        PipelTaskLogPO one = this.getOne(queryWrapper);
+        if (one != null){
+            if (one.getMsg().contains("运行成功")){
+                Map<Object, Object> pipelTask = redisUtil.getAndDel(RedisKeyEnum.PIPEL_TASK.getName() + ":" + pipelTaskTraceId);
+                Object endTime = pipelTask.get(DispatchLogEnum.taskend.getName());
+                Object count = pipelTask.get(DispatchLogEnum.taskcount.getName());
+                String msg = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + (endTime != null ? endTime.toString() : simpleDateFormat.format(new Date())) + " - 同步条数 : " + (Objects.isNull(count) || "null".equals(count) ? 0 : count);
+                pipelTaskLogMapper.updateMsgByPipelTraceId(msg,pipelTaskTraceId,DispatchLogEnum.taskend.getValue());
+            }
+        }
     }
 }
