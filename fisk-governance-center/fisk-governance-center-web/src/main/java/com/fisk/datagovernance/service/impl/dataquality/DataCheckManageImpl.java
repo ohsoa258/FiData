@@ -1348,8 +1348,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     "\t\t%s\n" +
                     "\tELSE\n" +
                     "\t\t%s\n" +
-                    "END", "[" + msgField + "]", "[" + msgField + "]", "'" + msg + "'", "[" + msgField + "]+" + "'；" + msg + "'");
-            updateMsgFieldSql = String.format("[%s]" + "=" + "%s ", msgField, caseSql);
+                    "END", msgField, msgField, "'" + msg + "'", msgField + "+" + "'；" + msg + "'");
+            updateMsgFieldSql = String.format("%s" + "=" + "%s ", msgField, caseSql);
 
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
             String caseSql = String.format("CASE \n" +
@@ -1357,8 +1357,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     "\t\t%s\n" +
                     "\tELSE\n" +
                     "\t\t%s\n" +
-                    "END", "\"" + msgField + "\"", "\"" + msgField + "\"", "'" + msg + "'", "\"" + msgField + "\"" + " || " + "'；" + msg + "'");
-            updateMsgFieldSql = String.format("\"%s\"" + "=" + "%s ", msgField, caseSql);
+                    "END", msgField, msgField, "'" + msg + "'", msgField + " || " + "'；" + msg + "'");
+            updateMsgFieldSql = String.format("%s" + "=" + "%s ", msgField, caseSql);
         }
         return updateMsgFieldSql;
     }
