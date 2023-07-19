@@ -154,6 +154,7 @@ public class HeartbeatService {
                         map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
                         log.info("打印条数81" + JSON.toJSONString(map));
                         redisUtil.hmset(RedisKeyEnum.PIPEL_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, map, 3600);
+                        iPipelTaskLog.updatePipelTaskLog(kafkaReceive.pipelTaskTraceId);
                         Boolean setnx;
                         do {
                             Thread.sleep(200);
