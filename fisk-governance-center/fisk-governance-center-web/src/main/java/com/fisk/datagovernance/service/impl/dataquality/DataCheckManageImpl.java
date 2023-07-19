@@ -63,9 +63,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckLogsManageImpl dataCheckLogsManage;
 
     @Resource
-    private DataCheckExtendManageImpl dataCheckExtendManageImpl;
-
-    @Resource
     private UserHelper userHelper;
 
     private static final String WARN = "warn";
@@ -181,7 +178,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addData(DataCheckDTO dto) {
+    public ResultEnum addData(DataCheckDTO dto)
+    {
+        // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
+        if (dto.getSourceType() == SourceTypeEnum.FiData) {
+            int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
+            if (idByDataSourceId == 0) {
+                return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+            }
+            dto.datasourceId = idByDataSourceId;
+        }
         //第一步：验证模板是否存在以及表规则是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
         if (templatePO == null) {
@@ -398,8 +404,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
                         dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.INTERFACE_DATA_CHECK_LOG.getValue());
                         dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
-                        dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
-                        dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
+                        dataCheckLogsPO.setTableName(dataCheckResult.getCheckTable());
+                        dataCheckLogsPO.setFieldName(dataCheckResult.getCheckField());
                         dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
                         dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
                         dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
@@ -1137,8 +1143,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
                         dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.NIFI_SYNCHRONIZATION_DATA_CHECK_LOG.getValue());
                         dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
-                        dataCheckLogsPO.setTableName(dataCheckSyncParamDTO.getTableName());
-                        dataCheckLogsPO.setFieldName(dataCheckSyncParamDTO.getFieldName());
+                        dataCheckLogsPO.setTableName(dataCheckResult.getCheckTable());
+                        dataCheckLogsPO.setFieldName(dataCheckResult.getCheckField());
                         dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
                         dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
                         dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
