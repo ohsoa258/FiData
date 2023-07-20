@@ -1644,7 +1644,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                         break;
-                    case URL_ADDRESS:
+                    case CHARACTER_PRECISION_LENGTH_RANGE:
                         // 字符精度长度范围
                         int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
                         int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
@@ -1660,7 +1660,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                         break;
-                    case BASE64_BYTE_STREAM:
+                    case URL_ADDRESS:
                         // URL地址
                         String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                         if (fieldValue == null || fieldValue.toString().equals("")) {
@@ -1672,7 +1672,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                         break;
-                    case CHARACTER_PRECISION_LENGTH_RANGE:
+                    case BASE64_BYTE_STREAM:
                         // BASE64字节流
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
@@ -1854,16 +1854,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         FluctuateCheckTypeEnum fluctuateCheckTypeEnum = FluctuateCheckTypeEnum.getEnum(dataCheckExtendPO.getFluctuateCheckType());
         switch (fluctuateCheckTypeEnum) {
             case AVG:
-                sql_QueryCheckData = String.format("SELECT AVG(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
+                sql_QueryCheckData = String.format("SELECT AVG(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case MIN:
-                sql_QueryCheckData = String.format("SELECT MIN(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
+                sql_QueryCheckData = String.format("SELECT MIN(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case MAX:
-                sql_QueryCheckData = String.format("SELECT MAX(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
+                sql_QueryCheckData = String.format("SELECT MAX(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case SUM:
-                sql_QueryCheckData = String.format("SELECT SUM(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
+                sql_QueryCheckData = String.format("SELECT SUM(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
                 break;
             case COUNT:
                 sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
@@ -2009,6 +2009,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                f_uniqueIdNameUnFormat = dataCheckSyncParamDTO.getUniqueIdNameUnFormat(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
@@ -2042,18 +2043,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             List<String> uniqueIdList = new ArrayList<>();
             for (Object obj : errorDataList) {
                 JSONObject jsonObject = (JSONObject) obj;
-                String uniqueId = (String) jsonObject.get(f_uniqueIdName);
+                String uniqueId = (String) jsonObject.get(f_uniqueIdNameUnFormat);
                 uniqueIdList.add(uniqueId);
             }
-            String sql_InString = uniqueIdList.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+            String sql_InString = uniqueIdList.stream()
+                    .map(item -> "'" + item + "'")
+                    .collect(Collectors.joining(", "));
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
             } else {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
             }
             dataCheckResultVO.setUpdateSql(updateSql);
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
