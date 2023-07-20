@@ -19,7 +19,9 @@
         fluctuate_check_value,
         parentage_check_type AS parentageCheckType,
         regexp_check_value,
-        sql_check_value
+        sql_check_value,
+        record_error_data,
+        error_data_retention_time
         FROM
         tb_datacheck_rule_extend
         WHERE

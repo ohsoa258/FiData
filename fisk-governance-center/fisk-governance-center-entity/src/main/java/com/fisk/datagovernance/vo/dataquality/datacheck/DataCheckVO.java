@@ -142,7 +142,7 @@ public class DataCheckVO {
      * 数据校验规则扩展属性
      */
     @ApiModelProperty(value = "数据校验规则扩展属性")
-    public List<DataCheckExtendVO> dataCheckExtends;
+    public DataCheckExtendVO dataCheckExtend;
 
     /**
      * 模板类型
