@@ -1072,6 +1072,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
             // 第五步：根据请求参数拼接SQL语句
             DataCheckSyncParamDTO dataCheckSyncParamDTO = nifiSync_RequestParamsToSql(dto, dataSourceType);
+            dataCheckSyncParamDTO.setUniqueIdNameUnFormat(dto.uniqueField);
 
             dataCheckSyncParamDTO.setTableNameFormat(nifiSync_GetSqlFieldFormat(dataSourceType, dto.getTableName()));
 
@@ -1133,18 +1134,23 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 DataCheckResultVO dataCheckResult = null;
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 switch (templateType) {
+                    //空值检查
                     case NULL_CHECK:
                         dataCheckResult = nifiSync_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
+                    //值域检查
                     case RANGE_CHECK:
                         dataCheckResult = nifiSync_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
+                    //规范检查
                     case STANDARD_CHECK:
                         dataCheckResult = nifiSync_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
+                    //重复数据检查
                     case DUPLICATE_DATA_CHECK:
                         dataCheckResult = nifiSync_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
+                    //波动检查
                     case FLUCTUATION_CHECK:
                         dataCheckResult = nifiSync_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                         break;
@@ -1536,9 +1542,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 String[] timeRange = timeRangeString.split("~");
                 LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
                 LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
-                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
+                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))",
                         f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
-                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))",
                         f_uniqueIdName, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
                 break;
         }
@@ -1608,6 +1614,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
+                f_uniqueIdNameUnFormat = dataCheckSyncParamDTO.getUniqueIdNameUnFormat(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
@@ -1617,10 +1624,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         JSONArray errorDataList = new JSONArray();
         StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
         JSONArray data = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
-        if (data != null && data.size() == 0) {
+        if (data != null && data.size() != 0) {
             for (int i = 0; i < data.size(); i++) {
                 JSONObject jsonObject = data.getJSONObject(i);
-                String fieldKey = jsonObject.getString(f_uniqueIdName);
+                String fieldKey = jsonObject.getString(f_uniqueIdNameUnFormat);
                 Object fieldValue = jsonObject.get(fName);
 
                 // 第四步：检查数据是否符合规范
@@ -1694,10 +1701,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             List<String> uniqueIdList = new ArrayList<>();
             for (Object obj : errorDataList) {
                 JSONObject jsonObject = (JSONObject) obj;
-                String uniqueId = (String) jsonObject.get(f_uniqueIdName);
+                String uniqueId = (String) jsonObject.get(f_uniqueIdNameUnFormat);
                 uniqueIdList.add(uniqueId);
             }
-            String sql_InString = uniqueIdList.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+            String sql_InString = uniqueIdList.stream()
+                    .map(item -> "'" + item + "'")
+                    .collect(Collectors.joining(", "));
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
                 dataCheckResultVO.setCheckResult(FAIL);

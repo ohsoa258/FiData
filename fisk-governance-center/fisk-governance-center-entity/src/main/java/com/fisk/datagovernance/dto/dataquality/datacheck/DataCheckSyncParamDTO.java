@@ -48,6 +48,12 @@ public class DataCheckSyncParamDTO {
     public String uniqueField;
 
     /**
+     * 唯一标识字段，依据此字段回写表数据(未被格式化)
+     */
+    @ApiModelProperty(value = "唯一标识字段，依据此字段回写表数据")
+    public String uniqueIdNameUnFormat;
+
+    /**
      * 表名称-带架构名
      */
     @ApiModelProperty(value = "表名称-带架构名")
@@ -88,4 +94,5 @@ public class DataCheckSyncParamDTO {
      */
     @ApiModelProperty(value = "请求参数DTO")
     public DataCheckSyncDTO requestDto;
+
 }
