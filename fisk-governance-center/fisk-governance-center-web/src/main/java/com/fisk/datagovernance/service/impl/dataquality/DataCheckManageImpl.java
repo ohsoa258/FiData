@@ -35,8 +35,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -507,23 +509,45 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 break;
             case DATE_RANGE:
                 // 日期范围
+                List<DateTimeFormatter> formatters = Arrays.asList(
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+                        DateTimeFormatter.ofPattern("yyyy-M-dd"),
+                        DateTimeFormatter.ofPattern("yyyy/M/dd"),
+                        DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                );
+                List<DateTimeFormatter> formatters1 = Arrays.asList(
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                        DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss"),
+                        DateTimeFormatter.ofPattern("yyyy/M/dd HH:mm:ss"),
+                        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                );
                 for (String item : fieldValues) {
-                    if (StringUtils.isNotEmpty(item)) {
-                        LocalDateTime dateTime = LocalDateTime.parse(item, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                        String formattedDate = dateTime.format(formatter);
+                    try {
+                        LocalDateTime dateTime = null;
+                        if (StringUtils.isNotEmpty(item)) {
+                            if (item.length() > 10) {
+                                dateTime = DateTimeUtils.parseDateTime(item, formatters1);
+                            } else {
+                                LocalDate localDate = DateTimeUtils.parseDate(item, formatters);
+                                if (localDate != null) {
+                                    dateTime = DateTimeUtils.convertLocalDateToDateTime(localDate);
+                                }
+                            }
+                        }
+                        if (dateTime != null) {
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
+                            String[] timeRange = timeRangeString.split("~");
+                            LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
+                            LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
 
-                        String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
-                        String[] timeRange = timeRangeString.split("~");
-                        LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
-                        LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
-
-                        LocalDateTime formattedDateTime = LocalDateTime.parse(formattedDate, formatter);
-
-                        if (formattedDateTime.isBefore(startTime) || formattedDateTime.isAfter(endTime)) {
+                            if (dateTime.isBefore(startTime) || dateTime.isAfter(endTime)) {
+                                errorDataList.add(item);
+                            }
+                        } else {
                             errorDataList.add(item);
                         }
-                    } else {
+                    } catch (DateTimeParseException e) {
                         errorDataList.add(item);
                     }
                 }

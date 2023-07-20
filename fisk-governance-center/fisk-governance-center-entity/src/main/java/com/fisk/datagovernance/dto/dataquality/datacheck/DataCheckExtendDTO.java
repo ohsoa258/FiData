@@ -41,7 +41,7 @@ public class DataCheckExtendDTO {
      * 值域检查-类型：
      * 1、序列范围(枚举)
      * 2、取值范围(1~10)
-     * 3、日期范围(20230401125959~20230501120000)
+     * 3、日期范围(2023-04-01 12:59:59~2023-05-01 12:00:00)
      */
     @ApiModelProperty(value = "值域检查-类型")
     public RangeCheckTypeEnum rangeCheckType;

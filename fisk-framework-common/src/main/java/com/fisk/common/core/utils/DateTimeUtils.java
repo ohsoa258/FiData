@@ -7,8 +7,11 @@ import org.apache.commons.lang.StringUtils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -171,5 +174,50 @@ public class DateTimeUtils {
             }
         }
         return value;
+    }
+
+    /*
+     * 字符串解析成日期格式
+     * */
+    public static LocalDateTime parseDateTime(String dateString, List<DateTimeFormatter> formatters) {
+        if (StringUtils.isEmpty(dateString)) {
+            return null;
+        }
+        LocalDateTime localDateTime = null;
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                localDateTime = LocalDateTime.parse(dateString, formatter);
+                if (localDateTime != null) {
+                    return localDateTime;
+                }
+            } catch (DateTimeParseException ignored) {
+
+            }
+        }
+        return null; // 解析失败，返回null
+    }
+
+    public static LocalDate parseDate(String dateString, List<DateTimeFormatter> formatters) {
+        if (StringUtils.isEmpty(dateString)) {
+            return null;
+        }
+        LocalDate localDateo = null;
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                localDateo = LocalDate.parse(dateString, formatter);
+                if (localDateo != null) {
+                    return localDateo;
+                }
+            } catch (DateTimeParseException ignored) {
+
+            }
+        }
+        return null; // 解析失败，返回null
+    }
+
+    public static LocalDateTime convertLocalDateToDateTime(LocalDate localDate) {
+        // Provide the default time component (midnight: 00:00:00)
+        LocalTime defaultTime = LocalTime.MIDNIGHT;
+        return LocalDateTime.of(localDate, defaultTime);
     }
 }
