@@ -138,7 +138,6 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             data.where = querySql.toString();
             all = baseMapper.getAll(query.page, data);
             if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
-
                 // 数据源集合
                 List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
 
@@ -150,9 +149,9 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 qualityReportRulePOQueryWrapper.lambda().eq(QualityReportRulePO::getDelFlag, 1)
                         .in(QualityReportRulePO::getReportId, reportIdList);
                 List<QualityReportRulePO> qualityReportRulePOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper);
+
                 // 质量报告下的质量规则的详细信息
                 List<DataCheckPO> dataCheckPOList = null;
-                List<BusinessFilterPO> businessFilterPOList = null;
                 if (CollectionUtils.isNotEmpty(qualityReportRulePOS)) {
                     // 查询质量报告下的质量规则详细信息
                     List<Integer> dataCheck_RuleIdList = qualityReportRulePOS.stream().filter(t -> t.getReportType() == 100).map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
@@ -161,13 +160,6 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                                 .in(DataCheckPO::getId, dataCheck_RuleIdList);
                         dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
-                    }
-                    List<Integer> businessFilter_RuleIdList = qualityReportRulePOS.stream().filter(t -> t.getReportType() == 200).map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(businessFilter_RuleIdList)) {
-                        QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
-                        businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
-                                .in(BusinessFilterPO::getId, businessFilter_RuleIdList);
-                        businessFilterPOList = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
                     }
                 }
 
@@ -178,24 +170,12 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 List<QualityReportNoticePO> qualityReportNoticePOList = qualityReportNoticeMapper.selectList(qualityReportNoticePOQueryWrapper);
 
                 // 质量报告的接收人
-//                List<UserDTO> userDTOList = null;
                 QueryWrapper<QualityReportRecipientPO> qualityReportRecipientPOQueryWrapper = new QueryWrapper<>();
                 qualityReportRecipientPOQueryWrapper.lambda().eq(QualityReportRecipientPO::getDelFlag, 1)
                         .in(QualityReportRecipientPO::getReportId, reportIdList);
                 List<QualityReportRecipientPO> qualityReportRecipientPOList = qualityReportRecipientMapper.selectList(qualityReportRecipientPOQueryWrapper);
-//                if (CollectionUtils.isNotEmpty(qualityReportRecipientPOList)) {
-//                    List<Integer> userIdList = qualityReportRecipientPOList.stream().filter(t -> t.getUserId() != 0 && t.getUserType() == 1).map(QualityReportRecipientPO::getUserId).collect(Collectors.toList());
-//                    if (CollectionUtils.isNotEmpty(userIdList)) {
-//                        List<Long> userIds = JSONArray.parseArray(userIdList.toString(), Long.class);
-//                        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-//                        if (userListByIds.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(userListByIds.getData())) {
-//                            userDTOList = userListByIds.getData();
-//                        }
-//                    }
-//                }
+
                 List<DataCheckPO> finalDataCheckPOList = dataCheckPOList;
-                List<BusinessFilterPO> finalBusinessFilterPOList = businessFilterPOList;
-//                List<UserDTO> finalUserDTOList = userDTOList;
 
                 all.getRecords().forEach(t -> {
 
@@ -216,45 +196,42 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                     List<QualityReportRuleVO> rules = new ArrayList<>();
                     if (CollectionUtils.isNotEmpty(qualityReportRulePOS)) {
                         List<QualityReportRulePO> qualityReportRulePOList = qualityReportRulePOS.stream().filter(rule -> rule.getReportId() == t.getId()).sorted(Comparator.comparing(QualityReportRulePO::getRuleSort)).collect(Collectors.toList());
-                        if (CollectionUtils.isNotEmpty(qualityReportRulePOList) && (CollectionUtils.isNotEmpty(finalDataCheckPOList) || CollectionUtils.isNotEmpty(finalBusinessFilterPOList))) {
+                        if (CollectionUtils.isNotEmpty(qualityReportRulePOList) && CollectionUtils.isNotEmpty(finalDataCheckPOList)) {
                             List<QualityReportRuleVO> qualityReportRuleVOS = QualityReportRuleMap.INSTANCES.poToVo(qualityReportRulePOList);
                             qualityReportRuleVOS.forEach(rule -> {
-                                if (t.getReportType() == 100) {
-                                    DataCheckPO dataCheckPO = finalDataCheckPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
-                                    if (dataCheckPO != null) {
-                                        rule.setRuleName(dataCheckPO.getRuleName());
-                                        rule.setRuleStateName(dataCheckPO.getRuleState() == 1 ? "启用" : "禁用");
-                                        rule.setRuleTypeName("校验规则（同步后）");
-                                        rule.setTableUnique(dataCheckPO.getTableUnique());
-                                        rule.setTableBusinessType(dataCheckPO.getTableBusinessType());
-                                        rule.setTableTypeName(dataCheckPO.getTableType() == 1 ? "TABLE" : dataCheckPO.getTableType() == 2 ? "VIEW" : "");
-                                        rule.setDataSourceId(dataCheckPO.getDatasourceId());
-                                    }
-                                } else if (t.getReportType() == 200) {
-                                    BusinessFilterPO businessFilterPO = finalBusinessFilterPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
-                                    if (businessFilterPO != null) {
-                                        rule.setRuleName(businessFilterPO.getRuleName());
-                                        rule.setRuleStateName(businessFilterPO.getRuleState() == 1 ? "启用" : "禁用");
-                                        rule.setRuleTypeName("清洗规则（同步后）");
-                                        rule.setTableUnique(businessFilterPO.getTableUnique());
-                                        rule.setTableBusinessType(businessFilterPO.getTableBusinessType());
-                                        rule.setTableTypeName(businessFilterPO.getTableType() == 1 ? "TABLE" : businessFilterPO.getTableType() == 2 ? "VIEW" : "");
-                                        rule.setDataSourceId(businessFilterPO.getDatasourceId());
-                                    }
+
+                                DataCheckPO dataCheckPO = finalDataCheckPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
+                                if (dataCheckPO == null) {
+                                   return;
                                 }
+                                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+                                if (dataSourceConVO == null) {
+                                    return;
+                                }
+                                rule.setRuleName(dataCheckPO.getRuleName());
+                                rule.setRuleDescribe(dataCheckPO.getRuleDescribe());
+                                rule.setRuleStateName(dataCheckPO.getRuleState() == 1 ? "启用" : "禁用");
+                                rule.setTableBusinessType(dataCheckPO.getTableBusinessType());
+                                rule.setTableTypeName(dataCheckPO.getTableType() == 1 ? "TABLE" : dataCheckPO.getTableType() == 2 ? "VIEW" : "");
+                                rule.setDataSourceId(dataCheckPO.getDatasourceId());
+                                rule.setIp(dataSourceConVO.getConIp());
+                                rule.setDbName(dataSourceConVO.getConDbname());
+                                rule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
+                                String tableNameFormat = "";
+                                if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
+                                    tableNameFormat = dataCheckPO.getSchemaName() + ".";
+                                }
+                                tableNameFormat += dataCheckPO.getTableName();
+                                rule.setTableName(tableNameFormat);
+
                                 if (StringUtils.isNotEmpty(rule.getRuleName())) {
                                     rules.add(rule);
                                 }
+
                             });
                         }
                     }
                     t.setRules(rules);
-
-                    // 质量报告下的质量规则的详细信息（含库和表信息）
-                    if (CollectionUtils.isNotEmpty(t.getRules())) {
-                        List<QualityReportRuleVO> ruleDetailList = getRuleDetailList(allDataSource, t.getRules());
-                        t.setRules(ruleDetailList);
-                    }
 
                     // 质量报告的通知方式
                     if (CollectionUtils.isNotEmpty(qualityReportNoticePOList)) {
@@ -504,6 +481,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
                 cRule.setId(t.getId());
                 cRule.setName(t.getRuleName());
+                cRule.setDescribe(t.getRuleDescribe());
                 cRule.setStateName(t.getRuleState() == 1 ? "启用" : "禁用");
                 cRule.setIp(dataSourceConVO.getConIp());
                 cRule.setDbName(dataSourceConVO.getConDbname());
@@ -556,8 +534,8 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                             .thenComparing(QualityReportExt_RuleVO::getDbName, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 3.再按照表名称排正序
                             .thenComparing(QualityReportExt_RuleVO::getTableName, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 4.再按照规则执行顺序排正序
-                            .thenComparing(QualityReportExt_RuleVO::getSort, Comparator.nullsFirst(Comparator.naturalOrder()))
+                    // 4.再按照规则执行顺序排正序
+                    //.thenComparing(QualityReportExt_RuleVO::getSort, Comparator.nullsFirst(Comparator.naturalOrder()))
             ).collect(Collectors.toList());
         }
         return qualityReportExtVO;
@@ -750,71 +728,5 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             return ResultEnum.SUCCESS;
         }
         return resultEnum;
-    }
-
-    /*
-     * @description 查询规则详情信息，含库和表名称
-     * @author dick
-     * @date 2022/12/23 20:50
-     * @version v1.0
-     * @params allDataSource
-     * @params rules
-     * @return java.util.List<com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportRuleVO>
-     */
-    public List<QualityReportRuleVO> getRuleDetailList(List<DataSourceConVO> allDataSource, List<QualityReportRuleVO> rules) {
-
-        List<DataTableFieldDTO> filterFiDataTableParams = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(rules)) {
-            rules.forEach(t -> {
-                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDataSourceId()).findFirst().orElse(null);
-                DataTableFieldDTO dataTableFieldDTO = filterFiDataTableParams.stream().filter(l -> l.getId().equals(t.getTableUnique()) && l.getTableBusinessTypeEnum().getValue() == t.getTableBusinessType()).findFirst().orElse(null);
-                if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData && dataTableFieldDTO == null) {
-                    DataTableFieldDTO dto = new DataTableFieldDTO();
-                    dto.setId(t.getTableUnique());
-                    dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
-                    dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(t.getTableBusinessType()));
-                    filterFiDataTableParams.add(dto);
-                }
-            });
-        }
-
-        // 查询表名称
-        List<FiDataMetaDataDTO> fiDataMetaDataList = null;
-        if (CollectionUtils.isNotEmpty(filterFiDataTableParams)) {
-            fiDataMetaDataList = dataSourceConManage.getTableFieldName(filterFiDataTableParams);
-        }
-
-        if (CollectionUtils.isNotEmpty(rules)) {
-            List<FiDataMetaDataDTO> finalFiDataMetaDataList = fiDataMetaDataList;
-            rules.forEach(t -> {
-                String sourceTypeName = "";
-                String ip = "";
-                String dbName = "";
-                String tableName = "";
-                String tableAliasName = "";
-                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDataSourceId()).findFirst().orElse(null);
-
-                ip = dataSourceConVO.getConIp();
-                dbName = dataSourceConVO.getConDbname();
-                if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
-                    sourceTypeName = "FiData";
-                    FiDataMetaDataDTO fiDataMetaDataDTO = finalFiDataMetaDataList.stream().filter(p -> p.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
-                    FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(o -> o.getId().equals(t.getTableUnique()) && o.getLabelBusinessType() == t.getTableBusinessType()).findFirst().orElse(null);
-                    tableName = fiDataMetaDataTree_Table.getLabel();
-                    tableAliasName = fiDataMetaDataTree_Table.getLabelAlias();
-                } else {
-                    sourceTypeName = "Customize";
-                    tableName = t.getTableUnique();
-                    tableAliasName = t.getTableUnique();
-                }
-                t.setIp(ip);
-                t.setDbName(dbName);
-                t.setSourceTypeName(sourceTypeName);
-                t.setTableName(tableName);
-                t.setTableAliasName(tableAliasName);
-            });
-        }
-
-        return rules;
     }
 }

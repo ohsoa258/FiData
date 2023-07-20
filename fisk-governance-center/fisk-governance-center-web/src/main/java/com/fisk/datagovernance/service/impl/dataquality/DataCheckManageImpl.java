@@ -176,6 +176,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (templatePO == null) {
             return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
         }
+        QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().in(DataCheckPO::getRuleName, dto.getRuleName())
+                .eq(DataCheckPO::getDelFlag, 1);
+        List<DataCheckPO> dataCheckPOList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
+            return ResultEnum.DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS;
+        }
         //第二步：转换DTO对象为PO对象
         DataCheckPO dataCheckPO = DataCheckMap.INSTANCES.dtoToPo(dto);
         if (dataCheckPO == null) {
@@ -210,6 +217,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
+        QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().in(DataCheckPO::getRuleName, dto.getRuleName())
+                .eq(DataCheckPO::getDelFlag, 1)
+                .ne(DataCheckPO::getId, dto.getId());
+        List<DataCheckPO> dataCheckPOList = baseMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
+            return ResultEnum.DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS;
+        }
         //第二步：转换DTO对象为PO对象
         dataCheckPO = DataCheckMap.INSTANCES.dtoToPo_Edit(dto);
         if (dataCheckPO == null) {
@@ -222,7 +237,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         //第四步：保存数据校验扩展属性
         if (dto.getDataCheckExtend() != null) {
-            dataCheckExtendMapper.updateByRuleId(dto.getId());
             DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
             dataCheckExtendPO.setRuleId(dto.getId());
             dataCheckExtendMapper.updateById(dataCheckExtendPO);

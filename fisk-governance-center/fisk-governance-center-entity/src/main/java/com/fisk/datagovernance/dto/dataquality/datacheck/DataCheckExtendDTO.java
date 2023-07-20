@@ -14,6 +14,12 @@ import io.swagger.annotations.ApiModelProperty;
  */
 public class DataCheckExtendDTO {
     /**
+     * 数据校验扩展表主键id
+     */
+    @ApiModelProperty(value = "数据校验扩展表主键id")
+    public int id;
+
+    /**
      * 数据校验规则id
      */
     @ApiModelProperty(value = "数据校验规则id")

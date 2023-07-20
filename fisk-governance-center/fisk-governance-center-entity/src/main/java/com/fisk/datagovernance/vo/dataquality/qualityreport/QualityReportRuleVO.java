@@ -36,22 +36,16 @@ public class QualityReportRuleVO {
     public int ruleId;
 
     /**
-     * 规则执行顺序
-     */
-    @ApiModelProperty(value = "规则执行顺序")
-    public int ruleSort;
-
-    /**
      * 规则名称
      */
     @ApiModelProperty(value = "规则名称")
     public String ruleName;
 
     /**
-     * 规则类型名称
+     * 规则名称
      */
-    @ApiModelProperty(value = "规则类型名称")
-    public String ruleTypeName;
+    @ApiModelProperty(value = "规则名称")
+    public String ruleDescribe;
 
     /**
      * 规则状态名称
@@ -84,27 +78,16 @@ public class QualityReportRuleVO {
     public String dbName;
 
     /**
-     * 表名称
+     * 表名称，带架构名
      */
-    @ApiModelProperty(value = "表名称")
+    @ApiModelProperty(value = "表名称，带架构名")
     public String tableName;
-
-    /**
-     * 表别名
-     */
-    @ApiModelProperty(value = "表别名")
-    public String tableAliasName;
 
     /**
      * 表类型
      */
     @ApiModelProperty(value = "表类型")
     public String tableTypeName;
-
-    /**
-     * 表名称/表Id
-     */
-    public String tableUnique;
 
     /**
      * 表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
