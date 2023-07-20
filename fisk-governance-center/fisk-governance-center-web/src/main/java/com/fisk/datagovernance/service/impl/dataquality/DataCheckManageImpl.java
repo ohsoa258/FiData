@@ -138,8 +138,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
             if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
                 filterRule.forEach(t -> {
-                    List<DataCheckExtendVO> dataCheckExtendVOS = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).collect(Collectors.toList());
-                    t.setDataCheckExtends(dataCheckExtendVOS);
+                    DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
+                    t.setDataCheckExtend(dataCheckExtendVO);
                 });
             }
             // 第七步：排序设置
@@ -148,8 +148,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 2.再按照执行节点排正序，并处理ruleExecuteNode为空的情况
                             .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 3.再按照执行顺序排正序，并处理ruleExecuteSort为空的情况
-                            .thenComparing(DataCheckVO::getRuleExecuteSort, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 3.再按照检查类型排正序，并处理templateType为空的情况
+                            .thenComparing(DataCheckVO::getTemplateType, Comparator.nullsFirst(Comparator.naturalOrder()))
             ).collect(Collectors.toList());
         } catch (Exception ex) {
             log.error("【getAllRule】查询校验规则列表异常：" + ex);
