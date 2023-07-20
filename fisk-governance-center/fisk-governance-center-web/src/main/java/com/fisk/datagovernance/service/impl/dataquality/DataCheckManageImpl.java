@@ -1090,15 +1090,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 String tableName = "";
                 String tableNameFormat = "";
                 String tblName = dataCheckPO.tableName;
+                //判断表名是否包含架构名，包含架构名就去掉架构名
                 if (tblName.contains(".")) {
-                    tblName = tblName.split("\\.")[1];
+                    tblName = dto.tablePrefix + tblName.split("\\.")[1];
+                }
+                //判断表名是否包含ods_,如果包含就将ods_替换为stg_,因为我们操作的是临时表
+                if (tblName.contains("ods_")) {
+                    tblName = tblName.replace("ods_", "stg_");
                 }
                 if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
                     tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
                     tableName = dataCheckPO.getSchemaName() + ".";
                 }
-                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dto.tablePrefix + tblName);
-                tableName += tblName;
+                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), tblName);
+                tableName += dataCheckPO.tableName;
 
                 String fieldName = "";
                 String fieldNameFormat = "";
@@ -1491,9 +1496,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             case SEQUENCE_RANGE:
                 // 序列范围
                 List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
-                String sql_InString = list.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+                // 将list里面的序列范围截取为'','',''格式的字符串
+                String sql_InString = list.stream()
+                        .map(item -> "N'" + item + "'")
+                        .collect(Collectors.joining(", "));
+
                 sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, sql_InString);
-                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_Name, t_Name, f_where, f_Name, sql_InString);
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, sql_InString);
                 break;
             case VALUE_RANGE:
                 // 取值范围
@@ -1516,10 +1525,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
                         f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
                 sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
-                        f_Name, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
+                        f_uniqueIdName, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
                 break;
         }
 
+        // 查询校验数据的总数
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
             Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
@@ -1529,6 +1539,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
             dataCheckResultVO.setCheckTotalCount(checkTotalCount);
         }
+
+        // 查询并获取不通过校验的记录
         JSONArray errorDataList = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
