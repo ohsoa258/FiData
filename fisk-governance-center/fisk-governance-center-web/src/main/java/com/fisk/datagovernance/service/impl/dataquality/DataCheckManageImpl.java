@@ -1065,12 +1065,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 获取表和字段信息，将其进行转义处理
                 String tableName = "";
                 String tableNameFormat = "";
+                String tblName = dataCheckPO.tableName;
+                if (tblName.contains(".")) {
+                    tblName = tblName.split("\\.")[1];
+                }
                 if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
                     tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
                     tableName = dataCheckPO.getSchemaName() + ".";
                 }
-                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dto.tablePrefix + dataCheckPO.getTableName());
-                tableName += dataCheckPO.getTableName();
+                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dto.tablePrefix + tblName);
+                tableName += tblName;
 
                 String fieldName = "";
                 String fieldNameFormat = "";
@@ -1471,12 +1475,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 取值范围
                 Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
                 Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                String sql_BetweenAnd = String.format("CASE(%s AS NUMERIC) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                 if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                     sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                 }
                 sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
-                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_Name, t_Name, f_where, sql_BetweenAnd);
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
                 break;
             case DATE_RANGE:
                 // 日期范围
@@ -1494,7 +1498,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
-            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
+            String checkTotalCount = null;
+            for (Map.Entry<String, Object> entry : entries) {
+                checkTotalCount = entry.getValue().toString();
+            }
             dataCheckResultVO.setCheckTotalCount(checkTotalCount);
         }
         JSONArray errorDataList = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
@@ -1701,11 +1709,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
 
         String sql_QueryTotalCount = String.format("SELECT COUNT(*) AS checkTotalCount FROM %s WHERE 1=1 %s", t_Name, f_where);
-        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
-                "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_where, f_Name);
+        String sql_QueryCheckData = String.format("SELECT %s COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
+                "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_where, f_Name.replaceAll(",+$", ""));
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
-            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
+            String checkTotalCount = null;
+            for (Map.Entry<String, Object> entry : entries) {
+                checkTotalCount = entry.getValue().toString();
+            }
             dataCheckResultVO.setCheckTotalCount(checkTotalCount);
         }
         JSONArray jsonArray = nifiSync_QueryTableData(dataSourceConVO, sql_QueryCheckData);
@@ -1715,7 +1727,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         // 第三步：判断是否通过重复数据检查，通过或者未通过都需要更新表状态
         String updateSql = "", updateMsgFieldSql = "";
-        if (!CollectionUtils.isNotEmpty(jsonArray)) {
+        if (CollectionUtils.isNotEmpty(jsonArray)) {
             // 组装修改语句
             if (StringUtils.isNotEmpty(dataCheckSyncParamDTO.getMsgField())) {
                 updateMsgFieldSql = "," + nifiSync_getUpdateMsgFieldSql(dataSourceConVO.getConType(), dataCheckSyncParamDTO.getMsgField(), "重复数据检查未通过");
@@ -1727,7 +1739,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         " SELECT %s FROM %s WHERE 1=1 %s\n" +
                         " GROUP BY %s HAVING COUNT(*) > 1\n" +
                         ") sy\n" +
-                        "WHERE 1=1 %s;", t_Name, sql_N + updateMsgFieldSql, f_Name, t_Name, f_where, f_Name, updateFieldWhereStr);
+                        "WHERE 1=1 %s;", t_Name, sql_N + updateMsgFieldSql, f_Name.replaceAll(",+$", ""), t_Name, f_where, f_Name.replaceAll(",+$", ""), updateFieldWhereStr);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过", tName, fName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             } else {
@@ -1737,7 +1749,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         " SELECT %s FROM %s WHERE 1=1 %s\n" +
                         " GROUP BY %s HAVING COUNT(*) > 1\n" +
                         ") sy\n" +
-                        "WHERE 1=1 %s;", t_Name, sql_W + updateMsgFieldSql, f_Name, t_Name, f_where, f_Name, updateFieldWhereStr);
+                        "WHERE 1=1 %s;", t_Name, sql_W + updateMsgFieldSql, f_Name.replaceAll(",+$", ""), t_Name, f_where, f_Name.replaceAll(",+$", ""), updateFieldWhereStr);
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             }
@@ -1801,12 +1813,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
-            String checkTotalCount = maps.get(0).get("checkTotalCount").toString();
+            Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
+            String checkTotalCount = null;
+            for (Map.Entry<String, Object> entry : entries) {
+                checkTotalCount = entry.getValue().toString();
+            }
             dataCheckResultVO.setCheckTotalCount(checkTotalCount);
         }
         maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryCheckData);
         if (CollectionUtils.isNotEmpty(maps)) {
-            realityValue = Double.parseDouble(maps.get(0).get("realityValue").toString());
+            Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
+            for (Map.Entry<String, Object> entry : entries) {
+                realityValue = Double.parseDouble(entry.getValue().toString());
+            }
+
+//            realityValue = Double.parseDouble(maps.get(0).get("realityValue").toString());
         }
 
         // 第四步：判断字段值是否通过波动检查
