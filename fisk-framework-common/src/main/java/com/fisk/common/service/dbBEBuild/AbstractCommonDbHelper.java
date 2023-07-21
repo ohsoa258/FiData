@@ -5,11 +5,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.BeanHelper;
+import com.fisk.common.core.utils.Dto.Excel.SheetDataDto;
 import com.fisk.common.framework.exception.FkException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StopWatch;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -166,6 +168,51 @@ public class AbstractCommonDbHelper {
             closeConnection(conn);
         }
         return dataArray;
+    }
+
+    /**
+     * 执行查询 直接返回组装后的SheetDataDto
+     *
+     * @param sql  查询语句
+     * @param conn 数据库连接
+     * @return 查询结果Map
+     */
+    public static SheetDataDto execQueryResultSheet(String sql, Connection conn) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        List<String> columnList = new ArrayList<>();
+        List<List<String>> mapList = new ArrayList<>();
+        Statement st = null;
+        try {
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            assert st != null;
+            ResultSet rs = st.executeQuery(sql);
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                columnList.add(metaData.getColumnLabel(columnIndex));
+            }
+            while (rs.next()) {
+                List<String> objectMap = new ArrayList<>();
+                // 遍历每一列
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnLabel(i);
+                    //获取sql查询数据集合
+                    Object value = rs.getObject(columnName);
+                    objectMap.add(value != null ? value.toString() : "");
+                }
+                mapList.add(objectMap);
+            }
+            rs.close();
+            sheetDataDto.setColumns(columnList);
+            sheetDataDto.setColumnData(mapList);
+        } catch (Exception ex) {
+            log.error("【execQueryResultArrays】执行SQL异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, ex.getMessage());
+        } finally {
+            closeStatement(st);
+            closeConnection(conn);
+        }
+        return sheetDataDto;
     }
 
     /**

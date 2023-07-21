@@ -4,13 +4,17 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
-import com.fisk.common.core.utils.Dto.Excel.*;
+import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
+import com.fisk.common.core.utils.Dto.Excel.RowDto;
+import com.fisk.common.core.utils.Dto.Excel.SheetDataDto;
+import com.fisk.common.core.utils.Dto.Excel.SheetDto;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
 import com.fisk.common.framework.exception.FkException;
@@ -20,17 +24,14 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncParamDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportNoticeDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportRecipientDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.datagovernance.vo.dataquality.rule.TableRuleTempVO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -38,7 +39,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.*;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -656,13 +657,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     // 生成数据校验质量报告
                     attachmentInfoPO.setOriginalName(String.format("数据检查质量报告%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
                     attachmentInfoPO.setCategory(100);
+                    //参数：规则配置，数据源，以及将要新建的excel文件的信息
                     resultEnum = dataCheck_QualityReport_CreateExcel(noticeExtendPOS, allDataSource, attachmentInfoPO);
                     break;
-                case 200:
-                    // 生成业务清洗质量报告
-                    attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
-                    attachmentInfoPO.setCategory(200);
-                    break;
+//                case 200:
+//                    // 生成业务清洗质量报告
+//                    attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
+//                    attachmentInfoPO.setCategory(200);
+//                    break;
             }
             if (qualityReportPO.getReportType() != 100 || qualityReportNoticePO.getReportNoticeType() != 1) {
                 log.info("质量报告类型暂不支持非质量校验报告的其他方式");
@@ -735,67 +737,132 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 .in(DataCheckExtendPO::getRuleId, ruleIds);
         List<DataCheckExtendPO> dataCheckExtendPOList = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
 
+        List<DataTableFieldDTO> dtoList = new ArrayList<>();
+        List<Integer> fiDataIds = allDataSource.stream().filter(t -> t.getDatasourceType() == SourceTypeEnum.FiData).map(DataSourceConVO::getId).collect(Collectors.toList());
+        for (int j = 0; j < dataCheckPOList.size(); j++) {
+            DataCheckPO dataCheckPO = dataCheckPOList.get(j);
+            DataTableFieldDTO dataTableFieldDTO = dtoList.stream().filter(t -> t.getId().equals(dataCheckPO.getTableUnique()) && t.getTableBusinessTypeEnum().getValue() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
+            if (dataTableFieldDTO != null || !fiDataIds.contains(dataCheckPO.getDatasourceId())) {
+                continue;
+            }
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+            dataTableFieldDTO = new DataTableFieldDTO();
+            dataTableFieldDTO.setId(dataCheckPO.getTableUnique());
+            dataTableFieldDTO.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
+            dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dataCheckPO.getTableBusinessType()));
+            dtoList.add(dataTableFieldDTO);
+        }
+        List<FiDataMetaDataDTO> fiDataMetaDataList = null;
+        if (CollectionUtils.isNotEmpty(dtoList)) {
+            fiDataMetaDataList = dataSourceConManageImpl.getTableFieldName(dtoList);
+            if (CollectionUtils.isEmpty(fiDataMetaDataList)) {
+                return ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD;
+            }
+        }
+
         // 第三步：填充Excel文档Dto
         ExcelDto excelDto = new ExcelDto();
         excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
         List<SheetDto> sheets = new ArrayList<>();
-//        for (int i = 0; i < dataCheckPOList.size(); i++) {
-//            DataCheckPO dataCheckPO = dataCheckPOList.get(i);
-//            DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
-//            if (dataCheckExtendPO == null) {
-//                continue;
-//            }
-//            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
-//            if (templatePO == null) {
-//                continue;
-//            }
-//            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
-//            if (dataSourceConVO == null) {
-//                continue;
-//            }
-//
-//            // 获取表和字段信息，将其进行转义处理
-//            DataCheckSyncParamDTO dataCheckSyncParamDTO = new DataCheckSyncParamDTO();
-//            String tableName = "";
-//            String tableNameFormat = "";
-//            if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
-//                tableNameFormat = QualityReport_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
-//                tableName = dataSourceConVO.getConType() + ".";
-//            }
-//            tableNameFormat += QualityReport_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getTableName());
-//            tableName += dataCheckPO.getTableName();
-//
-//            String fieldName = "";
-//            String fieldNameFormat = "";
-//            if (StringUtils.isNotEmpty(dataCheckExtendPO.getFieldName())) {
-//                fieldNameFormat = QualityReport_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckExtendPO.getFieldName());
-//                fieldName = dataCheckExtendPO.getFieldName();
-//            }
-//            dataCheckSyncParamDTO.setTableName(tableName);
-//            dataCheckSyncParamDTO.setTableNameFormat(tableNameFormat);
-//            dataCheckSyncParamDTO.setFieldName(fieldName);
-//            dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
-//
-//            SheetDataDto sheetDataDto = null;
-//            try {
-//                sheetDataDto = dataCheck_QualityReport_Create(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-//            } catch (Exception ex) {
-//                log.error("质量报告拼接SQL执行异常：" + ex);
-//                continue;
-//            }
-//            if (sheetDataDto == null) {
-//                log.info(dataCheckPO.getRuleName() + "，质量报告SQL检查结果为空，跳过。");
-//                continue;
-//            }
-//            SheetDto sheet = new SheetDto();
-//            sheet.setSheetName(dataCheckPO.getRuleName());
-//            SheetDataDto sheetDataDto = resultSetToMap(dataSourceConVO, roleSql);
-//            List<RowDto> singRows = dataCheck_QualityReport_GetSingRows(tableName, templatePO.getTemplateName(), sheetDataDto.getColumns());
-//            sheet.setSingRows(singRows);
-//            sheet.setSingFields(fields.keySet().stream().collect(Collectors.toList()));
-//            sheet.setDataRows(sheetDataDto.columnData);
-//            sheets.add(sheet);
-//        }
+        for (int i = 0; i < dataCheckPOList.size(); i++) {
+
+            //获取数据校验对象
+            DataCheckPO dataCheckPO = dataCheckPOList.get(i);
+            //获取数据校验对象对应的第一个扩展配置对象
+            DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
+            if (dataCheckExtendPO == null) {
+                continue;
+            }
+
+            List<DataCheckExtendPO> dataCheckExtendPOs = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(dataCheckExtendPOs)) {
+                continue;
+            }
+
+            //当前校验规则对应的 数据校验模板 tb_template_config
+            TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
+            if (templatePO == null) {
+                continue;
+            }
+
+            //获取数据源
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+            if (dataSourceConVO == null) {
+                continue;
+            }
+
+            String tblName = "";
+            HashMap<String, String> fields = new HashMap<>();
+            if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
+                FiDataMetaDataDTO fiDataMetaDataDTO = fiDataMetaDataList.stream().filter(t -> t.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
+                if (fiDataMetaDataDTO == null) {
+                    continue;
+                }
+                FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId().equals(dataCheckPO.getTableUnique()) && t.getLabelBusinessType() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
+                if (fiDataMetaDataTree_Table != null) {
+                    tblName = fiDataMetaDataTree_Table.getLabel();
+                    if (CollectionUtils.isNotEmpty(fiDataMetaDataTree_Table.getChildren())) {
+                        for (int k = 0; k < dataCheckExtendPOs.size(); k++) {
+                            DataCheckExtendPO dataCheckExtendPO1 = dataCheckExtendPOs.get(k);
+                            if (StringUtils.isNotEmpty(dataCheckExtendPO1.getFieldUnique())) {
+                                FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = fiDataMetaDataTree_Table.getChildren().stream().
+                                        filter(f -> f.getId().equals(dataCheckExtendPO1.getFieldUnique())).findFirst().orElse(null);
+                                if (fiDataMetaDataTree_Field != null) {
+                                    fields.put(fiDataMetaDataTree_Field.label, fiDataMetaDataTree_Field.getLabelType());
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                tblName = dataCheckPO.getTableUnique();
+                List<String> collect = dataCheckExtendPOs.stream().map(DataCheckExtendPO::getFieldUnique).collect(Collectors.toList());
+                collect.forEach(t -> {
+                    fields.put(t, "");
+                });
+            }
+
+            // 获取表和字段信息，将其进行转义处理
+            DataCheckSyncParamDTO dataCheckSyncParamDTO = new DataCheckSyncParamDTO();
+            String tableName = "";
+            String tableNameFormat = "";
+            if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
+                tableNameFormat = QualityReport_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
+                tableName = dataCheckPO.getSchemaName() + ".";
+            }
+            tableNameFormat += QualityReport_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getTableName());
+            tableName += dataCheckPO.getTableName();
+
+            String fieldName = "";
+            String fieldNameFormat = "";
+            if (StringUtils.isNotEmpty(dataCheckExtendPO.getFieldName())) {
+                fieldNameFormat = QualityReport_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckExtendPO.getFieldName());
+                fieldName = dataCheckExtendPO.getFieldName();
+            }
+            dataCheckSyncParamDTO.setTableName(tableName);
+            dataCheckSyncParamDTO.setTableNameFormat(tableNameFormat);
+            dataCheckSyncParamDTO.setFieldName(fieldName);
+            dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
+
+            SheetDataDto sheetDataDto = null;
+            try {
+                sheetDataDto = dataCheck_QualityReport_Create(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+            } catch (Exception ex) {
+                log.error("质量报告拼接SQL执行异常：" + ex);
+                continue;
+            }
+            if (sheetDataDto == null) {
+                log.info(dataCheckPO.getRuleName() + "，质量报告SQL检查结果为空，跳过。");
+                continue;
+            }
+            SheetDto sheet = new SheetDto();
+            sheet.setSheetName(dataCheckPO.getRuleName());
+            List<RowDto> singRows = dataCheck_QualityReport_GetSingRows(tableName, templatePO.getTemplateName(), sheetDataDto.getColumns());
+            sheet.setSingRows(singRows);
+            sheet.setSingFields(fields.keySet().stream().collect(Collectors.toList()));
+            sheet.setDataRows(sheetDataDto.columnData);
+            sheets.add(sheet);
+        }
         if (CollectionUtils.isNotEmpty(sheets)) {
             excelDto.setSheets(sheets);
             ExcelReportUtil.createExcel(excelDto, attachmentInfoPO.absolutePath, attachmentInfoPO.currentFileName, true);
@@ -808,27 +875,35 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         SheetDataDto sheetDataDto = null;
         switch (templateTypeEnum) {
+            //空值检查
             case NULL_CHECK:
                 sheetDataDto = dataCheck_QualityReport_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //值域检查
             case RANGE_CHECK:
                 sheetDataDto = dataCheck_QualityReport_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //规范检查
             case STANDARD_CHECK:
                 sheetDataDto = dataCheck_QualityReport_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //重复数据检查
             case DUPLICATE_DATA_CHECK:
                 sheetDataDto = dataCheck_QualityReport_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //波动检查
             case FLUCTUATION_CHECK:
                 sheetDataDto = dataCheck_QualityReport_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //血缘检查
             case PARENTAGE_CHECK:
                 sheetDataDto = dataCheck_QualityReport_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //正则表达式检查
             case REGEX_CHECK:
                 sheetDataDto = dataCheck_QualityReport_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
+            //SQL脚本检查
             case SQL_SCRIPT_CHECK:
                 sheetDataDto = dataCheck_QualityReport_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
                 break;
@@ -837,8 +912,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     public SheetDataDto dataCheck_QualityReport_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                       DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                          DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
         String sql_QueryCheckData = "";
         if (charValid) {
@@ -847,13 +922,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         } else {
             sql_QueryCheckData = String.format("SELECT * FROM %s WHERE %s IS NULL; ", dataCheckPO.getTableName(), dataCheckSyncParamDTO.getFieldName());
         }
-        JSONArray jsonArray = QualityReport_QueryTableData_Array(dataSourceConVO, sql_QueryCheckData);
+        sheetDataDto = QualityReport_QueryTableData_sheet(dataSourceConVO, sql_QueryCheckData);
         return sheetDataDto;
     }
 
     public SheetDataDto dataCheck_QualityReport_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                        DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                           DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         String sql_QueryCheckData = "";
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 tName = dataCheckSyncParamDTO.getTableName(),
@@ -866,14 +941,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             case SEQUENCE_RANGE:
                 // 序列范围
                 List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
-                String sql_InString = list.stream().map(s -> "'" + "'").collect(Collectors.joining(", "));
+                String sql_InString = list.stream()
+                        .map(item -> "N'" + item + "'")
+                        .collect(Collectors.joining(", "));
                 sql_QueryCheckData = String.format("SELECT %s FROM %s WHERE %s NOT IN (%s)", f_Name, t_Name, f_Name, sql_InString);
                 break;
             case VALUE_RANGE:
                 // 取值范围
                 Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
                 Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                String sql_BetweenAnd = String.format("CASE(%s AS NUMERIC) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                 if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                     sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                 }
@@ -890,13 +967,19 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         f_Name, t_Name, f_Name, f_Name, f_Name, startTime, endTime);
                 break;
         }
-        JSONArray jsonArray = QualityReport_QueryTableData_Array(dataSourceConVO, sql_QueryCheckData);
+        sheetDataDto = QualityReport_QueryTableData_sheet(dataSourceConVO, sql_QueryCheckData);
         return sheetDataDto;
     }
 
     public SheetDataDto dataCheck_QualityReport_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                           DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                              DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        //列名
+        List<String> columns = sheetDataDto.getColumns();
+        //相当于excel里的所有列的数据
+        List<List<String>> columnDatas = sheetDataDto.getColumnData();
+
+
         JSONArray errorDataList = new JSONArray();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 tName = dataCheckSyncParamDTO.getTableName(),
@@ -906,7 +989,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         JSONArray jsonArray = QualityReport_QueryTableData_Array(dataSourceConVO, sql_QueryCheckData);
         StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
         for (int i = 0; i < jsonArray.size(); i++) {
+            //相当于每行数据
+            List<String> columnData = new ArrayList<>();
             JSONObject jsonObject = jsonArray.getJSONObject(i);
+            // 获取所有列名
+            if (i == 0) {
+                columns.addAll(jsonObject.keySet());
+            }
             Object fieldValue = jsonObject.get(fName);
             switch (standardCheckTypeEnum) {
                 case DATE_FORMAT:
@@ -914,12 +1003,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
                     if (fieldValue == null || fieldValue.toString().equals("")) {
                         errorDataList.add(jsonObject);
+                        columnData.add(fieldValue.toString());
                     } else {
                         boolean hasValidDate = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
                         if (!hasValidDate) {
                             errorDataList.add(jsonObject);
+                            columnData.add(fieldValue.toString());
                         }
                     }
+                    columnDatas.add(columnData);
                     break;
                 case URL_ADDRESS:
                     // 字符精度长度范围
@@ -927,37 +1019,46 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
                     if (fieldValue == null || fieldValue.toString().equals("")) {
                         errorDataList.add(jsonObject);
+                        columnData.add(fieldValue.toString());
                     } else {
                         List<String> values = Arrays.asList(fieldValue.toString().split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
                         if (values.stream().count() >= 2) {
                             String value = values.get(Math.toIntExact(values.stream().count() - 1));
                             if (value.length() < minFieldLength || value.length() > maxFieldLength) {
                                 errorDataList.add(jsonObject);
+                                columnData.add(fieldValue.toString());
                             }
                         }
                     }
+                    columnDatas.add(columnData);
                     break;
                 case BASE64_BYTE_STREAM:
                     // URL地址
                     if (fieldValue == null || fieldValue.toString().equals("")) {
                         errorDataList.add(jsonObject);
+                        columnData.add(fieldValue.toString());
                     } else {
                         boolean validURL = RegexUtils.isValidURL(fieldValue.toString(), false);
                         if (!validURL) {
                             errorDataList.add(jsonObject);
+                            columnData.add(fieldValue.toString());
                         }
                     }
+                    columnDatas.add(columnData);
                     break;
                 case CHARACTER_PRECISION_LENGTH_RANGE:
                     // BASE64字节流
                     if (fieldValue == null || fieldValue.toString().equals("")) {
                         errorDataList.add(jsonObject);
+                        columnData.add(fieldValue.toString());
                     } else {
                         boolean validBase64String = RegexUtils.isBase64String(fieldValue.toString(), false);
                         if (!validBase64String) {
                             errorDataList.add(jsonObject);
+                            columnData.add(fieldValue.toString());
                         }
                     }
+                    columnDatas.add(columnData);
                     break;
             }
         }
@@ -965,21 +1066,21 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     public SheetDataDto dataCheck_QualityReport_DuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                                   DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 tName = dataCheckSyncParamDTO.getTableName(),
                 f_Name = "",
                 fName = dataCheckSyncParamDTO.getFieldName();
         String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
                 "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_Name);
-        JSONArray jsonArray = QualityReport_QueryTableData_Array(dataSourceConVO, sql_QueryCheckData);
+        sheetDataDto = QualityReport_QueryTableData_sheet(dataSourceConVO, sql_QueryCheckData);
         return sheetDataDto;
     }
 
     public SheetDataDto dataCheck_QualityReport_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                              DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                                 DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 tName = dataCheckSyncParamDTO.getTableName(),
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
@@ -1055,15 +1156,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     public SheetDataDto dataCheck_QualityReport_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                            DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                               DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         JSONArray jsonArray = new JSONArray();
         return sheetDataDto;
     }
 
     public SheetDataDto dataCheck_QualityReport_RegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                        DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                           DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 tName = dataCheckSyncParamDTO.getTableName(),
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
@@ -1087,8 +1188,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     public SheetDataDto dataCheck_QualityReport_SqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                            DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        SheetDataDto sheetDataDto=new SheetDataDto();
+                                                               DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        SheetDataDto sheetDataDto = new SheetDataDto();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 tName = dataCheckSyncParamDTO.getTableName(),
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
@@ -1170,12 +1271,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return mapList;
     }
 
+    public SheetDataDto QualityReport_QueryTableData_sheet(DataSourceConVO dataSourceConVO, String sql) {
+        // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
+        log.info("【dataCheck_QualityReport_QueryTableData】待执行SQL：" + sql);
+        Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
+        SheetDataDto sheetDataDto = AbstractCommonDbHelper.execQueryResultSheet(sql, connection);
+        return sheetDataDto;
+    }
+
     public JSONArray QualityReport_QueryTableData_Array(DataSourceConVO dataSourceConVO, String sql) {
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
         log.info("【dataCheck_QualityReport_QueryTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
-        JSONArray dataArray = AbstractCommonDbHelper.execQueryResultArrays(sql, connection);
-        return dataArray;
+        JSONArray jsonArray = AbstractCommonDbHelper.execQueryResultArrays(sql, connection);
+        return jsonArray;
     }
 }
 
