@@ -963,9 +963,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 String[] timeRange = timeRangeString.split("~");
                 LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
                 LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
-                sql_QueryCheckData = String.format("SELECT %s FROM %s WHERE ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND %s))",
+                sql_QueryCheckData = String.format("SELECT %s FROM %s WHERE ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))",
                         f_Name, t_Name, f_Name, f_Name, f_Name, startTime, endTime);
-                break;
         }
         sheetDataDto = QualityReport_QueryTableData_sheet(dataSourceConVO, sql_QueryCheckData);
         return sheetDataDto;
@@ -975,10 +974,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                                               DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         SheetDataDto sheetDataDto = new SheetDataDto();
         //列名
-        List<String> columns = sheetDataDto.getColumns();
+        List<String> columns = new ArrayList<>();
         //相当于excel里的所有列的数据
-        List<List<String>> columnDatas = sheetDataDto.getColumnData();
-
+        List<List<String>> columnDatas = new ArrayList<>();
 
         JSONArray errorDataList = new JSONArray();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
@@ -994,7 +992,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             // 获取所有列名
             if (i == 0) {
-                columns.addAll(jsonObject.keySet());
+                columns.add(String.valueOf(jsonObject.keySet()));
             }
             Object fieldValue = jsonObject.get(fName);
             switch (standardCheckTypeEnum) {
@@ -1011,9 +1009,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             columnData.add(fieldValue.toString());
                         }
                     }
-                    columnDatas.add(columnData);
+                    if (CollectionUtils.isNotEmpty(columnData)){
+                        columnDatas.add(columnData);
+                    }
                     break;
-                case URL_ADDRESS:
+                case CHARACTER_PRECISION_LENGTH_RANGE:
                     // 字符精度长度范围
                     int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
                     int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
@@ -1030,9 +1030,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             }
                         }
                     }
-                    columnDatas.add(columnData);
+                    if (CollectionUtils.isNotEmpty(columnData)){
+                        columnDatas.add(columnData);
+                    }
                     break;
-                case BASE64_BYTE_STREAM:
+                case URL_ADDRESS:
                     // URL地址
                     if (fieldValue == null || fieldValue.toString().equals("")) {
                         errorDataList.add(jsonObject);
@@ -1044,9 +1046,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             columnData.add(fieldValue.toString());
                         }
                     }
-                    columnDatas.add(columnData);
+                    if (CollectionUtils.isNotEmpty(columnData)){
+                        columnDatas.add(columnData);
+                    }
                     break;
-                case CHARACTER_PRECISION_LENGTH_RANGE:
+                case BASE64_BYTE_STREAM:
                     // BASE64字节流
                     if (fieldValue == null || fieldValue.toString().equals("")) {
                         errorDataList.add(jsonObject);
@@ -1058,10 +1062,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             columnData.add(fieldValue.toString());
                         }
                     }
-                    columnDatas.add(columnData);
+                    if (CollectionUtils.isNotEmpty(columnData)){
+                        columnDatas.add(columnData);
+                    }
                     break;
             }
         }
+        sheetDataDto.setColumns(columns);
+        sheetDataDto.setColumnData(columnDatas);
         return sheetDataDto;
     }
 
@@ -1072,10 +1080,30 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 tName = dataCheckSyncParamDTO.getTableName(),
                 f_Name = "",
                 fName = dataCheckSyncParamDTO.getFieldName();
-        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
-                "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_Name);
+        List<String> fieldNames = Arrays.asList(dataCheckExtendPO.getFieldName().split(","));
+        for (String item : fieldNames) {
+            String fieldFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), item);
+            f_Name += fieldFormat + ",";
+        }
+
+        String sql_QueryCheckData = String.format("SELECT %s COUNT(*) AS repetitionCount FROM %s WHERE 1=1 \n" +
+                "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_Name.replaceAll(",+$", ""));
         sheetDataDto = QualityReport_QueryTableData_sheet(dataSourceConVO, sql_QueryCheckData);
         return sheetDataDto;
+    }
+
+    public String nifiSync_GetSqlFieldFormat(DataSourceTypeEnum dataSourceTypeEnum, String fieldName) {
+        String sqlFieldStr = dataSourceTypeEnum == DataSourceTypeEnum.MYSQL
+                ? "`%s`" :
+                dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
+                        ? "[%s]" :
+                        dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
+                                ? "\"%s\"" :
+                                "";
+        if (StringUtils.isNotEmpty(sqlFieldStr)) {
+            sqlFieldStr = String.format(sqlFieldStr, fieldName);
+        }
+        return sqlFieldStr;
     }
 
     public SheetDataDto dataCheck_QualityReport_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
@@ -1089,20 +1117,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         boolean isValid = true;
         double thresholdValue = dataCheckExtendPO.getFluctuateCheckValue();
         double realityValue = 0.0;
+        //相当于excel里的所有列的数据
+        List<List<String>> columnDatas = new ArrayList<>();
+        //列名
+        List<String> columns = new ArrayList<>();
 
         FluctuateCheckTypeEnum fluctuateCheckTypeEnum = FluctuateCheckTypeEnum.getEnum(dataCheckExtendPO.getFluctuateCheckType());
         switch (fluctuateCheckTypeEnum) {
             case AVG:
-                sql_QueryCheckData = String.format("SELECT AVG(%s) AS realityValue FROM %s", f_Name, t_Name);
+                sql_QueryCheckData = String.format("SELECT AVG(CAST(%s as int)) AS realityValue FROM %s", f_Name, t_Name);
                 break;
             case MIN:
-                sql_QueryCheckData = String.format("SELECT MIN(%s) AS realityValue FROM %s", f_Name, t_Name);
+                sql_QueryCheckData = String.format("SELECT MIN(CAST(%s as int)) AS realityValue FROM %s", f_Name, t_Name);
                 break;
             case MAX:
-                sql_QueryCheckData = String.format("SELECT MAX(%s) AS realityValue FROM %s", f_Name, t_Name);
+                sql_QueryCheckData = String.format("SELECT MAX(CAST(%s as int)) AS realityValue FROM %s", f_Name, t_Name);
                 break;
             case SUM:
-                sql_QueryCheckData = String.format("SELECT SUM(%s) AS realityValue FROM %s", f_Name, t_Name);
+                sql_QueryCheckData = String.format("SELECT SUM(CAST(%s as int)) AS realityValue FROM %s", f_Name, t_Name);
                 break;
             case COUNT:
                 sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s", f_Name, t_Name);
@@ -1151,8 +1183,28 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 波动阈值
             jsonObject.put("ThresholdValue", thresholdValue);
             jsonArray.add(jsonObject);
+
+            //excel列名
+            // 字段名称
+            columns.add("FieldName");
+            // 聚合值
+            columns.add("AggregateValue");
+            // 波动阈值
+            columns.add("ThresholdValue");
+            //相当于每行数据
+            List<String> columnData = new ArrayList<>();
+            // 字段名称
+            columnData.add(fName);
+            // 聚合值
+            columnData.add(String.valueOf(realityValue));
+            // 波动阈值
+            columnData.add(String.valueOf(thresholdValue));
+            columnDatas.add(columnData);
+            sheetDataDto.setColumns(columns);
+            sheetDataDto.setColumnData(columnDatas);
+            return sheetDataDto;
         }
-        return sheetDataDto;
+        return null;
     }
 
     public SheetDataDto dataCheck_QualityReport_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
@@ -1170,20 +1222,37 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName();
         String sql_QueryCheckData = String.format("SELECT %s FROM %s", f_Name, t_Name);
+        //列名
+        List<String> columns = new ArrayList<>();
+        //相当于excel里的所有列的数据
+        List<List<String>> columnDatas = new ArrayList<>();
 
         JSONArray errorDataList = new JSONArray();
         JSONArray data = QualityReport_QueryTableData_Array(dataSourceConVO, sql_QueryCheckData);
         if (CollectionUtils.isNotEmpty(data)) {
             for (int i = 0; i < data.size(); i++) {
+                //相当于每行数据
+                List<String> columnData = new ArrayList<>();
+                // 获取所有列名
+                if (i == 0) {
+                    JSONObject jsonObject1 = data.getJSONObject(i);
+                    columns.add(String.valueOf(jsonObject1.keySet()));
+                }
                 JSONObject jsonObject = data.getJSONObject(i);
                 // 判断字段值是否通过正则表达式验证
                 String fieldValue = jsonObject.getString(fName);
                 boolean isValid = RegexUtils.isValidPattern(fieldValue, dataCheckExtendPO.getRegexpCheckValue(), false);
                 if (!isValid) {
                     errorDataList.add(jsonObject);
+                    columnData.add(fieldValue);
+                }
+                if (CollectionUtils.isNotEmpty(columnData)){
+                    columnDatas.add(columnData);
                 }
             }
         }
+        sheetDataDto.setColumns(columns);
+        sheetDataDto.setColumnData(columnDatas);
         return sheetDataDto;
     }
 
@@ -1195,6 +1264,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName();
         JSONArray jsonArray = QualityReport_QueryTableData_Array(dataSourceConVO, dataCheckExtendPO.getSqlCheckValue());
+        //相当于excel里的所有列的数据
+        List<List<String>> columnDatas = new ArrayList<>();
+        //列名
+        List<String> columns = new ArrayList<>();
 
         // 固定返回checkstate，通过为1，未通过为0，取第一行的checkstate字段判断
         boolean isValid = false;
@@ -1210,6 +1283,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
 
         if (!isValid) {
+            //excel列名
+            columns.add("checkstate");
+            //相当于每行数据
+            List<String> columnData = new ArrayList<>();
+            columnData.add("0");
+            columnDatas.add(columnData);
+            sheetDataDto.setColumns(columns);
+            sheetDataDto.setColumnData(columnDatas);
             return sheetDataDto;
         }
         return null;
