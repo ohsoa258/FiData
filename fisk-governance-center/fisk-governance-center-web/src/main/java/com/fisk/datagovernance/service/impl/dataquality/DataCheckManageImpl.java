@@ -623,7 +623,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                 }
                 break;
-            case URL_ADDRESS:
+            case CHARACTER_PRECISION_LENGTH_RANGE:
                 // 字符精度长度范围
                 int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
                 int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
@@ -641,7 +641,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                 }
                 break;
-            case BASE64_BYTE_STREAM:
+            case URL_ADDRESS:
                 // URL地址
                 String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                 for (String item : fieldValues) {
@@ -651,7 +651,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                 }
                 break;
-            case CHARACTER_PRECISION_LENGTH_RANGE:
+            case BASE64_BYTE_STREAM:
                 // BASE64字节流
                 for (String item : fieldValues) {
                     boolean validBase64String = RegexUtils.isBase64String(item, false);
@@ -1637,7 +1637,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                         break;
-                    case URL_ADDRESS:
+                    case CHARACTER_PRECISION_LENGTH_RANGE:
                         // 字符精度长度范围
                         int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
                         int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
@@ -1653,7 +1653,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                         break;
-                    case BASE64_BYTE_STREAM:
+                    case URL_ADDRESS:
                         // URL地址
                         String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                         if (fieldValue == null || fieldValue.toString().equals("")) {
@@ -1665,7 +1665,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             }
                         }
                         break;
-                    case CHARACTER_PRECISION_LENGTH_RANGE:
+                    case BASE64_BYTE_STREAM:
                         // BASE64字节流
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
