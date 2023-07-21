@@ -40,6 +40,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -623,13 +624,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                 }
                 break;
-            case URL_ADDRESS:
+            case CHARACTER_PRECISION_LENGTH_RANGE:
                 // 字符精度长度范围
                 int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
                 int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
                 for (String item : fieldValues) {
                     if (StringUtils.isNotEmpty(item)) {
-                        List<String> values = Arrays.asList(item.split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
+                        String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                        List<String> values = Arrays.asList(item.split(regex));
                         if (values.stream().count() >= 2) {
                             String value = values.get(Math.toIntExact(values.stream().count() - 1));
                             if (value.length() < minFieldLength || value.length() > maxFieldLength) {
@@ -641,7 +643,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                 }
                 break;
-            case BASE64_BYTE_STREAM:
+            case URL_ADDRESS:
                 // URL地址
                 String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
                 for (String item : fieldValues) {
@@ -651,7 +653,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                 }
                 break;
-            case CHARACTER_PRECISION_LENGTH_RANGE:
+            case BASE64_BYTE_STREAM:
                 // BASE64字节流
                 for (String item : fieldValues) {
                     boolean validBase64String = RegexUtils.isBase64String(item, false);
@@ -1651,7 +1653,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
                         } else {
-                            List<String> values = Arrays.asList(fieldValue.toString().split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
+                            String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                            List<String> values = Arrays.asList(fieldValue.toString().split(regex));
                             if (values.stream().count() >= 2) {
                                 String value = values.get(Math.toIntExact(values.stream().count() - 1));
                                 if (value.length() < minFieldLength || value.length() > maxFieldLength) {
