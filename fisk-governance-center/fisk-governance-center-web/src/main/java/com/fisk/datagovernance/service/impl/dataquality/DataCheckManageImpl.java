@@ -40,6 +40,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -629,7 +630,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
                 for (String item : fieldValues) {
                     if (StringUtils.isNotEmpty(item)) {
-                        List<String> values = Arrays.asList(item.split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
+                        String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                        List<String> values = Arrays.asList(item.split(regex));
                         if (values.stream().count() >= 2) {
                             String value = values.get(Math.toIntExact(values.stream().count() - 1));
                             if (value.length() < minFieldLength || value.length() > maxFieldLength) {
@@ -1651,7 +1653,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
                         } else {
-                            List<String> values = Arrays.asList(fieldValue.toString().split(dataCheckExtendPO.getStandardCheckTypeLengthSeparator()));
+                            String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                            List<String> values = Arrays.asList(fieldValue.toString().split(regex));
                             if (values.stream().count() >= 2) {
                                 String value = values.get(Math.toIntExact(values.stream().count() - 1));
                                 if (value.length() < minFieldLength || value.length() > maxFieldLength) {
