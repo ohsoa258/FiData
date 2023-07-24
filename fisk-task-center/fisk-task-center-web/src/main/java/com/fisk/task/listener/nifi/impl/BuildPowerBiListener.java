@@ -69,8 +69,10 @@ public class BuildPowerBiListener implements IpowerBiListener {
     public ResultEnum powerBiTask(String data, Acknowledgment acke) {
         PowerBiDataSetRefreshDTO powerBiDataSetRefresh = new PowerBiDataSetRefreshDTO();
         log.info("执行POWERBI数据集刷新任务参数:{}", data);
+        //china
         String zgetTokenUrl = "https://login.partner.microsoftonline.cn/common/oauth2/token";
         String zgetResourceUri = "https://api.powerbi.cn/v1.0/myorg/datasets/{0}/refreshes";
+        //global
         String wgetTokenUrl = "https://login.partner.microsoftonline.com/common/oauth2/token";
         String wgetResourceUri = "https://api.powerbi.com/v1.0/myorg/datasets/{0}/refreshes";
         String pwd = "";

@@ -1,8 +1,6 @@
 package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -13,21 +11,23 @@ import com.fisk.task.dto.dispatchlog.LogStatisticsForChartVO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelMergeLog;
+import com.fisk.task.dto.statistics.PipelLineDetailDTO;
 import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.mapper.PipelLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.utils.StackTraceHelper;
+import com.fisk.task.vo.statistics.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -307,4 +307,77 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
         String pipelId = pipelLogMapper.getPipelIdByTraceId(pipelTraceId);
         return StringUtils.isEmpty(pipelId) ? null : ResultEntityBuild.buildData(ResultEnum.SUCCESS, pipelId);
     }
+
+    @Override
+    public StatisticsVO getLogStatistics(Integer lookday) {
+        StatisticsVO statisticsVO = new StatisticsVO();
+        Integer successSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "运行成功");
+        Integer failureSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "运行失败");
+        Integer runningSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "开始运行");
+
+        statisticsVO.runningSum = runningSum - failureSum - successSum;
+        statisticsVO.failureSum = failureSum;
+        statisticsVO.successSum = successSum;
+        return statisticsVO;
+    }
+
+    @Override
+    public List<GanttChartVO> getGanttChart() {
+        List<GanttChartVO> ganttChart = pipelLogMapper.getGanttChart();
+        return ganttChart;
+    }
+
+    @Override
+    public List<TopRunningTimeVO> getTopRunningTime(Integer lookday) {
+        List<TopRunningTimeVO> topRunningTime = pipelLogMapper.getTopRunningTime(lookday);
+        return topRunningTime;
+    }
+
+    @Override
+    public List<FaildStatisticsVO> getFaildStatistics(Integer lookday) {
+        List<FaildStatisticsVO> faildStatisticsVOS = pipelLogMapper.getFaildStatistics(lookday);
+        List<FaildStatisticsVO> list = new ArrayList<>();
+        for (FaildStatisticsVO faildStatisticsVO : faildStatisticsVOS) {
+            if (faildStatisticsVO.sum != 0) {
+                faildStatisticsVO.success = 1.0 * faildStatisticsVO.successNum / faildStatisticsVO.sum;
+                faildStatisticsVO.faild = 1.0 * faildStatisticsVO.faildNum / faildStatisticsVO.sum;
+            }
+            list.add(faildStatisticsVO);
+        }
+        return list;
+    }
+
+    @Override
+    public List<LineChartVO> getLineChart(Integer lookday) {
+        List<LineChartVO> lineChartVOList = pipelLogMapper.getLineChart(lookday);
+        return lineChartVOList;
+    }
+
+    @Override
+    public List<DetailLineChartVO> getDetailLineChart(String workflowName, Integer lookday) {
+        List<DetailLineChartVO> detailLineChartVOList = pipelLogMapper.getDetailLineChart(workflowName, lookday);
+        return detailLineChartVOList;
+    }
+
+    @Override
+    public List<PipelLineDetailVO> getPipelLineDetailLog(PipelLineDetailDTO dto) {
+        List<PipelLineDetailVO> pipelLineDetailLog = pipelLogMapper.getPipelLineDetailLog(dto);
+        List<PipelLineDetailVO> data = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(pipelLineDetailLog)){
+            for (PipelLineDetailVO pipelLineDetailVO : pipelLineDetailLog) {
+                if (pipelLineDetailVO.runningStatus != null){
+                    if (pipelLineDetailVO.runningStatus.contains("运行成功")){
+                        pipelLineDetailVO.runningStatus = "成功";
+                    }else if (pipelLineDetailVO.runningStatus.contains("运行失败")){
+                        pipelLineDetailVO.runningStatus = "失败";
+                    }
+                }else {
+                    pipelLineDetailVO.runningStatus = "暂无";
+                }
+                data.add(pipelLineDetailVO);
+            }
+        }
+        return data;
+    }
+
 }
