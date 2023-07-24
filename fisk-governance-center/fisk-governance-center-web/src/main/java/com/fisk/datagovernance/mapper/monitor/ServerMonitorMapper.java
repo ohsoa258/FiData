@@ -18,10 +18,15 @@ import java.util.List;
 public interface ServerMonitorMapper extends BaseMapper<ServerMonitorPO> {
 
     List<DelayPingVO> getDelayPingTotal(@Param("number") Integer number, @Param("type") Integer type);
+
+    List<DelayPingVO> getDelayPingCacheTotal(@Param("number") Integer number, @Param("type") Integer type);
     ServerMonitorVO getAllTotal();
-    List<ServerTableVO> getServerTable(@Param("number") Integer number, @Param("type") Integer type);
+    List<ServerTableVO> getServerTable();
 
     List<DelayPingVO> getServerDelayPingVO(@Param("number") Integer number, @Param("type") Integer type,
+                                           @Param("name") String name,@Param("port") Integer port);
+
+    List<DelayPingVO> getServerDelayPingCacheVO(@Param("number") Integer number, @Param("type") Integer type,
                                            @Param("name") String name,@Param("port") Integer port);
     ServerMonitorDetailVO getRunningStatus(@Param("name") String name, @Param("port") Integer port);
 

@@ -24,33 +24,27 @@ public class QualityReportExt_RuleVO {
     public String name;
 
     /**
-     * 类型名称
+     * 描述
      */
-    @ApiModelProperty(value = "类型名称")
-    public String typeName;
+    @ApiModelProperty(value = "描述")
+    public String describe;
 
     /**
-     * 状态名称
+     * 状态
      */
-    @ApiModelProperty(value = "状态名称")
+    @ApiModelProperty(value = "状态")
     public String stateName;
 
     /**
-     * 顺序
+     * 数据源类型
      */
-    @ApiModelProperty(value = "顺序")
-    public int sort;
-
-    /**
-     * 数据源类型名称
-     */
-    @ApiModelProperty(value = "数据源类型名称")
+    @ApiModelProperty(value = "数据源类型")
     public String sourceTypeName;
 
     /**
-     * IP
+     * 库IP
      */
-    @ApiModelProperty(value = "IP")
+    @ApiModelProperty(value = "库IP")
     public String ip;
 
     /**
@@ -60,20 +54,8 @@ public class QualityReportExt_RuleVO {
     public String dbName;
 
     /**
-     * 表名称
+     * 表名称，携带架构名
      */
-    @ApiModelProperty(value = "表名称")
+    @ApiModelProperty(value = "表名称，携带架构名")
     public String tableName;
-
-    /**
-     * 表别名
-     */
-    @ApiModelProperty(value = "表别名")
-    public String tableAliasName;
-
-    /**
-     * 表类型
-     */
-    @ApiModelProperty(value = "表类型")
-    public String tableTypeName;
 }

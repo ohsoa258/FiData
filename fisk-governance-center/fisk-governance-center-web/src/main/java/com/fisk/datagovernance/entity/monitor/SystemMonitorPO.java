@@ -1,13 +1,11 @@
 package com.fisk.datagovernance.entity.monitor;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import lombok.Data;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 
 @TableName("tb_system_monitor")
 @Data

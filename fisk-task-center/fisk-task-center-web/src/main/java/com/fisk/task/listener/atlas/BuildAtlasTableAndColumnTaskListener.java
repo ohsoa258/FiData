@@ -139,7 +139,7 @@ public class BuildAtlasTableAndColumnTaskListener
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
                 log.info("开始执行nifi创建数据同步");
 
-                log.info("流程前参数校验：[{}]",JSON.toJSONString(buildPhysicalTableDTO));
+                log.info("流程前参数校验：[{}]", JSON.toJSONString(buildPhysicalTableDTO));
                 //nifi流程组件的属性设置开始.........
                 BuildNifiFlowDTO bfd = new BuildNifiFlowDTO();
                 bfd.userId = buildPhysicalTableDTO.userId;
@@ -172,6 +172,9 @@ public class BuildAtlasTableAndColumnTaskListener
                 bfd.deleteScript = buildPhysicalTableDTO.deleteStgScript;
                 //发布历史id
                 bfd.tableHistoryId = buildPhysicalTableDTO.tableHistoryId;
+                //临时表主键名称
+                bfd.pkName = buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key";
+
                 log.info("修改前的源字段：[{}]", buildPhysicalTableDTO.sourceFieldNames);
                 //修改前的源字段
                 if (buildPhysicalTableDTO.sourceFieldNames != null) {

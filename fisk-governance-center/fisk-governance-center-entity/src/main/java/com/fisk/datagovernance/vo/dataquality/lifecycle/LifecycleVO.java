@@ -145,18 +145,6 @@ public class LifecycleVO {
     public String moduleName;
 
     /**
-     * 模板应用场景
-     * 100、页面校验
-     * 101、同步校验
-     * 102、校验报告
-     * 200、同步清洗
-     * 201、清洗报告
-     * 300、回收报告
-     */
-    @ApiModelProperty(value = "模板应用场景")
-    public TemplateSceneEnum templateScene;
-
-    /**
      * 模板应用场景名称
      */
     @ApiModelProperty(value = "模板应用场景名称")

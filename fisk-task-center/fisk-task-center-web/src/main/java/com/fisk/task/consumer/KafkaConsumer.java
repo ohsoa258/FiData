@@ -152,7 +152,6 @@ public class KafkaConsumer {
             System.setProperty("java.security.krb5.conf", krb5ConfigPath);
         }
 
-
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumerBootstrapServer);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, enableAutoCommit);

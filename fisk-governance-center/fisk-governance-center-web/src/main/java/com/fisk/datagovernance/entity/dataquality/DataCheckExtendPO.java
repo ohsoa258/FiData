@@ -24,50 +24,97 @@ public class DataCheckExtendPO extends BasePO {
     public String fieldUnique;
 
     /**
-     * 字段条件值
+     * 字段名称
      */
-    public String fieldWhere;
+    public String fieldName;
 
     /**
-     * 字段聚合波动阈值模板；
-     * 字段聚合函数：
-     * SUM、COUNT、AVG、MAX、MIN
+     * 字段类型
      */
-    public String fieldAggregate;
+    public String fieldType;
 
     /**
-     * 字段校验模板；
-     * 校验类型，多选逗号分割：
-     * 1、唯一校验
-     * 2、非空校验
-     * 3、数据校验
+     * 值域检查-类型：
+     * 1、序列范围(枚举)
+     * 2、取值范围(1~10)
+     * 3、日期范围(2023-04-01 12:59:59~2023-05-01 12:00:00)
      */
-    public String checkType;
+    public int rangeCheckType;
 
     /**
-     * 数据校验类型：
-     * 1、文本长度校验
-     * 2、日期格式校验
-     * 3、序列范围校验
+     * 值域检查-对比值；
      */
-    public int dataCheckType;
+    public String rangeCheckValue;
 
     /**
-     * 相似度对比模板；
-     * 权重、比例；
+     * 规范检查-类型：
+     * 1、日期格式
+     * 2、字符精度长度范围(1~10)
+     * 3、URL地址(http或https或ftp或file开头)
+     * 4、Base64字节流
      */
-    public float scale;
+    public int standardCheckType;
 
     /**
-     * 表血缘断裂校验模板；
-     * 上下游血缘关系范围：
-     * 1、上游 2、下游 3、上下游
+     * 规范检查-日期格式值，多个日期格式逗号分隔
      */
-    public int consanguinityRange;
+    public String standardCheckTypeDateValue;
 
     /**
-     * 表行数波动阈值模板；
-     * 表行数；
+     * 规范检查-字符和浮点长度范围分隔符(.)
      */
-    public int tbaleRow;
+    public String standardCheckTypeLengthSeparator;
+
+    /**
+     * 规范检查-字符和浮点长度范围(1,10)
+     */
+    public String standardCheckTypeLengthValue;
+
+    /**
+     * 规范检查-正则表达式
+     */
+    public String standardCheckTypeRegexpValue;
+
+    /**
+     * 波动检查-类型：SUM、COUNT、AVG、MAX、MIN
+     */
+    public int fluctuateCheckType;
+
+    /**
+     * 波动检查-运算符：>、<、>=、<=、=
+     */
+    public String fluctuateCheckOperator;
+
+    /**
+     * 波动检查-波动值
+     */
+    public double fluctuateCheckValue;
+
+    /**
+     * 血缘检查-类型：
+     * 1、检查上游血缘是否断裂
+     * 2、检查下游血缘是否断裂
+     * 3、检查上下游血缘是否断裂
+     */
+    public int parentageCheckType;
+
+    /**
+     * 正则表达式检查-表达式值
+     */
+    public String regexpCheckValue;
+
+    /**
+     * SQL检查-脚本值(固定返回checkstate，通过为1，未通过为0)
+     */
+    public String sqlCheckValue;
+
+    /**
+     * 是否记录错误数据：0 不记录、1  记录
+     */
+    public int recordErrorData;
+
+    /**
+     * 错误数据保留时间：7天、14天、30天
+     */
+    public int errorDataRetentionTime;
 }

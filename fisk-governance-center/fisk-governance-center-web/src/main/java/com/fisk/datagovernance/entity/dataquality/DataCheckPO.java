@@ -29,9 +29,19 @@ public class DataCheckPO extends BasePO {
     public String ruleName;
 
     /**
+     * 架构名称
+     */
+    public String schemaName;
+
+    /**
      * 表名称/表Id
      */
     public String tableUnique;
+
+    /**
+     * 表名称
+     */
+    public String tableName;
 
     /**
      * 表类型 1：表  2：视图
@@ -46,27 +56,32 @@ public class DataCheckPO extends BasePO {
     /**
      * 校验规则：1、强规则 2、弱规则
      */
-    public int checkRule;
+    public int ruleCheckType;
 
     /**
-     * 生成规则
+     * 规则执行节点：1、同步前 2、同步中 3、同步后
      */
-    public String createRule;
+    public int ruleExecuteNode;
 
     /**
      * 规则执行顺序
      */
-    public int ruleSort;
+    public int ruleExecuteSort;
+
+    /**
+     * 规则权重，用于统计分析
+     */
+    public int ruleWeight;
+
+    /**
+     * 规则描述
+     */
+    public String ruleDescribe;
 
     /**
      * 规则状态：1、启用 0、禁用
      */
     public int ruleState;
-
-    /**
-     * 波动阈值
-     */
-    public int thresholdValue;
 }
 
 

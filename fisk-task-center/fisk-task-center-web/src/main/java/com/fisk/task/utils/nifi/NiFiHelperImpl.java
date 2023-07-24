@@ -1506,7 +1506,10 @@ public class NiFiHelperImpl implements INiFiHelper {
         String processorGroupId = "";
         log.info("删除nifi流程参数：{}", JSON.toJSONString(dataModelVO));
         try {
-            //调用封装的方法，获取待删除nifi工作流的表（维度表，事实表，物理表，指标表）集合
+            /**
+             * 调用封装的方法，获取待删除nifi工作流的表（维度表，事实表，物理表，指标表）集合
+             * 并且先停掉接消息的kafka组件
+             */
             List<NifiRemoveDTO> nifiRemoveDTOList = createNifiRemoveDTOs(dataModelVO, count);
             count++;
             for (NifiRemoveDTO nifiRemoveDTO : nifiRemoveDTOList) {
@@ -1765,16 +1768,18 @@ public class NiFiHelperImpl implements INiFiHelper {
                 List<String> outputportConnectIds = new ArrayList<>();
                 TableNifiSettingPO tableNifiSettingPO = tableNifiSettingService.query().eq("app_id", businessId).eq("table_access_id", tableId).eq("type", dataModelTableVO.type.getValue()).eq("del_flag", 1).one();
 
+                //此count是调用者写死传过来的
                 if (count == 0) {
                     try {
                         //无论是否成功删除任务组,都先暂停接收卡夫卡组件
+                        log.info("准备暂停接收kafka消息的组件:[{}]",tableNifiSettingPO.consumeKafkaProcessorId);
                         ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.consumeKafkaProcessorId);
                         this.stopProcessor(processor.getComponent().getParentGroupId(), processor);
+                        log.info("暂停接收kafka消息的组件完毕...");
                     } catch (ApiException e) {
                         log.error("停止卡夫卡消息接收组件报错" + StackTraceHelper.getStackTraceInfo(e));
                     }
                 }
-
 
                 //删除topic_name
                 TableTopicDTO topicDTO = new TableTopicDTO();

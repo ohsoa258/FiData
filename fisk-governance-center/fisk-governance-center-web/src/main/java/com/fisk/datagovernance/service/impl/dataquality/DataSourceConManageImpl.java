@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -756,7 +757,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 }
                 model.setName(tree.getLabel());
                 model.setTableType(tree.getLevelType());
-                model.setTableBusinessType(tree.getLabelBusinessType());
+                model.setTableBusinessType(TableBusinessTypeEnum.getEnum(tree.getLabelBusinessType()));
                 model.setSourceId(tree.getSourceId());
                 model.setSourceType(SourceTypeEnum.getEnum(tree.getSourceType()));
                 list.add(model);

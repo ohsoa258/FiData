@@ -54,4 +54,5 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      * @return
      */
     ResultEntity<DataServiceTableLogQueryVO> getDataServiceTableLogVos(DataServiceTableLogQueryDTO dto);
+    void updatePipelTaskLog(String pipelTaskTraceId);
 }

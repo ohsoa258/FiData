@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.datasource;
 
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,7 +28,7 @@ public class QueryTableRuleDTO
     public SourceTypeEnum sourceType;
 
     @ApiModelProperty(value = "业务类型，表和视图维度设置")
-    public int tableBusinessType;
+    public TableBusinessTypeEnum tableBusinessType;
 
     @ApiModelProperty(value = "层级类型")
     public LevelTypeEnum tableType;

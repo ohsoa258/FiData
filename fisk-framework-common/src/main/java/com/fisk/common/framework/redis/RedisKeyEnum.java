@@ -43,7 +43,15 @@ public enum RedisKeyEnum implements BaseEnum {
     //redis token
     NIFI_TOKEN(3600,"nifiToken"),
     //delayedTask,检查延时队列失效
-    DELAYED_TASK(3000,"delayed:task")
+    DELAYED_TASK(3000,"delayed:task"),
+
+    WEEK_MONITOR_ALL(87000,"monitor:week"),
+
+    MONTH_MONITOR_ALL(87000,"monitor:month"),
+
+    WEEK_MONITOR_SERVER(87000,"monitor:week:server"),
+
+    MONTH_MONITOR_SERVER(87000,"monitor:month:server")
     ;
 
     RedisKeyEnum(int value, String name) {

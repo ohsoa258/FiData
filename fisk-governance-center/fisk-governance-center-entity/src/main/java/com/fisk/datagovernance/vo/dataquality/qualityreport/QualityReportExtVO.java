@@ -20,12 +20,6 @@ public class QualityReportExtVO {
     public List<QualityReportExt_RuleVO> rules_c;
 
     /**
-     * 数据清洗规则
-     */
-    @ApiModelProperty(value = "数据清洗规则")
-    public List<QualityReportExt_RuleVO> rules_b;
-
-    /**
      * 邮件列表
      */
     @ApiModelProperty(value = "邮件列表")

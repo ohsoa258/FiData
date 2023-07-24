@@ -11,6 +11,7 @@ import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.constants.RedisTokenKey;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -57,7 +58,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
-import com.fisk.datagovernance.enums.dataquality.CheckRuleEnum;
+import com.fisk.datagovernance.enums.dataquality.RuleCheckTypeEnum;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
@@ -187,7 +188,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ApiConfigPO model = ApiConfigMap.INSTANCES.dtoToPo(dto);
         // 参数校验
         if (model == null) {
-            return  ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
+            return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL);
         }
 
 
@@ -346,24 +347,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
 
-    public ResultEnum addSourceField(List<ApiParameterDTO> dto)
-    {
+    public ResultEnum addSourceField(List<ApiParameterDTO> dto) {
         //查询数据是否存在
-        for (ApiParameterDTO d : dto ) {
+        for (ApiParameterDTO d : dto) {
             //添加字段
             ApiParameterPO po = apiParameterServiceImpl.query().eq("table_access_id", d.tableAccessId)
-                        .eq("attribute_field_name", d.attributeFieldName).one();
+                    .eq("attribute_field_name", d.attributeFieldName).one();
             if (po != null) {
                 throw new FkException(ResultEnum.DATA_EXISTS);
             }
             ApiParameterPO model = ApiParameterMap.INSTANCES.dtoToPo(d);
-            apiParameterServiceImpl.save(model) ;
+            apiParameterServiceImpl.save(model);
         }
         return ResultEnum.SUCCESS;
     }
 
-    public ResultEnum editSourceField(ApiParameterDTO dto)
-    {
+    public ResultEnum editSourceField(ApiParameterDTO dto) {
         //根据Id查出数据 并进行修改
         ApiParameterPO po = apiParameterServiceImpl.query().eq("id", dto.id).one();
         if (po != null) {
@@ -380,21 +379,18 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         return ResultEnum.SUCCESS;
     }
 
-    public ResultEnum deleteSourceField(long id)
-    {
+    public ResultEnum deleteSourceField(long id) {
         //根据Id进行删除
         ApiParameterPO po = apiParameterServiceImpl.query().eq("id", id).one();
-        if (po!=null)
-        {
+        if (po != null) {
             apiParameterServiceImpl.removeById(id);
         }
 
         return ResultEnum.SUCCESS;
     }
 
-    public ResultEnum saveMapping(List<ApiFieldDTO> dto)
-    {
-        for (ApiFieldDTO d: dto) {
+    public ResultEnum saveMapping(List<ApiFieldDTO> dto) {
+        for (ApiFieldDTO d : dto) {
             TableFieldsPO po = tableFieldImpl.query().eq("id", d.id).one();
             po.sourceFieldName = d.fieldName;
             po.sourceFieldType = d.fieldType;
@@ -1385,9 +1381,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
             if (!CollectionUtils.isEmpty(targetTable)) {
                 DataCheckWebDTO dto = new DataCheckWebDTO();
-                dto.ip = dataQualityCheckIp;
-                dto.dbName = dataQualityCheckName;
-
+                dto.setFiDataDataSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
+                String uuid = UUID.randomUUID().toString().replace("-", "");
+                dto.setBatchNumber(uuid);
+                dto.setSmallBatchNumber(uuid);
                 HashMap<String, JSONArray> body = new HashMap<>();
                 for (JsonTableData jsonTableData : targetTable) {
                     body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
@@ -1403,9 +1400,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                     if (!CollectionUtils.isEmpty(data)) {
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
-                            if (e.checkRule == CheckRuleEnum.STRONG_RULE.getValue()) {
+                            if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
                                 return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, e.checkResultMsg);
-                            } else if (e.checkRule == CheckRuleEnum.WEAK_RULE.getValue()) {
+                            } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                 checkResultMsg.append(e.checkResultMsg).append("；");
                             } else {
                                 return ResultEntityBuild.build(ResultEnum.getEnum(result.code), result.msg);
@@ -1413,7 +1410,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         }
                     }
                 }
-
             }
         } catch (Exception e) {
             log.error(String.format("调用数据质量接口报错，表名称：%s", tablePrefixName), e);
@@ -1935,17 +1931,18 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     /**
      * 根据apiId获取指定api
+     *
      * @param apiId
      * @return
      */
     @Override
     public ResultEntity<ApiConfigDTO> getOneApiById(Integer apiId) {
         LambdaQueryWrapper<ApiConfigPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ApiConfigPO::getId,apiId);
+        wrapper.eq(ApiConfigPO::getId, apiId);
         ApiConfigPO apiConfigPO = getOne(wrapper);
-        if (apiConfigPO != null){
-            return ResultEntityBuild.build(ResultEnum.SUCCESS,ApiConfigMap.INSTANCES.poToDto(apiConfigPO));
-        }else {
+        if (apiConfigPO != null) {
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, ApiConfigMap.INSTANCES.poToDto(apiConfigPO));
+        } else {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
     }

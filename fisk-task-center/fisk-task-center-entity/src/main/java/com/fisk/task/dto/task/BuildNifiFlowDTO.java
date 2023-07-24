@@ -211,4 +211,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     @ApiModelProperty(value = "修改前的源字段")
     public List<String> sourceFieldNames;
 
+    /**
+     * 临时表主键名称
+     */
+    @ApiModelProperty(value = "修改前的源字段")
+    public String pkName;
+
 }

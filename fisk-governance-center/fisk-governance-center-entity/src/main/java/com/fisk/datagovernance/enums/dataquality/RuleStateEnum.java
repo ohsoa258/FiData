@@ -9,6 +9,7 @@ import com.fisk.common.core.enums.BaseEnum;
  * @date 2022/3/22 14:02
  */
 public enum RuleStateEnum implements BaseEnum {
+
     Disable(0,"禁用"),
     Enable(1,"启用");
 

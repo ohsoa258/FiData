@@ -1437,7 +1437,7 @@ public class BusinessAreaImpl
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             if (Objects.isNull(dataSourceConfig.data)) {
-                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_ONTEXISTS);
+                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS);
             }
         } catch (Exception e) {
             log.error("调用userClient服务获取数据源失败,", e);
