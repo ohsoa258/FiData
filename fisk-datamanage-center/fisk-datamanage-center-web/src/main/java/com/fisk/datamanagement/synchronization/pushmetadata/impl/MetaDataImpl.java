@@ -158,18 +158,19 @@ public class MetaDataImpl implements IMetaData {
     @Override
     public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName) {
         log.info("开始同步元数据***********");
-        for (MetaDataInstanceAttributeDTO instance : data) {
-            String instanceGuid = metaDataInstance(instance,"-1");
-            if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
-                continue;
-            }
-            for (MetaDataDbAttributeDTO db : instance.dbList) {
-                //判断是否已同步库元数据，有则修改无则新增
-                String dbGuid = metaDataDb(db, instanceGuid);
-                if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
+        try {
+            for (MetaDataInstanceAttributeDTO instance : data) {
+                String instanceGuid = metaDataInstance(instance,"-1");
+                if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                     continue;
                 }
-                try {
+                for (MetaDataDbAttributeDTO db : instance.dbList) {
+                    //判断是否已同步库元数据，有则修改无则新增
+                    String dbGuid = metaDataDb(db, instanceGuid);
+                    if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
+                        continue;
+                    }
+
                     for (MetaDataTableAttributeDTO table : db.tableList) {
                         String tableName = table.name;
                         //元数据对参观：数据表 新增/修改 表新增/修改, 并且添加业务分类和表元数据的关联
@@ -197,11 +198,12 @@ public class MetaDataImpl implements IMetaData {
                         //同步血缘
                         synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
                     }
-                }catch (Exception e){
-                    log.error("实体同步失败错误信息："+ e.getMessage());
-                    e.printStackTrace();
+
                 }
             }
+        }catch (Exception e){
+            log.error("实体同步失败错误信息："+ e.getMessage());
+            e.printStackTrace();
         }
         //更新Redis
         //entityImpl.updateRedis();
