@@ -12,6 +12,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
+import com.fisk.common.core.utils.office.excel.ExcelUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
@@ -34,17 +35,13 @@ import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
 import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.EditMetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessMetadataMapDTO;
+import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import com.fisk.datamanagement.dto.process.ProcessAttributesPutDTO;
 import com.fisk.datamanagement.dto.process.ProcessUniqueAttributesDTO;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
-import com.fisk.datamanagement.entity.BusinessMetadataConfigPO;
-import com.fisk.datamanagement.entity.MetadataEntityPO;
-import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
-import com.fisk.datamanagement.enums.AtlasResultEnum;
-import com.fisk.datamanagement.enums.DataTypeEnum;
-import com.fisk.datamanagement.enums.EntityTypeEnum;
-import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
+import com.fisk.datamanagement.entity.*;
+import com.fisk.datamanagement.enums.*;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
@@ -77,6 +74,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author JianWenYang
@@ -171,32 +169,37 @@ public class MetaDataImpl implements IMetaData {
                 if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
                     continue;
                 }
-                for (MetaDataTableAttributeDTO table : db.tableList) {
-                    String tableName = table.name;
-                    //元数据对参观：数据表 新增/修改 表新增/修改, 并且添加业务分类和表元数据的关联
-                    String tableGuid = metaDataTable(table, dbGuid, db.name);
-                    //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
-                    String stgTableGuid = null;
-                    if (!stg.equals(table.getComment())) {
-                        stgTableGuid = metaDataStgTable(table, dbGuid);
-                    }
-                    if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
-                        continue;
-                    }
-                    List<String> qualifiedNames = new ArrayList<>();
-                    for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        //新增表字段
-                        metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName);
-                        qualifiedNames.add(field.qualifiedName);
+                try {
+                    for (MetaDataTableAttributeDTO table : db.tableList) {
+                        String tableName = table.name;
+                        //元数据对参观：数据表 新增/修改 表新增/修改, 并且添加业务分类和表元数据的关联
+                        String tableGuid = metaDataTable(table, dbGuid, db.name);
+                        //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
+                        String stgTableGuid = null;
                         if (!stg.equals(table.getComment())) {
-                            //新增stg表字段
-                            metaDataStgField(field, stgTableGuid);
+                            stgTableGuid = metaDataStgTable(table, dbGuid);
                         }
+                        if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
+                            continue;
+                        }
+                        List<String> qualifiedNames = new ArrayList<>();
+                        for (MetaDataColumnAttributeDTO field : table.columnList) {
+                            //新增表字段
+                            metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName);
+                            qualifiedNames.add(field.qualifiedName);
+                            if (!stg.equals(table.getComment())) {
+                                //新增stg表字段
+                                metaDataStgField(field, stgTableGuid);
+                            }
+                        }
+                        //删除历史元数据
+                        deleteMetaData(qualifiedNames, tableGuid);
+                        //同步血缘
+                        synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
                     }
-                    //删除历史元数据
-                    deleteMetaData(qualifiedNames, tableGuid);
-                    //同步血缘
-                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
+                }catch (Exception e){
+                    log.error("实体同步失败错误信息："+ e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
@@ -1493,7 +1496,64 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     @Override
-    public Object export() {
-        return null;
+    public void export(ExportMetaDataDto dto) {
+        //根据业务分类ID获取所属分类
+        if(dto.getBusinessClassificationId()==null){
+            return;
+        }
+//        if (dto.getAssociatedType()==null){
+//            return;
+//        }
+        //获取所有元数据
+        List<MetadataEntityPO> allMetadataList = metadataEntity.query().list();
+        //查询实体业务分类关联
+        List<MetadataBusinessMetadataMapPO> allMetadataBusinessMetadataMapPOList = metadataBusinessMetadataMap.query().list();
+        //获取业务分类
+        List<BusinessClassificationPO> allBusinessClassificationPOList = classification.query().list();
+        List<Long> exportBusinessClassificationIdList=new ArrayList<>();
+        exportBusinessClassificationIdList.addAll(dto.getBusinessClassificationId());
+        //判断是否选中一级分类，如果选中一级分类，则导出一级分类下所有分类的元数据
+//        for (ClassificationTypeEnum classificationTypeEnum : ClassificationTypeEnum.values()) {
+//            if (dto.getBusinessClassificationId().contains(classificationTypeEnum.getValue())){
+//                List<Long> allTwoLevelBusinessClassificationIdList = allBusinessClassificationPOList.stream()
+//                        .filter(e -> e.getPid().equals(classificationTypeEnum.getValue()))
+//                        .map(e-> {return e.getId();})
+//                        .collect(Collectors.toList());
+//                exportBusinessClassificationIdList.addAll(allTwoLevelBusinessClassificationIdList);
+//            }
+//        }
+        List<HashMap<String,Object>> excelMetaDataList=new ArrayList<>();
+        for (Long bcItem : dto.getBusinessClassificationId()) {
+            //获取业务分类下的元数据
+            List<Long> metaDataIdList = allMetadataBusinessMetadataMapPOList.stream()
+                    .filter(e -> e.getBusinessMetadataId().equals(bcItem))
+                    .map(e -> {
+                        return Long.valueOf(e.getMetadataEntityId());
+                    })
+                    .collect(Collectors.toList());
+            if (metaDataIdList==null){
+                continue;
+            }
+            Optional<BusinessClassificationPO> optionalBusinessClassificationPO = allBusinessClassificationPOList.stream().filter(e -> e.getId() == bcItem).findFirst();
+            //一级分类名称
+            String oneLevelBusinessClassificationName;
+            //二级分类名称
+            String twoLevelBusinessClassificationName;
+            //获取一二级分类名称
+            if (optionalBusinessClassificationPO.isPresent()){
+                oneLevelBusinessClassificationName = optionalBusinessClassificationPO.get().getName();
+                twoLevelBusinessClassificationName=ClassificationTypeEnum.valueOf(optionalBusinessClassificationPO.get().getPid().toString()).getName();
+            }
+            //根据元数据Id获取元数据详情
+            List<MetadataEntityPO> metadataEntityPOList = allMetadataList.stream().filter(e -> metaDataIdList.contains(e.getId())).collect(Collectors.toList());
+            for (MetadataEntityPO metaDataItem : metadataEntityPOList) {
+
+            }
+
+        }
+//        ExcelUtil.createSaveExcel();
+
     }
+
+
 }
