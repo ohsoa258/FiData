@@ -61,11 +61,11 @@ public class EntityImpl implements IEntity {
     public List<EntityTreeDTO> getEntityTreeList() {
         List<EntityTreeDTO> list;
         Boolean exist = redisTemplate.hasKey(metaDataEntity);
-        if (exist) {
-            String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
-            list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
-            return list;
-        }
+//        if (exist) {
+//            String treeList = redisTemplate.opsForValue().get(metaDataEntity).toString();
+//            list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
+//            return list;
+//        }
         list = getEntityList();
         return list;
     }

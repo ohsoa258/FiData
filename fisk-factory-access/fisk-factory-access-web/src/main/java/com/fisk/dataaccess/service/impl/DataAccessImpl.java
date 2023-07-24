@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Lock
@@ -40,15 +41,12 @@ public class DataAccessImpl implements IDataAccess {
     public ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData() {
 
         List<DataAccessSourceTableDTO> tableDtoList = tableAccessMapper.listTableMetaData();
-
+        List<TableFieldsPO> allTableFieldPOlist = tableFieldsImpl.query().list();
         // 获取物理表下的字段信息
         tableDtoList.forEach(e -> {
-            QueryWrapper<TableFieldsPO> fieldsQueryWrapper = new QueryWrapper<>();
-            fieldsQueryWrapper.lambda().eq(TableFieldsPO::getTableAccessId, e.id);
-            List<TableFieldsPO> fieldsList = tableFieldsMapper.selectList(fieldsQueryWrapper);
+            List<TableFieldsPO> fieldsList =allTableFieldPOlist.stream().filter(a->a.getTableAccessId().equals(e.getId())).collect(Collectors.toList());
             e.list = DataAccessMap.INSTANCES.fieldListPoToDto(fieldsList);
         });
-
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableDtoList);
     }
 

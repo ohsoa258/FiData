@@ -94,4 +94,13 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     List<AppDataSourceDTO> getDataSourcesBySystemDataSourceId(Integer id);
+
+
+    /**
+     * 获取数据接入引用的数据源id
+     *
+     * @param id
+     * @return
+     */
+    AppDataSourceDTO getAccessDataSources(Long id);
 }

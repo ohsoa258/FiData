@@ -11,4 +11,6 @@ import lombok.Data;
 public class MetaDataColumnAttributeDTO extends MetaDataBaseAttributeDTO {
     @ApiModelProperty(value = "字段数据类型")
     public String dataType;
+    @ApiModelProperty(value = "字段数据长度")
+    public String length;
 }

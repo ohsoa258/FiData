@@ -54,6 +54,12 @@ public class MetaDataController {
         return ResultEntityBuild.build(service.addFiledAndUpdateFiled(dto));
     }
 
+    @ApiOperation("导出元数据")
+    @PostMapping("/export")
+    public void export(){
+        service.export();
+    }
+
 
 
     @ApiOperation("删除元数据实体")

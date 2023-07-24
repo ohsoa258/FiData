@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,6 +9,9 @@ import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -17,10 +21,7 @@ import com.fisk.dataservice.dto.tableservice.TableAppDTO;
 import com.fisk.dataservice.dto.tableservice.TableAppDatasourceDTO;
 import com.fisk.dataservice.dto.tableservice.TableAppPageDTO;
 import com.fisk.dataservice.dto.tableservice.TableAppQueryDTO;
-import com.fisk.dataservice.entity.AppServiceConfigPO;
-import com.fisk.dataservice.entity.TableAppDatasourcePO;
-import com.fisk.dataservice.entity.TableAppPO;
-import com.fisk.dataservice.entity.TableServicePO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.map.TableAppDatasourceMap;
 import com.fisk.dataservice.map.TableAppMap;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,6 +77,11 @@ public class TableAppManageImpl
 
     @Resource
     private PublishTaskClient publishTaskClient;
+
+    @Resource
+    private  TableServiceImpl tableService;
+
+    @Resource TableFieldImpl tableField;
 
     @Override
     public List<FilterFieldDTO> getFilterColumn() {
@@ -288,5 +295,58 @@ public class TableAppManageImpl
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
         return ResultEnum.SUCCESS;
+    }
+
+
+    /**
+     * 获取表同步服务元数据
+     * @return
+     */
+    @Override
+    public List<MetaDataEntityDTO> getTableSyncMetaData() {
+        //获取所有应用
+        List<TableAppPO> allTableAppPO = this.query().list();
+        //获取所有字段
+        List<TableFieldPO> allViewFieldsPOList = tableField.query().list();
+        List<MetaDataEntityDTO> metaDataEntityDTOList= new ArrayList<>();
+        for (TableAppPO tableAppPO : allTableAppPO) {
+            //获取所有已发布的表
+            List<TableServicePO> tableServiceInTheAppList = tableServiceMapper.getTableServiceInTheApp((int)tableAppPO.getId());
+            //添加应用下的API
+            for (TableServicePO  tableServicePO : tableServiceInTheAppList) {
+                MetaDataEntityDTO metaDataEntityDTO=new MetaDataEntityDTO();
+                metaDataEntityDTO.setName(tableServicePO.getTableName());
+                metaDataEntityDTO.setDisplayName(tableServicePO.getDisplayName());
+                metaDataEntityDTO.setQualifiedName(String.valueOf(tableServicePO.getId()));
+                metaDataEntityDTO.setDescription(tableServicePO.getTableDes());
+                metaDataEntityDTO.setCreateSql(tableServicePO.getSqlScript());
+                metaDataEntityDTO.setDatasourceDbId(tableServicePO.getSourceDbId());
+                metaDataEntityDTO.setTargetDbId(tableServicePO.getTargetDbId());
+                metaDataEntityDTO.setTableName(tableServicePO.getTargetTable());
+                metaDataEntityDTO.setEntityType(14);
+                metaDataEntityDTO.setOwner(tableAppPO.getAppPrincipal());
+                metaDataEntityDTO.setAppName(tableAppPO.getAppName());
+                //获取表下的字段
+                LambdaQueryWrapper<TableFieldPO> tableFieldPOLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                tableFieldPOLambdaQueryWrapper.eq(TableFieldPO::getTableServiceId,tableServicePO.getId());
+                List<TableFieldPO> tableFieldPOList = tableField.list(tableFieldPOLambdaQueryWrapper);
+                //添加表下的字段
+                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList=new ArrayList<>();
+                for (TableFieldPO tableFieldPO : tableFieldPOList) {
+                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO=new MetaDataColumnAttributeDTO();
+                    metaDataColumnAttributeDTO.setName(tableFieldPO.getFieldName());
+                    metaDataColumnAttributeDTO.setDisplayName(tableFieldPO.getDisplayName());
+                    metaDataColumnAttributeDTO.setDescription(tableFieldPO.getFieldDes());
+                    metaDataColumnAttributeDTO.setDataType(tableFieldPO.getFieldType());
+                    metaDataColumnAttributeDTO.setLength(tableFieldPO.getFieldType());
+                    metaDataColumnAttributeDTO.setQualifiedName(String.valueOf(tableFieldPO.getId()));
+                    metaDataColumnAttributeDTO.setOwner(tableAppPO.getAppPrincipal());
+                    metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+                }
+                metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
+                metaDataEntityDTOList.add(metaDataEntityDTO);
+            }
+        }
+        return metaDataEntityDTOList;
     }
 }

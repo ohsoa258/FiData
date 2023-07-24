@@ -1,9 +1,12 @@
 package com.fisk.dataservice.map;
 
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.AppConfigPO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -33,4 +36,10 @@ public interface AppRegisterMap {
             @Mapping(target = "appPassword", ignore = true)// 添加了ignore，表示不会对该属性做映射
     })
     void editDtoToPo(AppRegisterEditDTO dto, @MappingTarget AppConfigPO po);
+
+    MetaDataApplicationDTO poDtoMetaDataApplicationDto(AppConfigPO po);
+
+    List<MetaDataApplicationDTO> poDtoMetaDataApplicationDtoList(List<AppConfigPO> po);
+
+
 }

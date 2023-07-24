@@ -1,6 +1,7 @@
 package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -458,6 +459,24 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         } catch (Exception e) {
             log.error("根据SystemDataSourceId获取数据接入引用的数据源信息失败！");
             throw new FkException(ResultEnum.GET_ACCESS_DATA_SOURCE_ERROR, "根据SystemDataSourceId获取数据接入引用的数据源信息失败,报错详情：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取数据接入引用的数据源id
+     * @param id
+     * @return
+     */
+    @Override
+    public AppDataSourceDTO getAccessDataSources(Long id) {
+        QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+        wrapper.eq("id",id);
+        AppDataSourcePO one = getOne(wrapper);
+        if (one!=null){
+            AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(one);
+            return appDataSourceDTO;
+        }else {
+            return null;
         }
     }
 

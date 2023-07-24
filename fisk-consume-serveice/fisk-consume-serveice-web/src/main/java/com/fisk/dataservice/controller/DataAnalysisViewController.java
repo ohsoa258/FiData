@@ -4,9 +4,10 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.dataanalysisview.*;
-import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
 import com.fisk.dataservice.service.IDataViewThemeService;
 import io.swagger.annotations.Api;
@@ -15,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @ClassName: 数据分析视图服务
@@ -149,4 +151,10 @@ public class DataAnalysisViewController {
         return ResultEntityBuild.build(dataViewService.addBatchDataView(dto));
     }
 
+
+    @ApiOperation("获取视图服务据应用信息元数")
+    @GetMapping("/getViewServiceMetaData")
+    public ResultEntity<List<MetaDataEntityDTO>> getViewServiceMetaData(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,dataViewThemeService.getViewServiceMetaData());
+    }
 }

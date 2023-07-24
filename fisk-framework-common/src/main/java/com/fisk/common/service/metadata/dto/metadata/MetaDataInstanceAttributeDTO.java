@@ -10,7 +10,7 @@ import java.util.List;
  * @date 2022-07-01 14:20
  */
 @Data
-public class MetaDataInstanceAttributeDTO extends MetaDataBaseAttributeDTO {
+public class  MetaDataInstanceAttributeDTO extends MetaDataBaseAttributeDTO {
     @ApiModelProperty(value = "创建实例：数据库类型")
     public String rdbms_type;
     @ApiModelProperty(value = "创建实例：平台")

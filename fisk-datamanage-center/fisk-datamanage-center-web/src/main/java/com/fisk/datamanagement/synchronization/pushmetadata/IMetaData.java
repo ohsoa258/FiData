@@ -48,4 +48,5 @@ public interface IMetaData {
     void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto);
 
 
+    Object export();
 }

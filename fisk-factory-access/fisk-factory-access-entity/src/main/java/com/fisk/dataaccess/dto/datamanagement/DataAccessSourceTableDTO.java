@@ -23,7 +23,7 @@ public class DataAccessSourceTableDTO {
     @ApiModelProperty(value = "物理表描述")
     public String tableDes;
 
-    @ApiModelProperty(value = "物理表id")
+    @ApiModelProperty(value = "应用id")
     public Integer appId;
 
     @ApiModelProperty(value = "数据源id")

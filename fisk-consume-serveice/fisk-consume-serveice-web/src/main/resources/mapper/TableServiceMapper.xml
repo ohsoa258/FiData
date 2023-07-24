@@ -16,6 +16,7 @@
         a.del_flag = 1
         AND s.del_flag = 1
         AND s.api_state = 1
+        AND s.type = 2
         AND s.app_id = #{query.tableAppId}
         <if test="query.tableName != null and query.tableName.length()>0">
             and a.table_name like CONCAT('%',#{query.tableName},'%')

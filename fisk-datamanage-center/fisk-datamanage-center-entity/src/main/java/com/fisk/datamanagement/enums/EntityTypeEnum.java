@@ -23,6 +23,7 @@ public enum EntityTypeEnum implements BaseEnum {
     APPLICATION(12,"application"),
     VIEW(13,"view"),
     DATABASE_SYNC(14,"database_sync"),
+    CLASSIFICATION(15,"classification"),
     OTHER(-1, "other");
 
     EntityTypeEnum(int value, String name) {

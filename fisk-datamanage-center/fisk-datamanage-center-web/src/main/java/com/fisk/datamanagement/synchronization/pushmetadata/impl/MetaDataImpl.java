@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 
+import ch.qos.logback.core.joran.spi.ElementSelector;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -17,8 +18,12 @@ import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.common.service.sqlparser.SqlParserUtils;
+import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
+import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
@@ -39,6 +44,7 @@ import com.fisk.datamanagement.entity.MetadataMapAtlasPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.DataTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
@@ -59,8 +65,10 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildMetaDataDTO;
+import io.micrometer.core.instrument.Meter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -88,6 +96,8 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     ClassificationImpl classification;
     @Resource
+    MetadataEntityImpl metadataEntity;
+    @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
     BusinessMetadataConfigMapper businessMetadataConfigMapper;
@@ -105,8 +115,6 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     DataGovernanceClient dataQualityClient;
     @Resource
-    MetadataEntityImpl metadataEntity;
-    @Resource
     private IMetaDataEntityOperationLog operationLog;
     //endregion
     //region 常量
@@ -121,7 +129,9 @@ public class MetaDataImpl implements IMetaData {
     private static final String stg = "stg";
     private static final String dim_prefix = "dim_";
     private static final String ods_suffix = "ods_";
-//endregion
+    private static final String sync_database_prefix="sync_database_";
+
+    //endregion
     @Override
     public ResultEnum metaData(MetaDataAttributeDTO data) {
         try {
@@ -140,16 +150,18 @@ public class MetaDataImpl implements IMetaData {
 
 
     //region 元数据实体同步具体实现
+
     /**
      * 同步元数据对象，主方法
-     * @param data  元数据对象实体集合
+     *
+     * @param data         元数据对象实体集合
      * @param currUserName 当前账号
      */
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data,String currUserName) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
-            String instanceGuid = metaDataInstance(instance);
+            String instanceGuid = metaDataInstance(instance,"-1");
             if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                 continue;
             }
@@ -174,7 +186,7 @@ public class MetaDataImpl implements IMetaData {
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
                         //新增表字段
-                        metaDataField(field, tableGuid,("").equals(currUserName)||currUserName==null?instance.currUserName:currUserName);
+                        metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段
@@ -193,19 +205,21 @@ public class MetaDataImpl implements IMetaData {
         return ResultEnum.SUCCESS;
     }
 
+
     /**
      * 元数据对象：数据库实例 新增/修改
      *
      * @param dto
      * @return
      */
-    private String metaDataInstance(MetaDataInstanceAttributeDTO dto) {
+    private String metaDataInstance(MetaDataInstanceAttributeDTO dto,String parentEntityId) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), "-1").toString();
+            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), parentEntityId).toString();
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
     }
+
     /**
      * 元数据对参观：数据库 新增/修改
      *
@@ -218,8 +232,7 @@ public class MetaDataImpl implements IMetaData {
         if (metadataEntity == null) {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
         }
-
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_DB.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_DB.getName()).toString();
 
     }
 
@@ -236,7 +249,7 @@ public class MetaDataImpl implements IMetaData {
         if (metadataEntity == null) {
             metadataEntity = this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId);
         } else {
-            metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_TABLE.getName());
+            metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId,EntityTypeEnum.RDBMS_TABLE.getName());
         }
 
         if (!"stg".equals(dto.description)) {
@@ -252,7 +265,7 @@ public class MetaDataImpl implements IMetaData {
 
 
     /**
-     * 实体关联业务分类
+     * 实体关联业务分类  数据工厂 建模，主数据建模。
      *
      * @param tableGuid
      * @param tableName
@@ -320,6 +333,7 @@ public class MetaDataImpl implements IMetaData {
 
     }
 
+
     /**
      * 公共维度表批量关联业务分类
      *
@@ -340,6 +354,7 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * 元数据对参观：临时表 新增/修改 表新增/修改
+     *
      * @param dto
      * @param parentEntityId
      * @return
@@ -359,8 +374,9 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId).toString();
         }
 
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_TABLE.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_TABLE.getName()).toString();
     }
+
     /**
      * 字段新增/修改
      *
@@ -368,7 +384,7 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityId
      * @return
      */
-    private String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId,String createUser) {
+    private String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId, String createUser) {
         MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
@@ -382,7 +398,7 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
         }
         MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
-        if(!entityPO.getName().equals(dto.getName())){
+        if (!entityPO.getName().equals(dto.getName())) {
             operationLogDTO.setOperationType(MetaDataeLogEnum.UPDATE_OPERATION.getName());
             operationLogDTO.setBeforeChange(entityPO.getName());
             operationLogDTO.setAfterChange(dto.getName());
@@ -391,7 +407,7 @@ public class MetaDataImpl implements IMetaData {
             operationLogDTO.setMetadataEntityId(parentEntityId);
             operationLog.addOperationLog(operationLogDTO);
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
     }
 
 
@@ -405,8 +421,9 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
         }
 
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
     }
+
     /**
      * 删除元数据实体
      *
@@ -425,10 +442,9 @@ public class MetaDataImpl implements IMetaData {
      * @param tableName
      */
     private void synchronizationTableKinShip(String dbName,
-                                            String tableGuid,
-                                            String tableName,
-                                            String stgTableGuid)
-    {
+                                             String tableGuid,
+                                             String tableName,
+                                             String stgTableGuid) {
         metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid);
         /*try {
 
@@ -605,6 +621,7 @@ public class MetaDataImpl implements IMetaData {
             return;
         }*/
     }
+
     /**
      * 同步业务元数据
      *
@@ -814,7 +831,7 @@ public class MetaDataImpl implements IMetaData {
     public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
-            String instanceGuid = metaDataInstance(instance);
+            String instanceGuid = metaDataInstance(instance,"-1");
             if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                 continue;
             }
@@ -836,7 +853,7 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid,instance.owner);
+                        metaDataField(field, tableGuid, instance.owner);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段
@@ -855,6 +872,8 @@ public class MetaDataImpl implements IMetaData {
     public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
         associatedBusinessMetaData(null, dto.dbName, dto.tableName);
     }
+
+
 
 
     @Override
@@ -890,6 +909,7 @@ public class MetaDataImpl implements IMetaData {
         }
         return ResultEnum.SUCCESS;
     }
+
     /**
      * 循环删除子节点
      *
@@ -1005,7 +1025,6 @@ public class MetaDataImpl implements IMetaData {
         }
         return atlasGuid;
     }
-
 
 
     /**
@@ -1141,7 +1160,340 @@ public class MetaDataImpl implements IMetaData {
     }
 
 
+    /**
+     *  同步数据消费元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
+     *
+     * @param entityList
+     * @return
+     */
+    public ResultEnum syncDataConsumptionMetaData(List<MetaDataEntityDTO> entityList, String currUserName) {
 
 
+        //获取所有数据源
+        ResultEntity<List<DataSourceDTO>> allDataSourceResult= userClient.getAll();
+        if (allDataSourceResult.code!=0){
+            log.error("【获取系统所有数据源异常】");
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        List<DataSourceDTO> allDataSourceList=allDataSourceResult.data;
 
+        //同步实体的外部数据源的实例和数据库元数据
+        syncExternalDataSourceDbInstance(entityList,allDataSourceList);
+        //同步实体目标数据库的实例和数据库元数据(仅限数据库同步服务的实体)
+        syncTargetDbInstance(entityList,allDataSourceList);
+        for (MetaDataEntityDTO entityDto : entityList) {
+            try {
+                String entityGuid =syncEntityTargetMetaData(entityDto,allDataSourceList);
+                //当为代理API是不需要同步血缘的和数据源信息
+                if (entityDto.createApiType!=3){
+                    //同步实体数据源的元数据
+                    List<String> fromEntityId = syncEntitySourceMetaData(entityDto,allDataSourceList);
+                    //同步源到目标的血缘
+                    metadataEntity.syncSourceToTargetKinShip(fromEntityId,entityGuid,entityDto.createSql);
+                }
+            }catch (Exception exception){
+                log.error("实体同步失败错误信息："+ exception.getMessage());
+                exception.printStackTrace();
+            }finally {
+                log.info("元数据数据信息："+JSONObject.toJSONString(entityDto));
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 同步外部数据源的实例和数据库元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
+     * @param entityList
+     */
+    private  void syncExternalDataSourceDbInstance(List<MetaDataEntityDTO> entityList ,List<DataSourceDTO> allDataSource){
+        Set<Integer> datasourceIdList = entityList.stream().collect(Collectors.groupingBy(e -> e.datasourceDbId)).keySet();
+        List<DataSourceDTO> dataSourceDTOList = allDataSource.stream()
+                .filter(e->datasourceIdList.contains(e.getId()))
+                .filter(e->e.getSourceType()==2)
+                .collect(Collectors.toList());
+        syncDbInstance(dataSourceDTOList,null);
+    }
+
+    /**
+     * 同步数据库同步服务的实例和数据库元数据 （数据消费模块:数据库同步服务）
+     * @param entityList
+     */
+    private  void syncTargetDbInstance(List<MetaDataEntityDTO> entityList ,List<DataSourceDTO> allDataSource){
+        Set<Integer> datasourceIdList = entityList.stream()
+                .filter(e->e.entityType==14)
+                .collect(Collectors.groupingBy(e -> e.getTargetDbId()))
+                .keySet();
+        List<DataSourceDTO> dataSourceDTOList = allDataSource.stream()
+                        .filter(e->datasourceIdList.contains(e.getId()))
+                        .collect(Collectors.toList());
+        syncDbInstance(dataSourceDTOList,String.valueOf(MetaClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getValue()));
+    }
+
+    /**
+     * 同步数据库的实例和数据库元数据
+     * @param dataSourceDTOList
+     */
+    private void syncDbInstance(List<DataSourceDTO> dataSourceDTOList,String parentEntityId){
+        for (DataSourceDTO dataSourceDTO : dataSourceDTOList) {
+            //判断是否指定指定了元数据的分类
+            if (parentEntityId==null){
+                //若元数据分类为空，则通过数据源类型判断
+                switch (dataSourceDTO.getSourceType()){
+                    case 1:
+                        //外部数据源，为数据源分类
+                        parentEntityId=String.valueOf(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
+                        break;
+                    case 2:
+                        //内部数据源 ,为数据工厂分类
+                        parentEntityId=String.valueOf(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
+                        break;
+                    default:
+                        parentEntityId=String.valueOf(MetaClassificationTypeEnum.OTHER.getValue());
+                        break;
+                }
+            }
+            //实例
+            MetaDataInstanceAttributeDTO metaDataInstanceAttributeDTO=new MetaDataInstanceAttributeDTO();
+            metaDataInstanceAttributeDTO.setHostname(dataSourceDTO.conIp);
+            metaDataInstanceAttributeDTO.setPort(dataSourceDTO.getConPort().toString());
+            metaDataInstanceAttributeDTO.setRdbms_type(dataSourceDTO.getConType().getName());
+            metaDataInstanceAttributeDTO.setName(dataSourceDTO.conIp);
+            metaDataInstanceAttributeDTO.setQualifiedName(dataSourceDTO.conIp);
+            metaDataInstanceAttributeDTO.setDisplayName(dataSourceDTO.getName());
+            metaDataInstanceAttributeDTO.setOwner(dataSourceDTO.getPrincipal());
+
+            //若为parentEntityId为数据库同步服务，实例QualifiedName添加固定前缀sync_database
+            if (MetaClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getValue()==Integer.parseInt(parentEntityId)){
+                metaDataInstanceAttributeDTO.setQualifiedName(sync_database_prefix+metaDataInstanceAttributeDTO.getHostname());
+            }
+            //添加实例元数据
+            String instanceId = metaDataInstance(metaDataInstanceAttributeDTO,parentEntityId);
+            //数据库
+            MetaDataDbAttributeDTO metaDataDbAttributeDTO= new MetaDataDbAttributeDTO();
+            metaDataDbAttributeDTO.setName(dataSourceDTO.getConDbname());
+            metaDataDbAttributeDTO.setDisplayName(dataSourceDTO.getConDbname());
+            metaDataDbAttributeDTO.setQualifiedName(metaDataInstanceAttributeDTO.getQualifiedName()+"_"+dataSourceDTO.getConDbname());
+            metaDataDbAttributeDTO.setOwner(dataSourceDTO.getPrincipal());
+            //添加数据库元数据
+            String dbId=metaDataDb(metaDataDbAttributeDTO,instanceId);
+
+        }
+    }
+
+
+    /**
+     * （数据消费模块，API网关、数据库同步服务、视图服务） 同步实体目标元数据
+     * @return
+     */
+    private String syncEntityTargetMetaData(MetaDataEntityDTO entityDto,List<DataSourceDTO> allDataSource){
+        String targetEntityId="";
+        EntityTypeEnum entityType = EntityTypeEnum.getValue(entityDto.entityType);
+        switch (entityType) {
+            case VIEW:
+                targetEntityId= addMetaData(entityDto, String.valueOf(MetaClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue()), EntityTypeEnum.getValue(entityDto.getEntityType()));
+                break;
+            case WEB_API:
+                //获取所有数据源详情
+                targetEntityId= addMetaData(entityDto, String.valueOf(MetaClassificationTypeEnum.API_GATEWAY.getValue()), EntityTypeEnum.getValue(entityDto.getEntityType()));
+                break;
+            case DATABASE_SYNC:
+                //根据目标数据源ID查询数据源详情
+                Optional<DataSourceDTO> targetDbDetailResult = allDataSource.stream().filter(e -> e.getId().equals(entityDto.getTargetDbId())).findFirst();
+                if(!targetDbDetailResult.isPresent()){
+                    log.error("数据库同步服务中同步目标表元数据信息，在数据源信息中: "+entityDto.getTargetDbId());
+                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+                }
+                DataSourceDTO targetDbDetail = targetDbDetailResult.get();
+                String dbQualifiedNames =sync_database_prefix+ targetDbDetail.getConIp() + "_" + targetDbDetail.getConDbname();
+                //根据DB元数据的QualifiedName获取DB元数据信息
+                MetadataEntityPO dbEntity = metadataEntity.getEntityByQualifiedNames(dbQualifiedNames);
+                MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+                //数据库同步服务实体元数据QualifiedName命名规则:  实例名+数据库名+数据库同步服务实体Id
+                table.setQualifiedName(dbQualifiedNames+"_"+ table.getQualifiedName());
+                table.setName(entityDto.getName());
+                table.setComment("");
+                table.setDisplayName(entityDto.getDisplayName());
+                targetEntityId= addMetaData(table,String.valueOf(dbEntity.getId()),EntityTypeEnum.RDBMS_TABLE);
+                //数据库同步服务实体下属性元数据QualifiedName命名规则:  实例名+数据库名+数据库同步服务实体Id+数据库同步服务实体下属性Id
+                for (MetaDataColumnAttributeDTO feildItem : entityDto.getAttributeDTOList()) {
+                    feildItem.setQualifiedName(table.getQualifiedName()+"_"+feildItem.getQualifiedName());
+                }
+
+                break;
+            default:
+                break;
+        }
+        //因为代理API没有字段所以不需要添加API
+        if (entityDto.createApiType!=3){
+            List<String> qualifiedNames = new ArrayList<>();
+            for (MetaDataColumnAttributeDTO field : entityDto.getAttributeDTOList()) {
+                metaDataField(field, targetEntityId,  entityDto.getOwner());
+                qualifiedNames.add(field.getQualifiedName());
+            }
+            if (qualifiedNames.stream().count()>0){
+                //删除历史元数据
+                deleteMetaData(qualifiedNames, targetEntityId);
+            }
+        }
+        //关联实体的业务分类
+        associatedClassification(targetEntityId,entityDto.getAppName());
+        return targetEntityId;
+    }
+
+    /**
+     * （数据消费模块，API网关、数据库同步服务、视图服务）  同步实体的源表元数据
+     * @param metaDataEntityDTO
+     * @param allDataSourceList
+     * @return
+     */
+     private List<String> syncEntitySourceMetaData(MetaDataEntityDTO metaDataEntityDTO,List<DataSourceDTO> allDataSourceList){
+         Optional<DataSourceDTO> dataSourceDTOResult = allDataSourceList.stream().filter(e -> e.getId().equals(metaDataEntityDTO.getDatasourceDbId())).findFirst();
+         DataSourceDTO dataSourceDTO= null;
+         if(!dataSourceDTOResult.isPresent()){
+
+             log.error("没有找到数据源，数据源ID: "+metaDataEntityDTO.getDatasourceDbId());
+             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+         }
+         dataSourceDTO=dataSourceDTOResult.get();
+         //解析sql脚本，获取数据源表以及字段。
+         List<TableMetaDataObject> res;
+         //实体为api且apiType为普通,那么createSql只包含字段sql如:[name],[age]，并非完整的sql，需要单独处理
+         if(metaDataEntityDTO.entityType==EntityTypeEnum.WEB_API.getValue() && metaDataEntityDTO.apiType==1){
+             String completeSql= "SELECT "+metaDataEntityDTO.createSql+" FROM "+ metaDataEntityDTO.tableName;
+             res = SqlParserUtils.sqlDriveConversionName(0,dataSourceDTO.conType.getName().toLowerCase(),completeSql);
+         }else {
+             //解析自定义脚本
+             log.debug("accessTable信息:表脚本"+metaDataEntityDTO.createSql);
+             res = SqlParserUtils.sqlDriveConversionName(0,dataSourceDTO.conType.getName().toLowerCase(),metaDataEntityDTO.createSql);
+         }
+         //来源表的MetaDataId
+         List<String> sourceEntityIdList = new ArrayList<>();
+         //判断数据源类型，若为外部数据(2)需要同步源表元数据信息，系统数据源(1)则不需要。
+         if(dataSourceDTO.getSourceType()==2){
+             //外部数据源，需要同步源表元数据信息
+             sourceEntityIdList = syncExternalDataSourceTableMetadata(dataSourceDTO, res);
+         }else {
+             //内部数据源下，源表元数据已同步,拼接QualifiedNames查询源表元数据ID信息
+             for (TableMetaDataObject tableMetaDataObjectItem : res) {
+                 String entityQualifiedNames="";
+                 switch (dataSourceDTO.getSourceBusinessType()) {
+                     case ODS:
+                         // ODS表的元数据的QualifiedNames命名规则：{hostname}_{dbName}_{tableId} tableId为数据工厂中表Id
+                         String tableName = tableMetaDataObjectItem.getName();
+                         ResultEntity<TableAccessDTO> accessTableByTableName = dataAccessClient.getAccessTableByTableName(tableName);
+                         if(accessTableByTableName.data==null){
+                             log.error("在数据工厂没有查询到相关表 表名: "+tableMetaDataObjectItem.getName());
+                             continue;
+                         }
+                         entityQualifiedNames=dataSourceDTO.getConIp()+"_"+dataSourceDTO.getConDbname()+"_"+ accessTableByTableName.data.getId();
+                         break;
+                     case DW:
+                         // DW表的元数据的QualifiedNames命名规则:{hostname}_{dbName}_{TableType}_{tableId} 。  TableType ： 维度表：1、事实表 ：2  。
+                         entityQualifiedNames=dataSourceDTO.getConIp()+"_"+dataSourceDTO.getConDbname();
+                         if(tableMetaDataObjectItem.getName().length()>4){
+                             if (dim_prefix.equals(tableMetaDataObjectItem.getName().substring(0, 4))) {
+                                 entityQualifiedNames += "_1_";
+                             } else {
+                                 entityQualifiedNames += "_2_";
+                             }
+                         }else {
+                             log.error("数据源为建模表不符合长度4 ，表名："+tableMetaDataObjectItem.getName());
+                             continue;
+                         }
+
+                         ResultEntity<Long> dwTableIdResult=dataModelClient.getFactOrDimTable(tableMetaDataObjectItem.getName().replace("dbo.",""));
+                         if(dwTableIdResult.data==null){
+                             log.error("在数据建模没有查询到相关表 表名: "+tableMetaDataObjectItem.getName());
+                             continue;
+                         }
+                         entityQualifiedNames+=dwTableIdResult.data;
+                         break;
+                     case MDM:
+                         break;
+                     default:
+                         break;
+                 }
+                 MetadataEntityPO metadataEntityPO = metadataEntity.getEntityByQualifiedNames(entityQualifiedNames);
+                 if(metadataEntityPO==null){
+                     log.error("没有查询到此元数据 QualifiedNames : "+entityQualifiedNames);
+                     continue;
+                 }
+                 sourceEntityIdList.add(String.valueOf(metadataEntityPO.getId()));
+             }
+         }
+         return  sourceEntityIdList;
+     }
+
+    /**
+     * 同步外部数据源表元数据
+     * @param dataSourceDTO
+     * @param tableMetaDataObjects
+     * @return
+     */
+    private List<String> syncExternalDataSourceTableMetadata(DataSourceDTO dataSourceDTO, List<TableMetaDataObject> tableMetaDataObjects){
+        List<String> tableIdList=new ArrayList<>();
+        String dbQualifiedName=dataSourceDTO.getConIp()+"_"+dataSourceDTO.getConDbname();
+        Long dbId=dataModelClient.getFactOrDimTable(dbQualifiedName).data;
+        for (TableMetaDataObject item : tableMetaDataObjects) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.setQualifiedName(dbQualifiedName + "_" + item.name);
+            table.setName(item.name);
+            table.setComment("");
+            table.setDisplayName(item.name);
+            table.setComment("");
+            String tableId= addMetaData(table,dbId.toString(),EntityTypeEnum.RDBMS_TABLE);
+            tableIdList.add(tableId);
+            for (FieldMetaDataObject fieldItem:item.getFields()){
+                MetaDataColumnAttributeDTO field=new MetaDataColumnAttributeDTO();
+                field.setName(fieldItem.name);
+                field.setQualifiedName(table.getQualifiedName()+"_"+fieldItem.name);
+                field.setDisplayName(fieldItem.name);
+                field.setDataType("");
+                field.setOwner("");
+                addMetaData(field,tableId,EntityTypeEnum.RDBMS_COLUMN);
+            }
+        }
+        return tableIdList;
+    }
+
+    /**
+     * 添加元数据对象，有则新增无则修改
+     *
+     * @param dto
+     * @param parentId
+     * @param entityTypeEnum
+     * @return
+     */
+    private String addMetaData(MetaDataBaseAttributeDTO dto, String parentId, EntityTypeEnum entityTypeEnum) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntity(dto, entityTypeEnum.getName(), parentId).toString();
+        }
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentId, entityTypeEnum.getName()).toString();
+    }
+
+    /**
+     * 关联业务分类。 数据消费API, 视图服务，数据库同步服务
+     * @param entityId
+     * @param appName
+     */
+    private void associatedClassification(String entityId,String appName){
+        ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
+        dto.entityGuids = new ArrayList<>();
+        dto.entityGuids.add(entityId);
+        ClassificationDTO data = new ClassificationDTO();
+        data.typeName = appName;
+        dto.classification = data;
+        classification.classificationAddAssociatedEntity(dto);
+    }
+
+
+    /**
+     * 导出元数据
+     * @return
+     */
+    @Override
+    public Object export() {
+        return null;
+    }
 }

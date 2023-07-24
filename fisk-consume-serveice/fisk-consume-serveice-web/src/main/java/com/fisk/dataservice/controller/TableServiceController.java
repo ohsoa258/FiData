@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.datasource.DataSourceColumnQueryDTO;
@@ -221,4 +223,9 @@ public class TableServiceController {
         return ResultEntityBuild.build(service.tableServiceSendEmails(dto));
     }
 
+    @ApiOperation("获取表同步应用信息元数据")
+    @GetMapping("/getTableSyncMetaData")
+    public ResultEntity<List<MetaDataEntityDTO>> getTableSyncMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAppManageService.getTableSyncMetaData());
+    }
 }

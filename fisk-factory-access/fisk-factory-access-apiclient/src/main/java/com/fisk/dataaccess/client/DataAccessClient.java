@@ -459,7 +459,17 @@ public interface DataAccessClient {
      * @param tableName
      * @return
      */
-    @GetMapping("/getAccessTableByTableName")
+    @GetMapping("/v3/tableAccess/getAccessTableByTableName")
     @ApiOperation(value = "通过表名（带架构）获取表信息")
     ResultEntity<TableAccessDTO> getAccessTableByTableName(@RequestParam("tableName") String tableName);
+
+    /**
+     * 获取数据接入引用的数据源id
+     *
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "获取数据接入引用的数据源id")
+    @GetMapping("/datasource/getAccessDataSources")
+    ResultEntity<AppDataSourceDTO> getAccessDataSources(@RequestParam("id") Long id);
 }

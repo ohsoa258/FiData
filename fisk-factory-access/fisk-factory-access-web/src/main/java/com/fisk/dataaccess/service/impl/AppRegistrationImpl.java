@@ -365,12 +365,12 @@ public class AppRegistrationImpl
         }
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
-        data.name = dataSource.host + "_" + appRegistration.appAbbreviation;
+        data.name = dataSource.host ;
         data.hostname = dataSource.host;
         data.port = dataSource.port;
-        data.qualifiedName = appRegistration.id + "_" + appRegistration.appAbbreviation;
+        data.qualifiedName = dataSource.host;
         data.rdbms_type = dataSource.driveType;
-        data.displayName = appRegistration.appName;
+        data.displayName = dataSource.host;
         data.description = "stg";
         data.comment = String.valueOf(dataSource.id);
         //库
@@ -378,7 +378,7 @@ public class AppRegistrationImpl
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
         db.name = dataSource.dbName;
         db.displayName = dataSource.dbName;
-        db.qualifiedName = data.qualifiedName + "_" + dataSource.id;
+        db.qualifiedName = data.qualifiedName + "_" + dataSource.dbName;
         dbList.add(db);
         data.dbList = dbList;
 

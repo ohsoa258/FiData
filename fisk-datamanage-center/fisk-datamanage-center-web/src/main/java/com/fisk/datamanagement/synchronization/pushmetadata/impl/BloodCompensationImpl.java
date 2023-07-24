@@ -5,9 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
@@ -106,11 +104,27 @@ public class BloodCompensationImpl
         synchronousDataModelTableSourceMetaData(currUserName);
 
         log.info("*******三.开始同步API网关服务相关元数据信息********");
-        log.info("********1.开始API网关服务、数据库同步服务、视图服务应用接入的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> apiTableViewAppList = serveiceClient.getApiTableViewService();
-        synchronousClassification(apiTableViewAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
+        log.info("********1.开始API网关服务的业务分类******************");
+        ResultEntity<List<AppBusinessInfoDTO>> apiAppList = serveiceClient.getApiService();
+        synchronousClassification(apiAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
         log.info("********2.开始API网关服务的元数据******************");
         synchronousAPIServiceMetaData(currUserName);
+
+        log.info("*******四.开始同步视图服务相关元数据信息********");
+        log.info("********1.开始视图服务的业务分类******************");
+        ResultEntity<List<AppBusinessInfoDTO>> viewAppList = serveiceClient.getViewService();
+        synchronousClassification(viewAppList, ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
+        log.info("********2.开始视图服务的元数据******************");
+        synchronousViewServiceMetaData(currUserName);
+
+        log.info("*******五.开始同步数据库同步服务相关元数据信息********");
+        log.info("********1.开始数据库同步服务的业务分类******************");
+        ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
+        synchronousClassification(tableAppList, ClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE);
+        log.info("********2.开始数据库同步服务的元数据******************");
+        synchronousDataBaseSyncMetaData(currUserName);
+
+
         return ResultEnum.SUCCESS;
 
 
@@ -122,6 +136,35 @@ public class BloodCompensationImpl
      */
     private void synchronousAPIServiceMetaData(String currUserName) {
         //待补充
+        ResultEntity<List<MetaDataEntityDTO>> apiMetaDataResult = serveiceClient.getApiMetaData();
+        List<MetaDataEntityDTO> metaDataList = apiMetaDataResult.data;
+        metaData.syncDataConsumptionMetaData(metaDataList,currUserName);
+
+    }
+
+    /**
+     * 同步视图服务的元数据信息
+     * @param currUserName 当前执行账号
+     */
+    private void synchronousViewServiceMetaData(String currUserName) {
+        //待补充
+        ResultEntity<List<MetaDataEntityDTO>> apiMetaDataResult = serveiceClient.getViewServiceMetaData();
+        List<MetaDataEntityDTO> metaDataList = apiMetaDataResult.data;
+        metaData.syncDataConsumptionMetaData(metaDataList,currUserName);
+
+    }
+
+
+    /**
+     * 同步数据库同步服务的元数据信息
+     * @param currUserName 当前执行账号
+     */
+    private void synchronousDataBaseSyncMetaData(String currUserName) {
+        //待补充
+        ResultEntity<List<MetaDataEntityDTO>> apiMetaDataResult = serveiceClient.getTableSyncMetaData();
+        List<MetaDataEntityDTO> metaDataList = apiMetaDataResult.data;
+        metaData.syncDataConsumptionMetaData(metaDataList,currUserName);
+
     }
     //region 初始化血缘方法
     /**
@@ -191,7 +234,7 @@ public class BloodCompensationImpl
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(item.name);
             classificationInfoDto.setDescription(item.appDes);
-            classificationInfoDto.setSourceType(item.getSourceType());
+            classificationInfoDto.setSourceType(classificationTypeEnum.getValue());
             classificationInfoDto.setDelete(false);
             try {
                 classification.appSynchronousClassification(classificationInfoDto);
@@ -258,6 +301,7 @@ public class BloodCompensationImpl
                 table.setComment(String.valueOf(accessTable.appId));
                 table.setDisplayName(item.name);
                 table.setComment("stg");
+                table.setDescription("stg");
                 List<MetaDataColumnAttributeDTO> fieldList=new ArrayList<>();
                 for (FieldMetaDataObject fieldItem:item.getFields()){
                     MetaDataColumnAttributeDTO field=new MetaDataColumnAttributeDTO();

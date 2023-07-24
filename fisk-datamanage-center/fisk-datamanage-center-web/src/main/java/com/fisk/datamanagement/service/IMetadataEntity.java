@@ -30,7 +30,7 @@ public interface IMetadataEntity {
      * @param rdbmsType
      * @return
      */
-    Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId, String rdbmsType);
+    Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId,String parentId,String rdbmsType);
 
     /**
      * 批量删除元数据实体

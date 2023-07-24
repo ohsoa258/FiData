@@ -2,6 +2,8 @@ package com.fisk.consumeserveice.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
@@ -48,11 +50,32 @@ public interface ConsumeServeiceClient {
     ResultEntity<BuildTableServiceDTO> getBuildTableServiceById(@PathVariable("id") long id);
 
     /**
-     * 获取API服务&Table服务&View服务的所有应用
+     * 获取API服务的所有应用
      * @return
      */
     @GetMapping("/apiTableViewService/getApiTableViewService")
     ResultEntity<List<AppBusinessInfoDTO>> getApiTableViewService();
+
+    /**
+     * 获取API服务&Table服务&View服务的所有应用
+     * @return
+     */
+    @GetMapping("/apiTableViewService/getApiService")
+    ResultEntity<List<AppBusinessInfoDTO>> getApiService();
+
+    /**
+     * 获取Table服务的所有应用
+     * @return
+     */
+    @GetMapping("/apiTableViewService/getTableService")
+    ResultEntity<List<AppBusinessInfoDTO>> getTableService();
+
+    /**
+     * 获取View服务的所有应用
+     * @return
+     */
+    @GetMapping("/apiTableViewService/getViewService")
+    ResultEntity<List<AppBusinessInfoDTO>> getViewService();
 
     /**
      * 元数据同步API服务应用信息
@@ -69,4 +92,25 @@ public interface ConsumeServeiceClient {
      */
     @PostMapping("/tableService/tableServiceSendEmails")
     ResultEntity<Object> tableServiceSendEmails(@RequestBody TableServiceEmailDTO dto);
+
+    /**
+     * 获取API服务应用信息元数据
+     * @return
+     */
+    @GetMapping("/appRegister/getApiMetaData")
+    ResultEntity<List<MetaDataEntityDTO>> getApiMetaData();
+
+    /**
+     * 获取视图服务据应用信息元数
+     * @return
+     */
+    @GetMapping("/dataAnalysisView/getViewServiceMetaData")
+    ResultEntity<List<MetaDataEntityDTO>> getViewServiceMetaData();
+
+    /**
+     * 获取数据库同步服务应用信息元数据
+     * @return
+     */
+    @GetMapping("/tableService/getTableSyncMetaData")
+    ResultEntity<List<MetaDataEntityDTO>> getTableSyncMetaData();
 }

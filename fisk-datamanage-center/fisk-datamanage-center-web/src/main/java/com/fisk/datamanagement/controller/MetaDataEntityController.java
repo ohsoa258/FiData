@@ -34,7 +34,7 @@ public class MetaDataEntityController {
     private IMetaDataEntityOperationLog iMetaDataEntityOperationLog;
 
 
-    @ApiOperation("获取atlas元数据对象树形列表")
+    @ApiOperation("获取元数据对象树形列表")
     @GetMapping("/getEntityList")
     public ResultEntity<Object> getEntityList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityTreeList());

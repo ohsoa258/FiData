@@ -2,6 +2,8 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.app.*;
@@ -115,4 +117,8 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @return 执行结果
      */
     ResultEnum setParam(AppApiBuiltinParmEditDTO dto);
+
+
+    List<MetaDataEntityDTO> getApiMetaData();
+
 }
