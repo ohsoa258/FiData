@@ -28,9 +28,213 @@
                     DATE_FORMAT( `create_time`, '%Y-%m-%d' ) ,pipel_trace_id
                 ORDER BY
                     DATE_FORMAT( `create_time`, '%Y-%m-%d' ) DESC) b GROUP BY b.days;
-
-
-
     </select>
 
+    <select id="getPipelineStatisticsLog" resultType="Integer">
+        SELECT COUNT(1) AS num
+        FROM tb_pipel_log
+        where msg like concat('%', #{result}, '%')
+            AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+          and del_flag = 1
+    </select>
+    <resultMap id="GanttChartMap" type="com.fisk.task.vo.statistics.GanttChartVO">
+        <result property="workflowName" column="workflow_name" ></result>
+        <collection property="ganttChartDetailVOList" ofType="com.fisk.task.vo.statistics.GanttChartTaskVO">
+            <result property="startDateTime" column="start_time"/>
+            <result property="endDateTime" column="end_time"/>
+        </collection>
+    </resultMap>
+    <select id="getGanttChart" resultMap="GanttChartMap">
+        SELECT t1.workflow_name, t2.create_time AS start_time, t3.create_time AS end_time
+        FROM (
+                 SELECT DISTINCT t1.workflow_name,t2.pipel_trace_id FROM dmp_datafactory_db.tb_nifi_custom_workflow t1 LEFT JOIN dmp_task_db.tb_pipel_log t2 on t1.id = t2.pipel_id WHERE t1.del_flag = 1 and t2.create_time >= CURDATE()
+             ) AS t1
+                 LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
+                 LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2;
+    </select>
+    <select id="getTopRunningTime" resultType="com.fisk.task.vo.statistics.TopRunningTimeVO">
+        SELECT
+            t4.workflow_name,
+            max( running_time ) as running_time
+        FROM
+            (
+                SELECT
+                    t1.workflow_name,
+                    t2.create_time AS start_time,
+                    t3.create_time AS end_time,
+                    TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time ) AS running_time
+                FROM
+                    (
+                        SELECT DISTINCT
+                            t1.workflow_name,
+                            t2.pipel_trace_id
+                        FROM
+                            dmp_datafactory_db.tb_nifi_custom_workflow t1
+                                LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+                        WHERE
+                            t1.del_flag = 1
+                            AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+                    ) AS t1
+                        LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                        AND t2.type = 1
+                        LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+                        AND t3.type = 2
+                WHERE
+                    t3.create_time IS NOT NULL
+            ) AS t4
+        GROUP BY
+            t4.workflow_name
+            LIMIT 20
+    </select>
+    <select id="getFaildStatistics" resultType="com.fisk.task.vo.statistics.FaildStatisticsVO">
+        SELECT
+            t5.workflow_name,
+            t4.sum,
+            t4.failed AS failedNum,
+            t4.success AS successNum
+        FROM
+            dmp_datafactory_db.tb_nifi_custom_workflow AS t5
+                LEFT JOIN (
+                SELECT
+                    t1.pipel_id,
+                    t1.num AS sum,
+                    t2.num AS success,
+		            t3.num AS failed
+                FROM
+                    (
+                    SELECT
+                    pipel_id,
+                    COUNT( 1 ) AS num
+                    FROM
+                    tb_pipel_log
+                    WHERE
+                    msg LIKE concat( '%', '开始运行', '%' )
+                    AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+                    AND del_flag = 1
+                    GROUP BY
+                    pipel_id
+                    ) AS t1
+                    LEFT JOIN (
+                    SELECT
+                    pipel_id,
+                    COUNT( 1 ) AS num
+                    FROM
+                    tb_pipel_log
+                    WHERE
+                    msg LIKE concat( '%', '运行成功', '%' )
+                    AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+                    AND del_flag = 1
+                    GROUP BY
+                    pipel_id
+                    ) AS t2 ON t1.pipel_id = t2.pipel_id
+                    LEFT JOIN (
+                    SELECT
+                    pipel_id,
+                    COUNT( 1 ) AS num
+                    FROM
+                    tb_pipel_log
+                    WHERE
+                    msg LIKE concat( '%', '运行失败', '%' )
+                    AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+                    AND del_flag = 1
+                    GROUP BY
+                    pipel_id
+                    ) AS t3 ON t1.pipel_id = t3.pipel_id
+            ) AS t4 ON t5.id = t4.pipel_id
+        WHERE
+            t5.del_flag = 1
+    </select>
+    <select id="getLineChart" resultType="com.fisk.task.vo.statistics.LineChartVO">
+        select a1.date,a2.failed,a2.success from (SELECT
+        DATE_ADD(DATE_SUB(CURDATE(), INTERVAL #{lookday} DAY), INTERVAL numbers.n DAY) AS date
+        FROM (
+        SELECT a.N + b.N * 10 + 1 AS n
+        FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) a,
+        (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) b
+        WHERE a.N + b.N * 10 + 1 &lt;= DATEDIFF(CURDATE(), DATE_SUB(CURDATE(), INTERVAL #{lookday} DAY))
+        ) numbers
+        ORDER BY date desc) a1
+        left join (SELECT
+        t1.date,
+        t1.num AS success,
+        t2.num AS failed
+        FROM
+        (SELECT
+        DATE(create_time) as date,
+        COUNT( 1 ) AS num
+        FROM
+        tb_pipel_log
+        WHERE
+        msg LIKE concat( '%', '运行成功', '%' )
+        AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+        AND del_flag = 1
+        GROUP BY
+        DATE(create_time)
+        ) AS t1
+        LEFT JOIN (
+        SELECT
+        DATE(create_time) as date,COUNT( 1 ) AS num
+        FROM
+        tb_pipel_log
+        WHERE
+        msg LIKE concat( '%', '运行失败', '%' )
+        AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+        AND del_flag = 1
+        GROUP BY
+        DATE(create_time)
+        ) AS t2 ON t1.date = t2.date) as a2 on a1.date = a2.date
+    </select>
+    <select id="getDetailLineChart" resultType="com.fisk.task.vo.statistics.DetailLineChartVO">
+        SELECT
+            t1.workflow_name,
+            DATE(t2.create_time) AS date,
+            MAX(TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time )) AS running_time
+        FROM
+            (
+            SELECT DISTINCT
+            t1.workflow_name,
+            t2.pipel_trace_id
+            FROM
+            dmp_datafactory_db.tb_nifi_custom_workflow t1
+            LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+            WHERE
+            t1.del_flag = 1
+            AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL (#{lookday} - 1 ) DAY )
+            ) AS t1
+            LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+            AND t2.type = 1
+            LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+            AND t3.type = 2
+        WHERE
+            t3.create_time IS NOT NULL
+          AND t1.workflow_name = #{workflowName}
+        GROUP BY DATE(t2.create_time)
+    </select>
+    <select id="getPipelLineDetailLog" resultType="com.fisk.task.vo.statistics.PipelLineDetailVO">
+        SELECT t1.workflow_name as workflowName,
+        t2.create_time AS startDateTime,
+        t3.create_time AS endDateTime,
+        TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time) as runningTime,
+        t3.msg as runningStatus
+        FROM (
+             SELECT DISTINCT t1.workflow_name,t2.pipel_trace_id
+             FROM dmp_datafactory_db.tb_nifi_custom_workflow t1
+             LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+             WHERE t1.del_flag = 1
+            <choose>
+                <when test="dto.lookday != null and dto.lookday != 0">
+                    and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+                </when>
+                <when test="dto.lookday == null or dto.lookday == 0">
+                    and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 29 DAY )
+                </when>
+            </choose>
+             ) AS t1
+                 LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
+                 LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2;
+                <if test="dto.workflowName != null and dto.workflowName != '' ">
+                    WHERE
+                        t1.workflow_name = #{dto.workflowName}
+                </if>
+    </select>
 </mapper>
