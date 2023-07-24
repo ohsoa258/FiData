@@ -70,7 +70,7 @@
             <artifactId>openedgewp</artifactId>
             <version>12.7</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/openedgewp.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/lib/openedge.jar</systemPath>
         </dependency>
 
         <!-- feign接口调用 -->
