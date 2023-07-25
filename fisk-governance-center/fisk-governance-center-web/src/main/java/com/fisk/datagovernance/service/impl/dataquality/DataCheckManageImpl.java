@@ -593,6 +593,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         }
+        // 设置具体的校验类型
+        dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         return dataCheckResultVO;
     }
 
@@ -681,6 +683,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         }
+        // 设置具体的校验类型
+        dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         return dataCheckResultVO;
     }
 
