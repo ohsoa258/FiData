@@ -1339,6 +1339,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         poList.forEach(e -> {
             ApiTableDTO apiTableDTO = new ApiTableDTO();
             apiTableDTO.tableName = e.tableName;
+            apiTableDTO.tblId = e.id;
             apiTableDTO.pid = e.pid;
             apiTableDTO.list = e.list;
             // 查询所有子级表名
@@ -1375,6 +1376,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // ods_应用简称
         String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
+        // 获取物理表id
+        List<Long> tableIdList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tblId).collect(Collectors.toList());
         JsonUtils jsonUtils = new JsonUtils();
         List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
         // 获取Json的schema信息
@@ -1398,9 +1401,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 dto.setBatchNumber(uuid);
                 dto.setSmallBatchNumber(uuid);
                 HashMap<String, JSONArray> body = new HashMap<>();
-                for (JsonTableData jsonTableData : targetTable) {
-                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+//                for (JsonTableData jsonTableData : targetTable) {
+//                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+//                }
+                for (int i = 0; i < targetTable.size(); i++) {
+                    body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
                 }
+
 
                 dto.body = body;
                 // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
