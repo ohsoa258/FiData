@@ -137,6 +137,9 @@ public class BuildDataInputPgTableListener {
                     String countString = countList.get(0).toString();
                     Map countMap = JSON.parseObject(countString, Map.class);
                     Object count = countMap.get("count");
+                    if (count==null){
+                        count = countMap.get("");
+                    }
                     tableCount = Integer.parseInt(count.toString());
                 }
                 if (tableCount == buildPhysicalTableDTO.apiTableNames.size()) {
