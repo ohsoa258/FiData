@@ -467,10 +467,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -478,7 +478,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s通过", tName, fName, TemplateTypeEnum.NULL_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
@@ -580,10 +580,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -591,7 +591,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查通过", tName, fName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         }
         return dataCheckResultVO;
     }
@@ -668,10 +668,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -679,7 +679,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         }
         return dataCheckResultVO;
     }
@@ -717,10 +717,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -728,7 +728,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s通过", tName, dataCheckExtendPO.getFieldName(), TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
@@ -834,10 +834,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (!isValid) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName,dataCheckPO.ruleName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 JSONArray jsonArray = new JSONArray();
@@ -854,7 +854,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(data.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
         }
         return dataCheckResultVO;
     }
@@ -934,10 +934,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，正则表达式为：%s", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -945,7 +945,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s通过", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.REGEX_CHECK.getName()));
         }
         return dataCheckResultVO;
     }

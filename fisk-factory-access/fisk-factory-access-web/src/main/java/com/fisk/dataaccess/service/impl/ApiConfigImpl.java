@@ -641,7 +641,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }else {
-                return ResultEntityBuild.build(resultEnum, msg);
+                return ResultEntityBuild.build(resultEnum, result.data);
             }
 
             // 保存本次的日志信息
@@ -1339,6 +1339,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         poList.forEach(e -> {
             ApiTableDTO apiTableDTO = new ApiTableDTO();
             apiTableDTO.tableName = e.tableName;
+            apiTableDTO.tblId = e.id;
             apiTableDTO.pid = e.pid;
             apiTableDTO.list = e.list;
             // 查询所有子级表名
@@ -1375,6 +1376,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // ods_应用简称
         String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
+        // 获取物理表id
+        List<Long> tableIdList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tblId).collect(Collectors.toList());
         JsonUtils jsonUtils = new JsonUtils();
         List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
         // 获取Json的schema信息
@@ -1398,9 +1401,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 dto.setBatchNumber(uuid);
                 dto.setSmallBatchNumber(uuid);
                 HashMap<String, JSONArray> body = new HashMap<>();
-                for (JsonTableData jsonTableData : targetTable) {
-                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+//                for (JsonTableData jsonTableData : targetTable) {
+//                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+//                }
+                for (int i = 0; i < targetTable.size(); i++) {
+                    body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
                 }
+
 
                 dto.body = body;
                 // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
@@ -1410,10 +1417,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
                     List<DataCheckResultVO> data = result.data;
                     if (!CollectionUtils.isEmpty(data)) {
+                        StringBuilder checkResult = new StringBuilder("校验不通过的规则代号如下：");
+                        for (DataCheckResultVO d : data) {
+                            checkResult.append(d.checkResultMsg)
+                                    .append("。 ");
+                        }
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
                             if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
-                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, e.checkResultMsg);
+                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
                             } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                 checkResultMsg.append(e.checkResultMsg).append("；");
                             } else {

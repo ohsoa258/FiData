@@ -105,10 +105,4 @@ public class DatafactoryController {
     public ResultEntity<PipeDagDTO> getTaskLinkedList(@PathVariable("id") Long id) {
         return service.getTaskLinkedList(id);
     }
-
-    @GetMapping("/getPipelLineName")
-    @ApiOperation(value = "根据所有管道名称")
-    public List<String> getPipelLineName() {
-        return service.getPipelLineName();
-    }
 }

@@ -8,10 +8,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+/**
+ * 定时任务调度
+ */
 @Slf4j
 @Component("SubscribeEmailTask")
 public class SubscribeEmailTask {
@@ -63,7 +64,7 @@ public class SubscribeEmailTask {
         service.sendPipelLogSendEmails(content.toString());
     }
 
-    public String format(int seconds){
+    public String format(int seconds) {
         StringBuilder content = new StringBuilder();
         // 获取小时数
         int hours = seconds / 3600;
@@ -72,11 +73,11 @@ public class SubscribeEmailTask {
         // 获取剩余的秒数
         int remainingSeconds = seconds % 60;
         content.append(String.format("%02ds", remainingSeconds));
-        if (minutes != 0){
-            content.insert(0,String.format("%02dm", minutes));
+        if (minutes != 0) {
+            content.insert(0, String.format("%02dm", minutes));
         }
-        if (hours != 0){
-            content.insert(0,String.format("%02dh", hours));
+        if (hours != 0) {
+            content.insert(0, String.format("%02dh", hours));
         }
         return content.toString();
     }

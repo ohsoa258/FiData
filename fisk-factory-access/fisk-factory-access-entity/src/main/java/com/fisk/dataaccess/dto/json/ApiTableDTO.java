@@ -28,4 +28,7 @@ public class ApiTableDTO {
 
     @ApiModelProperty(value = "子级表名")
     public List<String> childTableName;
+
+    @ApiModelProperty(value = "物理表id")
+    public long tblId;
 }
