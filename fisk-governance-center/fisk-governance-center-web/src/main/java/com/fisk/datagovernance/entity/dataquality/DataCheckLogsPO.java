@@ -19,6 +19,11 @@ public class DataCheckLogsPO extends BasePO {
     public int ruleId;
 
     /**
+     * 数据校验规则名称
+     */
+    public String ruleName;
+
+    /**
      * 模板id
      */
     public int templateId;
@@ -85,6 +90,11 @@ public class DataCheckLogsPO extends BasePO {
      * 检查提示消息
      */
     public String checkMsg;
+
+    /**
+     * 检查规则说明
+     */
+    public String checkRuleIllustrate;
 
     /**
      * 错误Json数据
