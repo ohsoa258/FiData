@@ -37,7 +37,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 })
 @EnableHystrix
 @EnableScheduling //开启定时任务
-public class FKDataManagementApplication {
+public class  FKDataManagementApplication {
     public static void main(String[] args) {
         SpringApplication.run(FKDataManagementApplication.class, args);
     }

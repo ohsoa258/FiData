@@ -105,5 +105,4 @@ public class DataModelScheduleImpl implements SchedulingConfigurer {
             throw new FkException(ResultEnum.LOAD_FIDATA_METADATA_ERROR, e);
         }
     }
-
 }

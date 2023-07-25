@@ -11,18 +11,17 @@ import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewAccountDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
-import com.fisk.dataservice.entity.DataViewAccountPO;
-import com.fisk.dataservice.entity.DataViewPO;
-import com.fisk.dataservice.entity.DataViewRolePO;
-import com.fisk.dataservice.entity.DataViewThemePO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.AccountJurisdictionEnum;
 import com.fisk.dataservice.map.DataViewMap;
 import com.fisk.dataservice.mapper.DataViewAccountMapper;
@@ -40,13 +39,11 @@ import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotNull;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -78,6 +75,11 @@ public class DataViewThemeServiceImpl
 
     @Resource
     private DataViewRoleMapper dataViewRoleMapper;
+
+    @Resource
+    private  DataViewFieldsServiceImpl dataViewFieldsService;
+
+    @Resource DataViewServiceImpl dataViewService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -676,5 +678,54 @@ public class DataViewThemeServiceImpl
         log.info("已获取数据库连接");
         CreateSchemaSqlUtils.buildSchemaSql(connection, schemaName, dataSourceConfig.data.conType);
         log.info("架构创建结束");
+    }
+
+
+    /**
+     * 获取视图元数据
+     * @return
+     */
+    @Override
+    public List<MetaDataEntityDTO> getViewServiceMetaData() {
+        //获取所有应用
+        List<DataViewThemePO> allDataViewThemePOList = this.query().list();
+        //获取所有视图
+        List<DataViewPO> allDataViewPOList = dataViewService.query().list();
+        //获取所有字段
+        List<ViewFieldsPO> allViewFieldsPOList = dataViewFieldsService.query().list();
+        List<MetaDataEntityDTO> metaDataEntityDTOList= new ArrayList<>();
+        for (DataViewThemePO dataViewThemePO : allDataViewThemePOList) {
+            //获取应用下的视图
+            List<DataViewPO> ThemeTheViewPOList = allDataViewPOList.stream().filter(e -> e.getViewThemeId() == dataViewThemePO.getId()).collect(Collectors.toList());
+            //添加应用下的API
+            for (DataViewPO  dataViewPO : ThemeTheViewPOList) {
+                MetaDataEntityDTO metaDataEntityDTO=new MetaDataEntityDTO();
+                metaDataEntityDTO.setName(dataViewPO.getName());
+                metaDataEntityDTO.setDisplayName(dataViewPO.getDisplayName());
+                metaDataEntityDTO.setQualifiedName("view_"+dataViewThemePO.getId()+"_"+dataViewPO.getId());
+                metaDataEntityDTO.setDescription(dataViewPO.getViewDesc());
+                metaDataEntityDTO.setCreateSql(dataViewPO.getViewScript());
+                metaDataEntityDTO.setDatasourceDbId(dataViewThemePO.getTargetDbId());
+                metaDataEntityDTO.setEntityType(13);
+                metaDataEntityDTO.setOwner(dataViewThemePO.getThemePrincipal());
+                metaDataEntityDTO.setAppName(dataViewThemePO.getThemeName());
+                //获取API下的字段
+                List<ViewFieldsPO> viewFieldsPOList = allViewFieldsPOList.stream().filter(e->e.getViewId()==dataViewPO.getId()).collect(Collectors.toList());
+                //添加AP下的字段
+                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList=new ArrayList<>();
+                for (ViewFieldsPO fieldConfigVO : viewFieldsPOList) {
+                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO=new MetaDataColumnAttributeDTO();
+                    metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
+                    metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
+                    metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
+                    metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName()+"_"+fieldConfigVO.getId());
+                    metaDataColumnAttributeDTO.setOwner(dataViewThemePO.getThemePrincipal());
+                    metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+                }
+                metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
+                metaDataEntityDTOList.add(metaDataEntityDTO);
+            }
+        }
+        return metaDataEntityDTOList;
     }
 }

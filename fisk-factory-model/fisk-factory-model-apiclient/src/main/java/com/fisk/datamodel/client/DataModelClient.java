@@ -358,7 +358,7 @@ public interface DataModelClient {
      * @return
      */
     @ApiOperation("根据表名获取事实或维度表")
-    @GetMapping("/getFactOrDimTable")
+    @GetMapping("/dimension/getFactOrDimTable")
     ResultEntity<Long> getFactOrDimTable(@RequestParam("tblName") String tblName);
 
 }

@@ -92,4 +92,16 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataSourcesBySystemDataSourceId(id));
     }
 
+    /**
+     * 获取数据接入引用的数据源id
+     *
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "获取数据接入引用的数据源id")
+    @GetMapping("/getAccessDataSources")
+    public ResultEntity<AppDataSourceDTO> getAccessDataSources(@RequestParam("id") Long id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAccessDataSources(id));
+    }
+
 }

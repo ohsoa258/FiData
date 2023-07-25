@@ -15,6 +15,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
@@ -36,6 +37,7 @@ import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.LineageMapRelationPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
 import com.fisk.datamanagement.enums.ProcessTypeEnum;
 import com.fisk.datamanagement.map.MetadataEntityMap;
 import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
@@ -51,6 +53,7 @@ import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
+import com.jcraft.jsch.IO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +62,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author JianWenYang
@@ -141,7 +145,7 @@ public class MetadataEntityImpl
     }
 
     @Override
-    public Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId, String rdbmsType) {
+    public Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId,String parentId, String rdbmsType) {
         MetadataEntityPO po = this.query().eq("id", entityId).one();
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -152,6 +156,10 @@ public class MetadataEntityImpl
         po.displayName = dto.displayName;
         po.name = dto.name;
         po.description = dto.description;
+        if(parentId!=null){
+            po.parentId=Integer.valueOf(parentId);
+        }
+
 
         boolean flat = this.updateById(po);
         if (!flat) {
@@ -201,6 +209,39 @@ public class MetadataEntityImpl
         HashMap<Long, Integer> idList = new HashMap<>();
         idList.put(0L, 0);
 
+        //获取FiData所有数据集
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSourceResult = userClient.getAllFiDataDataSource();
+        if (allFiDataDataSourceResult.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        //通过对比数据集, 为实例分类, 分类: 数据源、数据工厂。
+        List<DataSourceDTO> dataSourceDTOList = allFiDataDataSourceResult.data;
+        for (MetadataEntityPO parent :parentList){
+            //根据ip查找数据源所属类型
+            Optional<DataSourceDTO> dataSourceDTOResult = dataSourceDTOList.stream().filter(e -> e.getConIp().equals(parent.getName())).findFirst();
+            if(dataSourceDTOResult.isPresent()){
+                //存在，数据源，数据工厂
+                DataSourceDTO sourceDTO = dataSourceDTOResult.get();
+                if(sourceDTO.getSourceType()==1){
+                    //数据工厂
+                    parent.setParentId(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
+                }else{
+                    //数据源
+                    parent.setParentId(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
+                }
+            }
+        }
+
+        //获取元数据的分类
+        for (MetaClassificationTypeEnum value : MetaClassificationTypeEnum.values()) {
+            EntityTreeDTO dto = new EntityTreeDTO();
+            dto.id = String.valueOf(value.getValue());
+            dto.label = value.getName();
+            dto.type = EntityTypeEnum.CLASSIFICATION.getName();
+            dto.parentId = "-100";
+            dto.displayName = value.getName();
+            list.add(buildChildTree(dto, poList));
+        }
 //获取实体关联业务分类数据
 //        List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
 //        if (!CollectionUtils.isEmpty(classificationMap)) {
@@ -256,15 +297,15 @@ public class MetadataEntityImpl
 //            }
 //        }
 
-        for (MetadataEntityPO item : parentList) {
-            EntityTreeDTO dto = new EntityTreeDTO();
-            dto.id = String.valueOf(item.id);
-            dto.label = item.displayName;
-            dto.type = EntityTypeEnum.RDBMS_INSTANCE.getName();
-            dto.parentId = "-1";
-            dto.displayName = item.displayName;
-            list.add(buildChildTree(dto, poList));
-        }
+//        for (MetadataEntityPO item : parentList) {
+//            EntityTreeDTO dto = new EntityTreeDTO();
+//            dto.id = String.valueOf(item.id);
+//            dto.label = item.displayName;
+//            dto.type = EntityTypeEnum.RDBMS_INSTANCE.getName();
+//            dto.parentId = "-1";
+//            dto.displayName = item.displayName;
+//            list.add(buildChildTree(dto, poList));
+//        }
 
         return list;
     }
@@ -406,6 +447,10 @@ public class MetadataEntityImpl
             case RDBMS_COLUMN:
                 map.put("table", getEntityRelationInfo(po.parentId, EntityTypeEnum.RDBMS_TABLE, "id").get(0));
                 break;
+            case VIEW:
+            case WEB_API:
+                map.put("columns", getEntityRelationInfo((int) po.id, EntityTypeEnum.RDBMS_COLUMN, "parent_id"));
+                break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -478,6 +523,10 @@ public class MetadataEntityImpl
                 break;
             case RDBMS_COLUMN:
                 attributeMap.put("table", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_TABLE, "id").get(0));
+                break;
+            case WEB_API:
+            case VIEW:
+                attributeMap.put("columns", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_COLUMN, "parent_id"));
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -569,8 +618,22 @@ public class MetadataEntityImpl
             log.debug("=======开始解析表名集合first1======"+JSON.toJSONString(first1));
             List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
             log.debug("=======转换后的表集合========:"+JSON.toJSONString(collect));
-            String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
-            log.debug("=======appId"+first1.get().appId+"+名称"+first1.get().appAbbreviation+"+dataSourceId:"+first1.get().dataSourceId+"========");
+            ResultEntity<AppDataSourceDTO> accessDataSources = dataAccessClient.getAccessDataSources(Long.valueOf(first1.get().dataSourceId));
+
+            if(accessDataSources.code!= ResultEnum.SUCCESS.getCode()){
+                log.error("获取dataAccessClient.getAccessDataSource数据集失败");
+                return;
+            }
+            if (accessDataSources.data==null){
+                log.error("找不到数据源，数据集ID："+first1.get().dataSourceId);
+                return;
+            }
+            AppDataSourceDTO datasource = accessDataSources.data;
+//            String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
+//            log.debug("=======appId"+first1.get().appId+"+名称"+first1.get().appAbbreviation+"+dataSourceId:"+first1.get().dataSourceId+"========");
+
+            String dbQualifiedNames=datasource.getHost()+"_"+datasource.getDbName();
+            log.debug("=======ConIp"+datasource.getHost()+" ConDbname: "+datasource.getDbName());
             fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
             log.debug("========fromEntityIdList========="+JSON.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
@@ -854,6 +917,24 @@ public class MetadataEntityImpl
         }
     }
 
+    /**
+     * 同步源表到目标的血缘
+     * @param sourceId
+     * @param targetId
+     * @param sqlScript
+     */
+    public void syncSourceToTargetKinShip(List<String> sourceId,
+                                    String targetId,
+                                  String sqlScript) {
+
+
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(targetId), ProcessTypeEnum.TEMP_TABLE_PROCESS);
+
+        addProcess(sqlScript, sourceId.stream().map(e->Long.parseLong(e)).collect(Collectors.toList()), targetId, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
+
+    }
+
     public List<Long> getDwTableList(List<String> tableNameList,
                                      List<SourceTableDTO> dtoList,
                                      String dbQualifiedName) {
@@ -915,8 +996,8 @@ public class MetadataEntityImpl
 
 
     public void addProcess(String sql,
-                           List<Long> tableList,
-                           String atlasGuid,
+                           List<Long> sourceIdList,
+                           String targetId,
                            String processName,
                            ProcessTypeEnum processType) {
         //去除换行符,以及转小写
@@ -936,10 +1017,10 @@ public class MetadataEntityImpl
         }
 
         List<LineageMapRelationDTO> dtoList = new ArrayList<>();
-        for (Long item : tableList) {
+        for (Long item : sourceIdList) {
             LineageMapRelationDTO data = new LineageMapRelationDTO();
             data.fromEntityId = item.intValue();
-            data.toEntityId = Integer.parseInt(atlasGuid);
+            data.toEntityId = Integer.valueOf(targetId);
             data.metadataEntityId = (int) po.id;
             data.processType = processType.getValue();
             dtoList.add(data);
@@ -1200,4 +1281,15 @@ public class MetadataEntityImpl
         return data;
     }
 
+    /**
+     * 通过实体QualifiedNames获取实体
+     * @return
+     */
+    public MetadataEntityPO getEntityByQualifiedNames(String qualifiedName){
+        Optional<MetadataEntityPO> qualified_name = this.query().eq("qualified_name", qualifiedName).list().stream().findFirst();
+        if (qualified_name.isPresent()){
+            return qualified_name.get();
+        }
+        return null;
+    }
 }

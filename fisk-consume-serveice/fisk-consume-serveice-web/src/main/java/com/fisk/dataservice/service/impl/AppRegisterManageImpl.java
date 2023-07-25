@@ -12,6 +12,9 @@ import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.core.utils.office.pdf.exception.PDFException;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
@@ -28,6 +31,7 @@ import com.fisk.dataservice.map.AppApiMap;
 import com.fisk.dataservice.map.AppRegisterMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
+import com.fisk.dataservice.vo.api.FieldConfigVO;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
@@ -84,6 +88,9 @@ public class AppRegisterManageImpl
 
     @Resource
     private ApiFieldMapper apiFieldMapper;
+
+    @Resource
+    private  ApiRegisterManageImpl apiRegisterManage;
 
     @Resource
     GetConfigDTO getConfig;
@@ -450,6 +457,7 @@ public class AppRegisterManageImpl
         return ResultEnum.SAVE_DATA_ERROR;
     }
 
+
     /**
      * 生成API文档DTO
      *
@@ -640,5 +648,49 @@ public class AppRegisterManageImpl
         }
         apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDTOS);
         return apiDocDTO;
+    }
+
+
+    @Override
+    public List<MetaDataEntityDTO> getApiMetaData() {
+        //获取所有应用
+        List<AppConfigPO> allApiConfigPOList = this.query().list();
+        List<MetaDataEntityDTO> metaDataEntityDTOList= new ArrayList<>();
+        for (AppConfigPO appConfigPO : allApiConfigPOList) {
+            //获取应用下的API
+            List<ApiConfigPO> apiTheAppList = appApiMapper.getApiTheAppList((int) appConfigPO.getId());
+            //添加应用下的API
+            for (ApiConfigPO apiConfigPO : apiTheAppList) {
+                MetaDataEntityDTO metaDataEntityDTO=new MetaDataEntityDTO();
+                metaDataEntityDTO.setQualifiedName("api_"+appConfigPO.getId()+"_"+apiConfigPO.getId());
+                metaDataEntityDTO.setName(apiConfigPO.getApiName());
+                metaDataEntityDTO.setDisplayName(apiConfigPO.getApiName());
+                metaDataEntityDTO.setDescription(apiConfigPO.getApiDesc());
+                metaDataEntityDTO.setCreateSql(apiConfigPO.getCreateSql());
+                metaDataEntityDTO.setApiType(apiConfigPO.getApiType());
+                metaDataEntityDTO.setTableName(apiConfigPO.getTableName());
+                metaDataEntityDTO.setDatasourceDbId(apiConfigPO.getDatasourceId());
+                metaDataEntityDTO.setEntityType(5);
+                metaDataEntityDTO.setCreateApiType(apiConfigPO.getCreateApiType());
+                metaDataEntityDTO.setOwner(appConfigPO.getAppAccount());
+                metaDataEntityDTO.setAppName(appConfigPO.getAppName());
+                //获取API下的字段
+                List<FieldConfigVO> fieldConfigVOList = apiRegisterManage.getFieldAll((int) apiConfigPO.getId());
+                //添加AP下的字段
+                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList=new ArrayList<>();
+                for (FieldConfigVO fieldConfigVO : fieldConfigVOList) {
+                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO=new MetaDataColumnAttributeDTO();
+                    metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName()+"_"+fieldConfigVO.getId());
+                    metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
+                    metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
+                    metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
+                    metaDataColumnAttributeDTO.setOwner(appConfigPO.getAppAccount());
+                    metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+                }
+                metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
+                metaDataEntityDTOList.add(metaDataEntityDTO);
+            }
+        }
+        return metaDataEntityDTOList;
     }
 }

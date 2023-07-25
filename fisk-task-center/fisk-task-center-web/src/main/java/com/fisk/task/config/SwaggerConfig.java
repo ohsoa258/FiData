@@ -32,6 +32,9 @@ public class SwaggerConfig {
     public static final String TableTopic = "表主题";
     public static final String TaskLog = "任务日志";
     public static final String TBETLIncremental = "TBETL增量";
+    public static final String PIPELINE_STATISTICS = "管道日志统计";
+
+    public static final String SCHEDULE = "定时任务";
 
     @Bean
     public Docket createRestApi() {
@@ -51,6 +54,8 @@ public class SwaggerConfig {
                 .tags(new Tag(TableTopic,"表主题"))
                 .tags(new Tag(TaskLog,"任务日志"))
                 .tags(new Tag(TBETLIncremental,"TBETL增量"))
+                .tags(new Tag(PIPELINE_STATISTICS,"管道日志统计"))
+                .tags(new Tag(SCHEDULE,"定时任务"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

@@ -36,6 +36,7 @@ import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
+import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.*;
 import com.fisk.datamodel.map.dimension.DimensionMap;
 import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
@@ -933,11 +934,20 @@ public class DimensionImpl
     public Long getFactOrDimTable(String tblName) {
         Long tblId = null;
         if (tblName.contains("dim_")) {
-            tblId = getOne(new LambdaQueryWrapper<DimensionPO>().eq(DimensionPO::getDimensionTabName, tblName)).id;
+            DimensionPO one = getOne(new LambdaQueryWrapper<DimensionPO>().eq(DimensionPO::getDimensionTabName, tblName));
+            if (one!=null){
+                return one.id;
+            }else {
+                return null;
+            }
         } else {
-            tblId = factImpl.getFactIdByFactName(tblName);
+            FactPO factPO = factImpl.getFactIdByFactName(tblName);
+            if (factPO!=null){
+                return factPO.id;
+            }else {
+                return null;
+            }
         }
-        return tblId;
     }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,

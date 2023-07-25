@@ -5,6 +5,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.vo.app.*;
@@ -123,4 +125,11 @@ public class AppRegisterController {
     public ResultEntity<Object> setParm(@Validated @RequestBody AppApiBuiltinParmEditDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setParam(dto));
     }
+
+    @ApiOperation("获取网关API元数据")
+    @GetMapping("/getApiMetaData")
+    public ResultEntity<List<MetaDataEntityDTO>>   getApiMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiMetaData());
+    }
+
 }

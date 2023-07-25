@@ -546,8 +546,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
      * @param tblName
      * @return
      */
-    public Long getFactIdByFactName(String tblName){
-        return getOne(new LambdaQueryWrapper<FactPO>().eq(FactPO::getFactTabName, tblName)).id;
+    public FactPO getFactIdByFactName(String tblName){
+        return getOne(new LambdaQueryWrapper<FactPO>().eq(FactPO::getFactTabName, tblName));
     }
 
 }

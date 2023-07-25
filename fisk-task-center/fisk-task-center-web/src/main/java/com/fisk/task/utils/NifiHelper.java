@@ -54,6 +54,10 @@ public class NifiHelper implements ApplicationContextAware {
         return applicationContext != null ? applicationContext.getBean(clazz) : null;
     }
 
+    public static Object getBean(String beanName) {
+        return applicationContext != null ? applicationContext.getBean(beanName) : null;
+    }
+
 
     /**
      * 获取process组的api操作类

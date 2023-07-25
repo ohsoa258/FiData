@@ -120,7 +120,7 @@
                 GROUP BY server_name, timestamp;
             </when>
             <when test="type == 2">
-                WHERE create_time >= DATE(NOW())
+                WHERE create_time >= CURDATE()
                 and server_name = #{name} and server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>

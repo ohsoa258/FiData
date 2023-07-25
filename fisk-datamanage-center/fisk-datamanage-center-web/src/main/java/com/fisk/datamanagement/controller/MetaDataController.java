@@ -6,6 +6,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
@@ -52,6 +53,12 @@ public class MetaDataController {
     @PostMapping("/addFiledAndUpdateFiled")
     public ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto){
         return ResultEntityBuild.build(service.addFiledAndUpdateFiled(dto));
+    }
+
+    @ApiOperation("导出元数据")
+    @PostMapping("/export")
+    public void export(@Validated  @RequestParam ExportMetaDataDto dto){
+        service.export(dto);
     }
 
 
