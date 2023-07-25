@@ -68,6 +68,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckLogsManageImpl dataCheckLogsManage;
 
     @Resource
+    private DataCheckLogsMapper dataCheckLogsMapper;
+
+    @Resource
     private UserHelper userHelper;
 
     private static final String WARN = "warn";
@@ -400,6 +403,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (dataCheckExtendPO.getRecordErrorData() == 1) {
                         DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
                         dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                        dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
                         dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
                         dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
                         dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.INTERFACE_DATA_CHECK_LOG.getValue());
@@ -413,6 +417,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
                         dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
                         dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
+                        dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
                         dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
                         dataCheckLogs.add(dataCheckLogsPO);
                         // 清空校验不通过的数据字段，减少返回的字节流
@@ -443,22 +448,23 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
         String fName = dataCheckSyncParamDTO.getFieldName();
         String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
-        List<String> fieldValues = new ArrayList<>();
+        JSONArray errorDataList = new JSONArray();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             if (jsonObject.containsKey(fName)) {
-                fieldValues.add(jsonObject.getString(fName));
+                String value = jsonObject.getString(fName);
+                if (StringUtils.isEmpty(value)) {
+                    errorDataList.add(jsonObject);
+                }
+            } else {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
+                return dataCheckResultVO;
             }
-        }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
-            return dataCheckResultVO;
         }
 
         // 第三步：判断字段值是否通过空值检查
-        List<String> fieldValueFilters = fieldValues.stream().filter(item -> StringUtils.isEmpty(item)).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(fieldValueFilters)) {
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
@@ -467,9 +473,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
-                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(fieldValueFilters));
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
             }
-            dataCheckResultVO.setCheckFailCount(String.valueOf(fieldValueFilters.size()));
+            dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
@@ -487,89 +493,90 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
         String fName = dataCheckSyncParamDTO.getFieldName();
         String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
-        List<String> fieldValues = new ArrayList<>();
+        JSONArray errorDataList = new JSONArray();
+        RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             if (jsonObject.containsKey(fName)) {
-                fieldValues.add(jsonObject.getString(fName));
-            }
-        }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
-            return dataCheckResultVO;
-        }
 
-        // 第三步：判断字段值是否通过值域验证
-        List<String> errorDataList = new ArrayList<>();
-        RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
-        switch (rangeCheckTypeEnum) {
-            case SEQUENCE_RANGE:
-                // 序列范围
-                List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
-                errorDataList = RegexUtils.subtractValid(fieldValues, list, true);
-                break;
-            case VALUE_RANGE:
-                // 取值范围
-                Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                for (String item : fieldValues) {
-                    if (StringUtils.isNotEmpty(item)) {
-                        Integer value = Integer.valueOf(item);
-                        if (value < lowerBound_Int || value > upperBound_Int) {
-                            errorDataList.add(item);
-                        }
-                    } else {
-                        errorDataList.add(item);
-                    }
-                }
-                break;
-            case DATE_RANGE:
-                // 日期范围
-                List<DateTimeFormatter> formatters = Arrays.asList(
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-                        DateTimeFormatter.ofPattern("yyyy-M-dd"),
-                        DateTimeFormatter.ofPattern("yyyy/M/dd"),
-                        DateTimeFormatter.ofPattern("yyyy/MM/dd")
-                );
-                List<DateTimeFormatter> formatters1 = Arrays.asList(
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-                        DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss"),
-                        DateTimeFormatter.ofPattern("yyyy/M/dd HH:mm:ss"),
-                        DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
-                );
-                for (String item : fieldValues) {
-                    try {
-                        LocalDateTime dateTime = null;
-                        if (StringUtils.isNotEmpty(item)) {
-                            if (item.length() > 10) {
-                                dateTime = DateTimeUtils.parseDateTime(item, formatters1);
-                            } else {
-                                LocalDate localDate = DateTimeUtils.parseDate(item, formatters);
-                                if (localDate != null) {
-                                    dateTime = DateTimeUtils.convertLocalDateToDateTime(localDate);
-                                }
-                            }
-                        }
-                        if (dateTime != null) {
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                            String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
-                            String[] timeRange = timeRangeString.split("~");
-                            LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
-                            LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
+                String checkValue = jsonObject.getString(fName);
 
-                            if (dateTime.isBefore(startTime) || dateTime.isAfter(endTime)) {
-                                errorDataList.add(item);
+                // 第三步：判断字段值是否通过值域验证
+                switch (rangeCheckTypeEnum) {
+                    case SEQUENCE_RANGE:
+                        // 序列范围
+                        List<String> fieldValues = new ArrayList<>();
+                        fieldValues.add(checkValue);
+                        List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                        List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
+                        if (CollectionUtils.isNotEmpty(valid)) {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
+                    case VALUE_RANGE:
+                        // 取值范围
+                        Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                        Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                        if (StringUtils.isNotEmpty(checkValue)) {
+                            Integer value = Integer.valueOf(checkValue);
+                            if (value < lowerBound_Int || value > upperBound_Int) {
+                                errorDataList.add(jsonObject);
                             }
                         } else {
-                            errorDataList.add(item);
+                            errorDataList.add(jsonObject);
                         }
-                    } catch (DateTimeParseException e) {
-                        errorDataList.add(item);
-                    }
+                        break;
+                    case DATE_RANGE:
+                        // 日期范围
+                        List<DateTimeFormatter> formatters = Arrays.asList(
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+                                DateTimeFormatter.ofPattern("yyyy-M-dd"),
+                                DateTimeFormatter.ofPattern("yyyy/M/dd"),
+                                DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                        );
+                        List<DateTimeFormatter> formatters1 = Arrays.asList(
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                                DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss"),
+                                DateTimeFormatter.ofPattern("yyyy/M/dd HH:mm:ss"),
+                                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                        );
+                        try {
+                            LocalDateTime dateTime = null;
+                            if (StringUtils.isNotEmpty(checkValue)) {
+                                if (checkValue.length() > 10) {
+                                    dateTime = DateTimeUtils.parseDateTime(checkValue, formatters1);
+                                } else {
+                                    LocalDate localDate = DateTimeUtils.parseDate(checkValue, formatters);
+                                    if (localDate != null) {
+                                        dateTime = DateTimeUtils.convertLocalDateToDateTime(localDate);
+                                    }
+                                }
+                            }
+                            if (dateTime != null) {
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                                String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
+                                String[] timeRange = timeRangeString.split("~");
+                                LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
+                                LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
+
+                                if (dateTime.isBefore(startTime) || dateTime.isAfter(endTime)) {
+                                    errorDataList.add(jsonObject);
+                                }
+                            } else {
+                                errorDataList.add(jsonObject);
+                            }
+                        } catch (DateTimeParseException e) {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
                 }
-                break;
+            } else {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
+                return dataCheckResultVO;
+            }
         }
+
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
@@ -599,72 +606,65 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
         String fName = dataCheckSyncParamDTO.getFieldName();
         String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
-        List<String> fieldValues = new ArrayList<>();
+        JSONArray errorDataList = new JSONArray();
+
+        StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             if (jsonObject.containsKey(fName)) {
-                fieldValues.add(jsonObject.getString(fName));
+
+                String checkValue = jsonObject.getString(fName);
+
+                // 第三步：判断字段值是否通过规范检查
+                switch (standardCheckTypeEnum) {
+                    case DATE_FORMAT:
+                        // 日期格式
+                        List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
+                        boolean validDateFormat = DateTimeUtils.isValidDateFormat(checkValue, list);
+                        if (!validDateFormat) {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
+                    case CHARACTER_PRECISION_LENGTH_RANGE:
+                        // 字符精度长度范围
+                        int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
+                        int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
+                        if (StringUtils.isNotEmpty(checkValue)) {
+                            String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                            List<String> values = Arrays.asList(checkValue.split(regex));
+                            if (values.stream().count() >= 2) {
+                                String value = values.get(Math.toIntExact(values.stream().count() - 1));
+                                if (value.length() < minFieldLength || value.length() > maxFieldLength) {
+                                    errorDataList.add(jsonObject);
+                                }
+                            }
+                        } else {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
+                    case URL_ADDRESS:
+                        // URL地址
+                        String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
+                        boolean validURL = RegexUtils.isValidPattern(checkValue, standardCheckTypeRegexpValue, false);
+                        if (!validURL) {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
+                    case BASE64_BYTE_STREAM:
+                        // BASE64字节流
+                        boolean validBase64String = RegexUtils.isBase64String(checkValue, false);
+                        if (!validBase64String) {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
+                }
+            } else {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
+                return dataCheckResultVO;
             }
         }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
-            return dataCheckResultVO;
-        }
 
-        // 第三步：判断字段值是否通过规范检查
-        List<String> errorDataList = new ArrayList<>();
-        StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
-        switch (standardCheckTypeEnum) {
-            case DATE_FORMAT:
-                // 日期格式
-                List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
-                for (String dateStr : fieldValues) {
-                    boolean validDateFormat = DateTimeUtils.isValidDateFormat(dateStr, list);
-                    if (!validDateFormat) {
-                        errorDataList.add(dateStr);
-                    }
-                }
-                break;
-            case CHARACTER_PRECISION_LENGTH_RANGE:
-                // 字符精度长度范围
-                int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
-                int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
-                for (String item : fieldValues) {
-                    if (StringUtils.isNotEmpty(item)) {
-                        String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
-                        List<String> values = Arrays.asList(item.split(regex));
-                        if (values.stream().count() >= 2) {
-                            String value = values.get(Math.toIntExact(values.stream().count() - 1));
-                            if (value.length() < minFieldLength || value.length() > maxFieldLength) {
-                                errorDataList.add(item);
-                            }
-                        }
-                    } else {
-                        errorDataList.add(item);
-                    }
-                }
-                break;
-            case URL_ADDRESS:
-                // URL地址
-                String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
-                for (String item : fieldValues) {
-                    boolean validURL = RegexUtils.isValidPattern(item, standardCheckTypeRegexpValue, false);
-                    if (!validURL) {
-                        errorDataList.add(item);
-                    }
-                }
-                break;
-            case BASE64_BYTE_STREAM:
-                // BASE64字节流
-                for (String item : fieldValues) {
-                    boolean validBase64String = RegexUtils.isBase64String(item, false);
-                    if (!validBase64String) {
-                        errorDataList.add(item);
-                    }
-                }
-                break;
-        }
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
@@ -694,7 +694,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
         List<String> fieldNames = Arrays.asList(dataCheckExtendPO.getFieldName().split(","));
         List<String> fieldValues = new ArrayList<>();
-        JSONArray jsonArray = new JSONArray();
+        JSONArray errorDataList = new JSONArray();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             String value = "";
@@ -708,17 +708,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             }
             if (fieldValues.contains(value.toLowerCase())) {
-                JSONObject obj = new JSONObject();
-                for (String fieldName : fieldNames) {
-                    obj.put(fieldName, jsonObject.getString(fieldName));
-                }
-                jsonArray.add(obj);
+                errorDataList.add(jsonObject);
             }
             fieldValues.add(value.toLowerCase());
         }
 
         // 第三步：判断数据是否通过重复数据检查
-        if (CollectionUtils.isNotEmpty(jsonArray)) {
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
@@ -727,9 +723,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
-                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(jsonArray));
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
             }
-            dataCheckResultVO.setCheckFailCount(String.valueOf(jsonArray.size()));
+            dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
@@ -918,28 +914,23 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
         String fName = dataCheckSyncParamDTO.getFieldName();
         String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
-        List<String> fieldValues = new ArrayList<>();
+        JSONArray errorDataList = new JSONArray();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             if (jsonObject.containsKey(fName)) {
-                fieldValues.add(jsonObject.getString(fName));
+                String checkValue = jsonObject.getString(fName);
+                boolean isValid = RegexUtils.isValidPattern(checkValue, dataCheckExtendPO.getRegexpCheckValue(), false);
+                if (!isValid) {
+                    errorDataList.add(jsonObject);
+                }
+            } else {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
+                return dataCheckResultVO;
             }
-        }
-        if (fieldValues.size() != data.size()) {
-            dataCheckResultVO.setCheckResult(FAIL);
-            dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
-            return dataCheckResultVO;
         }
 
         // 第三步：判断字段值是否通过正则表达式验证
-        List<String> errorDataList = new ArrayList<>();
-        for (String item : fieldValues) {
-            boolean isValid = RegexUtils.isValidPattern(item, dataCheckExtendPO.getRegexpCheckValue(), false);
-            if (!isValid) {
-                errorDataList.add(item);
-            }
-        }
-
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
@@ -1177,6 +1168,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     if (dataCheckExtendPO.getRecordErrorData() == 1) {
                         DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
                         dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                        dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
                         dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
                         dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
                         dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.NIFI_SYNCHRONIZATION_DATA_CHECK_LOG.getValue());
@@ -1190,6 +1182,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
                         dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
                         dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
+                        dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
                         dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
                         dataCheckLogs.add(dataCheckLogsPO);
                         // 清空校验不通过的数据字段，减少返回的字节流
@@ -2161,6 +2154,6 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto) {
-        return null;
+        return dataCheckLogsMapper.getAll(dto.page, dto);
     }
 }

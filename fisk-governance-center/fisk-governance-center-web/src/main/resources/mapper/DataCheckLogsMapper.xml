@@ -1,0 +1,39 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.DataCheckLogsMapper">
+    <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO">
+        SELECT
+            log.id,
+            log.rule_id,
+            log.rule_name,
+            log.template_id,
+            log.fi_datasource_id,
+            log.log_type,
+            log.schema_name,
+            log.table_name,
+            log.field_name,
+            log.check_template_name,
+            log.check_batch_number,
+            log.check_small_batch_number,
+            log.check_total_count,
+            log.check_fail_count,
+            log.check_result,
+            log.check_msg,
+            log.check_rule_illustrate,
+            log.error_data
+        FROM
+            tb_datacheck_rule_logs log
+        WHERE
+            log.del_flag =1
+        <if test="query.logType !=0 ">
+            and log.log_type = #{query.logType}
+        </if>
+        <if test="query.ruleId !=0 ">
+            and log.rule_id = #{query.ruleId}
+        </if>
+        <if test="query.templateId !=0 ">
+            and log.template_id = #{query.templateId}
+        </if>
+    </select>
+</mapper>

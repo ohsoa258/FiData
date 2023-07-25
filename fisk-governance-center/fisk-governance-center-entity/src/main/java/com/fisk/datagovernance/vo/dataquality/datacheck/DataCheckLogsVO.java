@@ -19,6 +19,12 @@ public class DataCheckLogsVO {
     public int ruleId;
 
     /**
+     * 数据校验规则名称(代号)
+     */
+    @ApiModelProperty(value = "数据校验规则名称(代号)")
+    public String ruleName;
+
+    /**
      * 模板id
      */
     @ApiModelProperty(value = "模板id")
@@ -98,6 +104,12 @@ public class DataCheckLogsVO {
      */
     @ApiModelProperty(value = "检查提示消息")
     public String checkMsg;
+
+    /**
+     * 检查规则说明
+     */
+    @ApiModelProperty(value = "检查规则说明")
+    public String checkRuleIllustrate;
 
     /**
      * 错误Json数据
