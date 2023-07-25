@@ -635,6 +635,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+            }else {
+                return ResultEntityBuild.build(resultEnum, msg);
             }
 
             // 保存本次的日志信息
