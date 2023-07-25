@@ -126,6 +126,12 @@ public class DataCheckVO {
     public RuleStateEnum ruleState;
 
     /**
+     * 规则说明
+     */
+    @ApiModelProperty(value = "规则说明")
+    public String ruleIllustrate;
+
+    /**
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")
