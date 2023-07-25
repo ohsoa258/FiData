@@ -16,7 +16,8 @@ public class FaildStatisticsVO {
     public int sum;
     @ApiModelProperty("成功次数")
     public int successNum;
-    @ApiModelProperty("失败次数")    public int faildNum;
+    @ApiModelProperty("失败次数")
+    public int faildNum;
     @ApiModelProperty("成功率")
     public double success;
     @ApiModelProperty("失败率")

@@ -274,12 +274,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dto.list.forEach(e -> tableFieldImpl.updateData(e));
         }
 
+        // 获取应用引用的数据源
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
         if (dataSourcePo == null) {
             return ResultEnum.DATASOURCE_ISNULL;
         }
 
         // 发布之后,按照配置调用一次非实时api
+        if (dto.executeConfigFlag == null) {
+            dto.executeConfigFlag = false;
+        }
         if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
             ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
             apiImportDataDTO.appId = dto.appId;
@@ -625,6 +629,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             log.info("stg表数据用完即删");
             pushDataStgToOds(dto.apiCode, 0);
+
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
@@ -845,7 +850,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEntity<String> getToken(ApiUserDTO dto) {
 
         // 根据账号名称查询对应的app_id下
-        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).one();
+        List<AppDataSourcePO> dataSourcePos = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).list();
+        if (CollectionUtils.isEmpty(dataSourcePos)){
+            log.error("/apiConfig/getToken方法的账号或密码不正确或数据库中指定账号的realtime_account和realtime_pwd为空,请联系管理人员...");
+            return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+        }
+        AppDataSourcePO dataSourcePo = dataSourcePos.get(0);
         if (!dataSourcePo.realtimeAccount.equals(dto.getUseraccount()) || !dataSourcePo.realtimePwd.equals(dto.getPassword())) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR, ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR.getMsg());
         }

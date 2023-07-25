@@ -26,7 +26,8 @@ public class PipelLineDetailVO {
 
     @ApiModelProperty("运行时长")
     public String runningTime;
-
-    @ApiModelProperty("运行状态")
+    @ApiModelProperty("执行状态")
     public String runningStatus;
+    @ApiModelProperty("执行结果")
+    public String runningResult;
 }
