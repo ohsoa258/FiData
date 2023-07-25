@@ -626,6 +626,13 @@ public class DataFactoryImpl implements IDataFactory {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dto);
     }
 
+    @Override
+    public List<String> getPipelLineName() {
+        List<NifiCustomWorkflowPO> list = nifiCustomWorkflowImpl.list();
+        List<String> workflowName = list.stream().map(NifiCustomWorkflowPO::getWorkflowName).collect(Collectors.toList());
+        return workflowName;
+    }
+
     /**
      * 封装当前组件的其他属性(componentFirstFlag、componentEndFlag、pipeEndFlag、pipeEndDto)
      *

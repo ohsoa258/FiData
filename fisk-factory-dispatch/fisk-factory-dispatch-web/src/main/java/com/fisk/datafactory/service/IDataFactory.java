@@ -108,4 +108,6 @@ public interface IDataFactory {
      * @return 执行结果
      */
     ResultEntity<PipeDagDTO> getTaskLinkedList(Long id);
+
+    List<String> getPipelLineName();
 }

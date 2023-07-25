@@ -1,5 +1,6 @@
 package com.fisk.task.mapper;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.task.dto.dispatchlog.LogStatisticsVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
@@ -40,5 +41,6 @@ public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
 
     List<DetailLineChartVO> getDetailLineChart(@Param("workflowName") String workflowName, @Param("lookday") int lookday);
 
-    List<PipelLineDetailVO> getPipelLineDetailLog(@Param("dto") PipelLineDetailDTO dto);
+    Page<PipelLineDetailVO> getPipelLineDetailLog(Page<PipelLineDetailVO> page, @Param("dto") PipelLineDetailDTO dto);
+    List<PipelLineDetailVO> getDetailLog();
 }

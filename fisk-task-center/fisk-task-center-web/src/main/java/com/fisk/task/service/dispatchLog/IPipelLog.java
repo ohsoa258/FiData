@@ -1,5 +1,6 @@
 package com.fisk.task.service.dispatchLog;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.task.dto.statistics.PipelLineDetailDTO;
@@ -37,5 +38,6 @@ public interface IPipelLog extends IService<PipelLogPO> {
 
     List<DetailLineChartVO> getDetailLineChart(String workflowName, Integer lookday);
 
-    List<PipelLineDetailVO> getPipelLineDetailLog(PipelLineDetailDTO dto);
+    Page<PipelLineDetailVO> getPipelLineDetailLog(PipelLineDetailDTO dto);
+    List<PipelLineDetailVO> getDetailLog();
 }
