@@ -1417,7 +1417,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
                     List<DataCheckResultVO> data = result.data;
                     if (!CollectionUtils.isEmpty(data)) {
-                        StringBuilder checkResult = new StringBuilder("校验不通过的规则代号如下：");
+                        StringBuilder checkResult = new StringBuilder("校验结果详情：");
                         for (DataCheckResultVO d : data) {
                             checkResult.append(d.checkResultMsg)
                                     .append("。 ");
@@ -1425,6 +1425,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
                             if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
+                                checkResult.append("本次校验结果中存在未通过的强规则，数据同步失败！");
                                 return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
                             } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                 checkResultMsg.append(e.checkResultMsg).append("；");
