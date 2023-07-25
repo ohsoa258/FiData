@@ -641,7 +641,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }else {
-                return ResultEntityBuild.build(resultEnum, msg);
+                return ResultEntityBuild.build(resultEnum, result.data);
             }
 
             // 保存本次的日志信息
@@ -1417,10 +1417,15 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
                     List<DataCheckResultVO> data = result.data;
                     if (!CollectionUtils.isEmpty(data)) {
+                        StringBuilder checkResult = new StringBuilder("校验不通过的规则代号如下：");
+                        for (DataCheckResultVO d : data) {
+                            checkResult.append(d.checkResultMsg)
+                                    .append("。 ");
+                        }
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
                             if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
-                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, e.checkResultMsg);
+                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
                             } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                 checkResultMsg.append(e.checkResultMsg).append("；");
                             } else {
