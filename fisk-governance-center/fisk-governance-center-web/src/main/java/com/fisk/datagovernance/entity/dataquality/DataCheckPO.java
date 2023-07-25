@@ -82,6 +82,11 @@ public class DataCheckPO extends BasePO {
      * 规则状态：1、启用 0、禁用
      */
     public int ruleState;
+
+    /**
+     * 规则说明
+     */
+    public String ruleIllustrate;
 }
 
 

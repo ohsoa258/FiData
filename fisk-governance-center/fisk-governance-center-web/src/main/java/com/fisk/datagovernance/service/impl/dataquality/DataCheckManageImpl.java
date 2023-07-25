@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -25,6 +26,7 @@ import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
@@ -2155,5 +2157,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         dataCheckResultVO.setCheckTemplateName(templatePO.getTemplateName());
         dataCheckResultVO.setCheckTemplateDesc(templatePO.getTemplateDesc());
         return dataCheckResultVO;
+    }
+
+    @Override
+    public Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto) {
+        return null;
     }
 }
