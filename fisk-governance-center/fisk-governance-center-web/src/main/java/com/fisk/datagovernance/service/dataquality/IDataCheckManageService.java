@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.dataquality;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
@@ -71,4 +72,11 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 分页列表
      */
     Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto);
+
+    /**
+     * 检查日志结果
+     *
+     * @return 检查结果
+     */
+    JSONArray getDataCheckLogsResult(long logId);
 }

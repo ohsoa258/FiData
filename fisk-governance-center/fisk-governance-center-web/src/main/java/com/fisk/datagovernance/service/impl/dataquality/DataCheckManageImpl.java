@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -32,11 +33,12 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -72,6 +74,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     private UserHelper userHelper;
+
+    @Value("${spring.datasource.url}")
+    private String dataBaseUrl;
+    @Value("${spring.datasource.username}")
+    private String dataBaseUserName;
+    @Value("${spring.datasource.password}")
+    private String dataBasePassWord;
 
     private static final String WARN = "warn";
     private static final String FAIL = "fail";
@@ -2190,5 +2199,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     public Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto) {
         return dataCheckLogsMapper.getAll(dto.page, dto);
+    }
+
+    @Override
+    public JSONArray getDataCheckLogsResult(long logId) {
+        JSONArray jsonArray = null;
+        Connection connection = dataSourceConManageImpl.getStatement(DataSourceTypeEnum.MYSQL, dataBaseUrl, dataBaseUserName, dataBasePassWord);
+        String sql = String.format("SELECT error_data FROM tb_datacheck_rule_logs WHERE Id=%s", logId);
+        List<Map<String, Object>> maps = AbstractCommonDbHelper.execQueryResultMaps(sql, connection);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            Object error_data = maps.get(0).get("error_data");
+            if (error_data != null) {
+                jsonArray = JSON.parseArray(error_data.toString());
+            }
+        }
+        return jsonArray;
     }
 }

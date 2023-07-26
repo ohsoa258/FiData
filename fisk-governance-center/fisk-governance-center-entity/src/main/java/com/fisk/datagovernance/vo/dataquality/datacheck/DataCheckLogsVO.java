@@ -1,6 +1,5 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.alibaba.fastjson.JSONArray;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -110,10 +109,4 @@ public class DataCheckLogsVO {
      */
     @ApiModelProperty(value = "检查规则说明")
     public String checkRuleIllustrate;
-
-    /**
-     * 错误Json数据
-     */
-    @ApiModelProperty(value = "错误Json数据")
-    public JSONArray errorData;
 }
