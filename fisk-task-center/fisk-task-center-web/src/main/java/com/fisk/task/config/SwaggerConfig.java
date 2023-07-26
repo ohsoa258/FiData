@@ -34,6 +34,8 @@ public class SwaggerConfig {
     public static final String TBETLIncremental = "TBETL增量";
     public static final String PIPELINE_STATISTICS = "管道日志统计";
 
+    public static final String SCHEDULE = "定时任务";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkTaskApplication.class.getPackage().getName();
@@ -53,6 +55,7 @@ public class SwaggerConfig {
                 .tags(new Tag(TaskLog,"任务日志"))
                 .tags(new Tag(TBETLIncremental,"TBETL增量"))
                 .tags(new Tag(PIPELINE_STATISTICS,"管道日志统计"))
+                .tags(new Tag(SCHEDULE,"定时任务"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

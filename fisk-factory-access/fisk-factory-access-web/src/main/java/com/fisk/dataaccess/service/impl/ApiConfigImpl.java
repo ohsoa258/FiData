@@ -274,12 +274,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dto.list.forEach(e -> tableFieldImpl.updateData(e));
         }
 
+        // 获取应用引用的数据源
         AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
         if (dataSourcePo == null) {
             return ResultEnum.DATASOURCE_ISNULL;
         }
 
         // 发布之后,按照配置调用一次非实时api
+        if (dto.executeConfigFlag == null) {
+            dto.executeConfigFlag = false;
+        }
         if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.API.getName())) {
             ApiImportDataDTO apiImportDataDTO = new ApiImportDataDTO();
             apiImportDataDTO.appId = dto.appId;
@@ -625,6 +629,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             log.info("stg表数据用完即删");
             pushDataStgToOds(dto.apiCode, 0);
+
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
@@ -635,6 +640,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+            }else {
+                return ResultEntityBuild.build(resultEnum, result.data);
             }
 
             // 保存本次的日志信息
@@ -843,7 +850,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public ResultEntity<String> getToken(ApiUserDTO dto) {
 
         // 根据账号名称查询对应的app_id下
-        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).one();
+        List<AppDataSourcePO> dataSourcePos = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).list();
+        if (CollectionUtils.isEmpty(dataSourcePos)){
+            log.error("/apiConfig/getToken方法的账号或密码不正确或数据库中指定账号的realtime_account和realtime_pwd为空,请联系管理人员...");
+            return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
+        }
+        AppDataSourcePO dataSourcePo = dataSourcePos.get(0);
         if (!dataSourcePo.realtimeAccount.equals(dto.getUseraccount()) || !dataSourcePo.realtimePwd.equals(dto.getPassword())) {
             return ResultEntityBuild.build(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR, ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR.getMsg());
         }
@@ -1327,6 +1339,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         poList.forEach(e -> {
             ApiTableDTO apiTableDTO = new ApiTableDTO();
             apiTableDTO.tableName = e.tableName;
+            apiTableDTO.tblId = e.id;
             apiTableDTO.pid = e.pid;
             apiTableDTO.list = e.list;
             // 查询所有子级表名
@@ -1363,6 +1376,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // ods_应用简称
         String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
         List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
+        // 获取物理表id
+        List<Long> tableIdList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tblId).collect(Collectors.toList());
         JsonUtils jsonUtils = new JsonUtils();
         List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
         // 获取Json的schema信息
@@ -1386,9 +1401,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 dto.setBatchNumber(uuid);
                 dto.setSmallBatchNumber(uuid);
                 HashMap<String, JSONArray> body = new HashMap<>();
-                for (JsonTableData jsonTableData : targetTable) {
-                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+//                for (JsonTableData jsonTableData : targetTable) {
+//                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+//                }
+                for (int i = 0; i < targetTable.size(); i++) {
+                    body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
                 }
+
 
                 dto.body = body;
                 // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
@@ -1398,10 +1417,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
                     List<DataCheckResultVO> data = result.data;
                     if (!CollectionUtils.isEmpty(data)) {
+                        StringBuilder checkResult = new StringBuilder("校验结果详情：");
+                        for (DataCheckResultVO d : data) {
+                            checkResult.append(d.checkResultMsg)
+                                    .append("。 ");
+                        }
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
                             if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
-                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, e.checkResultMsg);
+                                checkResult.append("本次校验结果中存在未通过的强规则，数据同步失败！");
+                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
                             } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                 checkResultMsg.append(e.checkResultMsg).append("；");
                             } else {

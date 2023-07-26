@@ -106,6 +106,12 @@ public class DataCheckDTO {
     public RuleStateEnum ruleState;
 
     /**
+     * 规则说明
+     */
+    @ApiModelProperty(value = "规则说明")
+    public String ruleIllustrate;
+
+    /**
      * 数据校验规则扩展属性
      */
     @ApiModelProperty(value = "数据校验规则扩展属性")

@@ -1,4 +1,6 @@
 package com.fisk.task.dto.statistics;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.task.vo.statistics.PipelLineDetailVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -13,5 +15,6 @@ public class PipelLineDetailDTO {
     public Integer lookday;
     @ApiModelProperty("管道名称")
     public String workflowName;
-
+    @ApiModelProperty(value = "page")
+    public Page<PipelLineDetailVO> page;
 }

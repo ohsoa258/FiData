@@ -1,9 +1,13 @@
 package com.fisk.task.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datagovernance.dto.monitor.MonitorRecipientsDTO;
 import com.fisk.task.dto.statistics.PipelLineDetailDTO;
+import com.fisk.task.dto.statistics.PipelLogRecipientsDTO;
+import com.fisk.task.service.pipeline.PipelLogRecipientsService;
 import com.fisk.task.vo.statistics.*;
 import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.service.dispatchLog.IPipelLog;
@@ -13,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: wangjian
@@ -26,6 +31,9 @@ public class PipelineStatisticsController {
 
     @Resource
     IPipelLog pipelLog;
+
+    @Resource
+    PipelLogRecipientsService pipelLogRecipientsService;
     /**
      * getLogStatistics
      * @param lookday
@@ -90,7 +98,7 @@ public class PipelineStatisticsController {
      */
     @ApiOperation("获取管道日志详情页")
     @PostMapping("/getPipelLineDetailLog")
-    public ResultEntity<List<PipelLineDetailVO>> getPipelLineDetailLog(@RequestBody PipelLineDetailDTO dto){
+    public ResultEntity<Page<PipelLineDetailVO>> getPipelLineDetailLog(@RequestBody PipelLineDetailDTO dto){
         if(dto.lookday != null){
             if (dto.lookday>30 || dto.lookday<0){
                 return ResultEntityBuild.build(ResultEnum.ERROR);
@@ -99,4 +107,27 @@ public class PipelineStatisticsController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelLog.getPipelLineDetailLog(dto));
     }
 
+    @ApiOperation("查询管道日志订阅通知配置")
+    @GetMapping("/getPipelLogAlarmNotice")
+    public ResultEntity<Object> getPipelLogAlarmNotice() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, pipelLogRecipientsService.getPipelLogAlarmNotice());
+    }
+
+    @ApiOperation("保存管道日志订阅通知配置")
+    @PostMapping("/savePipelLogAlarmNotice")
+    public ResultEntity<Object> savePipelLogAlarmNotice(@RequestBody PipelLogRecipientsDTO pipelLogRecipientsDTO) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, pipelLogRecipientsService.savePipelLogAlarmNotice(pipelLogRecipientsDTO));
+    }
+
+    @ApiOperation("删除管道日志订阅通知配置")
+    @GetMapping("/deletePipelLogAlarmNotice")
+    public ResultEntity<Object> deletePipelLogAlarmNotice() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, pipelLogRecipientsService.deletePipelLogAlarmNotice());
+    }
+
+    @ApiOperation("发送管道日志订阅通知")
+    @PostMapping("/sendPipelLogSendEmails")
+    public ResultEntity<Object> sendPipelLogSendEmails(@RequestBody String content) {
+        return ResultEntityBuild.build(pipelLogRecipientsService.sendPipelLogSendEmails(content));
+    }
 }

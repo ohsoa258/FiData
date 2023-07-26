@@ -1,6 +1,7 @@
 package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -360,19 +361,46 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     }
 
     @Override
-    public List<PipelLineDetailVO> getPipelLineDetailLog(PipelLineDetailDTO dto) {
-        List<PipelLineDetailVO> pipelLineDetailLog = pipelLogMapper.getPipelLineDetailLog(dto);
+    public Page<PipelLineDetailVO> getPipelLineDetailLog(PipelLineDetailDTO dto) {
+        Page<PipelLineDetailVO> page = dto.page;
+        Page<PipelLineDetailVO> pipelLineDetailLog = pipelLogMapper.getPipelLineDetailLog(page, dto);
         List<PipelLineDetailVO> data = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(pipelLineDetailLog)){
-            for (PipelLineDetailVO pipelLineDetailVO : pipelLineDetailLog) {
-                if (pipelLineDetailVO.runningStatus != null){
-                    if (pipelLineDetailVO.runningStatus.contains("运行成功")){
-                        pipelLineDetailVO.runningStatus = "成功";
-                    }else if (pipelLineDetailVO.runningStatus.contains("运行失败")){
-                        pipelLineDetailVO.runningStatus = "失败";
+        if (CollectionUtils.isNotEmpty(pipelLineDetailLog.getRecords())) {
+            for (PipelLineDetailVO pipelLineDetailVO : pipelLineDetailLog.getRecords()) {
+                if (pipelLineDetailVO.runningStatus != null) {
+                    if (pipelLineDetailVO.runningStatus.contains("运行成功")) {
+                        pipelLineDetailVO.runningResult = "成功";
+                    } else if (pipelLineDetailVO.runningStatus.contains("运行失败")) {
+                        pipelLineDetailVO.runningResult = "失败";
                     }
-                }else {
-                    pipelLineDetailVO.runningStatus = "暂无";
+                    pipelLineDetailVO.runningStatus = "已完成";
+                } else {
+                    pipelLineDetailVO.runningResult = "暂无";
+                    pipelLineDetailVO.runningStatus = "未完成";
+                }
+                data.add(pipelLineDetailVO);
+            }
+        }
+        pipelLineDetailLog.setRecords(data);
+        return pipelLineDetailLog;
+    }
+
+    @Override
+    public List<PipelLineDetailVO> getDetailLog() {
+        List<PipelLineDetailVO> detailLog = pipelLogMapper.getDetailLog();
+        List<PipelLineDetailVO> data = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(detailLog)) {
+            for (PipelLineDetailVO pipelLineDetailVO : detailLog) {
+                if (pipelLineDetailVO.runningStatus != null) {
+                    if (pipelLineDetailVO.runningStatus.contains("运行成功")) {
+                        pipelLineDetailVO.runningResult = "成功";
+                    } else if (pipelLineDetailVO.runningStatus.contains("运行失败")) {
+                        pipelLineDetailVO.runningResult = "失败";
+                    }
+                    pipelLineDetailVO.runningStatus = "已完成";
+                } else {
+                    pipelLineDetailVO.runningResult = "暂无";
+                    pipelLineDetailVO.runningStatus = "未完成";
                 }
                 data.add(pipelLineDetailVO);
             }

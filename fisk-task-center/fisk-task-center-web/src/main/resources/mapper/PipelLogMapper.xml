@@ -231,10 +231,76 @@
             </choose>
              ) AS t1
                  LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
-                 LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2;
+                 LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2
                 <if test="dto.workflowName != null and dto.workflowName != '' ">
                     WHERE
                         t1.workflow_name = #{dto.workflowName}
                 </if>
+    </select>
+    <select id="getDetailLog" resultType="com.fisk.task.vo.statistics.PipelLineDetailVO">
+        SELECT
+            t.workflowName,
+            t.startDateTime,
+            t.endDateTime,
+            t.runningTime,
+            t.runningStatus
+        FROM
+            (
+                SELECT
+                    t1.workflow_name AS workflowName,
+                    t2.create_time AS startDateTime,
+                    t3.create_time AS endDateTime,
+                    TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time ) AS runningTime,
+                    t3.msg AS runningStatus
+                FROM
+                    (
+                        SELECT DISTINCT
+                            t1.workflow_name,
+                            t2.pipel_trace_id
+                        FROM
+                            dmp_datafactory_db.tb_nifi_custom_workflow t1
+                                LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+                        WHERE
+                            t1.del_flag = 1
+                          AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 1 DAY )
+                    ) AS t1
+                        LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                        AND t2.type = 1
+                        LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+                        AND t3.type = 2
+            ) AS t
+                INNER JOIN (
+                SELECT
+                    t5.workflowName,
+                    MAX( t5.startDateTime ) AS maxStartDateTime
+                FROM
+                    (
+                        SELECT
+                            t1.workflow_name AS workflowName,
+                            t2.create_time AS startDateTime,
+                            t3.create_time AS endDateTime,
+                            TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time ) AS runningTime,
+                            t3.msg AS runningStatus
+                        FROM
+                            (
+                                SELECT DISTINCT
+                                    t1.workflow_name,
+                                    t2.pipel_trace_id
+                                FROM
+                                    dmp_datafactory_db.tb_nifi_custom_workflow t1
+                                        LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+                                WHERE
+                                    t1.del_flag = 1
+                                  AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 1 DAY )
+                            ) AS t1
+                                LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                                AND t2.type = 1
+                                LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+                                AND t3.type = 2
+                    ) AS t5
+                GROUP BY
+                    t5.workflowName
+            ) sub ON t.workflowName = sub.workflowName
+                AND t.startDateTime = sub.maxStartDateTime;
     </select>
 </mapper>

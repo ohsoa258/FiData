@@ -1,11 +1,13 @@
 package com.fisk.datagovernance.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import io.swagger.annotations.Api;
@@ -63,5 +65,11 @@ public class DataCheckController {
     @PostMapping("/syncCheckData")
     public ResultEntity<List<DataCheckResultVO>> syncCheckData(@Validated @RequestBody DataCheckSyncDTO dto) {
         return service.nifiSyncCheckData(dto);
+    }
+
+    @ApiOperation("获取数据检查结果日志分页列表")
+    @PostMapping("/getDataCheckLogsPage")
+    public ResultEntity<Page<DataCheckLogsVO>> getDataCheckLogsPage(@RequestBody DataCheckLogsQueryDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsPage(dto));
     }
 }
