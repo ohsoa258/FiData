@@ -46,9 +46,9 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
     }
 
     @Override
-    public ServerMonitorVO getServerMonitor(Integer number, Integer type) {
+    public ServerMonitorVO getServerMonitor(String ip,Integer number, Integer type) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        ServerMonitorVO serverMonitorVO = this.baseMapper.getAllTotal();
+        ServerMonitorVO serverMonitorVO = this.baseMapper.getAllTotal(ip);
         if (serverMonitorVO == null) {
             serverMonitorVO = new ServerMonitorVO();
         }
@@ -65,15 +65,15 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
             } else {
                 key = RedisKeyEnum.MONTH_MONITOR_ALL;
             }
-            Object o = redisUtil.get(key.getName() + ":" + format);
+            Object o = redisUtil.get(key.getName() + ":" + ip + ":" + format);
             List<DelayPingVO> delayPingCacheTotal = new ArrayList<>();
             if (ObjectUtils.isNotEmpty(o)) {
                 delayPingCacheTotal = (List<DelayPingVO>) o;
             } else {
-                delayPingCacheTotal = this.baseMapper.getDelayPingCacheTotal(number, 1);
-                redisUtil.set(key.getName() + ":" + format, delayPingCacheTotal, key.getValue());
+                delayPingCacheTotal = this.baseMapper.getDelayPingCacheTotal(ip,number, 1);
+                redisUtil.set(key.getName() + ":" + ip + ":" + format, delayPingCacheTotal, key.getValue());
             }
-            List<DelayPingVO> data = this.baseMapper.getDelayPingCacheTotal(number, 2);
+            List<DelayPingVO> data = this.baseMapper.getDelayPingCacheTotal(ip,number, 2);
             delayPingCacheTotal.addAll(data);
             serverMonitorVO.setDelayPingVOList(delayPingCacheTotal);
 
@@ -84,27 +84,27 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
             } else {
                 serverKey = RedisKeyEnum.MONTH_MONITOR_SERVER;
             }
-            Object o1 = redisUtil.get(serverKey.getName() + ":" + format);
-            List<ServerTableVO> serverTable = this.baseMapper.getServerTable();
+            Object o1 = redisUtil.get(serverKey.getName() + ":" + ip + ":" + format);
+            List<ServerTableVO> serverTable = this.baseMapper.getServerTable(ip);
             if (ObjectUtils.isNotEmpty(o1)) {
                 serverTable = (List<ServerTableVO>) o1;
             } else {
                 if (CollectionUtils.isNotEmpty(serverTable)) {
                     //组装时移ping
                     for (ServerTableVO serverTableVO : serverTable) {
-                        List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(number, 1,
+                        List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(ip,number, 1,
                                 serverTableVO.getServerName(), serverTableVO.getPort());
                         serverTableVO.setDelayPingVO(serverDelayPingVO);
                         serverTableVOCacheList.add(serverTableVO);
                     }
                 }
-                redisUtil.set(serverKey.getName() + ":" + format, serverTableVOCacheList, serverKey.getValue());
+                redisUtil.set(serverKey.getName() + ":" + ip + ":" + format, serverTableVOCacheList, serverKey.getValue());
             }
             List<ServerTableVO> serverTableVOList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(serverTable)) {
                 //组装时移ping
                 for (ServerTableVO serverTableVO : serverTable) {
-                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(number, 2,
+                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(ip,number, 2,
                             serverTableVO.getServerName(), serverTableVO.getPort());
                     serverTableVO.setDelayPingVO(serverDelayPingVO);
                     serverTableVOList.add(serverTableVO);
@@ -122,15 +122,15 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
             serverMonitorVO.setServerTableVOList(serverList);
         } else {
             //获取所有服务时移ping
-            List<DelayPingVO> delayPingTotal = this.baseMapper.getDelayPingTotal(number, type);
+            List<DelayPingVO> delayPingTotal = this.baseMapper.getDelayPingTotal(ip,number, type);
             serverMonitorVO.setDelayPingVOList(delayPingTotal);
             //获取所有服务列表
-            List<ServerTableVO> serverTable = this.baseMapper.getServerTable();
+            List<ServerTableVO> serverTable = this.baseMapper.getServerTable(ip);
             List<ServerTableVO> list = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(serverTable)) {
                 //组装时移ping
                 for (ServerTableVO serverTableVO : serverTable) {
-                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingVO(number, type,
+                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingVO(ip,number, type,
                             serverTableVO.getServerName(), serverTableVO.getPort());
                     serverTableVO.setDelayPingVO(serverDelayPingVO);
                     list.add(serverTableVO);
@@ -153,7 +153,7 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
         }
         //获取时移ping
         List<DelayPingVO> serverDelayPingVO =
-                this.baseMapper.getServerDelayPingVO(serverMonitorPageDTO.number,
+                this.baseMapper.getServerDelayPingVO(serverMonitorPageDTO.ip,serverMonitorPageDTO.number,
                         serverMonitorPageDTO.type,
                         serverMonitorPageDTO.name,
                         serverMonitorPageDTO.port);

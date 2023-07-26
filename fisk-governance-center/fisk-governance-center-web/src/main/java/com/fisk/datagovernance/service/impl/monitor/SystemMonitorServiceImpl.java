@@ -14,12 +14,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("systemMonitorService")
 public class SystemMonitorServiceImpl extends ServiceImpl<SystemMonitorMapper, SystemMonitorPO> implements SystemMonitorService {
-    @Resource
-    ServerMonitorService serverMonitorService;
 
     @Override
     public ResultEnum saveSystemMonitor(SystemMonitorDTO systemMonitorDTO) {
@@ -33,8 +33,9 @@ public class SystemMonitorServiceImpl extends ServiceImpl<SystemMonitorMapper, S
     }
 
     @Override
-    public SystemMonitorVO getSystemMonitor() {
+    public SystemMonitorVO getSystemMonitor(String ip) {
         QueryWrapper<SystemMonitorPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("ip",ip);
         queryWrapper.orderByDesc("create_time");
         queryWrapper.last("limit 1");
         SystemMonitorPO systemMonitorPO = this.getOne(queryWrapper);

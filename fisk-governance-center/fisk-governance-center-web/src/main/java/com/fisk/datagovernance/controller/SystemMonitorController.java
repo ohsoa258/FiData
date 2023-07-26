@@ -5,10 +5,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.monitor.*;
-import com.fisk.datagovernance.service.monitor.MonitorDropDownBoxService;
-import com.fisk.datagovernance.service.monitor.MonitorRecipientsService;
-import com.fisk.datagovernance.service.monitor.ServerMonitorService;
-import com.fisk.datagovernance.service.monitor.SystemMonitorService;
+import com.fisk.datagovernance.service.monitor.*;
+import com.fisk.datagovernance.vo.monitor.ServerMonitorConfigVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +29,8 @@ public class SystemMonitorController {
     private MonitorDropDownBoxService monitorDropDownBoxService;
     @Resource
     private MonitorRecipientsService monitorRecipientsService;
+    @Resource
+    private ServerMonitorConfigService serverMonitorConfigService;
 
 
     @ApiOperation("新增系统监控参数")
@@ -47,14 +47,14 @@ public class SystemMonitorController {
 
     @ApiOperation("获取系统监控参数")
     @GetMapping("/getSystemMonitor")
-    public ResultEntity<Object> getSystemMonitor(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,systemMonitorService.getSystemMonitor());
+    public ResultEntity<Object> getSystemMonitor(@RequestParam("ip") String ip){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,systemMonitorService.getSystemMonitor(ip));
     }
 
     @ApiOperation("获取服务监控参数")
     @GetMapping("/getServerMonitor")
-    public ResultEntity<Object> getServerMonitor(@RequestParam("number") Integer number,@RequestParam("type") Integer type){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorService.getServerMonitor(number,type));
+    public ResultEntity<Object> getServerMonitor(@RequestParam("ip") String ip,@RequestParam("number") Integer number,@RequestParam("type") Integer type){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorService.getServerMonitor(ip,number,type));
     }
 
     @ApiOperation("获取服务监控详情")
@@ -67,6 +67,34 @@ public class SystemMonitorController {
     @GetMapping("/getMonitorDropDownBox")
     public ResultEntity<Object> getMonitorDropDownBox(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,monitorDropDownBoxService.getMonitorDropDownBox());
+    }
+    @ApiOperation("获取服务监控配置(脚本用)")
+    @GetMapping("/getServerMonitorConfig")
+    public ResultEntity<Object> getServerMonitorConfig(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorConfigService.getServerMonitorConfig());
+    }
+    @ApiOperation("获取服务监控配置信息")
+    @GetMapping("/getServerConfig")
+    public ResultEntity<List<ServerMonitorConfigVO>> getServerConfig(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorConfigService.getServerConfig());
+    }
+
+    @ApiOperation("修改服务监控配置信息")
+    @PostMapping("/updateServerMonitorConfig")
+    public ResultEntity<Object> updateServerMonitorConfig(@RequestBody ServerMonitorConfigDTO serverMonitorConfigDTO){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorConfigService.updateServerMonitorConfig(serverMonitorConfigDTO));
+    }
+
+    @ApiOperation("删除服务监控配置信息")
+    @PostMapping("/deleteServerMonitorConfig")
+    public ResultEntity<Object> deleteServerMonitorConfig(@RequestParam ("id") String id){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorConfigService.deleteServerMonitorConfig(id));
+    }
+
+    @ApiOperation("获取服务器地址")
+    @GetMapping("/getSystemAddress")
+    public ResultEntity<Object> getSystemAddress(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorConfigService.getSystemAddress());
     }
     @ApiOperation("查询系统监控告警通知配置")
     @GetMapping("/getSystemMonitorAlarmNotice")
