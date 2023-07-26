@@ -70,8 +70,8 @@ public class SystemMonitorController {
     }
     @ApiOperation("获取服务监控配置(脚本用)")
     @GetMapping("/getServerMonitorConfig")
-    public ResultEntity<Object> getServerMonitorConfig(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorConfigService.getServerMonitorConfig());
+    public String getServerMonitorConfig(){
+        return serverMonitorConfigService.getServerMonitorConfig();
     }
     @ApiOperation("获取服务监控配置信息")
     @GetMapping("/getServerConfig")

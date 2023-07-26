@@ -34,39 +34,39 @@ public class TaskUtils {
     RedisUtil redisUtil;
     @Scheduled(cron = "0 0 0 * * ?") // cron表达式：每天凌晨 0点 执行
     public void doTask(){
-        List<String> serverMonitorConfig = serverMonitorConfigService.getServerMonitorConfig();
+        List<ServerMonitorConfigVO> serverMonitorConfig = serverMonitorConfigService.getServerConfig();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String format = simpleDateFormat.format(new Date());
-        for (String ip : serverMonitorConfig) {
+        for (ServerMonitorConfigVO serverMonitorConfigVO : serverMonitorConfig) {
             //定时缓存每周监控数据
-            List<DelayPingVO> delayPingCacheTotal = mapper.getDelayPingCacheTotal(ip,7, 1);
-            redisUtil.set(RedisKeyEnum.WEEK_MONITOR_ALL.getName()+":"+ip+":"+format,delayPingCacheTotal,RedisKeyEnum.WEEK_MONITOR_ALL.getValue());
-            List<ServerTableVO> serverTable = mapper.getServerTable(ip);
+            List<DelayPingVO> delayPingCacheTotal = mapper.getDelayPingCacheTotal(serverMonitorConfigVO.getServerIp(),7, 1);
+            redisUtil.set(RedisKeyEnum.WEEK_MONITOR_ALL.getName()+":"+serverMonitorConfigVO.getServerIp()+":"+format,delayPingCacheTotal,RedisKeyEnum.WEEK_MONITOR_ALL.getValue());
+            List<ServerTableVO> serverTable = mapper.getServerTable(serverMonitorConfigVO.getServerIp());
             List<ServerTableVO> serverTableVOCacheList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(serverTable)) {
                 //组装时移ping
                 for (ServerTableVO serverTableVO : serverTable) {
-                    List<DelayPingVO> serverDelayPingVO = mapper.getServerDelayPingCacheVO(ip,7, 1,
+                    List<DelayPingVO> serverDelayPingVO = mapper.getServerDelayPingCacheVO(serverMonitorConfigVO.getServerIp(),7, 1,
                             serverTableVO.getServerName(), serverTableVO.getPort());
                     serverTableVO.setDelayPingVO(serverDelayPingVO);
                     serverTableVOCacheList.add(serverTableVO);
                 }
             }
-            redisUtil.set(RedisKeyEnum.WEEK_MONITOR_SERVER.getName()+":"+ip+":"+format,serverTableVOCacheList,RedisKeyEnum.WEEK_MONITOR_SERVER.getValue());
+            redisUtil.set(RedisKeyEnum.WEEK_MONITOR_SERVER.getName()+":"+serverMonitorConfigVO.getServerIp()+":"+format,serverTableVOCacheList,RedisKeyEnum.WEEK_MONITOR_SERVER.getValue());
             //定时缓存每月监控数据
-            List<DelayPingVO> delayPingCacheTotal2 = mapper.getDelayPingCacheTotal(ip,7, 1);
-            redisUtil.set(RedisKeyEnum.MONTH_MONITOR_ALL.getName()+":"+ip+":"+format,delayPingCacheTotal2,RedisKeyEnum.MONTH_MONITOR_ALL.getValue());
+            List<DelayPingVO> delayPingCacheTotal2 = mapper.getDelayPingCacheTotal(serverMonitorConfigVO.getServerIp(),7, 1);
+            redisUtil.set(RedisKeyEnum.MONTH_MONITOR_ALL.getName()+":"+serverMonitorConfigVO.getServerIp()+":"+format,delayPingCacheTotal2,RedisKeyEnum.MONTH_MONITOR_ALL.getValue());
             serverTableVOCacheList = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(serverTable)) {
                 //组装时移ping
                 for (ServerTableVO serverTableVO : serverTable) {
-                    List<DelayPingVO> serverDelayPingVO = mapper.getServerDelayPingCacheVO(ip,7, 1,
+                    List<DelayPingVO> serverDelayPingVO = mapper.getServerDelayPingCacheVO(serverMonitorConfigVO.getServerIp(),7, 1,
                             serverTableVO.getServerName(), serverTableVO.getPort());
                     serverTableVO.setDelayPingVO(serverDelayPingVO);
                     serverTableVOCacheList.add(serverTableVO);
                 }
             }
-            redisUtil.set(RedisKeyEnum.MONTH_MONITOR_SERVER.getName()+":"+ip+":"+format,serverTableVOCacheList,RedisKeyEnum.MONTH_MONITOR_SERVER.getValue());
+            redisUtil.set(RedisKeyEnum.MONTH_MONITOR_SERVER.getName()+":"+serverMonitorConfigVO.getServerIp()+":"+format,serverTableVOCacheList,RedisKeyEnum.MONTH_MONITOR_SERVER.getValue());
 
         }
     }

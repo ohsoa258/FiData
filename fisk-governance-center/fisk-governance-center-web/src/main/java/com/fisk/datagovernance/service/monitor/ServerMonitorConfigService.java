@@ -17,7 +17,7 @@ import java.util.List;
  */
 public interface ServerMonitorConfigService extends IService<ServerMonitorConfigPO> {
 
-    List<String> getServerMonitorConfig();
+    String getServerMonitorConfig();
 
     List<String> getSystemAddress();
     List<ServerMonitorConfigVO> getServerConfig();

@@ -17,14 +17,14 @@ public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorCon
 
 
     @Override
-    public List<String> getServerMonitorConfig() {
+    public String getServerMonitorConfig() {
         List<ServerMonitorConfigPO> config = this.list();
         List<String> result = config.stream().map(i -> {
             StringBuilder sb = new StringBuilder();
             sb.append(i.getServerIp()).append(":").append(i.getServerPort()).append(":").append(i.getServerName());
             return sb.toString();
         }).collect(Collectors.toList());
-        return result;
+        return result.toString();
     }
 
     @Override
