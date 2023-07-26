@@ -264,6 +264,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public ResultEntity<List<DataCheckResultVO>> interfaceCheckData(DataCheckWebDTO dto) {
+
+        log.info("api流程进入数据校验...校验参数[{}]", JSONObject.toJSON(dto));
+
         List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
         List<DataCheckLogsPO> dataCheckLogs = new ArrayList<>();
         ResultEnum resultEnum = ResultEnum.SUCCESS;
@@ -368,31 +371,40 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
                 DataCheckResultVO dataCheckResult = null;
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                switch (templateType) {
-                    case NULL_CHECK:
-                        dataCheckResult = interface_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case RANGE_CHECK:
-                        dataCheckResult = interface_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case STANDARD_CHECK:
-                        dataCheckResult = interface_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case DUPLICATE_DATA_CHECK:
-                        dataCheckResult = interface_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case FLUCTUATION_CHECK:
-                        dataCheckResult = interface_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case PARENTAGE_CHECK:
-                        dataCheckResult = interface_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case REGEX_CHECK:
-                        dataCheckResult = interface_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
-                    case SQL_SCRIPT_CHECK:
-                        dataCheckResult = interface_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
-                        break;
+                try {
+                    switch (templateType) {
+                        case NULL_CHECK:
+                            dataCheckResult = interface_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case RANGE_CHECK:
+                            dataCheckResult = interface_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case STANDARD_CHECK:
+                            dataCheckResult = interface_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case DUPLICATE_DATA_CHECK:
+                            dataCheckResult = interface_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case FLUCTUATION_CHECK:
+                            dataCheckResult = interface_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case PARENTAGE_CHECK:
+                            dataCheckResult = interface_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case REGEX_CHECK:
+                            dataCheckResult = interface_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                        case SQL_SCRIPT_CHECK:
+                            dataCheckResult = interface_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+                            break;
+                    }
+                } catch (Exception ruleEx) {
+                    if (dataCheckResult == null) {
+                        dataCheckResult = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+                    }
+                    dataCheckResult.setCheckResult(FAIL);
+                    dataCheckResult.setCheckResultMsg(String.format("代号：【%s】，触发系统异常，%s未通过", dataCheckPO.getRuleName(), templateType.getName()));
+                    log.error("【interfaceCheckData】执行检查规则时触发系统异常：" + ruleEx);
                 }
                 if (dataCheckResult != null) {
                     // 第六步：验证规则是否全部校验通过，并记录日志
@@ -515,10 +527,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         break;
                     case VALUE_RANGE:
                         // 取值范围
-                        Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                        Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                        Double lowerBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                        Double upperBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
                         if (StringUtils.isNotEmpty(checkValue)) {
-                            Integer value = Integer.valueOf(checkValue);
+                            Double value = Double.valueOf(checkValue);
                             if (value < lowerBound_Int || value > upperBound_Int) {
                                 errorDataList.add(jsonObject);
                             }
@@ -670,10 +682,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -681,7 +693,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         }
         // 设置具体的校验类型
         dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
@@ -721,10 +733,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -732,7 +744,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName,TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
@@ -838,10 +850,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (!isValid) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName,dataCheckPO.ruleName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 JSONArray jsonArray = new JSONArray();
@@ -858,7 +870,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(data.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
         }
         return dataCheckResultVO;
     }
@@ -938,10 +950,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(errorDataList)) {
             if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，正则表达式为：%s", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，正则表达式为：%s", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
             } else {
                 dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
             }
             if (dataCheckExtendPO.getRecordErrorData() == 1) {
                 dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
@@ -949,7 +961,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
         } else {
             dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName,TemplateTypeEnum.REGEX_CHECK.getName()));
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.REGEX_CHECK.getName()));
         }
         return dataCheckResultVO;
     }
@@ -1132,36 +1144,45 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
                 DataCheckResultVO dataCheckResult = null;
                 TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                switch (templateType) {
-                    //空值检查
-                    case NULL_CHECK:
-                        dataCheckResult = nifiSync_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    //值域检查
-                    case RANGE_CHECK:
-                        dataCheckResult = nifiSync_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    //规范检查
-                    case STANDARD_CHECK:
-                        dataCheckResult = nifiSync_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    //重复数据检查
-                    case DUPLICATE_DATA_CHECK:
-                        dataCheckResult = nifiSync_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    //波动检查
-                    case FLUCTUATION_CHECK:
-                        dataCheckResult = nifiSync_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    case PARENTAGE_CHECK:
-                        dataCheckResult = nifiSync_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    case REGEX_CHECK:
-                        dataCheckResult = nifiSync_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
-                    case SQL_SCRIPT_CHECK:
-                        dataCheckResult = nifiSync_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
-                        break;
+                try {
+                    switch (templateType) {
+                        //空值检查
+                        case NULL_CHECK:
+                            dataCheckResult = nifiSync_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        //值域检查
+                        case RANGE_CHECK:
+                            dataCheckResult = nifiSync_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        //规范检查
+                        case STANDARD_CHECK:
+                            dataCheckResult = nifiSync_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        //重复数据检查
+                        case DUPLICATE_DATA_CHECK:
+                            dataCheckResult = nifiSync_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        //波动检查
+                        case FLUCTUATION_CHECK:
+                            dataCheckResult = nifiSync_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        case PARENTAGE_CHECK:
+                            dataCheckResult = nifiSync_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        case REGEX_CHECK:
+                            dataCheckResult = nifiSync_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                        case SQL_SCRIPT_CHECK:
+                            dataCheckResult = nifiSync_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
+                            break;
+                    }
+                } catch (Exception ruleEx) {
+                    if (dataCheckResult == null) {
+                        dataCheckResult = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
+                    }
+                    dataCheckResult.setCheckResult(FAIL);
+                    dataCheckResult.setCheckResultMsg(String.format("代号：【%s】，触发系统异常，%s未通过", dataCheckPO.getRuleName(), templateType.getName()));
+                    log.error("【nifiSyncCheckData】执行检查规则时触发系统异常：" + ruleEx);
                 }
                 if (dataCheckResult != null) {
                     // 第八步：验证规则是否全部校验通过，并记录日志
