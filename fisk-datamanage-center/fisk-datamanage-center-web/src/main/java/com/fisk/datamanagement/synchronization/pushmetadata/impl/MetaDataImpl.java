@@ -204,8 +204,7 @@ public class MetaDataImpl implements IMetaData {
                 }
             }
         } catch (Exception e) {
-            log.error("实体同步失败错误信息：" + e.getMessage());
-            e.printStackTrace();
+            log.error("实体同步失败，堆栈信息: " , e);
         }
         //更新Redis
         //entityImpl.updateRedis();
@@ -1196,9 +1195,8 @@ public class MetaDataImpl implements IMetaData {
                     //同步源到目标的血缘
                     metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
                 }
-            } catch (Exception exception) {
-                log.error("实体同步失败错误信息：" + exception.getMessage());
-                exception.printStackTrace();
+            } catch (Exception e) {
+                log.error("数据消费实体同步失败，堆栈信息: " , e);
             } finally {
                 log.info("元数据数据信息：" + JSONObject.toJSONString(entityDto));
             }
@@ -1679,7 +1677,7 @@ public class MetaDataImpl implements IMetaData {
             toClient.flush();
             toClient.close();
         } catch (Exception e) {
-            log.error("导出元数据信息失败：" + e.toString());
+            log.error("导出元数据信息失败：" ,e);
         }
     }
 
