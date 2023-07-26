@@ -634,7 +634,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     case DATE_FORMAT:
                         // 日期格式
                         List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
-                        boolean validDateFormat = DateTimeUtils.isValidDateFormat(checkValue, list);
+                        boolean validDateFormat = false;
+                        if (checkValue.length() > 10) {
+                            validDateFormat = DateTimeUtils.isValidDateTimeFormat(checkValue, list);
+                        } else {
+                            validDateFormat = DateTimeUtils.isValidDateFormat(checkValue, list);
+                        }
                         if (!validDateFormat) {
                             errorDataList.add(jsonObject);
                         }
@@ -1660,8 +1665,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         if (fieldValue == null || fieldValue.toString().equals("")) {
                             errorDataList.add(jsonObject);
                         } else {
-                            boolean hasValidDate = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
-                            if (!hasValidDate) {
+                            boolean validDateFormat = false;
+                            if (fieldValue.toString().length() > 10) {
+                                validDateFormat = DateTimeUtils.isValidDateTimeFormat(fieldValue.toString(), list);
+                            } else {
+                                validDateFormat = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
+                            }
+                            if (!validDateFormat) {
                                 errorDataList.add(jsonObject);
                             }
                         }

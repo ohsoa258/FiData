@@ -1003,13 +1003,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         errorDataList.add(jsonObject);
                         columnData.add(fieldValue.toString());
                     } else {
-                        boolean hasValidDate = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
-                        if (!hasValidDate) {
+                        boolean validDateFormat = false;
+                        if (fieldValue.toString().length() > 10) {
+                            validDateFormat = DateTimeUtils.isValidDateTimeFormat(fieldValue.toString(), list);
+                        } else {
+                            validDateFormat = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
+                        }
+                        if (!validDateFormat) {
                             errorDataList.add(jsonObject);
                             columnData.add(fieldValue.toString());
                         }
                     }
-                    if (CollectionUtils.isNotEmpty(columnData)){
+                    if (CollectionUtils.isNotEmpty(columnData)) {
                         columnDatas.add(columnData);
                     }
                     break;
@@ -1030,7 +1035,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             }
                         }
                     }
-                    if (CollectionUtils.isNotEmpty(columnData)){
+                    if (CollectionUtils.isNotEmpty(columnData)) {
                         columnDatas.add(columnData);
                     }
                     break;
@@ -1046,7 +1051,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             columnData.add(fieldValue.toString());
                         }
                     }
-                    if (CollectionUtils.isNotEmpty(columnData)){
+                    if (CollectionUtils.isNotEmpty(columnData)) {
                         columnDatas.add(columnData);
                     }
                     break;
@@ -1062,7 +1067,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             columnData.add(fieldValue.toString());
                         }
                     }
-                    if (CollectionUtils.isNotEmpty(columnData)){
+                    if (CollectionUtils.isNotEmpty(columnData)) {
                         columnDatas.add(columnData);
                     }
                     break;
@@ -1246,7 +1251,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     errorDataList.add(jsonObject);
                     columnData.add(fieldValue);
                 }
-                if (CollectionUtils.isNotEmpty(columnData)){
+                if (CollectionUtils.isNotEmpty(columnData)) {
                     columnDatas.add(columnData);
                 }
             }

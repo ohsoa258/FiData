@@ -132,18 +132,34 @@ public class DateTimeUtils {
      *
      * @return
      */
-    public static boolean isValidDateFormat(String dateStr, List<String> patterns) {
+    public static boolean isValidDateTimeFormat(String dateStr, List<String> patterns) {
         for (String pattern : patterns) {
-            SimpleDateFormat dateFormat = new SimpleDateFormat(pattern);
-            dateFormat.setLenient(false); // 禁用宽松模式，严格匹配日期格式
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
             try {
-                dateFormat.parse(dateStr);
-                return true; // 如果解析成功，表示日期格式匹配
-            } catch (Exception e) {
-                // 解析失败，继续尝试下一个日期格式
+                LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
+                return true;
+            } catch (DateTimeParseException e) {
+
             }
         }
+        return false; // 日期格式不匹配
+    }
 
+    /**
+     * 判断字符串是否为合法的日期格式
+     *
+     * @return
+     */
+    public static boolean isValidDateFormat(String dateStr, List<String> patterns) {
+        for (String pattern : patterns) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+            try {
+                LocalDate date = LocalDate.parse(dateStr, formatter);
+                return true;
+            } catch (DateTimeParseException e) {
+
+            }
+        }
         return false; // 日期格式不匹配
     }
 
