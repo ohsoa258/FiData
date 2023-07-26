@@ -234,10 +234,15 @@ public class AppRegistrationImpl
 //            }
         });
 
+        //如果是RestfulAPI，进行如下操作  为了数接的/apiConfig/getToken接口可以正常使用
+        //获取实时api的临时token
         modelDataSource.forEach(m->{
-            m.realtimeAccount = m.connectAccount;
-            m.realtimePwd = m.connectPwd;
+            if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(m.driveType)){
+                m.realtimeAccount = m.connectAccount;
+                m.realtimePwd = m.connectPwd;
+            }
         });
+
         boolean insert = appDataSourceImpl.saveBatch(modelDataSource);
         if (!insert) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -525,9 +530,14 @@ public class AppRegistrationImpl
         // 2.1dto->po
         List<AppDataSourceDTO> appDatasourceDTO = dto.getAppDatasourceDTO();
         List<AppDataSourcePO> modelDataSource = AppDataSourceMap.INSTANCES.listDtoToPo(appDatasourceDTO);
+
+        //如果是RestfulAPI，进行如下操作  为了数接的/apiConfig/getToken接口可以正常使用
+        //获取实时api的临时token
         modelDataSource.forEach(m->{
-            m.realtimeAccount = m.connectAccount;
-            m.realtimePwd = m.connectPwd;
+            if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(m.driveType)){
+                m.realtimeAccount = m.connectAccount;
+                m.realtimePwd = m.connectPwd;
+            }
         });
 
         // 实时应用
