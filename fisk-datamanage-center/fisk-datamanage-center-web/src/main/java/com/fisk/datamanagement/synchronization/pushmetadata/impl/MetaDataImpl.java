@@ -261,8 +261,8 @@ public class MetaDataImpl implements IMetaData {
         if (!"stg".equals(dto.description)) {
             //同步业务分类和元数据的关联
             associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
-            //同步业务元数据
-            associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
+            //同步业务元数据 展示不调用
+            //associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
         }
 
         return metadataEntity.toString();

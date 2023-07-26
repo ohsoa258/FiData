@@ -17,16 +17,16 @@ import java.util.List;
 @Mapper
 public interface ServerMonitorMapper extends BaseMapper<ServerMonitorPO> {
 
-    List<DelayPingVO> getDelayPingTotal(@Param("number") Integer number, @Param("type") Integer type);
+    List<DelayPingVO> getDelayPingTotal(@Param("ip") String ip,@Param("number") Integer number, @Param("type") Integer type);
 
-    List<DelayPingVO> getDelayPingCacheTotal(@Param("number") Integer number, @Param("type") Integer type);
-    ServerMonitorVO getAllTotal();
-    List<ServerTableVO> getServerTable();
+    List<DelayPingVO> getDelayPingCacheTotal(@Param("ip") String ip,@Param("number") Integer number, @Param("type") Integer type);
+    ServerMonitorVO getAllTotal(@Param("ip") String ip);
+    List<ServerTableVO> getServerTable(@Param("ip") String ip );
 
-    List<DelayPingVO> getServerDelayPingVO(@Param("number") Integer number, @Param("type") Integer type,
+    List<DelayPingVO> getServerDelayPingVO(@Param("ip") String ip ,@Param("number") Integer number, @Param("type") Integer type,
                                            @Param("name") String name,@Param("port") Integer port);
 
-    List<DelayPingVO> getServerDelayPingCacheVO(@Param("number") Integer number, @Param("type") Integer type,
+    List<DelayPingVO> getServerDelayPingCacheVO(@Param("ip") String ip ,@Param("number") Integer number, @Param("type") Integer type,
                                            @Param("name") String name,@Param("port") Integer port);
     ServerMonitorDetailVO getRunningStatus(@Param("name") String name, @Param("port") Integer port);
 

@@ -6,11 +6,13 @@ import com.fisk.datagovernance.dto.monitor.SystemMonitorDTO;
 import com.fisk.datagovernance.entity.monitor.SystemMonitorPO;
 import com.fisk.datagovernance.vo.monitor.SystemMonitorVO;
 
+import java.util.List;
+
 
 public interface SystemMonitorService extends IService<SystemMonitorPO> {
 
     ResultEnum saveSystemMonitor(SystemMonitorDTO systemMonitorDTO);
 
-    SystemMonitorVO getSystemMonitor();
+    SystemMonitorVO getSystemMonitor(String ip);
 }
 

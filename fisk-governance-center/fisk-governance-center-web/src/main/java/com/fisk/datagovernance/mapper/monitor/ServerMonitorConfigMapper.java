@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.fisk.datagovernance.entity.monitor.ServerMonitorConfigPO;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * 
  *
@@ -13,5 +15,5 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface ServerMonitorConfigMapper extends BaseMapper<ServerMonitorConfigPO> {
 
-
+    List<String> getSystemAddress();
 }

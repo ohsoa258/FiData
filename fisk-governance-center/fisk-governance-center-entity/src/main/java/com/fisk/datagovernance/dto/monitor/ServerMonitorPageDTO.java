@@ -13,6 +13,9 @@ import lombok.Data;
 @Data
 public class ServerMonitorPageDTO {
 
+    @ApiModelProperty(value = "ip")
+    public String ip;
+
     @ApiModelProperty(value = "分钟数、小时数、天数")
     public Integer number;
 
