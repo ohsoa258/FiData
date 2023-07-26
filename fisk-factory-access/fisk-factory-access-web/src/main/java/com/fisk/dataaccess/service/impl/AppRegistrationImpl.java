@@ -234,6 +234,10 @@ public class AppRegistrationImpl
 //            }
         });
 
+        modelDataSource.forEach(m->{
+            m.realtimeAccount = m.connectAccount;
+            m.realtimePwd = m.connectPwd;
+        });
         boolean insert = appDataSourceImpl.saveBatch(modelDataSource);
         if (!insert) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -521,6 +525,10 @@ public class AppRegistrationImpl
         // 2.1dto->po
         List<AppDataSourceDTO> appDatasourceDTO = dto.getAppDatasourceDTO();
         List<AppDataSourcePO> modelDataSource = AppDataSourceMap.INSTANCES.listDtoToPo(appDatasourceDTO);
+        modelDataSource.forEach(m->{
+            m.realtimeAccount = m.connectAccount;
+            m.realtimePwd = m.connectPwd;
+        });
 
         // 实时应用
         if (po.appType == 0) {
