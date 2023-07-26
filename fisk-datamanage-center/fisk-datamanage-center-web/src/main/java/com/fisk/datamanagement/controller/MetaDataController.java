@@ -2,6 +2,7 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -16,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -57,8 +59,9 @@ public class MetaDataController {
 
     @ApiOperation("导出元数据")
     @PostMapping("/export")
-    public void export(@Validated  @RequestParam ExportMetaDataDto dto){
-        service.export(dto);
+    @ControllerAOPConfig(printParams = false)
+    public void export(@Validated  @RequestBody ExportMetaDataDto dto, HttpServletResponse response){
+        service.export(dto,response);
     }
 
 

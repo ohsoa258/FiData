@@ -7,6 +7,7 @@ import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
 
@@ -15,16 +16,17 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author gy
  */
 @Slf4j
 public class ExcelUtil {
+
+    private static final String[] parentMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述"};
+    private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类", "名称", "显示名称", "元数据类型", "描述"};
+    private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度"};
 
     /**
      * 用户信息导出类
@@ -226,6 +228,183 @@ public class ExcelUtil {
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+
+    /**
+     * @return java.io.InputStream
+     * @description 创建保存excel
+     * @author dick
+     * @date 2022/4/15 17:22
+     * @version v1.0
+     * @params filePath 文件全路径，含文件名称
+     * @params dataList
+     */
+    public static InputStream createMetaDataSaveExcel(
+            String sheetName
+            , List<Map<String, Object>> dataList
+            , Integer parentNumber
+            , Integer childNumber) {
+        InputStream stream = null;
+
+        if (sheetName == null || sheetName.isEmpty()) {
+            sheetName = "sheet1";
+        }
+        OutputStream outputStreamExcel = null;
+        try {
+            //创建Workbook对象(excel的文档对象) 导出的Excel行数为104万行，是操作Excel2007后的版本，扩展名是.xlsx；
+            XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+            XSSFSheet sheet = xssfWorkbook.createSheet(sheetName);
+
+            // 设置通用样式
+            XSSFCellStyle style = xssfWorkbook.createCellStyle();
+            style.setAlignment(HorizontalAlignment.CENTER); //居中
+            style.setBorderBottom(HSSFCellStyle.BORDER_THIN); //下边框
+            style.setBorderLeft(HSSFCellStyle.BORDER_THIN);//左边框
+            style.setBorderTop(HSSFCellStyle.BORDER_THIN);//上边框
+            style.setBorderRight(HSSFCellStyle.BORDER_THIN);//右边框
+            style.setWrapText(true); //自动换行
+            style.setHidden(true);//高度自动
+            style.setFillBackgroundColor(HSSFColor.PALE_BLUE.index); //背景颜色
+            XSSFFont font = xssfWorkbook.createFont();
+            font.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+            font.setFontHeight(11);
+            style.setFont(font);
+            sheet.setDefaultColumnWidth(10); //设置宽度
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+
+            //单个父级元数据元素个数
+            Integer parentMetadataAttributeNumber = parentMetaDataHeaders.length;
+            //写入表头
+            Integer colIndex = setMetadataSheetTableHeader(sheet, parentNumber, childNumber);
+
+            //所有父级的元素个数
+            Integer allParentMetadataAttributeNumber = parentNumber * parentMetadataAttributeNumber;
+
+            //当前元数据和子级元数据元素个数
+            Integer allMainChildMetadataAttributeNumber = mainMetaDataHeaders.length + childMetaDataHeaders.length;
+
+            //起始行
+            int excelRow = 2;
+            //写入数据
+            for (Map<String, Object> row : dataList) {
+                Row dataRow = sheet.createRow(excelRow++);
+                //内层for循环创建每行对应的列，并赋值
+                int columnIndex = 0;
+                for (int i = -allParentMetadataAttributeNumber; i < allMainChildMetadataAttributeNumber - 1; i++) {
+                    Cell cell = dataRow.createCell(columnIndex);
+                    columnIndex++;
+                    String key = i + "";
+                    if (row.containsKey(key)) {
+                        cell.setCellValue((String) row.get(key));
+                    }
+                }
+
+//                for (Map.Entry<String, Object> item : row.entrySet()) {
+//                    Cell cell = dataRow.createCell(columnIndex);
+//                    columnIndex++;
+//                    if (item.getValue() == null) {
+//                        continue;
+//                    }
+//                    Class<?> type = columnType.get(item.getKey());
+//                    if (Integer.class.equals(type)) {
+//                        cell.setCellValue(((Integer) item.getValue()).doubleValue());
+//                    } else if (Long.class.equals(type)) {
+//                        cell.setCellValue(new Double((Long) item.getValue()));
+//                    } else if (String.class.equals(type)) {
+//                        cell.setCellValue((String) item.getValue());
+//                    } else if (Date.class.equals(type)) {
+//                        cell.setCellValue((Date) item.getValue());
+//                    } else if (Timestamp.class.equals(type)) {
+//                        cell.setCellValue(sdf.format((Timestamp) item.getValue()));
+//                    } else if (BigDecimal.class.equals(type)) {
+//                        cell.setCellValue(((BigDecimal) item.getValue()).doubleValue());
+//                    } else if (Double.class.equals(type)) {
+//                        cell.setCellValue((Double) item.getValue());
+//                    }
+//                }
+            }
+
+            //写入流到文件
+//            outputStreamExcel = new FileOutputStream(tmpFile);
+//            xssfWorkbook.write(outputStreamExcel);
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            xssfWorkbook.write(outputStream);
+            stream = new ByteArrayInputStream(outputStream.toByteArray());
+        } catch (Exception ex) {
+            log.error("CreateSaveExcel异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        } finally {
+            try {
+                // 关闭输出流
+                if (outputStreamExcel != null) {
+                    outputStreamExcel.flush();
+                    outputStreamExcel.close();
+                }
+            } catch (IOException ex) {
+                log.error("CreateSaveExcel 流关闭异常：", ex);
+            }
+        }
+        return stream;
+    }
+
+    private static Integer setMetadataSheetTableHeader(Sheet sheet, Integer parentNumber, Integer childNumber) {
+        //下标
+        Integer colIndex = 0;
+        Row row1 = sheet.createRow(0);
+        Row row2 = sheet.createRow(1);
+
+        //写入父级表头
+        for (int i = 1; i <= parentNumber; i++) {
+            Integer firstCol = (i - 1) * parentMetaDataHeaders.length;
+            Integer lastRow = (i * parentMetaDataHeaders.length) - 1;
+            //合并一级表头
+            CellRangeAddress mergedRegion = new CellRangeAddress(0, 0, firstCol, lastRow);
+            sheet.addMergedRegion(mergedRegion);
+            Cell cellA1 = row1.createCell(firstCol);
+            cellA1.setCellValue("父级对象");
+
+
+            for (int j = 0; j < parentMetaDataHeaders.length; j++) {
+                Cell cellA2 = row2.createCell(firstCol + j);
+                cellA2.setCellValue(parentMetaDataHeaders[j]);
+            }
+
+        }
+
+
+        //当前元数据表头
+        colIndex = parentNumber * parentMetaDataHeaders.length;
+        // 合并一级表头
+        CellRangeAddress mergedRegion = new CellRangeAddress(0, 0, colIndex, colIndex + mainMetaDataHeaders.length - 1);
+        sheet.addMergedRegion(mergedRegion);
+        Cell cellA1_1 = row1.createCell(colIndex);
+        cellA1_1.setCellValue("当前对象");
+
+        for (int j = 0; j < mainMetaDataHeaders.length; j++) {
+            Cell cellA2 = row2.createCell(colIndex);
+            cellA2.setCellValue(mainMetaDataHeaders[j]);
+            colIndex++;
+        }
+
+        //填充子级元数据表头
+        if (childNumber > 0) {
+
+            CellRangeAddress mergedRegion2 = new CellRangeAddress(0, 0, colIndex, colIndex + childMetaDataHeaders.length - 1);
+            sheet.addMergedRegion(mergedRegion2);
+            Cell cellA1_2 = row1.createCell(colIndex);
+            cellA1_2.setCellValue("子级对象");
+            //填充二级表头
+            for (int j = 0; j < childMetaDataHeaders.length; j++) {
+                Cell cellA2 = row2.createCell(colIndex);
+                cellA2.setCellValue(childMetaDataHeaders[j]);
+                colIndex++;
+            }
+        }
+        return colIndex;
     }
 
     /**

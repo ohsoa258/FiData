@@ -7,6 +7,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -49,5 +50,5 @@ public interface IMetaData {
     void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto);
 
 
-    void export(ExportMetaDataDto dto);
+    void export(ExportMetaDataDto dto, HttpServletResponse response);
 }

@@ -46,10 +46,7 @@ import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
-import com.fisk.datamanagement.service.impl.ClassificationImpl;
-import com.fisk.datamanagement.service.impl.EntityImpl;
-import com.fisk.datamanagement.service.impl.MetadataBusinessMetadataMapImpl;
-import com.fisk.datamanagement.service.impl.MetadataEntityImpl;
+import com.fisk.datamanagement.service.impl.*;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -71,6 +68,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -95,6 +95,8 @@ public class MetaDataImpl implements IMetaData {
     ClassificationImpl classification;
     @Resource
     MetadataEntityImpl metadataEntity;
+    @Resource
+    MetadataAttributeImpl metadataAttribute;
     @Resource
     MetadataMapAtlasMapper metadataMapAtlasMapper;
     @Resource
@@ -127,7 +129,7 @@ public class MetaDataImpl implements IMetaData {
     private static final String stg = "stg";
     private static final String dim_prefix = "dim_";
     private static final String ods_suffix = "ods_";
-    private static final String sync_database_prefix="sync_database_";
+    private static final String sync_database_prefix = "sync_database_";
 
     //endregion
     @Override
@@ -160,7 +162,7 @@ public class MetaDataImpl implements IMetaData {
         log.info("开始同步元数据***********");
         try {
             for (MetaDataInstanceAttributeDTO instance : data) {
-                String instanceGuid = metaDataInstance(instance,"-1");
+                String instanceGuid = metaDataInstance(instance, "-1");
                 if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                     continue;
                 }
@@ -201,8 +203,8 @@ public class MetaDataImpl implements IMetaData {
 
                 }
             }
-        }catch (Exception e){
-            log.error("实体同步失败错误信息："+ e.getMessage());
+        } catch (Exception e) {
+            log.error("实体同步失败错误信息：" + e.getMessage());
             e.printStackTrace();
         }
         //更新Redis
@@ -217,12 +219,12 @@ public class MetaDataImpl implements IMetaData {
      * @param dto
      * @return
      */
-    private String metaDataInstance(MetaDataInstanceAttributeDTO dto,String parentEntityId) {
+    private String metaDataInstance(MetaDataInstanceAttributeDTO dto, String parentEntityId) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), parentEntityId).toString();
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
     }
 
     /**
@@ -237,7 +239,7 @@ public class MetaDataImpl implements IMetaData {
         if (metadataEntity == null) {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_DB.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_DB.getName()).toString();
 
     }
 
@@ -254,7 +256,7 @@ public class MetaDataImpl implements IMetaData {
         if (metadataEntity == null) {
             metadataEntity = this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId);
         } else {
-            metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId,EntityTypeEnum.RDBMS_TABLE.getName());
+            metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_TABLE.getName());
         }
 
         if (!"stg".equals(dto.description)) {
@@ -379,7 +381,7 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_TABLE.getName(), parentEntityId).toString();
         }
 
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_TABLE.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_TABLE.getName()).toString();
     }
 
     /**
@@ -412,7 +414,7 @@ public class MetaDataImpl implements IMetaData {
             operationLogDTO.setMetadataEntityId(parentEntityId);
             operationLog.addOperationLog(operationLogDTO);
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
     }
 
 
@@ -426,7 +428,7 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
         }
 
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
     }
 
     /**
@@ -836,7 +838,7 @@ public class MetaDataImpl implements IMetaData {
     public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
-            String instanceGuid = metaDataInstance(instance,"-1");
+            String instanceGuid = metaDataInstance(instance, "-1");
             if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                 continue;
             }
@@ -877,8 +879,6 @@ public class MetaDataImpl implements IMetaData {
     public void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto) {
         associatedBusinessMetaData(null, dto.dbName, dto.tableName);
     }
-
-
 
 
     @Override
@@ -1166,7 +1166,7 @@ public class MetaDataImpl implements IMetaData {
 
 
     /**
-     *  同步数据消费元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
+     * 同步数据消费元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
      *
      * @param entityList
      * @return
@@ -1175,32 +1175,32 @@ public class MetaDataImpl implements IMetaData {
 
 
         //获取所有数据源
-        ResultEntity<List<DataSourceDTO>> allDataSourceResult= userClient.getAll();
-        if (allDataSourceResult.code!=0){
+        ResultEntity<List<DataSourceDTO>> allDataSourceResult = userClient.getAll();
+        if (allDataSourceResult.code != 0) {
             log.error("【获取系统所有数据源异常】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        List<DataSourceDTO> allDataSourceList=allDataSourceResult.data;
+        List<DataSourceDTO> allDataSourceList = allDataSourceResult.data;
 
         //同步实体的外部数据源的实例和数据库元数据
-        syncExternalDataSourceDbInstance(entityList,allDataSourceList);
+        syncExternalDataSourceDbInstance(entityList, allDataSourceList);
         //同步实体目标数据库的实例和数据库元数据(仅限数据库同步服务的实体)
-        syncTargetDbInstance(entityList,allDataSourceList);
+        syncTargetDbInstance(entityList, allDataSourceList);
         for (MetaDataEntityDTO entityDto : entityList) {
             try {
-                String entityGuid =syncEntityTargetMetaData(entityDto,allDataSourceList);
+                String entityGuid = syncEntityTargetMetaData(entityDto, allDataSourceList);
                 //当为代理API是不需要同步血缘的和数据源信息
-                if (entityDto.createApiType!=3){
+                if (entityDto.createApiType != 3) {
                     //同步实体数据源的元数据
-                    List<String> fromEntityId = syncEntitySourceMetaData(entityDto,allDataSourceList);
+                    List<String> fromEntityId = syncEntitySourceMetaData(entityDto, allDataSourceList);
                     //同步源到目标的血缘
-                    metadataEntity.syncSourceToTargetKinShip(fromEntityId,entityGuid,entityDto.createSql);
+                    metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
                 }
-            }catch (Exception exception){
-                log.error("实体同步失败错误信息："+ exception.getMessage());
+            } catch (Exception exception) {
+                log.error("实体同步失败错误信息：" + exception.getMessage());
                 exception.printStackTrace();
-            }finally {
-                log.info("元数据数据信息："+JSONObject.toJSONString(entityDto));
+            } finally {
+                log.info("元数据数据信息：" + JSONObject.toJSONString(entityDto));
             }
         }
         return ResultEnum.SUCCESS;
@@ -1208,57 +1208,60 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * 同步外部数据源的实例和数据库元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
+     *
      * @param entityList
      */
-    private  void syncExternalDataSourceDbInstance(List<MetaDataEntityDTO> entityList ,List<DataSourceDTO> allDataSource){
+    private void syncExternalDataSourceDbInstance(List<MetaDataEntityDTO> entityList, List<DataSourceDTO> allDataSource) {
         Set<Integer> datasourceIdList = entityList.stream().collect(Collectors.groupingBy(e -> e.datasourceDbId)).keySet();
         List<DataSourceDTO> dataSourceDTOList = allDataSource.stream()
-                .filter(e->datasourceIdList.contains(e.getId()))
-                .filter(e->e.getSourceType()==2)
+                .filter(e -> datasourceIdList.contains(e.getId()))
+                .filter(e -> e.getSourceType() == 2)
                 .collect(Collectors.toList());
-        syncDbInstance(dataSourceDTOList,null);
+        syncDbInstance(dataSourceDTOList, null);
     }
 
     /**
      * 同步数据库同步服务的实例和数据库元数据 （数据消费模块:数据库同步服务）
+     *
      * @param entityList
      */
-    private  void syncTargetDbInstance(List<MetaDataEntityDTO> entityList ,List<DataSourceDTO> allDataSource){
+    private void syncTargetDbInstance(List<MetaDataEntityDTO> entityList, List<DataSourceDTO> allDataSource) {
         Set<Integer> datasourceIdList = entityList.stream()
-                .filter(e->e.entityType==14)
+                .filter(e -> e.entityType == 14)
                 .collect(Collectors.groupingBy(e -> e.getTargetDbId()))
                 .keySet();
         List<DataSourceDTO> dataSourceDTOList = allDataSource.stream()
-                        .filter(e->datasourceIdList.contains(e.getId()))
-                        .collect(Collectors.toList());
-        syncDbInstance(dataSourceDTOList,String.valueOf(MetaClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getValue()));
+                .filter(e -> datasourceIdList.contains(e.getId()))
+                .collect(Collectors.toList());
+        syncDbInstance(dataSourceDTOList, String.valueOf(MetaClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getValue()));
     }
 
     /**
      * 同步数据库的实例和数据库元数据
+     *
      * @param dataSourceDTOList
      */
-    private void syncDbInstance(List<DataSourceDTO> dataSourceDTOList,String parentEntityId){
+    private void syncDbInstance(List<DataSourceDTO> dataSourceDTOList, String parentEntityId) {
         for (DataSourceDTO dataSourceDTO : dataSourceDTOList) {
             //判断是否指定指定了元数据的分类
-            if (parentEntityId==null){
+            if (parentEntityId == null) {
                 //若元数据分类为空，则通过数据源类型判断
-                switch (dataSourceDTO.getSourceType()){
+                switch (dataSourceDTO.getSourceType()) {
                     case 1:
                         //外部数据源，为数据源分类
-                        parentEntityId=String.valueOf(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
+                        parentEntityId = String.valueOf(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
                         break;
                     case 2:
                         //内部数据源 ,为数据工厂分类
-                        parentEntityId=String.valueOf(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
+                        parentEntityId = String.valueOf(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
                         break;
                     default:
-                        parentEntityId=String.valueOf(MetaClassificationTypeEnum.OTHER.getValue());
+                        parentEntityId = String.valueOf(MetaClassificationTypeEnum.OTHER.getValue());
                         break;
                 }
             }
             //实例
-            MetaDataInstanceAttributeDTO metaDataInstanceAttributeDTO=new MetaDataInstanceAttributeDTO();
+            MetaDataInstanceAttributeDTO metaDataInstanceAttributeDTO = new MetaDataInstanceAttributeDTO();
             metaDataInstanceAttributeDTO.setHostname(dataSourceDTO.conIp);
             metaDataInstanceAttributeDTO.setPort(dataSourceDTO.getConPort().toString());
             metaDataInstanceAttributeDTO.setRdbms_type(dataSourceDTO.getConType().getName());
@@ -1268,19 +1271,19 @@ public class MetaDataImpl implements IMetaData {
             metaDataInstanceAttributeDTO.setOwner(dataSourceDTO.getPrincipal());
 
             //若为parentEntityId为数据库同步服务，实例QualifiedName添加固定前缀sync_database
-            if (MetaClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getValue()==Integer.parseInt(parentEntityId)){
-                metaDataInstanceAttributeDTO.setQualifiedName(sync_database_prefix+metaDataInstanceAttributeDTO.getHostname());
+            if (MetaClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE.getValue() == Integer.parseInt(parentEntityId)) {
+                metaDataInstanceAttributeDTO.setQualifiedName(sync_database_prefix + metaDataInstanceAttributeDTO.getHostname());
             }
             //添加实例元数据
-            String instanceId = metaDataInstance(metaDataInstanceAttributeDTO,parentEntityId);
+            String instanceId = metaDataInstance(metaDataInstanceAttributeDTO, parentEntityId);
             //数据库
-            MetaDataDbAttributeDTO metaDataDbAttributeDTO= new MetaDataDbAttributeDTO();
+            MetaDataDbAttributeDTO metaDataDbAttributeDTO = new MetaDataDbAttributeDTO();
             metaDataDbAttributeDTO.setName(dataSourceDTO.getConDbname());
             metaDataDbAttributeDTO.setDisplayName(dataSourceDTO.getConDbname());
-            metaDataDbAttributeDTO.setQualifiedName(metaDataInstanceAttributeDTO.getQualifiedName()+"_"+dataSourceDTO.getConDbname());
+            metaDataDbAttributeDTO.setQualifiedName(metaDataInstanceAttributeDTO.getQualifiedName() + "_" + dataSourceDTO.getConDbname());
             metaDataDbAttributeDTO.setOwner(dataSourceDTO.getPrincipal());
             //添加数据库元数据
-            String dbId=metaDataDb(metaDataDbAttributeDTO,instanceId);
+            String dbId = metaDataDb(metaDataDbAttributeDTO, instanceId);
 
         }
     }
@@ -1288,40 +1291,41 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * （数据消费模块，API网关、数据库同步服务、视图服务） 同步实体目标元数据
+     *
      * @return
      */
-    private String syncEntityTargetMetaData(MetaDataEntityDTO entityDto,List<DataSourceDTO> allDataSource){
-        String targetEntityId="";
+    private String syncEntityTargetMetaData(MetaDataEntityDTO entityDto, List<DataSourceDTO> allDataSource) {
+        String targetEntityId = "";
         EntityTypeEnum entityType = EntityTypeEnum.getValue(entityDto.entityType);
         switch (entityType) {
             case VIEW:
-                targetEntityId= addMetaData(entityDto, String.valueOf(MetaClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue()), EntityTypeEnum.getValue(entityDto.getEntityType()));
+                targetEntityId = addMetaData(entityDto, String.valueOf(MetaClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue()), EntityTypeEnum.getValue(entityDto.getEntityType()));
                 break;
             case WEB_API:
                 //获取所有数据源详情
-                targetEntityId= addMetaData(entityDto, String.valueOf(MetaClassificationTypeEnum.API_GATEWAY.getValue()), EntityTypeEnum.getValue(entityDto.getEntityType()));
+                targetEntityId = addMetaData(entityDto, String.valueOf(MetaClassificationTypeEnum.API_GATEWAY.getValue()), EntityTypeEnum.getValue(entityDto.getEntityType()));
                 break;
             case DATABASE_SYNC:
                 //根据目标数据源ID查询数据源详情
                 Optional<DataSourceDTO> targetDbDetailResult = allDataSource.stream().filter(e -> e.getId().equals(entityDto.getTargetDbId())).findFirst();
-                if(!targetDbDetailResult.isPresent()){
-                    log.error("数据库同步服务中同步目标表元数据信息，在数据源信息中: "+entityDto.getTargetDbId());
+                if (!targetDbDetailResult.isPresent()) {
+                    log.error("数据库同步服务中同步目标表元数据信息，在数据源信息中: " + entityDto.getTargetDbId());
                     throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
                 }
                 DataSourceDTO targetDbDetail = targetDbDetailResult.get();
-                String dbQualifiedNames =sync_database_prefix+ targetDbDetail.getConIp() + "_" + targetDbDetail.getConDbname();
+                String dbQualifiedNames = sync_database_prefix + targetDbDetail.getConIp() + "_" + targetDbDetail.getConDbname();
                 //根据DB元数据的QualifiedName获取DB元数据信息
                 MetadataEntityPO dbEntity = metadataEntity.getEntityByQualifiedNames(dbQualifiedNames);
                 MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
                 //数据库同步服务实体元数据QualifiedName命名规则:  实例名+数据库名+数据库同步服务实体Id
-                table.setQualifiedName(dbQualifiedNames+"_"+ table.getQualifiedName());
+                table.setQualifiedName(dbQualifiedNames + "_" + table.getQualifiedName());
                 table.setName(entityDto.getName());
                 table.setComment("");
                 table.setDisplayName(entityDto.getDisplayName());
-                targetEntityId= addMetaData(table,String.valueOf(dbEntity.getId()),EntityTypeEnum.RDBMS_TABLE);
+                targetEntityId = addMetaData(table, String.valueOf(dbEntity.getId()), EntityTypeEnum.RDBMS_TABLE);
                 //数据库同步服务实体下属性元数据QualifiedName命名规则:  实例名+数据库名+数据库同步服务实体Id+数据库同步服务实体下属性Id
                 for (MetaDataColumnAttributeDTO feildItem : entityDto.getAttributeDTOList()) {
-                    feildItem.setQualifiedName(table.getQualifiedName()+"_"+feildItem.getQualifiedName());
+                    feildItem.setQualifiedName(table.getQualifiedName() + "_" + feildItem.getQualifiedName());
                 }
 
                 break;
@@ -1329,116 +1333,118 @@ public class MetaDataImpl implements IMetaData {
                 break;
         }
         //因为代理API没有字段所以不需要添加API
-        if (entityDto.createApiType!=3){
+        if (entityDto.createApiType != 3) {
             List<String> qualifiedNames = new ArrayList<>();
             for (MetaDataColumnAttributeDTO field : entityDto.getAttributeDTOList()) {
-                metaDataField(field, targetEntityId,  entityDto.getOwner());
+                metaDataField(field, targetEntityId, entityDto.getOwner());
                 qualifiedNames.add(field.getQualifiedName());
             }
-            if (qualifiedNames.stream().count()>0){
+            if (qualifiedNames.stream().count() > 0) {
                 //删除历史元数据
                 deleteMetaData(qualifiedNames, targetEntityId);
             }
         }
         //关联实体的业务分类
-        associatedClassification(targetEntityId,entityDto.getAppName());
+        associatedClassification(targetEntityId, entityDto.getAppName());
         return targetEntityId;
     }
 
     /**
      * （数据消费模块，API网关、数据库同步服务、视图服务）  同步实体的源表元数据
+     *
      * @param metaDataEntityDTO
      * @param allDataSourceList
      * @return
      */
-     private List<String> syncEntitySourceMetaData(MetaDataEntityDTO metaDataEntityDTO,List<DataSourceDTO> allDataSourceList){
-         Optional<DataSourceDTO> dataSourceDTOResult = allDataSourceList.stream().filter(e -> e.getId().equals(metaDataEntityDTO.getDatasourceDbId())).findFirst();
-         DataSourceDTO dataSourceDTO= null;
-         if(!dataSourceDTOResult.isPresent()){
+    private List<String> syncEntitySourceMetaData(MetaDataEntityDTO metaDataEntityDTO, List<DataSourceDTO> allDataSourceList) {
+        Optional<DataSourceDTO> dataSourceDTOResult = allDataSourceList.stream().filter(e -> e.getId().equals(metaDataEntityDTO.getDatasourceDbId())).findFirst();
+        DataSourceDTO dataSourceDTO = null;
+        if (!dataSourceDTOResult.isPresent()) {
 
-             log.error("没有找到数据源，数据源ID: "+metaDataEntityDTO.getDatasourceDbId());
-             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-         }
-         dataSourceDTO=dataSourceDTOResult.get();
-         //解析sql脚本，获取数据源表以及字段。
-         List<TableMetaDataObject> res;
-         //实体为api且apiType为普通,那么createSql只包含字段sql如:[name],[age]，并非完整的sql，需要单独处理
-         if(metaDataEntityDTO.entityType==EntityTypeEnum.WEB_API.getValue() && metaDataEntityDTO.apiType==1){
-             String completeSql= "SELECT "+metaDataEntityDTO.createSql+" FROM "+ metaDataEntityDTO.tableName;
-             res = SqlParserUtils.sqlDriveConversionName(0,dataSourceDTO.conType.getName().toLowerCase(),completeSql);
-         }else {
-             //解析自定义脚本
-             log.debug("accessTable信息:表脚本"+metaDataEntityDTO.createSql);
-             res = SqlParserUtils.sqlDriveConversionName(0,dataSourceDTO.conType.getName().toLowerCase(),metaDataEntityDTO.createSql);
-         }
-         //来源表的MetaDataId
-         List<String> sourceEntityIdList = new ArrayList<>();
-         //判断数据源类型，若为外部数据(2)需要同步源表元数据信息，系统数据源(1)则不需要。
-         if(dataSourceDTO.getSourceType()==2){
-             //外部数据源，需要同步源表元数据信息
-             sourceEntityIdList = syncExternalDataSourceTableMetadata(dataSourceDTO, res);
-         }else {
-             //内部数据源下，源表元数据已同步,拼接QualifiedNames查询源表元数据ID信息
-             for (TableMetaDataObject tableMetaDataObjectItem : res) {
-                 String entityQualifiedNames="";
-                 switch (dataSourceDTO.getSourceBusinessType()) {
-                     case ODS:
-                         // ODS表的元数据的QualifiedNames命名规则：{hostname}_{dbName}_{tableId} tableId为数据工厂中表Id
-                         String tableName = tableMetaDataObjectItem.getName();
-                         ResultEntity<TableAccessDTO> accessTableByTableName = dataAccessClient.getAccessTableByTableName(tableName);
-                         if(accessTableByTableName.data==null){
-                             log.error("在数据工厂没有查询到相关表 表名: "+tableMetaDataObjectItem.getName());
-                             continue;
-                         }
-                         entityQualifiedNames=dataSourceDTO.getConIp()+"_"+dataSourceDTO.getConDbname()+"_"+ accessTableByTableName.data.getId();
-                         break;
-                     case DW:
-                         // DW表的元数据的QualifiedNames命名规则:{hostname}_{dbName}_{TableType}_{tableId} 。  TableType ： 维度表：1、事实表 ：2  。
-                         entityQualifiedNames=dataSourceDTO.getConIp()+"_"+dataSourceDTO.getConDbname();
-                         if(tableMetaDataObjectItem.getName().length()>4){
-                             if (dim_prefix.equals(tableMetaDataObjectItem.getName().substring(0, 4))) {
-                                 entityQualifiedNames += "_1_";
-                             } else {
-                                 entityQualifiedNames += "_2_";
-                             }
-                         }else {
-                             log.error("数据源为建模表不符合长度4 ，表名："+tableMetaDataObjectItem.getName());
-                             continue;
-                         }
+            log.error("没有找到数据源，数据源ID: " + metaDataEntityDTO.getDatasourceDbId());
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        dataSourceDTO = dataSourceDTOResult.get();
+        //解析sql脚本，获取数据源表以及字段。
+        List<TableMetaDataObject> res;
+        //实体为api且apiType为普通,那么createSql只包含字段sql如:[name],[age]，并非完整的sql，需要单独处理
+        if (metaDataEntityDTO.entityType == EntityTypeEnum.WEB_API.getValue() && metaDataEntityDTO.apiType == 1) {
+            String completeSql = "SELECT " + metaDataEntityDTO.createSql + " FROM " + metaDataEntityDTO.tableName;
+            res = SqlParserUtils.sqlDriveConversionName(0, dataSourceDTO.conType.getName().toLowerCase(), completeSql);
+        } else {
+            //解析自定义脚本
+            log.debug("accessTable信息:表脚本" + metaDataEntityDTO.createSql);
+            res = SqlParserUtils.sqlDriveConversionName(0, dataSourceDTO.conType.getName().toLowerCase(), metaDataEntityDTO.createSql);
+        }
+        //来源表的MetaDataId
+        List<String> sourceEntityIdList = new ArrayList<>();
+        //判断数据源类型，若为外部数据(2)需要同步源表元数据信息，系统数据源(1)则不需要。
+        if (dataSourceDTO.getSourceType() == 2) {
+            //外部数据源，需要同步源表元数据信息
+            sourceEntityIdList = syncExternalDataSourceTableMetadata(dataSourceDTO, res);
+        } else {
+            //内部数据源下，源表元数据已同步,拼接QualifiedNames查询源表元数据ID信息
+            for (TableMetaDataObject tableMetaDataObjectItem : res) {
+                String entityQualifiedNames = "";
+                switch (dataSourceDTO.getSourceBusinessType()) {
+                    case ODS:
+                        // ODS表的元数据的QualifiedNames命名规则：{hostname}_{dbName}_{tableId} tableId为数据工厂中表Id
+                        String tableName = tableMetaDataObjectItem.getName();
+                        ResultEntity<TableAccessDTO> accessTableByTableName = dataAccessClient.getAccessTableByTableName(tableName);
+                        if (accessTableByTableName.data == null) {
+                            log.error("在数据工厂没有查询到相关表 表名: " + tableMetaDataObjectItem.getName());
+                            continue;
+                        }
+                        entityQualifiedNames = dataSourceDTO.getConIp() + "_" + dataSourceDTO.getConDbname() + "_" + accessTableByTableName.data.getId();
+                        break;
+                    case DW:
+                        // DW表的元数据的QualifiedNames命名规则:{hostname}_{dbName}_{TableType}_{tableId} 。  TableType ： 维度表：1、事实表 ：2  。
+                        entityQualifiedNames = dataSourceDTO.getConIp() + "_" + dataSourceDTO.getConDbname();
+                        if (tableMetaDataObjectItem.getName().length() > 4) {
+                            if (dim_prefix.equals(tableMetaDataObjectItem.getName().substring(0, 4))) {
+                                entityQualifiedNames += "_1_";
+                            } else {
+                                entityQualifiedNames += "_2_";
+                            }
+                        } else {
+                            log.error("数据源为建模表不符合长度4 ，表名：" + tableMetaDataObjectItem.getName());
+                            continue;
+                        }
 
-                         ResultEntity<Long> dwTableIdResult=dataModelClient.getFactOrDimTable(tableMetaDataObjectItem.getName().replace("dbo.",""));
-                         if(dwTableIdResult.data==null){
-                             log.error("在数据建模没有查询到相关表 表名: "+tableMetaDataObjectItem.getName());
-                             continue;
-                         }
-                         entityQualifiedNames+=dwTableIdResult.data;
-                         break;
-                     case MDM:
-                         break;
-                     default:
-                         break;
-                 }
-                 MetadataEntityPO metadataEntityPO = metadataEntity.getEntityByQualifiedNames(entityQualifiedNames);
-                 if(metadataEntityPO==null){
-                     log.error("没有查询到此元数据 QualifiedNames : "+entityQualifiedNames);
-                     continue;
-                 }
-                 sourceEntityIdList.add(String.valueOf(metadataEntityPO.getId()));
-             }
-         }
-         return  sourceEntityIdList;
-     }
+                        ResultEntity<Long> dwTableIdResult = dataModelClient.getFactOrDimTable(tableMetaDataObjectItem.getName().replace("dbo.", ""));
+                        if (dwTableIdResult.data == null) {
+                            log.error("在数据建模没有查询到相关表 表名: " + tableMetaDataObjectItem.getName());
+                            continue;
+                        }
+                        entityQualifiedNames += dwTableIdResult.data;
+                        break;
+                    case MDM:
+                        break;
+                    default:
+                        break;
+                }
+                MetadataEntityPO metadataEntityPO = metadataEntity.getEntityByQualifiedNames(entityQualifiedNames);
+                if (metadataEntityPO == null) {
+                    log.error("没有查询到此元数据 QualifiedNames : " + entityQualifiedNames);
+                    continue;
+                }
+                sourceEntityIdList.add(String.valueOf(metadataEntityPO.getId()));
+            }
+        }
+        return sourceEntityIdList;
+    }
 
     /**
      * 同步外部数据源表元数据
+     *
      * @param dataSourceDTO
      * @param tableMetaDataObjects
      * @return
      */
-    private List<String> syncExternalDataSourceTableMetadata(DataSourceDTO dataSourceDTO, List<TableMetaDataObject> tableMetaDataObjects){
-        List<String> tableIdList=new ArrayList<>();
-        String dbQualifiedName=dataSourceDTO.getConIp()+"_"+dataSourceDTO.getConDbname();
-        Long dbId=dataModelClient.getFactOrDimTable(dbQualifiedName).data;
+    private List<String> syncExternalDataSourceTableMetadata(DataSourceDTO dataSourceDTO, List<TableMetaDataObject> tableMetaDataObjects) {
+        List<String> tableIdList = new ArrayList<>();
+        String dbQualifiedName = dataSourceDTO.getConIp() + "_" + dataSourceDTO.getConDbname();
+        Long dbId = dataModelClient.getFactOrDimTable(dbQualifiedName).data;
         for (TableMetaDataObject item : tableMetaDataObjects) {
             MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
             table.setQualifiedName(dbQualifiedName + "_" + item.name);
@@ -1446,16 +1452,16 @@ public class MetaDataImpl implements IMetaData {
             table.setComment("");
             table.setDisplayName(item.name);
             table.setComment("");
-            String tableId= addMetaData(table,dbId.toString(),EntityTypeEnum.RDBMS_TABLE);
+            String tableId = addMetaData(table, dbId.toString(), EntityTypeEnum.RDBMS_TABLE);
             tableIdList.add(tableId);
-            for (FieldMetaDataObject fieldItem:item.getFields()){
-                MetaDataColumnAttributeDTO field=new MetaDataColumnAttributeDTO();
+            for (FieldMetaDataObject fieldItem : item.getFields()) {
+                MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
                 field.setName(fieldItem.name);
-                field.setQualifiedName(table.getQualifiedName()+"_"+fieldItem.name);
+                field.setQualifiedName(table.getQualifiedName() + "_" + fieldItem.name);
                 field.setDisplayName(fieldItem.name);
                 field.setDataType("");
                 field.setOwner("");
-                addMetaData(field,tableId,EntityTypeEnum.RDBMS_COLUMN);
+                addMetaData(field, tableId, EntityTypeEnum.RDBMS_COLUMN);
             }
         }
         return tableIdList;
@@ -1474,15 +1480,16 @@ public class MetaDataImpl implements IMetaData {
         if (metadataEntity == null) {
             return this.metadataEntity.addMetadataEntity(dto, entityTypeEnum.getName(), parentId).toString();
         }
-        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity,parentId, entityTypeEnum.getName()).toString();
+        return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentId, entityTypeEnum.getName()).toString();
     }
 
     /**
      * 关联业务分类。 数据消费API, 视图服务，数据库同步服务
+     *
      * @param entityId
      * @param appName
      */
-    private void associatedClassification(String entityId,String appName){
+    private void associatedClassification(String entityId, String appName) {
         ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
         dto.entityGuids = new ArrayList<>();
         dto.entityGuids.add(entityId);
@@ -1495,67 +1502,241 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * 导出元数据
+     *
      * @return
      */
     @Override
-    public void export(ExportMetaDataDto dto) {
+    public void export(ExportMetaDataDto dto, HttpServletResponse response) {
         //根据业务分类ID获取所属分类
-        if(dto.getBusinessClassificationId()==null){
+        if (dto.getBusinessClassificationId() == null) {
             return;
         }
-//        if (dto.getAssociatedType()==null){
-//            return;
-//        }
         //获取所有元数据
         List<MetadataEntityPO> allMetadataList = metadataEntity.query().list();
         //查询实体业务分类关联
         List<MetadataBusinessMetadataMapPO> allMetadataBusinessMetadataMapPOList = metadataBusinessMetadataMap.query().list();
         //获取业务分类
         List<BusinessClassificationPO> allBusinessClassificationPOList = classification.query().list();
-        List<Long> exportBusinessClassificationIdList=new ArrayList<>();
+        List<MetadataAttributePO> metadataAttributePOList = new ArrayList<>();
+        //获取元数据下所有的属性
+        if (dto.associatedType.contains(2)) {
+            metadataAttributePOList = metadataAttribute.query().list();
+        }
+        //业务分类
+        List<Long> exportBusinessClassificationIdList = new ArrayList<>();
+        //合并业务分类
         exportBusinessClassificationIdList.addAll(dto.getBusinessClassificationId());
+
         //判断是否选中一级分类，如果选中一级分类，则导出一级分类下所有分类的元数据
-//        for (ClassificationTypeEnum classificationTypeEnum : ClassificationTypeEnum.values()) {
-//            if (dto.getBusinessClassificationId().contains(classificationTypeEnum.getValue())){
-//                List<Long> allTwoLevelBusinessClassificationIdList = allBusinessClassificationPOList.stream()
-//                        .filter(e -> e.getPid().equals(classificationTypeEnum.getValue()))
-//                        .map(e-> {return e.getId();})
-//                        .collect(Collectors.toList());
-//                exportBusinessClassificationIdList.addAll(allTwoLevelBusinessClassificationIdList);
-//            }
-//        }
-        List<HashMap<String,Object>> excelMetaDataList=new ArrayList<>();
-        for (Long bcItem : dto.getBusinessClassificationId()) {
+        for (ClassificationTypeEnum classificationTypeEnum : ClassificationTypeEnum.values()) {
+            if (dto.getBusinessClassificationId().contains(Long.valueOf(classificationTypeEnum.getValue()))) {
+                List<Long> allTwoLevelBusinessClassificationIdList = allBusinessClassificationPOList.stream()
+                        .filter(e -> e.getPid()!=null && e.getPid().equals(classificationTypeEnum.getValue()))
+                        .map(e -> {
+                            return e.getId();
+                        })
+                        .collect(Collectors.toList());
+                exportBusinessClassificationIdList.addAll(allTwoLevelBusinessClassificationIdList);
+            }
+        }
+        //去重
+        exportBusinessClassificationIdList= exportBusinessClassificationIdList.stream().distinct().collect(Collectors.toList());
+        List<Long> allParentBC = Arrays.stream(ClassificationTypeEnum.values()).map(e -> Long.valueOf(e.getValue())).collect(Collectors.toList());
+        //删除一级分类
+        exportBusinessClassificationIdList.removeAll(allParentBC);
+        List<Map<String, Object>> excelMetaDataList = new ArrayList<>();
+        //元数据父级最大层级
+        Integer maxParentNumber = 0;
+        //元数据子级最大层级
+        Integer maxChildNumber = 0;
+        if (dto.associatedType.contains(1)) {
+            maxChildNumber = 1;
+        }
+        for (Long bcItem : exportBusinessClassificationIdList) {
             //获取业务分类下的元数据
             List<Long> metaDataIdList = allMetadataBusinessMetadataMapPOList.stream()
-                    .filter(e -> e.getBusinessMetadataId().equals(bcItem))
+                    .filter(e -> e.getBusinessMetadataId().equals(bcItem.intValue()))
                     .map(e -> {
                         return Long.valueOf(e.getMetadataEntityId());
                     })
                     .collect(Collectors.toList());
-            if (metaDataIdList==null){
+            if (metaDataIdList == null) {
                 continue;
             }
             Optional<BusinessClassificationPO> optionalBusinessClassificationPO = allBusinessClassificationPOList.stream().filter(e -> e.getId() == bcItem).findFirst();
             //一级分类名称
-            String oneLevelBusinessClassificationName;
+            String oneLevelBusinessClassificationName = "";
             //二级分类名称
-            String twoLevelBusinessClassificationName;
+            String twoLevelBusinessClassificationName = "";
             //获取一二级分类名称
-            if (optionalBusinessClassificationPO.isPresent()){
+            if (optionalBusinessClassificationPO.isPresent()) {
                 oneLevelBusinessClassificationName = optionalBusinessClassificationPO.get().getName();
-                twoLevelBusinessClassificationName=ClassificationTypeEnum.valueOf(optionalBusinessClassificationPO.get().getPid().toString()).getName();
+                twoLevelBusinessClassificationName = ClassificationTypeEnum.getEnumByValue(optionalBusinessClassificationPO.get().getPid()).getName();
             }
             //根据元数据Id获取元数据详情
             List<MetadataEntityPO> metadataEntityPOList = allMetadataList.stream().filter(e -> metaDataIdList.contains(e.getId())).collect(Collectors.toList());
+            Integer i=0;
+            //元数据子级最大层级
             for (MetadataEntityPO metaDataItem : metadataEntityPOList) {
-
+                i++;
+                log.info(""+i);
+                //当前元数据信息
+                Map<String, Object> excelMainMetadataMap = new HashMap<>();
+                //二级分类
+                excelMainMetadataMap.put("0",twoLevelBusinessClassificationName);
+                //一级分类
+                excelMainMetadataMap.put("1",oneLevelBusinessClassificationName);
+                //名称
+                excelMainMetadataMap.put("2", metaDataItem.getName());
+                //显示名称
+                excelMainMetadataMap.put("3", metaDataItem.getDisplayName());
+                //元数据类型
+                excelMainMetadataMap.put("4", EntityTypeEnum.getValue(metaDataItem.getTypeId()).getName());
+                //描述
+                excelMainMetadataMap.put("5", metaDataItem.getDescription());
+                //是否导出实体关联的所有父级实体
+                if (dto.associatedType.contains(1)) {
+                    //导出实体所有关联父级实体parent
+                    Map<String, Object> excelParentMetadataMap = new HashMap<>();
+                    Integer parentNumber = setExcelParentMetaDataMap(excelParentMetadataMap, Long.valueOf(metaDataItem.getParentId()), 0);
+                    //设置元数据最大父级层级
+                    if (parentNumber > maxParentNumber) {
+                        maxParentNumber = parentNumber;
+                    }
+                    excelMainMetadataMap.putAll(excelParentMetadataMap);
+                }
+                //是否导出关联实体所有子级实体
+                if (dto.associatedType.contains(2)) {
+                    //导出实体所有关联子级实体
+                    List<MetadataEntityPO> childMetaData = allMetadataList.stream()
+                            .filter(e -> e.getParentId()!=null && e.getParentId() == metaDataItem.getId())
+                            .collect(Collectors.toList());
+                    // 判断是否存在子级，存在合并子级和主体成宽表， 条数变为子级的条数
+                    if (!childMetaData.isEmpty()) {
+                        maxChildNumber = 1;
+                        for (MetadataEntityPO childItem : childMetaData) {
+                            Map<String, Object> excelChildMetaDataMap = new HashMap<>();
+                            //名称
+                            excelChildMetaDataMap.put("5", childItem.getName());
+                            //显示名称
+                            excelChildMetaDataMap.put("6", childItem.getDisplayName());
+                            //元数据类型
+                            excelChildMetaDataMap.put("7", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
+                            //描述
+                            excelChildMetaDataMap.put("8", childItem.getDescription());
+                            List<MetadataAttributePO> EntityAttributeList = metadataAttributePOList.stream()
+                                    .filter(e -> e.getMetadataEntityId() == metaDataItem.getId())
+                                    .collect(Collectors.toList());
+                            String entityAttributeDataType = "";
+                            String entityAttributeLength = "";
+                            //判断子级是否存在额外属性 字段长度 字段类型
+                            if (!EntityAttributeList.isEmpty()) {
+                                //字段类型
+                                Optional<MetadataAttributePO> optionalDataTypeAttribute = EntityAttributeList.stream().filter(e -> e.getName() == "dataType").findFirst();
+                                if (optionalDataTypeAttribute.isPresent()) {
+                                    MetadataAttributePO dataTypeAttributePO = optionalDataTypeAttribute.get();
+                                    entityAttributeDataType = dataTypeAttributePO.getValue();
+                                }
+                                //字段长度
+                                Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName() == "length").findFirst();
+                                if (optionalDataTypeAttribute.isPresent()) {
+                                    MetadataAttributePO lengthAttributePO = optionalDataTypeAttribute.get();
+                                    entityAttributeLength = lengthAttributePO.getValue();
+                                }
+                            }
+                            //字段类型
+                            excelChildMetaDataMap.put("9", entityAttributeDataType);
+                            //字段长度
+                            excelChildMetaDataMap.put("10", entityAttributeLength);
+                            //合并主实体信息
+                            excelChildMetaDataMap.putAll(excelMainMetadataMap);
+                            excelMetaDataList.add(excelChildMetaDataMap);
+                        }
+                    } else {
+                        excelMetaDataList.add(excelMainMetadataMap);
+                    }
+                } else {
+                    excelMetaDataList.add(excelMainMetadataMap);
+                }
             }
-
         }
-//        ExcelUtil.createSaveExcel();
+        try {
+            String fileName="元数据.xlsx";
+            InputStream fileStream= ExcelUtil.createMetaDataSaveExcel( "sheet", excelMetaDataList, maxParentNumber, maxChildNumber);
 
+            // 取得文件名
+            byte[] buffer = new byte[fileStream.available()];
+            fileStream.read(buffer);
+            fileStream.close();
+            // 清空response
+            response.reset();
+            // 设置response的Header
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
+//            response.addHeader("Content-Length", "" + buffer.length);
+            OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+            response.setContentType("application/octet-stream");
+            toClient.write(buffer);
+            toClient.flush();
+            toClient.close();
+        } catch (Exception e) {
+            log.error("导出元数据信息失败：" + e.toString());
+        }
     }
 
+    /**
+     * 设置父级元数据信息
+     *
+     * @param parentMetadataMap
+     * @param allMetaDataPOList
+     * @param parentId
+     * @param number
+     */
+    public Integer setExcelParentMetaDataMap(Map<String, Object> parentMetadataMap, List<MetadataEntityPO> allMetaDataPOList, Long parentId, Integer number) {
+        //
+        Integer parentAttributeNumber = 4;
+        Optional<MetadataEntityPO> optionalParentMetaDataPO = allMetaDataPOList.stream().filter(e -> e.getId() == parentId).findFirst();
+        if (!optionalParentMetaDataPO.isPresent()) {
+            return number;
+        }
+        number++;
+        MetadataEntityPO parentMetaDataPO = optionalParentMetaDataPO.get();
+        Integer index=((number - 1) * parentAttributeNumber);
+        //名称
+        parentMetadataMap.put("-" + (index+4), parentMetaDataPO.getName());
+        //显示名称
+        parentMetadataMap.put("-" + (index+3), parentMetaDataPO.getDisplayName());
+        //类型
+        parentMetadataMap.put("-" + (index+2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
+        //描述
+        parentMetadataMap.put("-" + (index+1), parentMetaDataPO.getDescription());
+        return setExcelParentMetaDataMap(parentMetadataMap, allMetaDataPOList, Long.valueOf(parentMetaDataPO.getParentId()), number);
+    }
+    /**
+     * 设置父级元数据信息
+     *
+     * @param parentMetadataMap
+     * @param parentId
+     * @param number
+     */
+    public Integer setExcelParentMetaDataMap(Map<String, Object> parentMetadataMap, Long parentId, Integer number) {
+        //
+        Integer parentAttributeNumber = 4;
+
+        MetadataEntityPO parentMetaDataPO = metadataEntity.getMetadataEntityById(parentId);
+        if (parentMetaDataPO==null) {
+            return number;
+        }
+        number++;
+        Integer index=((number - 1) * parentAttributeNumber);
+        //名称
+        parentMetadataMap.put("-" + (index+4), parentMetaDataPO.getName());
+        //显示名称
+        parentMetadataMap.put("-" + (index+3), parentMetaDataPO.getDisplayName());
+        //类型
+        parentMetadataMap.put("-" + (index+2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
+        //描述
+        parentMetadataMap.put("-" + (index+1), parentMetaDataPO.getDescription());
+        return setExcelParentMetaDataMap(parentMetadataMap, Long.valueOf(parentMetaDataPO.getParentId()), number);
+    }
 
 }

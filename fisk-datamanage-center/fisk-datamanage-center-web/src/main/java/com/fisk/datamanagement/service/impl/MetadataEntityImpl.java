@@ -342,6 +342,10 @@ public class MetadataEntityImpl
         return one == null ? null : (int) one.id;
     }
 
+
+    public MetadataEntityPO getMetadataEntityById(Long id) {
+        return this.query().eq("id", id).one();
+    }
     /**
      * 删除元数据
      *
