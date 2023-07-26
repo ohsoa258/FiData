@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsNewVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
@@ -79,4 +80,11 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 检查结果
      */
     JSONArray getDataCheckLogsResult(long logId);
+
+    /**
+     * 删除检查日志
+     *
+     * @return 检查结果
+     */
+    ResultEnum deleteDataCheckLogs(long ruleId);
 }

@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsNewVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
@@ -78,5 +79,11 @@ public class DataCheckController {
     @PostMapping("/getDataCheckLogsResult")
     public ResultEntity<JSONArray> getDataCheckLogsResult(@RequestParam("logId") long logId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsResult(logId));
+    }
+
+    @ApiOperation("根据检查规则Id删除数据检查日志")
+    @PostMapping("/deleteDataCheckLogs")
+    public ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId){
+        return service.deleteDataCheckLogs(ruleId);
     }
 }
