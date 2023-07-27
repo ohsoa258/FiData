@@ -13,7 +13,7 @@ import java.util.List;
  */
 @Data
 public class PipelLogRecipientsVO {
-    public String cronExpress;
+    public String cronExpression;
 
     @ApiModelProperty(value = "通知服务器Id")
     public int noticeServerId;

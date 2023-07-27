@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.businessfilter;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -62,22 +63,28 @@ public class BusinessFilterVO {
     public String tableAlias;
 
     /**
-     * 表类型 1：表  2：视图
+     * 表架构名称
      */
-    @ApiModelProperty(value = "表类型 1：表  2：视图")
-    public int tableType;
+    @ApiModelProperty(value = "表架构名称")
+    public String schemaName;
+
+    /**
+     * 表类型
+     */
+    @ApiModelProperty(value = "表类型")
+    public TableTypeEnum tableType;
 
     /**
      * 表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表
      */
     @ApiModelProperty(value = "表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表")
-    public int tableBusinessType;
+    public TableBusinessTypeEnum tableBusinessType;
 
     /**
      * 规则执行顺序
      */
     @ApiModelProperty(value = "规则执行顺序")
-    public int ruleSort;
+    public int ruleExecuteSort;
 
     /**
      * 规则状态
@@ -102,6 +109,12 @@ public class BusinessFilterVO {
      */
     @ApiModelProperty(value = "触发场景：1 调度任务 2 质量报告 3 暂无")
     public int triggerScene;
+
+    /**
+     * 规则说明
+     */
+    @ApiModelProperty(value = "规则说明")
+    public String ruleIllustrate;
 
     /**
      * 序号

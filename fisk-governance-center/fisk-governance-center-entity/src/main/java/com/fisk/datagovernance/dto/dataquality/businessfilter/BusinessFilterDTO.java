@@ -1,7 +1,9 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.TableTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -40,22 +42,34 @@ public class BusinessFilterDTO {
     public String tableUnique;
 
     /**
+     * 表名称
+     */
+    @ApiModelProperty(value = "表名称")
+    public String tableName;
+
+    /**
+     * 表架构名称
+     */
+    @ApiModelProperty(value = "表架构名称")
+    public String schemaName;
+
+    /**
      * 表类型 1：表  2：视图
      */
     @ApiModelProperty(value = "表类型 1：表  2：视图")
-    public int tableType;
+    public TableTypeEnum tableType;
 
     /**
      * 表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表
      */
     @ApiModelProperty(value = "表业务类型 1：dw维度表、2：dw事实表、3、doris维度表  4、doris事实表 5、宽表")
-    public int tableBusinessType;
+    public TableBusinessTypeEnum tableBusinessType;
 
     /**
      * 规则执行顺序
      */
     @ApiModelProperty(value = "规则执行顺序")
-    public int ruleSort;
+    public int ruleExecuteSort;
 
     /**
      * 规则状态
@@ -80,4 +94,10 @@ public class BusinessFilterDTO {
      */
     @ApiModelProperty(value = "触发场景：1 调度任务 2 质量报告 3 暂无")
     public int triggerScene;
+
+    /**
+     * 规则说明
+     */
+    @ApiModelProperty(value = "规则说明")
+    public String ruleIllustrate;
 }

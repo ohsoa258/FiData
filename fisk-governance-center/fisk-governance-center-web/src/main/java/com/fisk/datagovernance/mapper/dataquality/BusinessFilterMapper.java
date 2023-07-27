@@ -38,6 +38,6 @@ public interface BusinessFilterMapper extends FKBaseMapper<BusinessFilterPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_bizfilter_rule(`datasource_id`, `rule_name`, `table_unique`, `table_type`, `table_business_type`, `rule_sort`, `rule_state`, `create_time`, `create_user`, `del_flag`) VALUES (#{datasourceId}, #{ruleName}, #{tableUnique}, #{tableType}, #{tableBusinessType}, #{ruleSort}, #{ruleState}, #{createTime}, #{createUser}, 1);\n;")
+    @Insert("INSERT INTO tb_bizfilter_rule(`datasource_id`, `rule_name`, `schema_name`, `table_unique`, `table_name`, `table_type`, `table_business_type`, `rule_execute_sort`, `rule_state`, `rule_describe`, `filter_scene`, `trigger_scene`, `rule_illustrate`, `create_time`, `create_user`, `del_flag`) VALUES (#{datasourceId}, #{ruleName}, #{schemaName}, #{tableUnique}, #{tableName}, #{tableType}, #{tableBusinessType}, #{ruleExecuteSort}, #{ruleState}, #{ruleDescribe}, #{filterScene}, #{triggerScene}, #{ruleIllustrate}, #{createTime}, #{createUser}, 1);")
     int insertOne(BusinessFilterPO po);
 }

@@ -24,6 +24,8 @@ public interface BusinessFilterMap {
      * @return target
      */
     @Mappings({
+            @Mapping(source = "tableType.value", target = "tableType"),
+            @Mapping(source = "tableBusinessType.value", target = "tableBusinessType"),
             @Mapping(source = "ruleState.value", target = "ruleState")
     })
     BusinessFilterPO dtoToPo(BusinessFilterDTO dto);
@@ -35,6 +37,8 @@ public interface BusinessFilterMap {
      * @return target
      */
     @Mappings({
+            @Mapping(source = "tableType.value", target = "tableType"),
+            @Mapping(source = "tableBusinessType.value", target = "tableBusinessType"),
             @Mapping(source = "ruleState.value", target = "ruleState")
     })
     BusinessFilterPO dtoToPo_Edit(BusinessFilterEditDTO dto);
