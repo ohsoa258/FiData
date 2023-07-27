@@ -156,7 +156,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     t.setDataCheckExtend(dataCheckExtendVO);
                 });
             }
-            // 第七步：排序设置
+            // 第五步：排序设置
             filterRule = filterRule.stream().sorted(
                     // 1.先按照表名称排正序，并处理tableAlias为空的情况
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
@@ -181,7 +181,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (idByDataSourceId == 0) {
                 return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
             }
-            dto.datasourceId = idByDataSourceId;
+            dto.setDatasourceId(idByDataSourceId);
         }
         //第一步：验证模板是否存在以及表规则是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
