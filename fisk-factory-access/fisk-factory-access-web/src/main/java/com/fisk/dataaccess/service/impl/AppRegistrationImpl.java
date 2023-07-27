@@ -1005,7 +1005,8 @@ public class AppRegistrationImpl
             switch (Objects.requireNonNull(driveType)) {
                 case MYSQL:
                     MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                    url = "jdbc:mysql://" + dto.host + ":" + dto.port;
+//                    url = "jdbc:mysql://" + dto.host + ":" + dto.port;
+                    url = dto.connectStr;
                     conn = DbConnectionHelper.connection(url, dto.connectAccount, dto.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
                     allDatabases.addAll(mysqlConUtils.getAllDatabases(conn));
                     break;
