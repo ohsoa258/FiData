@@ -23,11 +23,6 @@ public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorCon
         for (ServerMonitorConfigPO serverMonitorConfigPO : config) {
             sb.append(serverMonitorConfigPO.getServerIp()).append(":").append(serverMonitorConfigPO.getServerPort()).append(":").append(serverMonitorConfigPO.getServerName()).append(" ");
         }
-//        List<String> result = config.stream().map(i -> {
-//            StringBuilder sb = new StringBuilder();
-//            sb.append(i.getServerIp()).append(":").append(i.getServerPort()).append(":").append(i.getServerName());
-//            return sb.toString();
-//        }).collect(Collectors.toList());
         return sb.toString();
     }
 
@@ -47,9 +42,9 @@ public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorCon
     @Override
     public ServerMonitorConfigVO updateServerMonitorConfig(ServerMonitorConfigDTO serverMonitorConfigDTO) {
         ServerMonitorConfigPO serverMonitorConfigPO = ServerMonitorConfigMap.INSTANCES.dtoToPo(serverMonitorConfigDTO);
-        if (serverMonitorConfigDTO.getId() == null){
+        if (serverMonitorConfigDTO.getId() == null) {
             this.save(serverMonitorConfigPO);
-        }else {
+        } else {
             this.updateById(serverMonitorConfigPO);
         }
         return ServerMonitorConfigMap.INSTANCES.poToVO(serverMonitorConfigPO);

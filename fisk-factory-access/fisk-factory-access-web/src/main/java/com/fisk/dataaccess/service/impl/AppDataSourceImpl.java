@@ -416,6 +416,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
                 dataSourcePO.connectAccount = dto.conAccount;
                 dataSourcePO.connectPwd = dto.conPassword;
+
+                dataSourcePO.realtimeAccount = dto.conAccount;
+                dataSourcePO.realtimePwd = dto.conPassword;
+
                 dataSourcePO.serviceType = dto.serviceType;
                 dataSourcePO.serviceName = dto.serviceName;
                 dataSourcePO.domainName = dto.domainName;
