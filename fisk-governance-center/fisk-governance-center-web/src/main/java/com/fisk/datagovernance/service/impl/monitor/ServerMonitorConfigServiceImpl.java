@@ -42,7 +42,7 @@ public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorCon
     @Override
     public ServerMonitorConfigVO updateServerMonitorConfig(ServerMonitorConfigDTO serverMonitorConfigDTO) {
         ServerMonitorConfigPO serverMonitorConfigPO = ServerMonitorConfigMap.INSTANCES.dtoToPo(serverMonitorConfigDTO);
-        if (serverMonitorConfigDTO.getId() == null) {
+        if (serverMonitorConfigDTO.getId() == null || serverMonitorConfigDTO.getId() == 0) {
             this.save(serverMonitorConfigPO);
         } else {
             this.updateById(serverMonitorConfigPO);
