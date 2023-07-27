@@ -26,10 +26,7 @@ import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -2214,5 +2211,30 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
         }
         return jsonArray;
+    }
+
+    @Override
+    public ResultEnum deleteDataCheckLogs(long ruleId) {
+        DataCheckPO dataCheckPO = baseMapper.selectById(ruleId);
+        if (dataCheckPO == null) {
+            return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
+        }
+        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+        dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                .eq(DataCheckExtendPO::getRuleId, ruleId);
+        DataCheckExtendPO dataCheckExtendPO = dataCheckExtendMapper.selectOne(dataCheckExtendPOQueryWrapper);
+        if (dataCheckExtendPO == null) {
+            return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
+        }
+        if (dataCheckExtendPO.getRecordErrorData() == 1 && dataCheckExtendPO.getErrorDataRetentionTime() != 0) {
+            LocalDate currentDate = LocalDate.now();
+            LocalDate targetDate = currentDate.minusDays(dataCheckExtendPO.getErrorDataRetentionTime());
+
+            QueryWrapper<DataCheckLogsPO> dataCheckLogsPOQueryWrapper = new QueryWrapper<>();
+            dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getRuleId, ruleId)
+                    .gt(DataCheckLogsPO::getCreateTime, targetDate);
+            dataCheckLogsMapper.delete(dataCheckLogsPOQueryWrapper);
+        }
+        return ResultEnum.SUCCESS;
     }
 }

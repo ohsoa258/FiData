@@ -3,6 +3,7 @@ package com.fisk.datagovernance.vo.dataquality.datacheck;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+
 /**
  * @author dick
  * @version 1.0
@@ -109,4 +110,10 @@ public class DataCheckLogsVO {
      */
     @ApiModelProperty(value = "检查规则说明")
     public String checkRuleIllustrate;
+
+    /**
+     * 创建时间
+     */
+    @ApiModelProperty(value = "创建时间")
+    public String createTime;
 }

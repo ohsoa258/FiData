@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
@@ -24,7 +25,7 @@ import java.util.List;
 @FeignClient("datagovernance-service")
 public interface DataGovernanceClient {
     /**
-     * 数据校验 界面/接口验证
+     * 接口验证（同步前）
      *
      * @param dto 请求参数
      * @return 执行结果
@@ -33,10 +34,10 @@ public interface DataGovernanceClient {
     ResultEntity<List<DataCheckResultVO>> interfaceCheckData(@Validated @RequestBody DataCheckWebDTO dto);
 
     /**
-     * 数据校验 同步验证
+     * 接口验证（同步中）
      *
      * @param dto 请求参数
-     * @return AtlasEntityDbTableColumnDTO
+     * @return 执行结果
      */
     @PostMapping("/datacheck/syncCheckData")
     ResultEntity<List<DataCheckResultVO>> syncCheckData(@Validated @RequestBody DataCheckSyncDTO dto);
@@ -44,6 +45,7 @@ public interface DataGovernanceClient {
     /**
      * 查询数据质量表规则（含字段规则）
      * tableBusinessType：表业务类型 1：事实表、2：维度表、3、指标表  4、宽表
+     *
      * @return 查询结果
      */
     @GetMapping("/dataQualityClient/getTableRuleList")
@@ -58,12 +60,20 @@ public interface DataGovernanceClient {
     ResultEntity<List<DataSourceConVO>> getAllDataSource();
 
     /**
-     * 数据质量-生成质量报告
+     * 数据检查-生成质量报告
      *
      * @return 操作结果
      */
     @GetMapping("/dataQualityClient/createQualityReport")
     ResultEntity<Object> createQualityReport(@RequestParam("id") int id);
+
+    /**
+     * 数据检查-删除数据检查日志
+     *
+     * @return 操作结果
+     */
+    @PostMapping("/datacheck/deleteDataCheckLogs")
+    ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId);
 
     /**
      * 数据安全-生成智能发现报告

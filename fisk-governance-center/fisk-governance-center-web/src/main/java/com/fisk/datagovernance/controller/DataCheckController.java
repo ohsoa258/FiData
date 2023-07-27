@@ -79,4 +79,10 @@ public class DataCheckController {
     public ResultEntity<JSONArray> getDataCheckLogsResult(@RequestParam("logId") long logId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsResult(logId));
     }
+
+    @ApiOperation("根据检查规则Id删除数据检查日志")
+    @PostMapping("/deleteDataCheckLogs")
+    public ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId){
+        return service.deleteDataCheckLogs(ruleId);
+    }
 }
