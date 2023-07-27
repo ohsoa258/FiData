@@ -78,7 +78,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             pipelLogRecipientsVO.setWechatUserList(wechatUserList);
         }
         if (scheduleSetting != null) {
-            pipelLogRecipientsVO.setCronExpress(scheduleSetting.getCronExpression());
+            pipelLogRecipientsVO.setCronExpression(scheduleSetting.getCronExpression());
         }
         return pipelLogRecipientsVO;
     }
