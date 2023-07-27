@@ -78,7 +78,7 @@
     <select id="getServerTable" resultType="com.fisk.datagovernance.vo.monitor.ServerTableVO">
         SELECT t1.server_name, t2.status,CONCAT('http://', t1.server_ip,':',t1.server_port) as serverUrl,t1.server_port as port, t2.create_time as date FROM tb_server_monitor_config t1
             LEFT JOIN tb_server_monitor t2 ON t1.server_name = t2.server_name
-        WHERE t1.server_ip = #{ip} AND t2.create_time = (SELECT MAX(create_time) FROM tb_server_monitor)
+        WHERE t1.server_ip = #{ip}  AND t1.del_flag = 1 AND t2.create_time = (SELECT MAX(create_time) FROM tb_server_monitor)
     </select>
 
     <select id="getServerDelayPingVO" resultType="com.fisk.datagovernance.vo.monitor.DelayPingVO">
