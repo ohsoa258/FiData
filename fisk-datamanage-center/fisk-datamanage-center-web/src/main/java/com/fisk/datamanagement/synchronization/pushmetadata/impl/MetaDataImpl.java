@@ -1510,6 +1510,7 @@ public class MetaDataImpl implements IMetaData {
     /**
      * 刷新缓存导出Excel元数据的所有数据 间隔2小时刷新一次  0 0 0/2 ? * *
      */
+    @Override
     @Scheduled(cron = "0 0 0/2 ? * *")
     public void refreshRedisExcelMetadata() {
         log.info("***********************开始刷新Redis导出Excel的所有元数据********************************");
@@ -1639,13 +1640,13 @@ public class MetaDataImpl implements IMetaData {
                         //判断子级是否存在额外属性 字段长度 字段类型
                         if (!EntityAttributeList.isEmpty()) {
                             //字段类型
-                            Optional<MetadataAttributePO> optionalDataTypeAttribute = EntityAttributeList.stream().filter(e -> e.getName() == "dataType").findFirst();
+                            Optional<MetadataAttributePO> optionalDataTypeAttribute = EntityAttributeList.stream().filter(e -> e.getName().equals("dataType")).findFirst();
                             if (optionalDataTypeAttribute.isPresent()) {
                                 MetadataAttributePO dataTypeAttributePO = optionalDataTypeAttribute.get();
                                 entityAttributeDataType = dataTypeAttributePO.getValue();
                             }
                             //字段长度
-                            Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName() == "length").findFirst();
+                            Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName().equals("length")).findFirst();
                             if (optionalDataTypeAttribute.isPresent()) {
                                 MetadataAttributePO lengthAttributePO = optionalDataTypeAttribute.get();
                                 entityAttributeLength = lengthAttributePO.getValue();
@@ -1716,7 +1717,6 @@ public class MetaDataImpl implements IMetaData {
 
 
         List<Long> finalExportBusinessClassificationIdList = exportBusinessClassificationIdList;
-
 
         //筛选业务分类下的元数据
         List<Map<String, Object>> excelMetaDataList = allExcelMetadata.stream()
