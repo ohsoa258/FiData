@@ -13,6 +13,12 @@ import lombok.Data;
 @Data
 public class DataCheckLogsVO {
     /**
+     * 日志主键id
+     */
+    @ApiModelProperty(value = "日志主键id")
+    public int id;
+
+    /**
      * 数据校验规则id
      */
     @ApiModelProperty(value = "数据校验规则id")

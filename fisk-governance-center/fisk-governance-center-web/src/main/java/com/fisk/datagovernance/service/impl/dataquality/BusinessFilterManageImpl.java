@@ -250,7 +250,6 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
                 return ResultEnum.DATA_QUALITY_BUSINESS_RULE_ALREADY_EXISTS;
             }
-
             //第二步：转换DTO对象为PO对象
             businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo_Edit(dto);
             if (businessFilterPO == null)
