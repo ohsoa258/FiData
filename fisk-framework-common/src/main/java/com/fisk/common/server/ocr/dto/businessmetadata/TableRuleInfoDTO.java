@@ -44,15 +44,15 @@ public class TableRuleInfoDTO {
     public List<String> checkRules;
 
     /**
-     * 清洗规则，目前只针对表设置
+     * 清洗规则
      */
-    @ApiModelProperty(value = "清洗规则，目前只针对表设置")
+    @ApiModelProperty(value = "清洗规则")
     public List<String> filterRules;
 
     /**
-     * 生命周期，目前只针对表设置
+     * 生命周期
      */
-    @ApiModelProperty(value = "生命周期，目前只针对表设置")
+    @ApiModelProperty(value = "生命周期")
     public List<String> lifecycleRules;
 
     /**
