@@ -1,5 +1,6 @@
 spring:
   metadataentity: MetaDataEntity
+  excelMetadata: ExcelMetadata
   schedule: 0 0 2 * * ?
   datasource:
     url: jdbc:mysql://192.168.21.13:3306/FiData_datamanagement_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
