@@ -56,4 +56,9 @@ public interface IMetaData {
      */
     void export(ExportMetaDataDto dto,HttpServletResponse response);
 
+
+    /**
+     * 刷新Redis缓存key
+     */
+    void refreshRedisExcelMetadata();
 }
