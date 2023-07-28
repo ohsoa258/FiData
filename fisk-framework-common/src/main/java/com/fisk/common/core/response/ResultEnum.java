@@ -72,6 +72,7 @@ public enum ResultEnum {
     GET_ACCESS_DATA_SOURCE_ERROR(1042, "根据SystemDataSourceId获取数据接入引用的数据源信息失败"),
     DATA_SOURCE_IS_USING(1043, "平台数据源删除失败！当前要删除的数据源仍有数据接入的app应用在引用，请移除引用后在删除！"),
     APP_IS_NOT_EXISTS(1044, "数据接入-app应用不存在"),
+    DATA_SOURCE_ACCOUNT_ALREADY_EXISTS(1045, "RESTFULAPI的账号不允许重复!请您修改账号或使用已配置的数据源。"),
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -336,6 +337,7 @@ public enum ResultEnum {
     DATA_QUALITY_DATASOURCE_NOT_EXISTS_STOP(11029, "数据源不存在，表状态字段变更操作终止"),
     DATA_QUALITY_CURRENTLY_ONLY_NON_INSPECTION_QUALITY_REPORTS_ARE_SUPPORTED(11029, "暂只支持非检查质量报告"),
     DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS(11030, "检查代号已存在"),
+    DATA_QUALITY_BUSINESS_RULE_ALREADY_EXISTS(11031, "清洗规则已存在"),
 
     /**
      * 数据安全

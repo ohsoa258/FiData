@@ -1,8 +1,8 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.alibaba.fastjson.JSONArray;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
 
 /**
  * @author dick
@@ -112,8 +112,8 @@ public class DataCheckLogsVO {
     public String checkRuleIllustrate;
 
     /**
-     * 错误Json数据
+     * 创建时间
      */
-    @ApiModelProperty(value = "错误Json数据")
-    public JSONArray errorData;
+    @ApiModelProperty(value = "创建时间")
+    public String createTime;
 }

@@ -1,6 +1,7 @@
 package com.fisk.task.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -114,10 +115,23 @@ public class NifiController {
         } catch (Exception e) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
+
+        //RestfulApi类型的数据源的账号不允许重复
+        if (resultEntity.getCode() == ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS.getCode()) {
+            log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS);
+        }
+
         if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
             log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
         }
+
+        //RestfulApi无需在nifi创建全局变量，它不走nifi
+        if (dto.conType== DataSourceTypeEnum.RESTFULAPI){
+            return resultEntity;
+        }
+
         Integer id = (Integer) resultEntity.getData();
         log.info("开始向nifi中添加参数，数据源[{}],[{}]", id, dto);
         Map<String, String> map = new HashMap<>();
@@ -148,11 +162,20 @@ public class NifiController {
                 log.error("task模块调用system服务查询数据源失败，[{}]", modelResult.getMsg());
                 return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
             }
+
             resultEntity = userClient.editData(dto);
+
+            //RestfulApi类型的数据源的账号不允许重复
+            if (resultEntity.getCode() == ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS.getCode()) {
+                log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
+                return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS);
+            }
+
             if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                 log.error("system服务修改数据源失败，[{}]", resultEntity.getMsg());
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
             }
+
             //在修改数据源的同时，连带修改数据接入引用了平台配置数据源的app应用的数据源信息
             //远程调用数据接入的方法
             ResultEntity<List<AppDataSourceDTO>> sources = dataAccessClient.getDataSourcesBySystemDataSourceId(dto.id);
@@ -166,6 +189,11 @@ public class NifiController {
 
         } catch (Exception e) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        //RestfulApi无需在nifi创建全局变量，它不走nifi
+        if (dto.conType== DataSourceTypeEnum.RESTFULAPI){
+            return resultEntity;
         }
 
         // 查询修改后的连接信息

@@ -4,28 +4,28 @@
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.DataCheckLogsMapper">
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO">
         SELECT
-            log.id,
-            log.rule_id,
-            log.rule_name,
-            log.template_id,
-            log.fi_datasource_id,
-            log.log_type,
-            log.schema_name,
-            log.table_name,
-            log.field_name,
-            log.check_template_name,
-            log.check_batch_number,
-            log.check_small_batch_number,
-            log.check_total_count,
-            log.check_fail_count,
-            log.check_result,
-            log.check_msg,
-            log.check_rule_illustrate,
-            log.error_data
+        log.id,
+        log.rule_id,
+        log.rule_name,
+        log.template_id,
+        log.fi_datasource_id,
+        log.log_type,
+        log.schema_name,
+        log.table_name,
+        log.field_name,
+        log.check_template_name,
+        log.check_batch_number,
+        log.check_small_batch_number,
+        log.check_total_count,
+        log.check_fail_count,
+        log.check_result,
+        log.check_msg,
+        log.check_rule_illustrate,
+        log.create_time
         FROM
-            tb_datacheck_rule_logs log
+        tb_datacheck_rule_logs log
         WHERE
-            log.del_flag =1
+        log.del_flag =1
         <if test="query.logType !=0 ">
             and log.log_type = #{query.logType}
         </if>
@@ -34,6 +34,9 @@
         </if>
         <if test="query.templateId !=0 ">
             and log.template_id = #{query.templateId}
+        </if>
+        <if test="query.ruleName !=null and query.ruleName.length()>0 ">
+            and log.rule_name = #{query.ruleName}
         </if>
     </select>
 </mapper>

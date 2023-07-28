@@ -223,7 +223,7 @@
              WHERE t1.del_flag = 1
             <choose>
                 <when test="dto.lookday != null and dto.lookday != 0">
-                    and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
+                    and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{dto.lookday} - 1 ) DAY )
                 </when>
                 <when test="dto.lookday == null or dto.lookday == 0">
                     and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 29 DAY )

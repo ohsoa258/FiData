@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -25,18 +26,16 @@ import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.sql.Connection;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -72,6 +71,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     private UserHelper userHelper;
+
+    @Value("${spring.datasource.url}")
+    private String dataBaseUrl;
+    @Value("${spring.datasource.username}")
+    private String dataBaseUserName;
+    @Value("${spring.datasource.password}")
+    private String dataBasePassWord;
 
     private static final String WARN = "warn";
     private static final String FAIL = "fail";
@@ -150,7 +156,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     t.setDataCheckExtend(dataCheckExtendVO);
                 });
             }
-            // 第七步：排序设置
+            // 第五步：排序设置
             filterRule = filterRule.stream().sorted(
                     // 1.先按照表名称排正序，并处理tableAlias为空的情况
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
@@ -175,7 +181,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (idByDataSourceId == 0) {
                 return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
             }
-            dto.datasourceId = idByDataSourceId;
+            dto.setDatasourceId(idByDataSourceId);
         }
         //第一步：验证模板是否存在以及表规则是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
@@ -2190,5 +2196,45 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     public Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto) {
         return dataCheckLogsMapper.getAll(dto.page, dto);
+    }
+
+    @Override
+    public JSONArray getDataCheckLogsResult(long logId) {
+        JSONArray jsonArray = null;
+        Connection connection = dataSourceConManageImpl.getStatement(DataSourceTypeEnum.MYSQL, dataBaseUrl, dataBaseUserName, dataBasePassWord);
+        String sql = String.format("SELECT error_data FROM tb_datacheck_rule_logs WHERE Id=%s", logId);
+        List<Map<String, Object>> maps = AbstractCommonDbHelper.execQueryResultMaps(sql, connection);
+        if (CollectionUtils.isNotEmpty(maps)) {
+            Object error_data = maps.get(0).get("error_data");
+            if (error_data != null) {
+                jsonArray = JSON.parseArray(error_data.toString());
+            }
+        }
+        return jsonArray;
+    }
+
+    @Override
+    public ResultEnum deleteDataCheckLogs(long ruleId) {
+        DataCheckPO dataCheckPO = baseMapper.selectById(ruleId);
+        if (dataCheckPO == null) {
+            return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
+        }
+        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+        dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                .eq(DataCheckExtendPO::getRuleId, ruleId);
+        DataCheckExtendPO dataCheckExtendPO = dataCheckExtendMapper.selectOne(dataCheckExtendPOQueryWrapper);
+        if (dataCheckExtendPO == null) {
+            return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
+        }
+        if (dataCheckExtendPO.getRecordErrorData() == 1 && dataCheckExtendPO.getErrorDataRetentionTime() != 0) {
+            LocalDate currentDate = LocalDate.now();
+            LocalDate targetDate = currentDate.minusDays(dataCheckExtendPO.getErrorDataRetentionTime());
+
+            QueryWrapper<DataCheckLogsPO> dataCheckLogsPOQueryWrapper = new QueryWrapper<>();
+            dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getRuleId, ruleId)
+                    .gt(DataCheckLogsPO::getCreateTime, targetDate);
+            dataCheckLogsMapper.delete(dataCheckLogsPOQueryWrapper);
+        }
+        return ResultEnum.SUCCESS;
     }
 }

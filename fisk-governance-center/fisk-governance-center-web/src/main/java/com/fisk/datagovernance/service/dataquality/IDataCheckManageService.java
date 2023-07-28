@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.dataquality;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
@@ -9,7 +10,6 @@ import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -71,4 +71,18 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 分页列表
      */
     Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto);
+
+    /**
+     * 检查日志结果
+     *
+     * @return 检查结果
+     */
+    JSONArray getDataCheckLogsResult(long logId);
+
+    /**
+     * 删除检查日志
+     *
+     * @return 检查结果
+     */
+    ResultEnum deleteDataCheckLogs(long ruleId);
 }

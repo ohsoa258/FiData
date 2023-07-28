@@ -15,7 +15,7 @@ public interface ServerMonitorService extends IService<ServerMonitorPO> {
 
     ResultEnum saveServerMonitor(List<ServerMonitorDTO> serverMonitorDTO);
 
-    ServerMonitorVO getServerMonitor(Integer number, Integer type);
+    ServerMonitorVO getServerMonitor(String ip,Integer number, Integer type);
 
     ServerMonitorDetailVO getServerMonitorDetail(ServerMonitorPageDTO serverMonitorPageDTO);
 }

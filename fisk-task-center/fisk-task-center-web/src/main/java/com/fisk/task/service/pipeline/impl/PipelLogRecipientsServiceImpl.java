@@ -51,7 +51,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
         ScheduleSettingPO scheduleSettingPO = new ScheduleSettingPO();
         ScheduleSettingPO scheduleSetting = scheduleSettingPO.selectOne(new QueryWrapper<ScheduleSettingPO>().eq("bean_name", "SubscribeEmailTask"));
 
-        PipelLogRecipientsVO pipelLogRecipientsVO = null;
+        PipelLogRecipientsVO pipelLogRecipientsVO = new PipelLogRecipientsVO();
         List<PipelLogRecipientsPO> list = this.list();
         if (CollectionUtils.isNotEmpty(list)) {
             ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(list.get(0).getNoticeServerId());
@@ -71,14 +71,13 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
                     }
                 });
             }
-            pipelLogRecipientsVO = new PipelLogRecipientsVO();
             pipelLogRecipientsVO.setNoticeServerId(list.get(0).getNoticeServerId());
             pipelLogRecipientsVO.setUserEmails(list.get(0).getUserEmails());
             pipelLogRecipientsVO.setEnable(list.get(0).getEnable());
             pipelLogRecipientsVO.setWechatUserList(wechatUserList);
         }
         if (scheduleSetting != null) {
-            pipelLogRecipientsVO.setCronExpress(scheduleSetting.getCronExpression());
+            pipelLogRecipientsVO.setCronExpression(scheduleSetting.getCronExpression());
         }
         return pipelLogRecipientsVO;
     }

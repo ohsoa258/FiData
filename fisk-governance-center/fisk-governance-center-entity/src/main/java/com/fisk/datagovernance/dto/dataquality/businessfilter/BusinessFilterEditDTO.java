@@ -1,6 +1,7 @@
 package com.fisk.datagovernance.dto.dataquality.businessfilter;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -9,6 +10,7 @@ import lombok.EqualsAndHashCode;
  * @description 业务清洗编辑DTO
  * @date 2022/3/24 13:48
  */
+@Data
 @EqualsAndHashCode(callSuper = true)
 public class BusinessFilterEditDTO extends BusinessFilterDTO {
     /**

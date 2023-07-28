@@ -124,13 +124,12 @@ public class SystemLogImpl implements SystemLog {
         try {
             reader = new BufferedReader(new FileReader(file));
             //用来判断日志是否读完毕
-            String tempString = null;
+            String tempString;
             //可以记录行数
             int line = 1;
             // 一次读入一行，直到读入null为文件结束
             while ((tempString = reader.readLine()) != null) {
-                String logLine = reader.readLine();
-                oneLog.add(logLine);
+                oneLog.add(tempString);
                 line++;
             }
             systemLogVO.logList = oneLog;

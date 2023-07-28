@@ -33,6 +33,12 @@ public class DataCheckLogsQueryDTO {
     public int ruleId;
 
     /**
+     * 规则名称（代号）
+     */
+    @ApiModelProperty(value = "规则名称（代号）")
+    public String ruleName;
+
+    /**
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")

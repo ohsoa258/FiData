@@ -168,6 +168,16 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Override
     public ResultEnum updateDataSource(DataSourceSaveDTO dto) {
+        //RestfulApi类型的数据源的账号不允许重复
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI) {
+            QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(DataSourcePO::getConAccount, dto.getConAccount());
+            List<DataSourcePO> list = list(queryWrapper);
+            if (list.size()>1) {
+                return ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS;
+            }
+        }
+
         DataSourcePO model = baseMapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -235,6 +245,16 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         //获取当前登陆人  取缔
 //        UserInfo userInfo = userHelper.getLoginUserInfo();
 //        String username = userInfo.getUsername();
+
+        //RestfulApi类型的数据源的账号不允许重复
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI) {
+            QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(DataSourcePO::getConAccount, dto.getConAccount());
+            List<DataSourcePO> list = list(queryWrapper);
+            if (CollectionUtils.isNotEmpty(list)) {
+                return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS);
+            }
+        }
 
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DataSourcePO::getName, dto.name)

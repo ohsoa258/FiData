@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.controller;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -71,5 +72,17 @@ public class DataCheckController {
     @PostMapping("/getDataCheckLogsPage")
     public ResultEntity<Page<DataCheckLogsVO>> getDataCheckLogsPage(@RequestBody DataCheckLogsQueryDTO dto){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsPage(dto));
+    }
+
+    @ApiOperation("根据日志Id查询数据检查结果")
+    @PostMapping("/getDataCheckLogsResult")
+    public ResultEntity<JSONArray> getDataCheckLogsResult(@RequestParam("logId") long logId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsResult(logId));
+    }
+
+    @ApiOperation("根据检查规则Id删除数据检查日志")
+    @PostMapping("/deleteDataCheckLogs")
+    public ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId){
+        return service.deleteDataCheckLogs(ruleId);
     }
 }

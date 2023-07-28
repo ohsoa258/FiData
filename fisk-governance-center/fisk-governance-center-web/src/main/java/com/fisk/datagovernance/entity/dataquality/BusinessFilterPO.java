@@ -30,6 +30,16 @@ public class BusinessFilterPO extends BasePO
     public String tableUnique;
 
     /**
+     * 表名称
+     */
+    public String tableName;
+
+    /**
+     * 表架构名称
+     */
+    public String schemaName;
+
+    /**
      * 表类型 1：表  2：视图
      */
     public int tableType;
@@ -42,7 +52,7 @@ public class BusinessFilterPO extends BasePO
     /**
      * 规则执行顺序
      */
-    public int ruleSort;
+    public int ruleExecuteSort;
 
     /**
      * 规则状态
@@ -63,6 +73,11 @@ public class BusinessFilterPO extends BasePO
      * 触发场景：1 调度任务 2 质量报告 3 暂无
      */
     public int triggerScene;
+
+    /**
+     * 规则说明
+     */
+    public String ruleIllustrate;
 }
 
 

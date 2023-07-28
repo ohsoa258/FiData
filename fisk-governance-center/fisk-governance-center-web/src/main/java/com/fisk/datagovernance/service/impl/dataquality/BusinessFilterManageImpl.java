@@ -28,6 +28,7 @@ import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.TableTypeEnum;
 import com.fisk.datagovernance.map.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.BusinessFilterMapper;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
@@ -114,7 +115,9 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                 queryTableParam.setSourceId(query.getDatasourceId());
                 queryTableParam.setSourceType(query.getSourceType());
                 queryTableParams.add(queryTableParam);
-            } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER || query.getLevelType() == LevelTypeEnum.DATABASE || query.getLevelType() == LevelTypeEnum.FOLDER) {
+            } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
+                    || query.getLevelType() == LevelTypeEnum.DATABASE
+                    || query.getLevelType() == LevelTypeEnum.FOLDER) {
                 List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.getSourceType(), query.getUniqueId());
                 if (CollectionUtils.isNotEmpty(treeTableNodes)) {
                     queryTableParams.addAll(treeTableNodes);
@@ -129,24 +132,24 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             if (CollectionUtils.isNotEmpty(queryTableParams)) {
                 for (QueryTableRuleDTO dto : queryTableParams) {
                     List<BusinessFilterVO> rules = null;
-                    int tableType = 0;
+                    TableTypeEnum tableType = TableTypeEnum.NONE;
                     if (dto.getTableType() == LevelTypeEnum.TABLE) {
-                        tableType = 1;
+                        tableType = TableTypeEnum.TABLE;
                     } else if (dto.getTableType() == LevelTypeEnum.VIEW) {
-                        tableType = 2;
+                        tableType = TableTypeEnum.VIEW;
                     }
-                    int finalTableType = tableType;
+                    TableTypeEnum finalTableType = tableType;
                     if (dto.getSourceType() == SourceTypeEnum.FiData) {
                         // 通过数据源ID+表类型+表业务类型+表ID 定位到表的规则
                         rules = allRule.stream().filter(t -> t.getFiDataSourceId() == dto.getSourceId() &&
                                 t.getTableType() == finalTableType &&
-                                t.getTableBusinessType() == dto.getTableBusinessType().getValue() &&
+                                t.getTableBusinessType() == dto.getTableBusinessType()&&
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     } else if (dto.getSourceType() == SourceTypeEnum.custom) {
                         // 通过数据源ID+表类型+表业务类型+表名称 定位到表的规则
                         rules = allRule.stream().filter(t -> t.getDatasourceId() == dto.getSourceId() &&
                                 t.getTableType() == finalTableType &&
-                                t.getTableBusinessType() == dto.getTableBusinessType().getValue() &&
+                                t.getTableBusinessType() == dto.getTableBusinessType() &&
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     }
                     if (CollectionUtils.isNotEmpty(rules)) {
@@ -159,49 +162,14 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             if (CollectionUtils.isEmpty(filterRule)) {
                 return filterRule;
             }
-            // 第五步：基于筛选后的表查询表字段详情
-            List<DataTableFieldDTO> filterFiDataTables = new ArrayList<>();
-            filterRule.forEach(t -> {
-                if (t.getSourceTypeEnum() == SourceTypeEnum.custom) {
-                    return;
-                }
-                DataTableFieldDTO dto = new DataTableFieldDTO();
-                dto.setId(t.getTableUnique());
-                dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(t.getFiDataSourceId()));
-                dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(t.getTableBusinessType()));
-                filterFiDataTables.add(dto);
-            });
-            List<FiDataMetaDataDTO> tableFields = null;
-            if (CollectionUtils.isNotEmpty(filterFiDataTables)) {
-                tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
-            }
-            // 第六步：表信息填充
-            if (CollectionUtils.isNotEmpty(tableFields)) {
-                for (BusinessFilterVO ruleDto : filterRule) {
-                    FiDataMetaDataTreeDTO f_table = null;
-                    if (ruleDto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
-                        FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == ruleDto.getFiDataSourceId()).findFirst().orElse(null);
-                        if (fiDataMetaDataDTO != null && CollectionUtils.isNotEmpty(fiDataMetaDataDTO.getChildren())) {
-                            f_table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId().equals(ruleDto.getTableUnique())).findFirst().orElse(null);
-                        }
-                    }
-                    if (f_table != null) {
-                        ruleDto.setTableName(f_table.getLabel());
-                        ruleDto.setTableAlias(f_table.getLabelAlias());
-                    } else {
-                        ruleDto.setTableName(ruleDto.getTableUnique());
-                        ruleDto.setTableAlias(ruleDto.getTableUnique());
-                    }
-                }
-            }
-            // 第七步：排序设置
+            // 第五步：排序设置
             filterRule = filterRule.stream().sorted(
-                    // 1.先按照表名称排正序
-                    Comparator.comparing(BusinessFilterVO::getTableAlias, Comparator.naturalOrder())
-                            // 2.再按照调度类型排正序
-                            .thenComparing(BusinessFilterVO::getTriggerScene, Comparator.naturalOrder())
-                            // 3.再按照执行顺序排正序
-                            .thenComparing(BusinessFilterVO::getRuleSort, Comparator.naturalOrder())
+                    // 1.先按照表名称排正序，并处理tableAlias为空的情况
+                    Comparator.comparing(BusinessFilterVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 2.再按照调度类型排正序，并处理triggerScene为空的情况
+                            .thenComparing(BusinessFilterVO::getTriggerScene, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 3.再按照检查类型排正序，并处理ruleExecuteSort为空的情况
+                            .thenComparing(BusinessFilterVO::getRuleExecuteSort, Comparator.nullsFirst(Comparator.naturalOrder()))
             ).collect(Collectors.toList());
             int orderNumber = 0;
             for (BusinessFilterVO businessFilterVO : filterRule) {
@@ -209,7 +177,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                 businessFilterVO.setOrderNumber(orderNumber);
             }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[getAllRule]-ex：" + ex);
+            log.error("【getAllRule】查询清洗规则列表异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return filterRule;
@@ -223,25 +191,38 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             return ResultEnum.PARAMTER_NOTNULL;
         }
         try {
-            //第一步：查询数据质量数据源表主键id
+            // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
             if (dto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
                 int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceTypeEnum(), dto.getDatasourceId());
                 if (idByDataSourceId == 0)
+                {
                     return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+                }
                 dto.setDatasourceId(idByDataSourceId);
             }
+            //第一步：验证表清洗规则是否存在
+            QueryWrapper<BusinessFilterPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().in(BusinessFilterPO::getRuleName, dto.getRuleName())
+                    .eq(BusinessFilterPO::getDelFlag, 1);
+            List<BusinessFilterPO> businessFilterPOList = baseMapper.selectList(queryWrapper);
+            if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
+                return ResultEnum.DATA_QUALITY_BUSINESS_RULE_ALREADY_EXISTS;
+            }
+
             //第二步：转换DTO对象为PO对象
             BusinessFilterPO businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo(dto);
             if (businessFilterPO == null)
+            {
                 return ResultEnum.SAVE_DATA_ERROR;
+            }
             //第三步：保存业务清洗规则信息
             int i = baseMapper.insert(businessFilterPO);
             if (i <= 0)
+            {
                 return ResultEnum.SAVE_DATA_ERROR;
-            //第四步：调用元数据接口同步最新的规则信息
-            externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
+            }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[addData]-ex:" + ex);
+            log.error("【addData】新增清洗规则异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return resultEnum;
@@ -258,19 +239,32 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             //第一步：查询修改的数据是否存在
             BusinessFilterPO businessFilterPO = baseMapper.selectById(dto.id);
             if (businessFilterPO == null)
+            {
                 return ResultEnum.DATA_NOTEXISTS;
+            }
+            QueryWrapper<BusinessFilterPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().in(BusinessFilterPO::getRuleName, dto.getRuleName())
+                    .eq(BusinessFilterPO::getDelFlag, 1)
+                    .ne(BusinessFilterPO::getId, dto.getId());
+            List<BusinessFilterPO> businessFilterPOList = baseMapper.selectList(queryWrapper);
+            if (CollectionUtils.isNotEmpty(businessFilterPOList)) {
+                return ResultEnum.DATA_QUALITY_BUSINESS_RULE_ALREADY_EXISTS;
+            }
+
             //第二步：转换DTO对象为PO对象
             businessFilterPO = BusinessFilterMap.INSTANCES.dtoToPo_Edit(dto);
             if (businessFilterPO == null)
+            {
                 return ResultEnum.SAVE_DATA_ERROR;
+            }
             //第三步：保存业务清洗信息
             int i = baseMapper.updateById(businessFilterPO);
             if (i <= 0)
+            {
                 return ResultEnum.SAVE_DATA_ERROR;
-            //第四步：调用元数据接口同步最新的规则信息
-            externalInterfaceImpl.synchronousTableBusinessMetaData(dto.getDatasourceId(), dto.getSourceTypeEnum(), dto.getTableBusinessType(), dto.getTableUnique());
+            }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[editData]-ex:" + ex);
+            log.error("【addData】编辑清洗规则异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return resultEnum;
@@ -285,23 +279,25 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         try {
             BusinessFilterPO businessFilterPO = baseMapper.selectById(ruleId);
             if (businessFilterPO == null)
+            {
                 return ResultEnum.SUCCESS;
+            }
             // 第一步：删除清洗规则
             if (baseMapper.deleteByIdWithFill(businessFilterPO) <= 0)
+            {
                 return ResultEnum.DELETE_ERROR;
+            }
             // 第二步：删除清洗规则下的工作区流程信息
             if (!deleteProcess(ruleId))
+            {
                 return ResultEnum.DELETE_ERROR;
-            // 第三步：调用元数据接口同步最新的规则信息
-            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(businessFilterPO.getDatasourceId());
-            if (dataSourceConPO != null)
-                externalInterfaceImpl.synchronousTableBusinessMetaData(businessFilterPO.getDatasourceId(), SourceTypeEnum.getEnum(dataSourceConPO.getDatasourceType()), businessFilterPO.getTableBusinessType(), businessFilterPO.getTableUnique());
-            // 第四步：禁用调度任务（rule维度）
+            }
+            // 第三步：禁用调度任务（rule维度）
             if (businessFilterPO.getTriggerScene() == 1) {
 
             }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[deleteData]-ex:" + ex);
+            log.error("【deleteData】删除清洗规则异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return ResultEnum.SUCCESS;
@@ -324,7 +320,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             if (first.isPresent()) {
                 BusinessFilterSortDto businessFilterSortDto = first.get();
                 if (businessFilterSortDto != null) {
-                    e.setRuleSort(businessFilterSortDto.getModuleExecSort());
+                    e.setRuleExecuteSort(businessFilterSortDto.getModuleExecSort());
                 }
             }
         });
@@ -417,7 +413,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
                 processTaskList.add(processTaskVO);
             }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[getProcessDetail]-ex:" + ex);
+            log.error("【getProcessDetail】查看清洗规则工作流详情异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, processTaskList);
@@ -547,7 +543,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
 
             }
         } catch (Exception ex) {
-            log.error("[businessFilter]-[saveProcess]-ex:" + ex);
+            log.error("【saveProcess】保存清洗规则工作流详情异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return isSavePass ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
@@ -564,7 +560,8 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             BusinessFilterVO businessFilterVO = baseMapper.getRuleById(ruleId);
             if (businessFilterVO == null)
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_THE_CLEANING_RULE_DOES_NOT_EXIST, filterResultList);
-            String tableName = getTableName(businessFilterVO);
+            // businessFilterVO.getTableName(); 可能需要拼接架构
+            String tableName = businessFilterVO.getTableName();
             if (StringUtils.isEmpty(tableName))
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TO_OBTAIN_TABLE_INFORMATION, filterResultList);
             // 第二步：查询工作区-流程信息
@@ -593,7 +590,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             // 第八步：递归工作区流程信息获取清洗语句
 
         } catch (Exception ex) {
-            log.error("[businessFilter]-[collProcess]-ex:" + ex);
+            log.error("【collProcess】执行清洗规则工作流详情异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return null;
@@ -645,25 +642,6 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             }
         }
         return businessFilterProcessVOList;
-    }
-
-    private String getTableName(BusinessFilterVO businessFilterVO) {
-        List<DataTableFieldDTO> filterFiDataTables = new ArrayList<>();
-        DataTableFieldDTO dto = new DataTableFieldDTO();
-        dto.setId(businessFilterVO.getTableUnique());
-        dto.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(businessFilterVO.getFiDataSourceId()));
-        dto.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(businessFilterVO.getTableBusinessType()));
-        filterFiDataTables.add(dto);
-        List<FiDataMetaDataDTO> tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
-        FiDataMetaDataDTO fiDataMetaDataDTO = tableFields.stream().filter(t -> t.getDataSourceId() == businessFilterVO.getFiDataSourceId()).findFirst().orElse(null);
-        FiDataMetaDataTreeDTO f_table = null;
-        if (fiDataMetaDataDTO != null && CollectionUtils.isNotEmpty(fiDataMetaDataDTO.getChildren())) {
-            f_table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId().equals(businessFilterVO.getTableUnique())).findFirst().orElse(null);
-        }
-        if (f_table != null) {
-            return f_table.getLabel();
-        }
-        return "";
     }
 
     private boolean deleteProcess(int ruleId) {

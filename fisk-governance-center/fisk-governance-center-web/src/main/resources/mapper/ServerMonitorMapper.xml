@@ -21,15 +21,21 @@
         FROM tb_server_monitor
         <choose>
             <when test="type == 1">
-                WHERE create_time >= NOW() - INTERVAL #{number} MINUTE
+                WHERE
+                server_ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} MINUTE
                 GROUP BY timestamp;
             </when>
             <when test="type == 2">
-                WHERE create_time >= NOW() - INTERVAL #{number} HOUR
+                WHERE
+                server_ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} HOUR
                 GROUP BY timestamp;
             </when>
             <when test="type == 3">
-                WHERE create_time >= NOW() - INTERVAL #{number} DAY
+                WHERE
+                server_ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} DAY
                 GROUP BY timestamp;
             </when>
         </choose>
@@ -44,11 +50,15 @@
         FROM tb_server_monitor
         <choose>
             <when test="type == 1">
-                WHERE create_time &lt; CURDATE()
+                WHERE
+                server_ip = #{ip}
+                AND  create_time &lt; CURDATE()
                 AND create_time >= CURDATE() - INTERVAL #{number} DAY
             </when>
             <when test="type == 2">
-                WHERE create_time >= DATE(NOW())
+                WHERE
+                server_ip = #{ip}
+                AND create_time >= DATE(NOW())
             </when>
         </choose>
         GROUP BY timestamp;
@@ -62,12 +72,13 @@
         FROM
             tb_server_monitor
         WHERE
-            create_time = (SELECT MAX(create_time) FROM tb_server_monitor);
+            server_ip = #{ip}
+            and create_time = (SELECT MAX(create_time) FROM tb_server_monitor);
     </select>
     <select id="getServerTable" resultType="com.fisk.datagovernance.vo.monitor.ServerTableVO">
         SELECT t1.server_name, t2.status,CONCAT('http://', t1.server_ip,':',t1.server_port) as serverUrl,t1.server_port as port, t2.create_time as date FROM tb_server_monitor_config t1
             LEFT JOIN tb_server_monitor t2 ON t1.server_name = t2.server_name
-        WHERE t2.create_time = (SELECT MAX(create_time) FROM tb_server_monitor)
+        WHERE t1.server_ip = #{ip}  AND t1.del_flag = 1 AND t2.create_time = (SELECT MAX(create_time) FROM tb_server_monitor)
     </select>
 
     <select id="getServerDelayPingVO" resultType="com.fisk.datagovernance.vo.monitor.DelayPingVO">
@@ -90,17 +101,20 @@
         <choose>
             <when test="type == 1">
                 WHERE create_time >= NOW() - INTERVAL #{number} MINUTE
-                and server_name = #{name} and server_port = #{port}
+                AND server_ip = #{ip}
+                AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
             <when test="type == 2">
                 WHERE create_time >= NOW() - INTERVAL #{number} HOUR
-                and server_name = #{name} and server_port = #{port}
+                AND server_ip = #{ip}
+                AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
             <when test="type == 3">
                 WHERE create_time >= NOW() - INTERVAL #{number} DAY
-                and server_name = #{name} and server_port = #{port}
+                AND server_ip = #{ip}
+                AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
         </choose>
@@ -116,12 +130,14 @@
             <when test="type == 1">
                 WHERE create_time &lt; CURDATE()
                 AND create_time >= CURDATE() - INTERVAL #{number} DAY
-                AND server_name = #{name} and server_port = #{port}
+                AND server_ip = #{ip}
+                AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
             <when test="type == 2">
                 WHERE create_time >= CURDATE()
-                and server_name = #{name} and server_port = #{port}
+                AND server_ip = #{ip}
+                AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
         </choose>
