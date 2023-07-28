@@ -1633,10 +1633,13 @@ public class MetaDataImpl implements IMetaData {
                         //描述
                         excelChildMetaDataMap.put("9", childItem.getDescription());
                         List<MetadataAttributePO> EntityAttributeList = metadataAttributePOList.stream()
-                                .filter(e -> e.getMetadataEntityId() == metaDataItem.getId())
+                                .filter(e -> e.getMetadataEntityId() == childItem.getId())
                                 .collect(Collectors.toList());
                         String entityAttributeDataType = "";
                         String entityAttributeLength = "";
+                        if(childItem.getName().equals("BPM.T_AssetsDiscoveryDifference")){
+                            Integer a=1;
+                        }
                         //判断子级是否存在额外属性 字段长度 字段类型
                         if (!EntityAttributeList.isEmpty()) {
                             //字段类型
