@@ -2,6 +2,7 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
@@ -58,9 +59,9 @@ public class MetaDataController {
     }
 
     @ApiOperation("导出元数据")
-    @PostMapping("/export")
+    @PostMapping(path = "/export")
     @ControllerAOPConfig(printParams = false)
-    public void export(@Validated  @RequestBody ExportMetaDataDto dto, HttpServletResponse response){
+    public void export(@Validated  @RequestBody ExportMetaDataDto dto,HttpServletResponse response){
         service.export(dto,response);
     }
 
@@ -77,6 +78,5 @@ public class MetaDataController {
     public ResultEntity<Object> fieldDelete(@RequestParam("ids") List<Integer> ids) {
         return ResultEntityBuild.build(iMetadataEntity.delMetadataEntity(ids));
     }
-
 
 }
