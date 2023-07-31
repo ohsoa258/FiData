@@ -98,471 +98,83 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private String uploadUrl;
 
     @Override
-    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int dataSourceId, String tableUnique, int tableBusinessType) {
-        if (dataSourceId == 0 || StringUtils.isEmpty(tableUnique)) {
+    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int fiDataSourceId, String tableUnique, int tableBusinessType) {
+        // 第一步：检查参数是否合规
+        if (fiDataSourceId == 0 || StringUtils.isEmpty(tableUnique)) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
         }
-        // FiData数据源ID
-        int filndDataSourceId = dataSourceId;
-        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource().stream().filter(t -> t.getDatasourceId() == filndDataSourceId && t.getDatasourceType() == SourceTypeEnum.FiData).findFirst().orElse(null);
+        DataSourceConVO dataSourceConVO = dataSourceConManageImpl.getAllDataSource()
+                .stream().
+                filter(t -> t.getDatasourceId() == fiDataSourceId && t.getDatasourceType() == SourceTypeEnum.FiData)
+                .findFirst().orElse(null);
         if (dataSourceConVO == null) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
         }
-        // 数据质量数据源ID
-        dataSourceId = dataSourceConVO.getId();
 
-        // 数据校验、业务清洗、生命周期所对应的Id
-        List<Long> ruleIdList = new ArrayList<>();
-/*
-        // 校验规则
+        // 第二步：查询模板信息
+        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+        templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
+                .eq(TemplatePO::getTemplateState, 1);
+        List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
+        if (CollectionUtils.isEmpty(templatePOList)) {
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
+        }
+
+        // 第二步：查询数据检查的规则
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
-                .eq(DataCheckPO::getDatasourceId, dataSourceId)
-                .eq(DataCheckPO::getTableUnique, tableUnique)
-                .eq(DataCheckPO::getTableBusinessType, tableBusinessType)
-                .eq(DataCheckPO::getRuleState, 1);
-        List<DataCheckPO> dataCheckPOS = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
-        List<DataCheckExtendPO> dataCheckExtendPOS = null;
-        if (CollectionUtils.isNotEmpty(dataCheckPOS)) {
-            List<Long> ruleIds = dataCheckPOS.stream().map(DataCheckPO::getId).collect(Collectors.toList());
-            ruleIdList.addAll(ruleIds);
+                .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
+                .eq(DataCheckPO::getTableUnique, tableUnique);
+        List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
+
+        if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
+            List<Long> ruleIdList = dataCheckPOList.stream().map(DataCheckPO::getId).collect(Collectors.toList());
             QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
             dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
-                    .in(DataCheckExtendPO::getRuleId, ruleIds);
-            dataCheckExtendPOS = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
-        }
+                    .in(DataCheckExtendPO::getRuleId, ruleIdList);
+            List<DataCheckExtendPO> dataCheckExtendPOList = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
 
-        // 清洗规则
-//        QueryWrapper<BusinessFilterPO> businessFilterPOQueryWrapper = new QueryWrapper<>();
-//        businessFilterPOQueryWrapper.lambda().eq(BusinessFilterPO::getDelFlag, 1)
-//                .eq(BusinessFilterPO::getDatasourceId, dataSourceId)
-//                .eq(BusinessFilterPO::getTableUnique, tableUnique)
-//                .eq(BusinessFilterPO::getTableBusinessType, tableBusinessType)
-//                .eq(BusinessFilterPO::getRuleState, 1);
-//        List<BusinessFilterPO> businessFilterPOS = businessFilterMapper.selectList(businessFilterPOQueryWrapper);
-//        if (CollectionUtils.isNotEmpty(businessFilterPOS)) {
-//            List<Long> ruleIds = businessFilterPOS.stream().map(BusinessFilterPO::getId).collect(Collectors.toList());
-//            ruleIdList.addAll(ruleIds);
-//        }
+            // 表检查规则
+            TableRuleInfoDTO tableRuleInfo = new TableRuleInfoDTO();
+            // 字段检查规则
+            TableRuleInfoDTO fieldRuleInfo = new TableRuleInfoDTO();
 
-        // 生命周期
-        QueryWrapper<LifecyclePO> lifecyclePOQueryWrapper = new QueryWrapper<>();
-        lifecyclePOQueryWrapper.lambda().eq(LifecyclePO::getDelFlag, 1)
-                .eq(LifecyclePO::getDatasourceId, dataSourceId)
-                .eq(LifecyclePO::getTableUnique, tableUnique)
-                .eq(LifecyclePO::getTableBusinessType, tableBusinessType)
-                .eq(LifecyclePO::getRuleState, 1);
-        List<LifecyclePO> lifecyclePOS = lifecycleMapper.selectList(lifecyclePOQueryWrapper);
-        if (CollectionUtils.isNotEmpty(lifecyclePOS)) {
-            List<Long> ruleIds = lifecyclePOS.stream().map(LifecyclePO::getId).collect(Collectors.toList());
-            ruleIdList.addAll(ruleIds);
-        }
-
-//        // 告警通知
-//        List<NoticePO> noticePOS = null;
-//        List<NoticeExtendPO> noticeExtendPOS = null;
-//        List<Integer> noticeModuleTypes = new ArrayList<>();
-//        noticeModuleTypes.add(ModuleTypeEnum.DATACHECK_MODULE.getValue());
-//        noticeModuleTypes.add(ModuleTypeEnum.BIZCHECK_MODULE.getValue());
-//        noticeModuleTypes.add(ModuleTypeEnum.LIFECYCLE_MODULE.getValue());
-//        if (CollectionUtils.isNotEmpty(ruleIdList)) {
-//            ruleIdList = ruleIdList.stream().distinct().collect(Collectors.toList());
-//            QueryWrapper<NoticeExtendPO> noticeExtendPOQueryWrapper = new QueryWrapper<>();
-//            noticeExtendPOQueryWrapper.lambda().eq(NoticeExtendPO::getDelFlag, 1)
-//                    .in(NoticeExtendPO::getModuleType, noticeModuleTypes)
-//                    .in(NoticeExtendPO::getRuleId, ruleIdList);
-//            noticeExtendPOS = noticeExtendMapper.selectList(noticeExtendPOQueryWrapper);
-//            if (CollectionUtils.isNotEmpty(noticeExtendPOS)) {
-//                List<Integer> noticeIds = noticeExtendPOS.stream().map(NoticeExtendPO::getNoticeId).distinct().collect(Collectors.toList());
-//                QueryWrapper<NoticePO> noticePOQueryWrapper = new QueryWrapper<>();
-//                noticePOQueryWrapper.lambda().eq(NoticePO::getDelFlag, 1)
-//                        .eq(NoticePO::getNoticeState, 1)
-//                        .in(NoticePO::getId, noticeIds);
-//                noticePOS = noticeMapper.selectList(noticePOQueryWrapper);
-//            }
-//        }
-
-        // 查询数据校验、业务清洗、生命周期、告警设置所对应的模板信息
-        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
-        templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1);
-        List<TemplatePO> templatePOS = templateMapper.selectList(templatePOQueryWrapper);
-
-        // 查询实际的表字段名称
-        List<DataTableFieldDTO> dtoList = new ArrayList<>();
-        DataTableFieldDTO dataTableFieldDTO = new DataTableFieldDTO();
-        dataTableFieldDTO.setId(tableUnique);
-        dataTableFieldDTO.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
-        dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(tableBusinessType));
-        dtoList.add(dataTableFieldDTO);
-        List<FiDataMetaDataDTO> fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
-        if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_REDIS_NOTEXISTSTABLEFIELD, null);
-        }
-        FiDataMetaDataTreeDTO fiDataMetaData_Table = fiDataMetaDatas.get(0).getChildren().get(0);
-        List<FiDataMetaDataTreeDTO> fiDataMetaData_Fields = fiDataMetaData_Table.getChildren();
-        String tableName = "";
-        if (fiDataMetaData_Table != null) {
-            tableName = fiDataMetaData_Table.getLabel();
-        }
-
-        TemplatePO templatePO = null;
-        TableRuleTempVO tempVO_TableField = null;
-        List<TableRuleTempVO> tempVOS = new ArrayList<>();
-
-        // 循环数据校验规则
-        for (DataCheckPO dataCheckPO : dataCheckPOS) {
-            // 查询该校验规则对应的校验模板
-            templatePO = templatePOS.stream().filter(t -> t.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
-            if (templatePO != null) {
-                TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                List<DataCheckExtendPO> dataCheckExtendFilter = null;
-                switch (templateType) {
-                    case FIELD_RULE_TEMPLATE:
-                        // 字段规则模板
-                        dataCheckExtendFilter = dataCheckExtendPOS.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-                        if (CollectionUtils.isNotEmpty(dataCheckExtendFilter)) {
-                            for (DataCheckExtendPO dataCheckExtendPO : dataCheckExtendFilter) {
-                                String fieldName = "";
-                                FiDataMetaDataTreeDTO fiDataMetaData_Field = fiDataMetaData_Fields.stream().
-                                        filter(f -> f.getId().equals(dataCheckExtendPO.getFieldUnique())).findFirst().orElse(null);
-                                if (fiDataMetaData_Field != null) {
-                                    fieldName = fiDataMetaData_Field.getLabel();
-                                }
-                                if (StringUtils.isEmpty(fieldName)) {
-                                    continue;
-                                }
-                                if (StringUtils.isNotEmpty(dataCheckExtendPO.getCheckType())) {
-                                    String[] split = dataCheckExtendPO.getCheckType().split(",");
-                                    for (String checkType : split) {
-                                        CheckTypeEnum checkTypeEnum = CheckTypeEnum.getEnum(Integer.parseInt(checkType));
-                                        tempVO_TableField = new TableRuleTempVO();
-                                        tempVO_TableField.setRuleId(dataCheckPO.getId());
-                                        tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                                        tempVO_TableField.setFieldUnique(dataCheckExtendPO.getFieldUnique());
-                                        tempVO_TableField.setType("FIELD");
-                                        tempVO_TableField.setFieldName(fieldName);
-                                        tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                                        if (checkTypeEnum == CheckTypeEnum.DATA_CHECK) {
-                                            DataCheckTypeEnum dataCheckTypeEnum = DataCheckTypeEnum.getEnum(dataCheckExtendPO.getDataCheckType());
-                                            switch (dataCheckTypeEnum) {
-                                                case TEXTLENGTH_CHECK:
-                                                    tempVO_TableField.setTableFieldRule("文本长度");
-                                                    break;
-                                                case DATEFORMAT_CHECK:
-                                                    tempVO_TableField.setTableFieldRule("日期格式");
-                                                    break;
-                                                case SEQUENCERANGE_CHECK:
-                                                    tempVO_TableField.setTableFieldRule("序列范围");
-                                                    break;
-                                            }
-                                        } else if (checkTypeEnum == CheckTypeEnum.UNIQUE_CHECK) {
-                                            tempVO_TableField.setTableFieldRule("唯一");
-                                        } else if (checkTypeEnum == CheckTypeEnum.NONEMPTY_CHECK) {
-                                            tempVO_TableField.setTableFieldRule("非空");
-                                        }
-                                        tempVO_TableField.setTemplateType(templateType);
-                                        tempVOS.add(tempVO_TableField);
-                                    }
-                                }
-                            }
+            for (DataCheckPO dataCheckPO : dataCheckPOList) {
+                // 根据检查规则类型判断该规则是基于表设置的还是基于字段设置的
+                TemplatePO templatePO = templatePOList.stream().filter(t -> t.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
+                if (templatePO == null) {
+                    continue;
+                }
+                TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+                switch (templateTypeEnum) {
+                    case NULL_CHECK:
+                    case RANGE_CHECK:
+                    case STANDARD_CHECK:
+                    case DUPLICATE_DATA_CHECK:
+                    case FLUCTUATION_CHECK:
+                    case REGEX_CHECK:
+                        // 基于字段设置的检查规则
+                        DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
+                        if (dataCheckExtendPO==null){
+                            continue;
                         }
+                        tableRuleInfo.setTableFieldUnique(dataCheckPO.getTableUnique());
+                        tableRuleInfo.setName(dataCheckPO.getTableName());
+                        tableRuleInfo.setType(1);
+
                         break;
-                    case FIELD_AGGREGATE_TEMPLATE:
-                        // 字段聚合波动阈值模板
-                        dataCheckExtendFilter = dataCheckExtendPOS.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-                        if (CollectionUtils.isNotEmpty(dataCheckExtendFilter)) {
-                            for (DataCheckExtendPO dataCheckExtendPO : dataCheckExtendFilter) {
-                                String fieldName = "";
-                                FiDataMetaDataTreeDTO fiDataMetaData_Field = fiDataMetaData_Fields.stream().
-                                        filter(f -> f.getId().equals(dataCheckExtendPO.getFieldUnique())).findFirst().orElse(null);
-                                if (fiDataMetaData_Field != null) {
-                                    fieldName = fiDataMetaData_Field.getLabel();
-                                }
-                                if (StringUtils.isEmpty(fieldName)) {
-                                    continue;
-                                }
-                                tempVO_TableField = new TableRuleTempVO();
-                                tempVO_TableField.setRuleId(dataCheckPO.getId());
-                                tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                                tempVO_TableField.setFieldUnique(dataCheckExtendPO.getFieldUnique());
-                                tempVO_TableField.setType("FIELD");
-                                tempVO_TableField.setFieldName(fieldName);
-                                tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                                tempVO_TableField.setTableFieldRule(dataCheckExtendPO.getFieldAggregate());
-                                tempVO_TableField.setTemplateType(templateType);
-                                tempVOS.add(tempVO_TableField);
-                            }
-                        }
-                        break;
-                    case TABLECOUNT_TEMPLATE:
-                        // 表行数波动阈值模板
-                        tempVO_TableField = new TableRuleTempVO();
-                        tempVO_TableField.setRuleId(dataCheckPO.getId());
-                        tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                        tempVO_TableField.setType("TABLE");
-                        tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                        tempVO_TableField.setTableFieldRule("验证表行数波动是否超过阈值");
-                        tempVO_TableField.setTemplateType(templateType);
-                        tempVOS.add(tempVO_TableField);
-                        break;
-                    case EMPTY_TABLE_CHECK_TEMPLATE:
-                        // 空表校验模板
-                        tempVO_TableField = new TableRuleTempVO();
-                        tempVO_TableField.setRuleId(dataCheckPO.getId());
-                        tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                        tempVO_TableField.setType("TABLE");
-                        tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                        tempVO_TableField.setTableFieldRule("验证表是否为空");
-                        tempVO_TableField.setTemplateType(templateType);
-                        tempVOS.add(tempVO_TableField);
-                        break;
-                    case UPDATE_TABLE_CHECK_TEMPLATE:
-                        // 表更新校验模板
-                        tempVO_TableField = new TableRuleTempVO();
-                        tempVO_TableField.setRuleId(dataCheckPO.getId());
-                        tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                        tempVO_TableField.setType("TABLE");
-                        tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                        tempVO_TableField.setTableFieldRule("验证表数据是否存在更新");
-                        tempVO_TableField.setTemplateType(templateType);
-                        tempVOS.add(tempVO_TableField);
-                        break;
-                    case TABLE_BLOOD_KINSHIP_CHECK_TEMPLATE:
-                        // 表血缘断裂校验模板
-                        tempVO_TableField = new TableRuleTempVO();
-                        tempVO_TableField.setRuleId(dataCheckPO.getId());
-                        tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                        tempVO_TableField.setType("TABLE");
-                        tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                        tempVO_TableField.setTableFieldRule("验证表血缘关系是否断裂");
-                        tempVO_TableField.setTemplateType(templateType);
-                        tempVOS.add(tempVO_TableField);
-                        break;
-                    case BUSINESS_CHECK_TEMPLATE:
-                        // 业务验证模板
-                        tempVO_TableField = new TableRuleTempVO();
-                        tempVO_TableField.setRuleId(dataCheckPO.getId());
-                        tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                        tempVO_TableField.setType("TABLE");
-                        tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                        tempVO_TableField.setTableFieldRule("定时执行配置的SQL验证脚本");
-                        tempVO_TableField.setTemplateType(templateType);
-                        tempVOS.add(tempVO_TableField);
-                        break;
-                    case SIMILARITY_TEMPLATE:
-                        // 相似度模板
-                        break;
-                    case DATA_MISSING_TEMPLATE:
-                        // 数据缺失模板
-                        dataCheckExtendFilter = dataCheckExtendPOS.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-                        if (CollectionUtils.isNotEmpty(dataCheckExtendFilter)) {
-                            for (DataCheckExtendPO dataCheckExtendPO : dataCheckExtendFilter) {
-                                String fieldName = "";
-                                FiDataMetaDataTreeDTO fiDataMetaData_Field = fiDataMetaData_Fields.stream().
-                                        filter(f -> f.getId().equals(dataCheckExtendPO.getFieldUnique())).findFirst().orElse(null);
-                                if (fiDataMetaData_Field != null) {
-                                    fieldName = fiDataMetaData_Field.getLabel();
-                                }
-                                if (StringUtils.isEmpty(fieldName)) {
-                                    continue;
-                                }
-                                tempVO_TableField = new TableRuleTempVO();
-                                tempVO_TableField.setRuleId(dataCheckPO.getId());
-                                tempVO_TableField.setRuleName(dataCheckPO.getRuleName());
-                                tempVO_TableField.setFieldUnique(dataCheckExtendPO.getFieldUnique());
-                                tempVO_TableField.setType("FIELD");
-                                tempVO_TableField.setFieldName(fieldName);
-                                tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                                tempVO_TableField.setTemplateType(templateType);
-                                tempVO_TableField.setTableFieldRule("数据缺失");
-                                tempVOS.add(tempVO_TableField);
-                            }
-                        }
+                    case PARENTAGE_CHECK:
+                    case SQL_SCRIPT_CHECK:
+                        // 基于表设置的检查规则
                         break;
                 }
             }
         }
 
-        // 数据校验字段校验规则需在表中体现
-        if (CollectionUtils.isNotEmpty(tempVOS)) {
-            List<TableRuleTempVO> tableFieldRulesTemp = tempVOS.stream().filter(t -> t.getType() == "FIELD").collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(tableFieldRulesTemp)) {
-                List<TableRuleTempVO> collect = tableFieldRulesTemp.stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.DATA_MISSING_TEMPLATE).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(collect)) {
-                    tempVO_TableField = new TableRuleTempVO();
-                    tempVO_TableField.setType("TABLE");
-                    tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                    tempVO_TableField.setTemplateType(TemplateTypeEnum.DATA_MISSING_TEMPLATE);
-                    List<String> fieldNames = collect.stream().map(TableRuleTempVO::getFieldName).distinct().collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(fieldNames)) {
-                        String tableRule = Joiner.on(",").join(fieldNames) + "字段进行数据缺失校验";
-                        tempVO_TableField.setTableFieldRule(tableRule);
-                        tempVOS.add(tempVO_TableField);
-                    }
-                }
-                collect = tableFieldRulesTemp.stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.FIELD_RULE_TEMPLATE).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(collect)) {
-                    tempVO_TableField = new TableRuleTempVO();
-                    tempVO_TableField.setType("TABLE");
-                    tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                    tempVO_TableField.setTemplateType(TemplateTypeEnum.FIELD_RULE_TEMPLATE);
-                    List<String> list = collect.stream().map(TableRuleTempVO::getTableFieldRule).distinct().collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(list)) {
-                        for (int i = 0; i < list.size(); i++) {
-                            String value = list.get(i);
-                            List<TableRuleTempVO> collect1 = collect.stream().filter(t -> t.getTableFieldRule() == value).collect(Collectors.toList());
-                            if (CollectionUtils.isNotEmpty(collect1)) {
-                                List<String> fieldNames = collect1.stream().map(TableRuleTempVO::getFieldName).collect(Collectors.toList());
-                                if (CollectionUtils.isNotEmpty(fieldNames)) {
-                                    String tableRule = Joiner.on(",").join(fieldNames) + "字段进行" + value + "校验";
-                                    tempVO_TableField.setTableFieldRule(tableRule);
-                                    tempVOS.add(tempVO_TableField);
-                                }
-                            }
-                        }
-                    }
-                }
-                collect = tableFieldRulesTemp.stream().filter(t -> t.getTemplateType() == TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(collect)) {
-                    tempVO_TableField = new TableRuleTempVO();
-                    tempVO_TableField.setType("TABLE");
-                    tempVO_TableField.setModuleType(ModuleTypeEnum.DATACHECK_MODULE);
-                    tempVO_TableField.setTemplateType(TemplateTypeEnum.FIELD_AGGREGATE_TEMPLATE);
-                    List<String> fieldNames = collect.stream().map(TableRuleTempVO::getFieldName).distinct().collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(fieldNames)) {
-                        String tableRule = Joiner.on(",").join(fieldNames) + "字段进行聚合后校验波动阈值";
-                        tempVO_TableField.setTableFieldRule(tableRule);
-                        tempVOS.add(tempVO_TableField);
-                    }
-                }
-            }
-        }
+        // 第三步：查询业务清洗的规则
 
-        // 循环业务清洗规则
-//        for (BusinessFilterPO businessFilterPO : businessFilterPOS) {
-//
-//        }
+        // 第三步：查询生命周期的规则
 
-        // 循环生命周期规则
-        for (LifecyclePO lifecyclePO : lifecyclePOS) {
-            // 查询该生命周期规则对应的模板
-            templatePO = templatePOS.stream().filter(t -> t.getId() == lifecyclePO.getTemplateId()).findFirst().orElse(null);
-            if (templatePO != null) {
-                TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
-                switch (templateType) {
-                    case SPECIFY_TIME_RECYCLING_TEMPLATE:
-                        break;
-                    case EMPTY_TABLE_RECOVERY_TEMPLATE:
-                        break;
-                    case NO_REFRESH_DATA_RECOVERY_TEMPLATE:
-                        break;
-                    case DATA_BLOOD_KINSHIP_RECOVERY_TEMPLATE:
-                        break;
-                }
-            }
-        }
-
-        TableRuleInfoDTO tableRuleInfoDTO = new TableRuleInfoDTO();
-        tableRuleInfoDTO.setTableFieldUnique(tableUnique);
-        tableRuleInfoDTO.setName(tableName);
-        tableRuleInfoDTO.setType(1);
-        List<TableRuleInfoDTO> fieldRules = new ArrayList<>();
-
-        // 拼接数据校验规则--表维度
-        List<TableRuleTempVO> dataCheckTemp_TableRules = tempVOS.stream().
-                filter(t -> t.getModuleType() == ModuleTypeEnum.DATACHECK_MODULE && t.getType().equals("TABLE")).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(dataCheckTemp_TableRules)) {
-            // 表的校验规则
-            dataCheckTemp_TableRules.forEach(t -> {
-                if (!tableRuleInfoDTO.getCheckRules().contains(t.getTableFieldRule())) {
-                    tableRuleInfoDTO.checkRules.add(t.getTableFieldRule());
-                }
-            });
-        }
-
-        // 拼接业务清洗规则--表维度
-        List<TableRuleTempVO> businessFilterTemp_TableRules = tempVOS.stream().
-                filter(t -> t.getModuleType() == ModuleTypeEnum.BIZCHECK_MODULE && t.getType().equals("TABLE")).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(businessFilterTemp_TableRules)) {
-            // 表的校验规则
-            businessFilterTemp_TableRules.forEach(t -> {
-                if (!tableRuleInfoDTO.getFilterRules().contains(t.getTableFieldRule())) {
-                    tableRuleInfoDTO.filterRules.add(t.getTableFieldRule());
-                }
-            });
-        }
-
-        // 拼接生命周期规则--表维度
-        List<TableRuleTempVO> lifecycleTemp_TableRules = tempVOS.stream().
-                filter(t -> t.getModuleType() == ModuleTypeEnum.LIFECYCLE_MODULE && t.getType().equals("TABLE")).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(lifecycleTemp_TableRules)) {
-            // 表的校验规则
-            lifecycleTemp_TableRules.forEach(t -> {
-                if (!tableRuleInfoDTO.getLifecycleRules().contains(t.getTableFieldRule())) {
-                    tableRuleInfoDTO.lifecycleRules.add(t.getTableFieldRule());
-                }
-            });
-        }
-
-        // 拼接告警通知规则--表维度
-//        if (CollectionUtils.isNotEmpty(noticePOS)) {
-//            // 表的校验规则
-//            for (NoticePO noticePO : noticePOS) {
-//                NoticeTypeEnum noticeType = NoticeTypeEnum.getEnum(noticePO.getNoticeType());
-//                if (!tableRuleInfoDTO.noticeRules.contains(noticeType.getName())) {
-//                    tableRuleInfoDTO.noticeRules.add(noticeType.getName());
-//                }
-//            }
-//        }
-
-        // 循环字段，查询每个字段的数据校验、业务清洗、生命周期规则
-        List<TableRuleTempVO> dataCheckTemp_FieldRules = tempVOS.stream().filter(t -> t.getType().equals("FIELD")).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(dataCheckTemp_FieldRules)) {
-            List<String> fieldNames = dataCheckTemp_FieldRules.stream().map(TableRuleTempVO::getFieldName).distinct().collect(Collectors.toList());
-            for (int i = 0; i < fieldNames.size(); i++) {
-                String fieldName = fieldNames.get(i);
-                List<TableRuleTempVO> fieldRuleList = dataCheckTemp_FieldRules.stream().filter(t -> t.getFieldName().equals(fieldName)).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(fieldRuleList)) {
-
-                    TableRuleInfoDTO fieldRuleInfoDTO = new TableRuleInfoDTO();
-                    fieldRuleInfoDTO.setTableFieldUnique(fieldRuleList.get(0).getFieldUnique());
-                    fieldRuleInfoDTO.setName(fieldName);
-                    fieldRuleInfoDTO.setType(2);
-
-                    // 数据校验规则--字段维度
-                    List<TableRuleTempVO> dataCheck_FieldRules = fieldRuleList.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.DATACHECK_MODULE).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(dataCheck_FieldRules)) {
-                        List<String> ruleList = new ArrayList<>();
-                        dataCheck_FieldRules.forEach(t -> {
-                            switch (t.getTemplateType()) {
-                                case FIELD_RULE_TEMPLATE:
-                                    ruleList.add(t.getTableFieldRule() + "校验");
-                                    break;
-                                case FIELD_AGGREGATE_TEMPLATE:
-                                    ruleList.add("校验字段" + t.getTableFieldRule() + "聚合后是否超过阈值");
-                                    break;
-                                case DATA_MISSING_TEMPLATE:
-                                    ruleList.add("数据缺失校验");
-                                    break;
-                            }
-                        });
-                        fieldRuleInfoDTO.setCheckRules(ruleList);
-                    }
-                    // 业务清洗规则--字段维度,暂不支持设置到字段维度
-                    List<TableRuleTempVO> businessFilter_FieldRules = fieldRuleList.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.BIZCHECK_MODULE).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(businessFilter_FieldRules)) {
-                    }
-                    // 生命周期规则--字段维度,暂不支持设置到字段维度
-                    List<TableRuleTempVO> lifecycle_FieldRules = fieldRuleList.stream().filter(t -> t.getModuleType() == ModuleTypeEnum.BIZCHECK_MODULE).collect(Collectors.toList());
-                    if (CollectionUtils.isNotEmpty(lifecycle_FieldRules)) {
-                    }
-                    fieldRules.add(fieldRuleInfoDTO);
-                }
-            }
-        }
-        tableRuleInfoDTO.setFieldRules(fieldRules);
-        */
-//        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, tableRuleInfoDTO);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
     }
 

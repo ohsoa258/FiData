@@ -241,19 +241,15 @@ public class ExcelUtil {
      * @params dataList
      */
     public static InputStream createMetaDataSaveExcel(
-            String sheetName
-            , List<Map<String, Object>> dataList
-            , Integer parentNumber
-            , Integer childNumber) {
+            String sheetName ,
+            List<Map<String, Object>> dataList ,
+            Integer parentNumber ,
+                    Integer childNumber) {
         InputStream stream = null;
-
-        if (sheetName == null || sheetName.isEmpty()) {
-            sheetName = "sheet1";
-        }
-        OutputStream outputStreamExcel = null;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
         try {
-            //创建Workbook对象(excel的文档对象) 导出的Excel行数为104万行，是操作Excel2007后的版本，扩展名是.xlsx；
-            XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
+
             XSSFSheet sheet = xssfWorkbook.createSheet(sheetName);
 
             // 设置通用样式
@@ -279,12 +275,13 @@ public class ExcelUtil {
             Integer parentMetadataAttributeNumber = parentMetaDataHeaders.length;
             //写入表头
             Integer colIndex = setMetadataSheetTableHeader(sheet, parentNumber, childNumber);
-
             //所有父级的元素个数
             Integer allParentMetadataAttributeNumber = parentNumber * parentMetadataAttributeNumber;
-
+            Integer allMainChildMetadataAttributeNumber=mainMetaDataHeaders.length;
+            if(childNumber>0){
+                allMainChildMetadataAttributeNumber+=childMetaDataHeaders.length;
+            }
             //当前元数据和子级元数据元素个数
-            Integer allMainChildMetadataAttributeNumber = mainMetaDataHeaders.length + childMetaDataHeaders.length;
 
             //起始行
             int excelRow = 2;
@@ -302,36 +299,7 @@ public class ExcelUtil {
                     }
                 }
 
-//                for (Map.Entry<String, Object> item : row.entrySet()) {
-//                    Cell cell = dataRow.createCell(columnIndex);
-//                    columnIndex++;
-//                    if (item.getValue() == null) {
-//                        continue;
-//                    }
-//                    Class<?> type = columnType.get(item.getKey());
-//                    if (Integer.class.equals(type)) {
-//                        cell.setCellValue(((Integer) item.getValue()).doubleValue());
-//                    } else if (Long.class.equals(type)) {
-//                        cell.setCellValue(new Double((Long) item.getValue()));
-//                    } else if (String.class.equals(type)) {
-//                        cell.setCellValue((String) item.getValue());
-//                    } else if (Date.class.equals(type)) {
-//                        cell.setCellValue((Date) item.getValue());
-//                    } else if (Timestamp.class.equals(type)) {
-//                        cell.setCellValue(sdf.format((Timestamp) item.getValue()));
-//                    } else if (BigDecimal.class.equals(type)) {
-//                        cell.setCellValue(((BigDecimal) item.getValue()).doubleValue());
-//                    } else if (Double.class.equals(type)) {
-//                        cell.setCellValue((Double) item.getValue());
-//                    }
-//                }
             }
-
-            //写入流到文件
-//            outputStreamExcel = new FileOutputStream(tmpFile);
-//            xssfWorkbook.write(outputStreamExcel);
-
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             xssfWorkbook.write(outputStream);
             stream = new ByteArrayInputStream(outputStream.toByteArray());
         } catch (Exception ex) {
@@ -339,16 +307,17 @@ public class ExcelUtil {
             throw new FkException(ResultEnum.ERROR, ex);
         } finally {
             try {
+                xssfWorkbook.close();
                 // 关闭输出流
-                if (outputStreamExcel != null) {
-                    outputStreamExcel.flush();
-                    outputStreamExcel.close();
+                if (outputStream != null) {
+                    outputStream.close();
                 }
             } catch (IOException ex) {
                 log.error("CreateSaveExcel 流关闭异常：", ex);
             }
         }
-        return stream;
+
+       return stream;
     }
 
     private static Integer setMetadataSheetTableHeader(Sheet sheet, Integer parentNumber, Integer childNumber) {

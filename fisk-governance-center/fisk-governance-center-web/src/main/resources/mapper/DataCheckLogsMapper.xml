@@ -36,7 +36,7 @@
             and log.template_id = #{query.templateId}
         </if>
         <if test="query.ruleName !=null and query.ruleName.length()>0 ">
-            and log.rule_name = #{query.ruleName}
+            and log.rule_name like concat('%', #{query.ruleName}, '%')
         </if>
     </select>
 </mapper>

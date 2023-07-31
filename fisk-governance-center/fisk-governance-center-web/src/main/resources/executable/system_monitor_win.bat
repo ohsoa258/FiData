@@ -2,12 +2,15 @@
 
 REM Windows系统状态收集脚本
 
+:loop
 REM 查询操作系统版本
 rem for /f "tokens=2 delims==" %%i in ('wmic os get Caption /value') do set os_version=%%i
 
 REM 查看Windows操作系统ip地址
 for /f "tokens=2 delims=:" %%i in ('ipconfig ^| findstr "IPv4"') do set ip_addr=%%i
-rem echo ip_address: %ip_addr%
+:delleft
+if "%ip_addr:~0,1%"==" " set ip_addr=%ip_addr:~1%&&goto delleft
+echo ip_address:%ip_addr%
 
 REM 查询系统运行时间
 rem for /f "tokens=2 delims==" %%i in ('wmic os get LastBootUpTime /value') do set uptime=%%i
@@ -58,9 +61,14 @@ set /a "swapUsed=currentUsage /1024"
 
 REM 检查系统CPU使用情况
 rem 获取 CPU 使用率信息
-for /f "skip=2 tokens=2 delims==," %%A in ('wmic cpu get loadpercentage /value') do (
-    set "cpuUsage=%%A"
+rem for /f "skip=2 tokens=2 delims==," %%A in ('wmic cpu get loadpercentage /value') do (
+rem     set "cpuUsage=%%A"
+rem )
+
+for /f "tokens=2 delims==" %%a in ('wmic path Win32_PerfFormattedData_PerfOS_Processor get PercentProcessorTime /value^|findstr "PercentProcessorTime"') do (
+set cpuUsage=%%a
 )
+rem echo %UseCPU%%%
 
 REM 查询内存使用情况
 for /f "tokens=2 delims==" %%i in ('wmic os get TotalVisibleMemorySize /value') do (
@@ -84,14 +92,14 @@ rem set /a disk_usage=usedSpace * 100 / totalSpace
 REM 构建JSON格式的输出
 set json_output={
 rem set json_output=%json_output%"Operating System Version":"%os_version%","
-set json_output=%json_output%"ip":"%ip_addr%","
-set json_output=%json_output%"upTime":"%runtime_days% days","
-set json_output=%json_output%"cpuCores":"%cpu_cores%","
+set json_output=%json_output%"ip":"%ip_addr%",
+set json_output=%json_output%"upTime":"%runtime_days% days",
+set json_output=%json_output%"cpuCores":"%cpu_cores%",
 
-set json_output=%json_output%"rawTotal":"%rawTotal%","
-set json_output=%json_output%"rawUsed":"%rawUsed%","
-set json_output=%json_output%"swapTotal":"%swapTotal%","
-set json_output=%json_output%"swapUsed":"%swapUsed%","
+set json_output=%json_output%"rawTotal":"%rawTotal%",
+set json_output=%json_output%"rawUsed":"%rawUsed%",
+set json_output=%json_output%"swapTotal":"%swapTotal%",
+set json_output=%json_output%"swapUsed":"%swapUsed%",
 
 set json_output=%json_output%"cpuBusy":"%cpuUsage%"
 
@@ -100,8 +108,11 @@ rem set json_output=%json_output%"disk_usage":"%disk_usage%""
 set json_output=%json_output%}
 
 REM 输出JSON
-echo %json_output%
+echo %json_output%>"request.json"
 
 REM 使用curl发送POST请求
-rem curl -X POST "http://192.168.11.130:8093/systemMonitor/saveSystemMonitor" -H "accept: */*" -H "Content-Type: application/json" -d "%json_output%"
+curl -X POST "http://192.168.11.130:8093/systemMonitor/saveSystemMonitor" -H "accept: */*" -H "Content-Type: application/json" -d "@request.json"
 
+REM Wait for 30 seconds before looping again
+timeout /t 3 /nobreak
+goto loop

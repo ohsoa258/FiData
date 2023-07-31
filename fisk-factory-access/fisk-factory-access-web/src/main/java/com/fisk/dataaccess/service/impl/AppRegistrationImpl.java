@@ -2210,6 +2210,7 @@ public class AppRegistrationImpl
                     field.setDataType(e.fieldType);
                     field.setDisplayName(e.displayName);
                     field.setOwner(table.owner);
+                    field.setLength(String.valueOf(e.fieldLength));
                     return field;
                 }).collect(Collectors.toList());
 

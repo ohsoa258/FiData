@@ -50,5 +50,15 @@ public interface IMetaData {
     void synchronousTableBusinessMetaData(BusinessMetaDataInfoDTO dto);
 
 
-    void export(ExportMetaDataDto dto, HttpServletResponse response);
+    /**
+     * 导出
+     * @param dto
+     */
+    void export(ExportMetaDataDto dto,HttpServletResponse response);
+
+
+    /**
+     * 刷新Redis缓存key
+     */
+    void refreshRedisExcelMetadata();
 }

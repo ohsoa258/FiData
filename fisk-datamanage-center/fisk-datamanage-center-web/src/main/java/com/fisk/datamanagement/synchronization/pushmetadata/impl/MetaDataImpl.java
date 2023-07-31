@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -29,10 +31,7 @@ import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
-import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
-import com.fisk.datamanagement.dto.entity.EntityDTO;
-import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
-import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
+import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.EditMetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
@@ -64,6 +63,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -92,6 +93,9 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     MetadataBusinessMetadataMapImpl metadataBusinessMetadataMap;
     @Resource
+    MetadataClassificationMapImpl metadataClassificationMap;
+
+    @Resource
     ClassificationImpl classification;
     @Resource
     MetadataEntityImpl metadataEntity;
@@ -116,6 +120,9 @@ public class MetaDataImpl implements IMetaData {
     DataGovernanceClient dataQualityClient;
     @Resource
     private IMetaDataEntityOperationLog operationLog;
+
+    @Resource
+    private RedisTemplate redisTemplate;
     //endregion
     //region 常量
     @Value("${atlas.entity}")
@@ -124,6 +131,9 @@ public class MetaDataImpl implements IMetaData {
     private String entityByGuid;
     @Value("${atlas.relationship}")
     private String relationship;
+    @Value("${spring.excelMetadata}")
+    private String excelMetadataRedisKey;
+
     private static final String stg_prefix = "_stg";
     private static final String stg_suffix = "stg_";
     private static final String stg = "stg";
@@ -204,7 +214,7 @@ public class MetaDataImpl implements IMetaData {
                 }
             }
         } catch (Exception e) {
-            log.error("实体同步失败，堆栈信息: " , e);
+            log.error("实体同步失败，堆栈信息: ", e);
         }
         //更新Redis
         //entityImpl.updateRedis();
@@ -1196,7 +1206,7 @@ public class MetaDataImpl implements IMetaData {
                     metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
                 }
             } catch (Exception e) {
-                log.error("数据消费实体同步失败，堆栈信息: " , e);
+                log.error("数据消费实体同步失败，堆栈信息: ", e);
             } finally {
                 log.info("元数据数据信息：" + JSONObject.toJSONString(entityDto));
             }
@@ -1497,63 +1507,67 @@ public class MetaDataImpl implements IMetaData {
         classification.classificationAddAssociatedEntity(dto);
     }
 
-
     /**
-     * 导出元数据
-     *
-     * @return
+     * 刷新缓存导出Excel元数据的所有数据 间隔2小时刷新一次  0 0 0/2 ? * *
      */
     @Override
-    public void export(ExportMetaDataDto dto, HttpServletResponse response) {
-        //根据业务分类ID获取所属分类
-        if (dto.getBusinessClassificationId() == null) {
-            return;
+    @Scheduled(cron = "0 0 0/2 ? * *")
+    public void refreshRedisExcelMetadata() {
+        log.info("***********************开始刷新Redis导出Excel的所有元数据********************************");
+        List<Map<String, Object>> allExcelMetadata = getAllExcelMetadata();
+        String jsonString = JSONObject.toJSONString(allExcelMetadata);
+        redisTemplate.opsForValue().set(excelMetadataRedisKey, jsonString);
+        log.info("***********************刷新Redis导出Excel的所有元数据结束********************************");
+    }
+
+    /**
+     * 获取导出元数据的所有数据
+     */
+    public List<Map<String, Object>> getRedisExcelMetadata() {
+        List<Map<String, Object>> allExcelMetadata = null;
+        Boolean exist = redisTemplate.hasKey(excelMetadataRedisKey);
+        if (exist) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String listString = redisTemplate.opsForValue().get(excelMetadataRedisKey).toString();
+            try {
+                allExcelMetadata = objectMapper.readValue(listString, new TypeReference<List<Map<String, Object>>>() {
+                });
+            } catch (IOException e) {
+                log.error("导出元数据中，从redis获取缓存数据，将string转换为List<Map<String, Object>> 失败,错误信息: ", e);
+            }
+
+        } else {
+            allExcelMetadata = getAllExcelMetadata();
+            String jsonString = JSONObject.toJSONString(allExcelMetadata);
+            redisTemplate.opsForValue().set(excelMetadataRedisKey, jsonString);
         }
+        return allExcelMetadata;
+    }
+
+    /**
+     * 组装导出元数据所有数据
+     */
+    private List<Map<String, Object>> getAllExcelMetadata() {
+
         //获取所有元数据
         List<MetadataEntityPO> allMetadataList = metadataEntity.query().list();
         //查询实体业务分类关联
-        List<MetadataBusinessMetadataMapPO> allMetadataBusinessMetadataMapPOList = metadataBusinessMetadataMap.query().list();
+        List<MetadataClassificationMapPO> allMetadataClassificationMapPOList = metadataClassificationMap.query().list();
         //获取业务分类
         List<BusinessClassificationPO> allBusinessClassificationPOList = classification.query().list();
         List<MetadataAttributePO> metadataAttributePOList = new ArrayList<>();
-        //获取元数据下所有的属性
-        if (dto.associatedType.contains(2)) {
-            metadataAttributePOList = metadataAttribute.query().list();
-        }
-        //业务分类
-        List<Long> exportBusinessClassificationIdList = new ArrayList<>();
-        //合并业务分类
-        exportBusinessClassificationIdList.addAll(dto.getBusinessClassificationId());
 
-        //判断是否选中一级分类，如果选中一级分类，则导出一级分类下所有分类的元数据
-        for (ClassificationTypeEnum classificationTypeEnum : ClassificationTypeEnum.values()) {
-            if (dto.getBusinessClassificationId().contains(Long.valueOf(classificationTypeEnum.getValue()))) {
-                List<Long> allTwoLevelBusinessClassificationIdList = allBusinessClassificationPOList.stream()
-                        .filter(e -> e.getPid()!=null && e.getPid().equals(classificationTypeEnum.getValue()))
-                        .map(e -> {
-                            return e.getId();
-                        })
-                        .collect(Collectors.toList());
-                exportBusinessClassificationIdList.addAll(allTwoLevelBusinessClassificationIdList);
-            }
-        }
-        //去重
-        exportBusinessClassificationIdList= exportBusinessClassificationIdList.stream().distinct().collect(Collectors.toList());
-        List<Long> allParentBC = Arrays.stream(ClassificationTypeEnum.values()).map(e -> Long.valueOf(e.getValue())).collect(Collectors.toList());
-        //删除一级分类
-        exportBusinessClassificationIdList.removeAll(allParentBC);
+        metadataAttributePOList = metadataAttribute.query().list();
+
+        List<Long> allBusinessClassificationIdList = allBusinessClassificationPOList.stream()
+                .filter(e -> e.getPid()!=null&& e.getPid() != -1)
+                .map(e -> e.getId())
+                .collect(Collectors.toList());
         List<Map<String, Object>> excelMetaDataList = new ArrayList<>();
-        //元数据父级最大层级
-        Integer maxParentNumber = 0;
-        //元数据子级最大层级
-        Integer maxChildNumber = 0;
-        if (dto.associatedType.contains(1)) {
-            maxChildNumber = 1;
-        }
-        for (Long bcItem : exportBusinessClassificationIdList) {
+        for (Long bcItem : allBusinessClassificationIdList) {
             //获取业务分类下的元数据
-            List<Long> metaDataIdList = allMetadataBusinessMetadataMapPOList.stream()
-                    .filter(e -> e.getBusinessMetadataId().equals(bcItem.intValue()))
+            List<Long> metaDataIdList = allMetadataClassificationMapPOList.stream()
+                    .filter(e -> e.getBusinessClassificationId().equals(bcItem.intValue()))
                     .map(e -> {
                         return Long.valueOf(e.getMetadataEntityId());
                     })
@@ -1573,17 +1587,18 @@ public class MetaDataImpl implements IMetaData {
             }
             //根据元数据Id获取元数据详情
             List<MetadataEntityPO> metadataEntityPOList = allMetadataList.stream().filter(e -> metaDataIdList.contains(e.getId())).collect(Collectors.toList());
-            Integer i=0;
+            Integer i = 0;
             //元数据子级最大层级
             for (MetadataEntityPO metaDataItem : metadataEntityPOList) {
-                i++;
-                log.info(""+i);
-                //当前元数据信息
+                //**************************当前元数据信息**************************
                 Map<String, Object> excelMainMetadataMap = new HashMap<>();
+                excelMainMetadataMap.put("entityId", metaDataItem.getId());
+                excelMainMetadataMap.put("businessClassificationId", bcItem);
+
                 //二级分类
-                excelMainMetadataMap.put("0",twoLevelBusinessClassificationName);
+                excelMainMetadataMap.put("0", twoLevelBusinessClassificationName);
                 //一级分类
-                excelMainMetadataMap.put("1",oneLevelBusinessClassificationName);
+                excelMainMetadataMap.put("1", oneLevelBusinessClassificationName);
                 //名称
                 excelMainMetadataMap.put("2", metaDataItem.getName());
                 //显示名称
@@ -1593,148 +1608,204 @@ public class MetaDataImpl implements IMetaData {
                 //描述
                 excelMainMetadataMap.put("5", metaDataItem.getDescription());
                 //是否导出实体关联的所有父级实体
-                if (dto.associatedType.contains(1)) {
-                    //导出实体所有关联父级实体parent
-                    Map<String, Object> excelParentMetadataMap = new HashMap<>();
-                    Integer parentNumber = setExcelParentMetaDataMap(excelParentMetadataMap, Long.valueOf(metaDataItem.getParentId()), 0);
-                    //设置元数据最大父级层级
-                    if (parentNumber > maxParentNumber) {
-                        maxParentNumber = parentNumber;
-                    }
-                    excelMainMetadataMap.putAll(excelParentMetadataMap);
-                }
+
+                //导出实体所有关联父级实体parent
+                Map<String, Object> excelParentMetadataMap = new HashMap<>();
+                excelParentMetadataMap = setExcelParentMetaDataMap(Long.valueOf(metaDataItem.getParentId()), 0);
+                excelMainMetadataMap.putAll(excelParentMetadataMap);
+                //设置元数据最大父级层级
                 //是否导出关联实体所有子级实体
-                if (dto.associatedType.contains(2)) {
-                    //导出实体所有关联子级实体
-                    List<MetadataEntityPO> childMetaData = allMetadataList.stream()
-                            .filter(e -> e.getParentId()!=null && e.getParentId() == metaDataItem.getId())
-                            .collect(Collectors.toList());
-                    // 判断是否存在子级，存在合并子级和主体成宽表， 条数变为子级的条数
-                    if (!childMetaData.isEmpty()) {
-                        maxChildNumber = 1;
-                        for (MetadataEntityPO childItem : childMetaData) {
-                            Map<String, Object> excelChildMetaDataMap = new HashMap<>();
-                            //名称
-                            excelChildMetaDataMap.put("5", childItem.getName());
-                            //显示名称
-                            excelChildMetaDataMap.put("6", childItem.getDisplayName());
-                            //元数据类型
-                            excelChildMetaDataMap.put("7", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
-                            //描述
-                            excelChildMetaDataMap.put("8", childItem.getDescription());
-                            List<MetadataAttributePO> EntityAttributeList = metadataAttributePOList.stream()
-                                    .filter(e -> e.getMetadataEntityId() == metaDataItem.getId())
-                                    .collect(Collectors.toList());
-                            String entityAttributeDataType = "";
-                            String entityAttributeLength = "";
-                            //判断子级是否存在额外属性 字段长度 字段类型
-                            if (!EntityAttributeList.isEmpty()) {
-                                //字段类型
-                                Optional<MetadataAttributePO> optionalDataTypeAttribute = EntityAttributeList.stream().filter(e -> e.getName() == "dataType").findFirst();
-                                if (optionalDataTypeAttribute.isPresent()) {
-                                    MetadataAttributePO dataTypeAttributePO = optionalDataTypeAttribute.get();
-                                    entityAttributeDataType = dataTypeAttributePO.getValue();
-                                }
-                                //字段长度
-                                Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName() == "length").findFirst();
-                                if (optionalDataTypeAttribute.isPresent()) {
-                                    MetadataAttributePO lengthAttributePO = optionalDataTypeAttribute.get();
-                                    entityAttributeLength = lengthAttributePO.getValue();
-                                }
-                            }
-                            //字段类型
-                            excelChildMetaDataMap.put("9", entityAttributeDataType);
-                            //字段长度
-                            excelChildMetaDataMap.put("10", entityAttributeLength);
-                            //合并主实体信息
-                            excelChildMetaDataMap.putAll(excelMainMetadataMap);
-                            excelMetaDataList.add(excelChildMetaDataMap);
+
+                //导出实体所有关联子级实体
+                List<MetadataEntityPO> childMetaData = allMetadataList.stream()
+                        .filter(e -> e.getParentId() != null && e.getParentId() == metaDataItem.getId())
+                        .collect(Collectors.toList());
+                // 判断是否存在子级，存在合并子级和主体成宽表， 条数变为子级的条数
+                if (!childMetaData.isEmpty()) {
+                    for (MetadataEntityPO childItem : childMetaData) {
+                        Map<String, Object> excelChildMetaDataMap = new HashMap<>();
+                        //名称
+                        excelChildMetaDataMap.put("6", childItem.getName());
+                        //显示名称
+                        excelChildMetaDataMap.put("7", childItem.getDisplayName());
+                        //元数据类型
+                        excelChildMetaDataMap.put("8", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
+                        //描述
+                        excelChildMetaDataMap.put("9", childItem.getDescription());
+                        List<MetadataAttributePO> EntityAttributeList = metadataAttributePOList.stream()
+                                .filter(e -> e.getMetadataEntityId() == childItem.getId())
+                                .collect(Collectors.toList());
+                        String entityAttributeDataType = "";
+                        String entityAttributeLength = "";
+                        if(childItem.getName().equals("BPM.T_AssetsDiscoveryDifference")){
+                            Integer a=1;
                         }
-                    } else {
-                        excelMetaDataList.add(excelMainMetadataMap);
+                        //判断子级是否存在额外属性 字段长度 字段类型
+                        if (!EntityAttributeList.isEmpty()) {
+                            //字段类型
+                            Optional<MetadataAttributePO> optionalDataTypeAttribute = EntityAttributeList.stream().filter(e -> e.getName().equals("dataType")).findFirst();
+                            if (optionalDataTypeAttribute.isPresent()) {
+                                MetadataAttributePO dataTypeAttributePO = optionalDataTypeAttribute.get();
+                                entityAttributeDataType = dataTypeAttributePO.getValue();
+                            }
+                            //字段长度
+                            Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName().equals("length")).findFirst();
+                            if (optionalDataTypeAttribute.isPresent()) {
+                                MetadataAttributePO lengthAttributePO = optionalDataTypeAttribute.get();
+                                entityAttributeLength = lengthAttributePO.getValue();
+                            }
+                        }
+                        //字段类型
+                        excelChildMetaDataMap.put("10", entityAttributeDataType);
+                        //字段长度
+                        excelChildMetaDataMap.put("11", entityAttributeLength);
+                        //合并主实体信息
+                        excelChildMetaDataMap.putAll(excelMainMetadataMap);
+                        excelMetaDataList.add(excelChildMetaDataMap);
                     }
                 } else {
                     excelMetaDataList.add(excelMainMetadataMap);
                 }
+
             }
         }
-        try {
-            String fileName="元数据.xlsx";
-            InputStream fileStream= ExcelUtil.createMetaDataSaveExcel( "sheet", excelMetaDataList, maxParentNumber, maxChildNumber);
+        return excelMetaDataList;
+    }
 
-            // 取得文件名
-            byte[] buffer = new byte[fileStream.available()];
+    /**
+     * 导出元数据
+     *
+     * @return
+     */
+    @Override
+    public void export(ExportMetaDataDto dto, HttpServletResponse response) {
+        //根据业务分类ID获取所属分类
+        if (dto.getBusinessClassificationId() == null) {
+            return;
+        }
+        //从redis中获取所有缓存数据
+        List<Map<String, Object>> allExcelMetadata = getRedisExcelMetadata();
+
+        //获取所有业务分类
+        List<BusinessClassificationPO> allBusinessClassificationPOList = classification.query().list();
+
+        List<Long> exportBusinessClassificationIdList = new ArrayList<>();
+        //合并业务分类
+        exportBusinessClassificationIdList.addAll(dto.getBusinessClassificationId());
+        //判断是否选中一级分类，如果选中一级分类，则导出一级分类下所有分类的元数据
+        for (ClassificationTypeEnum classificationTypeEnum : ClassificationTypeEnum.values()) {
+            if (dto.getBusinessClassificationId().contains(Long.valueOf(classificationTypeEnum.getValue()))) {
+                List<Long> allTwoLevelBusinessClassificationIdList = allBusinessClassificationPOList.stream()
+                        .filter(e -> e.getPid() != null && e.getPid().equals(classificationTypeEnum.getValue()))
+                        .map(e -> {
+                            return e.getId();
+                        })
+                        .collect(Collectors.toList());
+                exportBusinessClassificationIdList.addAll(allTwoLevelBusinessClassificationIdList);
+            }
+        }
+        //去重
+        exportBusinessClassificationIdList = exportBusinessClassificationIdList.stream().distinct().collect(Collectors.toList());
+        //获取所有一级分类ID
+        List<Long> allParentBC = Arrays.stream(ClassificationTypeEnum.values())
+                .map(e -> Long.valueOf(e.getValue()))
+                .collect(Collectors.toList());
+        //删除一级分类
+        exportBusinessClassificationIdList.removeAll(allParentBC);
+
+        //元数据父级最大层级
+        Integer maxParentNumber = 0;
+        //元数据子级最大层级
+        Integer maxChildNumber = 0;
+
+
+        List<Long> finalExportBusinessClassificationIdList = exportBusinessClassificationIdList;
+
+        //筛选业务分类下的元数据
+        List<Map<String, Object>> excelMetaDataList = allExcelMetadata.stream()
+                .filter(e -> finalExportBusinessClassificationIdList.contains(Long.valueOf(e.get("businessClassificationId").toString())))
+                .collect(Collectors.toList());
+        //是否导出相关联的父级
+        if (dto.associatedType.contains(1)) {
+            maxParentNumber = 2;
+        }
+        //是否导出相关联的子级
+        if (dto.associatedType.contains(2)) {
+            //导出子级
+            maxChildNumber = 1;
+        }else{
+            // 使用 Set 来记录已存在的 id 和 name 组合
+            Set<String> existingCombinations = new HashSet<>();
+
+            // 去重后的 List<Map<String, Object>>
+            List<Map<String, Object>> deduplicatedList = new ArrayList<>();
+
+            // 遍历原始列表，根据 entityId 和 businessClassificationId 进行去重操作
+            for (Map<String, Object> map : excelMetaDataList) {
+                String idAndName = map.get("entityId") + "&" + map.get("businessClassificationId");
+                if (!existingCombinations.contains(idAndName)) {
+                    existingCombinations.add(idAndName);
+                    deduplicatedList.add(map);
+                }
+            }
+            excelMetaDataList=deduplicatedList;
+        }
+        String fileName="元数据.xlsx";
+        InputStream fileStream = ExcelUtil.createMetaDataSaveExcel("sheet", excelMetaDataList, maxParentNumber, maxChildNumber);
+        // 将excel文件流写入到Response
+        try {
+            byte[] buffer = new byte[0];
+            buffer = new byte[fileStream.available()];
             fileStream.read(buffer);
             fileStream.close();
             // 清空response
             response.reset();
             // 设置response的Header
             response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
-//            response.addHeader("Content-Length", "" + buffer.length);
+//          response.addHeader("Content-Length", "" + file.length());
             OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
             response.setContentType("application/octet-stream");
+            response.addHeader("Pargam", "no-cache");
+            response.addHeader("Cache-Control", "no-cache");
             toClient.write(buffer);
             toClient.flush();
             toClient.close();
-        } catch (Exception e) {
-            log.error("导出元数据信息失败：" ,e);
+        } catch (IOException e) {
+            log.error("导出元数据");
         }
     }
+
+
 
     /**
      * 设置父级元数据信息
      *
-     * @param parentMetadataMap
-     * @param allMetaDataPOList
      * @param parentId
      * @param number
      */
-    public Integer setExcelParentMetaDataMap(Map<String, Object> parentMetadataMap, List<MetadataEntityPO> allMetaDataPOList, Long parentId, Integer number) {
-        //
-        Integer parentAttributeNumber = 4;
-        Optional<MetadataEntityPO> optionalParentMetaDataPO = allMetaDataPOList.stream().filter(e -> e.getId() == parentId).findFirst();
-        if (!optionalParentMetaDataPO.isPresent()) {
-            return number;
-        }
-        number++;
-        MetadataEntityPO parentMetaDataPO = optionalParentMetaDataPO.get();
-        Integer index=((number - 1) * parentAttributeNumber);
-        //名称
-        parentMetadataMap.put("-" + (index+4), parentMetaDataPO.getName());
-        //显示名称
-        parentMetadataMap.put("-" + (index+3), parentMetaDataPO.getDisplayName());
-        //类型
-        parentMetadataMap.put("-" + (index+2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
-        //描述
-        parentMetadataMap.put("-" + (index+1), parentMetaDataPO.getDescription());
-        return setExcelParentMetaDataMap(parentMetadataMap, allMetaDataPOList, Long.valueOf(parentMetaDataPO.getParentId()), number);
-    }
-    /**
-     * 设置父级元数据信息
-     *
-     * @param parentMetadataMap
-     * @param parentId
-     * @param number
-     */
-    public Integer setExcelParentMetaDataMap(Map<String, Object> parentMetadataMap, Long parentId, Integer number) {
+    public Map<String, Object> setExcelParentMetaDataMap(Long parentId, Integer number) {
         //
         Integer parentAttributeNumber = 4;
 
         MetadataEntityPO parentMetaDataPO = metadataEntity.getMetadataEntityById(parentId);
-        if (parentMetaDataPO==null) {
-            return number;
+        if (parentMetaDataPO == null) {
+            return new HashMap<>();
+
         }
         number++;
-        Integer index=((number - 1) * parentAttributeNumber);
+        Integer index = ((number - 1) * parentAttributeNumber);
+        Map<String, Object> parentMetadataMap = new HashMap<>();
         //名称
-        parentMetadataMap.put("-" + (index+4), parentMetaDataPO.getName());
+        parentMetadataMap.put("-" + (index + 4), parentMetaDataPO.getName());
         //显示名称
-        parentMetadataMap.put("-" + (index+3), parentMetaDataPO.getDisplayName());
+        parentMetadataMap.put("-" + (index + 3), parentMetaDataPO.getDisplayName());
         //类型
-        parentMetadataMap.put("-" + (index+2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
+        parentMetadataMap.put("-" + (index + 2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
         //描述
-        parentMetadataMap.put("-" + (index+1), parentMetaDataPO.getDescription());
-        return setExcelParentMetaDataMap(parentMetadataMap, Long.valueOf(parentMetaDataPO.getParentId()), number);
+        parentMetadataMap.put("-" + (index + 1), parentMetaDataPO.getDescription());
+        Map<String, Object> lastResult = setExcelParentMetaDataMap(Long.valueOf(parentMetaDataPO.getParentId()), number);
+        parentMetadataMap.putAll(lastResult);
+        return parentMetadataMap;
     }
 
 }
