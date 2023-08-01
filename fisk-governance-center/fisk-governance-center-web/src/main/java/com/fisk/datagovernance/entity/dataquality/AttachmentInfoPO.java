@@ -12,11 +12,11 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_attachmentInfo")
-public class AttachmentInfoPO  extends BasePO {
+public class AttachmentInfoPO extends BasePO {
     /**
      * 原名称
      */
-    public  String originalName;
+    public String originalName;
 
     /**
      * 当前名称
@@ -39,7 +39,11 @@ public class AttachmentInfoPO  extends BasePO {
     public String absolutePath;
 
     /**
-     * 附件类别 100：质量校验报告 200 数据清洗报告 300 智能发现报告
+     * 附件类别
+     * 100：质量校验报告
+     * 200: 数据清洗报告
+     * 300: 智能发现报告
+     * 400: 数据检查日志报告
      */
     public int category;
 

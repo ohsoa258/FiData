@@ -32,6 +32,9 @@ import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.datagovernance.vo.dataquality.external.MetaDataFieldRuleVO;
+import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
+import com.fisk.datagovernance.vo.dataquality.external.MetaDataTableRuleVO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -98,7 +101,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private String uploadUrl;
 
     @Override
-    public ResultEntity<TableRuleInfoDTO> getTableRuleList(int fiDataSourceId, String tableUnique, int tableBusinessType) {
+    public ResultEntity<List<MetaDataQualityRuleVO>> getTableRuleList(int fiDataSourceId, String tableUnique, int tableBusinessType) {
         // 第一步：检查参数是否合规
         if (fiDataSourceId == 0 || StringUtils.isEmpty(tableUnique)) {
             return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
@@ -108,7 +111,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 filter(t -> t.getDatasourceId() == fiDataSourceId && t.getDatasourceType() == SourceTypeEnum.FiData)
                 .findFirst().orElse(null);
         if (dataSourceConVO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, null);
+            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, null);
         }
 
         // 第二步：查询模板信息
@@ -120,11 +123,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
         }
 
-        // 第二步：查询数据检查的规则
+        List<MetaDataQualityRuleVO> qualityRuleList = new ArrayList<>();
+
+        // 第三步：查询数据检查的规则
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                 .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
-                .eq(DataCheckPO::getTableUnique, tableUnique);
+                .eq(DataCheckPO::getTableUnique, tableUnique)
+                .eq(DataCheckPO::getTableBusinessType, tableBusinessType);
         List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
 
         if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
@@ -135,9 +141,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             List<DataCheckExtendPO> dataCheckExtendPOList = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
 
             // 表检查规则
-            TableRuleInfoDTO tableRuleInfo = new TableRuleInfoDTO();
+            List<MetaDataTableRuleVO> tableRuleList = new ArrayList<>();
             // 字段检查规则
-            TableRuleInfoDTO fieldRuleInfo = new TableRuleInfoDTO();
+            List<MetaDataFieldRuleVO> fieldRuleList = new ArrayList<>();
 
             for (DataCheckPO dataCheckPO : dataCheckPOList) {
                 // 根据检查规则类型判断该规则是基于表设置的还是基于字段设置的
@@ -155,27 +161,40 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     case REGEX_CHECK:
                         // 基于字段设置的检查规则
                         DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
-                        if (dataCheckExtendPO==null){
+                        if (dataCheckExtendPO == null) {
                             continue;
                         }
-                        tableRuleInfo.setTableFieldUnique(dataCheckPO.getTableUnique());
-                        tableRuleInfo.setName(dataCheckPO.getTableName());
-                        tableRuleInfo.setType(1);
-
+                        MetaDataFieldRuleVO metaDataFieldRule = new MetaDataFieldRuleVO();
+                        metaDataFieldRule.setFieldUnique(dataCheckExtendPO.getFieldUnique());
+                        metaDataFieldRule.setFieldName(dataCheckExtendPO.getFieldName());
+                        metaDataFieldRule.setRuleIllustrate(dataCheckPO.getRuleIllustrate());
+                        fieldRuleList.add(metaDataFieldRule);
                         break;
                     case PARENTAGE_CHECK:
                     case SQL_SCRIPT_CHECK:
                         // 基于表设置的检查规则
+                        MetaDataTableRuleVO metaDataTableRule = new MetaDataTableRuleVO();
+                        metaDataTableRule.setTableUnique(dataCheckPO.getTableUnique());
+                        metaDataTableRule.setTableName(dataCheckPO.getTableName());
+                        metaDataTableRule.setSchemaName(dataCheckPO.getSchemaName());
+                        metaDataTableRule.setRuleIllustrate(dataCheckPO.getRuleIllustrate());
+                        tableRuleList.add(metaDataTableRule);
                         break;
                 }
             }
+
+            MetaDataQualityRuleVO metaDataQualityRule = new MetaDataQualityRuleVO();
+            metaDataQualityRule.setModuleTypeEnum(ModuleTypeEnum.DATA_CHECK_MODULE);
+            metaDataQualityRule.setTableRuleList(tableRuleList);
+            metaDataQualityRule.setFieldRuleList(fieldRuleList);
+            qualityRuleList.add(metaDataQualityRule);
         }
 
         // 第三步：查询业务清洗的规则
 
         // 第三步：查询生命周期的规则
 
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, null);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, qualityRuleList);
     }
 
     @Override

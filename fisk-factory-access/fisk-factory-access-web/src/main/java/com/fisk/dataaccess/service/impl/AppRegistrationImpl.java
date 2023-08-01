@@ -1539,8 +1539,8 @@ public class AppRegistrationImpl
                     appDtoTree.setSourceType(1);
                     appDtoTree.setSourceId(Integer.parseInt(id));
                     appDtoTree.setParentId(appTreeByRealTimeGuid);
-                    appDtoTree.setLabel(app.appAbbreviation);
-                    appDtoTree.setLabelAlias(app.appName);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appAbbreviation);
                     appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                     appDtoTree.setLabelDesc(app.appDes);
 

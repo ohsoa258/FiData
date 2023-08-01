@@ -14,7 +14,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.DateTimeUtils;
+import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
+import com.fisk.common.core.utils.Dto.Excel.RowDto;
+import com.fisk.common.core.utils.Dto.Excel.SheetDto;
 import com.fisk.common.core.utils.RegexUtils;
+import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
@@ -70,6 +74,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckLogsMapper dataCheckLogsMapper;
 
     @Resource
+    private AttachmentInfoMapper attachmentInfoMapper;
+
+    @Resource
     private UserHelper userHelper;
 
     @Value("${spring.datasource.url}")
@@ -78,6 +85,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private String dataBaseUserName;
     @Value("${spring.datasource.password}")
     private String dataBasePassWord;
+
+
+    @Value("${file.excelFilePath}")
+    private String excelFilePath;
 
     private static final String WARN = "warn";
     private static final String FAIL = "fail";
@@ -2236,5 +2247,154 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckLogsMapper.delete(dataCheckLogsPOQueryWrapper);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public long createDataCheckResultExcel(String logIds) {
+        int attachmentId = 0;
+        if (StringUtils.isEmpty(logIds)) {
+            return attachmentId;
+        }
+        // 第一步：根据日志id查询数据检查日志详情
+        List<String> logIdList = Arrays.stream(logIds.split(",")).collect(Collectors.toList());
+        QueryWrapper<DataCheckLogsPO> dataCheckLogsPOQueryWrapper = new QueryWrapper<>();
+        dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getDelFlag, 1)
+                .in(DataCheckLogsPO::getId, logIdList);
+        List<DataCheckLogsPO> dataCheckLogList = dataCheckLogsMapper.selectList(dataCheckLogsPOQueryWrapper);
+        if (CollectionUtils.isEmpty(dataCheckLogList)) {
+            return attachmentId;
+        }
+
+        // 第二步：组装日志数据写入通用Excel对象
+        List<SheetDto> sheetList = new ArrayList<>();
+        int index = 0;
+        for (DataCheckLogsPO dataCheckLogsPO : dataCheckLogList) {
+            index++;
+
+            SheetDto sheet = new SheetDto();
+            String sheetName = dataCheckLogsPO.getRuleName() + "_Sheet" + index;
+            sheet.setSheetName(sheetName);
+
+            String errorData = dataCheckLogsPO.getErrorData();
+            JSONArray jsonArray = null;
+            if (StringUtils.isNotEmpty(errorData)) {
+                jsonArray = JSON.parseArray(errorData);
+            }
+            List<RowDto> singRows = createDataCheckResultExcel_GetSingRows(dataCheckLogsPO, jsonArray);
+            sheet.setSingRows(singRows);
+
+            if (StringUtils.isNotEmpty(dataCheckLogsPO.getFieldName())) {
+                sheet.setSingFields(Arrays.asList(dataCheckLogsPO.getFieldName().split(",")));
+            }
+
+            List<List<String>> dataRowList = createDataCheckResultExcel_GetDataRows(jsonArray);
+            sheet.setDataRows(dataRowList);
+            sheetList.add(sheet);
+        }
+
+        // 第三步：调用生成Excel的方法
+        String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+        String uploadUrl = excelFilePath + "dataCheckResult_excelFile";
+
+        ExcelDto excelDto =new ExcelDto();
+        excelDto.setExcelName(currentFileName);
+        excelDto.setSheets(sheetList);
+        ExcelReportUtil.createExcel(excelDto, uploadUrl, currentFileName, true);
+
+        // 第四步：数据库记录Excel附件信息并返回附件Id用于下载附件
+        AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+        attachmentInfoPO.setCurrentFileName(currentFileName);
+        attachmentInfoPO.setExtensionName(".xlsx");
+        attachmentInfoPO.setAbsolutePath(uploadUrl);
+        attachmentInfoPO.setOriginalName(String.format("数据检查日志%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
+        attachmentInfoPO.setCategory(400);
+        attachmentInfoMapper.insertOne(attachmentInfoPO);
+
+        return attachmentInfoPO.getId();
+    }
+
+    public List<RowDto> createDataCheckResultExcel_GetSingRows(DataCheckLogsPO dataCheckLogsPO, JSONArray jsonArray) {
+        List<RowDto> singRows = new ArrayList<>();
+        RowDto rowDto = new RowDto();
+        rowDto.setRowIndex(0);
+        List<String> Columns = new ArrayList<>();
+        Columns.add("检查场景");
+        Columns.add("检查类型");
+        Columns.add("代号");
+        Columns.add("表字段");
+        Columns.add("检查结果");
+        Columns.add("检查时间");
+        Columns.add("检查描述");
+        Columns.add("大小批次号");
+        rowDto.setColumns(Columns);
+        singRows.add(rowDto);
+
+        rowDto = new RowDto();
+        rowDto.setRowIndex(1);
+        Columns = new ArrayList<>();
+        Columns.add(dataCheckLogsPO.getLogType() == 1 ? "同步前" : dataCheckLogsPO.getLogType() == 2 ? "同步中" : "同步后");
+        Columns.add(dataCheckLogsPO.getCheckTemplateName());
+        Columns.add(dataCheckLogsPO.getRuleName());
+        String tableName = "";
+        if (StringUtils.isNotEmpty(dataCheckLogsPO.getSchemaName())) {
+            tableName = dataCheckLogsPO.getSchemaName();
+        }
+        if (StringUtils.isNotEmpty(dataCheckLogsPO.getTableName())) {
+            tableName += "." + dataCheckLogsPO.getTableName();
+        }
+        if (StringUtils.isNotEmpty(dataCheckLogsPO.getFieldName())) {
+            tableName = "." + dataCheckLogsPO.getFieldName();
+        }
+        Columns.add(tableName);
+        String checkResult = "";
+        if (dataCheckLogsPO.getCheckResult().equals(SUCCESS)) {
+            checkResult = String.format("%s,共检查%s条数据，全部通过", SUCCESS, dataCheckLogsPO.getCheckTotalCount());
+        } else if (dataCheckLogsPO.getCheckResult().equals(FAIL)) {
+            checkResult = String.format("%s,共检查%s条数据，%s条未通过", FAIL, dataCheckLogsPO.getCheckTotalCount(), dataCheckLogsPO.getCheckFailCount());
+        } else {
+            checkResult = String.format("%s,共检查%s条数据，%s条已标记警告", WARN, dataCheckLogsPO.getCheckTotalCount(), dataCheckLogsPO.getCheckFailCount());
+        }
+        Columns.add(checkResult);
+        Columns.add(dataCheckLogsPO.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        Columns.add(dataCheckLogsPO.getCheckRuleIllustrate());
+        Columns.add(dataCheckLogsPO.getCheckBatchNumber() + "/" + dataCheckLogsPO.getCheckSmallBatchNumber());
+        rowDto.setColumns(Columns);
+        singRows.add(rowDto);
+
+        if (CollectionUtils.isNotEmpty(jsonArray)) {
+            rowDto = new RowDto();
+            rowDto.setRowIndex(3);
+            Columns = new ArrayList<>();
+            Columns.add("检查结果明细");
+            rowDto.setColumns(Columns);
+            singRows.add(rowDto);
+
+            JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+            List<String> fieldList = jsonObject.keySet().stream().collect(Collectors.toList());
+            rowDto = new RowDto();
+            rowDto.setRowIndex(4);
+            Columns = new ArrayList<>();
+            Columns.addAll(fieldList);
+            rowDto.setColumns(Columns);
+            singRows.add(rowDto);
+        }
+        return singRows;
+    }
+
+    public List<List<String>> createDataCheckResultExcel_GetDataRows(JSONArray jsonArray) {
+        List<List<String>> dataRowList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(jsonArray)) {
+            for (int i = 0; i < jsonArray.size(); i++) {
+                Set<Map.Entry<String, Object>> entrySet = jsonArray.getJSONObject(i).entrySet();
+                List<String> dataRow = new ArrayList<>();
+                for (Map.Entry<String, Object> entry : entrySet) {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    dataRow.add(value != null ? value.toString() : "");
+                }
+                dataRowList.add(dataRow);
+            }
+        }
+        return dataRowList;
     }
 }

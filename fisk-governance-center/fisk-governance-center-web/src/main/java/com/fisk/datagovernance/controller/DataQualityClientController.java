@@ -5,6 +5,7 @@ import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
+import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,10 +35,10 @@ public class DataQualityClientController {
      *
      * @return 查询结果
      */
-    @ApiOperation("查询数据质量表规则（含字段规则）")
+    @ApiOperation("查询数据质量规则（表、字段规则）")
     @GetMapping("/getTableRuleList")
-    public ResultEntity<TableRuleInfoDTO> getTableRuleList(@RequestParam("dataSourceId") int dataSourceId, @RequestParam("tableUnique") String tableUnique, @RequestParam("tableBusinessType") int tableBusinessType) {
-        return service.getTableRuleList(dataSourceId, tableUnique, tableBusinessType);
+    public ResultEntity<List<MetaDataQualityRuleVO>> getTableRuleList(@RequestParam("fiDataSourceId") int fiDataSourceId, @RequestParam("tableUnique") String tableUnique, @RequestParam("tableBusinessType") int tableBusinessType) {
+        return service.getTableRuleList(fiDataSourceId, tableUnique, tableBusinessType);
     }
 
     /**

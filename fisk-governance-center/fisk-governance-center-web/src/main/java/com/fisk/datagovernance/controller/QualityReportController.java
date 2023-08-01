@@ -98,6 +98,13 @@ public class QualityReportController {
         service.downloadReportRecord(reportLogId, response);
     }
 
+    @ApiOperation("下载Excel附件")
+    @GetMapping("/downloadExcelReport/{attachmentId}")
+    @ControllerAOPConfig(printParams = false)
+    public void downloadExcelReport(@PathVariable("attachmentId") int attachmentId, HttpServletResponse response) {
+        service.downloadExcelReport(attachmentId, response);
+    }
+
     @ApiOperation("预览报告记录")
     @GetMapping("/previewReportRecord/{reportLogId}")
     public ResultEntity<List<PreviewQualityReportVO>> previewReportRecord(@PathVariable("reportLogId") int reportLogId) {
