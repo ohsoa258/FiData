@@ -1650,8 +1650,8 @@ public class MetaDataImpl implements IMetaData {
                             }
                             //字段长度
                             Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName().equals("length")).findFirst();
-                            if (optionalDataTypeAttribute.isPresent()) {
-                                MetadataAttributePO lengthAttributePO = optionalDataTypeAttribute.get();
+                            if (optionalLengthAttribute.isPresent()) {
+                                MetadataAttributePO lengthAttributePO = optionalLengthAttribute.get();
                                 entityAttributeLength = lengthAttributePO.getValue();
                             }
                         }

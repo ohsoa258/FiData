@@ -290,7 +290,7 @@ public class ExcelUtil {
                 Row dataRow = sheet.createRow(excelRow++);
                 //内层for循环创建每行对应的列，并赋值
                 int columnIndex = 0;
-                for (int i = -allParentMetadataAttributeNumber; i < allMainChildMetadataAttributeNumber - 1; i++) {
+                for (int i = -allParentMetadataAttributeNumber; i < allMainChildMetadataAttributeNumber; i++) {
                     Cell cell = dataRow.createCell(columnIndex);
                     columnIndex++;
                     String key = i + "";
