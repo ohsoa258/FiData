@@ -15,14 +15,14 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.vo.tableservice.WechatUserVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.vo.emailserver.EmailServerVO;
-import com.fisk.task.dto.statistics.PipelLogRecipientsDTO;
-import com.fisk.task.entity.PipelLogRecipientsPO;
+import com.fisk.task.dto.tableservice.TableServiceRecipientsDTO;
 import com.fisk.task.entity.ScheduleSettingPO;
-import com.fisk.task.mapper.PipelLogRecipientsMapper;
+import com.fisk.task.entity.TableServiceRecipientsPO;
+import com.fisk.task.mapper.TableServiceRecipientsMapper;
 import com.fisk.task.scheduled.CronTaskRegistrar;
 import com.fisk.task.scheduled.SchedulingRunnable;
-import com.fisk.task.service.pipeline.PipelLogRecipientsService;
-import com.fisk.task.vo.statistics.PipelLogRecipientsVO;
+import com.fisk.task.service.pipeline.TableServiceRecipientsService;
+import com.fisk.task.vo.tableservice.TableServiceRecipientsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,20 +39,20 @@ import static com.fisk.task.utils.HttpUtils.HttpGet;
 import static com.fisk.task.utils.HttpUtils.HttpPost;
 
 @Slf4j
-@Service("pipelLogRecipientsService")
-public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipientsMapper, PipelLogRecipientsPO> implements PipelLogRecipientsService {
+@Service("tableServiceRecipientsService")
+public class TableServiceRecipientsServiceImpl extends ServiceImpl<TableServiceRecipientsMapper, TableServiceRecipientsPO> implements TableServiceRecipientsService {
     @Autowired
     private CronTaskRegistrar cronTaskRegistrar;
     @Resource
     UserClient userClient;
 
     @Override
-    public PipelLogRecipientsVO getPipelLogAlarmNotice() {
+    public TableServiceRecipientsVO getTableServiceAlarmNotice() {
         ScheduleSettingPO scheduleSettingPO = new ScheduleSettingPO();
         ScheduleSettingPO scheduleSetting = scheduleSettingPO.selectOne(new QueryWrapper<ScheduleSettingPO>().eq("bean_name", "SubscribeEmailTask"));
 
-        PipelLogRecipientsVO pipelLogRecipientsVO = new PipelLogRecipientsVO();
-        List<PipelLogRecipientsPO> list = this.list();
+        TableServiceRecipientsVO pipelLogRecipientsVO = new TableServiceRecipientsVO();
+        List<TableServiceRecipientsPO> list = this.list();
         if (CollectionUtils.isNotEmpty(list)) {
             ResultEntity<EmailServerVO> emailServerById = userClient.getEmailServerById(list.get(0).getNoticeServerId());
             if (emailServerById == null || emailServerById.getCode() != ResultEnum.SUCCESS.getCode() || emailServerById.getData() == null) {
@@ -84,38 +84,38 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum savePipelLogAlarmNotice(PipelLogRecipientsDTO dto) {
-        List<PipelLogRecipientsPO> pipelLogRecipientsPOS = new ArrayList<>();
+    public ResultEnum saveTableServiceAlarmNotice(TableServiceRecipientsDTO dto) {
+        List<TableServiceRecipientsPO> tableServiceRecipientsPOS = new ArrayList<>();
         if (dto.getNoticeServerType() == 1) {
-            PipelLogRecipientsPO pipelLogRecipientsPO = new PipelLogRecipientsPO();
-            pipelLogRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
-            pipelLogRecipientsPO.setUserEmails(dto.getUserEmails());
-            pipelLogRecipientsPO.setType(dto.getNoticeServerType());
-            pipelLogRecipientsPO.setEnable(dto.enable);
-            pipelLogRecipientsPOS.add(pipelLogRecipientsPO);
+            TableServiceRecipientsPO tableServiceRecipientsPO = new TableServiceRecipientsPO();
+            tableServiceRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
+            tableServiceRecipientsPO.setUserEmails(dto.getUserEmails());
+            tableServiceRecipientsPO.setType(dto.getNoticeServerType());
+            tableServiceRecipientsPO.setEnable(dto.enable);
+            tableServiceRecipientsPOS.add(tableServiceRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
-                PipelLogRecipientsPO pipelLogRecipientsPO = new PipelLogRecipientsPO();
-                pipelLogRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
-                pipelLogRecipientsPO.setWechatUserId(t.getWechatUserId());
-                pipelLogRecipientsPO.setWechatUserName(t.getWechatUserName());
-                pipelLogRecipientsPO.setEnable(dto.enable);
-                pipelLogRecipientsPO.setType(dto.getNoticeServerType());
-                pipelLogRecipientsPOS.add(pipelLogRecipientsPO);
+                TableServiceRecipientsPO tableServiceRecipientsPO = new TableServiceRecipientsPO();
+                tableServiceRecipientsPO.setNoticeServerId(dto.getNoticeServerId());
+                tableServiceRecipientsPO.setWechatUserId(t.getWechatUserId());
+                tableServiceRecipientsPO.setWechatUserName(t.getWechatUserName());
+                tableServiceRecipientsPO.setEnable(dto.enable);
+                tableServiceRecipientsPO.setType(dto.getNoticeServerType());
+                tableServiceRecipientsPOS.add(tableServiceRecipientsPO);
             });
         }
-        if (CollectionUtils.isNotEmpty(pipelLogRecipientsPOS)) {
+        if (CollectionUtils.isNotEmpty(tableServiceRecipientsPOS)) {
             // 先删再插
 
-            List<PipelLogRecipientsPO> recipientsPOList = this.list();
+            List<TableServiceRecipientsPO> recipientsPOList = this.list();
             if (CollectionUtils.isNotEmpty(recipientsPOList)) {
-                List<Long> idList = recipientsPOList.stream().map(PipelLogRecipientsPO::getId).collect(Collectors.toList());
+                List<Long> idList = recipientsPOList.stream().map(TableServiceRecipientsPO::getId).collect(Collectors.toList());
                 // 修改的是del_flag状态
                 this.removeByIds(idList);
             }
             ResultEnum resultEnum = updateCronTask(dto.cronExpression);
             if (resultEnum == ResultEnum.SUCCESS) {
-                return this.saveBatch(pipelLogRecipientsPOS) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+                return this.saveBatch(tableServiceRecipientsPOS) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
             }else {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
@@ -130,7 +130,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             scheduleSetting = new ScheduleSettingPO();
             scheduleSetting.setBeanName("SubscribeEmailTask");
             scheduleSetting.setRemark("管道监控邮箱定时任务");
-            scheduleSetting.setMethodName("pipelLogSubscribeEmail");
+            scheduleSetting.setMethodName("tableServiceSubscribeEmail");
             scheduleSetting.setJobStatus(1);
             scheduleSetting.setCronExpression(cron);
             boolean insert = scheduleSetting.insert();
@@ -162,10 +162,10 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
     }
 
     @Override
-    public ResultEnum deletePipelLogAlarmNotice() {
-        List<PipelLogRecipientsPO> recipientsPOList = this.list();
+    public ResultEnum deleteTableServiceAlarmNotice() {
+        List<TableServiceRecipientsPO> recipientsPOList = this.list();
         if (CollectionUtils.isNotEmpty(recipientsPOList)) {
-            List<Long> idList = recipientsPOList.stream().map(PipelLogRecipientsPO::getId).collect(Collectors.toList());
+            List<Long> idList = recipientsPOList.stream().map(TableServiceRecipientsPO::getId).collect(Collectors.toList());
             // 修改的是del_flag状态
             this.removeByIds(idList);
         }
@@ -173,16 +173,16 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
         boolean delete = scheduleSettingPO.delete(new QueryWrapper<ScheduleSettingPO>().eq("bean_name","SubscribeEmailTask"));
         if (delete) {
             // 修改成功,则删除任务器中的任务
-            SchedulingRunnable task = new SchedulingRunnable("SubscribeEmailTask", "pipelLogSubscribeEmail");
+            SchedulingRunnable task = new SchedulingRunnable("SubscribeEmailTask", "tableServiceSubscribeEmail");
             cronTaskRegistrar.removeCronTask(task);
         }
         return ResultEnum.SUCCESS;
     }
 
     @Override
-    public ResultEnum sendPipelLogSendEmails(String content) {
+    public ResultEnum sendTableServiceSendEmails(String content) {
         // 发邮件
-        List<PipelLogRecipientsPO> email = this.list();
+        List<TableServiceRecipientsPO> email = this.list();
         //第一步：查询邮件服务器设置
         if (!CollectionUtils.isNotEmpty(email)) {
             return ResultEnum.ERROR;
@@ -211,7 +211,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("管道执行情况"));
+            mailSenderDTO.setSubject(String.format("表服务执行情况"));
 
             mailSenderDTO.setBody(content);
             //邮件收件人
@@ -239,14 +239,14 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             String accessToken = json.getString("access_token");
             //取出body的key和value值并将key和value拼接成一段 HTML 格式的字符串
 
-            for (PipelLogRecipientsPO user : email) {
+            for (TableServiceRecipientsPO user : email) {
                 //构造卡片消息内容
                 Map<String, Object> params = new HashMap<>();
                 params.put("touser", user.getWechatUserId());
                 params.put("msgtype", "textcard");
                 params.put("agentid", emailServerById.data.wechatAgentId.trim());
                 Map<String, Object> textcard = new HashMap<>();
-                textcard.put("title", "管道执行情况");
+                textcard.put("title", "表服务执行情况");
                 textcard.put("description", content);
                 textcard.put("btntxt", "更多");
                 params.put("textcard", textcard);
@@ -260,7 +260,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
                     String send = HttpPost(url, JSON.toJSONString(params));
                     JSONObject jsonSend = JSONObject.parseObject(send);
                 } catch (Exception e) {
-                    log.debug("【sendPipelLogSendEmails】 e：" + e);
+                    log.debug("【sendTableServiceSendEmails】 e：" + e);
                     throw new FkException(ResultEnum.ERROR, e.getMessage());
                 }
             }

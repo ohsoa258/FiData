@@ -35,7 +35,7 @@ public class PipelineStatisticsController {
     @Resource
     PipelLogRecipientsService pipelLogRecipientsService;
     /**
-     * getLogStatistics
+     * 获取图表的日志统计信息
      * @param lookday
      * @return
      */
@@ -46,7 +46,7 @@ public class PipelineStatisticsController {
     }
 
     /**
-     * getGanttChart
+     * 获取日志统计页面甘特图
      * @return
      */
     @ApiOperation("获取日志统计页面甘特图")
@@ -55,7 +55,8 @@ public class PipelineStatisticsController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelLog.getGanttChart());
     }
     /**
-     * getTopRunningTime
+     * 获取管道运行时长TOP20
+     * @param lookday
      * @return
      */
     @ApiOperation("获取管道运行时长TOP20")
@@ -64,7 +65,8 @@ public class PipelineStatisticsController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelLog.getTopRunningTime(lookday));
     }
     /**
-     * getFaildStatistics
+     * 获取失败统计图
+     * @param lookday
      * @return
      */
     @ApiOperation("获取失败统计图")
@@ -74,7 +76,8 @@ public class PipelineStatisticsController {
     }
 
     /**
-     * getLineChart
+     * 获取管道运行状态趋势图
+     * @param lookday
      * @return
      */
     @ApiOperation("获取管道运行状态趋势图")
@@ -82,8 +85,11 @@ public class PipelineStatisticsController {
     public ResultEntity<List<LineChartVO>> getLineChart(@RequestParam Integer lookday){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelLog.getLineChart(lookday));
     }
+
     /**
-     * getDetailLineChart
+     * 获取管道运行时长TOP详情
+     * @param workflowName
+     * @param lookday
      * @return
      */
     @ApiOperation("获取管道运行时长TOP详情")
@@ -93,7 +99,8 @@ public class PipelineStatisticsController {
     }
 
     /**
-     * getPipelLineDetailLog
+     * 获取管道日志详情页
+     * @param dto
      * @return
      */
     @ApiOperation("获取管道日志详情页")
@@ -106,25 +113,39 @@ public class PipelineStatisticsController {
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelLog.getPipelLineDetailLog(dto));
     }
-
+    /**
+     * 查询管道日志订阅通知配置
+     * @return
+     */
     @ApiOperation("查询管道日志订阅通知配置")
     @GetMapping("/getPipelLogAlarmNotice")
     public ResultEntity<Object> getPipelLogAlarmNotice() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, pipelLogRecipientsService.getPipelLogAlarmNotice());
     }
-
+    /**
+     * 保存管道日志订阅通知配置
+     * @param pipelLogRecipientsDTO
+     * @return
+     */
     @ApiOperation("保存管道日志订阅通知配置")
     @PostMapping("/savePipelLogAlarmNotice")
     public ResultEntity<Object> savePipelLogAlarmNotice(@RequestBody PipelLogRecipientsDTO pipelLogRecipientsDTO) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, pipelLogRecipientsService.savePipelLogAlarmNotice(pipelLogRecipientsDTO));
     }
-
+    /**
+     * 删除管道日志订阅通知配置
+     * @return
+     */
     @ApiOperation("删除管道日志订阅通知配置")
     @GetMapping("/deletePipelLogAlarmNotice")
     public ResultEntity<Object> deletePipelLogAlarmNotice() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, pipelLogRecipientsService.deletePipelLogAlarmNotice());
     }
-
+    /**
+     * 发送管道日志订阅通知
+     * @param content
+     * @return
+     */
     @ApiOperation("发送管道日志订阅通知")
     @PostMapping("/sendPipelLogSendEmails")
     public ResultEntity<Object> sendPipelLogSendEmails(@RequestBody String content) {
