@@ -28,3 +28,4 @@ file:
   uploadUrl: /opt/0226/soft/nginx/app/file/qualityreport/
   echoPath: /file/qualityreport/
   logoPath: /opt/0226/soft/nginx/app/file/qualityreport/image/companyLogo.jpg
+  excelFilePath: /opt/0226/soft/nginx/app/file/excel/

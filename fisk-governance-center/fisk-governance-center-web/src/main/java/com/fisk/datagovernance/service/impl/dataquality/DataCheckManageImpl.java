@@ -2294,7 +2294,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         // 第三步：调用生成Excel的方法
         String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
-        String uploadUrl = excelFilePath + "dataCheckResult_excelFile";
+        String uploadUrl = excelFilePath + "dataCheckResult_excelFile/";
 
         ExcelDto excelDto =new ExcelDto();
         excelDto.setExcelName(currentFileName);
