@@ -1657,6 +1657,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             tableNifiSettingPO.odsToStgProcessorId = processorEntity1.getId();
             //连接器
             if (invokeHTTP.getId() != null) {
+                //新增自己连自己 为了解决管道调度该组件时，偶发性的失败问题，失败就retry
+                componentConnector(groupId, invokeHTTP.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RETRY2);
+                componentConnector(groupId, invokeHTTP.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
                 componentConnector(groupId, invokeHTTP.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RESPONSE);
             } else {
                 if (putDatabaseRecord != null && putDatabaseRecord.getId() != null) {
