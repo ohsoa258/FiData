@@ -16,12 +16,30 @@ import java.util.Map;
  */
 public interface PipelLogRecipientsService extends IService<PipelLogRecipientsPO> {
 
+    /**
+     * 查询管道日志订阅通知配置
+     * @return
+     */
     PipelLogRecipientsVO getPipelLogAlarmNotice();
 
+    /**
+     * 保存管道日志订阅通知配置
+     * @param pipelLogRecipientsDTO
+     * @return
+     */
     ResultEnum savePipelLogAlarmNotice(PipelLogRecipientsDTO pipelLogRecipientsDTO);
 
+    /**
+     * 删除管道日志订阅通知配置
+     * @return
+     */
     ResultEnum deletePipelLogAlarmNotice();
 
+    /**
+     * 发送管道日志订阅通知
+     * @param content
+     * @return
+     */
     ResultEnum sendPipelLogSendEmails(String content);
 }
 

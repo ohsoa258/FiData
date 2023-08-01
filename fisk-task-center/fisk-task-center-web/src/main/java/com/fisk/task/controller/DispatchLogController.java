@@ -50,7 +50,7 @@ public class DispatchLogController {
     }
 
     /**
-     * getLogStatisticsForChart
+     * 获取图表的日志统计信息
      * @param pipelLog
      * @return
      */
