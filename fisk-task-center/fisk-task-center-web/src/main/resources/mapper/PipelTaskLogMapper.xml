@@ -115,7 +115,7 @@
 
     <select id="getTopRunningTime" resultType="com.fisk.task.vo.tableservice.TableTopRunningTimeVO">
         SELECT
-            t4.table_name,
+            t4.table_name as tableServiceName,
             max( running_time ) AS running_time
         FROM
             (
@@ -152,7 +152,7 @@
     </select>
     <select id="getFaildStatistics" resultType="com.fisk.task.vo.tableservice.TableFaildStatisticsVO">
         SELECT
-            t5.table_name,
+            t5.table_name as tableServiceName,
             t4.sum,
             t4.failed AS failedNum,
             t4.success AS successNum
@@ -255,7 +255,7 @@
     </select>
     <select id="getDetailLineChart" resultType="com.fisk.task.vo.tableservice.TableServiceLineChartVO">
         SELECT
-            t1.table_name,
+            t1.table_name as tableServiceName,
             DATE(t2.create_time) AS date,
             MAX(TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time )) AS running_time
         FROM
@@ -281,7 +281,7 @@
         GROUP BY DATE(t2.create_time)
     </select>
     <select id="getTableServiceDetailLog" resultType="com.fisk.task.vo.tableservice.TableServiceDetailVO">
-        SELECT t1.table_name as tableName,
+        SELECT t1.table_name as tableServiceName,
         t2.create_time AS startDateTime,
         t3.create_time AS endDateTime,
         TIMESTAMPDIFF( SECOND, t2.create_time, t3.create_time) as runningTime,
@@ -310,7 +310,7 @@
     </select>
     <select id="getDetailLog" resultType="com.fisk.task.vo.tableservice.TableServiceDetailVO">
         SELECT
-            t.tableName,
+            t.tableName as tableServiceName,
             t.startDateTime,
             t.endDateTime,
             t.runningTime,
