@@ -533,6 +533,15 @@ public class TableServiceImpl
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public List<String> getTableName() {
+        LambdaQueryWrapper<TableServicePO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.select(TableServicePO::getTableName);
+        List<TableServicePO> tableServicePOS = mapper.selectList(queryWrapper);
+        List<String> tableNames = tableServicePOS.stream().map(TableServicePO::getTableName).distinct().collect(Collectors.toList());
+        return tableNames;
+    }
+
     /**
      * 用于远程调用方法的参数，↑
      *
