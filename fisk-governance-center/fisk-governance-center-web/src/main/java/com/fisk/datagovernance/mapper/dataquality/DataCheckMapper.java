@@ -32,6 +32,6 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`, `schema_name`, `table_unique`,  `table_name`,  `table_describe`, `table_type`, `table_business_type`, `rule_check_type`, `rule_execute_node`, `rule_execute_sort`, `rule_weight`,`rule_describe`,`rule_state`, `rule_illustrate`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{schemaName}, #{tableUnique}, #{tableName}, #{tableType}, #{tableBusinessType}, #{ruleCheckType}, #{ruleExecuteNode}, #{ruleExecuteSort}, #{ruleWeight}, #{ruleDescribe}, #{ruleState}, #{ruleIllustrate}, #{createTime}, #{createUser},1);")
+    @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`, `schema_name`, `table_unique`,  `table_name`,  `table_describe`, `table_type`, `table_business_type`, `rule_check_type`, `rule_execute_node`, `rule_execute_sort`, `rule_weight`,`rule_describe`,`rule_state`, `rule_illustrate`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{schemaName}, #{tableUnique}, #{tableName}, #{tableDescribe}, #{tableType}, #{tableBusinessType}, #{ruleCheckType}, #{ruleExecuteNode}, #{ruleExecuteSort}, #{ruleWeight}, #{ruleDescribe}, #{ruleState}, #{ruleIllustrate}, #{createTime}, #{createUser},1);")
     int insertOne(DataCheckPO po);
 }
