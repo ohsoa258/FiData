@@ -89,8 +89,8 @@ public class TableServiceStatisticsController {
      */
     @ApiOperation("获取表服务运行时长TOP详情")
     @GetMapping("/getDetailLineChart")
-    public ResultEntity<List<TableServiceLineChartVO>> getDetailLineChart(@RequestParam String workflowName, @RequestParam Integer lookday){
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelTaskLog.getDetailLineChart(workflowName,lookday));
+    public ResultEntity<List<TableServiceLineChartVO>> getDetailLineChart(@RequestParam String tableName, @RequestParam Integer lookday){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,pipelTaskLog.getDetailLineChart(tableName,lookday));
     }
 
     /**

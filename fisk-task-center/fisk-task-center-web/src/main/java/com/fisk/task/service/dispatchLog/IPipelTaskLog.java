@@ -95,11 +95,11 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
 
     /**
      * 获取表服务运行时长TOP详情
-     * @param workflowName
+     * @param tableName
      * @param lookday
      * @return
      */
-    List<TableServiceLineChartVO> getDetailLineChart(String workflowName, Integer lookday);
+    List<TableServiceLineChartVO> getDetailLineChart(String tableName, Integer lookday);
 
     /**
      * 获取表服务日志详情页

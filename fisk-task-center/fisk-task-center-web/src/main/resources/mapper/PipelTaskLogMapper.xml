@@ -277,7 +277,7 @@
             AND t3.type = 8
         WHERE
             t3.create_time IS NOT NULL
-          AND t1.table_name = #{workflowName}
+          AND t1.table_name = #{tableName}
         GROUP BY DATE(t2.create_time)
     </select>
     <select id="getTableServiceDetailLog" resultType="com.fisk.task.vo.tableservice.TableServiceDetailVO">
@@ -303,9 +303,9 @@
         ) AS t1
         LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id AND t2.type = 7
         LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id AND t3.type = 8
-        <if test="dto.workflowName != null and dto.workflowName != '' ">
+        <if test="dto.tableServiceName != null and dto.tableServiceName != '' ">
             WHERE
-            t1.workflow_name = #{dto.workflowName}
+            t1.table_name = #{dto.tableServiceName}
         </if>
     </select>
     <select id="getDetailLog" resultType="com.fisk.task.vo.tableservice.TableServiceDetailVO">

@@ -5,13 +5,10 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
-import com.fisk.task.dto.statistics.PipelLineDetailDTO;
 import com.fisk.task.dto.tableservice.TableServiceDetailDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
-import com.fisk.task.vo.statistics.*;
 import com.fisk.task.vo.tableservice.*;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
@@ -40,7 +37,7 @@ public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
 
     List<TableLineChartVO> getLineChart(@Param("lookday") int lookday);
 
-    List<TableServiceLineChartVO> getDetailLineChart(@Param("workflowName") String workflowName, @Param("lookday") int lookday);
+    List<TableServiceLineChartVO> getDetailLineChart(@Param("tableName") String tableName, @Param("lookday") int lookday);
 
     Page<TableServiceDetailVO> getTableServiceDetailLog(Page<TableServiceDetailVO> page, @Param("dto") TableServiceDetailDTO dto);
     List<TableServiceDetailVO> getDetailLog();

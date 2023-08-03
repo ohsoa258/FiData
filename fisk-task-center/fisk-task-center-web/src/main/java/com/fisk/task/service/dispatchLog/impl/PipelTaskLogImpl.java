@@ -350,8 +350,8 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     }
 
     @Override
-    public List<TableServiceLineChartVO> getDetailLineChart(String workflowName, Integer lookday) {
-        List<TableServiceLineChartVO> detailLineChartVOList = pipelTaskLogMapper.getDetailLineChart(workflowName, lookday);
+    public List<TableServiceLineChartVO> getDetailLineChart(String tableName, Integer lookday) {
+        List<TableServiceLineChartVO> detailLineChartVOList = pipelTaskLogMapper.getDetailLineChart(tableName, lookday);
         return detailLineChartVOList;
     }
 
