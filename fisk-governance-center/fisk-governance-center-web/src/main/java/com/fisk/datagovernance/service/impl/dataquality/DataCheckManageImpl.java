@@ -2250,19 +2250,22 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     @Override
-    public long createDataCheckResultExcel(String logIds) {
-        int attachmentId = 0;
+    public String createDataCheckResultExcel(String logIds) {
         if (StringUtils.isEmpty(logIds)) {
-            return attachmentId;
+            return "";
         }
         // 第一步：根据日志id查询数据检查日志详情
-        List<String> logIdList = Arrays.stream(logIds.split(",")).collect(Collectors.toList());
         QueryWrapper<DataCheckLogsPO> dataCheckLogsPOQueryWrapper = new QueryWrapper<>();
-        dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getDelFlag, 1)
-                .in(DataCheckLogsPO::getId, logIdList);
+        if (logIds.equals("all")) {
+            dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getDelFlag, 1);
+        } else {
+            List<String> logIdList = Arrays.stream(logIds.split(",")).collect(Collectors.toList());
+            dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getDelFlag, 1)
+                    .in(DataCheckLogsPO::getId, logIdList);
+        }
         List<DataCheckLogsPO> dataCheckLogList = dataCheckLogsMapper.selectList(dataCheckLogsPOQueryWrapper);
         if (CollectionUtils.isEmpty(dataCheckLogList)) {
-            return attachmentId;
+            return "";
         }
 
         // 第二步：组装日志数据写入通用Excel对象
@@ -2296,7 +2299,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
         String uploadUrl = excelFilePath + "dataCheckResult_excelFile/";
 
-        ExcelDto excelDto =new ExcelDto();
+        ExcelDto excelDto = new ExcelDto();
         excelDto.setExcelName(currentFileName);
         excelDto.setSheets(sheetList);
         ExcelReportUtil.createExcel(excelDto, uploadUrl, currentFileName, true);
@@ -2310,7 +2313,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         attachmentInfoPO.setCategory(400);
         attachmentInfoMapper.insertOne(attachmentInfoPO);
 
-        return attachmentInfoPO.getId();
+        return attachmentInfoPO.getOriginalName() + "," + attachmentInfoPO.getId();
     }
 
     public List<RowDto> createDataCheckResultExcel_GetSingRows(DataCheckLogsPO dataCheckLogsPO, JSONArray jsonArray) {
@@ -2343,7 +2346,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             tableName += "." + dataCheckLogsPO.getTableName();
         }
         if (StringUtils.isNotEmpty(dataCheckLogsPO.getFieldName())) {
-            tableName = "." + dataCheckLogsPO.getFieldName();
+            tableName += "." + dataCheckLogsPO.getFieldName();
         }
         Columns.add(tableName);
         String checkResult = "";

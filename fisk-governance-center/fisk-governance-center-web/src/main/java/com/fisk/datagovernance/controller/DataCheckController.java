@@ -89,7 +89,7 @@ public class DataCheckController {
 
     @ApiOperation("生成数据检查结果——Excel")
     @PostMapping("/createDataCheckResultExcel")
-    public ResultEntity<Long> createDataCheckResultExcel(@RequestParam("logIds") String logIds){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.createDataCheckResultExcel(logIds));
+    public ResultEntity<String> createDataCheckResultExcel(@RequestParam("logIds") String logIds){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.createDataCheckResultExcel(logIds));
     }
 }

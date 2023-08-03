@@ -91,5 +91,5 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      *
      * @return 检查结果
      */
-    long createDataCheckResultExcel(String logIds);
+    String createDataCheckResultExcel(String logIds);
 }
