@@ -13,6 +13,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.models.auth.In;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -84,5 +85,11 @@ public class DataCheckController {
     @PostMapping("/deleteDataCheckLogs")
     public ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId){
         return service.deleteDataCheckLogs(ruleId);
+    }
+
+    @ApiOperation("生成数据检查结果——Excel")
+    @PostMapping("/createDataCheckResultExcel")
+    public ResultEntity<String> createDataCheckResultExcel(@RequestParam("logIds") String logIds){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.createDataCheckResultExcel(logIds));
     }
 }

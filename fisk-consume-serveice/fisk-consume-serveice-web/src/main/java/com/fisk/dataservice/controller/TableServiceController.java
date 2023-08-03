@@ -228,4 +228,10 @@ public class TableServiceController {
     public ResultEntity<List<MetaDataEntityDTO>> getTableSyncMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,tableAppManageService.getTableSyncMetaData());
     }
+
+    @ApiOperation("获取所有表名称")
+    @GetMapping("/getTableName")
+    public ResultEntity<List<String>> getTableName() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getTableName());
+    }
 }

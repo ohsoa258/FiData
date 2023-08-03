@@ -95,6 +95,13 @@ public interface IQualityReportManageService extends IService<QualityReportPO> {
     void downloadReportRecord(int reportLogId, HttpServletResponse response);
 
     /**
+     * 下载附件数据
+     *
+     * @return 执行结果
+     */
+    void downloadExcelReport(int attachmentId, HttpServletResponse response);
+
+    /**
      * 预览报告记录
      *
      * @return 执行结果

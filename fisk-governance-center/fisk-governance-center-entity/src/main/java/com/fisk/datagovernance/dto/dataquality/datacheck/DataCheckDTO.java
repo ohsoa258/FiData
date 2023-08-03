@@ -58,6 +58,12 @@ public class DataCheckDTO {
     public String tableName;
 
     /**
+     * 表描述
+     */
+    @ApiModelProperty(value = "表描述")
+    public String tableDescribe;
+
+    /**
      * 表类型 1：表  2：视图
      */
     @ApiModelProperty(value = "表类型 TABLE/VIEW")

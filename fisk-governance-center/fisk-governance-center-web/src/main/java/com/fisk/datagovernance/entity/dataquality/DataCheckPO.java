@@ -44,6 +44,11 @@ public class DataCheckPO extends BasePO {
     public String tableName;
 
     /**
+     * 表描述
+     */
+    public String tableDescribe;
+
+    /**
      * 表类型 1：表  2：视图
      */
     public int tableType;

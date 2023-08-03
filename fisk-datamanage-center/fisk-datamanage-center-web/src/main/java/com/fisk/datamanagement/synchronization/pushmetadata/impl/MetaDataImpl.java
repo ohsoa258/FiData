@@ -784,7 +784,9 @@ public class MetaDataImpl implements IMetaData {
                                               int dataType,
                                               int tableType) {
         TableRuleInfoDTO dto = new TableRuleInfoDTO();
-        ResultEntity<TableRuleInfoDTO> tableRule = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
+        ResultEntity<TableRuleInfoDTO> tableRule = null;
+        // 临时注释 lijiawen
+        //dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
         if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
             dto = tableRule.data;
         }
@@ -1650,8 +1652,8 @@ public class MetaDataImpl implements IMetaData {
                             }
                             //字段长度
                             Optional<MetadataAttributePO> optionalLengthAttribute = EntityAttributeList.stream().filter(e -> e.getName().equals("length")).findFirst();
-                            if (optionalDataTypeAttribute.isPresent()) {
-                                MetadataAttributePO lengthAttributePO = optionalDataTypeAttribute.get();
+                            if (optionalLengthAttribute.isPresent()) {
+                                MetadataAttributePO lengthAttributePO = optionalLengthAttribute.get();
                                 entityAttributeLength = lengthAttributePO.getValue();
                             }
                         }

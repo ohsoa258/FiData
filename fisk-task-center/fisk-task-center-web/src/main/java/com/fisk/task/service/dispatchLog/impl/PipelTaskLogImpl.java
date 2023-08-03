@@ -2,7 +2,7 @@ package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -16,6 +16,7 @@ import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
+import com.fisk.task.dto.tableservice.TableServiceDetailDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
@@ -23,7 +24,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.PipelTaskLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.utils.StackTraceHelper;
-import com.google.common.base.Joiner;
+import com.fisk.task.vo.tableservice.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -301,5 +302,104 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                 pipelTaskLogMapper.updateMsgByPipelTraceId(msg,pipelTaskTraceId,DispatchLogEnum.taskend.getValue());
             }
         }
+    }
+
+    @Override
+    public TableStatisticsVO getLogStatistics(Integer lookday) {
+        TableStatisticsVO statisticsVO = new TableStatisticsVO();
+        Integer successSum = pipelTaskLogMapper.getTableServerStatisticsLog(lookday, "运行成功");
+        Integer failureSum = pipelTaskLogMapper.getTableServerStatisticsLog(lookday, "运行失败");
+        Integer runningSum = pipelTaskLogMapper.getTableServerStatisticsLog(lookday, "开始运行");
+
+        statisticsVO.runningSum = runningSum - failureSum - successSum;
+        statisticsVO.failureSum = failureSum;
+        statisticsVO.successSum = successSum;
+        return statisticsVO;
+    }
+
+    @Override
+    public List<TableGanttChartVO> getGanttChart() {
+        List<TableGanttChartVO> ganttChart = pipelTaskLogMapper.getGanttChart();
+        return ganttChart;
+    }
+
+    @Override
+    public List<TableTopRunningTimeVO> getTopRunningTime(Integer lookday) {
+        List<TableTopRunningTimeVO> topRunningTime = pipelTaskLogMapper.getTopRunningTime(lookday);
+        return topRunningTime;
+    }
+
+    @Override
+    public List<TableFaildStatisticsVO> getFaildStatistics(Integer lookday) {
+        List<TableFaildStatisticsVO> faildStatisticsVOS = pipelTaskLogMapper.getFaildStatistics(lookday);
+        List<TableFaildStatisticsVO> list = new ArrayList<>();
+        for (TableFaildStatisticsVO faildStatisticsVO : faildStatisticsVOS) {
+            if (faildStatisticsVO.sum != 0) {
+                faildStatisticsVO.success = 1.0 * faildStatisticsVO.successNum / faildStatisticsVO.sum;
+                faildStatisticsVO.faild = 1.0 * faildStatisticsVO.faildNum / faildStatisticsVO.sum;
+            }
+            list.add(faildStatisticsVO);
+        }
+        return list;
+    }
+
+    @Override
+    public List<TableLineChartVO> getLineChart(Integer lookday) {
+        List<TableLineChartVO> lineChartVOList = pipelTaskLogMapper.getLineChart(lookday);
+        return lineChartVOList;
+    }
+
+    @Override
+    public List<TableServiceLineChartVO> getDetailLineChart(String tableName, Integer lookday) {
+        List<TableServiceLineChartVO> detailLineChartVOList = pipelTaskLogMapper.getDetailLineChart(tableName, lookday);
+        return detailLineChartVOList;
+    }
+
+    @Override
+    public Page<TableServiceDetailVO> getTableServiceDetailLog(TableServiceDetailDTO dto) {
+        Page<TableServiceDetailVO> page = dto.page;
+        Page<TableServiceDetailVO> tableServiceDetailLog = pipelTaskLogMapper.getTableServiceDetailLog(page, dto);
+        List<TableServiceDetailVO> data = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(tableServiceDetailLog.getRecords())) {
+            for (TableServiceDetailVO pipelLineDetailVO : tableServiceDetailLog.getRecords()) {
+                if (pipelLineDetailVO.runningStatus != null) {
+                    if (pipelLineDetailVO.runningStatus.contains("运行成功")) {
+                        pipelLineDetailVO.runningResult = "成功";
+                    } else if (pipelLineDetailVO.runningStatus.contains("运行失败")) {
+                        pipelLineDetailVO.runningResult = "失败";
+                    }
+                    pipelLineDetailVO.runningStatus = "已完成";
+                } else {
+                    pipelLineDetailVO.runningResult = "暂无";
+                    pipelLineDetailVO.runningStatus = "未完成";
+                }
+                data.add(pipelLineDetailVO);
+            }
+        }
+        tableServiceDetailLog.setRecords(data);
+        return tableServiceDetailLog;
+    }
+
+    @Override
+    public List<TableServiceDetailVO> getDetailLog() {
+        List<TableServiceDetailVO> detailLog = pipelTaskLogMapper.getDetailLog();
+        List<TableServiceDetailVO> data = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(detailLog)) {
+            for (TableServiceDetailVO tableServiceDetailVO : detailLog) {
+                if (tableServiceDetailVO.runningStatus != null) {
+                    if (tableServiceDetailVO.runningStatus.contains("运行成功")) {
+                        tableServiceDetailVO.runningResult = "成功";
+                    } else if (tableServiceDetailVO.runningStatus.contains("运行失败")) {
+                        tableServiceDetailVO.runningResult = "失败";
+                    }
+                    tableServiceDetailVO.runningStatus = "已完成";
+                } else {
+                    tableServiceDetailVO.runningResult = "暂无";
+                    tableServiceDetailVO.runningStatus = "未完成";
+                }
+                data.add(tableServiceDetailVO);
+            }
+        }
+        return data;
     }
 }

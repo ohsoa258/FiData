@@ -158,4 +158,10 @@ public interface ITableService {
      * @return
      */
     ResultEnum tableServiceSendEmails(TableServiceEmailDTO tableServiceEmail);
+
+    /**
+     * 获取所有表名
+     * @return
+     */
+    List<String> getTableName();
 }

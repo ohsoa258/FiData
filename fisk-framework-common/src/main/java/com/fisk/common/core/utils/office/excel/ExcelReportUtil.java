@@ -143,8 +143,11 @@ public class ExcelReportUtil {
         }
         if (isMergeRow) {
             // 合并标识行
-            int lastCol = headers.stream().filter(t -> t.getRowIndex() == 4).findFirst().get().getColumns().size();
-            setSheetCellRangeAddress(workbook, sheet, lastCol);
+            RowDto rowDto = headers.stream().filter(t -> t.getRowIndex() == 4).findFirst().orElse(null);
+            if (rowDto != null) {
+                int lastCol = rowDto.getColumns().size();
+                setSheetCellRangeAddress(workbook, sheet, lastCol);
+            }
         }
     }
 

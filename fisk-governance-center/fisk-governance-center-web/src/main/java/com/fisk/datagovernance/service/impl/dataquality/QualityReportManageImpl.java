@@ -617,6 +617,43 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     }
 
     @Override
+    public void downloadExcelReport(int attachmentId, HttpServletResponse response) {
+        try {
+            if (attachmentId == 0) {
+                return;
+            }
+            AttachmentInfoPO attachmentInfoPO = attachmentInfoMapper.selectById(attachmentId);
+            if (attachmentInfoPO == null) {
+                return;
+            }
+            String filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
+            log.info("【downloadExcelReport】文件路径：" + filePath);
+            File file = new File(filePath);
+            // 取得文件名
+            String filename = attachmentInfoPO.getOriginalName();
+            // 以流的形式下载文件。
+            InputStream fis = new BufferedInputStream(new FileInputStream(filePath));
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            fis.close();
+            // 清空response
+            response.reset();
+            // 设置response的Header
+            response.addHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+            response.addHeader("Content-Length", "" + file.length());
+            OutputStream toClient = new BufferedOutputStream(response.getOutputStream());
+            response.setContentType("application/octet-stream");
+            toClient.write(buffer);
+            toClient.flush();
+            toClient.close();
+        } catch (Exception ex) {
+            log.error("【downloadExcelReport】 系统异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【downloadExcelReport】 ex：" + ex);
+        }
+        return;
+    }
+
+    @Override
     public List<PreviewQualityReportVO> previewReportRecord(int reportLogId) {
         return null;
     }
