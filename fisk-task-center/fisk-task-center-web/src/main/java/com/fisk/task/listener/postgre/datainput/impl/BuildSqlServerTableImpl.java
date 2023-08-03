@@ -94,7 +94,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             stg_sql1 = sql.toString().replace("fi_tableName", "[" + buildPhysicalTableDTO.appAbbreviation + "].[" + buildPhysicalTableDTO.tableName + "]");
             stg_sql2 = stgSql.toString().replace("fi_tableName", "[" + buildPhysicalTableDTO.appAbbreviation + "].[stg_" + buildPhysicalTableDTO.tableName + "]");
             stg_sql2 = "DROP TABLE IF EXISTS " + "[" + buildPhysicalTableDTO.appAbbreviation + "].[stg_" + buildPhysicalTableDTO.tableName + "];" + stg_sql2 +
-                    "create index enableflagsy on [stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "] (fi_enableflag);";
+                    "create index enableflagsy on [" + buildPhysicalTableDTO.appAbbreviation + "].[stg_" + buildPhysicalTableDTO.tableName + "] (fi_enableflag);";
         } else {
             odsTableName = "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
             stg_sql1 = sql.toString().replace("fi_tableName", "[ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "]");
