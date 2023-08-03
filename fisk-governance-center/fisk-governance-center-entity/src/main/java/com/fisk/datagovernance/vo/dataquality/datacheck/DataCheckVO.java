@@ -72,6 +72,12 @@ public class DataCheckVO {
     public String tableName;
 
     /**
+     * 表描述
+     */
+    @ApiModelProperty(value = "表描述")
+    public String tableDescribe;
+
+    /**
      * 表别名
      */
     @ApiModelProperty(value = "表别名")

@@ -2321,8 +2321,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         RowDto rowDto = new RowDto();
         rowDto.setRowIndex(0);
         List<String> Columns = new ArrayList<>();
-        Columns.add("检查场景");
-        Columns.add("检查类型");
+        Columns.add("执行环节");
+        Columns.add("规则类型");
         Columns.add("代号");
         Columns.add("表字段");
         Columns.add("检查结果");

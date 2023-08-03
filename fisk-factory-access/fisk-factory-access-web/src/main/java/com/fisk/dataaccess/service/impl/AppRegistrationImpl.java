@@ -1609,7 +1609,8 @@ public class AppRegistrationImpl
                                                         table.publish = 0;
                                                     }
                                                     tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                    tableDtoTree.setLabelDesc(table.tableDes);
+                                                    // 实时API应用表描述不存在，取api的描述
+                                                    tableDtoTree.setLabelDesc(api.apiDes);
                                                     tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
                                                     // 第四层: field层

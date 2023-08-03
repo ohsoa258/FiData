@@ -67,7 +67,7 @@ public class FiDataMetaDataTreeDTO {
     @ApiModelProperty(value = "字段类型")
     public String labelType;
 
-    @ApiModelProperty(value = "字段描述")
+    @ApiModelProperty(value = "描述")
     public String labelDesc;
 
     @ApiModelProperty(value = "校验规则数量")
