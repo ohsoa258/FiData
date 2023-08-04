@@ -65,7 +65,7 @@ public class MetaDataController {
         service.export(dto,response);
     }
 
-    @ApiOperation("导出元数据")
+    @ApiOperation("刷新导出元数据Redis缓存")
     @PostMapping(path = "/refreshRedisExcelMetadata")
     public void refreshRedisExcelMetadata(){
         service.refreshRedisExcelMetadata();

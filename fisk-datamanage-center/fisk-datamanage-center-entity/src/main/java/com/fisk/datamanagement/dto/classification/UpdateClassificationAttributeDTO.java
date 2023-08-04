@@ -23,7 +23,7 @@ public class UpdateClassificationAttributeDTO {
     @NotEmpty(message = "属性名称不能为空")
     public String name;
 
-    @ApiModelProperty(value = "类型名称")
-    @NotEmpty(message = "属性类别名称不能为空")
-    public String typeName;
+    @ApiModelProperty(value = "属性值")
+    @NotEmpty(message = "属性值不能为空")
+    public String value;
 }

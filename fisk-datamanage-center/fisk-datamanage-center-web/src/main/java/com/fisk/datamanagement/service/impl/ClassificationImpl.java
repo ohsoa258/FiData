@@ -17,6 +17,7 @@ import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.enums.ClassificationAppTypeEnum;
 import com.fisk.datamanagement.enums.ClassificationTypeEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.*;
@@ -275,6 +276,15 @@ public class ClassificationImpl
             // 设置创建者信息
             //model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             int flag = businessClassificationMapper.insert(model);
+            //添加业务分类下的属性
+            for (ClassificationAttributeDefsDTO attributeDef : item.getAttributeDefs()) {
+                ClassificationAttributeDTO attributeDTO=new ClassificationAttributeDTO();
+                attributeDTO.guid=String.valueOf(model.getId());
+                attributeDTO.name=attributeDef.getName();
+                attributeDTO.value=attributeDef.getValue();
+                this.addClassificationAttribute(attributeDTO);
+            }
+
             if (flag < 0){
                 throw new FkException(ResultEnum.ERROR, "保存失败");
             }
@@ -307,23 +317,23 @@ public class ClassificationImpl
             return ResultEnum.SUCCESS;
         }
 
-        HashMap attributes= dto.getClassification().getAttributes();
-        //
-        List<MetadataEntityClassificationAttributePO> dataList = new ArrayList<>();
-        for (ClassificationPO item : list) {
-            MetadataEntityClassificationAttributePO po = new MetadataEntityClassificationAttributePO();
-            //通过key值 ，获取属性配置信息
-            po.attributeId = (int)item.getId();
-            po.metadataEntityId = Integer.parseInt(dto.entityGuids.get(0));
-            po.classificationId = (int) bcPo.id;
-            po.value=attributes.get(item.getAttributeName()).toString();
-            dataList.add(po);
-        }
-
-        boolean flat = metadataEntityClassificationAttributeMap.saveBatch(dataList);
-        if (!flat) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }
+//        HashMap attributes= dto.getClassification().getAttributes();
+//        //
+//        List<MetadataEntityClassificationAttributePO> dataList = new ArrayList<>();
+//        for (ClassificationPO item : list) {
+//            MetadataEntityClassificationAttributePO po = new MetadataEntityClassificationAttributePO();
+//            //通过key值 ，获取属性配置信息
+//            po.attributeId = (int)item.getId();
+//            po.metadataEntityId = Integer.parseInt(dto.entityGuids.get(0));
+//            po.classificationId = (int) bcPo.id;
+//            po.value=attributes.get(item.getAttributeName()).toString();
+//            dataList.add(po);
+//        }
+//
+//        boolean flat = metadataEntityClassificationAttributeMap.saveBatch(dataList);
+//        if (!flat) {
+//            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+//        }
 
         return ResultEnum.SUCCESS;
     }
@@ -392,10 +402,21 @@ public class ClassificationImpl
                 }
             }
         masterData.superTypes = analysisModelSuperType;
-        list.add(masterData);
+        //业务分类下的属性
+        List<ClassificationAttributeDefsDTO> attributeDefsDTOList=new ArrayList<>();
+        if (dto.getAppType()!=null){
 
+            ClassificationAttributeDefsDTO attributeDefsDTO=new ClassificationAttributeDefsDTO();
+            attributeDefsDTO.setName("类型");
+            attributeDefsDTO.setValue(ClassificationAppTypeEnum.getEnumByValue(dto.getAppType()).getName());
+            attributeDefsDTOList.add(attributeDefsDTO);
+        }
+        masterData.attributeDefs=attributeDefsDTOList;
+        list.add(masterData);
         data.classificationDefs = list;
+
         return this.addClassification(data);
+
     }
 
     @Override
@@ -474,13 +495,13 @@ public class ClassificationImpl
             throw new FkException(ResultEnum.ERROR, "业务分类不存在");
         }
 
-        // 根据属性类型查询属性id
-        QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
-        qw.lambda().eq(AttributeTypePO::getName, dto.getTypeName());
-        AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
-        if (Objects.isNull(typePo)){
-            throw new FkException(ResultEnum.ERROR, "属性类型不存在");
-        }
+//        // 根据属性类型查询属性id
+//        QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
+//        qw.lambda().eq(AttributeTypePO::getName, dto.getTypeName());
+//        AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
+//        if (Objects.isNull(typePo)){
+//            throw new FkException(ResultEnum.ERROR, "属性类型不存在");
+//        }
 
         // 查询是否重复
         QueryWrapper<ClassificationPO> cqw = new QueryWrapper<>();
@@ -494,7 +515,7 @@ public class ClassificationImpl
 
         // 添加业务分类属性
         ClassificationPO po = new ClassificationPO();
-        po.setAttributeTypeId(typePo.getTypeId());
+        po.setAttributeValue(dto.getValue());
         po.setAttributeName(dto.getName());
         po.setBusinessClassificationId(Integer.parseInt(dto.getGuid()));
 
@@ -520,8 +541,7 @@ public class ClassificationImpl
             AttributeTypeVO vo = new AttributeTypeVO();
             vo.setGuid(String.valueOf(model.getId()));
             vo.setName(model.getAttributeName());
-            vo.setTypeId(model.getAttributeTypeId());
-            vo.setTypeName(attributeTypeMapper.selectTypeName(model.getAttributeTypeId()));
+            vo.setValue(model.getAttributeValue());
             list.add(vo);
         }
         return list;
@@ -561,17 +581,17 @@ public class ClassificationImpl
             throw new FkException(ResultEnum.ERROR, "当前业务分类下已存在该属性名称");
         }
 
-        // 查询业务分类类型id
-        QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
-        qw.lambda().eq(AttributeTypePO::getName, dto.getTypeName());
-        AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
-        if (Objects.isNull(typePo)){
-            throw new FkException(ResultEnum.ERROR, "属性类型不存在");
-        }
+//        // 查询业务分类类型id
+//        QueryWrapper<AttributeTypePO> qw = new QueryWrapper<>();
+//        qw.lambda().eq(AttributeTypePO::getName, dto.getTypeName());
+//        AttributeTypePO typePo = attributeTypeMapper.selectOne(qw);
+//        if (Objects.isNull(typePo)){
+//            throw new FkException(ResultEnum.ERROR, "属性类型不存在");
+//        }
 
         // 更新属性
         model.setAttributeName(dto.getName());
-        model.setAttributeTypeId(typePo.getTypeId());
+        model.setAttributeValue(dto.getValue());
 
         if (classificationMapper.updateById(model) <= 0){
             throw new FkException(ResultEnum.UPDATE_DATA_ERROR);

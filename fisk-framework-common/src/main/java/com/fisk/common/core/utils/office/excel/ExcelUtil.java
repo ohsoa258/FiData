@@ -25,8 +25,8 @@ import java.util.*;
 public class ExcelUtil {
 
     private static final String[] parentMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述"};
-    private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类", "名称", "显示名称", "元数据类型", "描述"};
-    private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度"};
+    private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类","应用类型", "名称", "显示名称", "元数据类型", "描述","校验规则"};
+    private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度","校验规则"};
 
     /**
      * 用户信息导出类

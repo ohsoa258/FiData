@@ -31,4 +31,5 @@ public class MetaDataQualityRuleVO {
      */
     @ApiModelProperty(value = "元数据字段规则")
     public List<MetaDataFieldRuleVO> fieldRuleList;
+
 }

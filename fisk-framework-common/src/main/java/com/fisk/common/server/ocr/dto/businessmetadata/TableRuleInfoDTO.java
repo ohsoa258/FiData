@@ -15,6 +15,11 @@ import java.util.List;
 @Data
 public class TableRuleInfoDTO {
     /**
+     * 元数据ID
+     */
+    public String metadataId;
+
+    /**
      * 利益相关方
      */
     @ApiModelProperty(value = "利益相关方")
