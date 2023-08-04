@@ -343,6 +343,7 @@ public class AppRegistrationImpl
         classificationInfoDto.setName(appRegistrationDTO.appName);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
         classificationInfoDto.setSourceType(1);
+        classificationInfoDto.setAppType(appRegistrationDTO.appType);
         classificationInfoDto.setDelete(false);
 
         ExecutorService cachedThreadPool = Executors.newCachedThreadPool();

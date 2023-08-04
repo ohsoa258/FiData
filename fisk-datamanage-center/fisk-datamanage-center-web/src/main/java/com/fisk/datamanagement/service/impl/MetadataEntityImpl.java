@@ -1290,10 +1290,15 @@ public class MetadataEntityImpl
      * @return
      */
     public MetadataEntityPO getEntityByQualifiedNames(String qualifiedName){
-        Optional<MetadataEntityPO> qualified_name = this.query().eq("qualified_name", qualifiedName).list().stream().findFirst();
-        if (qualified_name.isPresent()){
-            return qualified_name.get();
-        }
-        return null;
+       return this.query().eq("qualified_name", qualifiedName).one();
+    }
+
+    /**
+     * 获取父级下的子级元数据
+     * @param parentMetaDataId
+     * @return
+     */
+    public List<MetadataEntityPO> getChildMetaData(String parentMetaDataId){
+        return this.query().eq("parent_id",Integer.valueOf(parentMetaDataId)).list();
     }
 }

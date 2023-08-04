@@ -21,7 +21,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -235,12 +235,12 @@ public class BloodCompensationImpl
             classificationInfoDto.setName(item.name);
             classificationInfoDto.setDescription(item.appDes);
             classificationInfoDto.setSourceType(classificationTypeEnum.getValue());
+            classificationInfoDto.setAppType(item.getAppType());
             classificationInfoDto.setDelete(false);
             try {
                 classification.appSynchronousClassification(classificationInfoDto);
             } catch (Exception e) {
                 log.error("【同步业务分类失败】,分类名称:{}"+item.name,e.getMessage() );
-                continue;
             }
         }
     }

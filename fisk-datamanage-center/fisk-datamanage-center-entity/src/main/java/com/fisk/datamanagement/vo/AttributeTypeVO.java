@@ -11,5 +11,5 @@ public class AttributeTypeVO {
 
     public String name;
 
-    public String typeName;
+    public String value;
 }

@@ -28,6 +28,9 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.datagovernance.client.DataGovernanceClient;
+import com.fisk.datagovernance.enums.dataquality.ModuleTypeEnum;
+import com.fisk.datagovernance.vo.dataquality.external.MetaDataFieldRuleVO;
+import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
@@ -43,6 +46,8 @@ import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.*;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
+import com.fisk.datamanagement.mapper.ClassificationMapper;
+import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
 import com.fisk.datamanagement.service.impl.*;
@@ -120,6 +125,10 @@ public class MetaDataImpl implements IMetaData {
     DataGovernanceClient dataQualityClient;
     @Resource
     private IMetaDataEntityOperationLog operationLog;
+    @Resource
+    ClassificationMapper classificationMapper;
+
+
 
     @Resource
     private RedisTemplate redisTemplate;
@@ -187,26 +196,31 @@ public class MetaDataImpl implements IMetaData {
                         String tableName = table.name;
                         //元数据对参观：数据表 新增/修改 表新增/修改, 并且添加业务分类和表元数据的关联
                         String tableGuid = metaDataTable(table, dbGuid, db.name);
-                        //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
-                        String stgTableGuid = null;
-                        if (!stg.equals(table.getComment())) {
-                            stgTableGuid = metaDataStgTable(table, dbGuid);
-                        }
-                        if (StringUtils.isEmpty(tableGuid) || CollectionUtils.isEmpty(table.columnList)) {
-                            continue;
-                        }
                         List<String> qualifiedNames = new ArrayList<>();
                         for (MetaDataColumnAttributeDTO field : table.columnList) {
                             //新增表字段
                             metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName);
                             qualifiedNames.add(field.qualifiedName);
-                            if (!stg.equals(table.getComment())) {
+                        }
+                        if (!qualifiedNames.isEmpty()){
+                            //删除历史元数据
+                            deleteMetaData(qualifiedNames, tableGuid);
+                        }
+                        //同步业务元数据
+                        if (!"stg".equals(table.description)) {
+                            associatedBusinessMetaData(tableGuid, db.name, table.name);
+                        }
+                        /*************************ODS和DW时需要同步STG表***********************************/
+                        //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
+                        String stgTableGuid = null;
+                        if (!stg.equals(table.getComment())) {
+                            stgTableGuid = metaDataStgTable(table, dbGuid);
+                            for (MetaDataColumnAttributeDTO field : table.columnList) {
                                 //新增stg表字段
                                 metaDataStgField(field, stgTableGuid);
+
                             }
                         }
-                        //删除历史元数据
-                        deleteMetaData(qualifiedNames, tableGuid);
                         //同步血缘
                         synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
                     }
@@ -271,8 +285,6 @@ public class MetaDataImpl implements IMetaData {
         if (!"stg".equals(dto.description)) {
             //同步业务分类和元数据的关联
             associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
-            //同步业务元数据 展示不调用
-            //associatedBusinessMetaData(metadataEntity.toString(), dbName, dto.name);
         }
 
         return metadataEntity.toString();
@@ -641,10 +653,10 @@ public class MetaDataImpl implements IMetaData {
     /**
      * 同步业务元数据
      *
-     * @param atlasGuid
+     * @param metadataId
      * @param dbName
      */
-    private void associatedBusinessMetaData(String atlasGuid, String dbName, String tableName) {
+    private void associatedBusinessMetaData(String metadataId, String dbName, String tableName) {
         //获取业务元数据配置信息
         QueryWrapper<BusinessMetadataConfigPO> businessMetadataConfigPoWrapper = new QueryWrapper<>();
         List<BusinessMetadataConfigPO> poList = businessMetadataConfigMapper.selectList(businessMetadataConfigPoWrapper);
@@ -712,7 +724,7 @@ public class MetaDataImpl implements IMetaData {
             dataType = DataTypeEnum.DATA_MODEL.getValue();
             tableType = first.get().type;
         }
-        if (StringUtils.isEmpty(atlasGuid)) {
+        if (StringUtils.isEmpty(metadataId)) {
             String qualifiedName = sourceData.conIp + "_" + sourceData.conDbname + "_" + tableType + "_" + tableId;
             if (sourceData.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
                 qualifiedName = sourceData.conIp + "_" + sourceData.conDbname + "_" + tableId;
@@ -724,14 +736,18 @@ public class MetaDataImpl implements IMetaData {
             if (po == null) {
                 return;
             }
-            atlasGuid = po.atlasGuid;
+            metadataId = po.atlasGuid;
         }
-        TableRuleInfoDTO tableRuleInfo = setTableRuleInfo(sourceData.id, tableId, dataType, tableType);
-        setBusinessMetaDataAttributeValue(atlasGuid, tableRuleInfo, poList);
+        //组装表字段业务元数据
+        List<TableRuleInfoDTO> tableRuleInfoList = setTableRuleInfo(sourceData.id, tableId, dataType, tableType ,metadataId);
+        for (TableRuleInfoDTO tableRuleInfoDTO : tableRuleInfoList) {
+            setBusinessMetaDataAttributeValue(tableRuleInfoDTO, poList);
+        }
+
     }
 
 
-    private ResultEnum setBusinessMetaDataAttributeValue(String guid,
+    private ResultEnum setBusinessMetaDataAttributeValue(
                                                          TableRuleInfoDTO tableRuleInfoDTO,
                                                          List<BusinessMetadataConfigPO> poList) {
 
@@ -742,22 +758,26 @@ public class MetaDataImpl implements IMetaData {
             throw new FkException(ResultEnum.DATA_SUBMIT_ERROR);
         }
 
-        Integer metadataEntityId = Integer.parseInt(guid);
+        Integer metadataEntityId = Integer.parseInt(tableRuleInfoDTO.metadataId);
         List<MetadataBusinessMetadataMapDTO> list = new ArrayList<>();
 
         for (String businessMetaDataName : collect.keySet()) {
             List<BusinessMetadataConfigPO> list1 = collect.get(businessMetaDataName);
             switch (businessMetaDataName) {
                 case "QualityRules":
+                    //质量规则
                     list.addAll(metadataBusinessMetadataMap.setQualityRules(list1, metadataEntityId, tableRuleInfoDTO));
                     break;
                 case "BusinessDefinition":
+                    //业务定义
                     list.addAll(metadataBusinessMetadataMap.setBusinessDefinition(list1, metadataEntityId, tableRuleInfoDTO));
                     break;
                 case "BusinessRules":
+                    //业务规则
                     list.addAll(metadataBusinessMetadataMap.setBusinessRules(list1, metadataEntityId, tableRuleInfoDTO));
                     break;
                 case "ManagementRules":
+                    //管理规则
                     list.addAll(metadataBusinessMetadataMap.setManagementRules(list1, metadataEntityId, tableRuleInfoDTO));
                     break;
                 default:
@@ -766,7 +786,7 @@ public class MetaDataImpl implements IMetaData {
         }
 
         EditMetadataBusinessMetadataMapDTO data = new EditMetadataBusinessMetadataMapDTO();
-        data.metadataEntityId = Integer.parseInt(guid);
+        data.metadataEntityId = Integer.parseInt(tableRuleInfoDTO.metadataId);
         data.list = list;
 
         return metadataBusinessMetadataMap.operationMetadataBusinessMetadataMap(data);
@@ -779,17 +799,15 @@ public class MetaDataImpl implements IMetaData {
      * @param tableId
      * @param dataType
      */
-    private TableRuleInfoDTO setTableRuleInfo(int dataSourceId,
+    private List<TableRuleInfoDTO> setTableRuleInfo(int dataSourceId,
                                               int tableId,
                                               int dataType,
-                                              int tableType) {
-        TableRuleInfoDTO dto = new TableRuleInfoDTO();
-        ResultEntity<TableRuleInfoDTO> tableRule = null;
-        // 临时注释 lijiawen
-        //dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
-        if (tableRule.code == ResultEnum.SUCCESS.getCode()) {
-            dto = tableRule.data;
-        }
+                                              int tableType,
+                                              String metadataId) {
+        List<TableRuleInfoDTO> dtoList=new ArrayList<>();
+
+        ResultEntity<List<MetaDataQualityRuleVO>> tableRuleResult = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
+        List<MetaDataQualityRuleVO> tableRuleList=tableRuleResult.data;
         TableRuleParameterDTO parameter = new TableRuleParameterDTO();
         parameter.type = tableType;
         parameter.tableId = tableId;
@@ -803,22 +821,72 @@ public class MetaDataImpl implements IMetaData {
         else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
             result = dataAccessClient.buildTableRuleInfo(parameter);
         }
+        TableRuleInfoDTO dto=new TableRuleInfoDTO();
         if (result.code == ResultEnum.SUCCESS.getCode()) {
-            if (StringUtils.isEmpty(dto.name)) {
-                dto = result.data;
-            } else {
-                dto.businessName = result.data.businessName;
-                dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
-                if (!CollectionUtils.isEmpty(dto.fieldRules)) {
-                    dto.fieldRules.stream().map(e -> {
-                        e.businessName = data.businessName;
-                        e.dataResponsiblePerson = data.dataResponsiblePerson;
-                        return e;
-                    });
-                }
+            dto.businessName = result.data.businessName;
+            dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
+            if (!CollectionUtils.isEmpty(dto.fieldRules)) {
+                dto.fieldRules.stream().map(e -> {
+                    e.businessName = data.businessName;
+                    e.dataResponsiblePerson = data.dataResponsiblePerson;
+                    return e;
+                });
             }
+            dto.metadataId=metadataId;
+
         }
-        return dto;
+        if(!tableRuleList.isEmpty()){
+            //校验规则
+            dto.checkRules=getRuleByModuleType(tableRuleList,ModuleTypeEnum.DATA_CHECK_MODULE);
+            dto.filterRules=getRuleByModuleType(tableRuleList,ModuleTypeEnum.BIZ_CHECK_MODULE);
+            dtoList.add(dto);
+            List<TableRuleInfoDTO> filedRuleInfoDTOS = packFiledRuleInfo(metadataId, tableRuleList);
+            dtoList.addAll(filedRuleInfoDTOS);
+        }
+        return dtoList;
+    }
+
+    /**
+     * 组装字段规则
+     * @return
+     */
+    private List<TableRuleInfoDTO> packFiledRuleInfo(String tableMetadataId,List<MetaDataQualityRuleVO>  tableRuleList){
+        List<MetadataEntityPO> childMetaData = metadataEntity.getChildMetaData(tableMetadataId);
+        List<TableRuleInfoDTO> tableRuleInfoDTOList=new ArrayList<>();
+        for (MetadataEntityPO filedMetadataItem : childMetaData) {
+            TableRuleInfoDTO tableRuleInfoDTO=new TableRuleInfoDTO();
+            tableRuleInfoDTO.metadataId=String.valueOf(filedMetadataItem.getId());
+            tableRuleInfoDTO.checkRules=getFiledRuleByModuleType(filedMetadataItem.name,tableRuleList,ModuleTypeEnum.DATA_CHECK_MODULE);
+            tableRuleInfoDTO.filterRules=getFiledRuleByModuleType(filedMetadataItem.name,tableRuleList,ModuleTypeEnum.BIZ_CHECK_MODULE);
+            tableRuleInfoDTOList.add(tableRuleInfoDTO);
+        }
+        return tableRuleInfoDTOList;
+    }
+
+    private List<String> getFiledRuleByModuleType(String filedName,List<MetaDataQualityRuleVO>  tableRuleList, ModuleTypeEnum moduleTypeEnum){
+        MetaDataQualityRuleVO metaDataQualityRuleVO = tableRuleList.stream().filter(e -> e.getModuleTypeEnum() == moduleTypeEnum).findFirst().orElse(null);
+        if(metaDataQualityRuleVO==null){
+            return  new ArrayList<>();
+        }
+        List<MetaDataFieldRuleVO> fieldRuleList = metaDataQualityRuleVO.getFieldRuleList();
+        if (fieldRuleList==null){
+            return new ArrayList<>();
+        }
+        return fieldRuleList.stream().filter(e->e.fieldName.equals(filedName)).map(e->e.getRuleIllustrate()).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据规则类型获取规则
+     * @param moduleTypeEnum
+     * @return
+     */
+    private List<String> getRuleByModuleType(List<MetaDataQualityRuleVO>  tableRuleList, ModuleTypeEnum moduleTypeEnum){
+        List<String> stringList=new ArrayList<>();
+        MetaDataQualityRuleVO metaDataQualityRuleVO = tableRuleList.stream().filter(e -> e.getModuleTypeEnum() == moduleTypeEnum).findFirst().orElse(null);
+        if (metaDataQualityRuleVO!=null){
+            stringList=  metaDataQualityRuleVO.getTableRuleList().stream().map(e-> e.getRuleIllustrate()).collect(Collectors.toList());
+        }
+        return stringList;
     }
 
     /**
@@ -877,6 +945,10 @@ public class MetaDataImpl implements IMetaData {
                             //新增stg表字段
                             metaDataStgField(field, stgTableGuid);
                         }
+                    }
+                    //同步业务元数据
+                    if (!"stg".equals(table.description)) {
+                        associatedBusinessMetaData(metadataEntity.toString(), db.name, table.name);
                     }
                 }
             }
@@ -1557,12 +1629,18 @@ public class MetaDataImpl implements IMetaData {
         List<MetadataClassificationMapPO> allMetadataClassificationMapPOList = metadataClassificationMap.query().list();
         //获取业务分类
         List<BusinessClassificationPO> allBusinessClassificationPOList = classification.query().list();
-        List<MetadataAttributePO> metadataAttributePOList = new ArrayList<>();
+        //元数据属性关联
+        List<ClassificationPO> classificationPOList=classificationMapper.selectList(null);
+        //元数据属性
+        List<MetadataAttributePO> metadataAttributePOList = metadataAttribute.query().list();
 
-        metadataAttributePOList = metadataAttribute.query().list();
+        //业务元数据属性值
+        List<MetadataBusinessMetadataMapPO> metadataBusinessMetadataMapPOList = metadataBusinessMetadataMap.query().list();
+        //业务元数据配置信息
+        List<BusinessMetadataConfigPO> businessMetadataConfigPOList = businessMetadataConfigMapper.selectList(null);
 
         List<Long> allBusinessClassificationIdList = allBusinessClassificationPOList.stream()
-                .filter(e -> e.getPid()!=null&& e.getPid() != -1)
+                .filter(e -> e.getPid() != null && e.getPid() != -1)
                 .map(e -> e.getId())
                 .collect(Collectors.toList());
         List<Map<String, Object>> excelMetaDataList = new ArrayList<>();
@@ -1577,15 +1655,24 @@ public class MetaDataImpl implements IMetaData {
             if (metaDataIdList == null) {
                 continue;
             }
-            Optional<BusinessClassificationPO> optionalBusinessClassificationPO = allBusinessClassificationPOList.stream().filter(e -> e.getId() == bcItem).findFirst();
+            BusinessClassificationPO businessClassificationPO = allBusinessClassificationPOList.stream().filter(e -> e.getId() == bcItem).findFirst().orElse(null);
             //一级分类名称
             String oneLevelBusinessClassificationName = "";
             //二级分类名称
             String twoLevelBusinessClassificationName = "";
+            //二级分类的类型
+            String twoLevelBusinessClassificationAppType = "";
             //获取一二级分类名称
-            if (optionalBusinessClassificationPO.isPresent()) {
-                oneLevelBusinessClassificationName = optionalBusinessClassificationPO.get().getName();
-                twoLevelBusinessClassificationName = ClassificationTypeEnum.getEnumByValue(optionalBusinessClassificationPO.get().getPid()).getName();
+            if (businessClassificationPO!=null) {
+                oneLevelBusinessClassificationName = businessClassificationPO.getName();
+                twoLevelBusinessClassificationName = ClassificationTypeEnum.getEnumByValue(businessClassificationPO.getPid()).getName();
+                //二级分类下的属性
+                List<ClassificationPO> classificationPO = classificationPOList.stream()
+                        .filter(e -> e.getBusinessClassificationId() == businessClassificationPO.getId()).collect(Collectors.toList());
+                ClassificationPO classificationAttributeAppTypePO = classificationPO.stream().filter(e -> e.getAttributeName().equals("类型")).findFirst().orElse(null);
+                if (classificationAttributeAppTypePO!=null){
+                    twoLevelBusinessClassificationAppType= classificationAttributeAppTypePO.getAttributeValue();
+                }
             }
             //根据元数据Id获取元数据详情
             List<MetadataEntityPO> metadataEntityPOList = allMetadataList.stream().filter(e -> metaDataIdList.contains(e.getId())).collect(Collectors.toList());
@@ -1597,26 +1684,30 @@ public class MetaDataImpl implements IMetaData {
                 excelMainMetadataMap.put("entityId", metaDataItem.getId());
                 excelMainMetadataMap.put("businessClassificationId", bcItem);
 
-                //二级分类
-                excelMainMetadataMap.put("0", twoLevelBusinessClassificationName);
                 //一级分类
+                excelMainMetadataMap.put("0", twoLevelBusinessClassificationName);
+                //二级分类
                 excelMainMetadataMap.put("1", oneLevelBusinessClassificationName);
+                //类型
+                excelMainMetadataMap.put("2", twoLevelBusinessClassificationAppType);
                 //名称
-                excelMainMetadataMap.put("2", metaDataItem.getName());
+                excelMainMetadataMap.put("3", metaDataItem.getName());
                 //显示名称
-                excelMainMetadataMap.put("3", metaDataItem.getDisplayName());
+                excelMainMetadataMap.put("4", metaDataItem.getDisplayName());
                 //元数据类型
-                excelMainMetadataMap.put("4", EntityTypeEnum.getValue(metaDataItem.getTypeId()).getName());
+                excelMainMetadataMap.put("5", EntityTypeEnum.getValue(metaDataItem.getTypeId()).getName());
                 //描述
-                excelMainMetadataMap.put("5", metaDataItem.getDescription());
-                //是否导出实体关联的所有父级实体
+                excelMainMetadataMap.put("6", metaDataItem.getDescription());
+                //业务清洗规则
+                String tableValidationRuleValue = getMetaDataRule(metaDataItem.getId(), metadataBusinessMetadataMapPOList, businessMetadataConfigPOList);
+                excelMainMetadataMap.put("7", tableValidationRuleValue);
+
 
                 //导出实体所有关联父级实体parent
                 Map<String, Object> excelParentMetadataMap = new HashMap<>();
                 excelParentMetadataMap = setExcelParentMetaDataMap(Long.valueOf(metaDataItem.getParentId()), 0);
                 excelMainMetadataMap.putAll(excelParentMetadataMap);
-                //设置元数据最大父级层级
-                //是否导出关联实体所有子级实体
+
 
                 //导出实体所有关联子级实体
                 List<MetadataEntityPO> childMetaData = allMetadataList.stream()
@@ -1627,20 +1718,20 @@ public class MetaDataImpl implements IMetaData {
                     for (MetadataEntityPO childItem : childMetaData) {
                         Map<String, Object> excelChildMetaDataMap = new HashMap<>();
                         //名称
-                        excelChildMetaDataMap.put("6", childItem.getName());
+                        excelChildMetaDataMap.put("8", childItem.getName());
                         //显示名称
-                        excelChildMetaDataMap.put("7", childItem.getDisplayName());
+                        excelChildMetaDataMap.put("9", childItem.getDisplayName());
                         //元数据类型
-                        excelChildMetaDataMap.put("8", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
+                        excelChildMetaDataMap.put("10", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
                         //描述
-                        excelChildMetaDataMap.put("9", childItem.getDescription());
+                        excelChildMetaDataMap.put("11", childItem.getDescription());
                         List<MetadataAttributePO> EntityAttributeList = metadataAttributePOList.stream()
                                 .filter(e -> e.getMetadataEntityId() == childItem.getId())
                                 .collect(Collectors.toList());
                         String entityAttributeDataType = "";
                         String entityAttributeLength = "";
-                        if(childItem.getName().equals("BPM.T_AssetsDiscoveryDifference")){
-                            Integer a=1;
+                        if (childItem.getName().equals("BPM.T_AssetsDiscoveryDifference")) {
+                            Integer a = 1;
                         }
                         //判断子级是否存在额外属性 字段长度 字段类型
                         if (!EntityAttributeList.isEmpty()) {
@@ -1658,9 +1749,12 @@ public class MetaDataImpl implements IMetaData {
                             }
                         }
                         //字段类型
-                        excelChildMetaDataMap.put("10", entityAttributeDataType);
+                        excelChildMetaDataMap.put("12", entityAttributeDataType);
                         //字段长度
-                        excelChildMetaDataMap.put("11", entityAttributeLength);
+                        excelChildMetaDataMap.put("13", entityAttributeLength);
+                        //校验规则
+                        String filedValidationRuleValue = getMetaDataRule(childItem.getId(), metadataBusinessMetadataMapPOList, businessMetadataConfigPOList);
+                        excelMainMetadataMap.put("14", filedValidationRuleValue);
                         //合并主实体信息
                         excelChildMetaDataMap.putAll(excelMainMetadataMap);
                         excelMetaDataList.add(excelChildMetaDataMap);
@@ -1672,6 +1766,29 @@ public class MetaDataImpl implements IMetaData {
             }
         }
         return excelMetaDataList;
+    }
+
+    /**
+     * 获取元数据校验规则
+     * @param metadataId
+     * @param metadataBusinessMetadataMapPOList
+     * @param businessMetadataConfigPOList
+     * @return
+     */
+    public String getMetaDataRule(Long metadataId,
+                                  List<MetadataBusinessMetadataMapPO> metadataBusinessMetadataMapPOList,
+                                  List<BusinessMetadataConfigPO> businessMetadataConfigPOList){
+        String  ruleAttributeName="ValidationRules";
+        BusinessMetadataConfigPO validationRuleAttributeInfo = businessMetadataConfigPOList.stream()
+                .filter(e -> e.getAttributeName().equals(ruleAttributeName)).findFirst().orElse(null);
+        if(validationRuleAttributeInfo==null){
+            return "";
+        }
+        return metadataBusinessMetadataMapPOList.stream()
+                .filter(e -> e.getMetadataEntityId() == metadataId.intValue() && e.getBusinessMetadataId() == validationRuleAttributeInfo.getId())
+                .map(e->e.getValue())
+                .collect(Collectors.joining("\n"));
+
     }
 
     /**
@@ -1735,7 +1852,7 @@ public class MetaDataImpl implements IMetaData {
         if (dto.associatedType.contains(2)) {
             //导出子级
             maxChildNumber = 1;
-        }else{
+        } else {
             // 使用 Set 来记录已存在的 id 和 name 组合
             Set<String> existingCombinations = new HashSet<>();
 
@@ -1750,9 +1867,9 @@ public class MetaDataImpl implements IMetaData {
                     deduplicatedList.add(map);
                 }
             }
-            excelMetaDataList=deduplicatedList;
+            excelMetaDataList = deduplicatedList;
         }
-        String fileName="元数据.xlsx";
+        String fileName = "元数据.xlsx";
         InputStream fileStream = ExcelUtil.createMetaDataSaveExcel("sheet", excelMetaDataList, maxParentNumber, maxChildNumber);
         // 将excel文件流写入到Response
         try {
@@ -1776,7 +1893,6 @@ public class MetaDataImpl implements IMetaData {
             log.error("导出元数据");
         }
     }
-
 
 
     /**

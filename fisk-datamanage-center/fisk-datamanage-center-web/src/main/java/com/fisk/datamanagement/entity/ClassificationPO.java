@@ -21,5 +21,5 @@ public class ClassificationPO extends BasePO {
 
     private String attributeName ;
 
-    private Integer attributeTypeId ;
+    private String attributeValue ;
 }

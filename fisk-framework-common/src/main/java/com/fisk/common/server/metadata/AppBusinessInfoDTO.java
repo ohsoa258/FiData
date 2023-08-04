@@ -22,4 +22,14 @@ public class AppBusinessInfoDTO {
 
     public Integer sourceType;
 
+    public Integer appType;
+
+    public AppBusinessInfoDTO(Long id, String name, String appAbbreviation, String appDes, Integer sourceType) {
+        this.setId(id);
+        this.setName(name);
+        this.setAppAbbreviation(appAbbreviation);
+        this.setAppDes(appDes);
+        this.setSourceType(sourceType);
+    }
+
 }
