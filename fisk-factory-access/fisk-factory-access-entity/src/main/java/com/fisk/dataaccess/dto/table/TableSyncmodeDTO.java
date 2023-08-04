@@ -106,6 +106,12 @@ public class TableSyncmodeDTO extends BaseDTO {
     @ApiModelProperty(value = "版本自定义规则")
     public String versionCustomRule;
 
+    /**
+     * nifi组件并发数量（目前只给数接/数仓的查询组件开启并发）
+     */
+    @ApiModelProperty(value = "nifi组件并发数量")
+    public Integer concurrencyNums;
+
     public TableSyncmodeDTO(BaseEntity entity) {
         super(entity);
     }

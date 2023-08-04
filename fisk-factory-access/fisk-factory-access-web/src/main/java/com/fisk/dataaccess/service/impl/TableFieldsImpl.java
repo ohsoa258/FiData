@@ -604,6 +604,12 @@ public class TableFieldsImpl
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
 
             BuildPhysicalTableDTO data = result.data;
+            //查询组件并发个数
+            if (syncMode.concurrencyNums==null){
+                syncMode.setConcurrencyNums(1);
+            }
+            data.concurrencyNums = syncMode.concurrencyNums;
+
             //装载应用id
             data.appId = String.valueOf(appId);
             //数据库id为什么传物理表id???????????
@@ -784,6 +790,13 @@ public class TableFieldsImpl
             ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
 
             BuildPhysicalTableDTO data = result.data;
+
+            //查询组件并发个数
+            if (syncMode.concurrencyNums==null){
+                syncMode.setConcurrencyNums(1);
+            }
+            data.concurrencyNums = syncMode.concurrencyNums;
+
             //装载应用id
             data.appId = String.valueOf(appId);
             //数据库id为什么传物理表id???????????
