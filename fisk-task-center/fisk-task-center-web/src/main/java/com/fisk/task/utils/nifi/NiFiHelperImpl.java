@@ -922,6 +922,10 @@ public class NiFiHelperImpl implements INiFiHelper {
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
         config.setComments(executeSQLRecordDTO.details);
+        if (executeSQLRecordDTO.concurrencyNums!=null){
+            // 组件并发数量
+            config.setConcurrentlySchedulableTaskCount(executeSQLRecordDTO.concurrencyNums);
+        }
 
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();

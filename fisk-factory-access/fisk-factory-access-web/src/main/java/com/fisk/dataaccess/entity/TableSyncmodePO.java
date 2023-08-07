@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BaseEntity;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -87,5 +88,11 @@ public class TableSyncmodePO extends BaseEntity implements Serializable {
      * 单词从结果集中提取的最大数据行
      */
     public Integer fetchSize;
+
+    /**
+     * nifi组件并发数量（目前只给数接/数仓的查询组件开启并发）
+     */
+    @ApiModelProperty(value = "nifi组件并发数量")
+    public Integer concurrencyNums;
 
 }

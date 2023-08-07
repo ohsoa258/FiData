@@ -1512,6 +1512,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                 res.addAll(excelProcessorEntity);
             } else {
+
+                /**
+                 * 数接 数仓的查询组件
+                 */
                 executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
                 componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
             }
@@ -2277,6 +2281,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         tableNifiSettingPO.avroRecordSetWriterId = id;
         ExecuteSQLRecordDTO executeSQLRecordDTO = new ExecuteSQLRecordDTO();
+        // 组件并发数量
+        executeSQLRecordDTO.concurrencyNums = dto.concurrencyNums;
         executeSQLRecordDTO.name = "executeSQLRecord";
         executeSQLRecordDTO.details = "query_phase";
         executeSQLRecordDTO.groupId = groupId;
