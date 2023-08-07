@@ -205,6 +205,16 @@ public interface UserClient {
     ResultEntity<DataSourceDTO> getById(@RequestParam("datasourceId") int datasourceId);
 
     /**
+     * 获取单条数据源连接信息
+     *
+     * @param ip
+     * @param dbName
+     * @return
+     */
+    @GetMapping("/datasource/getByIpAndDbName")
+    ResultEntity<DataSourceDTO> getByIpAndDbName(@RequestParam("ip")String ip,@RequestParam("dbName") String dbName);
+
+    /**
      * 根据用户id和页面url查询是否有此页面权限
      * @param userId
      * @param pageUrl

@@ -1,5 +1,6 @@
 package com.fisk.system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -423,6 +424,19 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     @Override
     public ResultEntity<DataSourceDTO> getById(int datasourceId) {
         DataSourcePO t = baseMapper.selectById(datasourceId);
+        if (t == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, null);
+        }
+        DataSourceDTO dataSourceDTO = poToDto(true, t);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceDTO);
+    }
+
+    @Override
+    public ResultEntity<DataSourceDTO> getByIpAndDbName(String ip, String dbName) {
+        LambdaQueryWrapper<DataSourcePO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DataSourcePO::getConIp,ip);
+        queryWrapper.eq(DataSourcePO::getConDbname,dbName);
+        DataSourcePO t = this.getOne(queryWrapper);
         if (t == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, null);
         }

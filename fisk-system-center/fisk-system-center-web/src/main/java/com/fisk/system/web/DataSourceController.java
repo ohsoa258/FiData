@@ -37,6 +37,12 @@ public class DataSourceController {
         return service.getById(datasourceId);
     }
 
+    @GetMapping("/getByIpAndDbName")
+    @ApiOperation("通过ip和名称获取单条数据源连接信息")
+    public ResultEntity<DataSourceDTO> getByIpAndDbName(@RequestParam("ip")String ip,@RequestParam("dbName") String dbName){
+        return service.getByIpAndDbName(ip,dbName);
+    }
+
     @PostMapping("/getAll")
     @ApiOperation("外部接口，获取所有数据源连接信息")
     public ResultEntity<List<DataSourceDTO>> getAll() {

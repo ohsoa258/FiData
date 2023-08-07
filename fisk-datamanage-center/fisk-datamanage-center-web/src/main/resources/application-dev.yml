@@ -51,3 +51,8 @@ atlas:
 #血缘同步
 scheduling:
   enabled: false
+azure:
+  openai:
+    key: 4412a8536d5843d4800d3a7aa8d2d306
+    endpoint: https://fiskai.openai.azure.com/
+    deploymodel: FiData
