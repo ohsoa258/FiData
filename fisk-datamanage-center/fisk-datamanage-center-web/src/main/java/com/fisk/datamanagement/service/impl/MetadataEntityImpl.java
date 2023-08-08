@@ -563,6 +563,8 @@ public class MetadataEntityImpl
             Map infoMap = new HashMap();
             infoMap.put("guid", item.id);
             infoMap.put("displayText", item.displayName);
+            infoMap.put("description", item.description);
+            infoMap.put("name", item.name);
             infoMap.put("entityStatus", "ACTIVE");
             infoMap.put("typeName", entityTypeEnum.getName());
             mapList.add(infoMap);

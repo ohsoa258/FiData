@@ -10,6 +10,7 @@ import com.fisk.system.dto.datasource.DataSourceQueryDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.entity.DataSourcePO;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -93,6 +94,12 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @return 查询结果
      */
     ResultEntity<DataSourceDTO> getById(int datasourceId);
+    /**
+     * 通过ip和名称获取单条数据源连接信息
+     *
+     * @return 查询结果
+     */
+    ResultEntity<DataSourceDTO> getByIpAndDbName(String ip, String dbName);
 
     /**
      * 同步数据接入添加数据源
