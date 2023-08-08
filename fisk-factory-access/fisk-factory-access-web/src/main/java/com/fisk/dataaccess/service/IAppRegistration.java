@@ -301,6 +301,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<MetaDataInstanceAttributeDTO> synchronizationAccessTable();
 
     /**
+     * 元数据同步单个接入表
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAccessOneTable(Long appId);
+
+    /**
      * 依据应用id集合查询应用对应的目标源id集合
      *
      * @param appIds 应用id集合

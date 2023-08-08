@@ -273,6 +273,9 @@ public class TableFieldsImpl
         if (openMetadata) {
             //新增元数据信息
             odsMetaDataInfo(dto.appDataSourceId, dto.sqlScript);
+
+            //元数据同步单个接入表
+            odsMetaDataInfoOfOneTable(dto.appId);
         }
 
         // 发布
@@ -396,6 +399,9 @@ public class TableFieldsImpl
         if (openMetadata) {
             //新增元数据信息
             odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+
+            //元数据同步单个接入表
+            odsMetaDataInfoOfOneTable(dto.appId);
         }
 
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
@@ -404,6 +410,18 @@ public class TableFieldsImpl
 
         // 发布
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 元数据同步单个接入表
+     *
+     * @param appId
+     */
+    public void odsMetaDataInfoOfOneTable(long appId) {
+
+        List<MetaDataInstanceAttributeDTO> lsit = appRegistration.synchronizationAccessOneTable(appId);
+        log.info("构建元数据实时同步数据对象开始.........: 参数为: {}", JSON.toJSONString(lsit));
+        dataManageClient.consumeMetaData(lsit);
     }
 
     /**

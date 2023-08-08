@@ -236,8 +236,8 @@ public class AppRegistrationImpl
 
         //如果是RestfulAPI，进行如下操作  为了数接的/apiConfig/getToken接口可以正常使用
         //获取实时api的临时token
-        modelDataSource.forEach(m->{
-            if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(m.driveType)){
+        modelDataSource.forEach(m -> {
+            if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(m.driveType)) {
                 m.realtimeAccount = m.connectAccount;
                 m.realtimePwd = m.connectPwd;
             }
@@ -375,7 +375,7 @@ public class AppRegistrationImpl
         }
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
         MetaDataInstanceAttributeDTO data = new MetaDataInstanceAttributeDTO();
-        data.name = dataSource.host ;
+        data.name = dataSource.host;
         data.hostname = dataSource.host;
         data.port = dataSource.port;
         data.qualifiedName = dataSource.host;
@@ -534,8 +534,8 @@ public class AppRegistrationImpl
 
         //如果是RestfulAPI，进行如下操作  为了数接的/apiConfig/getToken接口可以正常使用
         //获取实时api的临时token
-        modelDataSource.forEach(m->{
-            if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(m.driveType)){
+        modelDataSource.forEach(m -> {
+            if (DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(m.driveType)) {
                 m.realtimeAccount = m.connectAccount;
                 m.realtimePwd = m.connectPwd;
             }
@@ -1987,6 +1987,33 @@ public class AppRegistrationImpl
     }
 
     /**
+     * 元数据同步单个接入表
+     *
+     * @return
+     */
+    @Override
+    public List<MetaDataInstanceAttributeDTO> synchronizationAccessOneTable(Long appId) {
+        AppRegistrationPO one = getOne(new LambdaQueryWrapper<AppRegistrationPO>().eq(AppRegistrationPO::getId, appId));
+        if (one == null) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+
+        MetaDataInstanceAttributeDTO metaDataInstance = getMetaDataInstance(one);
+
+        List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("app_id", one.id).list();
+        List<MetaDataTableAttributeDTO> metaDataTable = new ArrayList<>();
+        for (TableAccessPO tableAccessPo : tableAccessPoList) {
+            metaDataTable.addAll(getAccessTableMetaData(one, tableAccessPo.id, metaDataInstance.dbList.get(0).qualifiedName));
+        }
+        metaDataInstance.dbList.get(0).tableList = metaDataTable;
+        list.add(metaDataInstance);
+
+        return list;
+    }
+
+    /**
      * 依据应用id集合查询应用对应的目标源id集合
      *
      * @param appIds 应用id集合
@@ -2228,9 +2255,9 @@ public class AppRegistrationImpl
      * @param schemaName
      * @return
      */
-    public AppRegistrationPO getAppBySchemaName(String schemaName){
+    public AppRegistrationPO getAppBySchemaName(String schemaName) {
         LambdaQueryWrapper<AppRegistrationPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AppRegistrationPO::getAppAbbreviation,schemaName);
+        wrapper.eq(AppRegistrationPO::getAppAbbreviation, schemaName);
         return getOne(wrapper);
     }
 
