@@ -10,14 +10,19 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.mdc.MDCHelper;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
+import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.dto.TaskLogQuery;
+import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.enums.TaskStatusEnum;
 import com.fisk.task.map.TaskLogMap;
 import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.utils.KafkaTemplateHelper;
+import com.fisk.task.utils.StackTraceHelper;
 import com.fisk.task.vo.TaskLogVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +49,9 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
     UserHelper userHelper;
     @Resource
     TaskLogMapper taskLogMapper;
+
+    @Resource
+    DataAccessClient dc;
 
 
     /**
@@ -98,6 +106,14 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
             this.updateById(model);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         } catch (KafkaException ex) {
+            //如果发送消息失败的话  修改发布状态为失败
+            BuildPhysicalTableDTO buildPhysicalTableDTO = JSON.parseObject(str, BuildPhysicalTableDTO.class);
+            ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
+            modelPublishStatus.publishErrorMsg = StackTraceHelper.getStackTraceInfo(ex);
+            modelPublishStatus.publish = PublishTypeEnum.FAIL.getValue();
+            modelPublishStatus.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
+
+            dc.updateTablePublishStatus(modelPublishStatus);
             log.error("【{}】消息发布失败，消息内容【{}】，ex：", queue, str, ex);
             model.taskSendOk = false;
             this.updateById(model);

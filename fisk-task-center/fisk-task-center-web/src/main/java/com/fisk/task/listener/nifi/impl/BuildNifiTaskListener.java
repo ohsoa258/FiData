@@ -13,6 +13,7 @@ import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.enums.task.nifi.*;
+import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.sftp.SftpUtils;
@@ -24,10 +25,7 @@ import com.fisk.dataaccess.dto.access.NifiAccessDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
-import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
-import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
-import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
-import com.fisk.dataaccess.enums.syncModeTypeEnum;
+import com.fisk.dataaccess.enums.*;
 import com.fisk.datafactory.enums.TableServicePublicStatusEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datamodel.client.DataModelClient;
@@ -781,7 +779,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             return resultEnum;
         } catch (Exception e) {
             resultEnum = ResultEnum.ERROR;
-            modelPublishStatusDTO.publish = 3;
+            modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
             modelPublishStatusDTO.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
             modelPublishStatusDTO.tableHistoryId = dto.tableHistoryId;
             modelPublishStatusDTO.subRunId = subRunId;

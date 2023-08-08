@@ -160,7 +160,7 @@ public class BuildDataInputPgTableListener {
             } else {
                 ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
                 modelPublishStatus.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
-                modelPublishStatus.publish = 3;
+                modelPublishStatus.publish = PublishTypeEnum.FAIL.getValue();
                 modelPublishStatus.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
                 dc.updateTablePublishStatus(modelPublishStatus);
             }
