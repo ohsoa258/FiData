@@ -134,7 +134,9 @@ public class AzureServiceImpl implements AzureService {
             dataList.add(data);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new FkException(ResultEnum.ERROR);
+            data.put("selectData",null);
+            dataList.add(data);
+            return dataList;
         } finally {
             try {
                 st.close();
