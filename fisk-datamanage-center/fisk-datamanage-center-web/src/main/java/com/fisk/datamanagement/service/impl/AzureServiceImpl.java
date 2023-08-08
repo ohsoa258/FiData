@@ -46,22 +46,29 @@ public class AzureServiceImpl implements AzureService {
 
     @Override
     public List<Map<String, Object>> getData(QueryData queryData) {
-        if (!StringUtils.isEmpty(queryData.getQualifiedName())){
-            if (queryData.getQualifiedName().contains("_")){
+
+        if (!StringUtils.isEmpty(queryData.getQualifiedName())) {
+            if (queryData.getQualifiedName().contains("_")) {
                 String[] s = queryData.getQualifiedName().split("_");
                 queryData.setQualifiedName(s[0]);
             }
         }
         List<Map<String, Object>> data = new ArrayList<>();
-        if (queryData.type == AzureTypeEnum.CHAT.getValue()){
-            data = getListToGpt(queryData);
-        }else if (queryData.type == AzureTypeEnum.SQL.getValue()){
-            data = getListToSelectSql(queryData);
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getByIpAndDbName(queryData.qualifiedName, queryData.getDbName());
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            if (queryData.type == AzureTypeEnum.CHAT.getValue()) {
+                data = getListToGpt(queryData, fiDataDataSource.data);
+            } else if (queryData.type == AzureTypeEnum.SQL.getValue()) {
+                data = getListToSelectSql(queryData, fiDataDataSource.data);
+            }
+        } else {
+            log.error("userclient无法查询到目标库的连接信息");
+            throw new FkException(ResultEnum.ERROR);
         }
         return data;
     }
 
-    public List<Map<String, Object>> getListToGpt(QueryData queryData) {
+    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
         String deploymentOrModelId = DEPLOYMODEL;
@@ -72,7 +79,7 @@ public class AzureServiceImpl implements AzureService {
                 .buildClient();
 
         List<String> prompt = new ArrayList<>();
-        prompt.add(queryData.getText());
+        prompt.add(dataSource.conType.getName()+" 数据库,"+queryData.getText());
         CompletionsOptions completionsOptions = new CompletionsOptions(prompt);
         completionsOptions.setTemperature((double) 0);
         completionsOptions.setMaxTokens(5000);
@@ -98,49 +105,42 @@ public class AzureServiceImpl implements AzureService {
                         + "number of completion token is %d, and number of total tokens in request and response is %d.%n",
                 usage.getPromptTokens(), usage.getCompletionTokens(), usage.getTotalTokens());
         queryData.setText(stringBuilder.toString());
-        List<Map<String, Object>> listToSelectSql = getListToSelectSql(queryData);
+        List<Map<String, Object>> listToSelectSql = getListToSelectSql(queryData, dataSource);
         return listToSelectSql;
     }
 
-    public List<Map<String, Object>> getListToSelectSql(QueryData queryData) {
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getByIpAndDbName(queryData.qualifiedName, queryData.getDbName());
+    public List<Map<String, Object>> getListToSelectSql(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> list = new ArrayList<>();
-        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
-            DataSourceDTO dataSource = fiDataDataSource.data;
-            Connection conn = null;
-            Statement st = null;
-            try {
-                Class.forName(dataSource.conType.getDriverName());
-                conn = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
-                st = conn.createStatement();
-                //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                log.info("开始执行脚本:{}", queryData.getText());
-                ResultSet resultSet = st.executeQuery(queryData.getText());
+        Connection conn = null;
+        Statement st = null;
+        try {
+            Class.forName(dataSource.conType.getDriverName());
+            conn = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
+            st = conn.createStatement();
+            //无需判断ddl语句执行结果,因为如果执行失败会进catch
+            log.info("开始执行脚本:{}", queryData.getText());
+            ResultSet resultSet = st.executeQuery(queryData.getText());
 
-                ResultSetMetaData md = resultSet.getMetaData();//获取键名
-                int columnCount = md.getColumnCount();//获取列的数量
-                while (resultSet.next()) {
-                    Map<String, Object> rowData = new HashMap<>();//声明Map
-                    for (int i = 1; i <= columnCount; i++) {
-                        rowData.put(md.getColumnName(i), resultSet.getObject(i));//获取键名及值
-                    }
-                    list.add(rowData);
+            ResultSetMetaData md = resultSet.getMetaData();//获取键名
+            int columnCount = md.getColumnCount();//获取列的数量
+            while (resultSet.next()) {
+                Map<String, Object> rowData = new HashMap<>();//声明Map
+                for (int i = 1; i <= columnCount; i++) {
+                    rowData.put(md.getColumnName(i), resultSet.getObject(i));//获取键名及值
                 }
-            } catch (Exception e) {
+                list.add(rowData);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new FkException(ResultEnum.ERROR);
+        } finally {
+            try {
+                st.close();
+                conn.close();
+            } catch (SQLException e) {
                 log.error(e.getMessage());
                 throw new FkException(ResultEnum.ERROR);
-            } finally {
-                try {
-                    st.close();
-                    conn.close();
-                } catch (SQLException e) {
-                    log.error(e.getMessage());
-                    throw new FkException(ResultEnum.ERROR);
-                }
             }
-        } else {
-            log.error("userclient无法查询到目标库的连接信息");
-            throw new FkException(ResultEnum.ERROR);
         }
         return list;
     }
