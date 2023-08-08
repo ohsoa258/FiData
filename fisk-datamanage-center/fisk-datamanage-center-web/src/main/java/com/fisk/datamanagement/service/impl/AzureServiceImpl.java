@@ -79,7 +79,7 @@ public class AzureServiceImpl implements AzureService {
                 .buildClient();
 
         List<String> prompt = new ArrayList<>();
-        prompt.add(dataSource.conType.getName()+" 数据库,"+queryData.getText());
+        prompt.add("### " + dataSource.conType.getName()+" 数据库,"+queryData.getText());
         CompletionsOptions completionsOptions = new CompletionsOptions(prompt);
         completionsOptions.setTemperature((double) 0);
         completionsOptions.setMaxTokens(5000);
@@ -92,25 +92,25 @@ public class AzureServiceImpl implements AzureService {
         completionsOptions.setStop(stop);
         Completions completions = client.getCompletions(deploymentOrModelId, completionsOptions);
 
-        log.info("Model ID=%s is created at %s.%n", completions.getId(), completions.getCreatedAt());
+        log.info("Model ID={} is created at {}.{}", completions.getId(),completions.getId(), completions.getCreatedAt());
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("SELECT ");
         for (Choice choice : completions.getChoices()) {
             String text = choice.getText();
-            log.info("索引: %d, 文字: %s.%n", choice.getIndex(), text);
+            log.info("索引:{}, 文字: {}.{}", choice.getIndex(),choice.getIndex(), text);
             stringBuilder.append(text);
         }
-        CompletionsUsage usage = completions.getUsage();
-        log.info("Usage: number of prompt token is %d, "
-                        + "number of completion token is %d, and number of total tokens in request and response is %d.%n",
-                usage.getPromptTokens(), usage.getCompletionTokens(), usage.getTotalTokens());
+//        CompletionsUsage usage = completions.getUsage();
         queryData.setText(stringBuilder.toString());
         List<Map<String, Object>> listToSelectSql = getListToSelectSql(queryData, dataSource);
         return listToSelectSql;
     }
 
     public List<Map<String, Object>> getListToSelectSql(QueryData queryData, DataSourceDTO dataSource) {
-        List<Map<String, Object>> list = new ArrayList<>();
+        List<Map<String, Object>> dataList = new ArrayList<>();
+        Map<String, Object> data = new HashMap<>();//声明Map
+        data.put("selectSql",queryData.getText());
+
         Connection conn = null;
         Statement st = null;
         try {
@@ -120,7 +120,7 @@ public class AzureServiceImpl implements AzureService {
             //无需判断ddl语句执行结果,因为如果执行失败会进catch
             log.info("开始执行脚本:{}", queryData.getText());
             ResultSet resultSet = st.executeQuery(queryData.getText());
-
+            List<Object> list = new ArrayList<>();
             ResultSetMetaData md = resultSet.getMetaData();//获取键名
             int columnCount = md.getColumnCount();//获取列的数量
             while (resultSet.next()) {
@@ -130,6 +130,8 @@ public class AzureServiceImpl implements AzureService {
                 }
                 list.add(rowData);
             }
+            data.put("selectData",list);
+            dataList.add(data);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new FkException(ResultEnum.ERROR);
@@ -142,6 +144,6 @@ public class AzureServiceImpl implements AzureService {
                 throw new FkException(ResultEnum.ERROR);
             }
         }
-        return list;
+        return dataList;
     }
 }
