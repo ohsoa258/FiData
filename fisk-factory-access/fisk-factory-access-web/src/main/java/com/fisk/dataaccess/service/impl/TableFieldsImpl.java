@@ -685,12 +685,13 @@ public class TableFieldsImpl
                 //todo:当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句 默认5day
                 data.deleteStgScript = accessPo.deleteStgScript;
 
-                //获取修改前的源字段集合
-                if (!sourceFieldNames.isEmpty()) {
-                    data.sourceFieldNames = sourceFieldNames;
-                }else {
-                    data.sourceFieldNames = new ArrayList<>();
-                }
+                //获取修改前的源字段集合 // todo:暂时先传入空集合,为了解决kafka消息体过大的问题
+//                if (!sourceFieldNames.isEmpty()) {
+//                    data.sourceFieldNames = sourceFieldNames;
+//                } else {
+//                    data.sourceFieldNames = new ArrayList<>();
+//                }
+                data.sourceFieldNames = new ArrayList<>();
 
                 List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
