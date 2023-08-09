@@ -501,7 +501,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             targetDbId = data1.getTargetDbId();
         }
 
-        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(data1.getTargetDbId());
+        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(targetDbId);
         //数据库密码不显示
         com.fisk.system.dto.datasource.DataSourceDTO dto = data.getData();
         dto.setConPassword("********");
