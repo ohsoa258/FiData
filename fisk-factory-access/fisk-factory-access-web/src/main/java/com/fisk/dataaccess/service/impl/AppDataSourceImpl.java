@@ -12,6 +12,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
@@ -48,6 +49,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     ApiResultConfigImpl apiResultConfig;
     @Resource
     PgsqlUtils pgsqlUtils;
+    @Resource
+    AppRegistrationImpl appRegistration;
 
     @Resource
     private UserClient userClient;
@@ -468,18 +471,19 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
     /**
      * 获取数据接入引用的数据源id
+     *
      * @param id
      * @return
      */
     @Override
     public AppDataSourceDTO getAccessDataSources(Long id) {
         QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
-        wrapper.eq("id",id);
+        wrapper.eq("id", id);
         AppDataSourcePO one = getOne(wrapper);
-        if (one!=null){
+        if (one != null) {
             AppDataSourceDTO appDataSourceDTO = AppDataSourceMap.INSTANCES.poToDto(one);
             return appDataSourceDTO;
-        }else {
+        } else {
             return null;
         }
     }
@@ -490,7 +494,14 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         LambdaQueryWrapper<AppDataSourcePO> eq = wrapper.eq(AppDataSourcePO::getId, id);
         AppDataSourcePO one = getOne(eq);
 
-        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(one.systemDataSourceId);
+        long appId = one.getAppId();
+        AppRegistrationDTO data1 = appRegistration.getData(appId);
+        Integer targetDbId = null;
+        if (data1 != null) {
+            targetDbId = data1.getTargetDbId();
+        }
+
+        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(data1.getTargetDbId());
         //数据库密码不显示
         com.fisk.system.dto.datasource.DataSourceDTO dto = data.getData();
         dto.setConPassword("********");
@@ -498,6 +509,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         return data;
+
     }
 
     /**
