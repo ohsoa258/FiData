@@ -95,13 +95,6 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      */
     ResultEntity<DataSourceDTO> getById(int datasourceId);
     /**
-     * 通过ip和名称获取单条数据源连接信息
-     *
-     * @return 查询结果
-     */
-    ResultEntity<DataSourceDTO> getByIpAndDbName(String ip, String dbName);
-
-    /**
      * 同步数据接入添加数据源
      *
      * @param dto

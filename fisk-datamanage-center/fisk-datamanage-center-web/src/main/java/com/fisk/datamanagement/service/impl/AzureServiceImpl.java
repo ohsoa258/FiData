@@ -46,15 +46,8 @@ public class AzureServiceImpl implements AzureService {
 
     @Override
     public List<Map<String, Object>> getData(QueryData queryData) {
-
-        if (!StringUtils.isEmpty(queryData.getQualifiedName())) {
-            if (queryData.getQualifiedName().contains("_")) {
-                String[] s = queryData.getQualifiedName().split("_");
-                queryData.setQualifiedName(s[0]);
-            }
-        }
         List<Map<String, Object>> data = new ArrayList<>();
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getByIpAndDbName(queryData.qualifiedName, queryData.getDbName());
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(queryData.dbId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             if (queryData.type == AzureTypeEnum.CHAT.getValue()) {
                 data = getListToGpt(queryData, fiDataDataSource.data);

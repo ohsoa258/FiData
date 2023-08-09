@@ -11,10 +11,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Data
 public class QueryData {
-    @ApiModelProperty(value = "合格库名")
-    public String qualifiedName;
-    @ApiModelProperty(value = "库名")
-    public String dbName;
+    @ApiModelProperty(value = "数据库id")
+    public int dbId;
     @ApiModelProperty(value = "查询类型")
     public Integer type;
     @ApiModelProperty(value = "查询文本")
