@@ -174,9 +174,20 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(DataSourcePO::getConAccount, dto.getConAccount());
             List<DataSourcePO> list = list(queryWrapper);
-            if (list.size()>1) {
+            if (list.size() > 1) {
                 return ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS;
             }
+        }
+
+        //编辑数据源时,相同数据库类型,相同ip,相同库名不允许重复添加
+        LambdaQueryWrapper<DataSourcePO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DataSourcePO::getConIp, dto.getConIp())
+                .eq(DataSourcePO::getConDbname, dto.getConDbname())
+                .eq(DataSourcePO::getConType, dto.getConType().getValue());
+
+        List<DataSourcePO> list = list(wrapper);
+        if (list.size() > 1) {
+            return ResultEnum.DATA_SOURCE_ALREADY_EXISTS;
         }
 
         DataSourcePO model = baseMapper.selectById(dto.id);
@@ -255,6 +266,21 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             if (CollectionUtils.isNotEmpty(list)) {
                 return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS);
             }
+        }
+
+        //新增数据源时,相同数据库类型,相同ip,相同库名不允许重复添加
+        LambdaQueryWrapper<DataSourcePO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DataSourcePO::getConIp, dto.getConIp())
+                .eq(DataSourcePO::getConDbname, dto.getConDbname())
+                .eq(DataSourcePO::getConType, dto.getConType().getValue());
+
+        List<DataSourcePO> list = list(wrapper);
+        if (CollectionUtils.isNotEmpty(list)) {
+            ArrayList<String> sourceNames = new ArrayList<>();
+            list.forEach(dataSourcePO -> {
+                sourceNames.add(dataSourcePO.name);
+            });
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ALREADY_EXISTS,sourceNames);
         }
 
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
@@ -434,8 +460,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     @Override
     public ResultEntity<DataSourceDTO> getByIpAndDbName(String ip, String dbName) {
         LambdaQueryWrapper<DataSourcePO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(DataSourcePO::getConIp,ip);
-        queryWrapper.eq(DataSourcePO::getConDbname,dbName);
+        queryWrapper.eq(DataSourcePO::getConIp, ip);
+        queryWrapper.eq(DataSourcePO::getConDbname, dbName);
         DataSourcePO t = this.getOne(queryWrapper);
         if (t == null) {
             return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, null);

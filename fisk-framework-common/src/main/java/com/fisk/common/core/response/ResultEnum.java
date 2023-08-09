@@ -73,6 +73,7 @@ public enum ResultEnum {
     DATA_SOURCE_IS_USING(1043, "平台数据源删除失败！当前要删除的数据源仍有数据接入的app应用在引用，请移除引用后在删除！"),
     APP_IS_NOT_EXISTS(1044, "数据接入-app应用不存在"),
     DATA_SOURCE_ACCOUNT_ALREADY_EXISTS(1045, "RESTFULAPI的账号不允许重复!请您修改账号或使用已配置的数据源。"),
+    DATA_SOURCE_ALREADY_EXISTS(1046, "相同类型,ip,库名的数据源已存在!请您使用已配置的数据源。"),
 
     /**
      * 报表可视化服务，错误码从2000开始

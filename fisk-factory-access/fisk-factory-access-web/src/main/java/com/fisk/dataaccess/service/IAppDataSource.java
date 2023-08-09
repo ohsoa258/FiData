@@ -103,4 +103,11 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     AppDataSourceDTO getAccessDataSources(Long id);
+
+    /**
+     *
+     * @param id
+     * @return
+     */
+    ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getSystemDataSourceById(Integer id);
 }

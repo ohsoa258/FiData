@@ -25,6 +25,7 @@ import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -472,4 +473,14 @@ public interface DataAccessClient {
     @ApiOperation(value = "获取数据接入引用的数据源id")
     @GetMapping("/datasource/getAccessDataSources")
     ResultEntity<AppDataSourceDTO> getAccessDataSources(@RequestParam("id") Long id);
+
+    /**
+     * 仅供数据资产模块调用使用,通过tb_app_datasource表内数据的id获取系统模块对应的数据源的信息
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "仅供数据资产模块调用使用,通过tb_app_datasource表内数据的id获取系统模块对应的数据源的信息")
+    @GetMapping("/datasource/getSystemDataSourceById")
+    ResultEntity<DataSourceDTO> getSystemDataSourceById(@RequestParam("id") Integer id);
+
 }

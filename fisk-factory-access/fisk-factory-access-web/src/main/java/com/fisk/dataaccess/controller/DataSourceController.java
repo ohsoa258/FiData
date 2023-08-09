@@ -104,4 +104,15 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAccessDataSources(id));
     }
 
+    /**
+     * 仅供数据资产模块调用使用,通过tb_app_datasource表内数据的id获取系统模块对应的数据源的信息
+     * @param id
+     * @return
+     */
+    @ApiOperation(value = "仅供数据资产模块调用使用,通过tb_app_datasource表内数据的id获取系统模块对应的数据源的信息")
+    @GetMapping("/getSystemDataSourceById")
+    public ResultEntity<DataSourceDTO> getSystemDataSourceById(@RequestParam("id") Integer id) {
+        return service.getSystemDataSourceById(id);
+    }
+
 }

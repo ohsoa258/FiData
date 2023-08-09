@@ -484,6 +484,22 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         }
     }
 
+    @Override
+    public ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getSystemDataSourceById(Integer id) {
+        LambdaQueryWrapper<AppDataSourcePO> wrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<AppDataSourcePO> eq = wrapper.eq(AppDataSourcePO::getId, id);
+        AppDataSourcePO one = getOne(eq);
+
+        ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(one.systemDataSourceId);
+        //数据库密码不显示
+        com.fisk.system.dto.datasource.DataSourceDTO dto = data.getData();
+        dto.setConPassword("********");
+        if (data.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        return data;
+    }
+
     /**
      * 枚举数值转换
      *

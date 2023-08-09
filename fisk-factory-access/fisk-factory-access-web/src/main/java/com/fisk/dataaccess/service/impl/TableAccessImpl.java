@@ -2516,7 +2516,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             String tblName = tableName.split("\\.")[1];
             AppRegistrationPO app = appRegistration.getAppBySchemaName(schemaName);
             //获取表对应的应用id
-            if (app==null){
+            if (app == null) {
                 return null;
             }
             long id = app.getId();
@@ -2524,16 +2524,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             wrapper.eq(TableAccessPO::getAppId, id)
                     .eq(TableAccessPO::getTableName, tblName);
             TableAccessPO one = getOne(wrapper);
-            if (one==null){
+            if (one == null) {
                 return null;
             }
             return TableAccessMap.INSTANCES.poToDto(one);
-        }else {
+        } else {
             //如果表名不包含架构名，则直接用表名作为条件查询物理表
             LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(TableAccessPO::getTableName, tableName);
             TableAccessPO one = getOne(wrapper);
-            if (one==null){
+            if (one == null) {
                 return null;
             }
             return TableAccessMap.INSTANCES.poToDto(one);
