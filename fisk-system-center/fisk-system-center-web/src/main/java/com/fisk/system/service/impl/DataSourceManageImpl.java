@@ -458,19 +458,6 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     }
 
     @Override
-    public ResultEntity<DataSourceDTO> getByIpAndDbName(String ip, String dbName) {
-        LambdaQueryWrapper<DataSourcePO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(DataSourcePO::getConIp, ip);
-        queryWrapper.eq(DataSourcePO::getConDbname, dbName);
-        DataSourcePO t = this.getOne(queryWrapper);
-        if (t == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_NOTEXISTS, null);
-        }
-        DataSourceDTO dataSourceDTO = poToDto(true, t);
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataSourceDTO);
-    }
-
-    @Override
     public DataSourceResultDTO insertDataSourceByAccess(DataSourceSaveDTO dto) {
         DataSourcePO model = this.query().eq("name", dto.name).one();
         if (model == null) {
