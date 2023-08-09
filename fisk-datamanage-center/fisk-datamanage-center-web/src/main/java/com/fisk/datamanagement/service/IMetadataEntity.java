@@ -1,9 +1,9 @@
 package com.fisk.datamanagement.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
-import io.swagger.models.auth.In;
 
 import java.util.List;
 
@@ -48,4 +48,5 @@ public interface IMetadataEntity {
      */
     List<MetadataEntityDTO> queryFildes(Integer tableId, Integer fldeId);
 
+    JSONObject getMetadataEntityDetailsV2(String entityId, String appName);
 }

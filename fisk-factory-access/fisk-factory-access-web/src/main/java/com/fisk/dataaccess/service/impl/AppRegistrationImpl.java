@@ -1382,6 +1382,18 @@ public class AppRegistrationImpl
         return AppRegistrationMap.INSTANCES.listDtoToAppBusinessInfoDto(baseMapper.getDataList());
     }
 
+    /**
+     * 获取所有不使用简称作为架构名的应用信息
+     *
+     * @return
+     */
+    @Override
+    public List<AppRegistrationPO> getAppListWithNoSchema() {
+        LambdaQueryWrapper<AppRegistrationPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AppRegistrationPO::getWhetherSchema,0);
+        return list(wrapper);
+    }
+
     @Override
     public String getApiToken(AppDataSourceDTO dto) {
         Optional<ApiResultConfigDTO> first = dto.apiResultConfigDtoList.stream().filter(e -> e.checked == true).findFirst();
@@ -2100,6 +2112,20 @@ public class AppRegistrationImpl
     public AppRegistrationDTO getAppNameById(Long id) {
         QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id).select("app_name");
+        AppRegistrationPO one = getOne(wrapper);
+        return AppRegistrationMap.INSTANCES.poToDto(one);
+    }
+
+    /**
+     * 根据应用名称获取单个应用详情
+     *
+     * @param appName
+     * @return
+     */
+    @Override
+    public AppRegistrationDTO getAppByAppName(String appName) {
+        QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(AppRegistrationPO::getAppName, appName);
         AppRegistrationPO one = getOne(wrapper);
         return AppRegistrationMap.INSTANCES.poToDto(one);
     }

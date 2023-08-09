@@ -483,4 +483,8 @@ public interface DataAccessClient {
     @GetMapping("/datasource/getSystemDataSourceById")
     ResultEntity<DataSourceDTO> getSystemDataSourceById(@RequestParam("id") Integer id);
 
+    @GetMapping("/appRegistration/getAppByAppName")
+    @ApiOperation(value = "根据应用名称获取单个应用详情")
+    ResultEntity<AppRegistrationDTO> getAppByAppName(@RequestParam("appName") String appName);
+
 }

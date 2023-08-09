@@ -174,6 +174,18 @@ public class EntityImpl implements IEntity {
     }
 
     /**
+     * 根据guid和应用名称获取entity详情
+     *
+     * @param guid
+     * @param appName
+     * @return
+     */
+    @Override
+    public JSONObject getEntityV2(String guid, String appName) {
+        return metadataEntity.getMetadataEntityDetailsV2(guid,appName);
+    }
+
+    /**
      * entity操作后,更新Redis数据
      */
     public void updateRedis(){

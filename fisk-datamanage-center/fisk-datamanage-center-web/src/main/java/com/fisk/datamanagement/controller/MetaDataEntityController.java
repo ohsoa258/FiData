@@ -58,6 +58,12 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntity(guid));
     }
 
+    @ApiOperation("根据guid和应用名称获取entity详情")
+    @GetMapping("/getEntityDetailV2/{guid}/{appName}")
+    public ResultEntity<Object> getEntityDetail(@PathVariable("guid") String guid,@PathVariable("appName") String appName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityV2(guid,appName));
+    }
+
     @ApiOperation("更新元数据对象：实例、数据库、表、字段")
     @PostMapping("/updateEntity")
     public ResultEntity<Object> updateEntity(@Validated @RequestBody JSONObject dto) {

@@ -91,5 +91,11 @@ public interface IEntity {
      */
     EntityInstanceDTO getInstanceDetail(String guid);
 
-
+    /**
+     * 根据guid和应用名称获取entity详情
+     * @param guid
+     * @param appName
+     * @return
+     */
+    JSONObject getEntityV2(String guid, String appName);
 }

@@ -14,8 +14,8 @@ import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
-import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
@@ -115,6 +115,88 @@ public class MetadataEntityImpl
         List<MetadataEntityPO> entityPOS = metadataEntityMapper.queryFildes(metadQualifiedName);
         List<MetadataEntityDTO> metadataEntityDTOS = MetadataEntityMap.INSTANCES.toDtos(entityPOS);
         return metadataEntityDTOS;
+    }
+
+    @Override
+    public JSONObject getMetadataEntityDetailsV2(String entityId, String appName) {
+
+        MetadataEntityPO one = this.query().eq("id", entityId).one();
+        if (one == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+        int metadataEntityId = Integer.parseInt(entityId);
+
+        Map infoMap = metadataAttribute.setMedataAttribute(metadataEntityId, 0);
+        infoMap.put("name", one.name);
+        infoMap.put("description", one.description);
+        infoMap.put("owner", one.owner);
+        infoMap.put("qualifiedName", one.qualifiedName);
+        infoMap.put("displayName", one.displayName);
+
+        //获取实体关联实体信息
+        getEntityRelation(one, infoMap);
+
+        Map map2 = new HashMap();
+        map2.put("attributes", infoMap);
+        map2.put("relationshipAttributes", getRelationshipAttributesV2(one, appName));
+
+        //实体关联业务分类
+        List<Map> classifications = metadataEntityClassificationAttributeMap.getMetadataEntityClassificationAttribute(metadataEntityId);
+        map2.put("classifications", classifications);
+
+        //自定义属性
+        map2 = getMetadataCustom(map2, Integer.parseInt(entityId));
+
+        //获取业务元数据
+        Map businessMetadata = metadataBusinessMetadataMap.getBusinessMetadata(entityId);
+        map2.put("businessAttributes", businessMetadata);
+
+        //获取属性标签
+        List<Integer> labelIdList = metadataLabelMap.getLabelIdList(metadataEntityId);
+        map2.put("labels", labelIdList);
+
+        //返回拼接JSON传
+        Map map = new HashMap();
+        map.put("entity", map2);
+
+        return JSONObject.parseObject(JSONObject.toJSONString(map));
+
+    }
+
+    private Object getRelationshipAttributesV2(MetadataEntityPO po, String appName) {
+
+        Map attributeMap = new HashMap();
+
+        EntityTypeEnum value = EntityTypeEnum.getValue(po.typeId);
+        switch (value) {
+            case RDBMS_INSTANCE:
+                attributeMap.put("databases", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_DB, "parent_id", null));
+                break;
+            case RDBMS_DB:
+                attributeMap.put("instance", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_INSTANCE, "id", null).get(0));
+                attributeMap.put("tables", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_TABLE, "parent_id", null));
+                break;
+            case RDBMS_TABLE:
+                attributeMap.put("db", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_DB, "id", appName).get(0));
+                attributeMap.put("columns", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_COLUMN, "parent_id", null));
+                break;
+            case RDBMS_COLUMN:
+                attributeMap.put("table", getEntityRelationAttributesInfo(po.parentId, EntityTypeEnum.RDBMS_TABLE, "id", null).get(0));
+                break;
+            case WEB_API:
+            case VIEW:
+                attributeMap.put("columns", getEntityRelationAttributesInfo((int) po.id, EntityTypeEnum.RDBMS_COLUMN, "parent_id", null));
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+
+        //实体关联术语
+        attributeMap.put("meanings", glossary.getEntityGlossData((int) po.id));
+
+        return attributeMap;
+
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -546,7 +628,7 @@ public class MetadataEntityImpl
      * @param fileName
      * @return
      */
-    public List<Map> getEntityRelationAttributesInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName, String tblName) {
+    public List<Map> getEntityRelationAttributesInfo(Integer entityId, EntityTypeEnum entityTypeEnum, String fileName, String appName) {
 
         List<MetadataEntityPO> list = this.query().eq(fileName, entityId).list();
         if (CollectionUtils.isEmpty(list)) {
@@ -554,21 +636,13 @@ public class MetadataEntityImpl
         }
 
         Integer systemDataSourceId = null;
-        if (tblName != null) {
-            //根据表名获取数接物理表
-            ResultEntity<TableAccessDTO> accessTable = dataAccessClient.getAccessTableByTableName(tblName);
-            TableAccessDTO data = accessTable.getData();
+        if (appName != null) {
+            //根据数据接入的应用名获取应用下表的目标数据源id
+            ResultEntity<AppRegistrationDTO> appByAppName = dataAccessClient.getAppByAppName(appName);
+            AppRegistrationDTO data = appByAppName.getData();
 
             if (data != null) {
-                Integer appDataSourceId = data.appDataSourceId;
-                if (appDataSourceId != null) {
-                    //根据物理表引用的应用数据源id获取系统模块的数据源信息
-                    ResultEntity<DataSourceDTO> systemDatasource = dataAccessClient.getSystemDataSourceById(appDataSourceId);
-                    DataSourceDTO systemDatasourceData = systemDatasource.getData();
-                    if (systemDatasourceData != null) {
-                        systemDataSourceId = systemDatasourceData.id;
-                    }
-                }
+                systemDataSourceId = data.targetDbId;
 
             }
         }
@@ -583,11 +657,11 @@ public class MetadataEntityImpl
             infoMap.put("name", item.name);
             infoMap.put("entityStatus", "ACTIVE");
             infoMap.put("typeName", entityTypeEnum.getName());
-            if (tblName != null) {
+            if (appName != null) {
                 if (systemDataSourceId != null) {
                     infoMap.put("systemDataSourceId", systemDataSourceId);
                 } else {
-                    infoMap.put("systemDataSourceId", "获取当前物理表引用的系统数据源时出现脏数据,请联系系统管理员处理..." + "资产实体id:" + entityId);
+                    infoMap.put("systemDataSourceId", "获取当前物理表的目标数据源时出现脏数据,请联系系统管理员处理...");
                 }
             }
 

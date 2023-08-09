@@ -256,6 +256,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<AppBusinessInfoDTO> getAppList();
 
     /**
+     * 获取所有不使用简称作为架构名的应用信息
+     *
+     * @return list
+     */
+    List<AppRegistrationPO> getAppListWithNoSchema();
+
+    /**
      * 根据jwt身份验证地址,获取token
      *
      * @param dto
@@ -339,4 +346,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     AppRegistrationDTO getAppNameById(Long id);
+
+    /**
+     * 根据应用名称获取单个应用详情
+     *
+     * @param appName
+     * @return
+     */
+    AppRegistrationDTO getAppByAppName(String appName);
 }

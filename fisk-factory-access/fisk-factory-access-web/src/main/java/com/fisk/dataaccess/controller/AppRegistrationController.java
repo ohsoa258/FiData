@@ -355,4 +355,10 @@ public class AppRegistrationController {
     public ResultEntity<AppRegistrationDTO> getAppNameById(@RequestParam("id") Long id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppNameById(id));
     }
+
+    @GetMapping("/getAppByAppName")
+    @ApiOperation(value = "根据应用名称获取单个应用详情")
+    public ResultEntity<AppRegistrationDTO> getAppByAppName(@RequestParam("appName") String appName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppByAppName(appName));
+    }
 }
