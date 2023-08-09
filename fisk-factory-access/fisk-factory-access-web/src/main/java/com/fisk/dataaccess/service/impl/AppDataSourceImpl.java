@@ -496,10 +496,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
         long appId = one.getAppId();
         AppRegistrationDTO data1 = appRegistration.getData(appId);
-        Integer targetDbId = null;
-        if (data1 != null) {
-            targetDbId = data1.getTargetDbId();
-        }
+        Integer targetDbId = data1.getTargetDbId();
 
         ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> data = userClient.getById(targetDbId);
         //数据库密码不显示
