@@ -42,6 +42,7 @@ import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
@@ -1646,6 +1647,45 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         boolean flag = this.checkTableName(dto);
         if (flag) {
             return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS);
+        }
+
+        // 如果存在多个不使用schema的应用,则添加时不允许这些应用下出现重复表名的物理表
+        Long appId = model.getAppId();
+        AppRegistrationDTO data = appRegistration.getData(appId);
+        Boolean whetherSchema = data.whetherSchema;
+        if (!whetherSchema) {
+            //获取此次新增的表名
+            String tableName = model.getTableName();
+            //获取所有不使用简称作为架构名的应用
+            List<AppRegistrationPO> appsWithNoSchema = appRegistration.getAppListWithNoSchema();
+            //新建集合预装载应用id
+            ArrayList<Long> ids = new ArrayList<>();
+            appsWithNoSchema.forEach(appRegistrationPO -> {
+                ids.add(appRegistrationPO.id);
+            });
+
+            //通过 应用id集合 查询对应的物理表
+            LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(TableAccessPO::getAppId,ids);
+            List<TableAccessPO> tableAccessPOS = list(wrapper);
+            List<TableAccessPO> posAlreadyExists = tableAccessPOS.stream()
+                    .filter(tableAccessPO -> tableName.equals(tableAccessPO.getTableName()))
+                    .collect(Collectors.toCollection(ArrayList::new));
+
+            // 如果不为空
+            if (!CollectionUtils.isEmpty(posAlreadyExists)) {
+                List<Long> uniqueAppIds = posAlreadyExists.stream()
+                        .map(TableAccessPO::getAppId)
+                        .distinct()
+                        .collect(Collectors.toList());
+
+                ArrayList<AppRegistrationPO> collect = appsWithNoSchema.stream()
+                        .filter(appRegistrationPO -> uniqueAppIds.contains(appRegistrationPO.id))
+                        .collect(Collectors.toCollection(ArrayList::new));
+
+                List<String> appNames = collect.stream().map(AppRegistrationPO::getAppName).collect(Collectors.toList());
+                return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS,"表名存在于以下应用中："+appNames);
+            }
         }
 
         boolean save = this.save(model);
