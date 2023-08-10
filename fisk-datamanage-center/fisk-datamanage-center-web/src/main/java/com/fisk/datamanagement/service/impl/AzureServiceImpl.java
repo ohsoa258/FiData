@@ -1,13 +1,9 @@
 package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.azure.ai.openai.OpenAIClient;
-import com.azure.ai.openai.OpenAIClientBuilder;
-import com.azure.ai.openai.models.Choice;
-import com.azure.ai.openai.models.Completions;
 import com.azure.ai.openai.models.CompletionsOptions;
-import com.azure.ai.openai.models.CompletionsUsage;
-import com.azure.core.credential.AzureKeyCredential;
+import com.azure.core.util.BinaryData;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -16,12 +12,20 @@ import com.fisk.datamanagement.enums.AzureTypeEnum;
 import com.fisk.datamanagement.service.AzureService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.dto.gpt.Completions;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,15 +67,11 @@ public class AzureServiceImpl implements AzureService {
     }
 
     public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
+        List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
         String deploymentOrModelId = DEPLOYMODEL;
-        log.info("开始创建OpenAIClient");
-        OpenAIClient client = new OpenAIClientBuilder()
-                .endpoint(endpoint)
-                .credential(new AzureKeyCredential(azureOpenaiKey))
-                .buildClient();
-        log.info("创建OpenAIClient完成");
+        log.info("开始创建请求");
         List<String> prompt = new ArrayList<>();
         prompt.add("### " + dataSource.conType.getName()+" 数据库,"+queryData.getText());
         CompletionsOptions completionsOptions = new CompletionsOptions(prompt);
@@ -85,19 +85,40 @@ public class AzureServiceImpl implements AzureService {
         stop.add(";");
         completionsOptions.setStop(stop);
         log.info("开始调用chatGpt请求:{}", JSONObject.toJSONString(completionsOptions));
-        Completions completions = client.getCompletions(deploymentOrModelId, completionsOptions);
-
-        log.info("Model ID={} is created at {}.{}", completions.getId(),completions.getId(), completions.getCreatedAt());
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("SELECT ");
-        for (Choice choice : completions.getChoices()) {
-            String text = choice.getText();
-            log.info("索引:{}, 文字: {}.{}", choice.getIndex(),choice.getIndex(), text);
-            stringBuilder.append(text);
-        }
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpResponse response = null;
+        try {
+            // 创建Http Post请求
+            String url = endpoint +"/openai/deployments/"+deploymentOrModelId+"/completions?api-version=2023-05-15";
+            HttpPost httpPost = new HttpPost(url);
+            httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
+            httpPost.setHeader("api-key", azureOpenaiKey);
+            // 模拟表单
+            httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString()));
+            // 执行http请求
+            response = httpClient.execute(httpPost);
+            ObjectMapper mapper = new ObjectMapper();
+            String resultString = EntityUtils.toString(response.getEntity());
+            Completions completions = mapper.readValue(resultString,Completions.class);
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("SELECT ");
+            for (Completions.Choice choice : completions.getChoices()) {
+                String text = choice.getText();
+                log.info("sql: {}",text);
+                stringBuilder.append(text);
+            }
 //        CompletionsUsage usage = completions.getUsage();
-        queryData.setText(stringBuilder.toString());
-        List<Map<String, Object>> listToSelectSql = getListToSelectSql(queryData, dataSource);
+            queryData.setText(stringBuilder.toString());
+            listToSelectSql = getListToSelectSql(queryData, dataSource);
+        } catch (Exception e) {
+            log.error("OpenAI请求报错" + e.getMessage());
+        } finally {
+            try {
+                response.close();
+            } catch (IOException e) {
+                log.error("OpenAI请求报错" + e.getMessage());
+            }
+        }
         return listToSelectSql;
     }
 
