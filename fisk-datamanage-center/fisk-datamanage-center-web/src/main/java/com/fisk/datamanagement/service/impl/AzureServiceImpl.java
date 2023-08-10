@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.azure.ai.openai.OpenAIClient;
 import com.azure.ai.openai.OpenAIClientBuilder;
 import com.azure.ai.openai.models.Choice;
@@ -65,12 +66,12 @@ public class AzureServiceImpl implements AzureService {
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
         String deploymentOrModelId = DEPLOYMODEL;
-
+        log.info("开始创建OpenAIClient");
         OpenAIClient client = new OpenAIClientBuilder()
                 .endpoint(endpoint)
                 .credential(new AzureKeyCredential(azureOpenaiKey))
                 .buildClient();
-
+        log.info("创建OpenAIClient完成");
         List<String> prompt = new ArrayList<>();
         prompt.add("### " + dataSource.conType.getName()+" 数据库,"+queryData.getText());
         CompletionsOptions completionsOptions = new CompletionsOptions(prompt);
@@ -83,6 +84,7 @@ public class AzureServiceImpl implements AzureService {
         stop.add("#");
         stop.add(";");
         completionsOptions.setStop(stop);
+        log.info("开始调用chatGpt请求:{}", JSONObject.toJSONString(completionsOptions));
         Completions completions = client.getCompletions(deploymentOrModelId, completionsOptions);
 
         log.info("Model ID={} is created at {}.{}", completions.getId(),completions.getId(), completions.getCreatedAt());
