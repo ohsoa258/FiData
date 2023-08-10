@@ -47,10 +47,10 @@
     <select id="getGanttChart" resultMap="GanttChartMap">
         SELECT t1.workflow_name, t2.create_time AS start_time, t3.create_time AS end_time
         FROM (
-                 SELECT DISTINCT t1.workflow_name,t2.pipel_trace_id FROM dmp_datafactory_db.tb_nifi_custom_workflow t1 LEFT JOIN dmp_task_db.tb_pipel_log t2 on t1.id = t2.pipel_id WHERE t1.del_flag = 1 and t2.create_time >= CURDATE()
+                 SELECT DISTINCT t1.workflow_name,t2.pipel_trace_id FROM ${dispatchDbName}.tb_nifi_custom_workflow t1 LEFT JOIN tb_pipel_log t2 on t1.id = t2.pipel_id WHERE t1.del_flag = 1 and t2.create_time >= CURDATE()
              ) AS t1
-                 LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
-                 LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2;
+                 LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
+                 LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2;
     </select>
     <select id="getTopRunningTime" resultType="com.fisk.task.vo.statistics.TopRunningTimeVO">
         SELECT
@@ -69,15 +69,15 @@
                             t1.workflow_name,
                             t2.pipel_trace_id
                         FROM
-                            dmp_datafactory_db.tb_nifi_custom_workflow t1
-                                LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+                            ${dispatchDbName}.tb_nifi_custom_workflow t1
+                                LEFT JOIN tb_pipel_log t2 ON t1.id = t2.pipel_id
                         WHERE
                             t1.del_flag = 1
                             AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
                     ) AS t1
-                        LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                        LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
                         AND t2.type = 1
-                        LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+                        LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
                         AND t3.type = 2
                 WHERE
                     t3.create_time IS NOT NULL
@@ -93,7 +93,7 @@
             t4.failed AS failedNum,
             t4.success AS successNum
         FROM
-            dmp_datafactory_db.tb_nifi_custom_workflow AS t5
+            ${dispatchDbName}.tb_nifi_custom_workflow AS t5
                 LEFT JOIN (
                 SELECT
                     t1.pipel_id,
@@ -195,15 +195,15 @@
             t1.workflow_name,
             t2.pipel_trace_id
             FROM
-            dmp_datafactory_db.tb_nifi_custom_workflow t1
-            LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+            ${dispatchDbName}.tb_nifi_custom_workflow t1
+            LEFT JOIN tb_pipel_log t2 ON t1.id = t2.pipel_id
             WHERE
             t1.del_flag = 1
             AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL (#{lookday} - 1 ) DAY )
             ) AS t1
-            LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+            LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
             AND t2.type = 1
-            LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+            LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
             AND t3.type = 2
         WHERE
             t3.create_time IS NOT NULL
@@ -218,8 +218,8 @@
         t3.msg as runningStatus
         FROM (
              SELECT DISTINCT t1.workflow_name,t2.pipel_trace_id
-             FROM dmp_datafactory_db.tb_nifi_custom_workflow t1
-             LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+             FROM ${dispatchDbName}.tb_nifi_custom_workflow t1
+             LEFT JOIN tb_pipel_log t2 ON t1.id = t2.pipel_id
              WHERE t1.del_flag = 1
             <choose>
                 <when test="dto.lookday != null and dto.lookday != 0">
@@ -230,8 +230,8 @@
                 </when>
             </choose>
              ) AS t1
-                 LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
-                 LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2
+                 LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
+                 LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2
                 <if test="dto.workflowName != null and dto.workflowName != '' ">
                     WHERE
                         t1.workflow_name = #{dto.workflowName}
@@ -258,15 +258,15 @@
                             t1.workflow_name,
                             t2.pipel_trace_id
                         FROM
-                            dmp_datafactory_db.tb_nifi_custom_workflow t1
-                                LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+                            ${dispatchDbName}.tb_nifi_custom_workflow t1
+                                LEFT JOIN tb_pipel_log t2 ON t1.id = t2.pipel_id
                         WHERE
                             t1.del_flag = 1
                           AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 1 DAY )
                     ) AS t1
-                        LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                        LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
                         AND t2.type = 1
-                        LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+                        LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
                         AND t3.type = 2
             ) AS t
                 INNER JOIN (
@@ -287,15 +287,15 @@
                                     t1.workflow_name,
                                     t2.pipel_trace_id
                                 FROM
-                                    dmp_datafactory_db.tb_nifi_custom_workflow t1
-                                        LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.id = t2.pipel_id
+                                    ${dispatchDbName}.tb_nifi_custom_workflow t1
+                                        LEFT JOIN tb_pipel_log t2 ON t1.id = t2.pipel_id
                                 WHERE
                                     t1.del_flag = 1
                                   AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 1 DAY )
                             ) AS t1
-                                LEFT JOIN dmp_task_db.tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                                LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
                                 AND t2.type = 1
-                                LEFT JOIN dmp_task_db.tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
+                                LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
                                 AND t3.type = 2
                     ) AS t5
                 GROUP BY

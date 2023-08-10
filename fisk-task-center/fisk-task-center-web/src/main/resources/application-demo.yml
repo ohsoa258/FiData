@@ -108,3 +108,10 @@ mybatis-plus:
   configuration:
     cache-enabled: true
 pipeline-async-switch: true
+
+#表服务dbname
+dataservice:
+  dbname: dmp_dataservice_db
+#管道服务dbname
+dispatch:
+  dbname: dmp_datafactory_db

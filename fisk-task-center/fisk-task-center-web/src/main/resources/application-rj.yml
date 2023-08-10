@@ -110,3 +110,10 @@ spring:
     host: 172.17.1.248
     port: 6379
 pipeline-async-switch: true
+
+#表服务dbname
+dataservice:
+  dbname: dmp_dataservice_db
+#管道服务dbname
+dispatch:
+  dbname: dmp_datafactory_db

@@ -108,3 +108,10 @@ spring:
     password: test123456
     port: 6380
 pipeline-async-switch: true
+
+#表服务dbname
+dataservice:
+  dbname: dmp_dataservice_db
+#管道服务dbname
+dispatch:
+  dbname: dmp_datafactory_db

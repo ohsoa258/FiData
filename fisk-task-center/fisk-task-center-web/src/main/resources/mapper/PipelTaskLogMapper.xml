@@ -107,10 +107,10 @@
     <select id="getGanttChart" resultMap="GanttChartMap">
         SELECT t1.table_name, t2.create_time AS start_time, t3.create_time AS end_time
         FROM (
-                 SELECT DISTINCT t1.table_name,t2.task_trace_id FROM dmp_dataservice_db.tb_table_service t1 LEFT JOIN dmp_task_db.tb_pipel_task_log t2 on t1.id = t2.table_id WHERE t1.del_flag = 1 and t2.table_type = 15 and t2.create_time >= CURDATE()
+                 SELECT DISTINCT t1.table_name,t2.task_trace_id FROM ${dataServiceDbName}.tb_table_service t1 LEFT JOIN tb_pipel_task_log t2 on t1.id = t2.table_id WHERE t1.del_flag = 1 and t2.table_type = 15 and t2.create_time >= CURDATE()
              ) AS t1
-                 LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id AND t2.type = 7
-                 LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id AND t3.type = 8;
+                 LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id AND t2.type = 7
+                 LEFT JOIN tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id AND t3.type = 8;
     </select>
 
     <select id="getTopRunningTime" resultType="com.fisk.task.vo.tableservice.TableTopRunningTimeVO">
@@ -130,8 +130,8 @@
                             t1.table_name,
                             t2.task_trace_id
                         FROM
-                            dmp_dataservice_db.tb_table_service t1
-                                LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.id = t2.table_id
+                            ${dataServiceDbName}.tb_table_service t1
+                                LEFT JOIN tb_pipel_task_log t2 ON t1.id = t2.table_id
                         WHERE
                             t1.del_flag = 1
                           AND t2.table_type = 15
@@ -139,9 +139,9 @@
                                 CURDATE(),
                                 INTERVAL ( #{lookday} - 1 ) DAY )
                     ) AS t1
-                        LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
+                        LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
                         AND t2.type = 7
-                        LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
+                        LEFT JOIN tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
                         AND t3.type = 8
                 WHERE
                     t3.create_time IS NOT NULL
@@ -157,7 +157,7 @@
             t4.failed AS failedNum,
             t4.success AS successNum
         FROM
-            dmp_dataservice_db.tb_table_service AS t5
+            ${dataServiceDbName}.tb_table_service AS t5
                 LEFT JOIN (
                 SELECT
                     t1.table_id,
@@ -264,16 +264,16 @@
             t1.table_name,
             t2.task_trace_id
             FROM
-            dmp_dataservice_db.tb_table_service t1
-            LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.id = t2.table_id
+            ${dataServiceDbName}.tb_table_service t1
+            LEFT JOIN tb_pipel_task_log t2 ON t1.id = t2.table_id
             WHERE
             t1.del_flag = 1
             AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL (#{lookday} - 1 ) DAY )
             AND t2.table_type = 15
             ) AS t1
-            LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
+            LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
             AND t2.type = 7
-            LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
+            LEFT JOIN tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
             AND t3.type = 8
         WHERE
             t3.create_time IS NOT NULL
@@ -288,8 +288,8 @@
         t3.msg as runningStatus
         FROM (
         SELECT DISTINCT t1.table_name,t2.task_trace_id
-        FROM dmp_dataservice_db.tb_table_service t1
-        LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.id = t2.table_id
+        FROM ${dataServiceDbName}.tb_table_service t1
+        LEFT JOIN tb_pipel_task_log t2 ON t1.id = t2.table_id
         WHERE t1.del_flag = 1
         and t2.table_type = 15
         <choose>
@@ -301,8 +301,8 @@
             </when>
         </choose>
         ) AS t1
-        LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id AND t2.type = 7
-        LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id AND t3.type = 8
+        LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id AND t2.type = 7
+        LEFT JOIN tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id AND t3.type = 8
         <if test="dto.tableServiceName != null and dto.tableServiceName != '' ">
             WHERE
             t1.table_name = #{dto.tableServiceName}
@@ -329,16 +329,16 @@
                             t1.table_name,
                             t2.task_trace_id
                         FROM
-                            dmp_dataservice_db.tb_table_service t1
+                            ${dataServiceDbName}.tb_table_service t1
                                 LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.id = t2.table_id
                         WHERE
                             t1.del_flag = 1
                           AND t2.table_type = 15
                           AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 1 DAY )
                     ) AS t1
-                        LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
+                        LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
                         AND t2.type = 7
-                        LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
+                        LEFT JOIN tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
                         AND t3.type = 8
             ) AS t
                 INNER JOIN (
@@ -359,16 +359,16 @@
                                     t1.table_name,
                                     t2.task_trace_id
                                 FROM
-                                    dmp_dataservice_db.tb_table_service t1
-                                        LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.id = t2.table_id
+                                    ${dataServiceDbName}.tb_table_service t1
+                                        LEFT JOIN tb_pipel_task_log t2 ON t1.id = t2.table_id
                                 WHERE
                                     t1.del_flag = 1
                                   AND t2.table_type = 15
                                   AND t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 1 DAY )
                             ) AS t1
-                                LEFT JOIN dmp_task_db.tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
+                                LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
                                 AND t2.type = 7
-                                LEFT JOIN dmp_task_db.tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
+                                LEFT JOIN tb_pipel_task_log t3 ON t1.task_trace_id = t3.task_trace_id
                                 AND t3.type = 8
                     ) AS t5
                 GROUP BY

@@ -38,6 +38,9 @@ import java.util.*;
 @Slf4j
 public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implements IPipelLog {
 
+
+    @Value("${dispatch.dbname}")
+    private String dispatchDbName;
     @Resource
     PipelLogMapper pipelLogMapper;
     @Resource
@@ -324,19 +327,19 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
 
     @Override
     public List<GanttChartVO> getGanttChart() {
-        List<GanttChartVO> ganttChart = pipelLogMapper.getGanttChart();
+        List<GanttChartVO> ganttChart = pipelLogMapper.getGanttChart(dispatchDbName);
         return ganttChart;
     }
 
     @Override
     public List<TopRunningTimeVO> getTopRunningTime(Integer lookday) {
-        List<TopRunningTimeVO> topRunningTime = pipelLogMapper.getTopRunningTime(lookday);
+        List<TopRunningTimeVO> topRunningTime = pipelLogMapper.getTopRunningTime(lookday,dispatchDbName);
         return topRunningTime;
     }
 
     @Override
     public List<FaildStatisticsVO> getFaildStatistics(Integer lookday) {
-        List<FaildStatisticsVO> faildStatisticsVOS = pipelLogMapper.getFaildStatistics(lookday);
+        List<FaildStatisticsVO> faildStatisticsVOS = pipelLogMapper.getFaildStatistics(lookday,dispatchDbName);
         List<FaildStatisticsVO> list = new ArrayList<>();
         for (FaildStatisticsVO faildStatisticsVO : faildStatisticsVOS) {
             if (faildStatisticsVO.sum != 0) {
@@ -356,14 +359,14 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
 
     @Override
     public List<DetailLineChartVO> getDetailLineChart(String workflowName, Integer lookday) {
-        List<DetailLineChartVO> detailLineChartVOList = pipelLogMapper.getDetailLineChart(workflowName, lookday);
+        List<DetailLineChartVO> detailLineChartVOList = pipelLogMapper.getDetailLineChart(workflowName, lookday,dispatchDbName);
         return detailLineChartVOList;
     }
 
     @Override
     public Page<PipelLineDetailVO> getPipelLineDetailLog(PipelLineDetailDTO dto) {
         Page<PipelLineDetailVO> page = dto.page;
-        Page<PipelLineDetailVO> pipelLineDetailLog = pipelLogMapper.getPipelLineDetailLog(page, dto);
+        Page<PipelLineDetailVO> pipelLineDetailLog = pipelLogMapper.getPipelLineDetailLog(page, dto,dispatchDbName);
         List<PipelLineDetailVO> data = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(pipelLineDetailLog.getRecords())) {
             for (PipelLineDetailVO pipelLineDetailVO : pipelLineDetailLog.getRecords()) {
@@ -387,7 +390,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
 
     @Override
     public List<PipelLineDetailVO> getDetailLog() {
-        List<PipelLineDetailVO> detailLog = pipelLogMapper.getDetailLog();
+        List<PipelLineDetailVO> detailLog = pipelLogMapper.getDetailLog(dispatchDbName);
         List<PipelLineDetailVO> data = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(detailLog)) {
             for (PipelLineDetailVO pipelLineDetailVO : detailLog) {
