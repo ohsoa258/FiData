@@ -31,16 +31,22 @@ public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
 
     Integer getPipelineStatisticsLog(@Param("lookday") int lookday, @Param("result") String result);
 
-    List<GanttChartVO> getGanttChart();
+    List<GanttChartVO> getGanttChart(@Param("dispatchDbName")String dispatchDbName);
 
-    List<TopRunningTimeVO> getTopRunningTime(@Param("lookday") int lookday);
+    List<TopRunningTimeVO> getTopRunningTime(@Param("lookday") int lookday,
+                                             @Param("dispatchDbName")String dispatchDbName);
 
-    List<FaildStatisticsVO> getFaildStatistics(@Param("lookday") int lookday);
+    List<FaildStatisticsVO> getFaildStatistics(@Param("lookday") int lookday,
+                                               @Param("dispatchDbName")String dispatchDbName);
 
     List<LineChartVO> getLineChart(@Param("lookday") int lookday);
 
-    List<DetailLineChartVO> getDetailLineChart(@Param("workflowName") String workflowName, @Param("lookday") int lookday);
+    List<DetailLineChartVO> getDetailLineChart(@Param("workflowName") String workflowName,
+                                               @Param("lookday") int lookday,
+                                               @Param("dispatchDbName")String dispatchDbName);
 
-    Page<PipelLineDetailVO> getPipelLineDetailLog(Page<PipelLineDetailVO> page, @Param("dto") PipelLineDetailDTO dto);
-    List<PipelLineDetailVO> getDetailLog();
+    Page<PipelLineDetailVO> getPipelLineDetailLog(Page<PipelLineDetailVO> page,
+                                                  @Param("dto") PipelLineDetailDTO dto,
+                                                  @Param("dispatchDbName")String dispatchDbName);
+    List<PipelLineDetailVO> getDetailLog(@Param("dispatchDbName")String dispatchDbName);
 }

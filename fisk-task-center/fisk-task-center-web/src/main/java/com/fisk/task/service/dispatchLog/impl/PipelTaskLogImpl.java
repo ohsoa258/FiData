@@ -45,6 +45,8 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskLogPO> implements IPipelTaskLog {
+    @Value("${dataservice.dbname}")
+    private String dataServiceDbName;
 
     @Resource
     PipelTaskLogMapper pipelTaskLogMapper;
@@ -319,19 +321,19 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
 
     @Override
     public List<TableGanttChartVO> getGanttChart() {
-        List<TableGanttChartVO> ganttChart = pipelTaskLogMapper.getGanttChart();
+        List<TableGanttChartVO> ganttChart = pipelTaskLogMapper.getGanttChart(dataServiceDbName);
         return ganttChart;
     }
 
     @Override
     public List<TableTopRunningTimeVO> getTopRunningTime(Integer lookday) {
-        List<TableTopRunningTimeVO> topRunningTime = pipelTaskLogMapper.getTopRunningTime(lookday);
+        List<TableTopRunningTimeVO> topRunningTime = pipelTaskLogMapper.getTopRunningTime(lookday,dataServiceDbName);
         return topRunningTime;
     }
 
     @Override
     public List<TableFaildStatisticsVO> getFaildStatistics(Integer lookday) {
-        List<TableFaildStatisticsVO> faildStatisticsVOS = pipelTaskLogMapper.getFaildStatistics(lookday);
+        List<TableFaildStatisticsVO> faildStatisticsVOS = pipelTaskLogMapper.getFaildStatistics(lookday,dataServiceDbName);
         List<TableFaildStatisticsVO> list = new ArrayList<>();
         for (TableFaildStatisticsVO faildStatisticsVO : faildStatisticsVOS) {
             if (faildStatisticsVO.sum != 0) {
@@ -351,14 +353,14 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
 
     @Override
     public List<TableServiceLineChartVO> getDetailLineChart(String tableName, Integer lookday) {
-        List<TableServiceLineChartVO> detailLineChartVOList = pipelTaskLogMapper.getDetailLineChart(tableName, lookday);
+        List<TableServiceLineChartVO> detailLineChartVOList = pipelTaskLogMapper.getDetailLineChart(tableName, lookday,dataServiceDbName);
         return detailLineChartVOList;
     }
 
     @Override
     public Page<TableServiceDetailVO> getTableServiceDetailLog(TableServiceDetailDTO dto) {
         Page<TableServiceDetailVO> page = dto.page;
-        Page<TableServiceDetailVO> tableServiceDetailLog = pipelTaskLogMapper.getTableServiceDetailLog(page, dto);
+        Page<TableServiceDetailVO> tableServiceDetailLog = pipelTaskLogMapper.getTableServiceDetailLog(page, dto,dataServiceDbName);
         List<TableServiceDetailVO> data = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(tableServiceDetailLog.getRecords())) {
             for (TableServiceDetailVO pipelLineDetailVO : tableServiceDetailLog.getRecords()) {
@@ -382,7 +384,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
 
     @Override
     public List<TableServiceDetailVO> getDetailLog() {
-        List<TableServiceDetailVO> detailLog = pipelTaskLogMapper.getDetailLog();
+        List<TableServiceDetailVO> detailLog = pipelTaskLogMapper.getDetailLog(dataServiceDbName);
         List<TableServiceDetailVO> data = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(detailLog)) {
             for (TableServiceDetailVO tableServiceDetailVO : detailLog) {

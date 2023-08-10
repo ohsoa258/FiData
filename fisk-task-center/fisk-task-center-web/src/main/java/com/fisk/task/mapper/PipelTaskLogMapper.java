@@ -29,16 +29,21 @@ public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
 
     Integer getTableServerStatisticsLog(@Param("lookday") int lookday, @Param("result") String result);
 
-    List<TableGanttChartVO> getGanttChart();
+    List<TableGanttChartVO> getGanttChart(@Param("dataServiceDbName")String dataServiceDbName);
 
-    List<TableTopRunningTimeVO> getTopRunningTime(@Param("lookday") int lookday);
+    List<TableTopRunningTimeVO> getTopRunningTime(@Param("lookday") int lookday,
+                                                  @Param("dataServiceDbName")String dataServiceDbName);
 
-    List<TableFaildStatisticsVO> getFaildStatistics(@Param("lookday") int lookday);
+    List<TableFaildStatisticsVO> getFaildStatistics(@Param("lookday") int lookday,@Param("dataServiceDbName")String dataServiceDbName);
 
     List<TableLineChartVO> getLineChart(@Param("lookday") int lookday);
 
-    List<TableServiceLineChartVO> getDetailLineChart(@Param("tableName") String tableName, @Param("lookday") int lookday);
+    List<TableServiceLineChartVO> getDetailLineChart(@Param("tableName") String tableName,
+                                                     @Param("lookday") int lookday,
+                                                     @Param("dataServiceDbName")String dataServiceDbName);
 
-    Page<TableServiceDetailVO> getTableServiceDetailLog(Page<TableServiceDetailVO> page, @Param("dto") TableServiceDetailDTO dto);
-    List<TableServiceDetailVO> getDetailLog();
+    Page<TableServiceDetailVO> getTableServiceDetailLog(Page<TableServiceDetailVO> page,
+                                                        @Param("dto") TableServiceDetailDTO dto,
+                                                        @Param("dataServiceDbName")String dataServiceDbName);
+    List<TableServiceDetailVO> getDetailLog(@Param("dataServiceDbName")String dataServiceDbName);
 }
