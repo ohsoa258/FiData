@@ -13,7 +13,7 @@ import com.fisk.datamanagement.enums.AzureTypeEnum;
 import com.fisk.datamanagement.service.AzureService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.task.dto.gpt.Completions;
+import com.fisk.datamanagement.dto.gpt.Completions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;

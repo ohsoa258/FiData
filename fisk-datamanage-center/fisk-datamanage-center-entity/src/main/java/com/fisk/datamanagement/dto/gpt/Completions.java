@@ -1,4 +1,4 @@
-package com.fisk.task.dto.gpt;
+package com.fisk.datamanagement.dto.gpt;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
