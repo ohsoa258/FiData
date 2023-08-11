@@ -1,5 +1,6 @@
 package com.fisk.task.dto.gpt;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  * @Description:
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Completions {
     private String id;
     private String object;
@@ -21,6 +23,7 @@ public class Completions {
     // getter and setter methods
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Choice {
         private String text;
         private int index;
@@ -30,6 +33,7 @@ public class Completions {
         // getter and setter methods
     }
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Usage {
         private int completion_tokens;
         private int prompt_tokens;

@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.azure.ai.openai.implementation.NonAzureOpenAIClientImpl;
 import com.azure.ai.openai.models.CompletionsOptions;
 import com.azure.core.util.BinaryData;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +50,7 @@ public class AzureServiceImpl implements AzureService {
     @Resource
     UserClient userClient;
 
+    NonAzureOpenAIClientImpl nonAzureOpenAIClient;
     @Override
     public List<Map<String, Object>> getData(QueryData queryData) {
         List<Map<String, Object>> data = new ArrayList<>();
@@ -89,12 +91,12 @@ public class AzureServiceImpl implements AzureService {
         CloseableHttpResponse response = null;
         try {
             // 创建Http Post请求
-            String url = endpoint +"/openai/deployments/"+deploymentOrModelId+"/completions?api-version=2023-05-15";
+            String url = endpoint +"/openai/deployments/"+deploymentOrModelId+"/completions?api-version=2023-07-01-preview";
             HttpPost httpPost = new HttpPost(url);
             httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
             httpPost.setHeader("api-key", azureOpenaiKey);
             // 模拟表单
-            httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString()));
+            httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString(),"UTF-8"));
             // 执行http请求
             response = httpClient.execute(httpPost);
             ObjectMapper mapper = new ObjectMapper();
