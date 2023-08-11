@@ -68,8 +68,7 @@ public class AzureServiceImpl implements AzureService {
         }
         return data;
     }
-
-    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
+    public List<Map<String, Object>> getListToGpt1(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
@@ -95,9 +94,7 @@ public class AzureServiceImpl implements AzureService {
                 .setConnectionRequestTimeout(10000)
                 .build();
 
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setDefaultRequestConfig(requestConfig)
-                .build();
+        CloseableHttpClient httpClient = HttpClients.createDefault();
         CloseableHttpResponse response = null;
         try {
             // 创建Http Post请求
@@ -105,6 +102,69 @@ public class AzureServiceImpl implements AzureService {
             HttpPost httpPost = new HttpPost(url);
             httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
             httpPost.setHeader("api-key", azureOpenaiKey);
+            // 模拟表单
+            httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString(),"UTF-8"));
+            // 执行http请求
+            response = httpClient.execute(httpPost);
+            ObjectMapper mapper = new ObjectMapper();
+            String resultString = EntityUtils.toString(response.getEntity());
+            Completions completions = mapper.readValue(resultString,Completions.class);
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("SELECT ");
+            for (Completions.Choice choice : completions.getChoices()) {
+                String text = choice.getText();
+                log.info("sql: {}",text);
+                stringBuilder.append(text);
+            }
+//        CompletionsUsage usage = completions.getUsage();
+            queryData.setText(stringBuilder.toString());
+            listToSelectSql = getListToSelectSql(queryData, dataSource);
+        } catch (Exception e) {
+            log.error("OpenAI请求报错" + e.getMessage());
+        } finally {
+            try {
+                response.close();
+            } catch (IOException e) {
+                log.error("OpenAI请求报错" + e.getMessage());
+            }
+        }
+        return listToSelectSql;
+    }
+    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
+        List<Map<String, Object>> listToSelectSql = new ArrayList<>();
+        String azureOpenaiKey = AZURE_OPENAI_KEY;
+        String endpoint = END_POINT;
+        String deploymentOrModelId = DEPLOYMODEL;
+        log.info("开始创建请求");
+        List<String> prompt = new ArrayList<>();
+        prompt.add("### " + dataSource.conType.getName()+" 数据库,"+queryData.getText());
+        CompletionsOptions completionsOptions = new CompletionsOptions(prompt);
+        completionsOptions.setModel(deploymentOrModelId);
+        completionsOptions.setTemperature((double) 0);
+        completionsOptions.setMaxTokens(800);
+        completionsOptions.setTopP((double) 1);
+        completionsOptions.setFrequencyPenalty((double) 0);
+        completionsOptions.setPresencePenalty((double) 0);
+        List<String> stop = new ArrayList<>();
+        stop.add("#");
+        stop.add(";");
+        completionsOptions.setStop(stop);
+        log.info("开始调用chatGpt请求:{}", JSONObject.toJSONString(completionsOptions));
+        // 设置连接超时时间为10秒
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(10000)
+                .setConnectionRequestTimeout(10000)
+                .build();
+
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpResponse response = null;
+        try {
+            // 创建Http Post请求
+            String url = endpoint;
+            HttpPost httpPost = new HttpPost(url);
+            httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
+            httpPost.setHeader("Authorization", azureOpenaiKey);
             // 模拟表单
             httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString(),"UTF-8"));
             // 执行http请求
