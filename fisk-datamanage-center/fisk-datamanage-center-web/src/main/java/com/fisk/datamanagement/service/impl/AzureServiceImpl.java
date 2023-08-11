@@ -15,6 +15,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.datamanagement.dto.gpt.Completions;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -87,7 +88,16 @@ public class AzureServiceImpl implements AzureService {
         stop.add(";");
         completionsOptions.setStop(stop);
         log.info("开始调用chatGpt请求:{}", JSONObject.toJSONString(completionsOptions));
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        // 设置连接超时时间为10秒
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(10000)
+                .setConnectionRequestTimeout(10000)
+                .build();
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
         CloseableHttpResponse response = null;
         try {
             // 创建Http Post请求
