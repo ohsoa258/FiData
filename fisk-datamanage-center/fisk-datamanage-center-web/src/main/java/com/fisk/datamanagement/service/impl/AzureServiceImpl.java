@@ -69,7 +69,7 @@ public class AzureServiceImpl implements AzureService {
         }
         return data;
     }
-    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
+    public List<Map<String, Object>> getListToGpt1(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
@@ -135,7 +135,7 @@ public class AzureServiceImpl implements AzureService {
         }
         return listToSelectSql;
     }
-    public List<Map<String, Object>> getListToGpt1(QueryData queryData, DataSourceDTO dataSource) {
+    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
@@ -172,7 +172,7 @@ public class AzureServiceImpl implements AzureService {
             String url = endpoint;
             HttpPost httpPost = new HttpPost(url);
             httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
-            httpPost.setHeader("Authorization", azureOpenaiKey);
+            httpPost.setHeader("api-key", azureOpenaiKey);
             // 模拟表单
             httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString(),"UTF-8"));
             // 执行http请求
