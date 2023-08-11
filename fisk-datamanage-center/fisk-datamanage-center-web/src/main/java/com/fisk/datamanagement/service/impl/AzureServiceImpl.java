@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -68,7 +69,7 @@ public class AzureServiceImpl implements AzureService {
         }
         return data;
     }
-    public List<Map<String, Object>> getListToGpt1(QueryData queryData, DataSourceDTO dataSource) {
+    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
@@ -93,8 +94,11 @@ public class AzureServiceImpl implements AzureService {
                 .setSocketTimeout(10000)
                 .setConnectionRequestTimeout(10000)
                 .build();
-
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setDefaultSocketConfig(socketConfig)
+                .build();
         CloseableHttpResponse response = null;
         try {
             // 创建Http Post请求
@@ -123,6 +127,7 @@ public class AzureServiceImpl implements AzureService {
             log.error("OpenAI请求报错" + e.getMessage());
         } finally {
             try {
+                httpClient.close();
                 response.close();
             } catch (IOException e) {
                 log.error("OpenAI请求报错" + e.getMessage());
@@ -130,7 +135,7 @@ public class AzureServiceImpl implements AzureService {
         }
         return listToSelectSql;
     }
-    public List<Map<String, Object>> getListToGpt(QueryData queryData, DataSourceDTO dataSource) {
+    public List<Map<String, Object>> getListToGpt1(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
         String endpoint = END_POINT;
@@ -156,8 +161,11 @@ public class AzureServiceImpl implements AzureService {
                 .setSocketTimeout(10000)
                 .setConnectionRequestTimeout(10000)
                 .build();
-
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setDefaultSocketConfig(socketConfig)
+                .build();
         CloseableHttpResponse response = null;
         try {
             // 创建Http Post请求
@@ -186,6 +194,7 @@ public class AzureServiceImpl implements AzureService {
             log.error("OpenAI请求报错" + e.getMessage());
         } finally {
             try {
+                httpClient.close();
                 response.close();
             } catch (IOException e) {
                 log.error("OpenAI请求报错" + e.getMessage());
