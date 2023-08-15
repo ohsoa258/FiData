@@ -104,6 +104,7 @@ public class AzureServiceImpl implements AzureService {
             // 创建Http Post请求
             String url = endpoint +"/openai/deployments/"+deploymentOrModelId+"/completions?api-version=2023-07-01-preview";
             HttpPost httpPost = new HttpPost(url);
+            httpPost.setConfig(requestConfig);
             httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
             httpPost.setHeader("api-key", azureOpenaiKey);
             // 模拟表单
@@ -114,7 +115,7 @@ public class AzureServiceImpl implements AzureService {
             String resultString = EntityUtils.toString(response.getEntity());
             Completions completions = mapper.readValue(resultString,Completions.class);
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("SELECT ");
+            stringBuilder.append("SELECT");
             for (Completions.Choice choice : completions.getChoices()) {
                 String text = choice.getText();
                 log.info("sql: {}",text);
@@ -171,6 +172,7 @@ public class AzureServiceImpl implements AzureService {
             // 创建Http Post请求
             String url = endpoint;
             HttpPost httpPost = new HttpPost(url);
+            httpPost.setConfig(requestConfig);
             httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
             httpPost.setHeader("api-key", azureOpenaiKey);
             // 模拟表单
@@ -181,7 +183,7 @@ public class AzureServiceImpl implements AzureService {
             String resultString = EntityUtils.toString(response.getEntity());
             Completions completions = mapper.readValue(resultString,Completions.class);
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("SELECT ");
+            stringBuilder.append("SELECT");
             for (Completions.Choice choice : completions.getChoices()) {
                 String text = choice.getText();
                 log.info("sql: {}",text);
