@@ -28,7 +28,7 @@ public class BuildGovernanceMySqlCommandImpl implements IBuildGovernanceSqlComma
             str.append(" ORDER BY " + orderBy);
         }
         // OFFSET从0开始
-        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, (pageIndex - 1) * pageSize));
+        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, pageIndex * pageSize));
         return str.toString();
     }
 

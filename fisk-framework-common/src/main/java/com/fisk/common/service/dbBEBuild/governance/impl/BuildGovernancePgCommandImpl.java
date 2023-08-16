@@ -24,7 +24,7 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
             str.append(" ORDER BY " + orderBy);
         }
         // OFFSET 从0开始
-        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, (pageIndex - 1) * pageSize));
+        str.append(String.format(" LIMIT %s OFFSET %s ", pageSize, pageIndex * pageSize));
         return str.toString();
     }
 
