@@ -36,5 +36,10 @@ public class AzureServerController {
     public ResultEntity<List<Map<String,Object>>> getData(@RequestBody QueryData queryData) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,azureService.getData(queryData));
     }
+    @ApiOperation("根据chat返回结果获取数据")
+    @PostMapping("/getSelectChatData")
+    public ResultEntity<List<Map<String,Object>>> getSelectChatData(@RequestBody QueryData queryData) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,azureService.getSelectChatData(queryData));
+    }
 }
 

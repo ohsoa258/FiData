@@ -69,6 +69,35 @@ public class AzureServiceImpl implements AzureService {
         }
         return data;
     }
+
+    @Override
+    public List<Map<String, Object>> getSelectChatData(QueryData queryData) {
+        List<Map<String, Object>> data = new ArrayList<>();
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(queryData.dbId);
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            if (queryData.type == AzureTypeEnum.CHAT.getValue()) {
+                String[] split = queryData.getText().split("\\n```\\n");
+                boolean flag = false;
+                for (int i = 0; i < split.length; i++) {
+                    if (split[i].substring(0,7).toUpperCase().contains("SELECT")){
+                        queryData.text = split[i];
+                        flag = true;
+                    }
+                }
+                if (!flag){
+                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+                }
+                data = getListToSelectSql(queryData, fiDataDataSource.data);
+            } else if (queryData.type == AzureTypeEnum.SQL.getValue()) {
+                data = getListToSelectSql(queryData, fiDataDataSource.data);
+            }
+        } else {
+            log.error("userclient无法查询到目标库的连接信息");
+            throw new FkException(ResultEnum.ERROR);
+        }
+        return data;
+    }
+
     public List<Map<String, Object>> getListToGpt1(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> listToSelectSql = new ArrayList<>();
         String azureOpenaiKey = AZURE_OPENAI_KEY;
@@ -207,7 +236,8 @@ public class AzureServiceImpl implements AzureService {
 
     public List<Map<String, Object>> getListToSelectSql(QueryData queryData, DataSourceDTO dataSource) {
         List<Map<String, Object>> dataList = new ArrayList<>();
-        Map<String, Object> data = new HashMap<>();//声明Map
+        //声明Map
+        Map<String, Object> data = new HashMap<>();
         data.put("selectSql",queryData.getText());
 
         Connection conn = null;
@@ -220,12 +250,16 @@ public class AzureServiceImpl implements AzureService {
             log.info("开始执行脚本:{}", queryData.getText());
             ResultSet resultSet = st.executeQuery(queryData.getText());
             List<Object> list = new ArrayList<>();
-            ResultSetMetaData md = resultSet.getMetaData();//获取键名
-            int columnCount = md.getColumnCount();//获取列的数量
+            //获取键名
+            ResultSetMetaData md = resultSet.getMetaData();
+            //获取列的数量
+            int columnCount = md.getColumnCount();
             while (resultSet.next()) {
-                Map<String, Object> rowData = new HashMap<>();//声明Map
+                //声明Map
+                Map<String, Object> rowData = new HashMap<>();
                 for (int i = 1; i <= columnCount; i++) {
-                    rowData.put(md.getColumnName(i), resultSet.getObject(i));//获取键名及值
+                    //获取键名及值
+                    rowData.put(md.getColumnName(i), resultSet.getObject(i));
                 }
                 list.add(rowData);
             }
