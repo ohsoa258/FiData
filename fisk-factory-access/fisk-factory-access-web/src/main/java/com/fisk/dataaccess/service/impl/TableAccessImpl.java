@@ -1062,17 +1062,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
         if (modelSync == null) {
-            log.info("第一次查询结果[{}]",modelSync);
-            try {
-                //线程休眠50毫秒
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            // 用mybatisPlus再次查
-            log.info("再次查询tb_table_syncmode表");
-            modelSync = syncmodeMapper.selectById(id);
-            log.info("第二次查询结果[{}]",modelSync);
             if (modelSync == null) {
                 return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
             }

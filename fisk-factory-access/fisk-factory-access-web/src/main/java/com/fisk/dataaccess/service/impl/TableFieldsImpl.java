@@ -284,7 +284,6 @@ public class TableFieldsImpl
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
