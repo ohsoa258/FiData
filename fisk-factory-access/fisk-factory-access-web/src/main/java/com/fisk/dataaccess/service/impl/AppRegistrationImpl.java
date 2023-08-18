@@ -616,7 +616,7 @@ public class AppRegistrationImpl
                 .collect(Collectors.toList());
 
         //判断前端传的参数是否包含原有数据源
-        if (collect3.containsAll(duplicates)){
+        if (!collect3.containsAll(duplicates)){
             //如果不为空 就说明当前要移除的数据源有表在使用 则本次修改不能生效
             if (!CollectionUtils.isEmpty(duplicates)){
                 Map<Long, String> result = new HashMap<>();
