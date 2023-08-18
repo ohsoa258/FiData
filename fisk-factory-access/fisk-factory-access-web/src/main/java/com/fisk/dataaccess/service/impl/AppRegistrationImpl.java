@@ -607,33 +607,35 @@ public class AppRegistrationImpl
         // 修改前的数据源id
         List<Long> collect = list.stream().map(e -> e.id).collect(Collectors.toList());
 
+        //获取前端传参的数据源id集合
+        List<Long> collect3 = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
         //找出重复出现的appDataSourceIds
         List<Long> duplicates = collect.stream()
                 .filter(collect2::contains)
                 .distinct()
                 .collect(Collectors.toList());
 
-        //如果不为空 就说明当前要移除的数据源有表在使用 则本次修改不能生效
-        if (!CollectionUtils.isEmpty(duplicates)){
-            Map<Long, String> result = new HashMap<>();
-            tables.forEach(tableAccessDTO -> {
-                if (duplicates.contains(tableAccessDTO.appDataSourceId)){
-                    result.put(tableAccessDTO.id,tableAccessDTO.tableName);
-                }
-            });
-            log.error("当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志...");
-            log.info("表详情如下：[{}]",JSON.toJSONString(result));
-            throw new FkException(ResultEnum.DATAACCESS_APP_EDIT_FAILURE);
+        //判断前端传的参数是否包含原有数据源
+        if (collect3.containsAll(duplicates)){
+            //如果不为空 就说明当前要移除的数据源有表在使用 则本次修改不能生效
+            if (!CollectionUtils.isEmpty(duplicates)){
+                Map<Long, String> result = new HashMap<>();
+                tables.forEach(tableAccessDTO -> {
+                    if (duplicates.contains(tableAccessDTO.appDataSourceId)){
+                        result.put(tableAccessDTO.id,tableAccessDTO.tableName);
+                    }
+                });
+                log.error("当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志...");
+                log.info("表详情如下：[{}]",JSON.toJSONString(result));
+                throw new FkException(ResultEnum.DATAACCESS_APP_EDIT_FAILURE);
+            }
         }
 
-        //删除数据源
-        //获取前端传参的数据源id集合
-        List<Long> collect3 = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
         //筛选
         List<AppDataSourcePO> collect1 = list.stream().filter(e -> !collect3.contains(e.id)).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect1)) {
             collect1.forEach(e -> {
-
+                //删除数据源
                 appDataSourceImpl.removeById(e.id);
             });
         }
