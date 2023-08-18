@@ -12,6 +12,11 @@ spring:
           password: root123
           driver-class-name: com.mysql.jdbc.Driver
 
+# 配置库db类型 根据各个客户环境改变
+config-Db-driverType: MYSQL
+# 配置库 tb_table_access 表名  根据各个客户环境改变
+config-tbName: tb_table_access
+
   # redis
   redis:
     host: 192.168.21.21
