@@ -19,6 +19,8 @@ builder.Services.AddCors(c => c.AddPolicy("LimitRequests", policy =>
 
 var app = builder.Build();
 
+app.UseCors("LimitRequests");
+
 // Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
