@@ -593,7 +593,6 @@ public class AppRegistrationImpl
             return e;
         });
 
-
         //查询修改前的数据源
         List<AppDataSourcePO> list = appDataSourceImpl.query().select("id").eq("app_id", dto.id).list();
         //查询应用下的表信息，如果有表正在使用当前数据源，禁止删除
@@ -603,9 +602,10 @@ public class AppRegistrationImpl
             //获取应用id
             appDataSourceIds.add(Long.valueOf(table.appDataSourceId));
         }
-        //去重
+        //去重  当前引用下的表正在使用的应用数据源id
         List<Long> collect2 = appDataSourceIds.stream().distinct().collect(Collectors.toList());
-        List<Long> collect = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
+        // 修改前的数据源id
+        List<Long> collect = list.stream().map(e -> e.id).collect(Collectors.toList());
 
         //找出重复出现的appDataSourceIds
         List<Long> duplicates = collect.stream()
@@ -626,10 +626,14 @@ public class AppRegistrationImpl
             throw new FkException(ResultEnum.DATAACCESS_APP_EDIT_FAILURE);
         }
 
-        List<AppDataSourcePO> collect1 = list.stream().filter(e -> !collect.contains(e.id)).collect(Collectors.toList());
+        //删除数据源
+        //获取前端传参的数据源id集合
+        List<Long> collect3 = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
+        //筛选
+        List<AppDataSourcePO> collect1 = list.stream().filter(e -> !collect3.contains(e.id)).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect1)) {
             collect1.forEach(e -> {
-                //删除数据源
+
                 appDataSourceImpl.removeById(e.id);
             });
         }
