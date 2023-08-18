@@ -5,17 +5,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorEntity;
 import com.davis.client.model.ProcessorRunStatusEntity;
-import com.davis.client.model.ScheduleComponentsEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.task.enums.ScheduleEnum;
-import com.fisk.task.po.NifiSchedulingComponentPO;
 import com.fisk.task.mapper.NifiSchedulingComponentMapper;
+import com.fisk.task.po.NifiSchedulingComponentPO;
 import com.fisk.task.service.pipeline.INifiSchedulingComponentService;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
