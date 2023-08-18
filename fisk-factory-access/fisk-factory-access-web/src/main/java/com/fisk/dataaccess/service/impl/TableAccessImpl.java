@@ -2596,7 +2596,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
-     * 通过应用id获取所选应用下的所有表
+     * 通过应用id获取所选应用下的所有表--仅供智能发布调用
      *
      * @param appId
      * @return
@@ -2613,7 +2613,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             connection = DbConnectionHelper.connection(accessConfigDbURL, username, pwd,
                     dataSourceTypeEnum);
             statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from " + tbName + "where app_id = " + appId + ";");
+            ResultSet resultSet = statement.executeQuery("select * from " + tbName + "where app_id = " + appId);
 
             while (resultSet.next()) {
                 TableAccessDTO tableAccessDTO = new TableAccessDTO();
