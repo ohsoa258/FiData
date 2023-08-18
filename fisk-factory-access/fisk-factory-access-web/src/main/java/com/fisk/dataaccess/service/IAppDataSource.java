@@ -30,7 +30,7 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @param appId appId
      * @return dto
      */
-    DataSourceDTO setDataSourceMeta(long appId);
+    DataSourceDTO setDataSourceMeta(long appId,long appDataSourceId);
 
     /**
      * 根据服务配置信息,获取所有的数据库名称
@@ -74,6 +74,7 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
 
     /**
      * 获取指定app下的非重复驱动类型
+     *
      * @param id
      * @return
      */
@@ -82,6 +83,7 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     *
      * @param dto
      * @return
      */
@@ -90,6 +92,7 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     *
      * @param id
      * @return
      */
@@ -105,9 +108,16 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
     AppDataSourceDTO getAccessDataSources(Long id);
 
     /**
-     *
      * @param id
      * @return
      */
     ResultEntity<com.fisk.system.dto.datasource.DataSourceDTO> getSystemDataSourceById(Integer id);
+
+    /**
+     * 数据接入，刷新redis里存储的表信息
+     *
+     * @param appId
+     * @return
+     */
+    List<DataSourceDTO> refreshRedis(long appId);
 }

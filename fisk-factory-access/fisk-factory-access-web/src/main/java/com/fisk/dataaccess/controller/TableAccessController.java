@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -89,6 +90,18 @@ public class TableAccessController {
     @ApiOperation(value = "通过表名（带架构）获取表信息")
     public ResultEntity<TableAccessDTO> getAccessTableByTableName(@RequestParam("tableName") String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAccessTableByTableName(tableName));
+    }
+
+    /**
+     * 通过应用id获取所选应用下的所有表
+     *
+     * @param appId
+     * @return
+     */
+    @GetMapping("/getTblByAppId")
+    @ApiOperation(value = "通过应用id获取所选应用下的所有表")
+    public ResultEntity<List<TableAccessDTO>> getTblByAppId(@RequestParam("appId") Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTblByAppId(appId));
     }
 
 

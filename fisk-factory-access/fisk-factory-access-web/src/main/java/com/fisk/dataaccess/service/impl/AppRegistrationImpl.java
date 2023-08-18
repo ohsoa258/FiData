@@ -45,6 +45,7 @@ import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
@@ -592,17 +593,46 @@ public class AppRegistrationImpl
             return e;
         });
 
-        //删除数据源
+
+        //查询修改前的数据源
         List<AppDataSourcePO> list = appDataSourceImpl.query().select("id").eq("app_id", dto.id).list();
+        //查询应用下的表信息，如果有表正在使用当前数据源，禁止删除
+        List<TableAccessDTO> tables = tableAccessImpl.getTblByAppId((int) dto.id);
+        ArrayList<Long> appDataSourceIds = new ArrayList<>();
+        for (TableAccessDTO table : tables) {
+            //获取应用id
+            appDataSourceIds.add(Long.valueOf(table.appDataSourceId));
+        }
+        //去重
+        List<Long> collect2 = appDataSourceIds.stream().distinct().collect(Collectors.toList());
         List<Long> collect = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
+
+        //找出重复出现的appDataSourceIds
+        List<Long> duplicates = collect.stream()
+                .filter(collect2::contains)
+                .distinct()
+                .collect(Collectors.toList());
+
+        //如果不为空 就说明当前要移除的数据源有表在使用 则本次修改不能生效
+        if (!CollectionUtils.isEmpty(duplicates)){
+            Map<Long, String> result = new HashMap<>();
+            tables.forEach(tableAccessDTO -> {
+                if (duplicates.contains(tableAccessDTO.appDataSourceId)){
+                    result.put(tableAccessDTO.id,tableAccessDTO.tableName);
+                }
+            });
+            log.error("当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志...");
+            log.info("表详情如下：[{}]",JSON.toJSONString(result));
+            throw new FkException(ResultEnum.DATAACCESS_APP_EDIT_FAILURE);
+        }
+
         List<AppDataSourcePO> collect1 = list.stream().filter(e -> !collect.contains(e.id)).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect1)) {
             collect1.forEach(e -> {
+                //删除数据源
                 appDataSourceImpl.removeById(e.id);
             });
         }
-
-
         return appDataSourceImpl.saveOrUpdateBatch(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
@@ -1390,7 +1420,7 @@ public class AppRegistrationImpl
     @Override
     public List<AppRegistrationPO> getAppListWithNoSchema() {
         LambdaQueryWrapper<AppRegistrationPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AppRegistrationPO::getWhetherSchema,0);
+        wrapper.eq(AppRegistrationPO::getWhetherSchema, 0);
         return list(wrapper);
     }
 

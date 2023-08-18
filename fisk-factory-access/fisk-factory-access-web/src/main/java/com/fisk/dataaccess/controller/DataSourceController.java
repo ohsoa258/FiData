@@ -32,11 +32,23 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceMeta(appId));
     }
 
-    @ApiOperation(value = "根据数据源id重新加载所有数据源以及数据库、表数据")
-    @GetMapping("/setDataSourceMeta/{appId}")
-    public ResultEntity<Object> setDataSourceMeta(@PathVariable long appId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataSourceMeta(appId));
+    /**
+     * 数据接入，刷新redis里存储的表信息
+     *
+     * @param appId
+     * @return
+     */
+    @ApiOperation(value = "数据接入，刷新redis里存储的表信息")
+    @GetMapping("/refreshRedis/{appId}")
+    public ResultEntity<Object> refreshRedis(@PathVariable long appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.refreshRedis(appId));
     }
+//
+//    @ApiOperation(value = "根据数据源id重新加载所有数据源以及数据库、表数据")
+//    @GetMapping("/setDataSourceMeta/{appId}")
+//    public ResultEntity<Object> setDataSourceMeta(@PathVariable long appId) {
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataSourceMetaV2(appId));
+//    }
 
     @PostMapping("/getDatabaseNameList")
     @ApiOperation(value = "根据服务配置信息,获取所有的数据库名称")
