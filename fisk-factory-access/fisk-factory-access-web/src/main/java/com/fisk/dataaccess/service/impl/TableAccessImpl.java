@@ -173,15 +173,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
 
-    @Value("${spring.datasource.url}")
+    @Value("${config-url}")
     private String accessConfigDbURL;
-    @Value("${spring.datasource.username}")
+    @Value("${config-username}")
     private String username;
-    @Value("${spring.datasource.password}")
+    @Value("${config-password}")
     private String pwd;
     @Value("${config-driverType}")
     private String dbType;
-    @Value("${config-tbName}")
+    @Value("${config-tb-name}")
     private String tbName;
 
     @Resource
