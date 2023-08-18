@@ -93,15 +93,15 @@ public class TableAccessController {
     }
 
     /**
-     * 通过应用id获取所选应用下的所有表
+     * 通过应用id获取所选应用下的所有表--仅供智能发布调用
      *
      * @param appId
      * @return
      */
     @GetMapping("/getTblByAppId")
-    @ApiOperation(value = "通过应用id获取所选应用下的所有表")
+    @ApiOperation(value = "通过应用id获取所选应用下的所有表--仅供智能发布调用")
     public ResultEntity<List<TableAccessDTO>> getTblByAppId(@RequestParam("appId") Integer appId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTblByAppId(appId));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTblByAppIdForSmart(appId));
     }
 
 

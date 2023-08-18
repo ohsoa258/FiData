@@ -2602,7 +2602,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @return
      */
     @Override
-    public List<TableAccessDTO> getTblByAppId(Integer appId) {
+    public List<TableAccessDTO> getTblByAppIdForSmart(Integer appId) {
         //使用jdbc的原因是绕开逻辑删除
         Connection connection = null;
         Statement statement = null;
@@ -2649,6 +2649,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             AbstractCommonDbHelper.closeStatement(statement);
             AbstractCommonDbHelper.closeConnection(connection);
         }
+    }
+
+    /**
+     * 通过应用id获取所选应用下的所有表
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public List<TableAccessDTO> getTblByAppId(Integer appId) {
+        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TableAccessPO::getAppId,appId);
+        List<TableAccessPO> list = list(wrapper);
+        return TableAccessMap.INSTANCES.listPoToDto(list);
     }
 
 }

@@ -365,6 +365,14 @@ public interface ITableAccess extends IService<TableAccessPO> {
     TableAccessDTO getAccessTableByTableName(String tableName);
 
     /**
+     * 通过应用id获取所选应用下的所有表--仅供智能发布调用
+     *
+     * @param appId
+     * @return
+     */
+    List<TableAccessDTO> getTblByAppIdForSmart(Integer appId);
+
+    /**
      * 通过应用id获取所选应用下的所有表
      *
      * @param appId
