@@ -119,7 +119,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>RELEASE</version>
+            <version>5.10.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -164,7 +164,7 @@
             <artifactId>ojdbc7</artifactId>
             <version>11.1.0.7.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.fisk</groupId>

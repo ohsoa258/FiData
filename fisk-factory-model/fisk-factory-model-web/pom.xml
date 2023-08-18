@@ -69,7 +69,7 @@
             <artifactId>ojdbc7</artifactId>
             <version>11.1.0.7.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/ojdbc7.jar</systemPath>
         </dependency>
 
         <!-- swagger-ui -->
