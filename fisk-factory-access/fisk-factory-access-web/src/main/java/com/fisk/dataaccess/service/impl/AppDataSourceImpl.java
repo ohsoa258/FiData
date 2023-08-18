@@ -98,12 +98,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Override
     public DataSourceDTO setDataSourceMeta(long appId, long appDataSourceId) {
         try {
-            DataSourceDTO dataSource = mapper.getDataSource(appId);
+            DataSourceDTO dataSource = mapper.getDataSource(appDataSourceId);
             if (dataSource == null) {
                 log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
                 return null;
             }
-            AppDataSourcePO po = this.query().eq("app_id", appId).one();
+            AppDataSourcePO po = this.query().eq("id", appDataSourceId).one();
             dataSource.appName = po.dbName;
             if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
@@ -527,6 +527,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
         List<DataSourceDTO> result = new ArrayList<>();
         for (DataSourceDTO dataSource : dsList) {
+            log.info("刷新redis..........");
             if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
                 return null;
             }
@@ -534,8 +535,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             /**
              * 删除旧缓存
              */
-            redisUtil.del(String.valueOf(appId));
-            redisUtil.del(String.valueOf(dataSource.id));
+            redisUtil.del(RedisKeyBuild.buildDataSoureKey(appId));
+            redisUtil.del(RedisKeyBuild.buildDataSoureKey(dataSource.id));
 
             DataSourceDTO dataSourceDTO = new DataSourceDTO();
             // 将表和视图的结构重新查询，重新存入redis
