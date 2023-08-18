@@ -9,8 +9,17 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(c => c.AddPolicy("LimitRequests", policy =>
+{
+    policy.AllowAnyMethod()
+          .SetIsOriginAllowed(_ => true)
+          .AllowAnyHeader()
+          .AllowCredentials();
+}));
 
 var app = builder.Build();
+
+app.UseCors("LimitRequests");
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
