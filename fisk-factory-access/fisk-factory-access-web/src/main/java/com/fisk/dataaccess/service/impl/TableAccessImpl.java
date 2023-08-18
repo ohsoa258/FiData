@@ -179,7 +179,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String username;
     @Value("${spring.datasource.password}")
     private String pwd;
-    @Value("${config-Db-driverType}")
+    @Value("${config-driverType}")
     private String dbType;
     @Value("${config-tbName}")
     private String tbName;
