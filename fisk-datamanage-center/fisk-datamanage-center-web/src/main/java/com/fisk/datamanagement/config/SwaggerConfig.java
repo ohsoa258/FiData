@@ -55,6 +55,7 @@ public class SwaggerConfig {
     public static final String MetaData = "元数据";
     public static final String MetadataAttribute = "元数据属性";
     public static final String AZURE_SERVER = "Azure服务 OpenAI";
+    public static final String EXPORT_TEMPLATE = "元数据导出模板";
 
 
     @Bean
@@ -84,6 +85,7 @@ public class SwaggerConfig {
                 .tags(new Tag(MetaData, "元数据"))
                 .tags(new Tag(MetadataAttribute, "元数据属性"))
                 .tags(new Tag(AZURE_SERVER, "Azure服务 OpenAI"))
+                .tags(new Tag(EXPORT_TEMPLATE, "元数据导出模板"))
                 .securityContexts(securityContexts());
     }
 

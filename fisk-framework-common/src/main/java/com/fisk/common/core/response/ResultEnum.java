@@ -363,6 +363,7 @@ public enum ResultEnum {
     NO_CONTENT(13002, "没有内容"),
     NOT_SUPPORT(13003, "暂不支持该类型数据查询"),
     DATA_SOURCE_CONFIG(13004, "获取元数据配置文件失败"),
+    DETAULT_EDIT_ERROR(13005, "默认模板无法修改"),
 
 
     /**

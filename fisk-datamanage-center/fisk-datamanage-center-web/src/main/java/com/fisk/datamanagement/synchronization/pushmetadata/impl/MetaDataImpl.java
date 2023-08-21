@@ -18,6 +18,7 @@ import com.fisk.common.core.utils.office.excel.ExcelUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
+import com.fisk.common.server.metadata.TemplateAttributeDto;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.metadata.dto.metadata.*;
@@ -38,12 +39,14 @@ import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.EditMetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
+import com.fisk.datamanagement.dto.metadataentityexporttemplate.MetadataExportTemplateAttributeDto;
 import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
 import com.fisk.datamanagement.dto.process.ProcessAttributesPutDTO;
 import com.fisk.datamanagement.dto.process.ProcessUniqueAttributesDTO;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
 import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.*;
+import com.fisk.datamanagement.map.MetadataEntityExportTemplateAttributeMap;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.ClassificationMapper;
@@ -128,6 +131,8 @@ public class MetaDataImpl implements IMetaData {
     @Resource
     ClassificationMapper classificationMapper;
 
+    @Resource
+    MetadataEntityExportTemplateAttributeServiceImpl metadataEntityExportTemplateAttributeService;
 
 
     @Resource
@@ -202,7 +207,7 @@ public class MetaDataImpl implements IMetaData {
                             metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName);
                             qualifiedNames.add(field.qualifiedName);
                         }
-                        if (!qualifiedNames.isEmpty()){
+                        if (!qualifiedNames.isEmpty()) {
                             //删除历史元数据
                             deleteMetaData(qualifiedNames, tableGuid);
                         }
@@ -739,7 +744,7 @@ public class MetaDataImpl implements IMetaData {
             metadataId = po.atlasGuid;
         }
         //组装表字段业务元数据
-        List<TableRuleInfoDTO> tableRuleInfoList = setTableRuleInfo(sourceData.id, tableId, dataType, tableType ,metadataId);
+        List<TableRuleInfoDTO> tableRuleInfoList = setTableRuleInfo(sourceData.id, tableId, dataType, tableType, metadataId);
         for (TableRuleInfoDTO tableRuleInfoDTO : tableRuleInfoList) {
             setBusinessMetaDataAttributeValue(tableRuleInfoDTO, poList);
         }
@@ -748,8 +753,8 @@ public class MetaDataImpl implements IMetaData {
 
 
     private ResultEnum setBusinessMetaDataAttributeValue(
-                                                         TableRuleInfoDTO tableRuleInfoDTO,
-                                                         List<BusinessMetadataConfigPO> poList) {
+            TableRuleInfoDTO tableRuleInfoDTO,
+            List<BusinessMetadataConfigPO> poList) {
 
         //分组获取业务元数据类别
         Map<String, List<BusinessMetadataConfigPO>> collect = poList.stream()
@@ -800,14 +805,14 @@ public class MetaDataImpl implements IMetaData {
      * @param dataType
      */
     private List<TableRuleInfoDTO> setTableRuleInfo(int dataSourceId,
-                                              int tableId,
-                                              int dataType,
-                                              int tableType,
-                                              String metadataId) {
-        List<TableRuleInfoDTO> dtoList=new ArrayList<>();
+                                                    int tableId,
+                                                    int dataType,
+                                                    int tableType,
+                                                    String metadataId) {
+        List<TableRuleInfoDTO> dtoList = new ArrayList<>();
 
         ResultEntity<List<MetaDataQualityRuleVO>> tableRuleResult = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
-        List<MetaDataQualityRuleVO> tableRuleList=tableRuleResult.data;
+        List<MetaDataQualityRuleVO> tableRuleList = tableRuleResult.data;
         TableRuleParameterDTO parameter = new TableRuleParameterDTO();
         parameter.type = tableType;
         parameter.tableId = tableId;
@@ -821,7 +826,7 @@ public class MetaDataImpl implements IMetaData {
         else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
             result = dataAccessClient.buildTableRuleInfo(parameter);
         }
-        TableRuleInfoDTO dto=new TableRuleInfoDTO();
+        TableRuleInfoDTO dto = new TableRuleInfoDTO();
         if (result.code == ResultEnum.SUCCESS.getCode()) {
             dto.businessName = result.data.businessName;
             dto.dataResponsiblePerson = result.data.dataResponsiblePerson;
@@ -832,13 +837,13 @@ public class MetaDataImpl implements IMetaData {
                     return e;
                 });
             }
-            dto.metadataId=metadataId;
+            dto.metadataId = metadataId;
 
         }
-        if(!tableRuleList.isEmpty()){
+        if (!tableRuleList.isEmpty()) {
             //校验规则
-            dto.checkRules=getRuleByModuleType(tableRuleList,ModuleTypeEnum.DATA_CHECK_MODULE);
-            dto.filterRules=getRuleByModuleType(tableRuleList,ModuleTypeEnum.BIZ_CHECK_MODULE);
+            dto.checkRules = getRuleByModuleType(tableRuleList, ModuleTypeEnum.DATA_CHECK_MODULE);
+            dto.filterRules = getRuleByModuleType(tableRuleList, ModuleTypeEnum.BIZ_CHECK_MODULE);
             dtoList.add(dto);
             List<TableRuleInfoDTO> filedRuleInfoDTOS = packFiledRuleInfo(metadataId, tableRuleList);
             dtoList.addAll(filedRuleInfoDTOS);
@@ -848,43 +853,45 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * 组装字段规则
+     *
      * @return
      */
-    private List<TableRuleInfoDTO> packFiledRuleInfo(String tableMetadataId,List<MetaDataQualityRuleVO>  tableRuleList){
+    private List<TableRuleInfoDTO> packFiledRuleInfo(String tableMetadataId, List<MetaDataQualityRuleVO> tableRuleList) {
         List<MetadataEntityPO> childMetaData = metadataEntity.getChildMetaData(tableMetadataId);
-        List<TableRuleInfoDTO> tableRuleInfoDTOList=new ArrayList<>();
+        List<TableRuleInfoDTO> tableRuleInfoDTOList = new ArrayList<>();
         for (MetadataEntityPO filedMetadataItem : childMetaData) {
-            TableRuleInfoDTO tableRuleInfoDTO=new TableRuleInfoDTO();
-            tableRuleInfoDTO.metadataId=String.valueOf(filedMetadataItem.getId());
-            tableRuleInfoDTO.checkRules=getFiledRuleByModuleType(filedMetadataItem.name,tableRuleList,ModuleTypeEnum.DATA_CHECK_MODULE);
-            tableRuleInfoDTO.filterRules=getFiledRuleByModuleType(filedMetadataItem.name,tableRuleList,ModuleTypeEnum.BIZ_CHECK_MODULE);
+            TableRuleInfoDTO tableRuleInfoDTO = new TableRuleInfoDTO();
+            tableRuleInfoDTO.metadataId = String.valueOf(filedMetadataItem.getId());
+            tableRuleInfoDTO.checkRules = getFiledRuleByModuleType(filedMetadataItem.name, tableRuleList, ModuleTypeEnum.DATA_CHECK_MODULE);
+            tableRuleInfoDTO.filterRules = getFiledRuleByModuleType(filedMetadataItem.name, tableRuleList, ModuleTypeEnum.BIZ_CHECK_MODULE);
             tableRuleInfoDTOList.add(tableRuleInfoDTO);
         }
         return tableRuleInfoDTOList;
     }
 
-    private List<String> getFiledRuleByModuleType(String filedName,List<MetaDataQualityRuleVO>  tableRuleList, ModuleTypeEnum moduleTypeEnum){
+    private List<String> getFiledRuleByModuleType(String filedName, List<MetaDataQualityRuleVO> tableRuleList, ModuleTypeEnum moduleTypeEnum) {
         MetaDataQualityRuleVO metaDataQualityRuleVO = tableRuleList.stream().filter(e -> e.getModuleTypeEnum() == moduleTypeEnum).findFirst().orElse(null);
-        if(metaDataQualityRuleVO==null){
-            return  new ArrayList<>();
-        }
-        List<MetaDataFieldRuleVO> fieldRuleList = metaDataQualityRuleVO.getFieldRuleList();
-        if (fieldRuleList==null){
+        if (metaDataQualityRuleVO == null) {
             return new ArrayList<>();
         }
-        return fieldRuleList.stream().filter(e->e.fieldName.equals(filedName)).map(e->e.getRuleIllustrate()).collect(Collectors.toList());
+        List<MetaDataFieldRuleVO> fieldRuleList = metaDataQualityRuleVO.getFieldRuleList();
+        if (fieldRuleList == null) {
+            return new ArrayList<>();
+        }
+        return fieldRuleList.stream().filter(e -> e.fieldName.equals(filedName)).map(e -> e.getRuleIllustrate()).collect(Collectors.toList());
     }
 
     /**
      * 根据规则类型获取规则
+     *
      * @param moduleTypeEnum
      * @return
      */
-    private List<String> getRuleByModuleType(List<MetaDataQualityRuleVO>  tableRuleList, ModuleTypeEnum moduleTypeEnum){
-        List<String> stringList=new ArrayList<>();
+    private List<String> getRuleByModuleType(List<MetaDataQualityRuleVO> tableRuleList, ModuleTypeEnum moduleTypeEnum) {
+        List<String> stringList = new ArrayList<>();
         MetaDataQualityRuleVO metaDataQualityRuleVO = tableRuleList.stream().filter(e -> e.getModuleTypeEnum() == moduleTypeEnum).findFirst().orElse(null);
-        if (metaDataQualityRuleVO!=null){
-            stringList=  metaDataQualityRuleVO.getTableRuleList().stream().map(e-> e.getRuleIllustrate()).collect(Collectors.toList());
+        if (metaDataQualityRuleVO != null) {
+            stringList = metaDataQualityRuleVO.getTableRuleList().stream().map(e -> e.getRuleIllustrate()).collect(Collectors.toList());
         }
         return stringList;
     }
@@ -1630,7 +1637,7 @@ public class MetaDataImpl implements IMetaData {
         //获取业务分类
         List<BusinessClassificationPO> allBusinessClassificationPOList = classification.query().list();
         //元数据属性关联
-        List<ClassificationPO> classificationPOList=classificationMapper.selectList(null);
+        List<ClassificationPO> classificationPOList = classificationMapper.selectList(null);
         //元数据属性
         List<MetadataAttributePO> metadataAttributePOList = metadataAttribute.query().list();
 
@@ -1663,15 +1670,15 @@ public class MetaDataImpl implements IMetaData {
             //二级分类的类型
             String twoLevelBusinessClassificationAppType = "";
             //获取一二级分类名称
-            if (businessClassificationPO!=null) {
+            if (businessClassificationPO != null) {
                 oneLevelBusinessClassificationName = businessClassificationPO.getName();
                 twoLevelBusinessClassificationName = ClassificationTypeEnum.getEnumByValue(businessClassificationPO.getPid()).getName();
                 //二级分类下的属性
                 List<ClassificationPO> classificationPO = classificationPOList.stream()
                         .filter(e -> e.getBusinessClassificationId() == businessClassificationPO.getId()).collect(Collectors.toList());
                 ClassificationPO classificationAttributeAppTypePO = classificationPO.stream().filter(e -> e.getAttributeName().equals("类型")).findFirst().orElse(null);
-                if (classificationAttributeAppTypePO!=null){
-                    twoLevelBusinessClassificationAppType= classificationAttributeAppTypePO.getAttributeValue();
+                if (classificationAttributeAppTypePO != null) {
+                    twoLevelBusinessClassificationAppType = classificationAttributeAppTypePO.getAttributeValue();
                 }
             }
             //根据元数据Id获取元数据详情
@@ -1685,22 +1692,22 @@ public class MetaDataImpl implements IMetaData {
                 excelMainMetadataMap.put("businessClassificationId", bcItem);
 
                 //一级分类
-                excelMainMetadataMap.put("0", twoLevelBusinessClassificationName);
+                excelMainMetadataMap.put("301", twoLevelBusinessClassificationName);
                 //二级分类
-                excelMainMetadataMap.put("1", oneLevelBusinessClassificationName);
+                excelMainMetadataMap.put("302", oneLevelBusinessClassificationName);
                 //类型
-                excelMainMetadataMap.put("2", twoLevelBusinessClassificationAppType);
+                excelMainMetadataMap.put("303", twoLevelBusinessClassificationAppType);
                 //名称
-                excelMainMetadataMap.put("3", metaDataItem.getName());
+                excelMainMetadataMap.put("304", metaDataItem.getName());
                 //显示名称
-                excelMainMetadataMap.put("4", metaDataItem.getDisplayName());
+                excelMainMetadataMap.put("305", metaDataItem.getDisplayName());
                 //元数据类型
-                excelMainMetadataMap.put("5", EntityTypeEnum.getValue(metaDataItem.getTypeId()).getName());
+                excelMainMetadataMap.put("306", EntityTypeEnum.getValue(metaDataItem.getTypeId()).getName());
                 //描述
-                excelMainMetadataMap.put("6", metaDataItem.getDescription());
+                excelMainMetadataMap.put("307", metaDataItem.getDescription());
                 //业务清洗规则
                 String tableValidationRuleValue = getMetaDataRule(metaDataItem.getId(), metadataBusinessMetadataMapPOList, businessMetadataConfigPOList);
-                excelMainMetadataMap.put("7", tableValidationRuleValue);
+                excelMainMetadataMap.put("308", tableValidationRuleValue);
 
 
                 //导出实体所有关联父级实体parent
@@ -1718,21 +1725,18 @@ public class MetaDataImpl implements IMetaData {
                     for (MetadataEntityPO childItem : childMetaData) {
                         Map<String, Object> excelChildMetaDataMap = new HashMap<>();
                         //名称
-                        excelChildMetaDataMap.put("8", childItem.getName());
+                        excelChildMetaDataMap.put("401", childItem.getName());
                         //显示名称
-                        excelChildMetaDataMap.put("9", childItem.getDisplayName());
+                        excelChildMetaDataMap.put("402", childItem.getDisplayName());
                         //元数据类型
-                        excelChildMetaDataMap.put("10", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
+                        excelChildMetaDataMap.put("403", EntityTypeEnum.getValue(childItem.getTypeId()).getName());
                         //描述
-                        excelChildMetaDataMap.put("11", childItem.getDescription());
+                        excelChildMetaDataMap.put("404", childItem.getDescription());
                         List<MetadataAttributePO> EntityAttributeList = metadataAttributePOList.stream()
                                 .filter(e -> e.getMetadataEntityId() == childItem.getId())
                                 .collect(Collectors.toList());
                         String entityAttributeDataType = "";
                         String entityAttributeLength = "";
-                        if (childItem.getName().equals("BPM.T_AssetsDiscoveryDifference")) {
-                            Integer a = 1;
-                        }
                         //判断子级是否存在额外属性 字段长度 字段类型
                         if (!EntityAttributeList.isEmpty()) {
                             //字段类型
@@ -1749,12 +1753,12 @@ public class MetaDataImpl implements IMetaData {
                             }
                         }
                         //字段类型
-                        excelChildMetaDataMap.put("12", entityAttributeDataType);
+                        excelChildMetaDataMap.put("405", entityAttributeDataType);
                         //字段长度
-                        excelChildMetaDataMap.put("13", entityAttributeLength);
+                        excelChildMetaDataMap.put("406", entityAttributeLength);
                         //校验规则
                         String filedValidationRuleValue = getMetaDataRule(childItem.getId(), metadataBusinessMetadataMapPOList, businessMetadataConfigPOList);
-                        excelMainMetadataMap.put("14", filedValidationRuleValue);
+                        excelMainMetadataMap.put("407", filedValidationRuleValue);
                         //合并主实体信息
                         excelChildMetaDataMap.putAll(excelMainMetadataMap);
                         excelMetaDataList.add(excelChildMetaDataMap);
@@ -1770,6 +1774,7 @@ public class MetaDataImpl implements IMetaData {
 
     /**
      * 获取元数据校验规则
+     *
      * @param metadataId
      * @param metadataBusinessMetadataMapPOList
      * @param businessMetadataConfigPOList
@@ -1777,16 +1782,16 @@ public class MetaDataImpl implements IMetaData {
      */
     public String getMetaDataRule(Long metadataId,
                                   List<MetadataBusinessMetadataMapPO> metadataBusinessMetadataMapPOList,
-                                  List<BusinessMetadataConfigPO> businessMetadataConfigPOList){
-        String  ruleAttributeName="ValidationRules";
+                                  List<BusinessMetadataConfigPO> businessMetadataConfigPOList) {
+        String ruleAttributeName = "ValidationRules";
         BusinessMetadataConfigPO validationRuleAttributeInfo = businessMetadataConfigPOList.stream()
                 .filter(e -> e.getAttributeName().equals(ruleAttributeName)).findFirst().orElse(null);
-        if(validationRuleAttributeInfo==null){
+        if (validationRuleAttributeInfo == null) {
             return "";
         }
         return metadataBusinessMetadataMapPOList.stream()
                 .filter(e -> e.getMetadataEntityId() == metadataId.intValue() && e.getBusinessMetadataId() == validationRuleAttributeInfo.getId())
-                .map(e->e.getValue())
+                .map(e -> e.getValue())
                 .collect(Collectors.joining("\n"));
 
     }
@@ -1832,11 +1837,6 @@ public class MetaDataImpl implements IMetaData {
         //删除一级分类
         exportBusinessClassificationIdList.removeAll(allParentBC);
 
-        //元数据父级最大层级
-        Integer maxParentNumber = 0;
-        //元数据子级最大层级
-        Integer maxChildNumber = 0;
-
 
         List<Long> finalExportBusinessClassificationIdList = exportBusinessClassificationIdList;
 
@@ -1845,32 +1845,13 @@ public class MetaDataImpl implements IMetaData {
                 .filter(e -> finalExportBusinessClassificationIdList.contains(Long.valueOf(e.get("businessClassificationId").toString())))
                 .collect(Collectors.toList());
         //是否导出相关联的父级
-        if (dto.associatedType.contains(1)) {
-            maxParentNumber = 2;
-        }
-        //是否导出相关联的子级
-        if (dto.associatedType.contains(2)) {
-            //导出子级
-            maxChildNumber = 1;
-        } else {
-            // 使用 Set 来记录已存在的 id 和 name 组合
-            Set<String> existingCombinations = new HashSet<>();
 
-            // 去重后的 List<Map<String, Object>>
-            List<Map<String, Object>> deduplicatedList = new ArrayList<>();
+        //获取模板束属性
+        List<MetadataExportTemplateAttributeDto> templateAttributeDtoList = metadataEntityExportTemplateAttributeService.getTemplateValidityAttributeByTemplateId(dto.templateId);
+        List<TemplateAttributeDto> commonAttributeDtoList = MetadataEntityExportTemplateAttributeMap.INSTANCES.dtoToDtoList(templateAttributeDtoList);
 
-            // 遍历原始列表，根据 entityId 和 businessClassificationId 进行去重操作
-            for (Map<String, Object> map : excelMetaDataList) {
-                String idAndName = map.get("entityId") + "&" + map.get("businessClassificationId");
-                if (!existingCombinations.contains(idAndName)) {
-                    existingCombinations.add(idAndName);
-                    deduplicatedList.add(map);
-                }
-            }
-            excelMetaDataList = deduplicatedList;
-        }
         String fileName = "元数据.xlsx";
-        InputStream fileStream = ExcelUtil.createMetaDataSaveExcel("sheet", excelMetaDataList, maxParentNumber, maxChildNumber);
+        InputStream fileStream = ExcelUtil.createMetaDataSaveExcel("sheet", excelMetaDataList, commonAttributeDtoList);
         // 将excel文件流写入到Response
         try {
             byte[] buffer = new byte[0];
@@ -1911,16 +1892,15 @@ public class MetaDataImpl implements IMetaData {
 
         }
         number++;
-        Integer index = ((number - 1) * parentAttributeNumber);
         Map<String, Object> parentMetadataMap = new HashMap<>();
         //名称
-        parentMetadataMap.put("-" + (index + 4), parentMetaDataPO.getName());
+        parentMetadataMap.put("-" + ((number * 100) + 4), parentMetaDataPO.getName());
         //显示名称
-        parentMetadataMap.put("-" + (index + 3), parentMetaDataPO.getDisplayName());
+        parentMetadataMap.put("-" +((number * 100)+ 3) , parentMetaDataPO.getDisplayName());
         //类型
-        parentMetadataMap.put("-" + (index + 2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
+        parentMetadataMap.put("-" +((number * 100)+ 2) , EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
         //描述
-        parentMetadataMap.put("-" + (index + 1), parentMetaDataPO.getDescription());
+        parentMetadataMap.put("-" +((number * 100)+ 1), parentMetaDataPO.getDescription());
         Map<String, Object> lastResult = setExcelParentMetaDataMap(Long.valueOf(parentMetaDataPO.getParentId()), number);
         parentMetadataMap.putAll(lastResult);
         return parentMetadataMap;

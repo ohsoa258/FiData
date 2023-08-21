@@ -2,6 +2,7 @@ package com.fisk.common.core.utils.office.excel;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.TemplateAttributeDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author gy
@@ -25,8 +27,8 @@ import java.util.*;
 public class ExcelUtil {
 
     private static final String[] parentMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述"};
-    private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类","应用类型", "名称", "显示名称", "元数据类型", "描述","校验规则"};
-    private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度","校验规则"};
+    private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类", "应用类型", "名称", "显示名称", "元数据类型", "描述", "校验规则"};
+    private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度", "校验规则"};
 
     /**
      * 用户信息导出类
@@ -241,10 +243,9 @@ public class ExcelUtil {
      * @params dataList
      */
     public static InputStream createMetaDataSaveExcel(
-            String sheetName ,
-            List<Map<String, Object>> dataList ,
-            Integer parentNumber ,
-                    Integer childNumber) {
+            String sheetName,
+            List<Map<String, Object>> dataList,
+            List<TemplateAttributeDto> commonAttributeDtoList) {
         InputStream stream = null;
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
@@ -274,14 +275,11 @@ public class ExcelUtil {
             //单个父级元数据元素个数
             Integer parentMetadataAttributeNumber = parentMetaDataHeaders.length;
             //写入表头
-            Integer colIndex = setMetadataSheetTableHeader(sheet, parentNumber, childNumber);
-            //所有父级的元素个数
-            Integer allParentMetadataAttributeNumber = parentNumber * parentMetadataAttributeNumber;
-            Integer allMainChildMetadataAttributeNumber=mainMetaDataHeaders.length;
-            if(childNumber>0){
-                allMainChildMetadataAttributeNumber+=childMetaDataHeaders.length;
-            }
-            //当前元数据和子级元数据元素个数
+            setMetadataSheetTableHeader(sheet, commonAttributeDtoList);
+            //获取二级表头 ,排除一级表头
+            List<TemplateAttributeDto> twoLevelAttribute = commonAttributeDtoList.stream().filter(e -> !e.getAttributePid().equals(0))
+                    .sorted(Comparator.comparing(TemplateAttributeDto::getAttributeId))
+                    .collect(Collectors.toList());
 
             //起始行
             int excelRow = 2;
@@ -290,15 +288,14 @@ public class ExcelUtil {
                 Row dataRow = sheet.createRow(excelRow++);
                 //内层for循环创建每行对应的列，并赋值
                 int columnIndex = 0;
-                for (int i = -allParentMetadataAttributeNumber; i < allMainChildMetadataAttributeNumber; i++) {
+                for (TemplateAttributeDto attributeDto : twoLevelAttribute) {
                     Cell cell = dataRow.createCell(columnIndex);
                     columnIndex++;
-                    String key = i + "";
+                    String key=attributeDto.getAttributeId()+"";
                     if (row.containsKey(key)) {
                         cell.setCellValue((String) row.get(key));
                     }
                 }
-
             }
             xssfWorkbook.write(outputStream);
             stream = new ByteArrayInputStream(outputStream.toByteArray());
@@ -317,63 +314,45 @@ public class ExcelUtil {
             }
         }
 
-       return stream;
+        return stream;
     }
 
-    private static Integer setMetadataSheetTableHeader(Sheet sheet, Integer parentNumber, Integer childNumber) {
-        //下标
-        Integer colIndex = 0;
+    private static void setMetadataSheetTableHeader(Sheet sheet, List<TemplateAttributeDto> commonAttributeDtoList) {
+        //一级表头起始下标
+        Integer startIndex = 0;
         Row row1 = sheet.createRow(0);
         Row row2 = sheet.createRow(1);
+        //一级表头ID
+        Integer[] oneLevelHeader = {-2,-1 , 3, 4};
+        for (Integer oneLevelId : oneLevelHeader) {
+            //获取一级表头信息
+            TemplateAttributeDto oneLevelAttribute = commonAttributeDtoList.stream().filter(e -> e.getAttributeId().equals(oneLevelId)).findFirst().orElse(null);
+            if (oneLevelAttribute != null) {
+                //获取二级表头信息
+                List<TemplateAttributeDto> twoLevelAttributeList = commonAttributeDtoList.stream()
+                        .filter(e -> e.getAttributePid().equals(oneLevelId))
+                        .sorted(Comparator.comparing(TemplateAttributeDto::getAttributeId))
+                        .collect(Collectors.toList());
+                //判断是否显示二级表头
+                Integer twoAttributeCount = Long.valueOf(twoLevelAttributeList.stream().count()).intValue();
+                if (twoAttributeCount > 0) {
+                    //设置excel 一级表头 合并一级表头
+                    Integer firstCol = startIndex;
+                    Integer lastRow = startIndex + twoAttributeCount - 1;
+                    CellRangeAddress mergedRegion = new CellRangeAddress(0, 0, firstCol, lastRow);
+                    sheet.addMergedRegion(mergedRegion);
+                    Cell cellA1 = row1.createCell(firstCol);
+                    cellA1.setCellValue(oneLevelAttribute.getAttributeName());
+                    //设置二级表头
+                    for (TemplateAttributeDto towAttributeDto : twoLevelAttributeList) {
+                        Cell cellA2 = row2.createCell(startIndex);
+                        cellA2.setCellValue(towAttributeDto.getAttributeName());
+                        startIndex++;
+                    }
+                }
 
-        //写入父级表头
-        for (int i = 1; i <= parentNumber; i++) {
-            Integer firstCol = (i - 1) * parentMetaDataHeaders.length;
-            Integer lastRow = (i * parentMetaDataHeaders.length) - 1;
-            //合并一级表头
-            CellRangeAddress mergedRegion = new CellRangeAddress(0, 0, firstCol, lastRow);
-            sheet.addMergedRegion(mergedRegion);
-            Cell cellA1 = row1.createCell(firstCol);
-            cellA1.setCellValue("父级对象");
-
-
-            for (int j = 0; j < parentMetaDataHeaders.length; j++) {
-                Cell cellA2 = row2.createCell(firstCol + j);
-                cellA2.setCellValue(parentMetaDataHeaders[j]);
-            }
-
-        }
-
-
-        //当前元数据表头
-        colIndex = parentNumber * parentMetaDataHeaders.length;
-        // 合并一级表头
-        CellRangeAddress mergedRegion = new CellRangeAddress(0, 0, colIndex, colIndex + mainMetaDataHeaders.length - 1);
-        sheet.addMergedRegion(mergedRegion);
-        Cell cellA1_1 = row1.createCell(colIndex);
-        cellA1_1.setCellValue("当前对象");
-
-        for (int j = 0; j < mainMetaDataHeaders.length; j++) {
-            Cell cellA2 = row2.createCell(colIndex);
-            cellA2.setCellValue(mainMetaDataHeaders[j]);
-            colIndex++;
-        }
-
-        //填充子级元数据表头
-        if (childNumber > 0) {
-
-            CellRangeAddress mergedRegion2 = new CellRangeAddress(0, 0, colIndex, colIndex + childMetaDataHeaders.length - 1);
-            sheet.addMergedRegion(mergedRegion2);
-            Cell cellA1_2 = row1.createCell(colIndex);
-            cellA1_2.setCellValue("子级对象");
-            //填充二级表头
-            for (int j = 0; j < childMetaDataHeaders.length; j++) {
-                Cell cellA2 = row2.createCell(colIndex);
-                cellA2.setCellValue(childMetaDataHeaders[j]);
-                colIndex++;
             }
         }
-        return colIndex;
     }
 
     /**
