@@ -36,7 +36,7 @@ public class SystemMonitorServiceImpl extends ServiceImpl<SystemMonitorMapper, S
     public SystemMonitorVO getSystemMonitor(String ip) {
         QueryWrapper<SystemMonitorPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("ip",ip);
-        queryWrapper.orderByDesc("create_time");
+        queryWrapper.orderByDesc("id");
         queryWrapper.last("limit 1");
         SystemMonitorPO systemMonitorPO = this.getOne(queryWrapper);
         SystemMonitorVO systemMonitorVO = SystemMonitorMap.INSTANCES.poToVo(systemMonitorPO);

@@ -18,11 +18,11 @@ public interface AppDataSourceMapper extends FKBaseMapper<AppDataSourcePO> {
     /**
      * 根据应用id获取数据源类型
      *
-     * @param appId appId
+     * @param appDataSourceId
      * @return po
      */
-    @Select("SELECT id,drive_type FROM tb_app_datasource WHERE del_flag = 1 AND app_id = #{app_id};")
-    DataSourceDTO getDataSource(@Param("app_id") long appId);
+    @Select("SELECT id,drive_type FROM tb_app_datasource WHERE del_flag = 1 AND id = #{appDataSourceId};")
+    DataSourceDTO getDataSource(@Param("appDataSourceId") long appDataSourceId);
 
     /**
      * 获取所有实时应用的

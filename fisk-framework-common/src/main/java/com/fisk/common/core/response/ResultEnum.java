@@ -194,6 +194,10 @@ public enum ResultEnum {
     SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
     SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
     DATASOURCE_TYPE_ERROR(5083, "已选择的数据源类型冲突"),
+    DATAACCESS_GET_TABLE_ERROR(5084,"根据应用id获取物理表失败"),
+    DATAACCESS_APP_EDIT_FAILURE(5085,"当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志..."),
+
+
 
 
     /**
@@ -382,6 +386,10 @@ public enum ResultEnum {
     PG_METADATA_SETREDIS_ERROR(14011, "redis写入pg元数据信息异常"),
     PG_METADATA_GETREDIS_ERROR(14012, "redis读取pg元数据信息异常"),
     TABLE_DATA_SYNC_FAIL(14013, "数据同步失败"),
+    SMART_PUBLISH_FAIL(14014, "智能发布失败"),
+    SMART_PUBLISH_REMOTE_ACCESS_FAIL(14015, "数据接入-智能发布失败-调用数据接入模块接口报错"),
+    SMART_PUBLISH_VARIABLES_MISSING_ERROR(14016, "数据接入-智能发布失败-调用数据接入模块接口报错"),
+    SMART_PUBLISH_GET_APPINFO_FALIURE(14017, "智能发布-获取应用信息失败"),
 
     /**
      * mdm

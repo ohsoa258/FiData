@@ -74,13 +74,15 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             DataSourceDTO dataSourceDTO = new DataSourceDTO();
             if (!flag) {
                 // 将表和视图的结构存入redis
-                dataSourceDTO = setDataSourceMeta(appId);
+                dataSourceDTO = setDataSourceMeta(appId, dataSource.id);
             }
 
             try {
                 String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildDataSoureKey(dataSource.id)).toString();
                 if (StringUtils.isNotBlank(datasourceMetaJson)) {
                     dataSource = JSON.parseObject(datasourceMetaJson, DataSourceDTO.class);
+                } else {
+                    dataSource = dataSourceDTO;
                 }
             } catch (Exception e) {
                 log.error("redis中获取数据失败");
@@ -94,14 +96,14 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     }
 
     @Override
-    public DataSourceDTO setDataSourceMeta(long appId) {
+    public DataSourceDTO setDataSourceMeta(long appId, long appDataSourceId) {
         try {
-            DataSourceDTO dataSource = mapper.getDataSource(appId);
+            DataSourceDTO dataSource = mapper.getDataSource(appDataSourceId);
             if (dataSource == null) {
                 log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
                 return null;
             }
-            AppDataSourcePO po = this.query().eq("app_id", appId).one();
+            AppDataSourcePO po = this.query().eq("id", appDataSourceId).one();
             dataSource.appName = po.dbName;
             if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
                 MysqlConUtils mysqlConUtils = new MysqlConUtils();
@@ -140,7 +142,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
-                redisUtil.set(RedisKeyBuild.buildDataSoureKey(appId), JSON.toJSONString(dataSource));
+                redisUtil.set(RedisKeyBuild.buildDataSoureKey(appDataSourceId), JSON.toJSONString(dataSource));
             }
             return dataSource;
         } catch (Exception e) {
@@ -507,6 +509,55 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         }
         return data;
 
+    }
+
+    /**
+     * 数据接入，刷新redis里存储的表信息
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public List<DataSourceDTO> refreshRedis(long appId) {
+
+        List<DataSourceDTO> dsList = mapper.getDataSourceListById(appId);
+        if (CollectionUtils.isEmpty(dsList)) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+
+        List<DataSourceDTO> result = new ArrayList<>();
+        for (DataSourceDTO dataSource : dsList) {
+            log.info("刷新redis..........");
+            if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
+                return null;
+            }
+
+            /**
+             * 删除旧缓存
+             */
+            redisUtil.del(RedisKeyBuild.buildDataSoureKey(appId));
+            redisUtil.del(RedisKeyBuild.buildDataSoureKey(dataSource.id));
+
+            DataSourceDTO dataSourceDTO = new DataSourceDTO();
+            // 将表和视图的结构重新查询，重新存入redis
+            dataSourceDTO = setDataSourceMeta(appId, dataSource.id);
+
+            try {
+                String datasourceMetaJson = redisUtil.get(RedisKeyBuild.buildDataSoureKey(dataSource.id)).toString();
+                if (StringUtils.isNotBlank(datasourceMetaJson)) {
+                    dataSource = JSON.parseObject(datasourceMetaJson, DataSourceDTO.class);
+                } else {
+                    dataSource = dataSourceDTO;
+                }
+            } catch (Exception e) {
+                log.error("redis中获取数据失败");
+                //在测试openedge数据库时发现，如果库内表过多，导致存不进redis里面时，会导致返回空数据
+                dataSource = dataSourceDTO;
+            }
+            result.add(dataSource);
+        }
+
+        return result;
     }
 
     /**

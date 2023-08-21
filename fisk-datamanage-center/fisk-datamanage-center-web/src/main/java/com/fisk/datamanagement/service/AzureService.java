@@ -12,4 +12,7 @@ import java.util.Map;
  */
 public interface AzureService {
     List<Map<String,Object>> getData(QueryData queryData);
+
+    List<Map<String,Object>> getSelectChatData(QueryData queryData);
+
 }

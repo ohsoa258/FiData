@@ -51,8 +51,13 @@ atlas:
 #血缘同步
 scheduling:
   enabled: false
+azure1:
+  openai:
+    key: Bearer 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
+    endpoint: http://4.216.139.151
+    deploymodel: text-davinci-003
 azure:
   openai:
     key: 4412a8536d5843d4800d3a7aa8d2d306
-    endpoint: https://fiskai.openai.azure.com/
-    deploymodel: FiData
+    endpoint: http://4.216.139.151
+    deploymodel: text-davinci-003

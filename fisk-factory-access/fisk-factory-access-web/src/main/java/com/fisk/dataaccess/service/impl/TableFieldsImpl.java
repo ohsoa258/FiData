@@ -284,7 +284,6 @@ public class TableFieldsImpl
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
@@ -623,7 +622,7 @@ public class TableFieldsImpl
 
             BuildPhysicalTableDTO data = result.data;
             //查询组件并发个数
-            if (syncMode.concurrencyNums==null){
+            if (syncMode.concurrencyNums == null) {
                 syncMode.setConcurrencyNums(1);
             }
             data.concurrencyNums = syncMode.concurrencyNums;
@@ -811,7 +810,7 @@ public class TableFieldsImpl
             BuildPhysicalTableDTO data = result.data;
 
             //查询组件并发个数
-            if (syncMode.concurrencyNums==null){
+            if (syncMode.concurrencyNums == null) {
                 syncMode.setConcurrencyNums(1);
             }
             data.concurrencyNums = syncMode.concurrencyNums;
@@ -1956,7 +1955,7 @@ public class TableFieldsImpl
             } else if ("WEEK".equalsIgnoreCase(dateUnit)) {
                 versionType = "CONCAT(YEAR(GETDATE()), '/W', DATEPART(WEEK, GETDATE()))";
             } else if ("DAY".equalsIgnoreCase(dateUnit)) {
-                versionType = "day(GETDATE())";
+                versionType = "CONVERT(varchar(8), GETDATE(), 112)";
             }
 
             //如果使用自定义版本号
@@ -1974,8 +1973,8 @@ public class TableFieldsImpl
 
             // 在 fi_createtime 前添加 fi_version
             finalSql = finalSql.replaceFirst("fi_createtime", "fi_version, fi_createtime");
-            // 在第一个 getdate() 前添加 @Version,
-            finalSql = finalSql.replaceFirst("getdate\\(\\)", "@Version, getdate()");
+            // 在第一个 getdate(),getdate(),fidata_batch_code 前添加 @Version,
+            finalSql = finalSql.replaceFirst("getdate\\(\\),getdate\\(\\),fidata_batch_code", "@Version, getdate(), getdate(), fidata_batch_code");
             return finalSql;
         } else {
             log.info("全量覆盖未选择生成版本快照...");
@@ -2016,7 +2015,7 @@ public class TableFieldsImpl
         //根据数据库的不同连接类型，获取不同的sqlHelper实现类
         IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
-        if(fields.isEmpty()){
+        if (fields.isEmpty()) {
             return "请检查字段映射...";
         }
 

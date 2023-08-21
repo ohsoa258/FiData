@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -141,6 +142,42 @@ public class TableAccessDTO extends BaseDTO {
      */
     @ApiModelProperty(value = "同步频率")
     public TableSyncmodeDTO tableSyncmodeDTO;
+
+    public LocalDateTime createTime;
+
+    public String createUser;
+
+    public LocalDateTime updateTime;
+
+    public String updateUser;
+
+    public int delFlag;
+
+    /**
+     * 物理表显示名称
+     */
+    public String displayName;
+
+    /**
+     * 业务时间覆盖的where条件
+     */
+    public String whereScript;
+
+    /**
+     * 覆盖脚本
+     */
+    public String coverScript;
+
+    /**
+     * 当Keep_number 配置天数后，这里保存删除stg表的数据的脚本语句
+     * 默认：5 day
+     */
+    public String deleteStgScript;
+
+    /**
+     * excel sheet数据开始读取行数
+     */
+    public Integer startLine;
 
     public TableAccessDTO(BaseEntity entity) {
         super(entity);

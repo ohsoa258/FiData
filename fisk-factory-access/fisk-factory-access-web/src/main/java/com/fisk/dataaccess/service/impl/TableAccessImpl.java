@@ -102,6 +102,7 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -171,6 +172,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private String nifiFilePath;
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+
+    @Value("${config-url}")
+    private String accessConfigDbURL;
+    @Value("${config-username}")
+    private String username;
+    @Value("${config-password}")
+    private String pwd;
+    @Value("${config-driverType}")
+    private String dbType;
+    @Value("${config-tb-name}")
+    private String tbName;
+
     @Resource
     TableHistoryMapper tableHistoryMapper;
     @Resource
@@ -1062,7 +1075,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 5.表及表sql
         TableSyncmodePO modelSync = syncmodeMapper.getData(id);
         if (modelSync == null) {
-            return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            if (modelSync == null) {
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            }
         }
         // TODO: 新增同步方式
         targetDsConfig.syncMode = modelSync.syncMode;
@@ -1666,7 +1681,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
             //通过 应用id集合 查询对应的物理表
             LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.in(TableAccessPO::getAppId,ids);
+            wrapper.in(TableAccessPO::getAppId, ids);
             List<TableAccessPO> tableAccessPOS = list(wrapper);
             List<TableAccessPO> posAlreadyExists = tableAccessPOS.stream()
                     .filter(tableAccessPO -> tableName.equals(tableAccessPO.getTableName()))
@@ -1684,7 +1699,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                         .collect(Collectors.toCollection(ArrayList::new));
 
                 List<String> appNames = collect.stream().map(AppRegistrationPO::getAppName).collect(Collectors.toList());
-                return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS,"表名存在于以下应用中："+appNames);
+                return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS, "表名存在于以下应用中：" + appNames);
             }
         }
 
@@ -2578,6 +2593,76 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             return TableAccessMap.INSTANCES.poToDto(one);
         }
+    }
+
+    /**
+     * 通过应用id获取所选应用下的所有表--仅供智能发布调用
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public List<TableAccessDTO> getTblByAppIdForSmart(Integer appId) {
+        //使用jdbc的原因是绕开逻辑删除
+        Connection connection = null;
+        Statement statement = null;
+        List<TableAccessDTO> tableAccessDTOS = new ArrayList<>();
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum =
+                com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(dbType);
+        try {
+            connection = DbConnectionHelper.connection(accessConfigDbURL, username, pwd,
+                    dataSourceTypeEnum);
+            statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from " + tbName + "where app_id = " + appId);
+
+            while (resultSet.next()) {
+                TableAccessDTO tableAccessDTO = new TableAccessDTO();
+                tableAccessDTO.setId(Long.parseLong(resultSet.getString("id")));
+                tableAccessDTO.setAppId(Long.parseLong(resultSet.getString("app_id")));
+                tableAccessDTO.setApiId(Long.valueOf(resultSet.getString("api_id")));
+                tableAccessDTO.setTableName(resultSet.getString("table_name"));
+                tableAccessDTO.setTableDes(resultSet.getString("table_des"));
+                tableAccessDTO.setIsRealtime(Integer.parseInt(resultSet.getString("is_realtime")));
+                tableAccessDTO.setPublish(Integer.valueOf(resultSet.getString("publish")));
+                tableAccessDTO.setSqlScript(resultSet.getString("sql_script"));
+                tableAccessDTO.setSheet(resultSet.getString("sheet"));
+                tableAccessDTO.setPublishErrorMsg(resultSet.getString("publish_error_msg"));
+                tableAccessDTO.setCreateUser(resultSet.getString("create_user"));
+                tableAccessDTO.setCreateTime(LocalDateTime.parse(resultSet.getString("create_time")));
+                tableAccessDTO.setDelFlag(Integer.parseInt(resultSet.getString("del_flag")));
+                tableAccessDTO.setUpdateUser(resultSet.getString("update_user"));
+                tableAccessDTO.setUpdateTime(LocalDateTime.parse(resultSet.getString("update_time")));
+                tableAccessDTO.setDisplayName(resultSet.getString("display_name"));
+                tableAccessDTO.setKeepNumber(resultSet.getString("keep_number"));
+                tableAccessDTO.setAppDataSourceId(Integer.valueOf(resultSet.getString("app_data_source_id")));
+                tableAccessDTO.setStartLine(Integer.valueOf(resultSet.getString("start_line")));
+                tableAccessDTO.setWhereScript(resultSet.getString("where_script"));
+                tableAccessDTO.setCoverScript(resultSet.getString("cover_script"));
+                tableAccessDTO.setDeleteStgScript(resultSet.getString("delete_stg_script"));
+                tableAccessDTOS.add(tableAccessDTO);
+            }
+            return tableAccessDTOS;
+        } catch (Exception e) {
+            log.error("数据接入-智能发布-根据应用id获取物理表失败, ex", e);
+            throw new FkException(ResultEnum.DATAACCESS_GET_TABLE_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(connection);
+        }
+    }
+
+    /**
+     * 通过应用id获取所选应用下的所有表
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public List<TableAccessDTO> getTblByAppId(Integer appId) {
+        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TableAccessPO::getAppId,appId);
+        List<TableAccessPO> list = list(wrapper);
+        return TableAccessMap.INSTANCES.listPoToDto(list);
     }
 
 }
