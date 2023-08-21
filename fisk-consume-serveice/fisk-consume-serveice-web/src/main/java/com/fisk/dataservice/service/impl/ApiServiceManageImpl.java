@@ -208,7 +208,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             if (current == null && size == null) {
                 // 未设置分页参数，默认查询第一页，查询数字的最大值
                 current = 1;
-                size = Integer.MAX_VALUE;
+                size = 1000;
             }
 
 //            // 第七步：获取请求参数中的分页信息 限制100条  2023-06-01 李世纪：暂时恢复原状
