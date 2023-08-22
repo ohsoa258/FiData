@@ -111,13 +111,14 @@ public class ExcelUtils {
                         getRow++;
                         continue;
                     }
+
                     Row row = sheet.getRow(i);
                     if (row != null) {
                         lastCellNum = row.getLastCellNum() > lastCellNum ? row.getLastCellNum() : lastCellNum;
                     } else {
                         row = sheet.createRow(i);
                     }
-                    if (getRow == 11) {
+                    if (i - getRow == 11) {
                         break;
                     }
                     List<Object> col = new ArrayList<>();
