@@ -12,6 +12,8 @@ import java.util.List;
 public class ExportMetaDataDto {
     @ApiModelProperty(value = "所属业务分类Id")
     public List<Long> businessClassificationId;
-    @ApiModelProperty(value = "关联实体类型  1 所有父级 2所有子集")
-    public List<Integer> associatedType;
+//    @ApiModelProperty(value = "关联实体类型  1 所有父级 2所有子集")
+//    public List<Integer> associatedType;
+    @ApiModelProperty(value = "模板ID")
+    public Integer templateId;
 }
