@@ -597,7 +597,7 @@ public class TableFieldsImpl
         AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
         //获取不到则抛出异常
         if (appRegistrationPo == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            throw new FkException(ResultEnum.DATAACCESS_DATASOURCE_ERROR);
         }
 
         Long tableHistoryId = 0L;
