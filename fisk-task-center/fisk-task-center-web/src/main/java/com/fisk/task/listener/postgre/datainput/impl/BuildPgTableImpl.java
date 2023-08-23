@@ -39,7 +39,9 @@ public class BuildPgTableImpl implements IbuildTable {
         log.info("保存版本号方法执行成功");
         StringBuilder sql = new StringBuilder("CREATE TABLE fi_tableName ( ");
         StringBuilder sqlFileds = new StringBuilder();
-        StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
+
+//        StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
+
         StringBuilder stgSql = new StringBuilder("CREATE TABLE fi_tableName ( ");
         changeCase(buildPhysicalTableDTO);
         List<TableFieldsDTO> tableFieldsDTOS = buildPhysicalTableDTO.tableFieldsDTOS;
@@ -61,19 +63,23 @@ public class BuildPgTableImpl implements IbuildTable {
                 sqlFileds.append("\"" + l.fieldName + "\" " + l.fieldType.toLowerCase() + "(" + l.fieldLength + "),");
             }
             stgSql.append("\"" + l.fieldName + "\" text,");
-            if (l.isPrimarykey == 1) {
-                pksql.append("\"" + l.fieldName + "\",");
-            }
+
+//            if (l.isPrimarykey == 1) {
+//                pksql.append("\"" + l.fieldName + "\",");
+//            }
 
         });
         stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
                 "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid()");
 
         sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid()");
-        String havePk = pksql.toString();
-        if (havePk.length() != 14) {
-            sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
-        }
+
+//        String havePk = pksql.toString();
+
+//        if (havePk.length() != 14) {
+//            sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
+//        }
+
         sqlFileds.append(")");
         stgSql.append(");");
         sql.append(sqlFileds);
