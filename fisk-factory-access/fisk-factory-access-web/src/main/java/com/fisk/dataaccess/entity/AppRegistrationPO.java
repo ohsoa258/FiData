@@ -60,4 +60,9 @@ public class AppRegistrationPO extends BasePO {
      */
     public Integer targetDbId;
 
+    /**
+     * 部门名称(浦东应急局专供)
+     */
+    public String departmentName;
+
 }

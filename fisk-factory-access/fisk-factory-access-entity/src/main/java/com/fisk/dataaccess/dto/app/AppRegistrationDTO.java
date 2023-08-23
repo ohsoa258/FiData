@@ -54,6 +54,12 @@ public class AppRegistrationDTO extends BaseDTO {
 
     public List<AppDataSourceDTO> appDatasourceDTO;
 
+    /**
+     * 部门名称(浦东应急局专供)
+     */
+    @ApiModelProperty(value = "部门名称(浦东应急局专供)")
+    public String departmentName;
+
 
     public AppRegistrationDTO(BaseEntity entity) {
         super(entity);

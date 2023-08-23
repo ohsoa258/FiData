@@ -10,7 +10,8 @@
         a.app_des,
         a.app_type,
         a.app_principal,
-        a.create_time
+        a.create_time,
+        a.department_name
         /*b.drive_type*/
         FROM
         tb_app_registration AS a
