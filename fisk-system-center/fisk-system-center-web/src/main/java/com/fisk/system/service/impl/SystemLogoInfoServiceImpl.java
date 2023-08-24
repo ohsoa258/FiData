@@ -127,6 +127,9 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
         if (systemLogoInfoDTO.getOverStriking() != null){
             info.setOverStriking(systemLogoInfoDTO.getOverStriking());
         }
+        if (systemLogoInfoDTO.getIfShowLogo() != null){
+            info.setIfShowLogo(systemLogoInfoDTO.getIfShowLogo());
+        }
 
         int update = mapper.updateById(info);
         return update > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

@@ -160,8 +160,6 @@ public class TaskPgTableStructureHelper
             //判断是否有修改语句
             return updatePgTableStructure(sql, version, dto.createType);
         } catch (Exception ex) {
-            //如果出现异常，手动将当前事务标记为回滚，触发事务回滚并抛出异常,以便事务注解能够处理它，并且确保事务能够回滚。
-//            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             log.error("saveTableStructure:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
@@ -224,7 +222,6 @@ public class TaskPgTableStructureHelper
                         }
                     } catch (SQLException e) {
                         log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
-                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
                     }
                 }
             }
@@ -251,7 +248,6 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-//    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = FkException.class)
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
@@ -321,7 +317,7 @@ public class TaskPgTableStructureHelper
         } catch (SQLException e) {
             log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
             //如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
-            taskPgTableStructureMapper.updatevalidVersion(version);
+//            taskPgTableStructureMapper.updatevalidVersion(version);
             throw new FkException(ResultEnum.SQL_ERROR, StackTraceHelper.getStackTraceInfo(e));
         } finally {
             if (st != null) {

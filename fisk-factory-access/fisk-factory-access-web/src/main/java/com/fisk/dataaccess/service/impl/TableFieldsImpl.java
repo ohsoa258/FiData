@@ -42,11 +42,13 @@ import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessFullVolumeSnapshotDTO
 import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessOverlayCodePreviewDTO;
 import com.fisk.dataaccess.dto.factorycodepreviewdto.AccessPublishFieldDTO;
 import com.fisk.dataaccess.dto.flink.FlinkConfigDTO;
+import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
+import com.fisk.dataaccess.enums.PublishTypeEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
@@ -130,6 +132,9 @@ public class TableFieldsImpl
     SavepointHistoryImpl savepointHistory;
     @Resource
     AppRegistrationImpl appRegistration;
+    @Resource
+    ApiConfigImpl apiConfig;
+
     @Resource
     FlinkApiImpl flinkApi;
     @Resource
@@ -586,113 +591,117 @@ public class TableFieldsImpl
                          List<TableHistoryDTO> dto,
                          String currUserName,
                          List<String> sourceFieldNames) {
-        //获取应用数据源
-        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
-        //获取不到则抛出异常
-        if (dataSourcePo == null) {
-            throw new FkException(ResultEnum.DATA_NOTEXISTS);
-        }
 
-        //获取应用信息
-        AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
-        //获取不到则抛出异常
-        if (appRegistrationPo == null) {
-            throw new FkException(ResultEnum.DATAACCESS_DATASOURCE_ERROR);
-        }
+        AppDataSourcePO dataSourcePo = null;
+        ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
+        modelPublishStatus.tableId = accessId;
+        try {
+            //获取应用数据源
+            dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
+            //获取不到则抛出异常
+            if (dataSourcePo == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
 
-        Long tableHistoryId = 0L;
-        //如果发布历史不为空
-        if (!CollectionUtils.isEmpty(dto)) {
-            log.info("开始记录发布日志");
-            for (TableHistoryDTO tableHistory : dto) {
-                if (tableHistory.tableId.longValue() == accessId) {
-                    log.info("记录发布日志的表id:{}", accessId);
-                    List<TableHistoryDTO> list = new ArrayList<>();
-                    list.add(tableHistory);
-                    tableHistoryId = iTableHistory.addTableHistory(list);
+            //获取应用信息
+            AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
+            //获取不到则抛出异常
+            if (appRegistrationPo == null) {
+                throw new FkException(ResultEnum.DATAACCESS_DATASOURCE_ERROR);
+            }
+
+            Long tableHistoryId = 0L;
+            //如果发布历史不为空
+            if (!CollectionUtils.isEmpty(dto)) {
+                log.info("开始记录发布日志");
+                for (TableHistoryDTO tableHistory : dto) {
+                    if (tableHistory.tableId.longValue() == accessId) {
+                        log.info("记录发布日志的表id:{}", accessId);
+                        List<TableHistoryDTO> list = new ArrayList<>();
+                        list.add(tableHistory);
+                        tableHistoryId = iTableHistory.addTableHistory(list);
+                    }
                 }
             }
-        }
 
-        if (success && flag == 1 && !useExistTable) {
-            UserInfo userInfo = userHelper.getLoginUserInfo();
+            if (success && flag == 1 && !useExistTable) {
+                UserInfo userInfo = userHelper.getLoginUserInfo();
 
-            //调用方法：封装参数给nifi
-            ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
+                //调用方法：封装参数给nifi
+                ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
 
-            BuildPhysicalTableDTO data = result.data;
-            //查询组件并发个数
-            if (syncMode.concurrencyNums == null) {
-                syncMode.setConcurrencyNums(1);
-            }
-            data.concurrencyNums = syncMode.concurrencyNums;
+                BuildPhysicalTableDTO data = result.data;
+                //查询组件并发个数
+                if (syncMode.concurrencyNums == null) {
+                    syncMode.setConcurrencyNums(1);
+                }
+                data.concurrencyNums = syncMode.concurrencyNums;
 
-            //装载应用id
-            data.appId = String.valueOf(appId);
-            //数据库id为什么传物理表id???????????
-            data.dbId = String.valueOf(accessId);
-            //用户id
-            data.userId = userInfo.id;
-            //是否发布
-            data.openTransmission = openTransmission;
-            //接入的增量时间参数
-            data.deltaTimes = deltaTimes;
+                //装载应用id
+                data.appId = String.valueOf(appId);
+                //数据库id为什么传物理表id???????????   变量名虽为dbid,实际上是物理表id
+                data.dbId = String.valueOf(accessId);
+                //用户id
+                data.userId = userInfo.id;
+                //是否发布
+                data.openTransmission = openTransmission;
+                //接入的增量时间参数
+                data.deltaTimes = deltaTimes;
 
-            //来源和目标数据源id
-            data.dataSourceDbId = dataSourcePo.systemDataSourceId;
-            //目标ods数据源id
-            data.targetDbId = appRegistrationPo.targetDbId;
+                //来源和目标数据源id
+                data.dataSourceDbId = dataSourcePo.systemDataSourceId;
+                //目标ods数据源id
+                data.targetDbId = appRegistrationPo.targetDbId;
 
-            // 拼接删除ods的sql
-            String tbName = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationPo.appAbbreviation, appRegistrationPo.whetherSchema);
+                // 拼接删除ods的sql
+                String tbName = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationPo.appAbbreviation, appRegistrationPo.whetherSchema);
 
-            // pg库则将表名转换为小写
-            //调用方法，获取数据源
-            boolean typeFlag = getTargetDbType(data.targetDbId);
-            //如果可以获取到
-            if (typeFlag) {
-                //表名小写
-                data.tableName = data.tableName.toLowerCase();
-                // 将字段集合转换为小写
-                List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
-                data.tableFieldsDTOS = tableFieldsDTOList.stream().map(item -> {
-                    item.fieldName = item.fieldName.toLowerCase();
-                    return item;
-                }).collect(Collectors.toList());
-                tbName = tbName.toLowerCase();
-            }
-            //同步方式
-            int syncType = syncMode.syncMode;
-            log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
+                // pg库则将表名转换为小写
+                //调用方法，获取数据源
+                boolean typeFlag = getTargetDbType(data.targetDbId);
+                //如果可以获取到
+                if (typeFlag) {
+                    //表名小写
+                    data.tableName = data.tableName.toLowerCase();
+                    // 将字段集合转换为小写
+                    List<TableFieldsDTO> tableFieldsDTOList = data.tableFieldsDTOS;
+                    data.tableFieldsDTOS = tableFieldsDTOList.stream().map(item -> {
+                        item.fieldName = item.fieldName.toLowerCase();
+                        return item;
+                    }).collect(Collectors.toList());
+                    tbName = tbName.toLowerCase();
+                }
+                //同步方式
+                int syncType = syncMode.syncMode;
+                log.info("syncType类型，{}，判断拼接删除ods的sql", syncType);
 
-            if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
-                data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
-                log.info("删除ods表的sql，{}", data.whereScript);
-            }
+                if (syncType == SyncModeEnum.CUSTOM_OVERRIDE.getValue()) {
+                    data.whereScript = "DELETE FROM " + tbName + " " + data.whereScript;
+                    log.info("删除ods表的sql，{}", data.whereScript);
+                }
 
-            // 版本号入库、调用存储存储过程
-            //获取物理表字段集合
-            List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
-            //获取应用信息
-            AppRegistrationPO registration = iAppRegistration.getById(appId);
+                // 版本号入库、调用存储存储过程
+                //获取物理表字段集合
+                List<TableFieldsPO> list = this.query().eq("table_access_id", accessId).list();
+                //获取应用信息
+                AppRegistrationPO registration = iAppRegistration.getById(appId);
 
-            //拼接ods表名
-            String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
+                //拼接ods表名
+                String odsTableName = TableNameGenerateUtils.buildOdsTableName(tableName, registration.appAbbreviation, registration.whetherSchema);
 
-            //调用方法 封装版本号和修改表结构的参数
-            data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
-            //是否使用应用简称
-            data.whetherSchema = registration.whetherSchema;
-            //版本sql
-            data.generateVersionSql = versionSql;
+                //调用方法 封装版本号和修改表结构的参数
+                data.modelPublishTableDTO = getModelPublishTableDTO(accessId, odsTableName, 3, list);
+                //是否使用应用简称
+                data.whetherSchema = registration.whetherSchema;
+                //版本sql
+                data.generateVersionSql = versionSql;
 
-            data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
-            data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
-            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
-            data.tableHistoryId = tableHistoryId;
+                data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
+                data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
+                data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
+                data.tableHistoryId = tableHistoryId;
 
-            // 执行发布
-            try {
+                // 执行发布
                 //获取指定id的物理表信息
                 TableAccessPO accessPo = tableAccessImpl.query().eq("id", accessId).one();
                 data.sheetName = accessPo.sheet;
@@ -723,6 +732,7 @@ public class TableFieldsImpl
                     data.apiTableNames = tablePoList.stream().map(e -> e.tableName).collect(Collectors.toList());
                     data.appType = registration.appType;
                     data.apiId = accessPo.apiId;
+                    modelPublishStatus.apiId = data.apiId;
                     // 创建表流程
                     publishTaskClient.publishBuildPhysicsTableTask(data);
                     // 构建元数据实时同步数据对象
@@ -746,11 +756,18 @@ public class TableFieldsImpl
                     consumeMetaData(metaDataList);
                 }
 
-            } catch (Exception e) {
-                log.info("发布失败", e);
-                log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
-                throw new FkException(ResultEnum.TASK_EXEC_FAILURE);
             }
+        } catch (Exception e) {
+            //先更新tb_table_access的发布状态   dmp_datainput_db
+            modelPublishStatus.publishErrorMsg = e.getMessage();
+            modelPublishStatus.publish = PublishTypeEnum.FAIL.getValue();
+            tableAccessImpl.updateTablePublishStatus(modelPublishStatus);
+
+            //再更新tb_api_config的状态   dmp_datainput_db
+            apiConfig.updateApiPublishStatus(modelPublishStatus);
+            log.info("发布失败", e);
+            log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
+            throw new FkException(ResultEnum.TASK_EXEC_FAILURE,e);
         }
 
         //oracle-cdc类型需要上传脚本

@@ -172,7 +172,7 @@ public class PostgreHelper {
         } catch (Exception e) {
             //捕捉错误
             log.error(e.getMessage());
-            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,e.getMessage());
         } finally {
             //关闭操作对象
             PostgreHelper.closeStatement(stmt);

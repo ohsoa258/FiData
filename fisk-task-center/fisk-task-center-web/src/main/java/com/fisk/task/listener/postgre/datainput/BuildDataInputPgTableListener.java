@@ -155,6 +155,14 @@ public class BuildDataInputPgTableListener {
                 taskPgTableStructureMapper.updatevalidVersion(version);
             }
             if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
+                //先更新tb_table_access的发布状态   dmp_datainput_db
+                ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
+                modelPublishStatus.publishErrorMsg = StackTraceHelper.getStackTraceInfo(e);
+                modelPublishStatus.publish = PublishTypeEnum.FAIL.getValue();
+                modelPublishStatus.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
+                dc.updateTablePublishStatus(modelPublishStatus);
+
+                //再更新tb_api_config的状态   dmp_datainput_db
                 modelPublishStatusDTO.publish = PublishTypeEnum.FAIL.getValue();
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
             } else {
