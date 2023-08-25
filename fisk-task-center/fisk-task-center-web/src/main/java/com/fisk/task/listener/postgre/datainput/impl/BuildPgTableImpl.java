@@ -40,7 +40,7 @@ public class BuildPgTableImpl implements IbuildTable {
         StringBuilder sql = new StringBuilder("CREATE TABLE fi_tableName ( ");
         StringBuilder sqlFileds = new StringBuilder();
 
-//        StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
+        StringBuilder pksql = new StringBuilder("PRIMARY KEY ( ");
 
         StringBuilder stgSql = new StringBuilder("CREATE TABLE fi_tableName ( ");
         changeCase(buildPhysicalTableDTO);
@@ -64,9 +64,9 @@ public class BuildPgTableImpl implements IbuildTable {
             }
             stgSql.append("\"" + l.fieldName + "\" text,");
 
-//            if (l.isPrimarykey == 1) {
-//                pksql.append("\"" + l.fieldName + "\",");
-//            }
+            if (l.isPrimarykey == 1) {
+                pksql.append("\"" + l.fieldName + "\",");
+            }
 
         });
         stgSql.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fi_enableflag varchar(50)," +
@@ -74,11 +74,11 @@ public class BuildPgTableImpl implements IbuildTable {
 
         sqlFileds.append("fi_createtime varchar(50) DEFAULT to_char(CURRENT_TIMESTAMP, 'yyyy-MM-dd HH24:mi:ss'),fi_updatetime varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT sys_guid()");
 
-//        String havePk = pksql.toString();
+        String havePk = pksql.toString();
 
-//        if (havePk.length() != 14) {
-//            sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
-//        }
+        if (havePk.length() != 14) {
+            sqlFileds.append("," + pksql.substring(0, pksql.length() - 1) + ")");
+        }
 
         sqlFileds.append(")");
         stgSql.append(");");
