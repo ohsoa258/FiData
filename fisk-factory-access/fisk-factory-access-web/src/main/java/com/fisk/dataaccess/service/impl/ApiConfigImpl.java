@@ -641,7 +641,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
-            }else {
+            } else {
                 return ResultEntityBuild.build(resultEnum, result.data);
             }
 
@@ -852,7 +852,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         // 根据账号名称查询对应的app_id下
         List<AppDataSourcePO> dataSourcePos = appDataSourceImpl.query().eq("realtime_account", dto.getUseraccount()).list();
-        if (CollectionUtils.isEmpty(dataSourcePos)){
+        if (CollectionUtils.isEmpty(dataSourcePos)) {
             log.error("/apiConfig/getToken方法的账号或密码不正确或数据库中指定账号的realtime_account和realtime_pwd为空,请联系管理人员...");
             return ResultEntityBuild.build(ResultEnum.USER_ACCOUNTPASSWORD_ERROR);
         }
@@ -981,19 +981,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
                 this.save(apiConfigPo);
 
-                // 2-1.实时不需要保存请求参数表tb_api_parameter
-                // 2-2.非实时需要保存请求参数表: 保存tb_api_parameter表信息
-                if (appRegistrationPo.appType == 1) { // 1: 非实时api
-                    List<ApiParameterPO> apiParameterPoList = apiParameterServiceImpl.query().eq("api_id", apiId).list();
-                    if (!CollectionUtils.isEmpty(apiParameterPoList)) {
-                        apiParameterPoList.forEach(e -> {
-                            e.id = 0;
-                            e.apiId = apiConfigPo.id;
-                        });
-                        apiParameterServiceImpl.addData(ApiParameterMap.INSTANCES.listPoToDto(apiParameterPoList));
-                    }
-                }
-
                 // 3.保存json结构的所有表节点信息: 循环调用/v3/tableAccess/add接口
                 List<TableAccessNonDTO> list = new ArrayList<>();
                 List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("api_id", apiId).list();
@@ -1012,6 +999,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                             log.error("复制api下的表失败: " + result.msg);
                             throw new FkException(ResultEnum.COPY_API_TABLE_ERROR);
                         }
+
+                        log.info("开始保存实时json格式配置到tb_api_parameter");
+                        // 2-1.非实时不需要保存请求参数表tb_api_parameter
+                        // 2-2.实时需要保存请求参数表: 保存tb_api_parameter表信息
+                        if (appRegistrationPo.appType == 0) { // 0: 非实时api
+                            List<ApiParameterPO> apiParameterPoList = apiParameterServiceImpl.query().eq("api_id", apiId).list();
+                            if (!CollectionUtils.isEmpty(apiParameterPoList)) {
+                                apiParameterPoList.forEach(apiParameterPO -> {
+                                    apiParameterPO.id = 0;
+                                    apiParameterPO.tableAccessId = Math.toIntExact((long) tableId);
+                                    apiParameterPO.apiId = apiConfigPo.id;
+                                });
+                                apiParameterServiceImpl.addData(ApiParameterMap.INSTANCES.listPoToDto(apiParameterPoList));
+                            }
+                        }
+
                         TableAccessNonDTO data = tableAccessImpl.getData((Long) tableId);
                         // 组装同步表信息
                         TableSyncmodePO tableSyncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
