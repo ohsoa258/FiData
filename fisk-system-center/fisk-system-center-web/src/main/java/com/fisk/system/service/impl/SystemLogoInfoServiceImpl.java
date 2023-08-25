@@ -4,7 +4,6 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.dto.SystemLogoInfoDTO;
-import com.fisk.system.entity.SystemLogoInfoPO;
 import com.fisk.system.mapper.SystemLogoInfoMapper;
 import com.fisk.system.service.SystemLogoInfoService;
 import lombok.extern.slf4j.Slf4j;
@@ -127,6 +126,9 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
         }
         if (systemLogoInfoDTO.getOverStriking() != null){
             info.setOverStriking(systemLogoInfoDTO.getOverStriking());
+        }
+        if (systemLogoInfoDTO.getIfShowLogo() != null){
+            info.setIfShowLogo(systemLogoInfoDTO.getIfShowLogo());
         }
 
         int update = mapper.updateById(info);

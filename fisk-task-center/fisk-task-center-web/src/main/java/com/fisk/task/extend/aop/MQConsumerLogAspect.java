@@ -14,7 +14,9 @@ import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.utils.WsSessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +35,9 @@ public class MQConsumerLogAspect {
 
     @Resource
     TaskLogMapper mapper;
+
+    @Resource
+    WsSessionManager wsSessionManager;
 
     @Pointcut("@annotation(com.fisk.task.extend.aop.MQConsumerLog)")
     public void traceType() {
@@ -141,6 +146,7 @@ public class MQConsumerLogAspect {
 
 
                 boolean isSuccess = false;
+                String errorMsg = null;
                 try {
                     res = joinPoint.proceed();
                     String ret = JSON.toJSONString(res);
@@ -151,6 +157,7 @@ public class MQConsumerLogAspect {
                     isSuccess = true;
                 } catch (Exception ex) {
                     log.error("消费者处理报错，", ex);
+                    errorMsg = ex.getMessage();
                     ex.printStackTrace();
                 }
                 log.info("【{}】执行结束，执行结果【{}】", name, isSuccess);
@@ -164,7 +171,16 @@ public class MQConsumerLogAspect {
                     mapper.updateById(model);
                 }
 
-                String outPutMsg = "任务执行完成";
+                String outPutMsg = null;
+                if (isSuccess) {
+                    outPutMsg = "任务执行完成";
+                } else {
+                    if (errorMsg.length() >= 300) {
+                        errorMsg = errorMsg.substring(0, 300);
+                    }
+                    outPutMsg = "任务执行失败，失败原因：" + errorMsg;
+                }
+
                 if (res instanceof ResultEntity<?>) {
                     outPutMsg = ((ResultEntity<?>) res).msg;
                 }
@@ -183,7 +199,9 @@ public class MQConsumerLogAspect {
                             }
                         }
                     } else {
-                        WsSessionManager.sendMsgById("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH);
+                        assert model != null;
+                        model.msg = outPutMsg;
+                        wsSessionManager.sendMsgByIdV2("【" + traceId + "】【" + taskName + "】后台任务处理完成，处理结果：【" + outPutMsg + "】", data.userId, MessageLevelEnum.HIGH, false, model);
                     }
 
                 }

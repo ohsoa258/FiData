@@ -33,7 +33,7 @@ public class JdbcBuildImpl implements IJdbcBuild {
             //捕捉错误
             log.error(e.getMessage());
             msg = e.getMessage();
-            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,e.getMessage());
         }
         BusinessResult res = new BusinessResult(re, msg);
         return res;

@@ -48,4 +48,10 @@ public class AppRegistrationVO{
     public LocalDateTime createTime;
     @ApiModelProperty(value = "创建时间", required = true)
     public String driveType;
+
+    /**
+     * 部门名称(浦东应急局专供)
+     */
+    @ApiModelProperty(value = "部门名称(浦东应急局专供)")
+    public String departmentName;
 }

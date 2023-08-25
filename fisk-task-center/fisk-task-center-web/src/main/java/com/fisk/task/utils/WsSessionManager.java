@@ -7,7 +7,9 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.entity.MessageLogPO;
+import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.mapper.MessageLogMapper;
+import com.fisk.task.mapper.TaskLogMapper;
 import com.fisk.task.vo.WsMessageLogVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @Component
 public class WsSessionManager {
+
+    @Resource
+    TaskLogMapper taskLogMapper;
 
     @Resource
     MessageLogMapper mapper;
@@ -67,7 +72,7 @@ public class WsSessionManager {
      */
     public static Session remove(Long key) {
         Session res = SESSION_POOL.remove(key);
-        if(res != null) {
+        if (res != null) {
             onlineCount.decrementAndGet();
         }
         // 删除 session
@@ -117,6 +122,14 @@ public class WsSessionManager {
     public static void sendMsgById(String message, Long id, MessageLevelEnum level) {
         Session session = SESSION_POOL.get(id);
         sendMsg(session, message, id, level);
+    }
+
+    /**
+     * 根据id发送消息
+     */
+    public void sendMsgByIdV2(String message, Long id, MessageLevelEnum level, Boolean isSuccess, TaskLogPO taskLogPO) {
+        Session session = SESSION_POOL.get(id);
+        sendMsgV2(session, message, id, level, isSuccess,taskLogPO);
     }
 
     /**
@@ -187,7 +200,7 @@ public class WsSessionManager {
         mapperService.insert(model);
 
         //低等级的不需要发消息，只落表
-        if(level != MessageLevelEnum.LOW) {
+        if (level != MessageLevelEnum.LOW) {
             //发送消息
             WsMessageLogVO vo = new WsMessageLogVO();
             vo.msg = msg;
@@ -207,4 +220,49 @@ public class WsSessionManager {
         }
         MDCHelper.removeLogType();
     }
+
+    /**
+     * 发送消息
+     *
+     * @param session session
+     * @param msg     msg
+     */
+    private void sendMsgV2(Session session, String msg, Long id, MessageLevelEnum level, Boolean isSuccess,TaskLogPO taskLogPO) {
+        MDCHelper.setAppLogType(TraceTypeEnum.TASK_WS_SEND_MESSAGE);
+
+        //记录日志
+        MessageLogPO model = new MessageLogPO();
+        model.createUser = id.toString();
+        model.status = MessageStatusEnum.UNREAD;
+        model.level = level;
+        model.msg = msg;
+        mapperService.insert(model);
+
+        if (!isSuccess) {
+            taskLogMapper.updateById(taskLogPO);
+
+        }
+
+        //低等级的不需要发消息，只落表
+        if (level != MessageLevelEnum.LOW) {
+            //发送消息
+            WsMessageLogVO vo = new WsMessageLogVO();
+            vo.msg = msg;
+            vo.id = model.id;
+            vo.status = model.status;
+            vo.createTime = model.createTime;
+            vo.level = level;
+
+            try {
+                if (session != null) {
+                    session.getBasicRemote().sendText(JSON.toJSONString(vo));
+                    log.info("ws消息发送成功，接收者id【{}】，发送时间【{}】，发送内容【{}】", id, DateTimeUtils.getNow(), msg);
+                }
+            } catch (Exception e) {
+                log.error("ws消息发送失败，接收者id【" + id + "】，发送时间【" + DateTimeUtils.getNow() + "】，错误信息：", e);
+            }
+        }
+        MDCHelper.removeLogType();
+    }
+
 }

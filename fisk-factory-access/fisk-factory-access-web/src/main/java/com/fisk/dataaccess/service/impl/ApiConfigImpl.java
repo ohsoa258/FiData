@@ -271,6 +271,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         editData(dto);
 
         if (!CollectionUtils.isEmpty(dto.list)) {
+            // 发布--task建表
             dto.list.forEach(e -> tableFieldImpl.updateData(e));
         }
 
