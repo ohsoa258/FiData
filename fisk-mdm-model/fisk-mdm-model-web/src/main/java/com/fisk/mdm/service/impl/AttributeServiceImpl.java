@@ -1,9 +1,9 @@
 package com.fisk.mdm.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.BeanUtils;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
@@ -32,18 +33,32 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * @author WangYan
  * @date 2022/4/5 14:49
  */
+@Slf4j
 @Service
 public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, AttributePO> implements AttributeService {
 
@@ -70,6 +85,14 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Resource
     AttributeLogService attributeLogService;
+    @Value("${poi.appkey}")
+    private String appKey;
+    @Value("${poi.secret}")
+    private String secret;
+    @Value("${poi.tokenUrl}")
+    private String getTokenUrl;
+    @Value("${poi.listUrl}")
+    private String getPoiUrl;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -523,4 +546,113 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         return AttributeMap.INSTANCES.poToDtoList(list);
     }
 
+    @Override
+    public List<PoiDetailDTO> getPoiDetails(PoiQueryDTO dto) {
+        String token = getToken(appKey, secret);
+        List<PoiDetailDTO> poiList = getPoiList(dto, token);
+        return poiList;
+    }
+
+
+    public String getToken(String appkey, String secret) {
+        // 设置请求参数
+
+        // 创建HTTP客户端
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(10000)
+                .setConnectionRequestTimeout(10000)
+                .build();
+        SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setDefaultSocketConfig(socketConfig)
+                .build();
+        // 创建POST请求
+        HttpPost post = new HttpPost(getTokenUrl);
+
+        // 创建参数列表
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("appkey", appkey));
+        params.add(new BasicNameValuePair("secret", secret));
+        try {
+            // 创建UrlEncodedFormEntity
+            HttpEntity entity = new UrlEncodedFormEntity(params);
+
+            // 将请求体设置到POST请求中
+            post.setEntity(entity);
+
+            // 发送请求并获取响应
+            HttpResponse response = httpClient.execute(post);
+
+            // 读取响应体中的内容
+            String responseBody = EntityUtils.toString(response.getEntity());
+
+            // 输出响应内容
+            log.info("-------------------------" + responseBody);
+
+            // 关闭HTTP客户端
+            httpClient.close();
+            JSONObject jsonObject = JSON.parseObject(responseBody);
+            JSONObject data = JSON.parseObject(jsonObject.getString("data"));
+            String token = data.getString("token");
+            log.info("------------------------poi获取token:{}", token);
+            return token;
+        } catch (Exception e) {
+            log.error("------------------------获取token失败:{}", e.getMessage());
+            throw new FkException(ResultEnum.ERROR, e.getMessage());
+        }
+    }
+
+    public List<PoiDetailDTO> getPoiList(PoiQueryDTO dto, String token) {
+
+        // 创建HTTP客户端
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(10000)
+                .setConnectionRequestTimeout(10000)
+                .build();
+        SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setDefaultSocketConfig(socketConfig)
+                .build();
+        // 创建POST请求
+        HttpPost post = new HttpPost(getPoiUrl);
+        post.addHeader("authorization",token);
+        Map<String,String> map = new HashMap<>();
+        map.put("search_area", dto.getSearchArea());
+        map.put("category_type", dto.getCategoryType());
+        map.put("keyword", dto.getKeyword());
+        String parame = JSONObject.toJSONString(map);
+        post.setHeader("Content-Type", "application/json");
+        StringEntity se = new StringEntity(parame, "UTF-8");
+        se.setContentType("application/json");
+        // 创建参数列表
+
+        try {
+            // 将请求体设置到POST请求中
+            post.setEntity(se);
+
+            // 发送请求并获取响应
+            HttpResponse response = httpClient.execute(post);
+
+            // 读取响应体中的内容
+            String responseBody = EntityUtils.toString(response.getEntity());
+
+            // 输出响应内容
+            log.info("-------------------------" + responseBody);
+
+            // 关闭HTTP客户端
+            httpClient.close();
+            JSONObject jsonObject = JSON.parseObject(responseBody);
+            String data = jsonObject.getString("data");
+            List<PoiDetailDTO> poiDetailDTO = JSONObject.parseArray(data, PoiDetailDTO.class);
+            log.info("------------------------获取poi数据:{}", token);
+            return poiDetailDTO;
+        } catch (Exception e) {
+            log.error("------------------------获取数据失败:{}", e.getMessage());
+            throw new FkException(ResultEnum.ERROR, e.getMessage());
+        }
+    }
 }

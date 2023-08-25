@@ -42,6 +42,7 @@ public class ChatController : ControllerBase
         myContext.Set("input", prompt.input);
         Console.WriteLine(prompt.input);
         var myResult = await myKernel.RunAsync(myContext, mySkill["GPT"]);
+        Console.WriteLine(myResult.Result);
         return this.Ok(myResult.Result);
     }
 

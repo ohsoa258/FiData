@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "vR3S1sHEklXWcpiw8G99rD1N4UxYK2sNY+yJjN+vd+Gxu+TF+rNhW52XAWonpaMP0Ai5F9jOTejE/wJvaW7p1Q==",
+  "dgSpecHash": "yxV/rz4AESwuT8Wzpb3Jtxjo/wOHbwSDpYdHzu4tyDbt50+IXOTEGUm8dm2u+idn//cHIi7ZO9wM7ENNbNEYGw==",
   "success": true,
-  "projectFilePath": "D:\\work project\\semantic-kernel\\semantic-kernel\\semantic-kernel.csproj",
+  "projectFilePath": "D:\\work project\\Fisk.DMP.Project\\ExtensionProject\\semantic-kernel\\semantic-kernel.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\book027\\.nuget\\packages\\azure.ai.openai\\1.0.0-beta.6\\azure.ai.openai.1.0.0-beta.6.nupkg.sha512",
     "C:\\Users\\book027\\.nuget\\packages\\azure.core\\1.34.0\\azure.core.1.34.0.nupkg.sha512",

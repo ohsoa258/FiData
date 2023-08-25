@@ -110,5 +110,5 @@ public interface AttributeService extends IService<AttributePO> {
      * @return
      */
     List<AttributeInfoDTO> listPublishedAttribute(int entityId);
-
+    List<PoiDetailDTO> getPoiDetails(PoiQueryDTO dto);
 }

@@ -7,7 +7,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://locahost:9093",
+      "applicationUrl": "http://locahost:10014",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -17,7 +17,7 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://locahost:9093",
+      "applicationUrl": "http://locahost:10014",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

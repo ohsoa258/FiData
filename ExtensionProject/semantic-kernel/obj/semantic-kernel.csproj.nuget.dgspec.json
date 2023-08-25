@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\work project\\semantic-kernel\\semantic-kernel\\semantic-kernel.csproj": {}
+    "D:\\work project\\Fisk.DMP.Project\\ExtensionProject\\semantic-kernel\\semantic-kernel.csproj": {}
   },
   "projects": {
-    "D:\\work project\\semantic-kernel\\semantic-kernel\\semantic-kernel.csproj": {
+    "D:\\work project\\Fisk.DMP.Project\\ExtensionProject\\semantic-kernel\\semantic-kernel.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\work project\\semantic-kernel\\semantic-kernel\\semantic-kernel.csproj",
+        "projectUniqueName": "D:\\work project\\Fisk.DMP.Project\\ExtensionProject\\semantic-kernel\\semantic-kernel.csproj",
         "projectName": "semantic-kernel",
-        "projectPath": "D:\\work project\\semantic-kernel\\semantic-kernel\\semantic-kernel.csproj",
+        "projectPath": "D:\\work project\\Fisk.DMP.Project\\ExtensionProject\\semantic-kernel\\semantic-kernel.csproj",
         "packagesPath": "C:\\Users\\book027\\.nuget\\packages\\",
-        "outputPath": "D:\\work project\\semantic-kernel\\semantic-kernel\\obj\\",
+        "outputPath": "D:\\work project\\Fisk.DMP.Project\\ExtensionProject\\semantic-kernel\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\Microsoft Visual Studio SDK\\Shared\\NuGetPackages"

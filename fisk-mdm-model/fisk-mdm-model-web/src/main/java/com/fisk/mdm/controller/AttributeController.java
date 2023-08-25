@@ -93,4 +93,9 @@ public class AttributeController {
     public ResultEntity<ResultEnum> deleteAttribute(Integer id) {
         return ResultEntityBuild.build(service.deleteData(id));
     }
+    @ApiOperation("获取poi信息")
+    @PostMapping("/getPoiDetails")
+    public ResultEntity<List<PoiDetailDTO>> getPoiDetails(@RequestBody PoiQueryDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getPoiDetails(dto));
+    }
 }
