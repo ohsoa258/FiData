@@ -14,7 +14,8 @@
         `status`,
         create_time,
         update_time,
-        work_status
+        work_status,
+        depart_name
         FROM
         tb_nifi_custom_workflow
         WHERE

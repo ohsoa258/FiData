@@ -46,4 +46,9 @@ public class NifiCustomWorkflowPO extends BasePO {
 
     public int workStatus;
 
+    /**
+     * 部门名称
+     */
+    public String departName;
+
 }

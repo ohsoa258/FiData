@@ -68,4 +68,10 @@ public class AppRegisterDTO
      */
     @ApiModelProperty(value = "应用白名单状态：1启用、2禁用")
     public int appWhiteListState;
+
+    /**
+     * 部门名称
+     */
+    @ApiModelProperty(value = "部门名称")
+    public String departName;
 }

@@ -39,4 +39,10 @@ public class NifiCustomWorkflowDTO {
     public int status;
 
     public int workStatus;
+
+    /**
+     * 部门名称
+     */
+    @ApiModelProperty(value = "部门名称")
+    public String departName;
 }
