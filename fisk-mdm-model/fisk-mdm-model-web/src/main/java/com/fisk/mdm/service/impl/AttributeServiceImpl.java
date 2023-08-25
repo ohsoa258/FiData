@@ -119,7 +119,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //若数据类型不为浮点型或文本，数据长度设置为null
         if (attributePo.getDataType() != DataTypeEnum.TEXT &&
-                attributePo.getDataType() != DataTypeEnum.FLOAT){
+                attributePo.getDataType() != DataTypeEnum.FLOAT &&
+        attributePo.getDataType() != DataTypeEnum.POI){
             attributePo.setDataTypeLength(null);
         }
         //若数据类型为“域字段”类型，维护“域字段id”字段
