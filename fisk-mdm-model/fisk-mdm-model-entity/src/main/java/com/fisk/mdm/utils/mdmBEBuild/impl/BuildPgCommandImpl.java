@@ -71,6 +71,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                         case "文本":
                             str1 = e.getName() + " VARCHAR(" + e.getDataTypeLength() + ")" + required;
                             break;
+                        case "POI":
+                            str1=  e.getName() + " text " + required;
+                            break;
                         default:
                             str1 = e.getName() + " VARCHAR( 200 )" + required;
                             break;
@@ -141,6 +144,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                             break;
                         case "货币":
                             str1 = name + " money " + required;
+                            break;
+                        case "POI":
+                            str1=  name + " text " + required;
                             break;
                         case "文本":
                         default:
@@ -215,7 +221,9 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
                             str1 = name + " money " + required;
                             break;
                         case "文本域":
+                        case "POI":
                             str1=  name + " text " + required;
+                            break;
                         case "文本":
                         default:
                             str1 = name + " VARCHAR(" + e.getDataTypeLength() + ")" + required;

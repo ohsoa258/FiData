@@ -33,6 +33,8 @@ public class PoiDetailDTO {
         private String city;
         private String district;
     }
+
+    private BigDecimal similarity;
 }
 
 

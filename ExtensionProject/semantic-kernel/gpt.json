@@ -2,7 +2,7 @@
   "serviceType": "AzureOpenAi",
   "serviceId": "FiData",
   "deploymentOrModelId": "FiData",
-  "endpoint": "http://4.216.139.151",
+  "endpoint": "https://fiskai.openai.azure.com/",
   "apiKey": "4412a8536d5843d4800d3a7aa8d2d306",
   "orgId": ""
 }

@@ -146,8 +146,10 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
         //若数据类型不为浮点型或文本，数据长度设置为null
         if (attributePo.getDataType() != DataTypeEnum.TEXT &&
-                attributePo.getDataType() != DataTypeEnum.FLOAT &&
-        attributePo.getDataType() != DataTypeEnum.POI){
+                attributePo.getDataType() != DataTypeEnum.FLOAT ){
+            attributePo.setDataTypeLength(null);
+        }
+        if (attributePo.getDataType() == DataTypeEnum.POI){
             attributePo.setDataTypeLength(null);
         }
         //若数据类型为“域字段”类型，维护“域字段id”字段
@@ -589,7 +591,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             httpClient.close();
             JSONObject jsonObject = JSON.parseObject(responseBody);
             JSONObject data = JSON.parseObject(jsonObject.getString("data"));
-            HashMap<String,Object> result = JSONObject.parseObject(data.toJSONString(), HashMap.class);
+            Map<String,Object> result = JSONObject.parseObject(data.toJSONString(), HashMap.class);
             log.info("------------------------poi获取权限:{}", result);
             return result;
         } catch (Exception e) {
@@ -665,7 +667,7 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         // 创建POST请求
         HttpPost post = new HttpPost(getPoiUrl);
         post.addHeader("authorization",token);
-        Map<String,String> map = new HashMap<>();
+        Map<String,Object> map = new HashMap<>();
         map.put("search_area", dto.getSearchArea());
         map.put("category_type", dto.getCategoryType());
         map.put("keyword", dto.getKeyword());

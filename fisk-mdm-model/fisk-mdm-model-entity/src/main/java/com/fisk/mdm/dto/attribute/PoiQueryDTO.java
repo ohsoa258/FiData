@@ -12,4 +12,9 @@ public class PoiQueryDTO {
     private String searchArea;
     private String categoryType;
     private String keyword;
+    @Data
+    private class SearchArea{
+        private Integer id;
+        private String fullname;
+    }
 }

@@ -528,7 +528,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
                     filedType = "money";
                     break;
                 case "文本域":
+                case "POI":
                     filedType = "text";
+                    break;
                 case "文本":
                 default:
                     filedType = "VARCHAR ( " + dataTypeLength + " )";
