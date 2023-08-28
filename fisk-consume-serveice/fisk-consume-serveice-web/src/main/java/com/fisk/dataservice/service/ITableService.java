@@ -164,4 +164,11 @@ public interface ITableService {
      * @return
      */
     List<String> getTableName();
+
+    /**
+     * 启用或禁用
+     * @param id
+     * @return
+     */
+    ResultEnum enableOrDisable(Integer id);
 }

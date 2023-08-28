@@ -39,6 +39,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.StringEntity;
@@ -93,6 +94,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     private String getTokenUrl;
     @Value("${poi.listUrl}")
     private String getPoiUrl;
+
+    @Value("${poi.authUrl}")
+    private String authUrl;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -551,6 +555,47 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
         String token = getToken(appKey, secret);
         List<PoiDetailDTO> poiList = getPoiList(dto, token);
         return poiList;
+    }
+
+    @Override
+    public Map<String, Object> getPoiAuthorization() {
+        // 设置请求参数
+        // 创建HTTP客户端
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setSocketTimeout(10000)
+                .setConnectionRequestTimeout(10000)
+                .build();
+        SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(10000).build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setDefaultSocketConfig(socketConfig)
+                .build();
+        // 创建POST请求
+        HttpGet httpGet = new HttpGet(authUrl);
+        httpGet.setHeader("Authorization", getToken(appKey, secret));
+        try {
+
+            // 发送请求并获取响应
+            HttpResponse response = httpClient.execute(httpGet);
+
+            // 读取响应体中的内容
+            String responseBody = EntityUtils.toString(response.getEntity());
+
+            // 输出响应内容
+            log.info("-------------------------" + responseBody);
+
+            // 关闭HTTP客户端
+            httpClient.close();
+            JSONObject jsonObject = JSON.parseObject(responseBody);
+            JSONObject data = JSON.parseObject(jsonObject.getString("data"));
+            HashMap<String,Object> result = JSONObject.parseObject(data.toJSONString(), HashMap.class);
+            log.info("------------------------poi获取权限:{}", result);
+            return result;
+        } catch (Exception e) {
+            log.error("------------------------获取权限失败:{}", e.getMessage());
+            throw new FkException(ResultEnum.ERROR, e.getMessage());
+        }
     }
 
 

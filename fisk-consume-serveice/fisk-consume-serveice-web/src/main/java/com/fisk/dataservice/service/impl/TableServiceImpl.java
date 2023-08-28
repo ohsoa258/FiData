@@ -543,6 +543,28 @@ public class TableServiceImpl
     }
 
     /**
+     * 启用或禁用
+     * @param id
+     * @return
+     */
+    @Override
+    public ResultEnum enableOrDisable(Integer id) {
+        TableServicePO tableServicePO = this.getById(id);
+        TableServiceDTO tableServiceDTO = TableServiceMap.INSTANCES.poToDto(tableServicePO);
+        ResultEntity<TableServiceDTO> result = publishTaskClient.enableOrDisable(tableServiceDTO);
+        if(result.getCode() != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }else {
+            TableServiceDTO data = result.getData();
+            TableServicePO tableService = TableServiceMap.INSTANCES.dtoToPo(data);
+            if (mapper.updateById(tableService) == 0) {
+                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
      * 用于远程调用方法的参数，↑
      *
      * @return
@@ -576,6 +598,7 @@ public class TableServiceImpl
      * @return
      */
     public ResultEnum updateTableService(TableServiceDTO dto) {
+        dto.enable = 1;
         TableServicePO po = this.query().eq("id", dto.id).one();
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);

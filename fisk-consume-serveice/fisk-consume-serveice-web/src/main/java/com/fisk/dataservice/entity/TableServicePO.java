@@ -55,5 +55,9 @@ public class TableServicePO extends BasePO {
      * 发布状态: 0: 未发布  1: 发布成功  2: 发布失败
      */
     public Integer publish;
+    /**
+     * 1:启用 0:禁用
+     */
+    public Integer enable;
 
 }

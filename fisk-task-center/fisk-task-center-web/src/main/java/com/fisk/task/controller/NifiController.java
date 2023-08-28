@@ -11,6 +11,7 @@ import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -245,5 +246,10 @@ public class NifiController {
     @ApiOperation(value = "执行一次管道")
     public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
         return ResultEntityBuild.build(iNifiSchedulingComponentService.runOnce(id));
+    }
+    @ApiOperation(value = "表服务启用或禁用")
+    @PostMapping("enableOrDisable")
+    public ResultEntity<TableServiceDTO> enableOrDisable(@RequestBody TableServiceDTO tableServiceDTO) {
+        return tableNifiSettingService.enableOrDisable(tableServiceDTO);
     }
 }

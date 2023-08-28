@@ -37,4 +37,7 @@ public class TableServiceDTO {
 
     @ApiModelProperty(value = "表应用ID", required = true)
     public Integer tableAppId;
+
+    @ApiModelProperty(value = "启用或禁用")
+    public Integer enable;
 }

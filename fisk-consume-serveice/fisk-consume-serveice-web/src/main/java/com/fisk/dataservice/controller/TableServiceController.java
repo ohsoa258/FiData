@@ -234,4 +234,10 @@ public class TableServiceController {
     public ResultEntity<List<String>> getTableName() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getTableName());
     }
+
+    @ApiOperation("表服务启用或禁用")
+    @GetMapping("/enableOrDisable")
+    public ResultEntity<List<String>> enableOrDisable(@RequestParam("id") Integer id) {
+        return ResultEntityBuild.build(service.enableOrDisable(id));
+    }
 }

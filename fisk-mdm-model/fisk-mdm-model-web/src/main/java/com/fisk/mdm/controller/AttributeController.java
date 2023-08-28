@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author ChenYa
@@ -97,5 +98,11 @@ public class AttributeController {
     @PostMapping("/getPoiDetails")
     public ResultEntity<List<PoiDetailDTO>> getPoiDetails(@RequestBody PoiQueryDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getPoiDetails(dto));
+    }
+
+    @ApiOperation("获取poi权限")
+    @GetMapping("/getPoiAuthorization")
+    public ResultEntity<Map<String, Object>> getPoiAuthorization() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getPoiAuthorization());
     }
 }

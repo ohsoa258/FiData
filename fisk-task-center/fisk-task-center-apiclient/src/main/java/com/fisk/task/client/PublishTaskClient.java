@@ -10,6 +10,7 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
@@ -445,7 +446,13 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/universalPublish")
     ResultEntity<Object> universalPublish(@RequestBody KafkaReceiveDTO dto);
 
-
+    /**
+     * 数据库同步服务，启用或禁用
+     * @param tableServiceDTO
+     * @return
+     */
+    @PostMapping("/nifi/enableOrDisable")
+    public ResultEntity<TableServiceDTO> enableOrDisable(@RequestBody TableServiceDTO tableServiceDTO);
     /**
      * 创建任务批量审批
      *
