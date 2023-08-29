@@ -8,7 +8,8 @@
         a.id,
         a.table_name,
         a.display_name,
-        a.publish
+        a.publish,
+        a.enable
         FROM
         tb_app_service_config s
         LEFT JOIN tb_table_service a ON a.id = s.service_id

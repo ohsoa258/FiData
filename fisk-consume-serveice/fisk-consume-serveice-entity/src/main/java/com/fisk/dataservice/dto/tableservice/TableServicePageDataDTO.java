@@ -21,4 +21,6 @@ public class TableServicePageDataDTO {
     @ApiModelProperty(value = "发布")
     public Integer publish;
 
+    @ApiModelProperty(value = "1:启用 0:禁用")
+    public Integer enable;
 }
