@@ -53,3 +53,9 @@ ocr:
 file:
   uploadUrl: /root/nginx/app/file/mdm/
   echoPath: /file/mdm/
+poi:
+  appkey: test
+  secret: test
+  tokenUrl: http://192.168.21.21:3001/v1/auth
+  listUrl: http://192.168.21.21:3001/v1/stores/suggestionForFidata
+  authUrl: http://192.168.21.21:3001/v1/dataPermission/getByAppKey?appkey=test
