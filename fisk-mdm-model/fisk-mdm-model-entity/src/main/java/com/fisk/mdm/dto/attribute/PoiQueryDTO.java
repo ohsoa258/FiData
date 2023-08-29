@@ -9,7 +9,7 @@ import lombok.Data;
  */
 @Data
 public class PoiQueryDTO {
-    private String searchArea;
+    private SearchArea searchArea;
     private String categoryType;
     private String keyword;
     @Data
