@@ -13,7 +13,8 @@
         app_type,
         app_white_list,
         app_white_list_state,
-        create_time
+        create_time,
+        depart_name
         from tb_app_config
         where del_flag=1
         <if test="query.where !=null and query.where.length()>0 ">
