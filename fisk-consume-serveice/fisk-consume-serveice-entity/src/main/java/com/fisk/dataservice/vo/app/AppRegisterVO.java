@@ -74,4 +74,10 @@ public class AppRegisterVO
      */
     @ApiModelProperty(value = "创建时间")
     public LocalDateTime createTime;
+
+    /**
+     * 部门名称
+     */
+    @ApiModelProperty(value = "部门名称")
+    public String departName;
 }

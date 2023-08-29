@@ -197,6 +197,7 @@ public enum ResultEnum {
     DATAACCESS_GET_TABLE_ERROR(5084,"根据应用id获取物理表失败"),
     DATAACCESS_APP_EDIT_FAILURE(5085,"当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志..."),
     DATAACCESS_DATASOURCE_ERROR(5086,"当前发布表的数据源不存在或已删除，请联系系统管理员"),
+    API_STATE_NOT_ALLOW_ERROR(5087,"当前调用的接口已被禁用，请联系系统管理员..."),
 
 
 

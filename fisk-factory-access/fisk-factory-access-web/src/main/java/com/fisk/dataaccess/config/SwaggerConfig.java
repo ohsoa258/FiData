@@ -63,6 +63,7 @@ public class SwaggerConfig {
     public static final String SFTP = "sftp";
 
     public static final String STATEMENT = "资产报表";
+    public static final String API_STATE = "实时API接口状态控制器";
 
 
 

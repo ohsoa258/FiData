@@ -28,6 +28,7 @@ import com.fisk.dataaccess.dto.api.doc.*;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
+import com.fisk.dataaccess.dto.apistate.ApiStateDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -47,6 +48,7 @@ import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.service.IApiCondition;
 import com.fisk.dataaccess.service.IApiConfig;
+import com.fisk.dataaccess.service.IApiStateService;
 import com.fisk.dataaccess.utils.httprequest.ApiHttpRequestFactoryHelper;
 import com.fisk.dataaccess.utils.httprequest.IBuildHttpRequest;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
@@ -158,6 +160,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private Boolean openMetadata;
     @Resource
     PgsqlUtils pgsqlUtils;
+
+    @Resource
+    private IApiStateService apiStateService;
 
     @Override
     public ApiConfigDTO getData(long id) {
@@ -588,6 +593,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Override
     public ResultEntity<Object> pushData(ReceiveDataDTO dto) {
+
+        // 2023-08-29 新增需求，数据接入页面新增大开关，控制实时应用推数据的接口是否启用
+        ApiStateDTO apiState = apiStateService.getApiState();
+        if (apiState!=null){
+            Integer state = apiState.getApiState();
+            // 0 接口禁用  1 接口启用
+            if (state == 0){
+                return ResultEntityBuild.build(ResultEnum.API_STATE_NOT_ALLOW_ERROR);
+            }
+        }
+
         ResultEnum resultEnum = null;
         StringBuilder msg = new StringBuilder("");
         Date startTime = new Date();
