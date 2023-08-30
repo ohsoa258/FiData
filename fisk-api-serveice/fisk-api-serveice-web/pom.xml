@@ -90,7 +90,67 @@
                     <fork>true</fork>
                     <!-- 将本地lib引入的jar包打包到项目的lib中 -->
                     <includeSystemScope>true</includeSystemScope>
+                    <!--项目启动类-->
+                    <mainClass>com.fisk.apiservice.FkApiServiceApplication</mainClass>
+                    <layout>ZIP</layout>
+                    <includes>
+                        <include>
+                            <groupId>${project.groupId}</groupId>
+                            <artifactId>${project.artifactId}</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-api-serveice-entity</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-factory-access-entity</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-framework-common</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-system-center-apiclient</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-system-center-entity</artifactId>
+                        </include>
+                    </includes>
+                    <!--配置为执行-->
+                    <!--<classifier>exec</classifier>-->
+                    <outputDirectory>../../lib/${project.name}</outputDirectory>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>cdn</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <type>jar</type>
+                            <includeTypes>jar</includeTypes>
+                            <!--                            <includeScope>runtime</includeScope>-->
+                            <!--依赖包的输出路径-->
+                            <outputDirectory>../../lib/${project.name}/${project.name}-libs</outputDirectory>
+                            <excludeArtifactIds>
+                                fisk-api-serveice-entity,
+                                fisk-factory-access-entity,
+                                fisk-framework-common,
+                                fisk-system-center-apiclient,
+                                fisk-system-center-entity
+                            </excludeArtifactIds>
+                            <skip>${package.switch}</skip>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

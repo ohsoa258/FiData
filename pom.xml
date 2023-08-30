@@ -49,6 +49,8 @@
         <org.lombok.version>1.18.10</org.lombok.version>
         <netty.version>4.1.86.Final</netty.version>
         <Jackson-core.version>2.13.5</Jackson-core.version>
+        <!-- 打包开关 true不输出分离依赖包 false输出分离依赖包 -->
+        <package.switch>false</package.switch>
     </properties>
 
 
