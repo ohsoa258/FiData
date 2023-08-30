@@ -14,9 +14,12 @@ target/
 .classpath
 .project
 target
+# LIB jar
+lib
 
 # Log file
 *.log
+
 
 # BlueJ files
 *.ctxt
