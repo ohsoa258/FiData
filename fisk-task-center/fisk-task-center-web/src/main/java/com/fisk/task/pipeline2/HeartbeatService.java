@@ -163,6 +163,10 @@ public class HeartbeatService {
                         } while (!setnx);
                         // 获取redis中TASK任务
                         Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId);
+                        //管道快照续期
+                        redisUtil.expire(RedisKeyEnum.PIPEL_TRACE_ID.getName() + ":" + pipelTraceId, Long.parseLong(maxTime));
+                        redisUtil.expire(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + pipelTraceId, Long.parseLong(maxTime));
+                        redisUtil.expire(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + pipelTraceId, Long.parseLong(maxTime));
                         //获取my-topic运行状态
                         TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(topicPO.getComponentId().toString()).toString(), TaskHierarchyDTO.class);
                         if (taskHierarchy.myTopicState.equals(MyTopicStateEnum.RUNNING)) {
