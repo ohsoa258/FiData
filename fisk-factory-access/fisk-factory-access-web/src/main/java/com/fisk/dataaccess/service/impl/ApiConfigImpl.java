@@ -361,8 +361,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         //查询数据是否存在
         for (ApiParameterDTO d : dto) {
             //添加字段
-            ApiParameterPO po = apiParameterServiceImpl.query().eq("table_access_id", d.tableAccessId)
-                    .eq("attribute_field_name", d.attributeFieldName).one();
+            ApiParameterPO po = apiParameterServiceImpl.query().eq("table_access_id", d.tableAccessId).eq("attribute_field_name", d.attributeFieldName).one();
             if (po != null) {
                 throw new FkException(ResultEnum.DATA_EXISTS);
             }
@@ -544,8 +543,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         long timeMillis = System.currentTimeMillis();
         String fileName = "APIServiceDoc" + timeMillis + ".pdf";
         // 生成PDF文件
-        OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "FiData接口文档", docDTO, response);
+        OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl", templatePath, fileName, "FiData接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
@@ -560,14 +558,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         List<ApiConfigDTO> dtoList = new ArrayList<>();
         // 去重
-        list.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList())
-                .forEach(generateDocDTO -> {
-                    ApiConfigDTO data = getData(generateDocDTO.apiId);
-                    if (data != null & generateDocDTO.tableIsEmpty) {
-                        data.pushDataJson = generateDocDTO.pushDataJson;
-                        dtoList.add(data);
-                    }
-                });
+        list.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList()).forEach(generateDocDTO -> {
+            ApiConfigDTO data = getData(generateDocDTO.apiId);
+            if (data != null & generateDocDTO.tableIsEmpty) {
+                data.pushDataJson = generateDocDTO.pushDataJson;
+                dtoList.add(data);
+            }
+        });
 
         // api信息转换为文档实体
         ApiDocDTO docDTO = createApiDocDTO(dtoList);
@@ -580,8 +577,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         String fileName = "APIServiceDoc" + timeMillis + ".pdf";
 
         // 生成PDF文件
-        OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
-                templatePath, fileName, "接口文档", docDTO, response);
+        OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl", templatePath, fileName, "接口文档", docDTO, response);
         try {
             outputStream.flush();
             outputStream.close();
@@ -596,10 +592,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         // 2023-08-29 新增需求，数据接入页面新增大开关，控制实时应用推数据的接口是否启用
         ApiStateDTO apiState = apiStateService.getApiState();
-        if (apiState!=null){
+        if (apiState != null) {
             Integer state = apiState.getApiState();
             // 0 接口禁用  1 接口启用
-            if (state == 0){
+            if (state == 0) {
                 return ResultEntityBuild.build(ResultEnum.API_STATE_NOT_ALLOW_ERROR);
             }
         }
@@ -683,9 +679,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
             }
 
+        } catch (FkException ex) {
+            resultEnum = ex.getResultEnum();
+            msg = msg.append(ex.getErrorMsg());
+            return ResultEntityBuild.build(resultEnum, msg);
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
             log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
+            return ResultEntityBuild.build(resultEnum, msg);
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
@@ -950,19 +951,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     public static KafkaReceiveDTO getKafkaReceive(ApiImportDataDTO dto, Integer numbers, OlapTableEnum olapTableEnum, String topic) {
-        return KafkaReceiveDTO.builder()
-                .pipelTraceId(dto.pipelTraceId)
-                .pipelTaskTraceId(dto.pipelTaskTraceId)
-                .pipelStageTraceId(dto.pipelStageTraceId)
-                .pipelJobTraceId(dto.pipelJobTraceId)
-                .numbers(numbers)
-                .tableId(Math.toIntExact(dto.apiId))
-                .tableType(olapTableEnum.getValue())
-                .topic(topic)
-                .nifiCustomWorkflowDetailId(Long.valueOf(dto.workflowId))
-                .topicType(TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())
-                .pipelApiDispatch(dto.pipelApiDispatch)
-                .build();
+        return KafkaReceiveDTO.builder().pipelTraceId(dto.pipelTraceId).pipelTaskTraceId(dto.pipelTaskTraceId).pipelStageTraceId(dto.pipelStageTraceId).pipelJobTraceId(dto.pipelJobTraceId).numbers(numbers).tableId(Math.toIntExact(dto.apiId)).tableType(olapTableEnum.getValue()).topic(topic).nifiCustomWorkflowDetailId(Long.valueOf(dto.workflowId)).topicType(TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue()).pipelApiDispatch(dto.pipelApiDispatch).build();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -1075,10 +1064,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public List<ApiSelectDTO> getAppAndApiList(int appType) {
 
         // 查询所有app_id和app_name
-        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
-                .eq(AppRegistrationPO::getAppType, appType)
-                .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName, AppRegistrationPO::getAppType)
-                .orderByDesc(AppRegistrationPO::getCreateTime));
+        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery().eq(AppRegistrationPO::getAppType, appType).select(AppRegistrationPO::getId, AppRegistrationPO::getAppName, AppRegistrationPO::getAppType).orderByDesc(AppRegistrationPO::getCreateTime));
 
         List<AppRegistrationPO> appRegistrationPoList = new ArrayList<>();
         // 只需要RestfulAPI和api类型
@@ -1128,8 +1114,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         }
         List<ApiParameterPO> parameterPoList = new ArrayList<>();
         //范本
-        List<ApiParameterPO> collect = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list().stream()
-                .filter(e -> e.parameterValue.toLowerCase().contains(ApiConditionEnum.PAGENUM.getName().toLowerCase())).collect(Collectors.toList());
+        List<ApiParameterPO> collect = apiParameterServiceImpl.query().eq("api_id", dto.apiId).list().stream().filter(e -> e.parameterValue.toLowerCase().contains(ApiConditionEnum.PAGENUM.getName().toLowerCase())).collect(Collectors.toList());
         // api的请求参数(允许为空)
         // 用apiParameters里面的值覆盖parameterPoList
         if (CollectionUtils.isEmpty(apiParameters)) {
@@ -1224,8 +1209,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
                 // post请求携带的请求参数Body: form-data参数
                 if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
-                    apiHttpRequestDto.formDataParams = formDataParams.stream()
-                            .collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
 
@@ -1260,8 +1244,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
                 // post请求携带的请求参数Body: form-data参数
                 if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
-                    apiHttpRequestDto.formDataParams = formDataParams.stream()
-                            .collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
 
@@ -1301,8 +1284,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
                 // post请求携带的请求参数Body: form-data参数
                 if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
-                    apiHttpRequestDto.formDataParams = formDataParams.stream()
-                            .collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
 
@@ -1364,8 +1346,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiTableDTO.list = e.list;
             // 查询所有子级表名
             QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(TableAccessPO::getPid, e.id)
-                    .select(TableAccessPO::getTableName);
+            queryWrapper.lambda().eq(TableAccessPO::getPid, e.id).select(TableAccessPO::getTableName);
             List<TableAccessPO> list = tableAccessMapper.selectList(queryWrapper);
             apiTableDTO.childTableName = list.stream().filter(Objects::nonNull).map(f -> f.tableName).collect(Collectors.toList());
             apiTableDTOList.add(apiTableDTO);
@@ -1387,9 +1368,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @author Lock
      * @date 2022/2/16 19:17
      */
-    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto,
-                                           String jsonStr, List<ApiTableDTO> apiTableDtoList,
-                                           String tablePrefixName, String jsonKey, Integer targetDbId) {
+    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto, String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey, Integer targetDbId) {
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
@@ -1439,8 +1418,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                     if (!CollectionUtils.isEmpty(data)) {
                         StringBuilder checkResult = new StringBuilder("校验结果详情：");
                         for (DataCheckResultVO d : data) {
-                            checkResult.append(d.checkResultMsg)
-                                    .append("。 ");
+                            checkResult.append(d.checkResultMsg).append("。 ");
                         }
                         for (DataCheckResultVO e : data) {
                             // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
@@ -1479,8 +1457,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         List<ApiSqlResultDTO> list = JSONArray.parseArray(excuteResult.msg.toString(), ApiSqlResultDTO.class);
         if (!CollectionUtils.isEmpty(list)) {
             for (ApiSqlResultDTO e : list) {
-                checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ")
-                        .append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append("；");
+                checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ").append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append("；");
                 COUNT_SQL = e.getCount();
                 // 推送条数累加值
                 COUNT_SQL += COUNT_SQL;
@@ -1623,19 +1600,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     private ApiDocDTO createDocDTO(ApiConfigDTO dto, String pushDataJson) {
 
-        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address)
-                .replace("{api_prd_address}", pdf_prd_address);
+        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address).replace("{api_prd_address}", pdf_prd_address);
 
         ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
-                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
-                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
-                "}";
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
-                "&nbsp;&nbsp; \"code\": 0,\n" +
-                "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" +
-                "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" +
-                "}", "2.4.9");
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" + "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" + "&nbsp;&nbsp; \"password\": \"xxx\"\n" + "}";
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" + "&nbsp;&nbsp; \"code\": 0,\n" + "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" + "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" + "}", "2.4.9");
         BigDecimal catalogueIndex = new BigDecimal("2.4");
 
         // API基本信息对象
@@ -1686,10 +1655,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         apiRequestDtoS.add(apiId);
         apiRequestDtoS.add(pushData);
         apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
-        apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
-                " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" +
-                " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
-                "}", addIndex + ".7");
+        apiBasicInfoDTO.apiRequestExamples = String.format("{\n" + " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" + " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" + "}", addIndex + ".7");
 
         // 参数(body)表格(2.5.9返回参数说明)
         List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
@@ -1711,11 +1677,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
 
         //设置API返回参数,即返回示例(3)
-        apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
-                " &nbsp;&nbsp;\"code\": 0,\n" +
-                " &nbsp;&nbsp;\"msg\": \"xxx\",\n" +
-                " &nbsp;&nbsp;\"data\": null\n" +
-                "}", addIndex + ".9");
+        apiBasicInfoDTO.apiResponseExamples = String.format("{\n" + " &nbsp;&nbsp;\"code\": 0,\n" + " &nbsp;&nbsp;\"msg\": \"xxx\",\n" + " &nbsp;&nbsp;\"data\": null\n" + "}", addIndex + ".9");
 
         // pushData json格式
         if (StringUtils.isNotBlank(pushDataJson)) {
@@ -1786,8 +1748,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     private ApiDocDTO createApiDocDTO(List<ApiConfigDTO> dtoList) {
 
-        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address)
-                .replace("{api_prd_address}", pdf_prd_address);
+        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address).replace("{api_prd_address}", pdf_prd_address);
 
         ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
 
@@ -1796,15 +1757,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // API文档代码示例 java
         apiDocDTO.apiCodeExamplesJava = DATAACCESS_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", pdf_uat_address);
 
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
-                "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" +
-                "&nbsp;&nbsp; \"password\": \"xxx\"\n" +
-                "}";
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" +
-                "&nbsp;&nbsp; \"code\": 0,\n" +
-                "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" +
-                "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" +
-                "}", "2.4.9");
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" + "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" + "&nbsp;&nbsp; \"password\": \"xxx\"\n" + "}";
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" + "&nbsp;&nbsp; \"code\": 0,\n" + "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" + "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" + "}", "2.4.9");
         BigDecimal catalogueIndex = new BigDecimal("2.4");
 
         // API基本信息对象
@@ -1857,10 +1811,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiRequestDtoS.add(apiId);
             apiRequestDtoS.add(pushData);
             apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
-            apiBasicInfoDTO.apiRequestExamples = String.format("{\n" +
-                    " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" +
-                    " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" +
-                    "}", addIndex + ".7");
+            apiBasicInfoDTO.apiRequestExamples = String.format("{\n" + " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" + " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" + "}", addIndex + ".7");
 
             // 参数(body)表格(2.5.9返回参数说明)
             List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
@@ -1882,11 +1833,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
 
             //设置API返回参数,即返回示例(3)
-            apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
-                    " &nbsp;&nbsp;\"code\": 0,\n" +
-                    " &nbsp;&nbsp;\"msg\": \"xxx\",\n" +
-                    " &nbsp;&nbsp;\"data\": null\n" +
-                    "}", addIndex + ".9");
+            apiBasicInfoDTO.apiResponseExamples = String.format("{\n" + " &nbsp;&nbsp;\"code\": 0,\n" + " &nbsp;&nbsp;\"msg\": \"xxx\",\n" + " &nbsp;&nbsp;\"data\": null\n" + "}", addIndex + ".9");
 
             // pushData json格式
             if (StringUtils.isNotBlank(dto.pushDataJson)) {
