@@ -15,7 +15,7 @@ target/
 .project
 target
 # LIB jar
-lib
+/lib
 
 # Log file
 *.log
