@@ -209,7 +209,7 @@ public class UserAuthServiceImpl implements UserAuthService {
             int code4 = resultEntity.getCode();
             String msg4 = resultEntity.getMsg();
             if (ResultEnum.SUCCESS.getCode() != code4) {
-                String errorMsg = "SSO单点登录获取角色id失败......" + "CODE:" + code + " MSG:" + msg4;
+                String errorMsg = "SSO单点登录获取角色id失败......" + "CODE:" + code4 + " MSG:" + msg4;
                 log.error(errorMsg);
                 return ResultEntityBuild.build(ResultEnum.SSO_GET_ROLE_ID_FAILURE, errorMsg);
             }
@@ -222,7 +222,7 @@ public class UserAuthServiceImpl implements UserAuthService {
             int code2 = result1.getCode();
             String msg2 = result1.getMsg();
             if (ResultEnum.SUCCESS.getCode() != code2) {
-                String errorMsg = "SSO单点登录为临时用户分配角色失败......" + "CODE:" + code + " MSG:" + msg2;
+                String errorMsg = "SSO单点登录为临时用户分配角色失败......" + "CODE:" + code2 + " MSG:" + msg2;
                 log.error(errorMsg);
                 return ResultEntityBuild.build(ResultEnum.SSO_ASSIGNMENT_FAILURE, errorMsg);
             }
@@ -236,7 +236,7 @@ public class UserAuthServiceImpl implements UserAuthService {
             //todo:记录临时账号访问日志
             SsoAccessRecordsPO ssoAccessRecordsPO = new SsoAccessRecordsPO();
             ssoAccessRecordsPO.setFiUid((long) fiUserId);
-            ssoAccessRecordsPO.setSsoUserInfo(JSON.toJSONString(data));
+            ssoAccessRecordsPO.setSsoUserInfo("");
             ssoAccessRecordsPO.setVisitTime(new Date());
             ssoAccessRecordsPO.setRoleInfo(roleName);
             boolean b = ssoAccessRecordsService.saveRecord(ssoAccessRecordsPO);
