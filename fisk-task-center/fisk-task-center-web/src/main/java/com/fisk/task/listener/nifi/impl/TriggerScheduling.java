@@ -142,7 +142,10 @@ public class TriggerScheduling implements ITriggerScheduling {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
-            //acknowledgment.acknowledge();
+            log.info("TriggerScheduling.unifiedControl方法结束...");
+            if (acknowledgment != null) {
+                acknowledgment.acknowledge();
+            }
         }
     }
 
