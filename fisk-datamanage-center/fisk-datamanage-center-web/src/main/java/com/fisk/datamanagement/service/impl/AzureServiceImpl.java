@@ -76,17 +76,17 @@ public class AzureServiceImpl implements AzureService {
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(queryData.dbId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             if (queryData.type == AzureTypeEnum.CHAT.getValue()) {
-                String[] split = queryData.getText().split("```");
-                boolean flag = false;
-                for (int i = 0; i < split.length; i++) {
-                    if (split[i].substring(0,7).toUpperCase().contains("SELECT")){
-                        queryData.text = split[i];
-                        flag = true;
-                    }
-                }
-                if (!flag){
-                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-                }
+//                String[] split = queryData.getText().split("```");
+//                boolean flag = false;
+//                for (int i = 0; i < split.length; i++) {
+//                    if (split[i].substring(0,7).toUpperCase().contains("SELECT")){
+//                        queryData.text = split[i];
+//                        flag = true;
+//                    }
+//                }
+//                if (!flag){
+//                    throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+//                }
                 data = getListToSelectSql(queryData, fiDataDataSource.data);
             } else if (queryData.type == AzureTypeEnum.SQL.getValue()) {
                 data = getListToSelectSql(queryData, fiDataDataSource.data);
