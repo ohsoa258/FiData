@@ -62,5 +62,9 @@ public class BuildGovernanceReportListener {
         } catch (Exception ex) {
             log.error("数据安全智能发现报告消费异常:" + ex);
         }
+        log.info("BuildGovernanceReportListener.dataSecurity_IntelligentDiscoveryReport_Msg方法结束...");
+        if (acke != null) {
+            acke.acknowledge();
+        }
     }
 }
