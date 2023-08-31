@@ -1,6 +1,7 @@
 package com.fisk.auth.service;
 
 import com.fisk.auth.dto.UserAuthDTO;
+import com.fisk.auth.dto.ssologin.TicketInfoDTO;
 import com.fisk.common.core.response.ResultEntity;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,4 +33,12 @@ public interface UserAuthService {
      * @return 获取token结果
      */
     ResultEntity<String> getToken(UserAuthDTO dto);
+
+    /**
+     * 浦东应急局--单点登录
+     *
+     * @param ticketInfoDTO
+     * @return
+     */
+    ResultEntity<String> singleLogin(TicketInfoDTO ticketInfoDTO);
 }

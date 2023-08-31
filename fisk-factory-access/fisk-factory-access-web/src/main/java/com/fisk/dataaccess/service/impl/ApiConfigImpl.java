@@ -1565,7 +1565,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 }
             }
         } catch (SQLException e) {
-            return ResultEnum.STG_TO_ODS_ERROR;
+            return ResultEnum.STG_TO_ODS_ERROR_DETAIL;
         }
         return resultEnum;
     }

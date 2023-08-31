@@ -177,7 +177,7 @@ public class PgsqlUtils {
             statement.executeUpdate(sqlList.get(flag));
         } catch (SQLException e) {
             log.error("批量执行SQL异常: " + e);
-            return ResultEnum.STG_TO_ODS_ERROR;
+            return ResultEnum.STG_TO_ODS_ERROR_DETAIL;
         } finally {
             AbstractCommonDbHelper.closeStatement(statement);
             AbstractCommonDbHelper.closeConnection(pgConn);

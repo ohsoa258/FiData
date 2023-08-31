@@ -2,12 +2,14 @@ package com.fisk.system.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoQueryDTO;
 import com.fisk.system.dto.roleinfo.RolePowerDTO;
+import com.fisk.system.entity.RoleInfoPO;
 import com.fisk.system.vo.roleinfo.RoleInfoVo;
 
 import java.util.List;
@@ -15,10 +17,11 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-public interface IRoleInfoService{
+public interface IRoleInfoService extends IService<RoleInfoPO> {
 
     /**
      * 获取角色列表
+     *
      * @param query
      * @return 查询结果
      */
@@ -74,12 +77,14 @@ public interface IRoleInfoService{
 
     /**
      * 获取角色字段数据
+     *
      * @return
      */
     List<FilterFieldDTO> getRoleInfoColumn();
 
     /**
      * 获取所有角色及角色下用户信息
+     *
      * @return
      */
     List<RoleInfoVo> getTreeRols();
@@ -90,4 +95,12 @@ public interface IRoleInfoService{
      * @return
      */
     List<RoleInfoDTO> getRolebyUserId(int userId);
+
+    /**
+     * 根据角色名获取角色id
+     *
+     * @param roleName
+     * @return
+     */
+    RoleInfoDTO getRoleByRoleName(String roleName);
 }

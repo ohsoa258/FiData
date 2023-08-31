@@ -97,6 +97,12 @@ public enum ResultEnum {
     AUTH_LOGIN_INFO_INVALID(3003, "登录信息无效或已过期，请重新登录"),
     AUTH_TOKEN_PARSER_ERROR(3005, "token解析失败"),
     AUTH_TOKEN_IS_NOTNULL(3006, "token为空"),
+    SSO_AUTH_FAILURE(3007, "SSO单点登录获取票据失败！未获取到有效用户信息..."),
+    SSO_REGISTER_FAILURE(3008, "SSO单点登录注册临时用户失败..."),
+    SSO_ASSIGNMENT_FAILURE(3009, "SSO单点登录为临时用户分配角色失败..."),
+    SSO_GET_TEMPORARY_USER_FAILURE(3010, "SSO单点登录获取刚插入的临时用户失败..."),
+    SSO_GET_ROLE_ID_FAILURE(3010, "SSO单点登录获取角色id失败..."),
+
 
     /**
      * 用户中心
@@ -198,6 +204,7 @@ public enum ResultEnum {
     DATAACCESS_APP_EDIT_FAILURE(5085,"当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志..."),
     DATAACCESS_DATASOURCE_ERROR(5086,"当前发布表的数据源不存在或已删除，请联系系统管理员"),
     API_STATE_NOT_ALLOW_ERROR(5087,"当前调用的接口已被禁用，请联系系统管理员..."),
+    STG_TO_ODS_ERROR_DETAIL(5088, "stg同步数据到ods-执行sql报错，请检查字段类型或字段长度..."),
 
 
 

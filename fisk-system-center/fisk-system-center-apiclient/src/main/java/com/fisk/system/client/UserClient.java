@@ -2,7 +2,10 @@ package com.fisk.system.client;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
+import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -15,17 +18,18 @@ import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.system.vo.roleinfo.RoleInfoVo;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 /**
  * @author Lock
- *
+ * <p>
  * 对外开放的是controller层里的方法,注意:
- *  1.没有方法体
- *  2.不再是ResponseEntity<param>接受参数,而是ResponseEntity<param>中的param
- *  3.方法上代表CRUD的注解不变,并且要全路径,包括controller类上的路径
+ * 1.没有方法体
+ * 2.不再是ResponseEntity<param>接受参数,而是ResponseEntity<param>中的param
+ * 3.方法上代表CRUD的注解不变,并且要全路径,包括controller类上的路径
  */
 @FeignClient("user-service")
 public interface UserClient {
@@ -34,7 +38,7 @@ public interface UserClient {
      * 根据用户名和密码查询用户
      *
      * @param userAccount 用户名
-     * @param password 密码
+     * @param password    密码
      * @return 前端json格式传来的,@RequestParam接对象
      */
     @GetMapping("/info")
@@ -44,6 +48,7 @@ public interface UserClient {
 
     /**
      * 获取数据服务中文名称列表
+     *
      * @return
      */
     @GetMapping("/attribute/getServiceRegistryList")
@@ -51,6 +56,7 @@ public interface UserClient {
 
     /**
      * 获取系统用户集合
+     *
      * @param ids
      * @return
      */
@@ -59,6 +65,7 @@ public interface UserClient {
 
     /**
      * 用户组筛选系统用户
+     *
      * @param dto
      * @return
      */
@@ -67,6 +74,7 @@ public interface UserClient {
 
     /**
      * 获取用户下拉数据
+     *
      * @return
      */
     @GetMapping("/info/listUserDrops")
@@ -74,6 +82,7 @@ public interface UserClient {
 
     /**
      * 查询所有数据源信息
+     *
      * @return
      */
     @PostMapping("/datasource/getAll")
@@ -81,6 +90,7 @@ public interface UserClient {
 
     /**
      * 查询FiData数据源信息
+     *
      * @return
      */
     @PostMapping("/datasource/getAllFiDataDataSource")
@@ -88,6 +98,7 @@ public interface UserClient {
 
     /**
      * 查询外部数据源信息
+     *
      * @return
      */
     @PostMapping("/datasource/getAllExternalDataSource")
@@ -95,6 +106,7 @@ public interface UserClient {
 
     /**
      * 查询FiData指定数据源信息
+     *
      * @return
      */
     @GetMapping("/datasource/getById/{datasourceId}")
@@ -102,6 +114,7 @@ public interface UserClient {
 
     /**
      * 查询所有邮件服务器信息
+     *
      * @return
      */
     @PostMapping("/emailserver/getEmailServerList")
@@ -109,6 +122,7 @@ public interface UserClient {
 
     /**
      * 根据ID查询邮件服务器信息
+     *
      * @return
      */
     @GetMapping("/emailserver/getById/{id}")
@@ -116,6 +130,7 @@ public interface UserClient {
 
     /**
      * 根据ids获取角色列表详情
+     *
      * @return
      */
     @PostMapping("/role/getRoles")
@@ -123,6 +138,7 @@ public interface UserClient {
 
     /**
      * 根据用户id获取用户角色信息
+     *
      * @return
      */
     @GetMapping("/role/getRolebyUserId/{userId}")
@@ -130,6 +146,7 @@ public interface UserClient {
 
     /**
      * 根据用户姓名模糊查询用户id
+     *
      * @return
      */
     @GetMapping("/info/getUserIdByUserName/{userName}")
@@ -137,12 +154,15 @@ public interface UserClient {
 
     /**
      * 获取所有角色及角色下用户列表
+     *
      * @return
      */
     @GetMapping("/role/getTreeRols")
     ResultEntity<List<RoleInfoVo>> getTreeRols();
+
     /**
      * 菜单列表
+     *
      * @return
      */
     @GetMapping("/ServiceRegistry/getList")
@@ -150,6 +170,7 @@ public interface UserClient {
 
     /**
      * 获取用户列表
+     *
      * @return
      */
     @GetMapping("/info/getAllUserList")
@@ -175,6 +196,7 @@ public interface UserClient {
 
     /**
      * 添加系统数据源，设置nifi启动参数
+     *
      * @param dto
      * @return
      */
@@ -183,6 +205,7 @@ public interface UserClient {
 
     /**
      * 修改系统数据源，设置nifi启动参数
+     *
      * @param dto
      * @return
      */
@@ -193,7 +216,7 @@ public interface UserClient {
     ResultEntity<Object> getCurrentUserInfo();
 
     @PostMapping("/sqlFactroy/sqlCheck")
-    ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestParam("sql")String sql, @RequestParam("dbType")String dbType);
+    ResultEntity<List<TableMetaDataObject>> sqlCheck(@RequestParam("sql") String sql, @RequestParam("dbType") String dbType);
 
     /**
      * 获取单条数据源连接信息
@@ -212,21 +235,56 @@ public interface UserClient {
      * @return
      */
     @GetMapping("/datasource/getByIpAndDbName")
-    ResultEntity<DataSourceDTO> getByIpAndDbName(@RequestParam("ip")String ip,@RequestParam("dbName") String dbName);
+    ResultEntity<DataSourceDTO> getByIpAndDbName(@RequestParam("ip") String ip, @RequestParam("dbName") String dbName);
 
     /**
      * 根据用户id和页面url查询是否有此页面权限
+     *
      * @param userId
      * @param pageUrl
      * @return
      */
     @GetMapping("/info/verifyPageByUserId")
-    ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId,@RequestParam("pageUrl")String pageUrl);
+    ResultEntity<Boolean> verifyPageByUserId(@RequestParam("userId") int userId, @RequestParam("pageUrl") String pageUrl);
 
     /**
      * 获取默认邮件服务器信息
+     *
      * @return
      */
     @GetMapping("/emailserver/getDefaultEmailServer")
     ResultEntity<EmailServerVO> getDefaultEmailServer();
+
+    /**
+     * 注册功能
+     *
+     * @param dto
+     * @return 执行结果
+     * <p>
+     * 表单提交的方式,不需要加@RequestBody来接对象,如果是json格式就需要了
+     */
+    @PostMapping("/info/register")
+    @ApiOperation("添加用户")
+    ResultEntity<Object> register(@Validated @RequestBody UserDTO dto);
+
+    /**
+     * 根据角色,添加关联用户
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/auth/addRoleUser")
+    @ApiOperation("根据角色,添加关联用户")
+    ResultEntity<Object> addRoleUser(@Validated @RequestBody AssignmentDTO dto);
+
+    /**
+     * 根据角色名获取角色id
+     *
+     * @param roleName
+     * @return
+     */
+    @ApiOperation("根据角色名获取角色id")
+    @GetMapping("/role/getRoleByRoleName")
+    ResultEntity<RoleInfoDTO> getRoleByRoleName(@RequestParam("roleName")String roleName);
+
 }

@@ -81,4 +81,16 @@ public class RoleInfoController {
     public ResultEntity<List<RoleInfoDTO>> getRolebyUserId(@RequestParam("userId")int userId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRolebyUserId(userId));
     }
+
+    /**
+     * 根据角色名获取角色id
+     *
+     * @param roleName
+     * @return
+     */
+    @ApiOperation("根据角色名获取角色id")
+    @GetMapping("/getRoleByRoleName")
+    public ResultEntity<RoleInfoDTO> getRoleByRoleName(@RequestParam("roleName")String roleName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getRoleByRoleName(roleName));
+    }
 }

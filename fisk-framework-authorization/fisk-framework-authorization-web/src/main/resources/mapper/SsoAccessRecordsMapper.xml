@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.auth.mapper.SsoAccessRecordsMapper">
+
+    <resultMap id="BaseResultMap" type="com.fisk.auth.entity.SsoAccessRecordsPO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="fiUid" column="fi_uid" jdbcType="BIGINT"/>
+            <result property="ssoUserInfo" column="sso_user_info" jdbcType="VARCHAR"/>
+            <result property="visitTime" column="visit_time" jdbcType="TIMESTAMP"/>
+            <result property="existTime" column="exist_time" jdbcType="TIMESTAMP"/>
+            <result property="roleInfo" column="role_info" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,fi_uid,sso_user_info,
+        visit_time,exist_time,role_info,
+        create_time,create_user,update_time,
+        update_user,del_flag
+    </sql>
+</mapper>
