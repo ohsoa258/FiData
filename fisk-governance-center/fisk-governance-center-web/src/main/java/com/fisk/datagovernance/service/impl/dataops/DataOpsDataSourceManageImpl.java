@@ -11,6 +11,11 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.DateTimeUtils;
+import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
+import com.fisk.common.core.utils.Dto.Excel.RowDto;
+import com.fisk.common.core.utils.Dto.Excel.SheetDto;
+import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.governance.BuildGovernanceHelper;
 import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
@@ -26,6 +31,8 @@ import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.datagovernance.entity.dataquality.AttachmentInfoPO;
+import com.fisk.datagovernance.mapper.dataquality.AttachmentInfoMapper;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
 import com.fisk.datagovernance.vo.dataops.*;
@@ -37,8 +44,6 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.statement.select.Select;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -49,6 +54,7 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +73,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     private int odsId;
     @Value("${dataops.metadataentity_key}")
     private String metaDataEntityKey;
+    @Value("${file.excelFilePath}")
+    private String excelFilePath;
 
     @Resource
     private DataOpsLogManageImpl dataOpsLogManageImpl;
@@ -88,6 +96,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Resource
     private PublishTaskClient publishTaskClient;
+
+    @Resource
+    private AttachmentInfoMapper attachmentInfoMapper;
 
     @Override
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableSource() {
@@ -378,6 +389,54 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         return ResultEnum.TABLE_DATA_SYNC_FAIL;
     }
 
+
+    public String createTableStructureTemplate(GetDataOpsFieldSourceDTO dto){
+        // 第一步：获取表字段
+        ResultEntity<List<DataOpsTableFieldVO>> dataOpsFieldSource = getDataOpsFieldSource(dto);
+        List<String> fieldNameList=new ArrayList<>();
+        if (dataOpsFieldSource!=null && CollectionUtils.isNotEmpty(dataOpsFieldSource.getData())){
+            dataOpsFieldSource.getData().forEach(t->{
+                fieldNameList.add(t.getFieldName());
+            });
+        }
+        if (CollectionUtils.isEmpty(fieldNameList)){
+            return "";
+        }
+
+        // 第二步：生成Excel
+        List<SheetDto> sheetList = new ArrayList<>();
+        SheetDto sheet = new SheetDto();
+        String sheetName ="" ;
+        if (StringUtils.isNotEmpty(dto.getTableFramework())){
+            sheetName=dto.getTableFramework()+".";
+        }
+        if (StringUtils.isNotEmpty(dto.getTableName())){
+            sheetName+=dto.getTableName();
+        }
+        sheetName+="_"+dto.getDatasourceId();
+        sheet.setSheetName(sheetName);
+        List<RowDto> singRows = createTableStructureTemplate_GetSingRows(fieldNameList);
+        sheet.setSingRows(singRows);
+        sheetList.add(sheet);
+        String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+        String uploadUrl = excelFilePath + "dataOps_excelFile/";
+        ExcelDto excelDto = new ExcelDto();
+        excelDto.setExcelName(currentFileName);
+        excelDto.setSheets(sheetList);
+        ExcelReportUtil.createExcel(excelDto, uploadUrl, currentFileName, true);
+
+        // 第三步：数据库记录Excel附件信息并返回附件Id用于下载附件
+        AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+        attachmentInfoPO.setCurrentFileName(currentFileName);
+        attachmentInfoPO.setExtensionName(".xlsx");
+        attachmentInfoPO.setAbsolutePath(uploadUrl);
+        attachmentInfoPO.setOriginalName(String.format("%s上传模板%s.xlsx",dto.getTableName(), DateTimeUtils.getNowToShortDate().replace("-", "")));
+        attachmentInfoPO.setCategory(500);
+        attachmentInfoMapper.insertOne(attachmentInfoPO);
+
+        return attachmentInfoPO.getOriginalName() + "," + attachmentInfoPO.getId();
+    }
+
     public void setMetaDataToRedis() {
         log.info("setMetaDataToRedis-ops 开始");
         List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
@@ -489,5 +548,15 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
         });
         return dataBaseList;
+    }
+
+    public List<RowDto>  createTableStructureTemplate_GetSingRows(List<String> fieldNameList){
+        List<RowDto> singRows = new ArrayList<>();
+        RowDto rowDto = new RowDto();
+        rowDto.setRowIndex(0);
+        List<String> Columns = fieldNameList;
+        rowDto.setColumns(Columns);
+        singRows.add(rowDto);
+        return singRows;
     }
 }

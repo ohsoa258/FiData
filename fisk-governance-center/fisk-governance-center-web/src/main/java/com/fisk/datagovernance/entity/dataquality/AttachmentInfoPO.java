@@ -44,6 +44,7 @@ public class AttachmentInfoPO extends BasePO {
      * 200: 数据清洗报告
      * 300: 智能发现报告
      * 400: 数据检查日志报告
+     * 500: 数据运维生成导入模板
      */
     public int category;
 
