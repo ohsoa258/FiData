@@ -387,4 +387,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return
      */
     PhyTblAndApiTblVO countTbl();
+
+    /**
+     * 根据应用id获取当前应用下表总数
+     *
+     * @return
+     */
+    Integer countTblByApp(Integer appId);
+
 }

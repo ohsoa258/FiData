@@ -54,4 +54,10 @@ public class AppRegistrationVO{
      */
     @ApiModelProperty(value = "部门名称(浦东应急局专供)")
     public String departmentName;
+
+    /**
+     * 当前应用下表总数
+     */
+    @ApiModelProperty(value = "当前应用下表总数")
+    public Integer tblCount;
 }

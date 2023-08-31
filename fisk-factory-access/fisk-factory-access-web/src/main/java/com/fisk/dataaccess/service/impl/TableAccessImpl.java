@@ -2661,7 +2661,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public List<TableAccessDTO> getTblByAppId(Integer appId) {
         LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TableAccessPO::getAppId,appId);
+        wrapper.eq(TableAccessPO::getAppId, appId);
         List<TableAccessPO> list = list(wrapper);
         return TableAccessMap.INSTANCES.listPoToDto(list);
     }
@@ -2686,6 +2686,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         vo.setApiCount(apiCount);
 
         return vo;
+    }
+
+    /**
+     * 根据应用id获取当前应用下表总数
+     *
+     * @return
+     */
+    @Override
+    public Integer countTblByApp(Integer appId) {
+        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TableAccessPO::getAppId,appId);
+        Integer count = accessMapper.selectCount(wrapper);
+        return count;
     }
 
 }

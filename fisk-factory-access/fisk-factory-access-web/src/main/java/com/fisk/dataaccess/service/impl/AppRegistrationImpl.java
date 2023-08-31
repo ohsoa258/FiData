@@ -616,17 +616,17 @@ public class AppRegistrationImpl
                 .collect(Collectors.toList());
 
         //判断前端传的参数是否包含原有数据源
-        if (!collect3.containsAll(duplicates)){
+        if (!collect3.containsAll(duplicates)) {
             //如果不为空 就说明当前要移除的数据源有表在使用 则本次修改不能生效
-            if (!CollectionUtils.isEmpty(duplicates)){
+            if (!CollectionUtils.isEmpty(duplicates)) {
                 Map<Long, String> result = new HashMap<>();
                 tables.forEach(tableAccessDTO -> {
-                    if (duplicates.contains(tableAccessDTO.appDataSourceId)){
-                        result.put(tableAccessDTO.id,tableAccessDTO.tableName);
+                    if (duplicates.contains(tableAccessDTO.appDataSourceId)) {
+                        result.put(tableAccessDTO.id, tableAccessDTO.tableName);
                     }
                 });
                 log.error("当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志...");
-                log.info("表详情如下：[{}]",JSON.toJSONString(result));
+                log.info("表详情如下：[{}]", JSON.toJSONString(result));
                 throw new FkException(ResultEnum.DATAACCESS_APP_EDIT_FAILURE);
             }
         }
@@ -998,6 +998,7 @@ public class AppRegistrationImpl
             List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
             if (driveTypePOList != null) {
                 for (AppRegistrationVO item : appRegistrationVOList) {
+                    item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
                     item.setDriveType(driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null).getDriveType());
                 }
             }
