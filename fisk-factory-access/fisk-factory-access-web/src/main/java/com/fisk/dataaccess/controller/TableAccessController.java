@@ -12,6 +12,7 @@ import com.fisk.dataaccess.dto.table.TableKeepNumberDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessQueryDTO;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.vo.table.PhyTblAndApiTblVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -102,6 +103,17 @@ public class TableAccessController {
     @ApiOperation(value = "通过应用id获取所选应用下的所有表--仅供智能发布调用")
     public ResultEntity<List<TableAccessDTO>> getTblByAppId(@RequestParam("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTblByAppIdForSmart(appId));
+    }
+
+    /**
+     * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     *
+     * @return
+     */
+    @GetMapping("/countTbl")
+    @ApiOperation(value = "数接--回显统计当前数据接入总共有多少非实时表和实时api")
+    public ResultEntity<PhyTblAndApiTblVO> countTbl() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.countTbl());
     }
 
 

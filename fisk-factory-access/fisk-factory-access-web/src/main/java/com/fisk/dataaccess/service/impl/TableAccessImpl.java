@@ -75,6 +75,7 @@ import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
+import com.fisk.dataaccess.vo.table.PhyTblAndApiTblVO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -2663,6 +2664,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         wrapper.eq(TableAccessPO::getAppId,appId);
         List<TableAccessPO> list = list(wrapper);
         return TableAccessMap.INSTANCES.listPoToDto(list);
+    }
+
+    /**
+     * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     *
+     * @return
+     */
+    @Override
+    public PhyTblAndApiTblVO countTbl() {
+        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.isNull(TableAccessPO::getApiId);
+        Integer phyCount = accessMapper.selectCount(wrapper);
+
+        LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.isNotNull(TableAccessPO::getApiId);
+        Integer apiCount = accessMapper.selectCount(wrapper1);
+
+        PhyTblAndApiTblVO vo = new PhyTblAndApiTblVO();
+        vo.setPhyCount(phyCount);
+        vo.setApiCount(apiCount);
+
+        return vo;
     }
 
 }

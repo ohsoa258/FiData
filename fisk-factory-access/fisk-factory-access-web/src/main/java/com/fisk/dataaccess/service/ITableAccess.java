@@ -22,6 +22,7 @@ import com.fisk.dataaccess.entity.TableAccessPO;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.dataaccess.vo.table.PhyTblAndApiTblVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
@@ -379,4 +380,11 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return
      */
     List<TableAccessDTO> getTblByAppId(Integer appId);
+
+    /**
+     * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     *
+     * @return
+     */
+    PhyTblAndApiTblVO countTbl();
 }
