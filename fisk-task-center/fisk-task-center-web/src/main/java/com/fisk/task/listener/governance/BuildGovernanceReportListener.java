@@ -39,6 +39,10 @@ public class BuildGovernanceReportListener {
         } catch (Exception ex) {
             log.error("数据质量质量报告消费异常:" + ex);
         }
+        log.info("BuildGovernanceReportListener.dataQuality_QualityReport_Msg方法结束...");
+        if (acke != null) {
+            acke.acknowledge();
+        }
     }
 
     public void dataSecurity_IntelligentDiscoveryReport_Msg(String dataInfo, Acknowledgment acke) {
