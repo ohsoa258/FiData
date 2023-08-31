@@ -2,4 +2,4 @@
 ===================
 history:{{$history}}
 ===================
-{{$input}},please Help me write the corresponding SQL statement, select 
+{{$input}},please Help me write the corresponding SQL statement
