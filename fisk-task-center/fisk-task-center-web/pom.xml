@@ -260,7 +260,7 @@
                     <!-- 将本地lib引入的jar包打包到项目的lib中 -->
                     <includeSystemScope>true</includeSystemScope>
                     <!--项目启动类-->
-                    <mainClass>com.fisk.FkTaskApplication</mainClass>
+                    <mainClass>com.fisk.task.FkTaskApplication</mainClass>
                     <layout>ZIP</layout>
                     <includes>
                         <include>
