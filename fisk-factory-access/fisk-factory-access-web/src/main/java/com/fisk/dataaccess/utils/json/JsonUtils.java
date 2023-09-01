@@ -197,7 +197,7 @@ public class JsonUtils {
         List<JsonSchema> dataSchema = new ArrayList<>();
 
         for (TableFieldsDTO fieldsDto : tableDto.list) {
-
+            fieldsDto.fieldType = "VARCHAR";
             dataSchema.add(JsonSchema.builder()
                     .name(fieldsDto.sourceFieldName)
                     .type(converFieldType(fieldsDto.fieldType))

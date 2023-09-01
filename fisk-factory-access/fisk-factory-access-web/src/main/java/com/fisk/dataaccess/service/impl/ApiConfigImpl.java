@@ -681,7 +681,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (FkException ex) {
             resultEnum = ex.getResultEnum();
-            msg = msg.append(ex.getErrorMsg());
+            msg.append(ex.getErrorMsg());
             return ResultEntityBuild.build(resultEnum, msg);
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
