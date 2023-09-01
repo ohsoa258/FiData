@@ -15,6 +15,7 @@ import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 
@@ -201,4 +202,10 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     Object overlayCodePreview(OverlayCodePreviewDTO dto);
 
+    /**
+     * 数仓建模首页--获取总共的维度表和事实表--不包含公共域维度
+     *
+     * @return
+     */
+    DimAndFactCountVO getTotalDimAndFactCount();
 }

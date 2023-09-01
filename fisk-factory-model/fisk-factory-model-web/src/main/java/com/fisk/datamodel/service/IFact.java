@@ -89,4 +89,17 @@ public interface IFact extends IService<FactPO> {
      */
     List<TableNameDTO> getPublishSuccessFactTable(Integer businessId);
 
+    /**
+     * 获取业务域下的事实表计数
+     *
+     * @return
+     */
+    Integer getFactCountByBid(Integer id);
+
+    /**
+     * 获取所有事实表计数
+     *
+     * @return
+     */
+    Integer getFactTotalCount();
 }

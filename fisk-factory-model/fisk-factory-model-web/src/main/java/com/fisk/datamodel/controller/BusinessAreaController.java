@@ -12,6 +12,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.service.IBusinessArea;
+import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import io.swagger.annotations.Api;
@@ -75,8 +76,8 @@ public class BusinessAreaController {
 
     @GetMapping("/getColumn")
     @ApiOperation(value = "获取业务域表字段")
-    public ResultEntity<Object> getBusinessColumn(){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getBusinessAreaColumn());
+    public ResultEntity<Object> getBusinessColumn() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaColumn());
     }
 
     @PostMapping("/getDataList")
@@ -167,6 +168,17 @@ public class BusinessAreaController {
     @ApiOperation(value = "覆盖方式预览代码")
     public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.overlayCodePreview(dto));
+    }
+
+    /**
+     * 数仓建模首页--获取总共的维度表和事实表--不包含公共域维度
+     *
+     * @return
+     */
+    @GetMapping("/getTotalDimAndFactCount")
+    @ApiOperation(value = "数仓建模首页--获取总共的维度表和事实表--不包含公共域维度")
+    public ResultEntity<DimAndFactCountVO> getTotalDimAndFactCount() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTotalDimAndFactCount());
     }
 
 }

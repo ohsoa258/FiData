@@ -68,4 +68,22 @@ public class BusinessPageResultDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime createTime;
 
+    /**
+     * 当前应用下表总数
+     */
+    @ApiModelProperty(value = "当前应用下表总数")
+    public Integer tblCount;
+
+    /**
+     * 当前应用下维度总数
+     */
+    @ApiModelProperty(value = "当前应用下维度表总数")
+    public Integer dimCount;
+
+    /**
+     * 当前应用下事实表总数
+     */
+    @ApiModelProperty(value = "当前应用下事实表总数")
+    public Integer factCount;
+
 }

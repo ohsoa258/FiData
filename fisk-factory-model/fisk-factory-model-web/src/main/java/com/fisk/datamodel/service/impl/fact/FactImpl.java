@@ -28,7 +28,6 @@ import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
-import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.*;
@@ -107,8 +106,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     }
 
     @Override
-    public ResultEnum deleteFact(int id)
-    {
+    public ResultEnum deleteFact(int id) {
         try {
             FactPO po = mapper.selectById(id);
             if (po == null) {
@@ -174,68 +172,64 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             }
 
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
-        }
-        catch (Exception e)
-        {
-            log.error("deleteFact:"+e.getMessage());
+        } catch (Exception e) {
+            log.error("deleteFact:" + e.getMessage());
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
     }
 
     /**
      * 拼接niFi删除表参数
+     *
      * @param businessAreaId
      * @param factId
      * @return
      */
-    public DataModelVO niFiDelTable(int businessAreaId,int factId)
-    {
-        DataModelVO vo=new DataModelVO();
-        vo.businessId= String.valueOf(businessAreaId);
-        vo.dataClassifyEnum= DataClassifyEnum.DATAMODELING;
-        vo.delBusiness=false;
-        DataModelTableVO tableVO=new DataModelTableVO();
-        tableVO.type= OlapTableEnum.FACT;
-        List<Long> ids=new ArrayList<>();
+    public DataModelVO niFiDelTable(int businessAreaId, int factId) {
+        DataModelVO vo = new DataModelVO();
+        vo.businessId = String.valueOf(businessAreaId);
+        vo.dataClassifyEnum = DataClassifyEnum.DATAMODELING;
+        vo.delBusiness = false;
+        DataModelTableVO tableVO = new DataModelTableVO();
+        tableVO.type = OlapTableEnum.FACT;
+        List<Long> ids = new ArrayList<>();
         ids.add(Long.valueOf(factId));
-        tableVO.ids=ids;
-        vo.factIdList=tableVO;
+        tableVO.ids = ids;
+        vo.factIdList = tableVO;
         return vo;
     }
 
     /**
      * 拼接删除DW/Doris表
+     *
      * @param factName
      * @return
      */
-    public PgsqlDelTableDTO delDwDorisTable(String factName)
-    {
-        PgsqlDelTableDTO dto=new PgsqlDelTableDTO();
-        dto.businessTypeEnum= BusinessTypeEnum.DATAMODEL;
-        dto.delApp=false;
-        List<TableListDTO> tableList=new ArrayList<>();
-        TableListDTO table=new TableListDTO();
-        table.tableName=factName;
+    public PgsqlDelTableDTO delDwDorisTable(String factName) {
+        PgsqlDelTableDTO dto = new PgsqlDelTableDTO();
+        dto.businessTypeEnum = BusinessTypeEnum.DATAMODEL;
+        dto.delApp = false;
+        List<TableListDTO> tableList = new ArrayList<>();
+        TableListDTO table = new TableListDTO();
+        table.tableName = factName;
         tableList.add(table);
-        dto.tableList=tableList;
-        dto.userId=userHelper.getLoginUserInfo().id;
+        dto.tableList = tableList;
+        dto.userId = userHelper.getLoginUserInfo().id;
         return dto;
     }
 
     @Override
-    public FactDTO getFact(int id)
-    {
+    public FactDTO getFact(int id) {
         FactDTO factDTO = FactMap.INSTANCES.poToDto(mapper.selectById(id));
-        if (factDTO != null){
+        if (factDTO != null) {
             factDTO.deltaTimes = systemVariables.getSystemVariable(id, CreateTypeEnum.CREATE_FACT.getValue());
         }
         return factDTO;
     }
 
     @Override
-    public ResultEnum updateFact(FactDTO dto)
-    {
-        FactPO po=mapper.selectById(dto.id);
+    public ResultEnum updateFact(FactDTO dto) {
+        FactPO po = mapper.selectById(dto.id);
         if (po == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -264,41 +258,36 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     }
 
     @Override
-    public IPage<FactListDTO> getFactList(QueryDTO dto)
-    {
-        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactPO::getBusinessProcessId,dto.id);
-        Page<FactPO> data=new Page<>(dto.getPage(),dto.getSize());
-        return FactMap.INSTANCES.pagePoToDto(mapper.selectPage(data,queryWrapper.select().orderByDesc("create_time")));
+    public IPage<FactListDTO> getFactList(QueryDTO dto) {
+        QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactPO::getBusinessProcessId, dto.id);
+        Page<FactPO> data = new Page<>(dto.getPage(), dto.getSize());
+        return FactMap.INSTANCES.pagePoToDto(mapper.selectPage(data, queryWrapper.select().orderByDesc("create_time")));
     }
 
     @Override
-    public List<FactDropDTO> getFactDropList()
-    {
+    public List<FactDropDTO> getFactDropList() {
         //获取事实表数据
-        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
-        List<FactDropDTO> list=FactMap.INSTANCES.dropPoToDto(mapper.selectList(queryWrapper));
+        QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
+        List<FactDropDTO> list = FactMap.INSTANCES.dropPoToDto(mapper.selectList(queryWrapper));
         //获取事实字段表数据
-        QueryWrapper<FactAttributePO> attribute=new QueryWrapper<>();
-        for (FactDropDTO dto:list)
-        {
+        QueryWrapper<FactAttributePO> attribute = new QueryWrapper<>();
+        for (FactDropDTO dto : list) {
             //向字段集合添加数据,只获取字段为度量类型的数据
-             dto.list= FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute).stream().filter(e->e.getFactId()==dto.id && e.attributeType== FactAttributeEnum.MEASURE.getValue()).collect(Collectors.toList()));
+            dto.list = FactAttributeMap.INSTANCES.poDropToDto(attributeMapper.selectList(attribute).stream().filter(e -> e.getFactId() == dto.id && e.attributeType == FactAttributeEnum.MEASURE.getValue()).collect(Collectors.toList()));
         }
         return list;
     }
 
     @Override
-    public List<FactScreenDropDTO> getFactScreenDropList()
-    {
+    public List<FactScreenDropDTO> getFactScreenDropList() {
         //获取事实表数据
-        QueryWrapper<FactPO> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
         return FactMap.INSTANCES.dropScreenPoToDto(mapper.selectList(queryWrapper.orderByDesc("create_time")));
     }
 
     @Override
-    public ResultEnum updateFactSql(DimensionSqlDTO dto)
-    {
+    public ResultEnum updateFactSql(DimensionSqlDTO dto) {
         FactPO model = mapper.selectById(dto.id);
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -431,6 +420,30 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     }
 
     /**
+     * 获取业务域下的事实表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getFactCountByBid(Integer id) {
+        LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FactPO::getBusinessId, id);
+        return mapper.selectCount(wrapper);
+    }
+
+    /**
+     * 获取所有事实表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getFactTotalCount() {
+        LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FactPO::getDelFlag, 1);
+        return mapper.selectCount(wrapper);
+    }
+
+    /**
      * 事实/指标表获取字段
      *
      * @param dto
@@ -543,10 +556,11 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
 
     /**
      * 根据事实表名获取事实表id
+     *
      * @param tblName
      * @return
      */
-    public FactPO getFactIdByFactName(String tblName){
+    public FactPO getFactIdByFactName(String tblName) {
         return getOne(new LambdaQueryWrapper<FactPO>().eq(FactPO::getFactTabName, tblName));
     }
 

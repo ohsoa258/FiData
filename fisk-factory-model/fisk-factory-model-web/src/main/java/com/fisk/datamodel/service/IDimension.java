@@ -113,6 +113,20 @@ public interface IDimension extends IService<DimensionPO> {
      */
     Long getFactOrDimTable(String tblName);
 
+    /**
+     * 获取业务域下的维度表计数
+     *
+     * @return
+     */
+    Integer getDimCountByBid(Integer businessId);
+
+    /**
+     * 获取总共的维度表计数
+     *
+     * @return
+     */
+    Integer getDimTotalCount();
+
     //void asyncSynchronousMetadata(DimensionPO model);
 
 }

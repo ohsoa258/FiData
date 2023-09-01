@@ -935,19 +935,43 @@ public class DimensionImpl
         Long tblId = null;
         if (tblName.contains("dim_")) {
             DimensionPO one = getOne(new LambdaQueryWrapper<DimensionPO>().eq(DimensionPO::getDimensionTabName, tblName));
-            if (one!=null){
+            if (one != null) {
                 return one.id;
-            }else {
+            } else {
                 return null;
             }
         } else {
             FactPO factPO = factImpl.getFactIdByFactName(tblName);
-            if (factPO!=null){
+            if (factPO != null) {
                 return factPO.id;
-            }else {
+            } else {
                 return null;
             }
         }
+    }
+
+    /**
+     * 获取业务域下的维度表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getDimCountByBid(Integer businessId) {
+        LambdaQueryWrapper<DimensionPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DimensionPO::getBusinessId, businessId);
+        return mapper.selectCount(wrapper);
+    }
+
+    /**
+     * 获取总共的维度表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getDimTotalCount() {
+        LambdaQueryWrapper<DimensionPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DimensionPO::getDelFlag, 1);
+        return mapper.selectCount(wrapper);
     }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,

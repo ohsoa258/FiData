@@ -10,13 +10,11 @@ import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
-import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.common.core.utils.StringBuildUtils;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -82,6 +80,7 @@ import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -519,7 +518,18 @@ public class BusinessAreaImpl
         BusinessPageDTO data = new BusinessPageDTO();
         data.page = query.page;
         data.where = str.toString();
-        return baseMapper.queryList(query.page, data);
+        Page<BusinessPageResultDTO> page = baseMapper.queryList(query.page, data);
+        List<BusinessPageResultDTO> records = page.getRecords();
+        records.stream().forEach(businessPageResultDTO -> {
+            int id = (int) businessPageResultDTO.getId();
+            int dimCount = dimensionImpl.getDimCountByBid(id);
+            int factCount = factImpl.getFactCountByBid(id);
+            int totalCount = dimCount + factCount;
+            businessPageResultDTO.setDimCount(dimCount);
+            businessPageResultDTO.setFactCount(factCount);
+            businessPageResultDTO.setTblCount(totalCount);
+        });
+        return page;
     }
 
     @Override
@@ -1336,6 +1346,21 @@ public class BusinessAreaImpl
     }
 
     /**
+     * 数仓建模首页--获取总共的维度表和事实表--不包含公共域维度
+     *
+     * @return
+     */
+    @Override
+    public DimAndFactCountVO getTotalDimAndFactCount() {
+        Integer factTotalCount = factImpl.getFactTotalCount();
+        Integer dimTotalCount = dimensionImpl.getDimTotalCount();
+        DimAndFactCountVO dimAndFactCountVO = new DimAndFactCountVO();
+        dimAndFactCountVO.setDimCount(dimTotalCount);
+        dimAndFactCountVO.setFactCount(factTotalCount);
+        return dimAndFactCountVO;
+    }
+
+    /**
      * 数据建模覆盖方式预览sql
      *
      * @param dto
@@ -1358,10 +1383,10 @@ public class BusinessAreaImpl
         //获取同步方式
         int syncMode = configDTO.targetDsConfig.syncMode;
         String tableName = "";
-        String tempTableName ="";
+        String tempTableName = "";
 
         //根据数据库的不同连接类型，获取不同的表名格式
-        if (sourceType.getValue() == DataSourceTypeEnum.SQLSERVER.getValue()){
+        if (sourceType.getValue() == DataSourceTypeEnum.SQLSERVER.getValue()) {
             //获取表名
             tableName = "[" + configDTO.processorConfig.targetTableName + "]";
             String tableName1 = configDTO.processorConfig.targetTableName;
@@ -1369,7 +1394,7 @@ public class BusinessAreaImpl
             String prefixTempName = buildNifiFlow.prefixTempName;
             //拼接临时表名称
             tempTableName = "[" + prefixTempName + "_" + tableName1 + "]";
-        }else if (sourceType.getValue() == DataSourceTypeEnum.POSTGRESQL.getValue()){
+        } else if (sourceType.getValue() == DataSourceTypeEnum.POSTGRESQL.getValue()) {
             //获取表名
             tableName = "\"" + configDTO.processorConfig.targetTableName + "\"";
             String tableName1 = configDTO.processorConfig.targetTableName;
@@ -1389,7 +1414,7 @@ public class BusinessAreaImpl
         //根据数据库的不同连接类型，获取不同的sqlHelper实现类
         IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
 
-        if(fields.isEmpty()){
+        if (fields.isEmpty()) {
             return "请检查字段映射...";
         }
 

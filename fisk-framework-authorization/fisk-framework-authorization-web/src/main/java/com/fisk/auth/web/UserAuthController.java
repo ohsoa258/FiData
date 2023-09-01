@@ -75,7 +75,6 @@ public class UserAuthController {
     @ApiOperation(value = "浦东应急局--单点登录")
     @PostMapping("/singleLogin")
     public ResultEntity<String> singleLogin(@RequestBody TicketInfoDTO ticketInfoDTO) {
-
         return userAuthService.singleLogin(ticketInfoDTO);
     }
 
