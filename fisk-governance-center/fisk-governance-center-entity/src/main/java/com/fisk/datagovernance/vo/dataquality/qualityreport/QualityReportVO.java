@@ -78,4 +78,16 @@ public class QualityReportVO {
      */
     @ApiModelProperty(value = "通知方式")
     public QualityReportNoticeVO notice;
+
+    /**
+     * 所有应用下规则总数
+     */
+    @ApiModelProperty(value = "所有应用下规则总数")
+    public int totalCount;
+
+    /**
+     * 单个应用下规则个数
+     */
+    @ApiModelProperty(value = "单个应用下规则个数")
+    public int itemCount;
 }

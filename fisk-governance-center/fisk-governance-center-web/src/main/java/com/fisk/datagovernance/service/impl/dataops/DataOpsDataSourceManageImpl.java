@@ -73,7 +73,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     private int odsId;
     @Value("${dataops.metadataentity_key}")
     private String metaDataEntityKey;
-    @Value("${file.excelFilePath}")
+    //@Value("${file.excelFilePath}")
     private String excelFilePath;
 
     @Resource

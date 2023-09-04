@@ -80,4 +80,16 @@ public class AppRegisterVO
      */
     @ApiModelProperty(value = "部门名称")
     public String departName;
+
+    /**
+     * 所有应用下服务总数
+     */
+    @ApiModelProperty(value = "所有应用下服务总数")
+    public int totalCount;
+
+    /**
+     * 单个应用下服务个数
+     */
+    @ApiModelProperty(value = "单个应用下服务个数")
+    public int  itemCount;
 }

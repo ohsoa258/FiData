@@ -9,7 +9,6 @@ import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -30,6 +29,7 @@ import com.fisk.dataservice.mapper.TableAppDatasourceMapper;
 import com.fisk.dataservice.mapper.TableAppMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ITableAppManageService;
+import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
 import com.fisk.dataservice.vo.tableservice.TableAppDatasourceVO;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -79,9 +79,10 @@ public class TableAppManageImpl
     private PublishTaskClient publishTaskClient;
 
     @Resource
-    private  TableServiceImpl tableService;
+    private TableServiceImpl tableService;
 
-    @Resource TableFieldImpl tableField;
+    @Resource
+    TableFieldImpl tableField;
 
     @Override
     public List<FilterFieldDTO> getFilterColumn() {
@@ -113,7 +114,10 @@ public class TableAppManageImpl
                     eq(TableAppDatasourcePO::getDelFlag, 1)
                     .in(TableAppDatasourcePO::getTableAppId, tableAppId);
             List<TableAppDatasourcePO> tableAppDatasourcePOS = tableAppDatasourceMapper.selectList(tableAppDatasourcePOQueryWrapper);
-            filter.getRecords().forEach(t -> {
+            List<AppServiceCountVO> tableAppServiceCount = appServiceConfigMapper.getTableAppServiceCount();
+            int totalCount = 0;
+
+            for (TableAppVO t : filter.getRecords()) {
                 if (CollectionUtils.isNotEmpty(tableAppDatasourcePOS)) {
                     List<TableAppDatasourcePO> tableAppDatasourcePOList = tableAppDatasourcePOS.stream().filter(k -> k.getTableAppId() == t.getId()).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(tableAppDatasourcePOList)) {
@@ -121,7 +125,18 @@ public class TableAppManageImpl
                         t.setTableAppDatasourceVOS(tableAppDatasourceVOS);
                     }
                 }
-            });
+
+                if (CollectionUtils.isNotEmpty(tableAppServiceCount)) {
+                    AppServiceCountVO appServiceCountVO = tableAppServiceCount.stream().filter(k -> k.getAppId() == t.getId()).findFirst().orElse(null);
+                    if (appServiceCountVO != null) {
+                        t.setItemCount(appServiceCountVO.getCount());
+                    }
+                }
+            }
+            if (CollectionUtils.isNotEmpty(tableAppServiceCount)) {
+                totalCount = tableAppServiceCount.stream().collect(Collectors.summingInt(AppServiceCountVO::getCount));
+                filter.getRecords().get(0).setTotalCount(totalCount);
+            }
         }
         return filter;
     }
@@ -300,6 +315,7 @@ public class TableAppManageImpl
 
     /**
      * 获取表同步服务元数据
+     *
      * @return
      */
     @Override
@@ -308,13 +324,13 @@ public class TableAppManageImpl
         List<TableAppPO> allTableAppPO = this.query().list();
         //获取所有字段
         List<TableFieldPO> allViewFieldsPOList = tableField.query().list();
-        List<MetaDataEntityDTO> metaDataEntityDTOList= new ArrayList<>();
+        List<MetaDataEntityDTO> metaDataEntityDTOList = new ArrayList<>();
         for (TableAppPO tableAppPO : allTableAppPO) {
             //获取所有已发布的表
-            List<TableServicePO> tableServiceInTheAppList = tableServiceMapper.getTableServiceInTheApp((int)tableAppPO.getId());
+            List<TableServicePO> tableServiceInTheAppList = tableServiceMapper.getTableServiceInTheApp((int) tableAppPO.getId());
             //添加应用下的API
-            for (TableServicePO  tableServicePO : tableServiceInTheAppList) {
-                MetaDataEntityDTO metaDataEntityDTO=new MetaDataEntityDTO();
+            for (TableServicePO tableServicePO : tableServiceInTheAppList) {
+                MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
                 metaDataEntityDTO.setName(tableServicePO.getTableName());
                 metaDataEntityDTO.setDisplayName(tableServicePO.getDisplayName());
                 metaDataEntityDTO.setQualifiedName(String.valueOf(tableServicePO.getId()));
@@ -328,12 +344,12 @@ public class TableAppManageImpl
                 metaDataEntityDTO.setAppName(tableAppPO.getAppName());
                 //获取表下的字段
                 LambdaQueryWrapper<TableFieldPO> tableFieldPOLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                tableFieldPOLambdaQueryWrapper.eq(TableFieldPO::getTableServiceId,tableServicePO.getId());
+                tableFieldPOLambdaQueryWrapper.eq(TableFieldPO::getTableServiceId, tableServicePO.getId());
                 List<TableFieldPO> tableFieldPOList = tableField.list(tableFieldPOLambdaQueryWrapper);
                 //添加表下的字段
-                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList=new ArrayList<>();
+                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
                 for (TableFieldPO tableFieldPO : tableFieldPOList) {
-                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO=new MetaDataColumnAttributeDTO();
+                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
                     metaDataColumnAttributeDTO.setName(tableFieldPO.getFieldName());
                     metaDataColumnAttributeDTO.setDisplayName(tableFieldPO.getDisplayName());
                     metaDataColumnAttributeDTO.setDescription(tableFieldPO.getFieldDes());

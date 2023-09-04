@@ -7,8 +7,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.constants.MqConstants;
-import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
-import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -20,14 +18,11 @@ import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.datagovernance.dto.GetConfigDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataTableFieldDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -37,6 +32,7 @@ import com.fisk.datagovernance.map.dataquality.QualityReportRecipientMap;
 import com.fisk.datagovernance.map.dataquality.QualityReportRuleMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
+import com.fisk.datagovernance.vo.appcount.AppRuleCountVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
 import com.fisk.system.client.UserClient;
@@ -175,9 +171,13 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         .in(QualityReportRecipientPO::getReportId, reportIdList);
                 List<QualityReportRecipientPO> qualityReportRecipientPOList = qualityReportRecipientMapper.selectList(qualityReportRecipientPOQueryWrapper);
 
+                // 质量报告下的数据校验规则数量
+                List<AppRuleCountVO> appRuleCount = qualityReportRuleMapper.getAppRuleCount();
+                int totalCount = 0;
+
                 List<DataCheckPO> finalDataCheckPOList = dataCheckPOList;
 
-                all.getRecords().forEach(t -> {
+                for (QualityReportVO t : all.getRecords()) {
 
                     // 获取Cron表达式下次执行时间
                     if (StringUtils.isNotEmpty(t.getRunTimeCron())) {
@@ -202,7 +202,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 
                                 DataCheckPO dataCheckPO = finalDataCheckPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
                                 if (dataCheckPO == null) {
-                                   return;
+                                    return;
                                 }
                                 DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
                                 if (dataSourceConVO == null) {
@@ -258,7 +258,19 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                             t.getNotice().setRecipients(qualityReportRecipientVOS);
                         }
                     }
-                });
+
+                    // 质量报告下的数据校验规则
+                    if (CollectionUtils.isNotEmpty(appRuleCount)) {
+                        AppRuleCountVO appServiceCountVO = appRuleCount.stream().filter(k -> k.getAppId() == t.getId()).findFirst().orElse(null);
+                        if (appServiceCountVO != null) {
+                            t.setItemCount(appServiceCountVO.getCount());
+                        }
+                    }
+                }
+                if (CollectionUtils.isNotEmpty(appRuleCount)) {
+                    totalCount = appRuleCount.stream().collect(Collectors.summingInt(AppRuleCountVO::getCount));
+                    all.getRecords().get(0).setTotalCount(totalCount);
+                }
 
             }
         } catch (Exception ex) {
