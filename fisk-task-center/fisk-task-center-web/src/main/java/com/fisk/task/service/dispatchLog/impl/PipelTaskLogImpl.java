@@ -286,13 +286,6 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                     resultMap = (Map<Integer,String>)tableNames.getData();
                     break;
                 case PHYSICS:
-                    ResultEntity<Object> tables = dataAccessClient.getTableNames(tableQueryDTO);
-                    if (tables.code == ResultEnum.SUCCESS.getCode()){
-                        log.error("远程调用失败,方法名: 【getPipelTaskLogVos】");
-                        throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-                    }
-                    resultMap = (Map<Integer,String>)tables.getData();
-                    break;
                     break;
                 default:
                     break;
