@@ -42,4 +42,16 @@ public class TableAppVO {
      */
     @ApiModelProperty(value = "表应用数据源列表")
     public List<TableAppDatasourceVO> tableAppDatasourceVOS;
+
+    /**
+     * 所有应用下服务总数
+     */
+    @ApiModelProperty(value = "所有应用下服务总数")
+    public int totalCount;
+
+    /**
+     * 单个应用下服务个数
+     */
+    @ApiModelProperty(value = "单个应用下服务个数")
+    public int  itemCount;
 }

@@ -49,6 +49,8 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      */
     List<PipelTaskMergeLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs);
 
+    List<PipelTaskMergeLogVO> getPipelTaskLogVos1(String JobTraceId);
+
     /**
      * 获取数据服务表服务同步日志
      *

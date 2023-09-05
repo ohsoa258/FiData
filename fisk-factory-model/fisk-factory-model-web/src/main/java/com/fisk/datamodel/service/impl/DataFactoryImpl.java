@@ -5,6 +5,7 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
@@ -22,13 +23,12 @@ import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.mapper.widetable.WideTableMapper;
 import com.fisk.datamodel.service.IDataFactory;
+import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -190,4 +190,40 @@ public class DataFactoryImpl implements IDataFactory {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
 
+    @Override
+    public Map<Integer,String> getTableNames(TableQueryDTO dto) {
+        Map<Integer,String> map = new HashMap<>();
+        switch (Objects.requireNonNull(OlapTableEnum.getNameByValue(dto.getType()))){
+            case DIMENSION:
+                //查询维度
+                QueryWrapper<DimensionPO> dimensionPoQueryWrapper = new QueryWrapper<>();
+                dimensionPoQueryWrapper.lambda().in(DimensionPO::getId, dto.getIds());
+                List<DimensionPO> dimensionPoList = dimensionMapper.selectList(dimensionPoQueryWrapper);
+                for (DimensionPO dimensionPO : dimensionPoList) {
+                    map.put((int) dimensionPO.getId(),dimensionPO.getDimensionTabName());
+                }
+                break;
+            case FACT:
+                //查询事实
+                QueryWrapper<FactPO> factPoQueryWrapper = new QueryWrapper<>();
+                factPoQueryWrapper.lambda().in(FactPO::getId,dto.getIds());
+                List<FactPO> factPoList = factMapper.selectList(factPoQueryWrapper);
+                for (FactPO factPO : factPoList) {
+                    map.put((int) factPO.getId(),factPO.getFactTabName());
+                }
+                break;
+            case WIDETABLE:
+                //查询宽表
+                QueryWrapper<WideTableConfigPO> wideTableConfigPoQueryWrapper = new QueryWrapper<>();
+                wideTableConfigPoQueryWrapper.lambda().in(WideTableConfigPO::getId,dto.getIds());
+                List<WideTableConfigPO> wideTableConfigPoList = wideTableMapper.selectList(wideTableConfigPoQueryWrapper);
+                for (WideTableConfigPO wideTableConfigPO : wideTableConfigPoList) {
+                    map.put((int) wideTableConfigPO.getId(),wideTableConfigPO.getName());
+                }
+                break;
+            default:
+                break;
+        }
+        return map;
+    }
 }

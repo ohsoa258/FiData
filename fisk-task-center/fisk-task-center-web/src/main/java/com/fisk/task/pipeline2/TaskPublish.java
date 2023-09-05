@@ -138,6 +138,8 @@ public class TaskPublish {
 
                             //管道开始,job开始,task开始
                             List<TableTopicDTO> topicNames = iTableTopicService.getByTopicName(topicName, pipelTraceId);
+                            //通过pipelJobLogPid值限制同一job日志不重复添加
+                            String pipelJobLogPid = null;
                             for (TableTopicDTO topic : topicNames) {
                                 String[] split = topic.topicName.split("\\.");
                                 NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, Integer.parseInt(split[4]), null, Integer.valueOf(split[6]));
@@ -197,17 +199,21 @@ public class TaskPublish {
 
                                 }
                                 //-----------------------------------------------------
-                                //job开始日志
-                                Map<Integer, Object> jobMap = new HashMap<>();
-                                //任务依赖的组件
-                                jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                log.info("管道调度,记录管道开始日志,jobTrackId:{}", kafkaReceiveDTO.pipelJobTraceId);
-                                iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
+                                String JobPid = String.valueOf(nifiPortHierarchy.itselfPort.pid);
+                                if(!JobPid.equals(pipelJobLogPid)){
+                                    pipelJobLogPid = JobPid;
+                                    //job开始日志
+                                    Map<Integer, Object> jobMap = new HashMap<>();
+                                    //任务依赖的组件
+                                    jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    log.info("管道调度,记录管道开始日志,jobTrackId:{}", kafkaReceiveDTO.pipelJobTraceId);
+                                    iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, JobPid);
+                                }
                                 //task日志
                                 HashMap<Integer, Object> taskMap = new HashMap<>();
                                 taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                                 log.info("第三处调用保存task日志");
-                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), null, 0);
+                                iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), nifiPortHierarchy.itselfPort.tableId, Integer.parseInt(split[4]));
 
 
                             }
@@ -232,10 +238,14 @@ public class TaskPublish {
                                     NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.PHYSICS_API.getValue(), null, Math.toIntExact(pipelApiDispatch.apiId));
                                     TaskHierarchyDTO nifiPortHierarchy = iPipelineTaskPublishCenter.getNifiPortHierarchy(nifiGetPortHierarchy, kafkaReceiveDTO.pipelTraceId);
                                     //任务依赖的组件
-                                    jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
-                                    log.info("管道调度非实时api,记录管道开始日志,jobTrackId:{}", kafkaReceiveDTO.pipelJobTraceId);
-                                    iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, pipelineId, kafkaReceiveDTO.pipelJobTraceId, String.valueOf(nifiPortHierarchy.itselfPort.pid));
-                                    //task日志
+                                    String JobPid = String.valueOf(nifiPortHierarchy.itselfPort.pid);
+                                    if(!JobPid.equals(pipelJobLogPid)){
+                                        pipelJobLogPid = JobPid;
+                                        //job开始日志
+                                        jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                        log.info("管道调度非实时api,记录管道开始日志,jobTrackId:{}", kafkaReceiveDTO.pipelJobTraceId);
+                                        iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, JobPid);
+                                    }//task日志
                                     HashMap<Integer, Object> taskMap = new HashMap<>();
                                     taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
                                     log.info("第四处调用保存task日志");
@@ -247,7 +257,7 @@ public class TaskPublish {
                             //管道开始日志
                             pipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                             log.info("第一处调用保存job日志");
-                            iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+//                            iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                             iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                             redisUtil.del("PipelLock:" + pipelTraceId);
                         } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {

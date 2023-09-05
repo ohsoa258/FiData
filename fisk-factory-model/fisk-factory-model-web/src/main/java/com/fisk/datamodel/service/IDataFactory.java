@@ -1,12 +1,14 @@
 package com.fisk.datamodel.service;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author JianWenYang
@@ -26,5 +28,7 @@ public interface IDataFactory {
      * @return
      */
     ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto);
+    Map<Integer,String> getTableNames(TableQueryDTO dto);
+
 
 }

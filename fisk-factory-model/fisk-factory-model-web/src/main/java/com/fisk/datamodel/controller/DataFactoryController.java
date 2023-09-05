@@ -3,6 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
@@ -39,6 +40,13 @@ public class DataFactoryController {
     public ResultEntity<Object> getAppNameAndTableName(@RequestBody DataAccessIdsDTO dto) {
         ResultEntity<ComponentIdDTO> result = service.getBusinessAreaNameAndTableName(dto);
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
+    }
+
+
+    @ApiOperation("根据tableId和tableType 获取tableName")
+    @PostMapping("/getTableNames")
+    public ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNames(dto));
     }
 
 }

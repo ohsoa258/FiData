@@ -8,11 +8,10 @@ import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.vo.app.AppApiBindVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppWhiteListVO;
+import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
@@ -150,4 +149,36 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tAND t1.del_flag = 1 \n" +
             "\tAND t2.del_flag = 1 ")
     List<ApiConfigPO> getApiTheAppList(@Param("appId") int appId);
+
+    @Select("SELECT\n" +
+            "\tt1.app_id as appId,\n" +
+            "\tCOUNT(*) AS count \n" +
+            "FROM\n" +
+            "\ttb_app_service_config t1\n" +
+            "\tLEFT JOIN tb_api_config t2 ON t1.service_id = t2.id\n" +
+            "\tLEFT JOIN tb_app_config t3 ON t1.app_id = t3.id \n" +
+            "WHERE\n" +
+            "\tt1.del_flag = 1 \n" +
+            "\tAND t2.del_flag = 1 \n" +
+            "\tAND t3.del_flag = 1 \n" +
+            "\tAND t1.type = 1 \n" +
+            "GROUP BY\n" +
+            "\tt1.app_id")
+    List<AppServiceCountVO> getApiAppServiceCount();
+
+    @Select("SELECT\n" +
+            "\tt1.app_id AS appId,\n" +
+            "\tCOUNT(*) AS count \n" +
+            "FROM\n" +
+            "\ttb_app_service_config t1\n" +
+            "\tLEFT JOIN tb_table_service t2 ON t2.id = t1.service_id\n" +
+            "\tLEFT JOIN tb_table_app t3 ON t3.id = t1.app_id \n" +
+            "WHERE\n" +
+            "\tt1.del_flag = 1 \n" +
+            "\tAND t2.del_flag = 1 \n" +
+            "\tAND t3.del_flag = 1 \n" +
+            "\tAND t1.type = 2 \n" +
+            "GROUP BY\n" +
+            "\tt1.app_id")
+    List<AppServiceCountVO> getTableAppServiceCount();
 }

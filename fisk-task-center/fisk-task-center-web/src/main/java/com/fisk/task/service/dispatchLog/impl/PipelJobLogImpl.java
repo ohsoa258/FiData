@@ -11,14 +11,12 @@ import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.dispatchlog.PipelJobLogVO;
 import com.fisk.task.entity.PipelJobLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
-import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.mapper.PipelJobLogMapper;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
-import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +30,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author cfk
@@ -41,8 +40,8 @@ import java.util.concurrent.TimeUnit;
 public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogPO> implements IPipelJobLog {
     @Resource
     PipelJobLogMapper pipelJobLogMapper;
-    @Resource
-    IPipelStageLog iPipelStageLog;
+    @Value("${dispatch.dbname}")
+    private String dispatchDbName;
     @Resource
     IPipelTaskLog iPipelTaskLog;
     @Resource
@@ -265,6 +264,19 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         }
         //pipelJobMergeLogVos.sort((a, b) -> a.getEndTime().compareTo(b.getEndTime()));
         return pipelJobMergeLogVos;
+    }
+
+    @Override
+    public List<PipelJobMergeLogVO> getPipelJobLogVos1(String pipelTraceId) {
+        List<PipelJobMergeLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo1(pipelTraceId,dispatchDbName);
+        pipelJobLogVo = pipelJobLogVo.stream().map(i->{
+            long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
+            long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
+            long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
+            i.duration = hour+"h " + min + "m " + sec + "s ";
+            return i;
+        }).collect(Collectors.toList());
+        return pipelJobLogVo;
     }
 
     @Override

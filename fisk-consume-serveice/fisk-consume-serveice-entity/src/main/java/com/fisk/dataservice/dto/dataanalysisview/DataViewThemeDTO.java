@@ -57,4 +57,16 @@ public class DataViewThemeDTO extends BaseDTO{
 
     @ApiModelProperty(value = "视图主题关联账号名称集合")
     private List<DataViewAccountDTO> relAccountList;
+
+    /**
+     * 所有应用下服务总数
+     */
+    @ApiModelProperty(value = "所有应用下服务总数")
+    public int totalCount;
+
+    /**
+     * 单个应用下服务个数
+     */
+    @ApiModelProperty(value = "单个应用下服务个数")
+    public int  itemCount;
 }

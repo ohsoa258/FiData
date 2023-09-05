@@ -7,6 +7,7 @@ import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.google.common.base.Joiner;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,19 @@ public class SqlParmUtils {
         }
         for (SqlParmDto item : list) {
             String targetKey = String.format("%s%s", symbol, item.parmName);
-            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : flag + "'" + item.parmValue + "'";
+
+            // 数据中有,号 默认为in查询
+            String paramValue_In = "";
+            String finalFlag = flag;
+            if (item.parmValue.contains(",")) {
+                paramValue_In = Arrays.stream(item.parmValue.split(","))
+                        .map(s -> finalFlag + "'" + s.trim() + "'")
+                        .collect(Collectors.joining(", "));
+            } else {
+                paramValue_In = flag + "'" + item.parmValue + "'";
+            }
+
+            String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : paramValue_In;
             sql = sql.replace(targetKey, replacement);
         }
         return sql;
@@ -91,7 +104,11 @@ public class SqlParmUtils {
         if (CollectionUtils.isEmpty(list))
             return sql;
         for (SqlParmDto item : list) {
-            sql += String.format(" AND %s = %s", item.parmName, symbol + item.parmName);
+            if (item.parmValue.contains(",")){
+                sql += String.format(" AND %s IN ( %s )", item.parmName, symbol + item.parmName);
+            }else{
+                sql += String.format(" AND %s = %s", item.parmName, symbol + item.parmName);
+            }
         }
         return sql;
     }

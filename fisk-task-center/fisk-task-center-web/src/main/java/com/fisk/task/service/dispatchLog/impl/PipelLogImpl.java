@@ -198,8 +198,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
             if (Objects.nonNull(pipelMergeLog.endTime) && Objects.nonNull(pipelMergeLog.startTime)) {
                 long sec = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / 1000 % 60;
                 long min = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / (60 * 1000) % 60;
-
-                pipelMergeLog.duration = min + "m " + sec + "s ";
+                long hour = (pipelMergeLog.endTime.getTime() - pipelMergeLog.startTime.getTime()) / (60 * 60 * 1000);
+                pipelMergeLog.duration = hour+"h " + min + "m " + sec + "s ";
             } else {
                 pipelMergeLog.pipelStatu = "正在运行";
                 pipelMergeLogs.add(pipelMergeLog);

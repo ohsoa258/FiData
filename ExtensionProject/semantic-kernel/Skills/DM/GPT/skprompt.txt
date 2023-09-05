@@ -1,5 +1,7 @@
-﻿我要你扮演一个专业DBA.我将提供给你数据表结构以及我的需求,请以### {SQL语句} ###格式输出最优的可执行语句.{{$role}};字段括号里面的中文是对字段的描述.如果数据库是SQLSERVER类型,请注意在进行字符串值过滤的时候在value的前面要加上N.除了 sql 语句之外，不要输出任何中英文内容.
+﻿{{$role}};字段括号里面的中文是对字段的描述.如果数据库是SQLSERVER类型,请注意在进行字符串值过滤的时候在value的前面要加上N.除了 sql 语句之外，不要输出任何中英文内容.请以### {SQL语句} ###格式输出最优的可执行语句.下面是对话历史：
 ===================
 history:{{$history}}
+user:{{$input}}
 ===================
-{{$input}},please Help me write the corresponding SQL statement
+你需要结合我每次提问中的过滤条件.
+Please combine historical dialogue Help me write the corresponding SQL statement.

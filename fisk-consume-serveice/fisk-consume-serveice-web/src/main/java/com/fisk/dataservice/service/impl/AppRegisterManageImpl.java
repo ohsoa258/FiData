@@ -12,7 +12,6 @@ import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.core.utils.office.pdf.exception.PDFException;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -35,6 +34,7 @@ import com.fisk.dataservice.vo.api.FieldConfigVO;
 import com.fisk.dataservice.vo.app.AppApiParmVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
 import com.fisk.dataservice.vo.app.AppRegisterVO;
+import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,7 +90,7 @@ public class AppRegisterManageImpl
     private ApiFieldMapper apiFieldMapper;
 
     @Resource
-    private  ApiRegisterManageImpl apiRegisterManage;
+    private ApiRegisterManageImpl apiRegisterManage;
 
     @Resource
     GetConfigDTO getConfig;
@@ -134,7 +134,25 @@ public class AppRegisterManageImpl
         // 筛选器左边的模糊搜索查询SQL拼接
         data.where = querySql.toString();
 
-        return baseMapper.filter(query.page, data);
+        int totalCount = 0;
+        Page<AppRegisterVO> registerVOPage = baseMapper.filter(query.page, data);
+        if (registerVOPage != null && CollectionUtils.isNotEmpty(registerVOPage.getRecords())) {
+            // 查询应用下的API个数
+            List<AppServiceCountVO> appServiceCount = appApiMapper.getApiAppServiceCount();
+            for (AppRegisterVO appRegisterVO : registerVOPage.getRecords()) {
+                if (CollectionUtils.isNotEmpty(appServiceCount)) {
+                    AppServiceCountVO appServiceCountVO = appServiceCount.stream().filter(k -> k.getAppId() == appRegisterVO.getId()).findFirst().orElse(null);
+                    if (appServiceCountVO != null) {
+                        appRegisterVO.setItemCount(appServiceCountVO.getCount());
+                    }
+                }
+            }
+            if (CollectionUtils.isNotEmpty(appServiceCount)) {
+                totalCount = appServiceCount.stream().collect(Collectors.summingInt(AppServiceCountVO::getCount));
+                registerVOPage.getRecords().get(0).setTotalCount(totalCount);
+            }
+        }
+        return registerVOPage;
     }
 
     @Override
@@ -655,14 +673,14 @@ public class AppRegisterManageImpl
     public List<MetaDataEntityDTO> getApiMetaData() {
         //获取所有应用
         List<AppConfigPO> allApiConfigPOList = this.query().list();
-        List<MetaDataEntityDTO> metaDataEntityDTOList= new ArrayList<>();
+        List<MetaDataEntityDTO> metaDataEntityDTOList = new ArrayList<>();
         for (AppConfigPO appConfigPO : allApiConfigPOList) {
             //获取应用下的API
             List<ApiConfigPO> apiTheAppList = appApiMapper.getApiTheAppList((int) appConfigPO.getId());
             //添加应用下的API
             for (ApiConfigPO apiConfigPO : apiTheAppList) {
-                MetaDataEntityDTO metaDataEntityDTO=new MetaDataEntityDTO();
-                metaDataEntityDTO.setQualifiedName("api_"+appConfigPO.getId()+"_"+apiConfigPO.getId());
+                MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
+                metaDataEntityDTO.setQualifiedName("api_" + appConfigPO.getId() + "_" + apiConfigPO.getId());
                 metaDataEntityDTO.setName(apiConfigPO.getApiName());
                 metaDataEntityDTO.setDisplayName(apiConfigPO.getApiName());
                 metaDataEntityDTO.setDescription(apiConfigPO.getApiDesc());
@@ -677,10 +695,10 @@ public class AppRegisterManageImpl
                 //获取API下的字段
                 List<FieldConfigVO> fieldConfigVOList = apiRegisterManage.getFieldAll((int) apiConfigPO.getId());
                 //添加AP下的字段
-                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList=new ArrayList<>();
+                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
                 for (FieldConfigVO fieldConfigVO : fieldConfigVOList) {
-                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO=new MetaDataColumnAttributeDTO();
-                    metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName()+"_"+fieldConfigVO.getId());
+                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
+                    metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName() + "_" + fieldConfigVO.getId());
                     metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
                     metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
                     metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
