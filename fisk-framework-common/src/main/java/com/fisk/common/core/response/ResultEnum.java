@@ -200,13 +200,14 @@ public enum ResultEnum {
     SFTP_ACCOUNT_IS_NULL(5081, "SFTP账号密码不能为空"),
     SFTP_DIR_PATH_ERROR(5082, "SFTP目录格式错误"),
     DATASOURCE_TYPE_ERROR(5083, "已选择的数据源类型冲突"),
-    DATAACCESS_GET_TABLE_ERROR(5084,"根据应用id获取物理表失败"),
-    DATAACCESS_APP_EDIT_FAILURE(5085,"当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志..."),
-    DATAACCESS_DATASOURCE_ERROR(5086,"当前发布表的数据源不存在或已删除，请联系系统管理员"),
-    API_STATE_NOT_ALLOW_ERROR(5087,"当前调用的接口已被禁用，请联系系统管理员..."),
-    STG_TO_ODS_ERROR_DETAIL(5088, "stg同步数据到ods-执行sql报错，请检查字段类型或字段长度..."),
-
-
+    DATAACCESS_GET_TABLE_ERROR(5084, "根据应用id获取物理表失败"),
+    DATAACCESS_APP_EDIT_FAILURE(5085, "当前要删除的数据源正在使用，此次修改失败...事务已回滚...正在使用的表详情请查看报错日志..."),
+    DATAACCESS_DATASOURCE_ERROR(5086, "当前发布表的数据源不存在或已删除，请联系系统管理员"),
+    API_STATE_NOT_ALLOW_ERROR(5087, "当前调用的接口已被禁用，请联系系统管理员..."),
+    STG_TO_ODS_ERROR_DETAIL(5088, "失败，stg同步数据到ods-执行sql报错，请排查：" +
+            "1、字段类型、长度 " +
+            "2、页面配置的主键个数是否与底表主键个数匹配 " +
+            "3、若是业务主键覆盖方式，请检查on conflict - do update语句是否会二次更新列..."),
 
 
     /**
