@@ -9,6 +9,7 @@ import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -184,6 +185,8 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return TableNameAndFieldDTO
      */
     List<TableNameDTO> getTableName(long id);
+
+    Map<Integer,String> getTableNames(TableQueryDTO tableQueryDTO);
 
     /**
      * 根据表id获取表详情

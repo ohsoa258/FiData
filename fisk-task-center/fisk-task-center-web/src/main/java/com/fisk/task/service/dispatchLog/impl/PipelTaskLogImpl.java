@@ -155,7 +155,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     }
 
     @Override
-    public List<PipelTaskMergeLogVO> getPipelTaskLogVos(List<PipelTaskLogVO> pipelTaskLogs) {
+    public List<PipelTaskMergeLogVO> getPipelTaskLogVos1(List<PipelTaskLogVO> pipelTaskLogs) {
         List<PipelTaskLogVO> pipelTaskLogVos = new ArrayList<>();
         for (PipelTaskLogVO pipelTaskLog : pipelTaskLogs) {
             List<PipelTaskLogVO> byTaskId = pipelTaskLogMapper.getByTaskId(pipelTaskLog.taskId, pipelTaskLog.jobTraceId);
@@ -257,7 +257,7 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     }
 
     @Override
-    public List<PipelTaskMergeLogVO> getPipelTaskLogVos1(String JobTraceId) {
+    public List<PipelTaskMergeLogVO> getPipelTaskLogVos(String JobTraceId) {
         List<PipelTaskMergeLogVO> result = new ArrayList<>();
         List<PipelTaskMergeLogVO> pipelTaskLogVos = pipelTaskLogMapper.getPipelTaskLogVos(JobTraceId);
         pipelTaskLogVos.stream().map(i->{
@@ -279,13 +279,19 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                 case FACT:
                 case WIDETABLE:
                     ResultEntity<Object> tableNames = dataModelClient.getTableNames(tableQueryDTO);
-                    if (tableNames.code == ResultEnum.SUCCESS.getCode()){
+                    if (tableNames.code != ResultEnum.SUCCESS.getCode()){
                         log.error("远程调用失败,方法名: 【getPipelTaskLogVos】");
                         throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
                     }
                     resultMap = (Map<Integer,String>)tableNames.getData();
                     break;
                 case PHYSICS:
+                    ResultEntity<Object> tables = dataAccessClient.getTableNames(tableQueryDTO);
+                    if (tables.code != ResultEnum.SUCCESS.getCode()){
+                        log.error("远程调用失败,方法名: 【getPipelTaskLogVos】");
+                        throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                    }
+                    resultMap = (Map<Integer,String>)tables.getData();
                     break;
                 default:
                     break;

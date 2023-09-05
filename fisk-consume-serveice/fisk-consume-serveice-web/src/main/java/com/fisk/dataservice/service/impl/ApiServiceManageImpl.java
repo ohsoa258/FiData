@@ -346,10 +346,10 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             logPO.setResponseStatus(HttpStatus.OK.getReasonPhrase());
         } catch (Exception e) {
             logPO.setLogLevel(LogLevelTypeEnum.ERROR.getName());
-            logPO.setLogInfo(e.getMessage());
+            logPO.setLogInfo(e.toString());
             logPO.setResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
             resultEnum = ResultEnum.DS_APISERVICE_QUERY_ERROR;
-            throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR, e.getMessage());
+            throw new FkException(ResultEnum.DS_APISERVICE_QUERY_ERROR, e);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
             AbstractCommonDbHelper.closeConnection(conn);

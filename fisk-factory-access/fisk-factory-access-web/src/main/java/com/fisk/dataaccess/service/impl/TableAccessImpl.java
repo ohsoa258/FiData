@@ -46,6 +46,7 @@ import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -1283,6 +1284,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         return list;
+    }
+
+    @Override
+    public Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO) {
+        Map<Integer,String> map = new HashMap<>();
+        //查询宽表
+        QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper = new QueryWrapper<>();
+        tableAccessPOQueryWrapper.lambda().in(TableAccessPO::getId,tableQueryDTO.getIds());
+        List<TableAccessPO> tableAccessPOList = baseMapper.selectList(tableAccessPOQueryWrapper);
+        for (TableAccessPO tableAccessPO : tableAccessPOList) {
+            map.put((int) tableAccessPO.getId(),tableAccessPO.getTableName());
+        }
+        return map;
     }
 
     @Override

@@ -142,11 +142,11 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     }
 
     @Override
-    public List<PipelJobMergeLogVO> getPipelJobLogVos(List<PipelJobLogVO> pipelJobLogs) {
+    public List<PipelJobMergeLogVO> getPipelJobLogVos1(List<PipelJobLogVO> pipelJobLogs) {
         List<PipelJobLogVO> pipelJobLogVos = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(pipelJobLogs)) {
             for (PipelJobLogVO pipelJobLog : pipelJobLogs) {
-                List<PipelJobLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo(pipelJobLog);
+                List<PipelJobLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo1(pipelJobLog);
                 pipelJobLogVo.stream()
                         .filter(Objects::nonNull)
                         .filter(e -> e.componentId != null && e.componentId.equalsIgnoreCase(pipelJobLog.componentId))
@@ -267,8 +267,8 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     }
 
     @Override
-    public List<PipelJobMergeLogVO> getPipelJobLogVos1(String pipelTraceId) {
-        List<PipelJobMergeLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo1(pipelTraceId,dispatchDbName);
+    public List<PipelJobMergeLogVO> getPipelJobLogVos(String pipelTraceId) {
+        List<PipelJobMergeLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo(pipelTraceId,dispatchDbName);
         pipelJobLogVo = pipelJobLogVo.stream().map(i->{
             long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
             long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;

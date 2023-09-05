@@ -15,6 +15,7 @@ import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.dataaccess.dto.ftp.CopyFtpFileDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
@@ -101,6 +102,9 @@ public interface DataAccessClient {
      */
     @PostMapping("/physicalTable/addAtlasTableIdAndDorisSql")
     ResultEntity<Object> addAtlasTableIdAndDorisSql(@RequestBody AtlasWriteBackDataDTO dto);
+
+    @PostMapping("/physicalTable/getTableNames")
+    ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO);
 
 
     /**

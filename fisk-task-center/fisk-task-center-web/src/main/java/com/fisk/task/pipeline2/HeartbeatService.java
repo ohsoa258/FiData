@@ -182,7 +182,7 @@ public class HeartbeatService {
                         redisUtil.del("PipelLock:" + kafkaReceive.pipelTraceId);
                         acke.acknowledge();
                         flag = true;
-                        sendKafka(topicPO, kafkaReceive, msg.size());
+                        sendKafka(topicPO, kafkaReceive);
                     } else if (split.length == 6) {
                         String state = (String) redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
                         if (state.equals(MyTopicStateEnum.RUNNING.getName())) {
@@ -191,7 +191,7 @@ public class HeartbeatService {
                         redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, MyTopicStateEnum.RUNNING.getName(), Long.parseLong(maxTime));
                         acke.acknowledge();
                         flag = true;
-                        sendKafka(topicPO, kafkaReceive, msg.size());
+                        sendKafka(topicPO, kafkaReceive);
                     }
                 } catch (Exception e) {
                     log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
@@ -229,7 +229,7 @@ public class HeartbeatService {
     }
 
 
-    public void sendKafka(TableTopicPO topicPO, KafkaReceiveDTO kafkaReceive, Integer msgNum) throws Exception {
+    public void sendKafka(TableTopicPO topicPO, KafkaReceiveDTO kafkaReceive) throws Exception {
         String groupId = "";
         List<TableNifiSettingPO> list = new ArrayList<>();
         String[] split = topicPO.getTopicName().split("\\.");
