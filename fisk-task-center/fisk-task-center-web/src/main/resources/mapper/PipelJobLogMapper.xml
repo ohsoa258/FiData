@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.fisk.task.mapper.PipelJobLogMapper">
 
-    <select id="getPipelJobLogVo" resultType="com.fisk.task.dto.dispatchlog.PipelJobLogVO">
+    <select id="getPipelJobLogVo1" resultType="com.fisk.task.dto.dispatchlog.PipelJobLogVO">
         select * from tb_pipel_job_log where pipel_id=#{pipelJobLog.pipelId}
         <if test="pipelJobLog.pipelTraceId != null and pipelJobLog.pipelTraceId != '' ">
             and component_id=#{pipelJobLog.componentId}
@@ -15,7 +15,7 @@
         and del_flag=1 ORDER BY create_time desc limit 100
 
     </select>
-    <select id="getPipelJobLogVo1" resultType="com.fisk.task.dto.dispatchlog.PipelJobMergeLogVO">
+    <select id="getPipelJobLogVo" resultType="com.fisk.task.dto.dispatchlog.PipelJobMergeLogVO">
         SELECT t1.pipel_trace_id,
                t1.job_trace_id,
                t1.pipel_id,
@@ -37,7 +37,7 @@
         FROM
             tb_pipel_job_log t1
                 LEFT JOIN tb_pipel_job_log t2 ON t1.job_trace_id = t2.job_trace_id
-                LEFT JOIN #{dispatchDbName}.tb_nifi_custom_workflow_detail t3 ON t1.component_id = t3.id
+                LEFT JOIN ${dispatchDbName}.tb_nifi_custom_workflow_detail t3 ON t1.component_id = t3.id
         WHERE
         t1.pipel_trace_id = #{pipelTraceId}
           AND t1.del_flag = 1

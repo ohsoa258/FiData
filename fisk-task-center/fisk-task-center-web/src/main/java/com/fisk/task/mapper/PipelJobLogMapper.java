@@ -14,11 +14,11 @@ import java.util.List;
  */
 public interface PipelJobLogMapper extends FKBaseMapper<PipelJobLogPO> {
 
-    List<PipelJobLogVO> getPipelJobLogVo(@Param("pipelJobLog") PipelJobLogVO pipelJobLog);
+    List<PipelJobLogVO> getPipelJobLogVo1(@Param("pipelJobLog") PipelJobLogVO pipelJobLog);
 
     @Update("update tb_pipel_job_log set del_flag = 0 where job_trace_id=#{pipelJobId} and type = #{type} and del_flag=1")
     void updateByPipelTraceId(@Param("pipelJobId")String pipelJobId,@Param("type") int type);
 
-    List<PipelJobMergeLogVO> getPipelJobLogVo1(@Param("pipelTraceId")String pipelTraceId,@Param("dispatchDbName")String dispatchDbName);
+    List<PipelJobMergeLogVO> getPipelJobLogVo(@Param("pipelTraceId")String pipelTraceId,@Param("dispatchDbName")String dispatchDbName);
 
 }

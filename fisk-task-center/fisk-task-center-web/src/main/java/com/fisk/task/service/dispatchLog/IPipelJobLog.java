@@ -52,9 +52,9 @@ public interface IPipelJobLog extends IService<PipelJobLogPO> {
      * @param pipelJobLogs pipelJobLogs
      * @return
      */
-    List<PipelJobMergeLogVO> getPipelJobLogVos(List<PipelJobLogVO> pipelJobLogs);
+    List<PipelJobMergeLogVO> getPipelJobLogVos1(List<PipelJobLogVO> pipelJobLogs);
 
-    List<PipelJobMergeLogVO> getPipelJobLogVos1(String pipelTraceId);
+    List<PipelJobMergeLogVO> getPipelJobLogVos(String pipelTraceId);
     /**
      * 获取日志
      *

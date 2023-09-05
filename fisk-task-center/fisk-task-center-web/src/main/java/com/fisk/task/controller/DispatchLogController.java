@@ -73,7 +73,7 @@ public class DispatchLogController {
     @PostMapping("/getPipelJobLogVos")
     public ResultEntity<List<PipelJobMergeLogVO>> getPipelJobLogVos(@RequestBody List<PipelJobLogVO> pipelJobLogs) {
         ResultEntity<List<PipelJobMergeLogVO>> objectResultEntity = new ResultEntity<>();
-        objectResultEntity.data = iPipelJobLog.getPipelJobLogVos(pipelJobLogs);
+        objectResultEntity.data = iPipelJobLog.getPipelJobLogVos1(pipelJobLogs);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
@@ -82,7 +82,7 @@ public class DispatchLogController {
     @GetMapping("/getPipelJobLogVos")
     public ResultEntity<List<PipelJobMergeLogVO>> getPipelJobLogVos(@RequestParam String pipelTraceId) {
         ResultEntity<List<PipelJobMergeLogVO>> objectResultEntity = new ResultEntity<>();
-        objectResultEntity.data = iPipelJobLog.getPipelJobLogVos1(pipelTraceId);
+        objectResultEntity.data = iPipelJobLog.getPipelJobLogVos(pipelTraceId);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
@@ -97,7 +97,7 @@ public class DispatchLogController {
     @PostMapping("/getPipelTaskLogVos")
     public ResultEntity<List<PipelTaskMergeLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs) {
         ResultEntity<List<PipelTaskMergeLogVO>> objectResultEntity = new ResultEntity<>();
-        objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos(pipelTaskLogs);
+        objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos1(pipelTaskLogs);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }
@@ -105,7 +105,7 @@ public class DispatchLogController {
     @GetMapping("/getPipelTaskLogVos")
     public ResultEntity<List<PipelTaskMergeLogVO>> getPipelTaskLogVos(@RequestParam String JobTraceId) {
         ResultEntity<List<PipelTaskMergeLogVO>> objectResultEntity = new ResultEntity<>();
-        objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos1(JobTraceId);
+        objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos(JobTraceId);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }

@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppNameDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
@@ -121,6 +122,12 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableName(id));
     }
 
+    @PostMapping("/getTableNames")
+    @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
+    public ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNames(tableQueryDTO));
+    }
 
     /**
      * 添加物理表(实时)
