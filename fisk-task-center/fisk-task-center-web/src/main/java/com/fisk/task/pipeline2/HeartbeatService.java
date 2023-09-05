@@ -130,6 +130,7 @@ public class HeartbeatService {
     public void endService(String data, Acknowledgment acke) {
         //List<KafkaReceiveDTO>
         log.info("my-topic服务,参数:{}", data);
+        Boolean flag = false;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         try {
             List<String> msg = JSON.parseArray(data, String.class);
@@ -179,6 +180,8 @@ public class HeartbeatService {
                         //更新my-topic运行状态
                         redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceive.pipelTraceId, map1, Long.parseLong(maxTime));
                         redisUtil.del("PipelLock:" + kafkaReceive.pipelTraceId);
+                        acke.acknowledge();
+                        flag = true;
                         sendKafka(topicPO, kafkaReceive, msg.size());
                     } else if (split.length == 6) {
                         String state = (String) redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
@@ -186,6 +189,8 @@ public class HeartbeatService {
                             continue;
                         }
                         redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, MyTopicStateEnum.RUNNING.getName(), Long.parseLong(maxTime));
+                        acke.acknowledge();
+                        flag = true;
                         sendKafka(topicPO, kafkaReceive, msg.size());
                     }
                 } catch (Exception e) {
@@ -202,7 +207,9 @@ public class HeartbeatService {
         }catch (Exception e){
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }finally {
-            acke.acknowledge();
+            if (!flag){
+                acke.acknowledge();
+            }
         }
     }
 

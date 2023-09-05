@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.tableservice.TableServiceDetailDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
@@ -46,4 +47,6 @@ public interface PipelTaskLogMapper extends FKBaseMapper<PipelTaskLogPO> {
                                                         @Param("dto") TableServiceDetailDTO dto,
                                                         @Param("dataServiceDbName")String dataServiceDbName);
     List<TableServiceDetailVO> getDetailLog(@Param("dataServiceDbName")String dataServiceDbName);
+
+    List<PipelTaskMergeLogVO> getPipelTaskLogVos(@Param("JobTraceId")String JobTraceId);
 }

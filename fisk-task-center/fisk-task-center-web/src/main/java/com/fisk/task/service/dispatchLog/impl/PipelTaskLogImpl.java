@@ -2,6 +2,7 @@ package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
@@ -10,7 +11,11 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.enums.DataFactoryEnum;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogQueryVO;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
@@ -54,7 +59,10 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     RedisUtil redisUtil;
     @Value("${nifi.pipeline.maxTime}")
     public String maxTime;
-
+    @Resource
+    private DataModelClient dataModelClient;
+    @Resource
+    private DataAccessClient dataAccessClient;
     @Override
     public void savePipelTaskLog(String pipelTraceId, String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType) {
         log.info("PipelTask参数:jobTraceId:{},pipelTaskTraceId:{},map:{},taskId:{}", jobTraceId, pipelTaskTraceId, JSON.toJSONString(map), taskId);
@@ -246,6 +254,55 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
 
 
         return pipelTaskMergeLogVos;
+    }
+
+    @Override
+    public List<PipelTaskMergeLogVO> getPipelTaskLogVos1(String JobTraceId) {
+        List<PipelTaskMergeLogVO> result = new ArrayList<>();
+        List<PipelTaskMergeLogVO> pipelTaskLogVos = pipelTaskLogMapper.getPipelTaskLogVos(JobTraceId);
+        pipelTaskLogVos.stream().map(i->{
+            long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
+            long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
+            long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
+            i.duration = hour+"h " + min + "m " + sec + "s ";
+            return i;
+        }).collect(Collectors.toList());
+        Map<String, List<PipelTaskMergeLogVO>> map = pipelTaskLogVos.stream().collect(Collectors.groupingBy(PipelTaskMergeLogVO::getTableType));
+        for (Map.Entry<String, List<PipelTaskMergeLogVO>> stringListEntry : map.entrySet()) {
+            TableQueryDTO tableQueryDTO = new TableQueryDTO();
+            tableQueryDTO.setType(Integer.parseInt(stringListEntry.getKey()));
+            List<String> ids = stringListEntry.getValue().stream().map(PipelTaskMergeLogVO::getTableId).collect(Collectors.toList());
+            tableQueryDTO.setIds(ids);
+            Map<Integer, String> resultMap = new HashMap<>();
+            switch (Objects.requireNonNull(OlapTableEnum.getNameByValue(Integer.parseInt(stringListEntry.getKey())))){
+                case DIMENSION:
+                case FACT:
+                case WIDETABLE:
+                    ResultEntity<Object> tableNames = dataModelClient.getTableNames(tableQueryDTO);
+                    if (tableNames.code == ResultEnum.SUCCESS.getCode()){
+                        log.error("远程调用失败,方法名: 【getPipelTaskLogVos】");
+                        throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                    }
+                    resultMap = (Map<Integer,String>)tableNames.getData();
+                    break;
+                case PHYSICS:
+                    ResultEntity<Object> tables = dataAccessClient.getTableNames(tableQueryDTO);
+                    if (tables.code == ResultEnum.SUCCESS.getCode()){
+                        log.error("远程调用失败,方法名: 【getPipelTaskLogVos】");
+                        throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                    }
+                    resultMap = (Map<Integer,String>)tables.getData();
+                    break;
+                    break;
+                default:
+                    break;
+            }
+            for (PipelTaskMergeLogVO pipelTaskMergeLogVO : stringListEntry.getValue()) {
+                pipelTaskMergeLogVO.setTableName(resultMap.get(pipelTaskMergeLogVO.getTableId()));
+                result.add(pipelTaskMergeLogVO);
+            }
+        }
+        return result;
     }
 
     @Override

@@ -78,6 +78,15 @@ public class DispatchLogController {
         return objectResultEntity;
     }
 
+    @ApiOperation("获取job日志")
+    @GetMapping("/getPipelJobLogVos")
+    public ResultEntity<List<PipelJobMergeLogVO>> getPipelJobLogVos(@RequestParam String pipelTraceId) {
+        ResultEntity<List<PipelJobMergeLogVO>> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelJobLog.getPipelJobLogVos1(pipelTraceId);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+
     /**
      * 获取任务日志
      *
@@ -89,6 +98,14 @@ public class DispatchLogController {
     public ResultEntity<List<PipelTaskMergeLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs) {
         ResultEntity<List<PipelTaskMergeLogVO>> objectResultEntity = new ResultEntity<>();
         objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos(pipelTaskLogs);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+    @ApiOperation("获取任务日志")
+    @GetMapping("/getPipelTaskLogVos")
+    public ResultEntity<List<PipelTaskMergeLogVO>> getPipelTaskLogVos(@RequestParam String JobTraceId) {
+        ResultEntity<List<PipelTaskMergeLogVO>> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVos1(JobTraceId);
         objectResultEntity.code = 0;
         return objectResultEntity;
     }

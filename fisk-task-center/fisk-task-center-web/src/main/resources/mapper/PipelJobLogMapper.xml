@@ -15,5 +15,35 @@
         and del_flag=1 ORDER BY create_time desc limit 100
 
     </select>
+    <select id="getPipelJobLogVo1" resultType="com.fisk.task.dto.dispatchlog.PipelJobMergeLogVO">
+        SELECT t1.pipel_trace_id,
+               t1.job_trace_id,
+               t1.pipel_id,
+               t3.id as componentId,
+               t3.component_type as componentName,
+               t1.create_time as start_time,
+               t2.create_time as end_time,
+               CASE
+                   t2.msg
+                   WHEN find_in_set( '运行成功', t2.msg ) THEN
+                       '成功'
+                   WHEN find_in_set( '运行失败', t2.msg ) THEN
+                       '失败'
+                   WHEN find_in_set( '跳过', t2.msg ) THEN
+                       '跳过'
+                   WHEN find_in_set( '禁止', t2.msg ) THEN
+                       '禁止'
+                   END AS result
+        FROM
+            tb_pipel_job_log t1
+                LEFT JOIN tb_pipel_job_log t2 ON t1.job_trace_id = t2.job_trace_id
+                LEFT JOIN #{dispatchDbName}.tb_nifi_custom_workflow_detail t3 ON t1.component_id = t3.id
+        WHERE
+        t1.pipel_trace_id = #{pipelTraceId}
+          AND t1.del_flag = 1
+          AND t2.del_flag = 1
+          AND t1.type = 4
+          AND t2.type = 5
+    </select>
 
 </mapper>

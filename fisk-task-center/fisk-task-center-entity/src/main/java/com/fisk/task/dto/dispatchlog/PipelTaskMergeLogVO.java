@@ -23,6 +23,8 @@ public class PipelTaskMergeLogVO extends BasePO {
     public String tableId;
     @ApiModelProperty(value = "绑定表名称")
     public String tableName;
+    @ApiModelProperty(value = "绑定表类型")
+    public String tableType;
     @ApiModelProperty(value = "内容")
     public String msg;
     @ApiModelProperty(value = "task开始时间")

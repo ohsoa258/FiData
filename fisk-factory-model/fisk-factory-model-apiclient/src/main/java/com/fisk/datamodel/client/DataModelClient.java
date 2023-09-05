@@ -15,6 +15,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -262,6 +263,9 @@ public interface DataModelClient {
      */
     @PostMapping("/DataFactory/getTableId")
     ResultEntity<List<ChannelDataDTO>> getTableId(@RequestBody NifiComponentsDTO dto);
+
+    @PostMapping("/DataFactory/getTableNames")
+    ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO dto);
 
     /**
      * 获取业务域下维度/事实表

@@ -376,4 +376,24 @@
             ) sub ON t.tableName = sub.tableName
                 AND t.startDateTime = sub.maxStartDateTime;
     </select>
+    <select id="getPipelTaskLogVos" resultType="com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO">
+        SELECT
+            t1.job_trace_id,
+            t1.task_trace_id,
+            t1.task_id,
+            t1.table_id,
+            t1.table_type,
+            t2.msg,
+            t1.create_time AS start_time,
+            t2.create_time AS end_time
+        FROM
+            tb_pipel_task_log t1
+                LEFT JOIN tb_pipel_task_log t2 ON t1.task_trace_id = t2.task_trace_id
+        WHERE
+            t1.job_trace_id = #{JobTraceId}
+          AND t1.del_flag = 1
+          AND t2.del_flag = 1
+          AND t1.type = 7
+          AND t2.type = 8
+    </select>
 </mapper>
