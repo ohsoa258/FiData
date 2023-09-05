@@ -78,12 +78,14 @@ public class SqlParmUtils {
             // 数据中有,号 默认为in查询
             String paramValue_In = "";
             String finalFlag = flag;
-            if (item.parmValue.contains(",")) {
-                paramValue_In = Arrays.stream(item.parmValue.split(","))
-                        .map(s -> finalFlag + "'" + s.trim() + "'")
-                        .collect(Collectors.joining(", "));
-            } else {
-                paramValue_In = flag + "'" + item.parmValue + "'";
+            if (StringUtils.isNotEmpty(item.parmValue)) {
+                if (item.parmValue.contains(",")) {
+                    paramValue_In = Arrays.stream(item.parmValue.split(","))
+                            .map(s -> finalFlag + "'" + s.trim() + "'")
+                            .collect(Collectors.joining(", "));
+                } else {
+                    paramValue_In = flag + "'" + item.parmValue + "'";
+                }
             }
 
             String replacement = StringUtils.isEmpty(item.parmValue) ? "NULL" : paramValue_In;
@@ -104,9 +106,9 @@ public class SqlParmUtils {
         if (CollectionUtils.isEmpty(list))
             return sql;
         for (SqlParmDto item : list) {
-            if (item.parmValue.contains(",")){
+            if (StringUtils.isNotEmpty(item.parmValue) && item.parmValue.contains(",")) {
                 sql += String.format(" AND %s IN ( %s )", item.parmName, symbol + item.parmName);
-            }else{
+            } else {
                 sql += String.format(" AND %s = %s", item.parmName, symbol + item.parmName);
             }
         }
