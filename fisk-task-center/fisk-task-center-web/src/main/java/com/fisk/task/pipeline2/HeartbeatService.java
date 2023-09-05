@@ -150,6 +150,8 @@ public class HeartbeatService {
                     queryWrapper.eq(TableTopicPO::getTopicName, topic).eq(TableTopicPO::getDelFlag, 1);
                     TableTopicPO topicPO = tableTopicService.getOne(queryWrapper);
                     if (split.length == 7) {
+                        acke.acknowledge();
+                        flag = true;
                         Map<String, Object> map = new HashMap<>();
                         map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
                         map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
@@ -180,8 +182,6 @@ public class HeartbeatService {
                         //更新my-topic运行状态
                         redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceive.pipelTraceId, map1, Long.parseLong(maxTime));
                         redisUtil.del("PipelLock:" + kafkaReceive.pipelTraceId);
-                        acke.acknowledge();
-                        flag = true;
                         sendKafka(topicPO, kafkaReceive);
                     } else if (split.length == 6) {
                         String state = (String) redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
