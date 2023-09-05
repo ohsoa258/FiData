@@ -152,9 +152,9 @@ public class BuildDataInputPgTableListener {
 
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
-            if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
-                taskPgTableStructureMapper.updatevalidVersion(version);
-            }
+//            if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+//                taskPgTableStructureMapper.updatevalidVersion(version);
+//            }
             if (((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api))) {
                 //先更新tb_table_access的发布状态   dmp_datainput_db
                 ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
