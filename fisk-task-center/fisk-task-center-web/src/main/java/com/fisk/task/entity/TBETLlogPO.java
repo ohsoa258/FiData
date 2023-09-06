@@ -1,8 +1,12 @@
 package com.fisk.task.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import org.joda.time.DateTime;
+
+import java.time.LocalDateTime;
 
 /**
  * @author: DennyHui
@@ -22,4 +26,6 @@ public class TBETLlogPO {
     public String errordesc;
     public String topicName;
     public String querySql;
+    @TableField(value = "createtime", fill = FieldFill.INSERT)
+    public LocalDateTime createtime;
 }

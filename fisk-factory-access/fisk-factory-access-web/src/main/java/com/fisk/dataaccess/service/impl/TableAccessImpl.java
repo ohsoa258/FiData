@@ -38,6 +38,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.dataaccess.dto.AccessMainPageVO;
 import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
@@ -85,6 +86,7 @@ import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
 import com.fisk.task.dto.atlas.AtlasEntityColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDbTableColumnDTO;
 import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
@@ -2718,21 +2720,44 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
-     * 首页--回显统计当前数据接入总共有多少表
+     * 首页--回显统计当前数据接入总共有多少表,多少重点接口，当日数据量等信息
      *
      * @return
      */
     @Override
-    public Integer countTblTotal() {
+    public AccessMainPageVO countTotal() {
+        AccessMainPageVO vo = new AccessMainPageVO();
         LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.isNull(TableAccessPO::getApiId);
+        //非实时表个数
         Integer phyCount = accessMapper.selectCount(wrapper);
 
         LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
         wrapper1.isNotNull(TableAccessPO::getApiId);
+        //实时表 restfulapi个数
         Integer apiCount = accessMapper.selectCount(wrapper1);
 
-        return phyCount + apiCount;
+        //当日接入数据总量
+        ResultEntity<Long> result1 = publishTaskClient.accessDataTotalCount();
+        Long dataTotal = result1.getData();
+        if (result1.getCode()!=ResultEnum.SUCCESS.getCode()){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        //成功次数和失败次数
+        ResultEntity<AccessDataSuccessAndFailCountDTO> result2 = publishTaskClient.accessDataSuccessAndFailCount();
+        AccessDataSuccessAndFailCountDTO dto = result2.getData();
+        if (result2.getCode()!=ResultEnum.SUCCESS.getCode()){
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        vo.setInterfaceCount(phyCount + apiCount);
+        vo.setDataCount(dataTotal);
+        vo.setSuccessCount(dto.getSuccessCount());
+        vo.setFailCount(dto.getFailCount());
+        vo.setImportantInterfaceCount(0);
+        vo.setDatastoreSize(0);
+        return vo;
     }
 
 }

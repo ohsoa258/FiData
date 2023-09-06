@@ -208,6 +208,7 @@ public enum ResultEnum {
             "1、字段类型、长度 " +
             "2、页面配置的主键个数是否与底表主键个数匹配 " +
             "3、若是业务主键覆盖方式，请检查on conflict - do update语句是否会二次更新列..."),
+    ACCESS_PUBLISH_FAILURE(5089, "发布失败，请联系系统管理员"),
 
 
     /**

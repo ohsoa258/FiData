@@ -155,7 +155,7 @@ public class TableFieldsImpl
     @Resource
     FlinkConfigDTO flinkConfig;
 
-    @Value("${spring.open-metadata}")
+    @Value("${open-metadata}")
     private Boolean openMetadata;
 
 
@@ -766,8 +766,8 @@ public class TableFieldsImpl
             //再更新tb_api_config的状态   dmp_datainput_db
             apiConfig.updateApiPublishStatus(modelPublishStatus);
             log.info("发布失败", e);
-            log.info("发布失败,{}", ResultEnum.TASK_EXEC_FAILURE.getMsg());
-            throw new FkException(ResultEnum.TASK_EXEC_FAILURE,e);
+            log.info("发布失败,{}", ResultEnum.ACCESS_PUBLISH_FAILURE.getMsg());
+            throw new FkException(ResultEnum.ACCESS_PUBLISH_FAILURE,e);
         }
 
         //oracle-cdc类型需要上传脚本

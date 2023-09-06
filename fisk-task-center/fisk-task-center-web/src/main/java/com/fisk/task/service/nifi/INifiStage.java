@@ -1,6 +1,7 @@
 package com.fisk.task.service.nifi;
 
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
+import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.entity.NifiStagePO;
@@ -37,4 +38,17 @@ public interface INifiStage {
      */
     Object overlayCodePreview(OverLoadCodeDTO dto);
 
+    /**
+     * 数据接入--首页展示信息--当日接入数据总量
+     *
+     * @return
+     */
+    Long accessDataTotalCount();
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据的成功次数和失败次数
+     *
+     * @return
+     */
+    AccessDataSuccessAndFailCountDTO accessDataSuccessAndFailCount();
 }

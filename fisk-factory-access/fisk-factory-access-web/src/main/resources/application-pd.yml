@@ -21,6 +21,18 @@ spring:
   freemarker:
     settings:
       classic_compatible: true
+
+# 是否同步元数据
+open-metadata: true
+# 智能发布所需配置
+config-url: jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+config-username: root
+config-password: root123
+# 配置库db类型 根据各个客户环境改变
+config-driverType: MYSQL
+# 配置库 tb_table_access 表名  根据各个客户环境改变
+config-tb-name: tb_table_access
+
 # pdf文档模板
 dataservice:
   pdf:

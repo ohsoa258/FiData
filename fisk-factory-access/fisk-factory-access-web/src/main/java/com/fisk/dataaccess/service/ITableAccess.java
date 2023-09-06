@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.dataaccess.dto.AccessMainPageVO;
 import com.fisk.dataaccess.dto.access.DataAccessTreeDTO;
 import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
@@ -399,9 +400,10 @@ public interface ITableAccess extends IService<TableAccessPO> {
     Integer countTblByApp(Integer appId);
 
     /**
-     * 首页--回显统计当前数据接入总共有多少表
+     * 首页--回显统计当前数据接入总共有多少表,多少重点接口，当日数据量等信息
      *
      * @return
      */
-    Integer countTblTotal();
+    AccessMainPageVO countTotal();
+
 }

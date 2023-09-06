@@ -2,6 +2,7 @@ package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
@@ -13,6 +14,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
@@ -469,4 +471,23 @@ public interface PublishTaskClient {
      */
     @GetMapping("/nifi/runOnce")
     public ResultEntity<Object> runOnce(@RequestParam("id") Long id);
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据总量
+     *
+     * @return
+     */
+    @ApiOperation("数据接入--首页展示信息--当日接入数据总量")
+    @GetMapping("/pipeline/accessDataTotalCount")
+    ResultEntity<Long> accessDataTotalCount();
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据的成功次数和失败次数
+     *
+     * @return
+     */
+    @ApiOperation("数据接入--首页展示信息--当日接入数据的成功次数和失败次数")
+    @GetMapping("/pipeline/accessDataSuccessAndFailCount")
+    ResultEntity<AccessDataSuccessAndFailCountDTO> accessDataSuccessAndFailCount();
+
 }

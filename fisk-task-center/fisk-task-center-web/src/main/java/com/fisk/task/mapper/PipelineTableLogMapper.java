@@ -1,6 +1,5 @@
 package com.fisk.task.mapper;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -36,6 +35,7 @@ public interface PipelineTableLogMapper extends FKBaseMapper<PipelineTableLogPO>
 
     /**
      * 日志数据补全
+     *
      * @param tableId
      * @param tableType
      * @param keyword

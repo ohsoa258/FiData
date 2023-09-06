@@ -64,6 +64,7 @@ public class SwaggerConfig {
 
     public static final String STATEMENT = "资产报表";
     public static final String API_STATE = "实时API接口状态控制器";
+    public static final String MAIN_PAGE = "数据接入首页展示";
 
 
 
@@ -90,6 +91,8 @@ public class SwaggerConfig {
                 .tags(new Tag(DATA_OPS, "数据运维"))
                 .tags(new Tag(SFTP, "sftp"))
                 .tags(new Tag(STATEMENT,"资产报表"))
+                .tags(new Tag(API_STATE,"实时API接口状态控制器"))
+                .tags(new Tag(MAIN_PAGE,"数据接入首页展示"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

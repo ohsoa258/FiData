@@ -24,6 +24,7 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.system.client.UserClient;
+import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
@@ -31,9 +32,9 @@ import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.NifiStagePO;
-import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.entity.PipelineTableLogPO;
+import com.fisk.task.entity.TBETLlogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -49,7 +50,10 @@ import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
+import com.fisk.task.service.nifi.IPipelineTableLog;
+import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.utils.KafkaTemplateHelper;
+import com.fisk.task.utils.LocalDateUtil;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -105,6 +109,10 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     ConsumeServeiceClient consumeServeiceClient;
     @Resource
     IPipelLog iPipelLog;
+    @Resource
+    private IPipelineTableLog iPipelineTableLog;
+    @Resource
+    private IEtlLog etlLog;
 
 
     @Override
@@ -280,7 +288,6 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                         nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
                     }
 
-
                     nifiStagePO.comment = nifiStageMessageDTO.message;
                     if (nifiStageMessageDTO.nifiStageDTO != null) {
                         NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
@@ -426,6 +433,94 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     public Object overlayCodePreview(OverLoadCodeDTO dto) {
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dto.dataSourceType);
         return dbCommand.assemblySql(dto.config, dto.synchronousTypeEnum, dto.funcName, dto.buildNifiFlow);
+    }
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据总量
+     *
+     * @return
+     */
+    @Override
+    public Long accessDataTotalCount() {
+        LambdaQueryWrapper<PipelineTableLogPO> wrapper = new LambdaQueryWrapper<>();
+        ArrayList<Integer> types = new ArrayList<>();
+        //3 物理表
+        types.add(3);
+        //11 RESTFULAPI
+        types.add(11);
+        //开始时间
+        Date start = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 00:00:00");
+        //结束时间
+        Date end = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 23:59:59");
+        wrapper.in(PipelineTableLogPO::getTableType, types)
+                .between(PipelineTableLogPO::getCreateTime, start, end);
+        List<PipelineTableLogPO> list = iPipelineTableLog.list(wrapper);
+        long count = 0;
+        for (PipelineTableLogPO po : list) {
+            count += po.getCounts();
+        }
+
+        //查询nifi同步的数据量
+        LambdaQueryWrapper<TBETLlogPO> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.between(TBETLlogPO::getCreatetime, start, end);
+        List<TBETLlogPO> list1 = etlLog.list(wrapper1);
+        long count1 = 0;
+        for (TBETLlogPO tbetLlogPO : list1) {
+            count1 += tbetLlogPO.getDatarows();
+        }
+
+        return count + count1;
+    }
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据的成功次数和失败次数
+     *
+     * @return
+     */
+    @Override
+    public AccessDataSuccessAndFailCountDTO accessDataSuccessAndFailCount() {
+        //查询成功的
+        LambdaQueryWrapper<PipelineTableLogPO> wrapper = new LambdaQueryWrapper<>();
+        ArrayList<Integer> types = new ArrayList<>();
+        //3 物理表
+        types.add(3);
+        //11 RESTFULAPI
+        types.add(11);
+        //开始时间
+        Date start = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 00:00:00");
+        //结束时间
+        Date end = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 23:59:59");
+        wrapper.in(PipelineTableLogPO::getTableType, types)
+                //3成功
+                .eq(PipelineTableLogPO::getState, 3)
+                .between(PipelineTableLogPO::getCreateTime, start, end);
+        List<PipelineTableLogPO> successList = iPipelineTableLog.list(wrapper);
+
+        //查询失败的
+        LambdaQueryWrapper<PipelineTableLogPO> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.in(PipelineTableLogPO::getTableType, types)
+                //3成功
+                .eq(PipelineTableLogPO::getState, 4)
+                .between(PipelineTableLogPO::getCreateTime, start, end);
+        List<PipelineTableLogPO> failureList = iPipelineTableLog.list(wrapper1);
+
+        //查询nifi同步的数据 当天的成功次数和失败次数
+        LambdaQueryWrapper<TBETLlogPO> wrapper2 = new LambdaQueryWrapper<>();
+        //1成功的
+        wrapper2.eq(TBETLlogPO::getStatus, 1)
+                .between(TBETLlogPO::getCreatetime, start, end);
+        int successCount = etlLog.list(wrapper2).size();
+
+        LambdaQueryWrapper<TBETLlogPO> wrapper3 = new LambdaQueryWrapper<>();
+        //2失败的
+        wrapper3.eq(TBETLlogPO::getStatus, 2)
+                .between(TBETLlogPO::getCreatetime, start, end);
+        int failCount = etlLog.list(wrapper3).size();
+
+        AccessDataSuccessAndFailCountDTO dto = new AccessDataSuccessAndFailCountDTO();
+        dto.setSuccessCount(successList.size() + successCount);
+        dto.setFailCount(failureList.size() + failCount);
+        return dto;
     }
 
 

@@ -116,16 +116,4 @@ public class TableAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.countTbl());
     }
 
-    /**
-     * 首页--回显统计当前数据接入总共有多少表
-     *
-     * @return
-     */
-    @GetMapping("/countTblTotal")
-    @ApiOperation(value = "数接--回显统计当前数据接入总共有多少非实时表和实时api")
-    public ResultEntity<Integer> countTblTotal() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.countTblTotal());
-    }
-
-
 }

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.task.config.SwaggerConfig;
+import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
@@ -107,6 +108,28 @@ public class PipelineSupervisionController {
     @PostMapping("/overlayCodePreview")
     public ResultEntity<Object> overlayCodePreview(@RequestBody OverLoadCodeDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iNifiStage.overlayCodePreview(dto));
+    }
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据总量
+     *
+     * @return
+     */
+    @ApiOperation("数据接入--首页展示信息--当日接入数据总量")
+    @GetMapping("/accessDataTotalCount")
+    public ResultEntity<Long> accessDataTotalCount() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iNifiStage.accessDataTotalCount());
+    }
+
+    /**
+     * 数据接入--首页展示信息--当日接入数据的成功次数和失败次数
+     *
+     * @return
+     */
+    @ApiOperation("数据接入--首页展示信息--当日接入数据的成功次数和失败次数")
+    @GetMapping("/accessDataSuccessAndFailCount")
+    public ResultEntity<AccessDataSuccessAndFailCountDTO> accessDataSuccessAndFailCount() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iNifiStage.accessDataSuccessAndFailCount());
     }
 
 }
