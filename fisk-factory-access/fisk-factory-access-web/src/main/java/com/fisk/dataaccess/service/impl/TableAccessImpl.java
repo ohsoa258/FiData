@@ -2339,7 +2339,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //装载查询sql
         dto.selectSql = tableAccessPo.sqlScript;
         //装载业务时间覆盖需要的条件sql  2023-04-28 李世纪：该属性目前不需要了，业务时间的覆盖语句已经包含条件sql
-        dto.whereScript = tableAccessPo.whereScript;
+        dto.whereScript = "";
         // 非实时物理表才有sql
         if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.api.getName())
