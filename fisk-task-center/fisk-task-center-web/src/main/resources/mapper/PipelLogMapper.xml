@@ -303,4 +303,62 @@
             ) sub ON t.workflowName = sub.workflowName
                 AND t.startDateTime = sub.maxStartDateTime;
     </select>
+    <select id="getPipelLogVos" resultType="com.fisk.task.dto.dispatchlog.PipelMergeLog">
+        SELECT
+            t1.pipel_id,
+            t1.pipel_trace_id,
+            t1.create_time,
+            t1.create_time AS start_time,
+            t2.create_time AS end_time,
+            CASE
+                WHEN t2.create_time is null THEN
+                    '正在运行'
+                WHEN t2.create_time is not null THEN
+                    '已完成'
+                END AS pipelStatu,
+            CASE
+                WHEN t2.msg LIKE '%运行成功%' THEN
+                    '成功'
+                WHEN t2.msg LIKE '%运行失败%' THEN
+                    '失败'
+                WHEN t2.msg LIKE '%取消运行%' THEN
+                    '取消'
+                END AS result
+        FROM
+                ( SELECT * FROM tb_pipel_log WHERE type = 1 AND del_flag = 1 ) AS t1
+                    LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                AND t2.type = 2
+                AND t2.del_flag = 1
+        WHERE
+            t1.pipel_id = #{dto.pipelId}
+          AND t1.create_time >= DATE_SUB( CURDATE(), INTERVAL (#{dto.lookday} - 1 ) DAY )
+        ORDER BY t1.create_time DESC
+    </select>
+    <select id="getLastPipelLog" resultType="com.fisk.task.dto.dispatchlog.PipelMergeLog">
+        SELECT
+            t1.pipel_id,
+            t1.pipel_trace_id,
+            t1.create_time AS start_time,
+            t2.create_time AS end_time,
+            CASE
+                WHEN t2.msg LIKE '%运行成功%' THEN
+                    '成功'
+                WHEN t2.msg LIKE '%运行失败%' THEN
+                    '失败'
+                WHEN t2.msg LIKE '%取消运行%' THEN
+                    '取消'
+                END AS result
+        FROM
+                ( SELECT * FROM tb_pipel_log WHERE type = 1 AND del_flag = 1 ) AS t1
+                    LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
+                AND t2.type = 2
+                AND t2.del_flag = 1
+                AND NOT find_in_set( '取消运行', t2.msg )
+        WHERE
+            t1.pipel_id = #{pipelId}
+
+        ORDER BY
+            t1.create_time DESC
+            LIMIT 1
+    </select>
 </mapper>

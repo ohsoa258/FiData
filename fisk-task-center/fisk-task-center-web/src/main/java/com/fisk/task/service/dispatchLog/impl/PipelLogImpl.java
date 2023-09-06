@@ -30,6 +30,7 @@ import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author cfk
@@ -119,7 +120,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     }
 
     @Override
-    public List<PipelMergeLog> getPipelLogVos(PipelLogVO pipelLog) {
+    public List<PipelMergeLog> getPipelLogVos1(PipelLogVO pipelLog) {
         List<PipelLogVO> list = pipelLogMapper.getPipelLogs(pipelLog);
         list.stream()
                 .filter(Objects::nonNull)
@@ -216,6 +217,11 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
         // 处理超过50分钟的失败任务-把和当前时间比超过50分钟并且没有结束时间的任务指定为失败是不合理的，先注释；
         // handleIsFailStatus(pipelMergeLogs);
         return pipelMergeLogs;
+    }
+    @Override
+    public PipelMergeLog getLastPipelLog(String pipelId) {
+        PipelMergeLog lastPipelLog = baseMapper.getLastPipelLog(pipelId);
+        return lastPipelLog;
     }
 
     /**
@@ -409,6 +415,21 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
             }
         }
         return data;
+    }
+
+    @Override
+    public List<PipelMergeLog> getPipelLogVos(PipelLogVO pipelLog) {
+        List<PipelMergeLog> pipelLogs = baseMapper.getPipelLogVos(pipelLog);
+        return pipelLogs.stream().map(i->{
+            i.setPipelName(pipelLog.pipelName);
+            if (Objects.nonNull(i.endTime)){
+                long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
+                long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
+                long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
+                i.duration = hour+"h " + min + "m " + sec + "s ";
+            }
+            return i;
+        }).collect(Collectors.toList());
     }
 
 }

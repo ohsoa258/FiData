@@ -24,26 +24,23 @@
                t1.create_time as start_time,
                t2.create_time as end_time,
                CASE
-                   t2.msg
-                   WHEN find_in_set( '运行成功', t2.msg ) THEN
+                   WHEN t2.msg LIKE '%运行成功%' THEN
                        '成功'
-                   WHEN find_in_set( '运行失败', t2.msg ) THEN
+                   WHEN t2.msg LIKE '%运行失败%' THEN
                        '失败'
-                   WHEN find_in_set( '跳过', t2.msg ) THEN
+                   WHEN t2.msg LIKE '%跳过%' THEN
                        '跳过'
-                   WHEN find_in_set( '禁止', t2.msg ) THEN
+                   WHEN t2.msg LIKE '%禁止%' THEN
                        '禁止'
                    END AS result
         FROM
-            tb_pipel_job_log t1
-                LEFT JOIN tb_pipel_job_log t2 ON t1.job_trace_id = t2.job_trace_id
+            (SELECT * FROM
+            tb_pipel_job_log a WHERE a.type = 4 AND a.del_flag =1) as t1
+                LEFT JOIN tb_pipel_job_log t2 ON t1.job_trace_id = t2.job_trace_id AND t2.type = 5 AND t2.del_flag = 1
                 LEFT JOIN ${dispatchDbName}.tb_nifi_custom_workflow_detail t3 ON t1.component_id = t3.id
         WHERE
         t1.pipel_trace_id = #{pipelTraceId}
-          AND t1.del_flag = 1
-          AND t2.del_flag = 1
-          AND t1.type = 4
-          AND t2.type = 5
+        ORDER BY t1.create_time DESC
     </select>
 
 </mapper>

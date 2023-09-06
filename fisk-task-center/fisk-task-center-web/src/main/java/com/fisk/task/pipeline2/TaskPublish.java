@@ -3,6 +3,7 @@ package com.fisk.task.pipeline2;
 import com.alibaba.fastjson.JSON;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessGroupEntity;
+import com.davis.client.model.ProcessGroupStatusDTO;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.framework.mdc.MDCHelper;
@@ -18,6 +19,9 @@ import com.fisk.datafactory.dto.tasknifi.NifiPortsHierarchyNextDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
+import com.fisk.task.dto.dispatchlog.PipelJobMergeLogVO;
+import com.fisk.task.dto.dispatchlog.PipelMergeLog;
+import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.PowerBiDataSetRefreshDTO;
@@ -50,6 +54,7 @@ import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.fisk.task.pipeline2.HeartbeatService.buildDispatchExceptionHandling;
 
@@ -115,16 +120,39 @@ public class TaskPublish {
                         String pipelineId = split1[3];
                         //调度管道中与调度job相连接的job(可能是多个job与开始调度job连接)中首个task任务
                         if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.PIPELINE_NIFI_FLOW.getValue())) {
+
                             //  这个时候可能是api的topic,可能是管道直接调度的topic,保存管道开始,job开始 定义管道traceid  定义job的traceid
+                            String pipelstart = simpleDateFormat.format(new Date());
                             //流程开始时间
-                            kafkaReceiveDTO.start_time = simpleDateFormat.format(new Date());
+                            kafkaReceiveDTO.start_time = pipelstart;
                             kafkaReceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
                             //nifi流程要的批次号
                             kafkaReceiveDTO.fidata_batch_code = kafkaReceiveDTO.pipelTraceId;
 
                             log.info("打印topic内容:" + JSON.toJSONString(kafkaReceiveDTO));
                             Map<Integer, Object> pipelMap = new HashMap<>();
-                            String pipelstart = simpleDateFormat.format(new Date());
+
+                            //执行管道监测机制
+                            Boolean flag;
+                            try {
+                                flag = pipelineMonitoringMechanism(split1[3],pipelstart);
+                            }catch (Exception e){
+                                log.info(e.getMessage());
+                                pipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
+                                iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                pipelMap = new HashMap<>();
+                                pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.CANCEL.getName() + " - " + pipelstart + " - Message:" + "执行管道监测机制异常,调用nifiAPI监控组件失败");
+                                iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                continue;
+                            }
+                            if(!flag){
+                                pipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
+                                iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                pipelMap = new HashMap<>();
+                                pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.CANCEL.getName() + " - " + pipelstart + " - Message:" + "已有任务正在运行");
+                                iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                continue;
+                            }
                             //创建redis里本次调度版本
                             NifiGetPortHierarchyDTO hierarchy = new NifiGetPortHierarchyDTO();
                             hierarchy.workflowId = pipelineId;
@@ -205,13 +233,13 @@ public class TaskPublish {
                                     //job开始日志
                                     Map<Integer, Object> jobMap = new HashMap<>();
                                     //任务依赖的组件
-                                    jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                                     log.info("管道调度,记录管道开始日志,jobTrackId:{}", kafkaReceiveDTO.pipelJobTraceId);
                                     iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, JobPid);
                                 }
                                 //task日志
                                 HashMap<Integer, Object> taskMap = new HashMap<>();
-                                taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                                 log.info("第三处调用保存task日志");
                                 iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), nifiPortHierarchy.itselfPort.tableId, Integer.parseInt(split[4]));
 
@@ -242,12 +270,12 @@ public class TaskPublish {
                                     if(!JobPid.equals(pipelJobLogPid)){
                                         pipelJobLogPid = JobPid;
                                         //job开始日志
-                                        jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                        jobMap.put(DispatchLogEnum.jobstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                                         log.info("管道调度非实时api,记录管道开始日志,jobTrackId:{}", kafkaReceiveDTO.pipelJobTraceId);
                                         iPipelJobLog.savePipelJobLog(kafkaReceiveDTO.pipelTraceId, jobMap, split1[3], kafkaReceiveDTO.pipelJobTraceId, JobPid);
                                     }//task日志
                                     HashMap<Integer, Object> taskMap = new HashMap<>();
-                                    taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + simpleDateFormat.format(new Date()));
+                                    taskMap.put(DispatchLogEnum.taskstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + pipelstart);
                                     log.info("第四处调用保存task日志");
                                     iPipelTaskLog.savePipelTaskLog(kafkaReceiveDTO.pipelTraceId, kafkaReceiveDTO.pipelJobTraceId, kafkaReceiveDTO.pipelTaskTraceId, taskMap, String.valueOf(nifiPortHierarchy.itselfPort.id), String.valueOf(pipelApiDispatch.apiId), OlapTableEnum.PHYSICS_API.getValue());
 
@@ -740,7 +768,59 @@ public class TaskPublish {
                 .build();
     }
 
-
+    private Boolean pipelineMonitoringMechanism(String pipelId,String pipelstart) throws Exception{
+        PipelMergeLog lastPipelLog = iPipelLog.getLastPipelLog(pipelId);
+        if (lastPipelLog == null){
+            return true;
+        }
+        if (StringUtils.isEmpty(lastPipelLog.result)){
+            List<PipelJobMergeLogVO> pipelJobLogVos = iPipelJobLog.getPipelJobLogVos(lastPipelLog.getPipelTraceId());
+            List<String> jobTraceIds = pipelJobLogVos.stream().filter(i -> i.endTime == null).map(PipelJobMergeLogVO::getJobTraceId).collect(Collectors.toList());
+            for (String jobTraceId : jobTraceIds) {
+                List<PipelTaskMergeLogVO> pipelTaskLogVos = iPipelTaskLog.getPipelTaskLogVos(jobTraceId);
+                pipelTaskLogVos = pipelTaskLogVos.stream().filter(i -> i.endTime == null).collect(Collectors.toList());
+                boolean verify = true;
+                for (PipelTaskMergeLogVO pipelTaskLogVo : pipelTaskLogVos) {
+                    TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(pipelTaskLogVo.getTableId()), Long.parseLong(pipelTaskLogVo.getTableType()));
+                    if (tableNifiSetting == null){
+                        Map<Integer, Object> pipelMap = new HashMap<>();
+                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + pipelstart + " - ErrorMessage:" + "TableNifiSettingPO中没有表ID为"+pipelTaskLogVo.getTableId()+"，表类型为"+OlapTableEnum.getNameByValue(Integer.valueOf(pipelTaskLogVo.getTableType()))+"的表");
+                        iPipelLog.savePipelLog(lastPipelLog.pipelTraceId, pipelMap, lastPipelLog.pipelId);
+                        return false;
+                    }
+                        Integer flowFilesQueued;
+                        Integer activeThreadCount;
+                        boolean flag = false;
+                        for (int i = 0; i < 3; i++) {
+                            Thread.sleep(200);
+                            ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSetting.getTableComponentId());
+                            ProcessGroupStatusDTO status = processGroup.getStatus();
+                            //flowFilesQueued 组内流文件数量,如果为0代表组内无流文件
+                            //activeThreadCount 组内活跃线程数量，为0代表没有正在工作的组件
+                            flowFilesQueued = status.getAggregateSnapshot().getFlowFilesQueued();
+                            activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
+                            log.info("管道内剩余流文件flowFilesQueued:{}", flowFilesQueued);
+                            log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
+                            if (activeThreadCount == 0 && flowFilesQueued == 0){
+                                flag = true;
+                            }
+                        }
+                        if (!flag){
+                            verify = false;
+                        }
+                }
+                if (verify){
+                    Map<Integer, Object> pipelMap = new HashMap<>();
+                    pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + pipelstart + " - ErrorMessage:" + "消息可能积压请检查kafka是否正常");
+                    iPipelLog.savePipelLog(lastPipelLog.pipelTraceId, pipelMap, lastPipelLog.pipelId);
+                    return true;
+                }else {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
 
 
