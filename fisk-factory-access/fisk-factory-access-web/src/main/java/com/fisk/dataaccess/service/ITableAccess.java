@@ -398,4 +398,10 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     Integer countTblByApp(Integer appId);
 
+    /**
+     * 首页--回显统计当前数据接入总共有多少表
+     *
+     * @return
+     */
+    Integer countTblTotal();
 }

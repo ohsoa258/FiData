@@ -1288,13 +1288,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     @Override
     public Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO) {
-        Map<Integer,String> map = new HashMap<>();
+        Map<Integer, String> map = new HashMap<>();
         //查询宽表
         QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper = new QueryWrapper<>();
-        tableAccessPOQueryWrapper.lambda().in(TableAccessPO::getId,tableQueryDTO.getIds());
+        tableAccessPOQueryWrapper.lambda().in(TableAccessPO::getId, tableQueryDTO.getIds());
         List<TableAccessPO> tableAccessPOList = baseMapper.selectList(tableAccessPOQueryWrapper);
         for (TableAccessPO tableAccessPO : tableAccessPOList) {
-            map.put((int) tableAccessPO.getId(),tableAccessPO.getTableName());
+            map.put((int) tableAccessPO.getId(), tableAccessPO.getTableName());
         }
         return map;
     }
@@ -1337,7 +1337,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                         for (AppDataSourcePO item : dataSourcePo) {
                             if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
                                     item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
-                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName()) ||
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName()) ) {
                                 list.add(e);
                             }
                         }
@@ -2710,9 +2711,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public Integer countTblByApp(Integer appId) {
         LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(TableAccessPO::getAppId,appId);
+        wrapper.eq(TableAccessPO::getAppId, appId);
         Integer count = accessMapper.selectCount(wrapper);
         return count;
+    }
+
+    /**
+     * 首页--回显统计当前数据接入总共有多少表
+     *
+     * @return
+     */
+    @Override
+    public Integer countTblTotal() {
+        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.isNull(TableAccessPO::getApiId);
+        Integer phyCount = accessMapper.selectCount(wrapper);
+
+        LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.isNotNull(TableAccessPO::getApiId);
+        Integer apiCount = accessMapper.selectCount(wrapper1);
+
+        return phyCount + apiCount;
     }
 
 }
