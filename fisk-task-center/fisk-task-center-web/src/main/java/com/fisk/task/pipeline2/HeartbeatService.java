@@ -32,6 +32,7 @@ import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.Acknowledgment;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -150,8 +151,6 @@ public class HeartbeatService {
                     queryWrapper.eq(TableTopicPO::getTopicName, topic).eq(TableTopicPO::getDelFlag, 1);
                     TableTopicPO topicPO = tableTopicService.getOne(queryWrapper);
                     if (split.length == 7) {
-                        acke.acknowledge();
-                        flag = true;
                         Map<String, Object> map = new HashMap<>();
                         map.put(DispatchLogEnum.taskend.getName(), simpleDateFormat.format(new Date()));
                         map.put(DispatchLogEnum.taskcount.getName(), kafkaReceive.numbers + "");
@@ -182,16 +181,20 @@ public class HeartbeatService {
                         //更新my-topic运行状态
                         redisUtil.hmsetForDispatch(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + kafkaReceive.pipelTraceId, map1, Long.parseLong(maxTime));
                         redisUtil.del("PipelLock:" + kafkaReceive.pipelTraceId);
-                        sendKafka(topicPO, kafkaReceive);
+                        //同方法内@Async注解不生效所以需获取本service的代理对象
+                        HeartbeatService heartbeatService = NifiHelper.getBean(HeartbeatService.class);
+                        //异步执行避免阻塞
+                        heartbeatService.sendKafka(topicPO, kafkaReceive);
                     } else if (split.length == 6) {
                         String state = (String) redisUtil.get(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId);
                         if (state.equals(MyTopicStateEnum.RUNNING.getName())) {
                             continue;
                         }
                         redisUtil.set(RedisKeyEnum.DELAYED_TASK.getName() + ":" + kafkaReceive.pipelTaskTraceId, MyTopicStateEnum.RUNNING.getName(), Long.parseLong(maxTime));
-                        acke.acknowledge();
-                        flag = true;
-                        sendKafka(topicPO, kafkaReceive);
+                        //同方法内@Async注解不生效所以需获取本service的代理对象
+                        HeartbeatService heartbeatService = NifiHelper.getBean(HeartbeatService.class);
+                        //异步执行避免阻塞
+                        heartbeatService.sendKafka(topicPO, kafkaReceive);
                     }
                 } catch (Exception e) {
                     log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
@@ -207,9 +210,7 @@ public class HeartbeatService {
         }catch (Exception e){
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
         }finally {
-            if (!flag){
-                acke.acknowledge();
-            }
+            acke.acknowledge();
         }
     }
 
@@ -229,6 +230,7 @@ public class HeartbeatService {
     }
 
 
+    @Async
     public void sendKafka(TableTopicPO topicPO, KafkaReceiveDTO kafkaReceive) throws Exception {
         String groupId = "";
         List<TableNifiSettingPO> list = new ArrayList<>();

@@ -261,10 +261,12 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         List<PipelTaskMergeLogVO> result = new ArrayList<>();
         List<PipelTaskMergeLogVO> pipelTaskLogVos = pipelTaskLogMapper.getPipelTaskLogVos(JobTraceId);
         pipelTaskLogVos.stream().map(i->{
-            long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
-            long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
-            long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
-            i.duration = hour+"h " + min + "m " + sec + "s ";
+            if (Objects.nonNull(i.endTime)){
+                long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
+                long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
+                long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
+                i.duration = hour+"h " + min + "m " + sec + "s ";
+            }
             return i;
         }).collect(Collectors.toList());
         Map<String, List<PipelTaskMergeLogVO>> map = pipelTaskLogVos.stream().collect(Collectors.groupingBy(PipelTaskMergeLogVO::getTableType));

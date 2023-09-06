@@ -270,10 +270,12 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
     public List<PipelJobMergeLogVO> getPipelJobLogVos(String pipelTraceId) {
         List<PipelJobMergeLogVO> pipelJobLogVo = pipelJobLogMapper.getPipelJobLogVo(pipelTraceId,dispatchDbName);
         pipelJobLogVo = pipelJobLogVo.stream().map(i->{
-            long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
-            long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
-            long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
-            i.duration = hour+"h " + min + "m " + sec + "s ";
+            if (Objects.nonNull(i.endTime)){
+                long sec = (i.endTime.getTime() - i.startTime.getTime()) / 1000 % 60;
+                long min = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 1000) % 60;
+                long hour = (i.endTime.getTime() - i.startTime.getTime()) / (60 * 60 * 1000);
+                i.duration = hour+"h " + min + "m " + sec + "s ";
+            }
             return i;
         }).collect(Collectors.toList());
         return pipelJobLogVo;

@@ -26,7 +26,7 @@ public interface IPipelLog extends IService<PipelLogPO> {
      * @param pipelLog pipelLog
      * @return 执行结果
      */
-    List<PipelMergeLog> getPipelLogVos(PipelLogVO pipelLog);
+    List<PipelMergeLog> getPipelLogVos1(PipelLogVO pipelLog);
 
     /**
      * 获取图表的日志统计信息
@@ -95,4 +95,7 @@ public interface IPipelLog extends IService<PipelLogPO> {
      * @return
      */
     List<PipelLineDetailVO> getDetailLog();
+    List<PipelMergeLog> getPipelLogVos(PipelLogVO pipelLog);
+
+    PipelMergeLog getLastPipelLog(String pipelId);
 }
