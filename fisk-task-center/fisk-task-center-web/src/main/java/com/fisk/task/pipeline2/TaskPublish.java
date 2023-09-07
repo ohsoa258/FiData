@@ -158,7 +158,7 @@ public class TaskPublish {
                             hierarchy.workflowId = pipelineId;
                             Boolean setnx;
                             do {
-                                Thread.sleep(200);
+                                Thread.sleep(300);
 //                        log.info("endService获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
                                 setnx = redisUtil.setnx("PipelLock:" + pipelTraceId, 100, TimeUnit.SECONDS);
                             } while (!setnx);
@@ -302,7 +302,7 @@ public class TaskPublish {
                         } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue())) {
                             Boolean setnx;
                             do {
-                                Thread.sleep(200);
+                                Thread.sleep(300);
 //                            log.info("taskPublish获取锁PipelLock:{}",kafkaReceiveDTO.pipelTraceId);
                                 setnx = redisUtil.setnx("PipelLock:" + kafkaReceiveDTO.pipelTraceId, 100, TimeUnit.SECONDS);
                             } while (!setnx);
@@ -792,7 +792,7 @@ public class TaskPublish {
                         Integer activeThreadCount;
                         boolean flag = false;
                         for (int i = 0; i < 3; i++) {
-                            Thread.sleep(200);
+                            Thread.sleep(500);
                             ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(tableNifiSetting.getTableComponentId());
                             ProcessGroupStatusDTO status = processGroup.getStatus();
                             //flowFilesQueued 组内流文件数量,如果为0代表组内无流文件

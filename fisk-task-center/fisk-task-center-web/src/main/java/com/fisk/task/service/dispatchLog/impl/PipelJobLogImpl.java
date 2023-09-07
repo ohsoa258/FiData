@@ -286,7 +286,7 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         log.info("管道异常修补参数:{}", JSON.toJSONString(dto));
         Boolean setnx;
         do {
-            Thread.sleep(200);
+            Thread.sleep(300);
 //                    log.info("exceptionHandlingLog获取锁PipelLock:{}",kafkaReceive.pipelTraceId);
             setnx = redisUtil.setnx("PipelLock:"+dto.pipelTraceId, 100, TimeUnit.SECONDS);
         } while (!setnx);
