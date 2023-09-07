@@ -585,6 +585,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.ORACLE_CDC.getName();
         } else if (DataSourceTypeEnum.SFTP.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.SFTP.getName();
+        } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.OPENEDGE.getName();
         }
         return driverName;
     }

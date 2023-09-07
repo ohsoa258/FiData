@@ -312,10 +312,11 @@ public class AppRegistrationImpl
             //遍历data时，根据各个外部数据源的驱动类型，存入到我们预先准备的集合中
             data.forEach(e -> {
                 String driveType = e.driveType;
-                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) ||
-                        AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) ||
-                        AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) ||
-                        AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)) {
+                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType)
+                        || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType)
+                        || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType)
+                        || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)
+                        || AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
                     dbTypeSources.add(e);
                 } else {
                     otherSources.add(e);
