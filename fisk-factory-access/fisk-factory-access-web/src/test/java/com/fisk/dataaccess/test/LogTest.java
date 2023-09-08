@@ -1,8 +1,13 @@
 package com.fisk.dataaccess.test;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fisk.dataaccess.webservice.entity.UserDTO;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
+import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -60,14 +66,31 @@ public class LogTest {
     }
 
     public static void main(String[] args) {
+        //创建动态客户端
         JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
         Client client = dcf.createClient("http://localhost:8089/webservice/api?wsdl");
+
+        //设置超时时间
+        HTTPConduit conduit = (HTTPConduit) client.getConduit();
+        HTTPClientPolicy policy = new HTTPClientPolicy();
+        policy.setAllowChunking(false);
+        // 连接服务器超时时间 10秒
+        policy.setConnectionTimeout(10000);
+        // 等待服务器响应超时时间 20秒
+        policy.setReceiveTimeout(20000);
+        conduit.setClient(policy);
+
         ObjectMapper mapper = new ObjectMapper();
         try {
             // invoke("方法名",参数1,参数2,参数3....);
             Object[] objects = client.invoke("getUser", 99L);
+            String s = JSON.toJSONString(objects);
+            System.out.println(s);
+            JSONArray jsonArray = JSON.parseArray(s);
+            List<UserDTO> userDTOS = jsonArray.toJavaList(UserDTO.class);
+            System.out.println(userDTOS);
             System.out.println(mapper.writeValueAsString(objects[0]));
-        } catch (java.lang.Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
