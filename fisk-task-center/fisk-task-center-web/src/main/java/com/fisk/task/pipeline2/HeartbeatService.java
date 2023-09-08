@@ -231,43 +231,54 @@ public class HeartbeatService {
 
 
     @Async
-    public void sendKafka(TableTopicPO topicPO, KafkaReceiveDTO kafkaReceive) throws Exception {
-        String groupId = "";
-        List<TableNifiSettingPO> list = new ArrayList<>();
-        String[] split = topicPO.getTopicName().split("\\.");
-        if (split.length == 6) {
-            list = iTableNifiSettingService.query().eq("type", split[3]).eq("table_access_id", split[5]).list();
-        } else if (split.length == 7) {
-            list = iTableNifiSettingService.query().eq("type", split[4]).eq("table_access_id", split[6]).list();
-        }
-        if (!CollectionUtils.isEmpty(list)) {
-            groupId = list.get(0).tableComponentId;
-        }
-        //只有是nifi处理的任务才有这个groupId
-        if (!StringUtils.isEmpty(groupId)) {
-            Integer flowFilesQueued;
-            Integer activeThreadCount;
-            do {
-                Thread.sleep(500);
-                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(groupId);
-                ProcessGroupStatusDTO status = processGroup.getStatus();
-                //flowFilesQueued 组内流文件数量,如果为0代表组内无流文件
-                //activeThreadCount 组内活跃线程数量，为0代表没有正在工作的组件
-                flowFilesQueued = status.getAggregateSnapshot().getFlowFilesQueued();
-                activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
-                log.info("管道内剩余流文件flowFilesQueued:{}", flowFilesQueued);
-                log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
-            } while (activeThreadCount != 0 && flowFilesQueued != 0);
-            if (!StringUtils.isEmpty(kafkaReceive.message)) {
-                DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);
-                iPipelJobLog.exceptionHandlingLog(dto);
-                Map<Object, Object> hmJob = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + dto.pipelTraceId);
-                Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId);
-                log.info("修改完的job与task结构:{},{}", JSON.toJSONString(hmJob), JSON.toJSONString(hmTask));
+    public void sendKafka(TableTopicPO topicPO, KafkaReceiveDTO kafkaReceive) {
+        try {
+            String groupId = "";
+            List<TableNifiSettingPO> list = new ArrayList<>();
+            String[] split = topicPO.getTopicName().split("\\.");
+            if (split.length == 6) {
+                list = iTableNifiSettingService.query().eq("type", split[3]).eq("table_access_id", split[5]).list();
+            } else if (split.length == 7) {
+                list = iTableNifiSettingService.query().eq("type", split[4]).eq("table_access_id", split[6]).list();
             }
-            // 任务结束中心的topic为 : task.build.task.over
-            log.info("my-topic服务发送到任务:{}", JSON.toJSONString(kafkaReceive));
-            kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceive));
+            if (!CollectionUtils.isEmpty(list)) {
+                groupId = list.get(0).tableComponentId;
+            }
+            //只有是nifi处理的任务才有这个groupId
+            if (!StringUtils.isEmpty(groupId)) {
+                Integer flowFilesQueued;
+                Integer activeThreadCount;
+                do {
+                    Thread.sleep(500);
+                    ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(groupId);
+                    ProcessGroupStatusDTO status = processGroup.getStatus();
+                    //flowFilesQueued 组内流文件数量,如果为0代表组内无流文件
+                    //activeThreadCount 组内活跃线程数量，为0代表没有正在工作的组件
+                    flowFilesQueued = status.getAggregateSnapshot().getFlowFilesQueued();
+                    activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
+                    log.info("管道内剩余流文件flowFilesQueued:{}", flowFilesQueued);
+                    log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
+                } while (activeThreadCount != 0 && flowFilesQueued != 0);
+                if (!StringUtils.isEmpty(kafkaReceive.message)) {
+                    DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);
+                    iPipelJobLog.exceptionHandlingLog(dto);
+                    Map<Object, Object> hmJob = redisUtil.hmget(RedisKeyEnum.PIPEL_JOB_TRACE_ID.getName() + ":" + dto.pipelTraceId);
+                    Map<Object, Object> hmTask = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + dto.pipelTraceId);
+                    log.info("修改完的job与task结构:{},{}", JSON.toJSONString(hmJob), JSON.toJSONString(hmTask));
+                }
+                // 任务结束中心的topic为 : task.build.task.over
+                log.info("my-topic服务发送到任务:{}", JSON.toJSONString(kafkaReceive));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceive));
+            }
+        }catch (Exception e){
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+            redisUtil.del("PipelLock:" + kafkaReceive.pipelTraceId);
+            DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);
+            try {
+                iPipelJobLog.exceptionHandlingLog(dto);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 }
