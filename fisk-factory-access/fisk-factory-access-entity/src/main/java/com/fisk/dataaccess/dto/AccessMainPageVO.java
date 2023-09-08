@@ -25,10 +25,10 @@ public class AccessMainPageVO {
     private Integer ImportantInterfaceCount;
 
     /**
-     * 数据存储大小
+     * 数据存储大小 gb
      */
     @ApiModelProperty(value = "数据存储大小")
-    private Integer DatastoreSize;
+    private String DatastoreSize;
 
     /**
      * 成功次数

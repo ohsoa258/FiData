@@ -31,6 +31,8 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.dataaccess.utils.dbdatasize.IBuildFactoryDbDataSizeCount;
+import com.fisk.dataaccess.utils.dbdatasize.impl.DbDataSizeCountHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
@@ -2726,38 +2728,62 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     @Override
     public AccessMainPageVO countTotal() {
-        AccessMainPageVO vo = new AccessMainPageVO();
-        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.isNull(TableAccessPO::getApiId);
-        //非实时表个数
-        Integer phyCount = accessMapper.selectCount(wrapper);
+        try {
+            AccessMainPageVO vo = new AccessMainPageVO();
+            LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.isNull(TableAccessPO::getApiId);
+            //非实时表个数
+            Integer phyCount = accessMapper.selectCount(wrapper);
 
-        LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.isNotNull(TableAccessPO::getApiId);
-        //实时表 restfulapi个数
-        Integer apiCount = accessMapper.selectCount(wrapper1);
+            LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.isNotNull(TableAccessPO::getApiId);
+            //实时表 restfulapi个数
+            Integer apiCount = accessMapper.selectCount(wrapper1);
 
-        //当日接入数据总量
-        ResultEntity<Long> result1 = publishTaskClient.accessDataTotalCount();
-        Long dataTotal = result1.getData();
-        if (result1.getCode()!=ResultEnum.SUCCESS.getCode()){
+            //当日接入数据总量
+            ResultEntity<Long> result1 = publishTaskClient.accessDataTotalCount();
+            Long dataTotal = result1.getData();
+            if (result1.getCode()!=ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+
+            //成功次数和失败次数
+            ResultEntity<AccessDataSuccessAndFailCountDTO> result2 = publishTaskClient.accessDataSuccessAndFailCount();
+            AccessDataSuccessAndFailCountDTO dto = result2.getData();
+            if (result2.getCode()!=ResultEnum.SUCCESS.getCode()){
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+
+            //查询数据接入-ods库的存储数据总量（包括stg）
+            String dataSize = countDbDataSize();
+
+            vo.setInterfaceCount(phyCount + apiCount);
+            vo.setDataCount(dataTotal);
+            vo.setSuccessCount(dto.getSuccessCount());
+            vo.setFailCount(dto.getFailCount());
+            vo.setImportantInterfaceCount(0);
+            vo.setDatastoreSize(dataSize);
+            return vo;
+        }catch (Exception e){
+            log.error("countTotal(),数据接入-首页展示查询失败!");
+            throw new FkException(ResultEnum.ACCESS_MAINPAGE_SELECT_FAILURE,e);
+        }
+    }
+
+    /**
+     * 查询数据接入-ods库的存储数据总量（包括stg）
+     *
+     * @return
+     */
+    public String countDbDataSize() {
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(2);
+        if (result.getCode()!=ResultEnum.SUCCESS.getCode()){
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
-
-        //成功次数和失败次数
-        ResultEntity<AccessDataSuccessAndFailCountDTO> result2 = publishTaskClient.accessDataSuccessAndFailCount();
-        AccessDataSuccessAndFailCountDTO dto = result2.getData();
-        if (result2.getCode()!=ResultEnum.SUCCESS.getCode()){
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-        }
-
-        vo.setInterfaceCount(phyCount + apiCount);
-        vo.setDataCount(dataTotal);
-        vo.setSuccessCount(dto.getSuccessCount());
-        vo.setFailCount(dto.getFailCount());
-        vo.setImportantInterfaceCount(0);
-        vo.setDatastoreSize(0);
-        return vo;
+        DataSourceDTO data = result.getData();
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = data.getConType();
+        IBuildFactoryDbDataSizeCount helper = DbDataSizeCountHelper.getDbDataSizeCountHelperByConType(conType);
+        return helper.DbDataStoredSize(data);
     }
 
 }
