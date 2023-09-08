@@ -2,6 +2,7 @@ package com.fisk.dataaccess.test;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.dataaccess.webservice.entity.UserDTO;
 import org.apache.cxf.endpoint.Client;
@@ -68,6 +69,7 @@ public class LogTest {
     public static void main(String[] args) {
         //创建动态客户端
         JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+        //todo：webService的这个动态客户端的地址需要从数据库中查出来
         Client client = dcf.createClient("http://localhost:8089/webservice/api?wsdl");
 
         //设置超时时间
@@ -83,10 +85,16 @@ public class LogTest {
         ObjectMapper mapper = new ObjectMapper();
         try {
             // invoke("方法名",参数1,参数2,参数3....);
+            //todo：webService的这个方法名和参数同样需要从数据库查询得出
             Object[] objects = client.invoke("getUser", 99L);
             String s = JSON.toJSONString(objects);
             System.out.println(s);
             JSONArray jsonArray = JSON.parseArray(s);
+            for (Object o : jsonArray) {
+                //todo:webService拿到这个jsonObject对象后，后续流程就和api推数据差不多了
+                JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(o));
+                System.out.println(jsonObject);
+            }
             List<UserDTO> userDTOS = jsonArray.toJavaList(UserDTO.class);
             System.out.println(userDTOS);
             System.out.println(mapper.writeValueAsString(objects[0]));

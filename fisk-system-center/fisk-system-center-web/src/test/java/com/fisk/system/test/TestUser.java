@@ -1,20 +1,14 @@
 package com.fisk.system.test;
 
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.StandardCharsets;
-
-import static org.apache.commons.io.Charsets.UTF_8;
 
 /**
  * @author: Lock
@@ -42,8 +36,6 @@ public class TestUser {
             e.printStackTrace();
         }
     }
-
-
 
 
 }
