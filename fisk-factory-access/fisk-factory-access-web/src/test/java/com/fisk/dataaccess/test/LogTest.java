@@ -1,5 +1,8 @@
 package com.fisk.dataaccess.test;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.cxf.endpoint.Client;
+import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,4 +58,18 @@ public class LogTest {
         temp_str = sdf.format(dt);
         return temp_str;
     }
+
+    public static void main(String[] args) {
+        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+        Client client = dcf.createClient("http://localhost:8089/webservice/api?wsdl");
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            // invoke("方法名",参数1,参数2,参数3....);
+            Object[] objects = client.invoke("getUser", 99L);
+            System.out.println(mapper.writeValueAsString(objects[0]));
+        } catch (java.lang.Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
