@@ -217,7 +217,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>fisk-data-management</finalName>
+        <finalName>fisk-datamanage-center</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
