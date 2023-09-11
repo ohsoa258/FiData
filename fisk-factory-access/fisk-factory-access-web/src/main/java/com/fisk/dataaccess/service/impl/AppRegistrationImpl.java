@@ -108,9 +108,7 @@ import static com.fisk.dataaccess.enums.HttpRequestEnum.POST;
  */
 @Service
 @Slf4j
-public class AppRegistrationImpl
-        extends ServiceImpl<AppRegistrationMapper, AppRegistrationPO>
-        implements IAppRegistration {
+public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppRegistrationPO> implements IAppRegistration {
     @Resource
     private IAppDataSource iAppDataSource;
     @Resource
@@ -312,11 +310,7 @@ public class AppRegistrationImpl
             //遍历data时，根据各个外部数据源的驱动类型，存入到我们预先准备的集合中
             data.forEach(e -> {
                 String driveType = e.driveType;
-                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType)
-                        || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType)
-                        || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType)
-                        || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)
-                        || AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
+                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
                     dbTypeSources.add(e);
                 } else {
                     otherSources.add(e);
@@ -369,10 +363,7 @@ public class AppRegistrationImpl
      * @param dataSource
      */
     public List<MetaDataInstanceAttributeDTO> addDataSourceMetaData(AppRegistrationPO appRegistration, AppDataSourcePO dataSource) {
-        if (dataSource.driveType.toUpperCase().equals("API")
-                || dataSource.driveType.toUpperCase().equals("RESTFULAPI")
-                || dataSource.driveType.toUpperCase().equals("SFTP")
-                || dataSource.driveType.toUpperCase().equals("FTP")) {
+        if (dataSource.driveType.toUpperCase().equals("API") || dataSource.driveType.toUpperCase().equals("RESTFULAPI") || dataSource.driveType.toUpperCase().equals("SFTP") || dataSource.driveType.toUpperCase().equals("FTP")) {
             return null;
         }
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
@@ -463,8 +454,7 @@ public class AppRegistrationImpl
         boolean isKeyExists = StringUtils.isNoneBlank(key);
         query().like(isKeyExists, "app_name", key)
                 // 未删除
-                .eq("del_flag", 1)
-                .page(pageReg);
+                .eq("del_flag", 1).page(pageReg);
 
         // 分页封装
         Page<AppRegistrationPO> poPage = new Page<>(page, rows);
@@ -472,8 +462,7 @@ public class AppRegistrationImpl
         QueryWrapper<AppRegistrationPO> queryWrapper = new QueryWrapper<>();
 
         // 查询数据
-        queryWrapper.like(isKeyExists, "app_name", key)
-                .eq("del_flag", 1)
+        queryWrapper.like(isKeyExists, "app_name", key).eq("del_flag", 1)
                 // 未删除
                 .orderByDesc("create_time");
         baseMapper.selectPage(poPage, queryWrapper);
@@ -548,9 +537,7 @@ public class AppRegistrationImpl
 
             for (AppDataSourceDTO item : appDatasourceDTO) {
                 QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
-                wrapper.lambda()
-                        .eq(AppDataSourcePO::getRealtimeAccount, item.realtimeAccount)
-                        .eq(AppDataSourcePO::getAppId, item.appId);
+                wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, item.realtimeAccount).eq(AppDataSourcePO::getAppId, item.appId);
                 AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
                 if (appDataSourcePo != null && appDataSourcePo.id != item.id) {
                     throw new FkException(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
@@ -611,10 +598,7 @@ public class AppRegistrationImpl
         //获取前端传参的数据源id集合
         List<Long> collect3 = modelDataSource.stream().map(e -> e.id).collect(Collectors.toList());
         //找出重复出现的appDataSourceIds
-        List<Long> duplicates = collect.stream()
-                .filter(collect2::contains)
-                .distinct()
-                .collect(Collectors.toList());
+        List<Long> duplicates = collect.stream().filter(collect2::contains).distinct().collect(Collectors.toList());
 
         //判断前端传的参数是否包含原有数据源
         if (!collect3.containsAll(duplicates)) {
@@ -761,12 +745,7 @@ public class AppRegistrationImpl
                 deleteTableDetailDtoList.add(deleteTableDetailDto);
             });
             // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
-            accessList.stream().map(
-                            po -> tableFieldsImpl.query()
-                                    .eq("table_access_id", po.id)
-                                    .eq("del_flag", 1).list())
-                    .flatMap(Collection::stream)
-                    .forEachOrdered(po -> tableFieldsMapper.deleteByIdWithFill(po));
+            accessList.stream().map(po -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(po -> tableFieldsMapper.deleteByIdWithFill(po));
         }
 
         // 删除factory-dispatch对应的表配置
@@ -823,10 +802,7 @@ public class AppRegistrationImpl
     public List<AppNameDTO> queryAppName() {
 
         // 查询所有应用名称
-        List<AppRegistrationPO> list = this.query()
-                .eq("del_flag", 1)
-                .orderByDesc("create_time")
-                .list();
+        List<AppRegistrationPO> list = this.query().eq("del_flag", 1).orderByDesc("create_time").list();
         List<AppNameDTO> listAppName = new ArrayList<>();
         for (AppRegistrationPO po : list) {
 
@@ -844,16 +820,10 @@ public class AppRegistrationImpl
     @Override
     public AppRegistrationDTO getData(long id) {
 
-        AppRegistrationPO modelReg = this.query()
-                .eq("id", id)
-                .eq("del_flag", 1)
-                .one();
+        AppRegistrationPO modelReg = this.query().eq("id", id).eq("del_flag", 1).one();
         AppRegistrationDTO appRegistrationDTO = AppRegistrationMap.INSTANCES.poToDto(modelReg);
 
-        List<AppDataSourcePO> modelDataSource = appDataSourceImpl.query()
-                .eq("app_id", id)
-                .eq("del_flag", 1)
-                .list();
+        List<AppDataSourcePO> modelDataSource = appDataSourceImpl.query().eq("app_id", id).eq("del_flag", 1).list();
         List<AppDataSourceDTO> appDataSourceDTO = AppDataSourceMap.INSTANCES.listPoToDto(modelDataSource);
 
         appDataSourceDTO.stream().map(e -> {
@@ -883,10 +853,7 @@ public class AppRegistrationImpl
     @Override
     public List<AppNameDTO> queryNoneRealTimeAppName() {
 
-        List<AppRegistrationPO> list = this.query()
-                .eq("del_flag", 1)
-                .eq("app_type", 1)
-                .list();
+        List<AppRegistrationPO> list = this.query().eq("del_flag", 1).eq("app_type", 1).list();
         List<AppNameDTO> listAppName = new ArrayList<>();
         for (AppRegistrationPO po : list) {
 
@@ -915,13 +882,9 @@ public class AppRegistrationImpl
         try {
             dto = new AtlasEntityDTO();
 
-            AppRegistrationPO modelReg = this.query().eq("id", id)
-                    .eq("del_flag", 1)
-                    .one();
+            AppRegistrationPO modelReg = this.query().eq("id", id).eq("del_flag", 1).one();
 
-            AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", id)
-                    .eq("del_flag", 1)
-                    .one();
+            AppDataSourcePO modelDataSource = appDataSourceImpl.query().eq("app_id", id).eq("del_flag", 1).one();
 
             dto.sendTime = LocalDateTime.now();
             dto.appName = modelReg.appName;
@@ -950,9 +913,7 @@ public class AppRegistrationImpl
     @Override
     public ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId) {
 
-        AppRegistrationPO modelReg = this.query().eq("id", appid)
-                .eq("del_flag", 1)
-                .one();
+        AppRegistrationPO modelReg = this.query().eq("id", appid).eq("del_flag", 1).one();
         if (modelReg == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -962,10 +923,7 @@ public class AppRegistrationImpl
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
-        AppDataSourcePO modelData = appDataSourceImpl.query()
-                .eq("app_id", appid)
-                .eq("del_flag", 1)
-                .one();
+        AppDataSourcePO modelData = appDataSourceImpl.query().eq("app_id", appid).eq("del_flag", 1).one();
         if (modelData == null) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
@@ -1094,14 +1052,13 @@ public class AppRegistrationImpl
 
         final int[] count = {1};
 
-        return allDatabases.stream().filter(Objects::nonNull)
-                .map(e -> {
-                    DbNameDTO dbname = new DbNameDTO();
-                    dbname.setId(count[0]);
-                    count[0]++;
-                    dbname.setDbName(e);
-                    return dbname;
-                }).collect(Collectors.toList());
+        return allDatabases.stream().filter(Objects::nonNull).map(e -> {
+            DbNameDTO dbname = new DbNameDTO();
+            dbname.setId(count[0]);
+            count[0]++;
+            dbname.setDbName(e);
+            return dbname;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -1229,9 +1186,7 @@ public class AppRegistrationImpl
 
         // 根据driveType对应管道的具体组件
         // 物理表
-        if (dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
-                dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
-                dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
+        if (dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) || dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) || dto.getDriveType().equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName())) {
             detailDto.componentType = ChannelDataEnum.DATALAKE_TASK.getName();
             detailDto.tableId = String.valueOf(dto.getTableId());
             // 非实时api
@@ -1348,32 +1303,29 @@ public class AppRegistrationImpl
         // 应用负责人
         tableRuleInfoDto.dataResponsiblePerson = appRegistrationDto.appPrincipal;
         // 表名
-        tableRuleInfoDto.name = TableNameGenerateUtils.buildOdsTableName(data.tableName,
-                appRegistrationDto.appAbbreviation, appRegistrationDto.whetherSchema);
+        tableRuleInfoDto.name = TableNameGenerateUtils.buildOdsTableName(data.tableName, appRegistrationDto.appAbbreviation, appRegistrationDto.whetherSchema);
         // 类型 1: 表
         tableRuleInfoDto.type = 1;
 
         if (!CollectionUtils.isEmpty(data.list)) {
             StringBuilder transformationRules = new StringBuilder();
-            data.list.stream()
-                    .filter(Objects::nonNull)
-                    .forEach(e -> {
-                        TableRuleInfoDTO tableRuleInfoDtoByField = new TableRuleInfoDTO();
-                        // 应用名称
-                        tableRuleInfoDtoByField.businessName = appRegistrationDto.appName;
-                        // 应用负责人
-                        tableRuleInfoDtoByField.dataResponsiblePerson = appRegistrationDto.appPrincipal;
-                        // 字段名称
-                        tableRuleInfoDtoByField.name = e.fieldName;
-                        // 类型 2: 字段
-                        tableRuleInfoDtoByField.type = 2;
-                        if (!e.fieldName.equalsIgnoreCase(e.sourceFieldName)) {
-                            transformationRules.append(e.sourceFieldName).append("转换").append(e.fieldName).append(",");
-                            // 转换规则
-                            tableRuleInfoDtoByField.transformationRules = transformationRules.deleteCharAt(transformationRules.length() - 1).toString();
-                        }
-                        fieldRules.add(tableRuleInfoDtoByField);
-                    });
+            data.list.stream().filter(Objects::nonNull).forEach(e -> {
+                TableRuleInfoDTO tableRuleInfoDtoByField = new TableRuleInfoDTO();
+                // 应用名称
+                tableRuleInfoDtoByField.businessName = appRegistrationDto.appName;
+                // 应用负责人
+                tableRuleInfoDtoByField.dataResponsiblePerson = appRegistrationDto.appPrincipal;
+                // 字段名称
+                tableRuleInfoDtoByField.name = e.fieldName;
+                // 类型 2: 字段
+                tableRuleInfoDtoByField.type = 2;
+                if (!e.fieldName.equalsIgnoreCase(e.sourceFieldName)) {
+                    transformationRules.append(e.sourceFieldName).append("转换").append(e.fieldName).append(",");
+                    // 转换规则
+                    tableRuleInfoDtoByField.transformationRules = transformationRules.deleteCharAt(transformationRules.length() - 1).toString();
+                }
+                fieldRules.add(tableRuleInfoDtoByField);
+            });
         }
 
         // 表字段规则
@@ -1389,30 +1341,29 @@ public class AppRegistrationImpl
             return null;
         }
 
-        return dto.getTableUniques().keySet().stream()
-                .map(e -> {
-                    // 表信息
-                    FiDataTableMetaDataDTO tableMetaDataDto = new FiDataTableMetaDataDTO();
-                    TableAccessNonDTO data = tableAccessImpl.getData(Long.parseLong(e));
-                    if (data == null || CollectionUtils.isEmpty(data.list)) {
-                        return null;
-                    }
-                    AppRegistrationPO app = this.query().eq("id", data.appId).select("app_abbreviation").one();
-                    tableMetaDataDto.id = e;
-                    tableMetaDataDto.name = TableNameGenerateUtils.buildOdsTableName(data.tableName, app.appAbbreviation, app.whetherSchema);
-                    tableMetaDataDto.nameAlias = data.tableName;
+        return dto.getTableUniques().keySet().stream().map(e -> {
+            // 表信息
+            FiDataTableMetaDataDTO tableMetaDataDto = new FiDataTableMetaDataDTO();
+            TableAccessNonDTO data = tableAccessImpl.getData(Long.parseLong(e));
+            if (data == null || CollectionUtils.isEmpty(data.list)) {
+                return null;
+            }
+            AppRegistrationPO app = this.query().eq("id", data.appId).select("app_abbreviation").one();
+            tableMetaDataDto.id = e;
+            tableMetaDataDto.name = TableNameGenerateUtils.buildOdsTableName(data.tableName, app.appAbbreviation, app.whetherSchema);
+            tableMetaDataDto.nameAlias = data.tableName;
 
-                    // 字段信息
-                    tableMetaDataDto.fieldList = data.list.stream().filter(Objects::nonNull).map(field -> {
-                        FiDataTableMetaDataDTO fieldMetaDataDto = new FiDataTableMetaDataDTO();
-                        fieldMetaDataDto.id = String.valueOf(field.id);
-                        fieldMetaDataDto.name = field.fieldName;
-                        fieldMetaDataDto.nameAlias = field.fieldName;
-                        return fieldMetaDataDto;
-                    }).collect(Collectors.toList());
+            // 字段信息
+            tableMetaDataDto.fieldList = data.list.stream().filter(Objects::nonNull).map(field -> {
+                FiDataTableMetaDataDTO fieldMetaDataDto = new FiDataTableMetaDataDTO();
+                fieldMetaDataDto.id = String.valueOf(field.id);
+                fieldMetaDataDto.name = field.fieldName;
+                fieldMetaDataDto.nameAlias = field.fieldName;
+                return fieldMetaDataDto;
+            }).collect(Collectors.toList());
 
-                    return tableMetaDataDto;
-                }).collect(Collectors.toList());
+            return tableMetaDataDto;
+        }).collect(Collectors.toList());
     }
 
     @Override
@@ -1575,11 +1526,9 @@ public class AppRegistrationImpl
     private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByRealTime(String appTreeByRealTimeGuid, String id, List<AppRegistrationPO> appPoList) {
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
         List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
-        List<FiDataMetaDataTreeDTO> value = appPoList.stream()
-                .filter(Objects::nonNull)
+        List<FiDataMetaDataTreeDTO> value = appPoList.stream().filter(Objects::nonNull)
                 // 实时应用
-                .filter(e -> e.appType == 0)
-                .map(app -> {
+                .filter(e -> e.appType == 0).map(app -> {
 
                     // 第一层: app层
                     FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
@@ -1601,10 +1550,7 @@ public class AppRegistrationImpl
 //                    DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.getValue(dataSourcePo.driveType);
                     String type = "dataBase";
                     QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
-                    appDataSourcePOQueryWrapper.lambda()
-                            .eq(AppDataSourcePO::getAppId, app.id)
-                            .eq(AppDataSourcePO::getDelFlag, 1)
-                            .eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
+                    appDataSourcePOQueryWrapper.lambda().eq(AppDataSourcePO::getAppId, app.id).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
                     List<AppDataSourcePO> appDataSourcePOS = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
                     if (!CollectionUtils.isEmpty(appDataSourcePOS)) {
                         type = "restfulapi";
@@ -1613,98 +1559,81 @@ public class AppRegistrationImpl
                     switch (type) {
                         case "restfulapi":
                             // 当前app下的所有api
-                            List<FiDataMetaDataTreeDTO> apiTreeList = this.apiConfigImpl.query()
-                                    .eq("app_id", app.id)
-                                    .orderByDesc("create_time")
-                                    .list()
-                                    .stream()
-                                    .filter(Objects::nonNull)
-                                    .map(api -> {
-                                        FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
-                                        String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
-                                        apiDtoTree.setId(uuid_apiId);// String.valueOf(api.id)
-                                        apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
-                                        apiDtoTree.setLabel(api.apiName);
-                                        apiDtoTree.setLabelAlias(api.apiName);
-                                        apiDtoTree.setSourceType(1);
-                                        apiDtoTree.setSourceId(Integer.parseInt(id));
-                                        apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
-                                        // 不是已发布的都当作未发布处理
-                                        if (api.publish == null) {
-                                            apiDtoTree.setPublishState("0");
-                                        } else {
-                                            apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
-                                        }
-                                        apiDtoTree.setLabelDesc(api.apiDes);
+                            List<FiDataMetaDataTreeDTO> apiTreeList = this.apiConfigImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(api -> {
+                                FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
+                                String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                                apiDtoTree.setId(uuid_apiId);// String.valueOf(api.id)
+                                apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                                apiDtoTree.setLabel(api.apiName);
+                                apiDtoTree.setLabelAlias(api.apiName);
+                                apiDtoTree.setSourceType(1);
+                                apiDtoTree.setSourceId(Integer.parseInt(id));
+                                apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                // 不是已发布的都当作未发布处理
+                                if (api.publish == null) {
+                                    apiDtoTree.setPublishState("0");
+                                } else {
+                                    apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                }
+                                apiDtoTree.setLabelDesc(api.apiDes);
 
-                                        // 第三层: table层
-                                        List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
-                                                .eq("api_id", api.id)
-                                                .orderByDesc("create_time")
-                                                .list()
-                                                .stream()
-                                                .filter(Objects::nonNull)
-                                                .map(table -> {
-                                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                                    tableDtoTree.setId(String.valueOf(table.id));
-                                                    tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
-                                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                    tableDtoTree.setLabelAlias(table.tableName);
-                                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
-                                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
-                                                    tableDtoTree.setSourceType(1);
-                                                    tableDtoTree.setSourceId(Integer.parseInt(id));
-                                                    if (table.publish == null) {
-                                                        tableDtoTree.setPublishState("0");
-                                                        table.publish = 0;
-                                                    }
-                                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                    // 实时API应用表描述不存在，取api的描述
-                                                    tableDtoTree.setLabelDesc(api.apiDes);
-                                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                // 第三层: table层
+                                List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("api_id", api.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                    tableDtoTree.setId(String.valueOf(table.id));
+                                    tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
+                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLabelAlias(table.tableName);
+                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                    tableDtoTree.setSourceType(1);
+                                    tableDtoTree.setSourceId(Integer.parseInt(id));
+                                    if (table.publish == null) {
+                                        tableDtoTree.setPublishState("0");
+                                        table.publish = 0;
+                                    }
+                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                    // 实时API应用表描述不存在，取api的描述
+                                    tableDtoTree.setLabelDesc(api.apiDes);
+                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
-                                                    // 第四层: field层
-                                                    List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
-                                                            .eq("table_access_id", table.id)
-                                                            .list()
-                                                            .stream()
-                                                            .filter(Objects::nonNull)
-                                                            .map(field -> {
+                                    // 第四层: field层
+                                    List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query().eq("table_access_id", table.id).list().stream().filter(Objects::nonNull).map(field -> {
 
-                                                                FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                                                fieldDtoTree.setId(String.valueOf(field.id));
-                                                                fieldDtoTree.setParentId(String.valueOf(table.id));
-                                                                fieldDtoTree.setLabel(field.fieldName);
-                                                                fieldDtoTree.setLabelAlias(field.fieldName);
-                                                                fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
-                                                                fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                                fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
-                                                                fieldDtoTree.setLabelType(field.fieldType);
-                                                                fieldDtoTree.setLabelDesc(field.fieldDes);
-                                                                fieldDtoTree.setSourceType(1);
-                                                                fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setParentNameAlias(table.tableName);
-                                                                fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
-                                                                return fieldDtoTree;
-                                                            }).collect(Collectors.toList());
-
-                                                    // table的子级
-                                                    tableDtoTree.setChildren(fieldTreeList);
-                                                    return tableDtoTree;
-                                                }).collect(Collectors.toList());
-
-                                        // api的子级
-                                        apiDtoTree.setChildren(tableTreeList);
-                                        // 表字段信息单独再保存一份
-                                        if (!CollectionUtils.isEmpty(tableTreeList)) {
-                                            key.addAll(tableTreeList);
-                                        }
-                                        return apiDtoTree;
+                                        FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                        fieldDtoTree.setId(String.valueOf(field.id));
+                                        fieldDtoTree.setParentId(String.valueOf(table.id));
+                                        fieldDtoTree.setLabel(field.fieldName);
+                                        fieldDtoTree.setLabelAlias(field.fieldName);
+                                        fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                        fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                        fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                        fieldDtoTree.setLabelType(field.fieldType);
+                                        fieldDtoTree.setLabelDesc(field.fieldDes);
+                                        fieldDtoTree.setSourceType(1);
+                                        fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                        fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                        fieldDtoTree.setParentNameAlias(table.tableName);
+                                        fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                        fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                        fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                        return fieldDtoTree;
                                     }).collect(Collectors.toList());
+
+                                    // table的子级
+                                    tableDtoTree.setChildren(fieldTreeList);
+                                    return tableDtoTree;
+                                }).collect(Collectors.toList());
+
+                                // api的子级
+                                apiDtoTree.setChildren(tableTreeList);
+                                // 表字段信息单独再保存一份
+                                if (!CollectionUtils.isEmpty(tableTreeList)) {
+                                    key.addAll(tableTreeList);
+                                }
+                                return apiDtoTree;
+                            }).collect(Collectors.toList());
 
                             // app的子级
                             appDtoTree.setChildren(apiTreeList);
@@ -1735,11 +1664,9 @@ public class AppRegistrationImpl
     private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByNonRealTime(String appTreeByNonRealTimeGuid, String id, List<AppRegistrationPO> appPoList) {
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
         List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
-        List<FiDataMetaDataTreeDTO> value = appPoList.stream()
-                .filter(Objects::nonNull)
+        List<FiDataMetaDataTreeDTO> value = appPoList.stream().filter(Objects::nonNull)
                 // 非实时应用
-                .filter(e -> e.appType == 1)
-                .map(app -> {
+                .filter(e -> e.appType == 1).map(app -> {
 
                     // 第一层: app层
                     FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
@@ -1757,10 +1684,7 @@ public class AppRegistrationImpl
                     // 查询驱动类型
                     String type = "dataBase";
                     QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
-                    appDataSourcePOQueryWrapper.lambda()
-                            .eq(AppDataSourcePO::getAppId, app.id)
-                            .eq(AppDataSourcePO::getDelFlag, 1)
-                            .eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.API.getName());
+                    appDataSourcePOQueryWrapper.lambda().eq(AppDataSourcePO::getAppId, app.id).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.API.getName());
                     List<AppDataSourcePO> appDataSourcePOS = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
                     if (!CollectionUtils.isEmpty(appDataSourcePOS)) {
                         type = "api";
@@ -1770,163 +1694,135 @@ public class AppRegistrationImpl
                         // 第二层: api层
                         case "api":
                             // 当前app下的所有api
-                            List<FiDataMetaDataTreeDTO> apiTreeList = this.apiConfigImpl.query()
-                                    .eq("app_id", app.id)
-                                    .orderByDesc("create_time")
-                                    .list()
-                                    .stream()
-                                    .filter(Objects::nonNull)
-                                    .map(api -> {
-                                        FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
+                            List<FiDataMetaDataTreeDTO> apiTreeList = this.apiConfigImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(api -> {
+                                FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
 
-                                        String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
-                                        apiDtoTree.setId(uuid_apiId); // String.valueOf(api.id)
-                                        apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
-                                        apiDtoTree.setLabel(api.apiName);
-                                        apiDtoTree.setLabelAlias(api.apiName);
-                                        apiDtoTree.setSourceType(1);
-                                        apiDtoTree.setSourceId(Integer.parseInt(id));
-                                        apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
-                                        // 不是已发布的都当作未发布处理
-                                        if (api.publish == null) {
-                                            apiDtoTree.setPublishState("0");
-                                        } else {
-                                            apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
-                                        }
-                                        apiDtoTree.setLabelDesc(api.apiDes);
+                                String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                                apiDtoTree.setId(uuid_apiId); // String.valueOf(api.id)
+                                apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                                apiDtoTree.setLabel(api.apiName);
+                                apiDtoTree.setLabelAlias(api.apiName);
+                                apiDtoTree.setSourceType(1);
+                                apiDtoTree.setSourceId(Integer.parseInt(id));
+                                apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                // 不是已发布的都当作未发布处理
+                                if (api.publish == null) {
+                                    apiDtoTree.setPublishState("0");
+                                } else {
+                                    apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                }
+                                apiDtoTree.setLabelDesc(api.apiDes);
 
-                                        // 第三层: table层
-                                        List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
-                                                .eq("api_id", api.id)
-                                                .orderByDesc("create_time")
-                                                .list()
-                                                .stream()
-                                                .filter(Objects::nonNull)
-                                                .map(table -> {
-                                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                                    tableDtoTree.setId(String.valueOf(table.id));
-                                                    tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
-                                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                    tableDtoTree.setLabelAlias(table.tableName);
-                                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
-                                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
-                                                    tableDtoTree.setSourceType(1);
-                                                    tableDtoTree.setSourceId(Integer.parseInt(id));
-                                                    if (table.publish == null) {
-                                                        tableDtoTree.setPublishState("0");
-                                                        table.publish = 0;
-                                                    } else {
-                                                        tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                    }
-                                                    tableDtoTree.setLabelDesc(table.tableDes);
-                                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                // 第三层: table层
+                                List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("api_id", api.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                    tableDtoTree.setId(String.valueOf(table.id));
+                                    tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
+                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLabelAlias(table.tableName);
+                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                    tableDtoTree.setSourceType(1);
+                                    tableDtoTree.setSourceId(Integer.parseInt(id));
+                                    if (table.publish == null) {
+                                        tableDtoTree.setPublishState("0");
+                                        table.publish = 0;
+                                    } else {
+                                        tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                    }
+                                    tableDtoTree.setLabelDesc(table.tableDes);
+                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
-                                                    // 第四层: field层
-                                                    List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
-                                                            .eq("table_access_id", table.id)
-                                                            .list()
-                                                            .stream()
-                                                            .filter(Objects::nonNull)
-                                                            .map(field -> {
+                                    // 第四层: field层
+                                    List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query().eq("table_access_id", table.id).list().stream().filter(Objects::nonNull).map(field -> {
 
-                                                                FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                                                fieldDtoTree.setId(String.valueOf(field.id));
-                                                                fieldDtoTree.setParentId(String.valueOf(table.id));
-                                                                fieldDtoTree.setLabel(field.fieldName);
-                                                                fieldDtoTree.setLabelAlias(field.fieldName);
-                                                                fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
-                                                                fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                                fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
-                                                                fieldDtoTree.setLabelType(field.fieldType);
-                                                                fieldDtoTree.setLabelDesc(field.fieldDes);
-                                                                fieldDtoTree.setSourceType(1);
-                                                                fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                                fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setParentNameAlias(table.tableName);
-                                                                fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
-                                                                fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
-                                                                return fieldDtoTree;
-                                                            }).collect(Collectors.toList());
-
-                                                    // table的子级
-                                                    tableDtoTree.setChildren(fieldTreeList);
-                                                    return tableDtoTree;
-                                                }).collect(Collectors.toList());
-
-                                        // api的子级
-                                        apiDtoTree.setChildren(tableTreeList);
-                                        // 表字段信息单独再保存一份
-                                        if (!CollectionUtils.isEmpty(tableTreeList)) {
-                                            key.addAll(tableTreeList);
-                                        }
-                                        return apiDtoTree;
+                                        FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                        fieldDtoTree.setId(String.valueOf(field.id));
+                                        fieldDtoTree.setParentId(String.valueOf(table.id));
+                                        fieldDtoTree.setLabel(field.fieldName);
+                                        fieldDtoTree.setLabelAlias(field.fieldName);
+                                        fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                        fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                        fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                        fieldDtoTree.setLabelType(field.fieldType);
+                                        fieldDtoTree.setLabelDesc(field.fieldDes);
+                                        fieldDtoTree.setSourceType(1);
+                                        fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                        fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                        fieldDtoTree.setParentNameAlias(table.tableName);
+                                        fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                        fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                        fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                        return fieldDtoTree;
                                     }).collect(Collectors.toList());
+
+                                    // table的子级
+                                    tableDtoTree.setChildren(fieldTreeList);
+                                    return tableDtoTree;
+                                }).collect(Collectors.toList());
+
+                                // api的子级
+                                apiDtoTree.setChildren(tableTreeList);
+                                // 表字段信息单独再保存一份
+                                if (!CollectionUtils.isEmpty(tableTreeList)) {
+                                    key.addAll(tableTreeList);
+                                }
+                                return apiDtoTree;
+                            }).collect(Collectors.toList());
 
                             // app的子级
                             appDtoTree.setChildren(apiTreeList);
                             break;
                         // 第二层: table层
                         case "dataBase":
-                            List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query()
-                                    .eq("app_id", app.id)
-                                    .orderByDesc("create_time")
-                                    .list()
-                                    .stream()
-                                    .filter(Objects::nonNull)
-                                    .map(table -> {
-                                        FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                        tableDtoTree.setId(String.valueOf(table.id));
-                                        tableDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
-                                        tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                        tableDtoTree.setLabelAlias(table.tableName);
-                                        tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                        tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
-                                        tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
-                                        tableDtoTree.setSourceType(1);
-                                        tableDtoTree.setSourceId(Integer.parseInt(id));
-                                        if (table.publish == null) {
-                                            tableDtoTree.setPublishState("0");
-                                            table.publish = 0;
-                                        } else {
-                                            tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                        }
-                                        tableDtoTree.setLabelDesc(table.tableDes);
-                                        tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                            List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                tableDtoTree.setId(String.valueOf(table.id));
+                                tableDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                                tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                tableDtoTree.setLabelAlias(table.tableName);
+                                tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                tableDtoTree.setSourceType(1);
+                                tableDtoTree.setSourceId(Integer.parseInt(id));
+                                if (table.publish == null) {
+                                    tableDtoTree.setPublishState("0");
+                                    table.publish = 0;
+                                } else {
+                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                }
+                                tableDtoTree.setLabelDesc(table.tableDes);
+                                tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
 
-                                        // 第四层: field层
-                                        List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query()
-                                                .eq("table_access_id", table.id)
-                                                .list()
-                                                .stream()
-                                                .filter(Objects::nonNull)
-                                                .map(field -> {
+                                // 第四层: field层
+                                List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query().eq("table_access_id", table.id).list().stream().filter(Objects::nonNull).map(field -> {
 
-                                                    FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                                    fieldDtoTree.setId(String.valueOf(field.id));
-                                                    fieldDtoTree.setParentId(String.valueOf(table.id));
-                                                    fieldDtoTree.setLabel(field.fieldName);
-                                                    fieldDtoTree.setLabelAlias(field.fieldName);
-                                                    fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
-                                                    fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                    fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
-                                                    fieldDtoTree.setLabelType(field.fieldType);
-                                                    fieldDtoTree.setLabelDesc(field.fieldDes);
-                                                    fieldDtoTree.setSourceType(1);
-                                                    fieldDtoTree.setSourceId(Integer.parseInt(id));
-                                                    fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                    fieldDtoTree.setParentNameAlias(table.tableName);
-                                                    fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
-                                                    fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
-                                                    fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
-                                                    return fieldDtoTree;
-                                                }).collect(Collectors.toList());
+                                    FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                    fieldDtoTree.setId(String.valueOf(field.id));
+                                    fieldDtoTree.setParentId(String.valueOf(table.id));
+                                    fieldDtoTree.setLabel(field.fieldName);
+                                    fieldDtoTree.setLabelAlias(field.fieldName);
+                                    fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                    fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                    fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                    fieldDtoTree.setLabelType(field.fieldType);
+                                    fieldDtoTree.setLabelDesc(field.fieldDes);
+                                    fieldDtoTree.setSourceType(1);
+                                    fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                    fieldDtoTree.setParentName(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    fieldDtoTree.setParentNameAlias(table.tableName);
+                                    fieldDtoTree.setParentLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    fieldDtoTree.setParentLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                    fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                    return fieldDtoTree;
+                                }).collect(Collectors.toList());
 
-                                        // table的子级
-                                        tableDtoTree.setChildren(fieldTreeList);
-                                        return tableDtoTree;
-                                    }).collect(Collectors.toList());
+                                // table的子级
+                                tableDtoTree.setChildren(fieldTreeList);
+                                return tableDtoTree;
+                            }).collect(Collectors.toList());
 
                             appDtoTree.setChildren(tableTreeList);
                             // 表字段信息单独再保存一份
@@ -1966,9 +1862,7 @@ public class AppRegistrationImpl
         if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
-        List<DataSourceDTO> collect = allExternalDataSource.data.stream()
-                .filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName()))
-                .collect(Collectors.toList());
+        List<DataSourceDTO> collect = allExternalDataSource.data.stream().filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName())).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collect)) {
             return new ArrayList<>();
         }
@@ -2169,6 +2063,35 @@ public class AppRegistrationImpl
     }
 
     /**
+     * 数据接入--应用级别修改应用下的接口是否允许推送数据
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public Object appIfAllowDataTransfer(Long appId) {
+
+        // 1.1非空判断
+        AppRegistrationPO model = this.getById(appId);
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        Integer mark = model.ifAllowDatatransfer;
+        if (mark == null){
+            mark = 1;
+        }else {
+            if (mark == 0) {
+                mark = 1;
+            } else {
+                mark = 0;
+            }
+        }
+
+        model.setIfAllowDatatransfer(mark);
+        return updateById(model);
+    }
+
+    /**
      * 封装筛选方法：要么是四种数据库类型，要么只能是restfulapi,api,sftp,ftp中单一的一种
      *
      * @param transFormData
@@ -2180,17 +2103,9 @@ public class AppRegistrationImpl
         List<AppDriveTypeDTO> result = new ArrayList<>();
         transFormData.stream().anyMatch(e -> {
             String driveType = e.driveType;
-            if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) ||
-                    AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) ||
-                    AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) ||
-                    AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType) ||
-                    AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
+            if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
                 originDriveType.forEach(d -> {
-                    if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(d.name) ||
-                            AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(d.name) ||
-                            AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(d.name) ||
-                            AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(d.name) ||
-                            AppDriveTypeEnum.OPENEDGE.getName().equals(d.name)) {
+                    if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(d.name) || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(d.name) || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(d.name) || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(d.name) || AppDriveTypeEnum.OPENEDGE.getName().equals(d.name)) {
                         result.add(d);
                     }
                 });
@@ -2265,9 +2180,7 @@ public class AppRegistrationImpl
      * @param qualifiedName
      * @return
      */
-    public List<MetaDataTableAttributeDTO> getAccessTableMetaData(AppRegistrationPO app,
-                                                                  long accessId,
-                                                                  String qualifiedName) {
+    public List<MetaDataTableAttributeDTO> getAccessTableMetaData(AppRegistrationPO app, long accessId, String qualifiedName) {
 
         TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
         if (tableAccess == null) {
@@ -2279,9 +2192,7 @@ public class AppRegistrationImpl
 
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
-        table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(),
-                app.appAbbreviation,
-                app.whetherSchema));
+        table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
         table.setContact_info(app.getAppPrincipal());
         table.setDescription(tableAccess.getTableDes());
         table.setComment(String.valueOf(app.getId()));
@@ -2289,23 +2200,19 @@ public class AppRegistrationImpl
         table.setOwner(app.createUser);
 
         // 字段
-        List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id)
-                .list()
-                .stream()
-                .filter(Objects::nonNull)
-                .map(e -> {
-                    MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
-                    field.setQualifiedName(table.qualifiedName + "_" + e.getId());
-                    field.setName(e.getFieldName());
-                    field.setContact_info(app.getAppPrincipal());
-                    field.setDescription(e.getFieldDes());
-                    field.setComment(e.getDisplayName());
-                    field.setDataType(e.fieldType);
-                    field.setDisplayName(e.displayName);
-                    field.setOwner(table.owner);
-                    field.setLength(String.valueOf(e.fieldLength));
-                    return field;
-                }).collect(Collectors.toList());
+        List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id).list().stream().filter(Objects::nonNull).map(e -> {
+            MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
+            field.setQualifiedName(table.qualifiedName + "_" + e.getId());
+            field.setName(e.getFieldName());
+            field.setContact_info(app.getAppPrincipal());
+            field.setDescription(e.getFieldDes());
+            field.setComment(e.getDisplayName());
+            field.setDataType(e.fieldType);
+            field.setDisplayName(e.displayName);
+            field.setOwner(table.owner);
+            field.setLength(String.valueOf(e.fieldLength));
+            return field;
+        }).collect(Collectors.toList());
 
         table.setColumnList(columnList);
         tableList.add(table);

@@ -361,4 +361,15 @@ public class AppRegistrationController {
     public ResultEntity<AppRegistrationDTO> getAppByAppName(@RequestParam("appName") String appName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppByAppName(appName));
     }
+
+    /**
+     * 数据接入--应用级别修改应用下的接口是否允许推送数据
+     * @param appId
+     * @return
+     */
+    @PostMapping("/appIfAllowDataTransfer")
+    @ApiOperation(value = "数据接入--应用级别修改应用下的接口是否允许推送数据")
+    public ResultEntity<Object> appIfAllowDataTransfer(@RequestParam("appId") Long appId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.appIfAllowDataTransfer(appId));
+    }
 }

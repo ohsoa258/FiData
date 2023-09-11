@@ -324,8 +324,9 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 获取数据接入不同同步类型下的表个数
-     * @return
+     *
      * @param appId
+     * @return
      */
     SyncTableCountVO getSyncTableCount(Integer appId);
 
@@ -335,6 +336,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 意味着只返回mysql,sqlserver,oracle,pg
      * 若当前app存在的数据源已经包含RestfulApi,Api,Sftp,Ftp这四种非数据库类型的其中一种，那么当前app就只能使用这一种数据源
      * 意味着只返回RestfulApi,Api,Sftp,Ftp这四种中已被选取的那一种
+     *
      * @param appid
      * @return
      */
@@ -342,6 +344,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * 根据appId获取app应用名称
+     *
      * @param id
      * @return
      */
@@ -354,4 +357,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     AppRegistrationDTO getAppByAppName(String appName);
+
+    /**
+     * 数据接入--应用级别修改应用下的接口是否允许推送数据
+     *
+     * @param appId
+     * @return
+     */
+    Object appIfAllowDataTransfer(Long appId);
 }

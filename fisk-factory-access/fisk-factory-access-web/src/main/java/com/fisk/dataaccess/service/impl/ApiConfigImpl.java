@@ -638,6 +638,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (modelApp == null) {
                 return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
             }
+
+            // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+            // 0 接口禁用  1 接口启用
+            if (modelApp.ifAllowDatatransfer == 0) {
+                return ResultEntityBuild.build(ResultEnum.API_STATE_NOT_ALLOW_ERROR);
+            }
+
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
             log.info("stg表数据用完即删");
@@ -921,21 +928,22 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // task根据调度配置调用
         //List<PipelApiDispatchDTO> pipelApiDispatchs = JSON.(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
         PipelApiDispatchDTO pipelApiDispatch = JSON.parseObject(dto.pipelApiDispatch, PipelApiDispatchDTO.class);
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
 
         if (!Objects.isNull(pipelApiDispatch)) {
             dto.workflowId = pipelApiDispatch.workflowId;
             dto.appId = pipelApiDispatch.appId;
             dto.apiId = pipelApiDispatch.apiId;
-            syncData(dto, null);
+            resultEnum = syncData(dto, null);
             consumer(dto, pipelApiDispatch);
         } else {
             // 接入模块调用
-            syncData(dto, null);
+            resultEnum = syncData(dto, null);
             if (dto.workflowId != null) {
                 consumer(dto, pipelApiDispatch);
             }
         }
-        return ResultEnum.SUCCESS;
+        return resultEnum;
     }
 
     /**
@@ -1100,6 +1108,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     public ResultEnum syncData(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) {
         // 根据appId获取应用信息(身份验证方式,验证参数)
+        AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", dto.appId).one();
+        if (modelApp == null) {
+            return ResultEnum.APP_NOT_EXIST;
+        }
+        // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+        // 0 接口禁用  1 接口启用
+        if (modelApp.ifAllowDatatransfer == 0) {
+            return ResultEnum.API_STATE_NOT_ALLOW_ERROR;
+        }
+
         // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
         String data = "";
         ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();

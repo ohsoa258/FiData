@@ -65,4 +65,9 @@ public class AppRegistrationPO extends BasePO {
      */
     public String departmentName;
 
+    /**
+     * 应用下的接口是否允许数据传输  0否，1是
+     */
+    public Integer ifAllowDatatransfer;
+
 }

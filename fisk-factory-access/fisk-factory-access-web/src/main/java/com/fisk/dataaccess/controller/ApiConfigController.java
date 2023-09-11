@@ -104,7 +104,6 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.generateAppPdfDoc(list, response));
     }
 
-
     @PostMapping("/pushdata")
     @ApiOperation(value = "推送api数据")
     public ResultEntity<Object> pushData(@RequestBody ReceiveDataDTO dto) {

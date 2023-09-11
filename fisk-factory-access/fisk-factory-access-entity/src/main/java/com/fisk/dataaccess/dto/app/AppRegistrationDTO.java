@@ -52,6 +52,12 @@ public class AppRegistrationDTO extends BaseDTO {
     @ApiModelProperty(value = "目标ods数据源id")
     public Integer targetDbId;
 
+    /**
+     * 应用下的接口是否允许数据传输  0否，1是
+     */
+    @ApiModelProperty(value = "应用下的接口是否允许数据传输  0否，1是")
+    public Integer ifAllowDatatransfer;
+
     public List<AppDataSourceDTO> appDatasourceDTO;
 
     /**
