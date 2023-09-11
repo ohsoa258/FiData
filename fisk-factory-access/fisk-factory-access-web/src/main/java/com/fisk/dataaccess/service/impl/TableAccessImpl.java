@@ -31,8 +31,6 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
-import com.fisk.dataaccess.utils.dbdatasize.IBuildFactoryDbDataSizeCount;
-import com.fisk.dataaccess.utils.dbdatasize.impl.DbDataSizeCountHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
@@ -69,6 +67,8 @@ import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.utils.dbdatasize.IBuildFactoryDbDataSizeCount;
+import com.fisk.dataaccess.utils.dbdatasize.impl.DbDataSizeCountHelper;
 import com.fisk.dataaccess.utils.keepnumberfactory.IBuildKeepNumber;
 import com.fisk.dataaccess.utils.keepnumberfactory.impl.BuildKeepNumberSqlHelper;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
@@ -2794,7 +2794,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         DataSourceDTO data = result.getData();
         com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = data.getConType();
         IBuildFactoryDbDataSizeCount helper = DbDataSizeCountHelper.getDbDataSizeCountHelperByConType(conType);
-        return helper.DbDataStoredSize(data);
+
+        //去掉GB 交给前端显示
+        return helper.DbDataStoredSize(data).replace("GB", "");
     }
 
 }

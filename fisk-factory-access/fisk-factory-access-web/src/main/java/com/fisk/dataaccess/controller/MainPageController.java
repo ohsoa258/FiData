@@ -32,4 +32,5 @@ public class MainPageController {
     public ResultEntity<AccessMainPageVO> countTblTotal() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccess.countTotal());
     }
+
 }

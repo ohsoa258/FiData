@@ -35,7 +35,6 @@ public class DbDataSizeCountPgSqlImpl implements IBuildFactoryDbDataSizeCount {
             statement = connection.createStatement();
             resultSet = statement.executeQuery("SELECT pg_size_pretty(pg_database_size(" + conDbname + ")) AS total_size;");
 
-
             if (resultSet.next()) {
                 totalSize = resultSet.getString("total_size");
             }
