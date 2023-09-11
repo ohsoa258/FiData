@@ -142,4 +142,9 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public String deleteStgScript;
 
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    public Integer isImportantInterface;
+
 }

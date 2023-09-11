@@ -1342,7 +1342,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                             if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
                                     item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
                                     item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName()) ||
-                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName()) ) {
+                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName())) {
                                 list.add(e);
                             }
                         }
@@ -2740,17 +2740,28 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             //实时表 restfulapi个数
             Integer apiCount = accessMapper.selectCount(wrapper1);
 
+            //重点接口个数 非实时物理表
+            LambdaQueryWrapper<TableAccessPO> wrapper2 = new LambdaQueryWrapper<>();
+            //1代表是重点接口
+            wrapper2.eq(TableAccessPO::getIsImportantInterface, 1);
+            Integer count = accessMapper.selectCount(wrapper2);
+            //重点接口个数 实时restfulapi
+            LambdaQueryWrapper<ApiConfigPO> wrapper3 = new LambdaQueryWrapper<>();
+            //1代表是重点接口
+            wrapper3.eq(ApiConfigPO::getIsImportantInterface, 1);
+            int restfulApiCount = apiConfigImpl.count(wrapper3);
+
             //当日接入数据总量
             ResultEntity<Long> result1 = publishTaskClient.accessDataTotalCount();
             Long dataTotal = result1.getData();
-            if (result1.getCode()!=ResultEnum.SUCCESS.getCode()){
+            if (result1.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
 
             //成功次数和失败次数
             ResultEntity<AccessDataSuccessAndFailCountDTO> result2 = publishTaskClient.accessDataSuccessAndFailCount();
             AccessDataSuccessAndFailCountDTO dto = result2.getData();
-            if (result2.getCode()!=ResultEnum.SUCCESS.getCode()){
+            if (result2.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
 
@@ -2761,12 +2772,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             vo.setDataCount(dataTotal);
             vo.setSuccessCount(dto.getSuccessCount());
             vo.setFailCount(dto.getFailCount());
-            vo.setImportantInterfaceCount(0);
+            vo.setImportantInterfaceCount(count + restfulApiCount);
             vo.setDatastoreSize(dataSize);
             return vo;
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("countTotal(),数据接入-首页展示查询失败!");
-            throw new FkException(ResultEnum.ACCESS_MAINPAGE_SELECT_FAILURE,e);
+            throw new FkException(ResultEnum.ACCESS_MAINPAGE_SELECT_FAILURE, e);
         }
     }
 
@@ -2777,7 +2788,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     public String countDbDataSize() {
         ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(2);
-        if (result.getCode()!=ResultEnum.SUCCESS.getCode()){
+        if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         DataSourceDTO data = result.getData();

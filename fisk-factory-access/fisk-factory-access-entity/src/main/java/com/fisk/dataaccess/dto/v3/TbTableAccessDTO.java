@@ -139,5 +139,11 @@ public class TbTableAccessDTO {
     @ApiModelProperty(value = "系统数据源id")
     public Integer appDataSourceId;
 
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    public Integer isImportantInterface;
+
 
 }

@@ -59,4 +59,10 @@ public class ApiConfigPO extends BasePO {
      * 是否全字段去重
      */
     public Boolean fieldDistinct;
+
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    public Integer isImportantInterface;
+
 }

@@ -58,4 +58,10 @@ public class ApiConfigDTO {
 
     @ApiModelProperty(value = "true: 勾选(发布之后,按照配置调用一次api);false: 不勾选")
     public Boolean executeConfigFlag;
+
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    public Integer isImportantInterface;
 }
