@@ -123,7 +123,7 @@ public class BuildAccessOpenEdgeCommandImpl  implements IBuildAccessSqlCommand {
                 data[0] = SqlServerTypeEnum.CHAR.getName();
                 break;
             case VARCHAR:
-                data[0] = SqlServerTypeEnum.VARCHAR.getName();
+                data[0] = SqlServerTypeEnum.NVARCHAR.getName();
                 break;
             case TEXT:
                 data[0] = SqlServerTypeEnum.TEXT.getName();
