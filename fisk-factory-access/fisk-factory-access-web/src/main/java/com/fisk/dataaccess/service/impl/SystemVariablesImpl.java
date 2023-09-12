@@ -45,7 +45,7 @@ public class SystemVariablesImpl extends ServiceImpl<SystemVariablesMapper, Syst
             systemVariablesPoList.add(po);
         }
 
-        return this.saveBatch(systemVariablesPoList) == true ? ResultEnum.SUCCESS : ResultEnum.DATA_SUBMIT_ERROR;
+        return this.saveBatch(systemVariablesPoList) ? ResultEnum.SUCCESS : ResultEnum.DATA_SUBMIT_ERROR;
     }
 
     @Override

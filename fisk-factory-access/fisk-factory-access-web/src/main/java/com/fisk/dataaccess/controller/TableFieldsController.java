@@ -40,6 +40,12 @@ public class TableFieldsController {
         return ResultEntityBuild.build(service.addData(dto));
     }
 
+    /**
+     * 保存&发布
+     *
+     * @param dto
+     * @return
+     */
     @PutMapping("/edit")
     @ApiOperation(value = "修改物理表字段--保存&发布")
     public ResultEntity<Object> editData(@Validated @RequestBody TableAccessNonDTO dto) {
@@ -78,8 +84,8 @@ public class TableFieldsController {
 
     @DeleteMapping("/delFile/{id}/{tableId}/{userId}")
     @ApiOperation(value = "删除单个字段&&元数据字段异步删除")
-    public ResultEntity<Object> delFile(@PathVariable("id") long id,@PathVariable("tableId")long tableId,@PathVariable("userId")long userId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id, tableId,userId));
+    public ResultEntity<Object> delFile(@PathVariable("id") long id, @PathVariable("tableId") long tableId, @PathVariable("userId") long userId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.delFile(id, tableId, userId));
     }
 
     @PutMapping("/updateFile")

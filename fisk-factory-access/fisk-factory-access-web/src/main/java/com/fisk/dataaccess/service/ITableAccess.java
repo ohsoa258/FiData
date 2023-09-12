@@ -266,12 +266,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     ResultEnum updateTableAccessData(TbTableAccessDTO dto);
 
-    /**
-     * 物理表单表删除
-     *
-     * @param id id
-     * @return 执行结果
-     */
+//    /**
+//     * 物理表单表删除
+//     *
+//     * @param id id
+//     * @return 执行结果
+//     */
 //    ResultEnum deleteTableAccessData(long id);
 
     /**

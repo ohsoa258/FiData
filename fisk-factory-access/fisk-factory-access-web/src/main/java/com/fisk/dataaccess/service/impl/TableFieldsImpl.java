@@ -289,22 +289,33 @@ public class TableFieldsImpl
         return success ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * 保存&发布
+     *
+     * @param dto dto
+     * @return
+     */
     @Override
     public ResultEnum updateData(TableAccessNonDTO dto) {
 
         // 字段名称不可重复(前端没有提示功能,后端强制去重)
         List<TableFieldsDTO> list = dto.list.stream().filter(RegexUtils.distinctByKey(po -> po.fieldName)).collect(Collectors.toList());
 
-        List<TableFieldsPO> originalDataList = list(Wrappers.<TableFieldsPO>lambdaQuery()
-                .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
-                .select(TableFieldsPO::getId));
+        // 查询物理表对应的字段
+        List<TableFieldsPO> originalDataList =
+                list(Wrappers.<TableFieldsPO>lambdaQuery()
+                        .eq(TableFieldsPO::getTableAccessId, list.get(0).tableAccessId)
+                        .select(TableFieldsPO::getId));
 
+        // 查询物理表
         TableAccessPO model = tableAccessImpl.getById(dto.id);
 
+        // 若为空则返回 数据不存在
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
+        //校验参数
         TableSyncmodeDTO tableSyncmodeDTO = dto.getTableSyncmodeDTO();
         if (CollectionUtils.isEmpty(dto.list) || tableSyncmodeDTO == null) {
             return ResultEnum.PARAMTER_NOTNULL;
@@ -322,7 +333,6 @@ public class TableFieldsImpl
         if (!success) {
             return ResultEnum.UPDATE_DATA_ERROR;
         }
-
         List<String> sourceFieldNames = new ArrayList<>();
         if (!tableFieldsBeforeUpdate.isEmpty()) {
             tableFieldsBeforeUpdate.forEach(tableFieldsPO -> {
@@ -344,7 +354,8 @@ public class TableFieldsImpl
                     return fieldsPo;
                 }).collect(Collectors.toList());
         List<TableFieldsPO> collect = originalDataList.stream().filter(item -> !webDataList.contains(item)).collect(Collectors.toList());
-        System.out.println("collect = " + collect);
+        log.info("collect = " + collect);
+
         try {
             collect.stream().map(e -> baseMapper.deleteByIdWithFill(e)).collect(Collectors.toList());
         } catch (Exception e) {
@@ -767,7 +778,7 @@ public class TableFieldsImpl
             apiConfig.updateApiPublishStatus(modelPublishStatus);
             log.info("发布失败", e);
             log.info("发布失败,{}", ResultEnum.ACCESS_PUBLISH_FAILURE.getMsg());
-            throw new FkException(ResultEnum.ACCESS_PUBLISH_FAILURE,e);
+            throw new FkException(ResultEnum.ACCESS_PUBLISH_FAILURE, e);
         }
 
         //oracle-cdc类型需要上传脚本
@@ -804,7 +815,7 @@ public class TableFieldsImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        Long tableHistoryId = 0L;
+        long tableHistoryId = 0L;
         //如果发布历史不为空
         if (!CollectionUtils.isEmpty(dto)) {
             log.info("开始记录发布日志");

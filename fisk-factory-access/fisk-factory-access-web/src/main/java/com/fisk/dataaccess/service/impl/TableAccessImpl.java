@@ -2717,8 +2717,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public Integer countTblByApp(Integer appId) {
         LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TableAccessPO::getAppId, appId);
-        Integer count = accessMapper.selectCount(wrapper);
-        return count;
+        return accessMapper.selectCount(wrapper);
     }
 
     /**
