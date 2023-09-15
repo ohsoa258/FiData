@@ -92,4 +92,11 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 检查结果
      */
     String createDataCheckResultExcel(String logIds);
+
+    /**
+     * 删除数据检查结果
+     *
+     * @return 操作结果
+     */
+    ResultEnum deleteCheckResult();
 }

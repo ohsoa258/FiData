@@ -1,13 +1,10 @@
 package com.fisk.datagovernance.mapper.dataquality;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Param;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DeleteCheckResultVO;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -34,4 +31,18 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     @Insert("INSERT INTO tb_datacheck_rule(`template_id`, `datasource_id`, `rule_name`, `schema_name`, `table_unique`,  `table_name`,  `table_describe`, `table_type`, `table_business_type`, `rule_check_type`, `rule_execute_node`, `rule_execute_sort`, `rule_weight`,`rule_describe`,`rule_state`, `rule_illustrate`, `create_time`, `create_user`, `del_flag`) VALUES (#{templateId}, #{datasourceId}, #{ruleName}, #{schemaName}, #{tableUnique}, #{tableName}, #{tableDescribe}, #{tableType}, #{tableBusinessType}, #{ruleCheckType}, #{ruleExecuteNode}, #{ruleExecuteSort}, #{ruleWeight}, #{ruleDescribe}, #{ruleState}, #{ruleIllustrate}, #{createTime}, #{createUser},1);")
     int insertOne(DataCheckPO po);
+
+    @Select("SELECT\n" +
+            "\trule.id AS ruleId,\n" +
+            "\trule.rule_name AS ruleName,\n" +
+            "\truleExt.error_data_retention_time AS errorDataRetentionTime \n" +
+            "FROM\n" +
+            "\ttb_datacheck_rule rule\n" +
+            "\tLEFT JOIN tb_datacheck_rule_extend ruleExt ON rule.id = ruleExt.rule_id \n" +
+            "WHERE\n" +
+            "\truleExt.record_error_data = 1 \n" +
+            "\tAND rule.del_flag = 1 \n" +
+            "\tAND ruleExt.del_flag = 1 \n" +
+            "\tAND ruleExt.error_data_retention_time > 0")
+    List<DeleteCheckResultVO> getDeleteDataCheckResult();
 }

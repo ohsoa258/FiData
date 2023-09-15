@@ -71,25 +71,31 @@ public class DataCheckController {
 
     @ApiOperation("获取数据检查结果日志分页列表")
     @PostMapping("/getDataCheckLogsPage")
-    public ResultEntity<Page<DataCheckLogsVO>> getDataCheckLogsPage(@RequestBody DataCheckLogsQueryDTO dto){
+    public ResultEntity<Page<DataCheckLogsVO>> getDataCheckLogsPage(@RequestBody DataCheckLogsQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsPage(dto));
     }
 
     @ApiOperation("根据日志Id查询数据检查结果")
     @PostMapping("/getDataCheckLogsResult")
-    public ResultEntity<JSONArray> getDataCheckLogsResult(@RequestParam("logId") long logId){
+    public ResultEntity<JSONArray> getDataCheckLogsResult(@RequestParam("logId") long logId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsResult(logId));
     }
 
     @ApiOperation("根据检查规则Id删除数据检查日志")
     @PostMapping("/deleteDataCheckLogs")
-    public ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId){
+    public ResultEnum deleteDataCheckLogs(@RequestParam("ruleId") long ruleId) {
         return service.deleteDataCheckLogs(ruleId);
     }
 
     @ApiOperation("生成数据检查结果——Excel")
     @PostMapping("/createDataCheckResultExcel")
-    public ResultEntity<String> createDataCheckResultExcel(@RequestParam("logIds") String logIds){
+    public ResultEntity<String> createDataCheckResultExcel(@RequestParam("logIds") String logIds) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.createDataCheckResultExcel(logIds));
+    }
+
+    @ApiOperation("删除数据检查结果")
+    @DeleteMapping("/deleteCheckResult")
+    public ResultEntity<Object> deleteCheckResult() {
+        return ResultEntityBuild.build(service.deleteCheckResult());
     }
 }

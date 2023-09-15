@@ -2400,4 +2400,25 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         return dataRowList;
     }
+
+    public ResultEnum deleteCheckResult() {
+        // 第一步：设置计划任务每天凌晨12点执行
+        // 第二步：检查校验规则是否设置错误数据保留时间
+        List<DeleteCheckResultVO> deleteDataCheckResult = baseMapper.getDeleteDataCheckResult();
+        if (CollectionUtils.isEmpty(deleteDataCheckResult)) {
+            return ResultEnum.SUCCESS;
+        }
+        StringBuilder updateSqlBuilder = new StringBuilder();
+        String toDate = DateTimeUtils.getNowToShortDate();
+        String toDateTime = DateTimeUtils.getNow();
+        for (DeleteCheckResultVO item : deleteDataCheckResult) {
+            String dateAddReduceDay = DateTimeUtils.getDateAddReduceDay(toDate, 0 - (item.getErrorDataRetentionTime() - 1));
+            String updateSql = String.format("UPDATE tb_datacheck_rule_logs SET del_flag=0 , update_time='%s' , update_user='system task'" +
+                    " WHERE rule_id = %s AND create_time<'%s';", toDateTime, item.getRuleId(), dateAddReduceDay);
+            updateSqlBuilder.append(updateSql);
+        }
+        Connection connection = dataSourceConManageImpl.getStatement(DataSourceTypeEnum.MYSQL, dataBaseUrl, dataBaseUserName, dataBasePassWord);
+        AbstractCommonDbHelper.executeSql_Close(updateSqlBuilder.toString(), connection);
+        return ResultEnum.SUCCESS;
+    }
 }

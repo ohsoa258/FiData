@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -107,22 +108,22 @@ public class DateTimeUtils {
 
     /**
      * @return java.lang.String
-     * @description 指定日期加多少天
+     * @description 指定日期加减多少天
      * @author dick
      * @date 2022/4/21 18:38
      * @version v1.0
      * @params date
      * @params day
      */
-    public static String getDateAddDay(String date, int day) {
+    public static String getDateAddReduceDay(String date, int day) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Calendar cd = Calendar.getInstance();//获取一个Calendar对象
         try {
             cd.setTime(sdf.parse(date));//设置calendar日期
         } catch (ParseException ex) {
-            throw new FkException(ResultEnum.ERROR, "【getNowAddDay】：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【getDateAddReduceDay】：" + ex);
         }
-        cd.add(Calendar.DATE, day);//增加n天
+        cd.add(Calendar.DATE, day);// 操作n天
         String format = sdf.format(cd.getTime());
         return format;
     }
