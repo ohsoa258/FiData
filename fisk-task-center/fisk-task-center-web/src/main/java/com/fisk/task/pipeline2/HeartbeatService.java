@@ -258,7 +258,7 @@ public class HeartbeatService {
                     activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
                     log.info("管道内剩余流文件flowFilesQueued:{}", flowFilesQueued);
                     log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
-                } while (activeThreadCount != 0 && flowFilesQueued != 0);
+                } while (activeThreadCount != 0 || flowFilesQueued != 0);
                 if (!StringUtils.isEmpty(kafkaReceive.message)) {
                     DispatchExceptionHandlingDTO dto = buildDispatchExceptionHandling(kafkaReceive);
                     iPipelJobLog.exceptionHandlingLog(dto);
