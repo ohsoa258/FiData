@@ -24,7 +24,4 @@ public class ServerMonitorVO {
 
     @ApiModelProperty(value = "总时移ping")
     private List<DelayPingVO> delayPingVOList;
-
-    @ApiModelProperty(value = "服务列表")
-    private List<ServerTableVO> serverTableVOList;
 }

@@ -9,6 +9,8 @@ import com.fisk.datagovernance.map.monitor.SystemMonitorMap;
 import com.fisk.datagovernance.mapper.monitor.SystemMonitorMapper;
 import com.fisk.datagovernance.service.monitor.ServerMonitorService;
 import com.fisk.datagovernance.service.monitor.SystemMonitorService;
+import com.fisk.datagovernance.vo.monitor.SystemCpuDelayPingVO;
+import com.fisk.datagovernance.vo.monitor.SystemMemDelayPingVO;
 import com.fisk.datagovernance.vo.monitor.SystemMonitorVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,16 @@ public class SystemMonitorServiceImpl extends ServiceImpl<SystemMonitorMapper, S
         } else {
             return ResultEnum.SAVE_DATA_ERROR;
         }
+    }
+
+    @Override
+    public List<SystemCpuDelayPingVO> getSystemCpuDelayPing(String ip, Integer number, Integer type) {
+        return baseMapper.getSystemCpuDelayPing(ip,number,type);
+    }
+
+    @Override
+    public List<SystemMemDelayPingVO> getSystemMemDelayPing(String ip, Integer number, Integer type) {
+        return baseMapper.getSystemMemDelayPing(ip,number,type);
     }
 
     @Override

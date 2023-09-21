@@ -51,10 +51,30 @@ public class SystemMonitorController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,systemMonitorService.getSystemMonitor(ip));
     }
 
+    @ApiOperation("获取系统监控cpu时移图")
+    @GetMapping("/getSystemCpuDelayPing")
+    public ResultEntity<Object> getSystemCpuDelayPing(@RequestParam("ip") String ip,@RequestParam("number") Integer number,@RequestParam("type") Integer type){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,systemMonitorService.getSystemCpuDelayPing(ip,number,type));
+    }
+
+    @ApiOperation("获取系统监控mem时移图")
+    @GetMapping("/getSystemMemDelayPing")
+    public ResultEntity<Object> getSystemMemDelayPing(@RequestParam("ip") String ip,@RequestParam("number") Integer number,@RequestParam("type") Integer type){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,systemMonitorService.getSystemMemDelayPing(ip,number,type));
+    }
+
     @ApiOperation("获取服务监控参数")
     @GetMapping("/getServerMonitor")
-    public ResultEntity<Object> getServerMonitor(@RequestParam("ip") String ip,@RequestParam("number") Integer number,@RequestParam("type") Integer type){
+    public ResultEntity<Object> getServerMonitor(@RequestParam("ip") String ip,
+                                                 @RequestParam("number") Integer number,
+                                                 @RequestParam("type") Integer type){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorService.getServerMonitor(ip,number,type));
+    }
+
+    @ApiOperation("查询服务监控信息")
+    @PostMapping("/searchServerMonitor")
+    public ResultEntity<Object> searchServerMonitor(@RequestBody ServerMonitorQueryDTO serverMonitorQueryDTO){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorService.searchServerMonitor(serverMonitorQueryDTO));
     }
 
     @ApiOperation("获取服务监控详情")

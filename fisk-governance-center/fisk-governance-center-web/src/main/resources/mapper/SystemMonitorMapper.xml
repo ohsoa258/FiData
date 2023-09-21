@@ -1,0 +1,80 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.monitor.SystemMonitorMapper">
+    <select id="getSystemCpuDelayPing" resultType="com.fisk.datagovernance.vo.monitor.SystemCpuDelayPingVO">
+        SELECT
+        <choose>
+            <when test="type == 1">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:%i') AS timestamp,
+            </when>
+            <when test="type == 2">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:00') AS timestamp,
+            </when>
+            <when test="type == 3">
+                DATE_FORMAT(create_time, '%Y-%m-%d') AS timestamp,
+            </when>
+        </choose>
+        max( cpu_busy) AS cpuBuys
+        FROM
+            `tb_system_monitor`
+        <choose>
+            <when test="type == 1">
+                WHERE
+                ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} MINUTE
+                GROUP BY timestamp;
+            </when>
+            <when test="type == 2">
+                WHERE
+                ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} HOUR
+                GROUP BY timestamp;
+            </when>
+            <when test="type == 3">
+                WHERE
+                ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} DAY
+                GROUP BY timestamp;
+            </when>
+        </choose>
+    </select>
+
+    <select id="getSystemMemDelayPing" resultType="com.fisk.datagovernance.vo.monitor.SystemMemDelayPingVO">
+        SELECT
+        <choose>
+            <when test="type == 1">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:%i') AS timestamp,
+            </when>
+            <when test="type == 2">
+                DATE_FORMAT(create_time, '%Y-%m-%d %H:00') AS timestamp,
+            </when>
+            <when test="type == 3">
+                DATE_FORMAT(create_time, '%Y-%m-%d') AS timestamp,
+            </when>
+        </choose>
+        CONVERT ( 100 * CAST( max( raw_used ) AS DECIMAL ) / CAST( max( raw_total ) AS DECIMAL ), DECIMAL ) AS memBuys
+        FROM
+        `tb_system_monitor`
+        <choose>
+            <when test="type == 1">
+                WHERE
+                ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} MINUTE
+                GROUP BY timestamp;
+            </when>
+            <when test="type == 2">
+                WHERE
+                ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} HOUR
+                GROUP BY timestamp;
+            </when>
+            <when test="type == 3">
+                WHERE
+                ip = #{ip}
+                AND create_time >= NOW() - INTERVAL #{number} DAY
+                GROUP BY timestamp;
+            </when>
+        </choose>
+    </select>
+</mapper>

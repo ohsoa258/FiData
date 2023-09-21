@@ -25,6 +25,9 @@ public class ServerTableVO {
     @ApiModelProperty(value = "服务状态")
     private Integer status;
 
+    @ApiModelProperty(value = "0:系统1:其他")
+    private Integer serverType;
+
     @ApiModelProperty(value = "时间")
     private String date;
 

@@ -22,4 +22,7 @@ public class ServerMonitorConfigVO {
 
     @ApiModelProperty(value = "服务ip")
     private String serverIp;
+
+    @ApiModelProperty(value = "0:系统1:其他")
+    private Integer serverType;
 }
