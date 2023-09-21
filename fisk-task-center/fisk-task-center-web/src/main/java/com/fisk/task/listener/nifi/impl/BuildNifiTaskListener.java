@@ -267,7 +267,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             /**
              * 创建表服务组件！！！
              */
-            List<ProcessorEntity> processorEntities = buildProcessorVersion3(taskGroupId, dataAccessConfig, taskGroupId, sourceControllerServiceId, targetControllerServiceId, cfgControllerServiceId, buildNifiFlow, buildTableService);
+            List<ProcessorEntity> processorEntities = buildProcessorVersion3(taskGroupId, dataAccessConfig, taskGroupId, sourceControllerServiceId, targetControllerServiceId, cfgControllerServiceId, buildNifiFlow, buildTableService,targetDbId);
 
             // 启动,保存
             enabledProcessor(taskGroupId, processorEntities);
@@ -1800,7 +1800,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
 
     private List<ProcessorEntity> buildProcessorVersion3(String appGroupId, DataAccessConfigDTO config, String groupId,
-                                                         String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId, BuildNifiFlowDTO dto, BuildTableServiceDTO buildTableService) {
+                                                         String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId,
+                                                         BuildNifiFlowDTO dto, BuildTableServiceDTO buildTableService, Integer targetDbId) {
         List<ProcessorEntity> res = new ArrayList<>();
         SynchronousTypeEnum synchronousTypeEnum = dto.synchronousTypeEnum;
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
@@ -1938,7 +1939,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //查询条数
         String fullTableName = buildTableService.schemaName + "." + buildTableService.targetTable;
         config.processorConfig.targetTableName = fullTableName;
-        ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId, buildTableService.syncModeDTO.customScriptAfter);
+        ProcessorEntity queryNumbers = queryNumbers(dto, config, groupId, targetDbPoolId, buildTableService.syncModeDTO.customScriptAfter, targetDbId);
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //连接器
         componentConnector(groupId, putDatabaseRecord.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -2974,14 +2975,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     }
 
 
-    private ProcessorEntity queryNumbers(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId, String afterSql) {
+    private ProcessorEntity queryNumbers(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId, String afterSql, Integer targetDbId) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query numbers Field";
         querySqlDto.preSql = afterSql;
         querySqlDto.details = "insert_phase";
         querySqlDto.groupId = groupId;
         //接入需要数据校验,查的是ods表,其他的不变
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(targetDbId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);

@@ -17,6 +17,8 @@ public class BuildFactoryHelper {
                 return new BuildSqlServerTableImpl();
             case POSTGRESQL:
                 return new BuildPgTableImpl();
+            case MYSQL:
+                return new BuildMysqlTableImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
