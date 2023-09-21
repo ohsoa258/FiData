@@ -91,7 +91,7 @@
                     </includes>
                     <!--配置为执行-->
                     <!--<classifier>exec</classifier>-->
-                    <outputDirectory>../lib/${project.name}</outputDirectory>
+                    <outputDirectory>../lib/${project.name}-web</outputDirectory>
                 </configuration>
             </plugin>
             <plugin>
@@ -109,7 +109,7 @@
                             <includeTypes>jar</includeTypes>
 <!--                            <includeScope>runtime</includeScope>-->
                             <!--依赖包的输出路径-->
-                            <outputDirectory>../lib/${project.name}/${project.name}-libs</outputDirectory>
+                            <outputDirectory>../lib/${project.name}-web/${project.name}-web-libs</outputDirectory>
                             <excludeArtifactIds>
                                 fisk-framework-authorization-apiclient,
                                 fisk-framework-authorization-entity,

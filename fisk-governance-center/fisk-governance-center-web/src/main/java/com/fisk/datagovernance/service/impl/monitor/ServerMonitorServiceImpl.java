@@ -9,6 +9,7 @@ import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datagovernance.dto.monitor.ServerMonitorDTO;
 import com.fisk.datagovernance.dto.monitor.ServerMonitorPageDTO;
+import com.fisk.datagovernance.dto.monitor.ServerMonitorQueryDTO;
 import com.fisk.datagovernance.entity.monitor.ServerMonitorPO;
 import com.fisk.datagovernance.map.monitor.ServerMonitorMap;
 import com.fisk.datagovernance.mapper.monitor.ServerMonitorMapper;
@@ -55,7 +56,9 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
         String format = simpleDateFormat.format(new Date());
         boolean cache = false;
         if (number == 7 || number == 30) {
-            cache = true;
+            if (type == 3){
+                cache = true;
+            }
         }
         //缓存中有取缓存数据没有就查数据库并缓存每周每月监控数据
         if (cache) {
@@ -70,75 +73,89 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
             if (ObjectUtils.isNotEmpty(o)) {
                 delayPingCacheTotal = (List<DelayPingVO>) o;
             } else {
-                delayPingCacheTotal = this.baseMapper.getDelayPingCacheTotal(ip,number, 1);
+                delayPingCacheTotal = this.baseMapper.getDelayPingCacheTotal(ip, number, 1);
                 redisUtil.set(key.getName() + ":" + ip + ":" + format, delayPingCacheTotal, key.getValue());
             }
-            List<DelayPingVO> data = this.baseMapper.getDelayPingCacheTotal(ip,number, 2);
+            List<DelayPingVO> data = this.baseMapper.getDelayPingCacheTotal(ip, number, 2);
             delayPingCacheTotal.addAll(data);
             serverMonitorVO.setDelayPingVOList(delayPingCacheTotal);
+        } else {
+            //获取所有服务时移ping
+            List<DelayPingVO> delayPingTotal = this.baseMapper.getDelayPingTotal(ip,number, type);
+            serverMonitorVO.setDelayPingVOList(delayPingTotal);
+        }
+        return serverMonitorVO;
+    }
 
+    @Override
+    public List<ServerTableVO> searchServerMonitor(ServerMonitorQueryDTO serverMonitorQueryDTO) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String format = simpleDateFormat.format(new Date());
+        List<ServerTableVO> tableList = new ArrayList<>();
+        boolean cache = false;
+        if (serverMonitorQueryDTO.getNumber() == 7 || serverMonitorQueryDTO.getNumber() == 30) {
+            if (serverMonitorQueryDTO.getType() == 3){
+                cache = true;
+            }
+        }
+        //缓存中有取缓存数据没有就查数据库并缓存每周每月监控数据
+        if (cache) {
             RedisKeyEnum serverKey = null;
             List<ServerTableVO> serverTableVOCacheList = new ArrayList<>();
-            if (number == 7) {
+            if (serverMonitorQueryDTO.getNumber() == 7) {
                 serverKey = RedisKeyEnum.WEEK_MONITOR_SERVER;
             } else {
                 serverKey = RedisKeyEnum.MONTH_MONITOR_SERVER;
             }
-            Object o1 = redisUtil.get(serverKey.getName() + ":" + ip + ":" + format);
-            List<ServerTableVO> serverTable = this.baseMapper.getServerTable(ip);
+            Object o1 = redisUtil.get(serverKey.getName() + ":" + serverMonitorQueryDTO.getIp() + ":" + format);
+            List<ServerTableVO> serverTable = this.baseMapper.getServerTable(serverMonitorQueryDTO.getIp(),null,null);
             if (ObjectUtils.isNotEmpty(o1)) {
                 serverTable = (List<ServerTableVO>) o1;
             } else {
                 if (CollectionUtils.isNotEmpty(serverTable)) {
                     //组装时移ping
                     for (ServerTableVO serverTableVO : serverTable) {
-                        List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(ip,number, 1,
+                        List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(serverMonitorQueryDTO.getIp(),serverMonitorQueryDTO.getNumber(), 1,
                                 serverTableVO.getServerName(), serverTableVO.getPort());
                         serverTableVO.setDelayPingVO(serverDelayPingVO);
                         serverTableVOCacheList.add(serverTableVO);
                     }
                 }
-                redisUtil.set(serverKey.getName() + ":" + ip + ":" + format, serverTableVOCacheList, serverKey.getValue());
+                redisUtil.set(serverKey.getName() + ":" + serverMonitorQueryDTO.getIp() + ":" + format, serverTableVOCacheList, serverKey.getValue());
+                serverTable = serverTableVOCacheList;
             }
-            List<ServerTableVO> serverTableVOList = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(serverTable)) {
-                //组装时移ping
-                for (ServerTableVO serverTableVO : serverTable) {
-                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingCacheVO(ip,number, 2,
-                            serverTableVO.getServerName(), serverTableVO.getPort());
-                    serverTableVO.setDelayPingVO(serverDelayPingVO);
-                    serverTableVOList.add(serverTableVO);
+            tableList = serverTable.stream().filter(i->{
+                if (i.getServerType().equals(serverMonitorQueryDTO.getServerType())
+                        && i.getStatus().equals(serverMonitorQueryDTO.getStatus())
+                        &&(i.getServerName().contains(serverMonitorQueryDTO.getSearchKey())
+                    || i.getServerUrl().contains(serverMonitorQueryDTO.getSearchKey()))){
+                    return true;
                 }
-            }
-            Map<String, ServerTableVO> serverTableVOMap = serverTableVOList.stream().collect(Collectors.toMap(ServerTableVO::getServerName, i -> i));
-
-            List<ServerTableVO> serverList = serverTableVOList.stream().map(i -> {
-                ServerTableVO serverTableVO1 = serverTableVOMap.get(i.getServerName());
-                List<DelayPingVO> delayPingVO = i.getDelayPingVO();
-                delayPingVO.addAll(serverTableVO1.getDelayPingVO());
-                i.setDelayPingVO(delayPingVO);
-                return i;
+                return false;
             }).collect(Collectors.toList());
-            serverMonitorVO.setServerTableVOList(serverList);
         } else {
-            //获取所有服务时移ping
-            List<DelayPingVO> delayPingTotal = this.baseMapper.getDelayPingTotal(ip,number, type);
-            serverMonitorVO.setDelayPingVOList(delayPingTotal);
             //获取所有服务列表
-            List<ServerTableVO> serverTable = this.baseMapper.getServerTable(ip);
+            tableList = this.baseMapper.getServerTable(serverMonitorQueryDTO.getIp(),serverMonitorQueryDTO.getStatus(),serverMonitorQueryDTO.getServerType());
+            tableList = tableList.stream().filter(i->{
+                if (i.getServerName().contains(serverMonitorQueryDTO.getSearchKey())
+                        || i.getServerUrl().contains(serverMonitorQueryDTO.getSearchKey())){
+                    return true;
+                }
+                return false;
+            }).collect(Collectors.toList());
             List<ServerTableVO> list = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(serverTable)) {
+            if (CollectionUtils.isNotEmpty(tableList)) {
                 //组装时移ping
-                for (ServerTableVO serverTableVO : serverTable) {
-                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingVO(ip,number, type,
+                for (ServerTableVO serverTableVO : tableList) {
+                    List<DelayPingVO> serverDelayPingVO = this.baseMapper.getServerDelayPingVO(serverMonitorQueryDTO.getIp(),serverMonitorQueryDTO.getNumber(), serverMonitorQueryDTO.getType(),
                             serverTableVO.getServerName(), serverTableVO.getPort());
                     serverTableVO.setDelayPingVO(serverDelayPingVO);
                     list.add(serverTableVO);
                 }
             }
-            serverMonitorVO.setServerTableVOList(list);
+            tableList = list;
         }
-        return serverMonitorVO;
+        return tableList;
     }
 
     @Override

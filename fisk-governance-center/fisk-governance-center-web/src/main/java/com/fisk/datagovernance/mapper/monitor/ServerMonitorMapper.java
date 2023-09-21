@@ -21,7 +21,7 @@ public interface ServerMonitorMapper extends BaseMapper<ServerMonitorPO> {
 
     List<DelayPingVO> getDelayPingCacheTotal(@Param("ip") String ip,@Param("number") Integer number, @Param("type") Integer type);
     ServerMonitorVO getAllTotal(@Param("ip") String ip);
-    List<ServerTableVO> getServerTable(@Param("ip") String ip );
+    List<ServerTableVO> getServerTable(@Param("ip") String ip,@Param("status") Integer status,@Param("serverType") Integer serverType);
 
     List<DelayPingVO> getServerDelayPingVO(@Param("ip") String ip ,@Param("number") Integer number, @Param("type") Integer type,
                                            @Param("name") String name,@Param("port") Integer port);

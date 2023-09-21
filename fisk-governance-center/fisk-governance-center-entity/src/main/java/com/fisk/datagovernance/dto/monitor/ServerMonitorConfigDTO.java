@@ -20,6 +20,9 @@ public class ServerMonitorConfigDTO {
     @ApiModelProperty(value = "服务端口")
     private Integer serverPort;
 
+    @ApiModelProperty(value = "服务类型0:系统1:其他")
+    private Integer serverType;
+
     @ApiModelProperty(value = "服务ip")
     private String serverIp;
 }
