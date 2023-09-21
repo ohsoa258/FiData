@@ -219,6 +219,11 @@ public class PhysicalTableController {
     @ApiOperation(value = "删除物理表")
     public ResultEntity<Object> deleteData(@PathVariable("id") long id) {
         ResultEntity<NifiVO> result = service.deleteData(id);
+        int code = result.getCode();
+        //如果物理表已经被配置到了管道，则不允许删除，并给出提示在哪个管道中配置
+        if (code == ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH.getCode()) {
+            return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH, result);
+        }
 
         log.info("方法返回值,{}", result.data);
         // TODO 删除pg库中的表和nifi流程
@@ -228,7 +233,7 @@ public class PhysicalTableController {
         pgsqlDelTableDTO.userId = nifiVO.userId;
         pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
         pgsqlDelTableDTO.delApp = false;
-        pgsqlDelTableDTO.businessTypeEnum= BusinessTypeEnum.DATAINPUT;
+        pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
 
             pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
@@ -244,14 +249,14 @@ public class PhysicalTableController {
         ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
 
         DataModelVO dataModelVO = new DataModelVO();
-        dataModelVO.delBusiness=false;
+        dataModelVO.delBusiness = false;
         DataModelTableVO dataModelTableVO = new DataModelTableVO();
-        dataModelTableVO.ids=nifiVO.tableIdList;
-        dataModelTableVO.type= OlapTableEnum.PHYSICS;
-        dataModelVO.physicsIdList=dataModelTableVO;
-        dataModelVO.businessId=nifiVO.appId;
-        dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
-        dataModelVO.userId=nifiVO.userId;
+        dataModelTableVO.ids = nifiVO.tableIdList;
+        dataModelTableVO.type = OlapTableEnum.PHYSICS;
+        dataModelVO.physicsIdList = dataModelTableVO;
+        dataModelVO.businessId = nifiVO.appId;
+        dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
+        dataModelVO.userId = nifiVO.userId;
         // 删除nifi流程
         publishTaskClient.deleteNifiFlow(dataModelVO);
 
@@ -354,19 +359,19 @@ public class PhysicalTableController {
 
     @ApiOperation("添加同步配置信息")
     @GetMapping("/createPgToDorisConfig")
-    public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName")String tableName,@RequestParam("selectSql")String selectSql) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.createPgToDorisConfig(tableName,selectSql));
+    public ResultEntity<Object> createPgToDorisConfig(@RequestParam("tableName") String tableName, @RequestParam("selectSql") String selectSql) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.createPgToDorisConfig(tableName, selectSql));
     }
 
     @GetMapping("/getTableFieldId/{id}")
     @ApiOperation("根据接入表id获取所有字段id")
-    public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id){
+    public ResultEntity<Object> getTableFieldId(@PathVariable("id") int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableFieldId(id));
     }
 
     @ApiOperation("修改物理表发布状态")
     @PutMapping("/updateTablePublishStatus")
-    public void updateTablePublishStatus(@RequestBody ModelPublishStatusDTO dto){
+    public void updateTablePublishStatus(@RequestBody ModelPublishStatusDTO dto) {
         service.updateTablePublishStatus(dto);
     }
 

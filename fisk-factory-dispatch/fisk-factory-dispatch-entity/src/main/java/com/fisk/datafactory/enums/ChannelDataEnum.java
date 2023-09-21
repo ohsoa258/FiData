@@ -78,9 +78,7 @@ public enum ChannelDataEnum implements BaseEnum {
     /**
      * 主数据模型表任务
      */
-    MDM_TABLE_TASK(16,"主数据表任务")
-
-    ;
+    MDM_TABLE_TASK(16,"主数据表任务");
 
     ChannelDataEnum(int value, String name) {
         this.name = name;

@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
@@ -17,8 +19,11 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.QueryDTO;
@@ -108,6 +113,24 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public ResultEnum deleteFact(int id) {
         try {
+            // 删除之前检查该事实表是否已经被配置到存在的管道里面：
+            // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该事实表，
+            // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数仓建模的事实表对应的table type是5  数仓表任务-数仓事实表任务
+            CheckPhyDimFactTableIfExistsDTO checkDto = new CheckPhyDimFactTableIfExistsDTO();
+            checkDto.setTblId((long) id);
+            checkDto.setChannelDataEnum(ChannelDataEnum.getName(5));
+            ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(checkDto);
+            if (booleanResultEntity.getCode()!=ResultEnum.SUCCESS.getCode()){
+                return ResultEnum.DISPATCH_REMOTE_ERROR;
+            }
+            List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
+            if (!CollectionUtils.isEmpty(data)){
+                //这里的getWorkflowId 已经被替换为 workflowName
+                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+                log.info("当前要删除的表存在于以下管道中："+ collect);
+                return ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH;
+            }
+
             FactPO po = mapper.selectById(id);
             if (po == null) {
                 return ResultEnum.DATA_NOTEXISTS;

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.datafactory.config.SwaggerConfig;
+import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
@@ -86,7 +87,7 @@ public class NifiCustomWorkflowDetailController {
             Map<Map, Map> structure = workListDTO.structure;
             workListDTO.externalStructure1 = externalStructure.toString();
             workListDTO.structure1 = structure.toString();
-            log.info("task前管道参数：{}",JSON.toJSONString(workListDTO));
+            log.info("task前管道参数：{}", JSON.toJSONString(workListDTO));
             publishTaskClient.publishBuildNifiCustomWorkFlowTask(workListDTO);
             log.info(JSON.toJSONString(workListDTO));
             log.info("nifi: 管道创建成功");
@@ -161,9 +162,23 @@ public class NifiCustomWorkflowDetailController {
 
         return ResultEntityBuild.build(service.forbiddenTask(dto));
     }
+
     @GetMapping("/runOnce")
     @ApiOperation(value = "执行一次管道")
     public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
         return ResultEntityBuild.build(service.runOnce(id));
     }
+
+    /**
+     * 数据接入、数仓建模 - 校验非实时物理表、维度表、事实表是否被配置到管道
+     *
+     * @param dto 物理表id
+     * @return
+     */
+    @PostMapping("/checkPhyDimFactTableIfExists")
+    @ApiOperation(value = "数据接入、数仓建模 - 校验非实时物理表、维度表、事实表是否被配置到管道")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> checkPhyDimFactTableIfExists(@RequestBody CheckPhyDimFactTableIfExistsDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.checkPhyDimFactTableIfExists(dto));
+    }
+
 }

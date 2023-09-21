@@ -46,4 +46,9 @@ public class NifiVO {
      * atlas业务名称(应用名称_应用简称)
      */
     public String classifications;
+
+    /**
+     * 管道名称
+     */
+    public List<String> workFlowName;
 }

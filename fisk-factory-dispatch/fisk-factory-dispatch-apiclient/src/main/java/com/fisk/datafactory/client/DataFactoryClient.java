@@ -1,6 +1,7 @@
 package com.fisk.datafactory.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
@@ -181,5 +182,17 @@ public interface DataFactoryClient {
      */
     @GetMapping("/taskSetting/getTaskSettingsByTaskId/{taskId}")
     @ApiOperation(value = "根据任务id查询当前任务下的配置信息列表")
-    public List<TaskSettingDTO> getTaskSettingsByTaskId(@PathVariable("taskId") long taskId);
+    List<TaskSettingDTO> getTaskSettingsByTaskId(@PathVariable("taskId") long taskId);
+
+    /**
+     * 数据接入、数仓建模 - 校验非实时物理表、维度表、事实表是否被配置到管道
+     *
+     * @param dto 物理表id
+     * @return
+     */
+    @PostMapping("/nifiCustomWorkflowDetail/checkPhyDimFactTableIfExists")
+    @ApiOperation(value = "数据接入-校验非实时物理表是否被配置到管道")
+    ResultEntity<List<NifiCustomWorkflowDetailDTO>> checkPhyTableIfExists(@RequestBody CheckPhyDimFactTableIfExistsDTO dto);
+
+
 }

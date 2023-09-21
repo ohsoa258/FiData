@@ -5,10 +5,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
+import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
@@ -145,4 +145,12 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      * @return 执行结果
      */
     ResultEnum runOnce(Long id);
+
+    /**
+     * 数据接入、数仓建模 - 校验非实时物理表、维度表、事实表是否被配置到管道
+     *
+     * @param dto
+     * @return
+     */
+    List<NifiCustomWorkflowDetailDTO> checkPhyDimFactTableIfExists(CheckPhyDimFactTableIfExistsDTO dto);
 }

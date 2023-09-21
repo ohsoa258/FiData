@@ -80,9 +80,12 @@ import com.fisk.dataaccess.vo.TableNameVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.dataaccess.vo.table.PhyTblAndApiTblVO;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
@@ -147,6 +150,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserClient userClient;
+    @Resource
+    private DataFactoryClient dataFactoryClient;
     @Resource
     private UserHelper userHelper;
     @Resource
@@ -760,8 +765,27 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEntity<NifiVO> deleteData(long id) {
 
-        UserInfo userInfo = userHelper.getLoginUserInfo();
+        // 删除之前检查该物理表是否已经被配置到存在的管道里面：
+        // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该物理表，
+        // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数据接入的物理表对应的table type是3 数据湖表任务
+        CheckPhyDimFactTableIfExistsDTO dto = new CheckPhyDimFactTableIfExistsDTO();
+        dto.setTblId(id);
+        dto.setChannelDataEnum(ChannelDataEnum.getName(3));
+        ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(dto);
+        if (booleanResultEntity.getCode()!=ResultEnum.SUCCESS.getCode()){
+            return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
+        }
+        List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
+        if (!CollectionUtils.isEmpty(data)){
+            //这里的getWorkflowId 已经被替换为 workflowName
+            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+            log.info("当前要删除的表存在于以下管道中："+ collect);
+            NifiVO nifiVO = new NifiVO();
+            nifiVO.setWorkFlowName(collect);
+            return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH,nifiVO);
+        }
 
+        UserInfo userInfo = userHelper.getLoginUserInfo();
         // 1.删除tb_table_access数据
         TableAccessPO modelAccess = this.getById(id);
         if (modelAccess == null) {

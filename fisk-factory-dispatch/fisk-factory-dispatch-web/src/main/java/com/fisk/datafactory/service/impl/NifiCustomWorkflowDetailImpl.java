@@ -18,6 +18,7 @@ import com.fisk.common.core.utils.Dto.cron.NextCronTimeDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -211,7 +212,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     @Override
     public ResultEntity<NifiCustomWorkListDTO> editData(NifiCustomWorkflowDetailVO dto) {
         LambdaQueryWrapper<NifiCustomWorkflowDetailPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(NifiCustomWorkflowDetailPO::getWorkflowId,dto.dto.workflowId);
+        queryWrapper.eq(NifiCustomWorkflowDetailPO::getWorkflowId, dto.dto.workflowId);
         mapper.delete(queryWrapper);
 
         String componentType = "触发器";
@@ -248,16 +249,16 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
         List<NifiCustomWorkflowDetailDTO> WorkflowDetailDTOS = new ArrayList<>();
         List<ChildrenWorkflowDetailDTO> childrenWorkflowDetailDTOS = new ArrayList<>();
-        Map<String,Long> map = new HashMap<>();
+        Map<String, Long> map = new HashMap<>();
         List<NifiCustomWorkflowDetailDTO> collect = dto.list.stream().map(i -> {
             i.setPid(0L);
             i.setDelFlag(1);
             NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO = NifiCustomWorkflowDetailMap.INSTANCES.dtoToPo(i);
-            if (nifiCustomWorkflowDetailPO.id != 0){
+            if (nifiCustomWorkflowDetailPO.id != 0) {
                 nifiCustomWorkflowDetailPO.setUpdateTime(LocalDateTime.now());
                 nifiCustomWorkflowDetailPO.setUpdateUser(userHelper.getLoginUserInfo().id.toString());
                 this.mapper.updateByDetailId(nifiCustomWorkflowDetailPO);
-            }else {
+            } else {
                 this.save(nifiCustomWorkflowDetailPO);
             }
             if (!StringUtils.isEmpty(i.uuid)) {
@@ -267,7 +268,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             return i;
         }).collect(Collectors.toList());
         for (NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO : collect) {
-            if(nifiCustomWorkflowDetailDTO.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())){
+            if (nifiCustomWorkflowDetailDTO.componentType.equals(ChannelDataEnum.SFTP_FILE_COPY_TASK.getName())) {
                 Map<String, String> taskSettingMap = nifiCustomWorkflowDetailDTO.getTaskSetting();
                 String sourceFile = taskSettingMap.get("sourceFile");
                 saveSftpFile(dto, nifiCustomWorkflowDetailDTO, sourceFile, sourceFile);
@@ -278,33 +279,33 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 nifiCustomWorkflowDetailDTO.setTaskSetting(taskSettingMap);
             }
             taskSetting.updateTaskSetting(nifiCustomWorkflowDetailDTO.id, nifiCustomWorkflowDetailDTO.taskSetting);
-            if (!StringUtils.isEmpty(nifiCustomWorkflowDetailDTO.inportUuid)){
+            if (!StringUtils.isEmpty(nifiCustomWorkflowDetailDTO.inportUuid)) {
                 List<String> inport = new ArrayList<>();
                 String[] InportUuid = nifiCustomWorkflowDetailDTO.inportUuid.split(",");
                 for (String s : InportUuid) {
                     Long aLong = map.get(s);
-                    if(aLong != null){
+                    if (aLong != null) {
                         inport.add(aLong.toString());
-                    }else {
+                    } else {
                         inport.add(s);
                     }
                 }
-                nifiCustomWorkflowDetailDTO.setInport( StringUtils.join(inport,","));
+                nifiCustomWorkflowDetailDTO.setInport(StringUtils.join(inport, ","));
             }
-            if (!StringUtils.isEmpty(nifiCustomWorkflowDetailDTO.outportUuid)){
+            if (!StringUtils.isEmpty(nifiCustomWorkflowDetailDTO.outportUuid)) {
                 List<String> outport = new ArrayList<>();
                 String[] OutportUuid = nifiCustomWorkflowDetailDTO.outportUuid.split(",");
                 for (String s : OutportUuid) {
                     Long aLong = map.get(s);
-                    if(aLong != null){
+                    if (aLong != null) {
                         outport.add(aLong.toString());
-                    }else {
+                    } else {
                         outport.add(s);
                     }
                 }
-                nifiCustomWorkflowDetailDTO.setOutport( StringUtils.join(outport,","));
+                nifiCustomWorkflowDetailDTO.setOutport(StringUtils.join(outport, ","));
             }
-            if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailDTO.childrenWorkflowDetailList)){
+            if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailDTO.childrenWorkflowDetailList)) {
                 for (ChildrenWorkflowDetailDTO childrenWorkflowDetailDTO : nifiCustomWorkflowDetailDTO.childrenWorkflowDetailList) {
                     childrenWorkflowDetailDTO.setPid(nifiCustomWorkflowDetailDTO.id);
                     childrenWorkflowDetailDTO.setInport(nifiCustomWorkflowDetailDTO.inport);
@@ -349,7 +350,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
     }
 
     private void saveSftpFile(NifiCustomWorkflowDetailVO dto, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO, String sourceFile, String targetFile) {
-        if (!StringUtils.isEmpty(targetFile)){
+        if (!StringUtils.isEmpty(targetFile)) {
             final String[] base64Array = sourceFile.split(",");
             String dataUir, data;
             if (base64Array.length > 1) {
@@ -610,7 +611,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             buildNifiCustomWorkFlows.add(getBuildNifiCustomWorkFlowDTO(NifiCustomWorkflowDetailMap.INSTANCES.poToDto(workflowDetailPo)));
                         }
                     }
-                    if (Objects.equals(list.get(0).componentType, ChannelDataEnum.DATALAKE_API_TASK)){
+                    if (Objects.equals(list.get(0).componentType, ChannelDataEnum.DATALAKE_API_TASK)) {
                         buildNifiCustomWorkFlows.remove(0);
                     }
                     NifiCustomWorkflowDetailPO nifiCustomWorkflowDetailPO2 = list.get(0);
@@ -1000,7 +1001,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                     list.add(a);
                 }
                 break;
-                //分析模型维度表任务
+            //分析模型维度表任务
             case OLAP_DIMENSION_TASK:
                 // 分析模型事实表任务
             case OLAP_FACT_TASK:
@@ -1070,10 +1071,10 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                                     // 数仓事实表任务
                                 case DW_FACT_TASK:
                                     v.setSourceId(DataSourceConfigEnum.DMP_DW.getValue());
-                                    if (v.getTableBusinessType() == TableBusinessTypeEnum.DW_DIMENSION.getValue()){
+                                    if (v.getTableBusinessType() == TableBusinessTypeEnum.DW_DIMENSION.getValue()) {
                                         v.setTableType(ChannelDataEnum.DW_DIMENSION_TASK.getValue());
                                         v.setComponentType(ChannelDataEnum.DW_DIMENSION_TASK.getName());
-                                    }else if (v.getTableBusinessType() == TableBusinessTypeEnum.DW_FACT.getValue()){
+                                    } else if (v.getTableBusinessType() == TableBusinessTypeEnum.DW_FACT.getValue()) {
                                         v.setTableType(ChannelDataEnum.DW_FACT_TASK.getValue());
                                         v.setComponentType(ChannelDataEnum.DW_FACT_TASK.getName());
                                     }
@@ -1089,7 +1090,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                                     break;
                             }
 
-                            List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPos = this.query().eq("component_type", type).eq("table_id", v.id).eq("table_type",v.tableType).list();
+                            List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPos = this.query().eq("component_type", type).eq("table_id", v.id).eq("table_type", v.tableType).list();
                             List<TableUsageDTO> tableUsageDtos = new ArrayList<>();
                             if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailPos)) {
                                 nifiCustomWorkflowDetailPos.stream().filter(Objects::nonNull)
@@ -1116,7 +1117,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                         }
                         return v;
                     }).collect(Collectors.toList());
-        }else {
+        } else {
             return null;
         }
     }
@@ -1175,9 +1176,9 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
                                             List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPos = this.query().eq("component_type", type).eq("table_id", v.id).list();
                                             List<TableUsageDTO> tableUsageDtos = new ArrayList<>();
-                                                if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailPos)) {
-                                                    nifiCustomWorkflowDetailPos.stream().filter(Objects::nonNull)
-                                                            .forEach(a -> {
+                                            if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailPos)) {
+                                                nifiCustomWorkflowDetailPos.stream().filter(Objects::nonNull)
+                                                        .forEach(a -> {
                                                             String workflowId = a.workflowId;
                                                             NifiCustomWorkflowPO nifiCustomWorkflowPo = nifiCustomWorkflowImpl.query().eq("workflow_id", workflowId).one();
                                                             TableUsageDTO tableUsage = new TableUsageDTO();
@@ -1357,6 +1358,32 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         } else {
             return ResultEnum.SUCCESS;
         }
+    }
+
+    /**
+     * 数据接入、数仓建模 - 校验非实时物理表、维度表、事实表是否被配置到管道
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public List<NifiCustomWorkflowDetailDTO> checkPhyDimFactTableIfExists(CheckPhyDimFactTableIfExistsDTO dto) {
+        //物理表在配置管道时的表类别是 3    数据湖表任务
+        int tblType = dto.getChannelDataEnum().getValue();
+        LambdaQueryWrapper<NifiCustomWorkflowDetailPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(NifiCustomWorkflowDetailPO::getTableId, dto.getTblId())
+                .eq(NifiCustomWorkflowDetailPO::getTableType, tblType);
+        List<NifiCustomWorkflowDetailPO> list = nifiCustomWorkflowDetailImpl.list(wrapper);
+        List<String> collect = list.stream().map(NifiCustomWorkflowDetailPO::getWorkflowId).collect(Collectors.toList());
+        for (int i = 0; i < collect.size(); i++) {
+            NifiCustomWorkflowPO one = nifiCustomWorkflowImpl
+                    .getOne(new LambdaQueryWrapper<NifiCustomWorkflowPO>()
+                            .eq(NifiCustomWorkflowPO::getWorkflowId, collect.get(i)));
+            //把workflowid替换为workflowName
+            list.get(i).setWorkflowId(one.workflowName);
+        }
+
+        return NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(list);
     }
 
 }

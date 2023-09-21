@@ -74,6 +74,8 @@ public enum ResultEnum {
     APP_IS_NOT_EXISTS(1044, "数据接入-app应用不存在"),
     DATA_SOURCE_ACCOUNT_ALREADY_EXISTS(1045, "RESTFULAPI的账号不允许重复!请您修改账号或使用已配置的数据源。"),
     DATA_SOURCE_ALREADY_EXISTS(1046, "相同类型,ip,库名的数据源已存在!请您使用已配置的数据源。"),
+    DISPATCH_REMOTE_ERROR(1047, "删除表时-远程调用管道模块失败"),
+    ACCESS_PHYTABLE_EXISTS_IN_DISPATCH(1048, "禁止删除该表-该表存在于以下管道:"),
 
     /**
      * 报表可视化服务，错误码从2000开始
