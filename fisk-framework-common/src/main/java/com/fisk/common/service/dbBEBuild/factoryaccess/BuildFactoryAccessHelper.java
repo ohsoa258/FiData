@@ -22,6 +22,8 @@ public class BuildFactoryAccessHelper {
                 return new BuildAccessMySqlCommandImpl();
             case OPENEDGE:
                 return new BuildAccessOpenEdgeCommandImpl();
+            case SAPBW:
+                return new BuildAccessSapBwCommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

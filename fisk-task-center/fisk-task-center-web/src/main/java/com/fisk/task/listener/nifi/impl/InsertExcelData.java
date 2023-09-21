@@ -221,7 +221,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                 }
             }
         } catch (Exception e) {
-            log.error("sftp或ftp-Java代码同步" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("sftp或ftp-Java代码同步报错：" + StackTraceHelper.getStackTraceInfo(e));
         } finally {
             try {
                 if (pstmt != null) {

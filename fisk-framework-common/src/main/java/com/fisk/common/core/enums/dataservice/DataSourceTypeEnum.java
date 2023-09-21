@@ -29,15 +29,17 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     REDSHIFT(7, "REDSHIFT", "", ""),
 
-    RESTFULAPI(8,"RESTFULAPI","",""),
+    RESTFULAPI(8, "RESTFULAPI", "", ""),
 
-    API(9,"API","",""),
+    API(9, "API", "", ""),
 
-    FTP(10,"FTP","",""),
+    FTP(10, "FTP", "", ""),
 
-    SFTP(11,"SFTP","",""),
+    SFTP(11, "SFTP", "", ""),
 
-    OPENEDGE(12,"OPENEDGE","com.ddtek.jdbc.openedge.OpenEdgeDriver","opt/nifi/nifi-current/jdbcdriver/openedge.jar");
+    OPENEDGE(12, "OPENEDGE", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "opt/nifi/nifi-current/jdbcdriver/openedge.jar"),
+
+    SAPBW(13, "SAPBW", "", "");
 
     DataSourceTypeEnum(int value, String name, String driverName, String driverLocation) {
         this.driverName = driverName;

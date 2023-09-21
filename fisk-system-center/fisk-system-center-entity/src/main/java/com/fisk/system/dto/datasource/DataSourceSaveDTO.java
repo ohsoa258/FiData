@@ -93,7 +93,7 @@ public class DataSourceSaveDTO {
     public String serviceName;
 
     /**
-    /**
+     * /**
      * oracle域名
      */
     @ApiModelProperty(value = "oracle域名")
@@ -212,4 +212,16 @@ public class DataSourceSaveDTO {
      */
     @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)
     public List<ApiResultConfigDTO> apiResultConfigDtoList;
+
+    /**
+     * JCO_SYSNR
+     */
+    @ApiModelProperty(value = "JCO_SYSNR", required = true)
+    public String sysNr;
+
+    /**
+     * JCO_LANG
+     */
+    @ApiModelProperty(value = "JCO_LANG", required = true)
+    public String lang;
 }

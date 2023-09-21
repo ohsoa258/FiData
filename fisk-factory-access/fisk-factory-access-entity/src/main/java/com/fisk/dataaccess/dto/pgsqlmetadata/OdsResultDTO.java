@@ -34,4 +34,10 @@ public class OdsResultDTO {
 
     @ApiModelProperty(value = "sql")
     public String sql;
+
+    /**
+     * sapbw执行mdx语句后的查询结果集合
+     */
+    @ApiModelProperty(value = "sapbw执行mdx语句后的查询结果集合")
+    public List<List<String>> sapdataList;
 }

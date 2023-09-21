@@ -213,9 +213,12 @@ public enum ResultEnum {
             "4、若涉及到时间类型，请联系系统管理员..."),
     ACCESS_PUBLISH_FAILURE(5089, "发布失败，请联系系统管理员"),
     ACCESS_MAINPAGE_SELECT_FAILURE(5090, "数据接入-首页展示查询失败"),
-
-
-
+    SAPBW_EXECUATE_MDX_ERROR(5091, "SAPBW执行mdx语句报错"),
+    SAPBW_GETCUBES_ERROR(5092, "SAPBW获取cubes报错"),
+    SAPBW_GETVARS_ERROR(5093, "SAPBW获取cube参数报错"),
+    SAPBW_GETDIMS_MES_ERROR(5094, "SAPBW获取cube维度和指标报错"),
+    SAPBW_CONNECT_ERROR(5095, "创建SAPBW连接失败"),
+    SAPBW_NIFI_SYNC_ERROR(5096, "SAPBW-NIFI同步报错"),
 
 
     /**

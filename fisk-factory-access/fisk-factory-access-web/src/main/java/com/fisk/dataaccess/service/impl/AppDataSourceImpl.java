@@ -8,12 +8,14 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
+import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
@@ -25,6 +27,7 @@ import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.sap.conn.jco.JCoDestination;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -139,6 +142,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 // 表结构
                 Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
                 dataSource.tableDtoList = OpenEdgeUtils.getTableNameAndColumnsPlus(con, po.dbName);
+            } else if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(dataSource.driveType)) {
+                ProviderAndDestination providerAndDestination =
+                        DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
+                JCoDestination destination = providerAndDestination.getDestination();
+                MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+                dataSource.tableDtoList = SapBwUtils.getAllCubesV2(destination, myProvider);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -146,6 +155,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             }
             return dataSource;
         } catch (Exception e) {
+            log.error("查询数据源表信息失败：" + e);
             log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
             return null;
         }
@@ -179,6 +189,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             // 表结构
             Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
             return OpenEdgeUtils.getColumnsName(con, dto.name);
+        } else if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(dataSource.driveType)) {
+            ProviderAndDestination providerAndDestination =
+                    DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
+            JCoDestination destination = providerAndDestination.getDestination();
+            MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+            return SapBwUtils.getVariablesByCubeName(destination, myProvider, dto.name);
         }
         return null;
     }
@@ -344,6 +360,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.SAPBW.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 13) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
         }
         return dataSourceDTOS;
     }
@@ -441,6 +463,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSourcePO.expirationTime = dto.expirationTime;
                 dataSourcePO.token = dto.token;
                 dataSourcePO.authenticationMethod = dto.authenticationMethod;
+                dataSourcePO.sysNr = dto.sysNr;
+                dataSourcePO.lang = dto.lang;
                 appDataSourcePOS.add(dataSourcePO);
             }
             return updateBatchById(appDataSourcePOS);
@@ -587,6 +611,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.SFTP.getName();
         } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.OPENEDGE.getName();
+        } else if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.SAPBW.getName();
         }
         return driverName;
     }

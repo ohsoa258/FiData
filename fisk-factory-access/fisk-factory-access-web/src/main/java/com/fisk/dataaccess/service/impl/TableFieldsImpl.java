@@ -621,7 +621,7 @@ public class TableFieldsImpl
                 throw new FkException(ResultEnum.DATAACCESS_DATASOURCE_ERROR);
             }
 
-            Long tableHistoryId = 0L;
+            long tableHistoryId = 0L;
             //如果发布历史不为空
             if (!CollectionUtils.isEmpty(dto)) {
                 log.info("开始记录发布日志");
@@ -710,6 +710,7 @@ public class TableFieldsImpl
                 data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
                 data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
                 data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
+                data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
                 data.tableHistoryId = tableHistoryId;
 
                 // 执行发布
@@ -732,7 +733,7 @@ public class TableFieldsImpl
 
                 List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
                 // 实时--RestfulAPI类型  or  非实时--api类型
-                //0实时
+                // 0实时
                 if ((registration.appType == 0
                         && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType))
                         || (registration.appType == 1
@@ -905,6 +906,7 @@ public class TableFieldsImpl
             data.maxRowsPerFlowFile = syncMode.maxRowsPerFlowFile == null ? maxRowsPerFlowFile : syncMode.maxRowsPerFlowFile;
             data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
             data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
+            data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
             data.tableHistoryId = tableHistoryId;
 
             // 执行发布

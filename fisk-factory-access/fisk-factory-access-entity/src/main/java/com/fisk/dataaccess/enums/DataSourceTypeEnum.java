@@ -21,7 +21,8 @@ public enum DataSourceTypeEnum implements BaseEnum {
     POSTGRESQL(7, "postgresql"),
     ORACLE_CDC(8, "oracle-cdc"),
     SFTP(9, "sftp"),
-    OPENEDGE(10,"openedge");
+    OPENEDGE(10, "openedge"),
+    SAPBW(11, "sapbw");
 
     DataSourceTypeEnum(int value, String name) {
         this.name = name;

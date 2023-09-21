@@ -30,7 +30,7 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @param appId appId
      * @return dto
      */
-    DataSourceDTO setDataSourceMeta(long appId,long appDataSourceId);
+    DataSourceDTO setDataSourceMeta(long appId, long appDataSourceId);
 
     /**
      * 根据服务配置信息,获取所有的数据库名称

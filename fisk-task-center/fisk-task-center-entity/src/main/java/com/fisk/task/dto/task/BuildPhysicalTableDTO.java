@@ -38,20 +38,20 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     public ModelPublishTableDTO modelPublishTableDTO;
 
     /*
-    * 同步方式
-    * */
+     * 同步方式
+     * */
     @ApiModelProperty(value = "同步方式")
     public int syncMode;
 
     /*
-    * 查询范围开始时间
-    * */
+     * 查询范围开始时间
+     * */
     @ApiModelProperty(value = "查询范围开始时间")
     public String queryStartTime;
 
     /*
-    * 查询范围结束时间
-    * */
+     * 查询范围结束时间
+     * */
     @ApiModelProperty(value = "查询范围结束时间")
     public String queryEndTime;
 
@@ -182,5 +182,11 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "nifi组件并发数量")
     public Integer concurrencyNums;
+
+    /**
+     * 是否是sapbw
+     */
+    @ApiModelProperty(value = "是否是sapbw")
+    public boolean sapBwFlow;
 
 }

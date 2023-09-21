@@ -58,6 +58,9 @@ public class TableFieldsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.loadDepend(dto));
     }
 
+    /*
+      2023 09-20 李世纪：接口已弃用
+     */
     @PostMapping("/previewCoverCondition")
     @ApiOperation(value = "预览业务时间覆盖")
     public ResultEntity<Object> previewCoverCondition(@Validated @RequestBody TableBusinessDTO dto) {

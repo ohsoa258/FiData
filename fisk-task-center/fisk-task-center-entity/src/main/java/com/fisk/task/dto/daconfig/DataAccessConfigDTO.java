@@ -71,5 +71,10 @@ public class DataAccessConfigDTO {
     @ApiModelProperty(value = "ftp配置信息")
     public FtpConfig ftpConfig;
 
+    /**
+     * sapBw配置信息
+     */
+    @ApiModelProperty(value = "sapBw配置信息")
+    public SapBwConfig sapBwConfig;
 
 }

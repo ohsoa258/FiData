@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.ddtek.jdbc.openedge.OpenEdgeDriver;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -14,6 +13,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.FileBinaryUtils;
+import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
@@ -30,6 +30,10 @@ import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
 import com.fisk.system.service.IDataSourceManageService;
+import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoDestinationManager;
+import com.sap.conn.jco.ext.DestinationDataProvider;
+import com.sap.conn.jco.ext.Environment;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -41,6 +45,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -135,6 +140,10 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("10");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("SFTP")) {
                             filterQueryDTO.setColumnValue("11");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("OPENEDGE")) {
+                            filterQueryDTO.setColumnValue("12");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("SAPBW")) {
+                            filterQueryDTO.setColumnValue("13");
                         }
                     }
                 });
@@ -318,6 +327,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     @Override
     public ResultEnum testConnection(DataSourceSaveDTO dto) {
         Connection conn = null;
+        MyDestinationDataProvider myProvider = null;
         try {
             switch (dto.conType) {
                 case MYSQL:
@@ -372,7 +382,6 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                         }
                     }
                 case OPENEDGE:
-
                     log.info("注册OpenEdge驱动程序前...");
 //                    // 注册OpenEdge驱动程序
 //                    DriverManager.registerDriver(new OpenEdgeDriver());
@@ -381,6 +390,24 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
+                case SAPBW:
+                    Properties connProps = new Properties();
+                    connProps.setProperty(DestinationDataProvider.JCO_ASHOST, dto.conIp);
+                    connProps.setProperty(DestinationDataProvider.JCO_SYSNR, dto.sysNr);
+                    connProps.setProperty(DestinationDataProvider.JCO_CLIENT, String.valueOf(dto.conPort));
+                    connProps.setProperty(DestinationDataProvider.JCO_USER, dto.conAccount);
+                    connProps.setProperty(DestinationDataProvider.JCO_PASSWD, dto.conPassword);
+                    connProps.setProperty(DestinationDataProvider.JCO_LANG, dto.lang);
+                    myProvider = new MyDestinationDataProvider();
+                    myProvider.addDestination("SAPBW", connProps);
+                    log.info("注册SAPBW驱动程序前...");
+                    Environment.registerDestinationDataProvider(myProvider);
+                    // 创建JCo连接
+                    JCoDestination destination = JCoDestinationManager.getDestination("SAPBW");
+                    // 测试连接
+                    destination.ping();
+                    log.info("注册SAPBW驱动程序后...");
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
@@ -388,12 +415,18 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             if (conn != null) {
                 conn.close();
             }
+            if (myProvider != null) {
+                Environment.unregisterDestinationDataProvider(myProvider);
+            }
             log.error("测试连接异常：" + e);
             return ResultEnum.DATASOURCE_CONNECTERROR;
         } finally {
             try {
                 if (conn != null) {
                     conn.close();
+                }
+                if (myProvider != null) {
+                    Environment.unregisterDestinationDataProvider(myProvider);
                 }
             } catch (SQLException e) {
                 throw new FkException(ResultEnum.DATASOURCE_CONNECTCLOSEERROR);
@@ -547,6 +580,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setExpirationTime(t.getExpirationTime());
         dataSourceDTO.setToken(t.getToken());
         dataSourceDTO.setAuthenticationMethod(t.getAuthenticationMethod());
+        dataSourceDTO.setSysNr(t.getSysNr());
+        dataSourceDTO.setLang(t.getLang());
         if (isShowPwd) {
             dataSourceDTO.setConPassword(t.getConPassword());
         }

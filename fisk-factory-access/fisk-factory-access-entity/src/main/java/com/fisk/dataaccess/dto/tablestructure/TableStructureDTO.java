@@ -1,12 +1,15 @@
 package com.fisk.dataaccess.dto.tablestructure;
 
+import com.fisk.dataaccess.dto.sapbw.CubeDimsAndMeas;
+import com.fisk.dataaccess.dto.sapbw.CubeVariable;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
  * <p>
- *     表结构对象
+ * 表结构对象
  * </p>
+ *
  * @author Lock
  */
 @Data
@@ -38,5 +41,17 @@ public class TableStructureDTO {
      */
     @ApiModelProperty(value = "字段精度", required = true)
     public Integer fieldPrecision;
+
+    /**
+     * 如果是sapbw，这个对象代表cube的所有参数
+     */
+    @ApiModelProperty(value = "如果是sapbw，这个对象代表cube的所有参数")
+    public CubeVariable cubeVariable;
+
+    /**
+     * 如果是sapbw，这个对象代表cube的所有维度和指标
+     */
+    @ApiModelProperty(value = "字段精度")
+    public CubeDimsAndMeas cubeDimsAndMeas;
 
 }

@@ -19,6 +19,7 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
@@ -46,6 +47,8 @@ import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.dto.sapbw.CubesAndCats;
+import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
@@ -82,6 +85,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.sap.conn.jco.JCoDestination;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -1036,6 +1040,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     log.info("注册OpenEdge驱动程序后...");
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     allDatabases.addAll(OpenEdgeUtils.getAllDatabases(conn));
+                case SAPBW:
+                    ProviderAndDestination providerAndDestination =
+                            DbConnectionHelper.myDestination(dto.host, dto.sysNr, dto.port, dto.connectAccount, dto.connectPwd, dto.lang);
+                    JCoDestination destination = providerAndDestination.getDestination();
+                    MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+                    // 测试连接
+                    destination.ping();
+                    log.info("注册SAPBW驱动程序后...");
+                    CubesAndCats allCubes = SapBwUtils.getAllCubes(destination, myProvider);
+                    // cube Names
+                    List<String> cubeNames = allCubes.getCubeNames();
+                    // cat Names
+                    List<String> catNames = allCubes.getCatNames();
+                    // 只返回cubeNames
+                    allDatabases.addAll(cubeNames);
                 default:
                     break;
             }

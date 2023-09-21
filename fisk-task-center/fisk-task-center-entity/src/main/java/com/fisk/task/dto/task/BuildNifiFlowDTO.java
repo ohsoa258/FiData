@@ -223,4 +223,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     @ApiModelProperty(value = "nifi组件并发数量")
     public Integer concurrencyNums;
 
+    /**
+     * 是否是sapbw
+     */
+    @ApiModelProperty(value = "是否是sapbw")
+    public boolean sapBwFlow;
+
 }

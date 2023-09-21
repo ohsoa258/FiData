@@ -22,6 +22,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
@@ -52,6 +53,7 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -73,6 +75,7 @@ import com.fisk.dataaccess.utils.keepnumberfactory.IBuildKeepNumber;
 import com.fisk.dataaccess.utils.keepnumberfactory.impl.BuildKeepNumberSqlHelper;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
+import com.fisk.dataaccess.utils.sql.SapBwUtils;
 import com.fisk.dataaccess.utils.sql.SqlServerConUtils;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
@@ -100,6 +103,7 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
+import com.sap.conn.jco.JCoDestination;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -786,6 +790,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
+
         // 1.删除tb_table_access数据
         TableAccessPO modelAccess = this.getById(id);
         if (modelAccess == null) {
@@ -1059,6 +1064,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ProcessorConfig processorConfig = new ProcessorConfig();
         // ftp连接信息
         FtpConfig ftpConfig = new FtpConfig();
+        // sapBw连接信息
+        SapBwConfig sapBwConfig = new SapBwConfig();
+
         // 1.app组配置
         // select * from tb_app_registration where id=id and del_flag=1;
         AppRegistrationPO modelReg = this.appRegistrationImpl.query().eq("id", appid).eq("del_flag", 1).one();
@@ -1095,6 +1103,18 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             case FTP:
             case SFTP:
                 dto.ftpConfig = buildFtpConfig(ftpConfig, modelDataSource, modelAccess, modelReg);
+                break;
+            case SAPBW:
+                // 设置sapBw配置信息
+                sapBwConfig.setAppId(modelDataSource.getAppId());
+                sapBwConfig.setDriveType(modelDataSource.getDriveType());
+                sapBwConfig.setHost(modelDataSource.getHost());
+                sapBwConfig.setPort(modelDataSource.getPort());
+                sapBwConfig.setConnectAccount(modelDataSource.getConnectAccount());
+                sapBwConfig.setConnectPwd(modelDataSource.getConnectPwd());
+                sapBwConfig.setSysNr(modelDataSource.getSysNr());
+                sapBwConfig.setLang(modelDataSource.getLang());
+                sapBwConfig.setMdxSql(modelAccess.getSqlScript());
                 break;
             default:
                 break;
@@ -1160,6 +1180,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.targetDsConfig = targetDsConfig;
         dto.processorConfig = processorConfig;
         dto.cfgDsConfig = cfgDsConfig;
+        dto.sapBwConfig = sapBwConfig;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 
@@ -1431,7 +1452,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName())) {
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())) {
                             f.type = "数据湖表任务";
                         }
                         if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
@@ -2230,6 +2252,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (registration == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
+
         OdsResultDTO array = new OdsResultDTO();
         Instant inst1 = Instant.now();
         Connection conn = null;
@@ -2237,55 +2260,69 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         ResultSet rs = null;
         com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
         try {
-            AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
-            conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
-            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-            st.setMaxRows(10);
+            // 如果是sapbw
+            if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(po.driveType)) {
+                // 获取sapbw的destination和provider
+                ProviderAndDestination providerAndDestination =
+                        DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
+                JCoDestination destination = providerAndDestination.getDestination();
+                MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
 
-            //cdc模式
-            if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
-                query.querySql = "SELECT * FROM " + query.querySql;
-            }
+                // 执行mdx语句，返回结果
+                array = SapBwUtils.excuteMdx(destination, myProvider, query.querySql);
+                Instant inst2 = Instant.now();
+                log.info("执行mdx时间 : " + Duration.between(inst1, inst2).toMillis());
 
-            //系统变量替换
-            if (!CollectionUtils.isEmpty(query.deltaTimes)) {
-                for (DeltaTimeDTO item : query.deltaTimes) {
-                    boolean empty = StringUtils.isEmpty(item.variableValue);
-                    if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE || empty) {
-                        continue;
-                    }
-                    item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, item.systemVariableTypeEnum.getName());
+            } else {
+                AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
+                conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
+                st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+                st.setMaxRows(10);
+
+                //cdc模式
+                if (po.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE_CDC.getName())) {
+                    query.querySql = "SELECT * FROM " + query.querySql;
                 }
+
+                //系统变量替换
+                if (!CollectionUtils.isEmpty(query.deltaTimes)) {
+                    for (DeltaTimeDTO item : query.deltaTimes) {
+                        boolean empty = StringUtils.isEmpty(item.variableValue);
+                        if (item.deltaTimeParameterTypeEnum != DeltaTimeParameterTypeEnum.VARIABLE || empty) {
+                            continue;
+                        }
+                        item.variableValue = AbstractCommonDbHelper.executeTotalSql(item.variableValue, conn, item.systemVariableTypeEnum.getName());
+                    }
+                }
+
+                Instant inst2 = Instant.now();
+                log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
+                Instant inst3 = Instant.now();
+                String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
+                log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
+                // 传参改动
+                DataTranDTO dto = new DataTranDTO();
+                dto.tableName = tableName;
+                dto.querySql = query.querySql;
+                dto.driveType = po.driveType;
+                dto.deltaTimes = JSON.toJSONString(query.deltaTimes);
+                Map<String, String> converSql = publishTaskClient.converSql(dto).data;
+                log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
+
+                String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
+                rs = st.executeQuery(sql);
+                Instant inst4 = Instant.now();
+                log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
+                // 获取数据集
+                array = resultSetToJsonArrayDataAccess(rs);
+
+                Instant inst5 = Instant.now();
+                log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
+
+                array.sql = sql;
             }
-
-            assert st != null;
-            Instant inst2 = Instant.now();
-            log.info("流式设置执行时间 : " + Duration.between(inst1, inst2).toMillis());
-            Instant inst3 = Instant.now();
-            String tableName = TableNameGenerateUtils.buildTableName(query.tableName, registration.appAbbreviation, registration.whetherSchema);
-            log.info("时间增量值:{}", JSON.toJSONString(query.deltaTimes));
-            // 传参改动
-            DataTranDTO dto = new DataTranDTO();
-            dto.tableName = tableName;
-            dto.querySql = query.querySql;
-            dto.driveType = po.driveType;
-            dto.deltaTimes = JSON.toJSONString(query.deltaTimes);
-            Map<String, String> converSql = publishTaskClient.converSql(dto).data;
-            log.info("拼语句执行时间 : " + Duration.between(inst2, inst3).toMillis());
-
-            String sql = converSql.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-            rs = st.executeQuery(sql);
-            Instant inst4 = Instant.now();
-            log.info("执行sql时间 : " + Duration.between(inst3, inst4).toMillis());
-            //获取数据集
-            array = resultSetToJsonArrayDataAccess(rs);
-
-            Instant inst5 = Instant.now();
-            log.info("封装数据执行时间 : " + Duration.between(inst4, inst5).toMillis());
-
-            array.sql = sql;
         } catch (Exception e) {
-            log.error("数据接入执行自定义sql失败,ex:{}", e);
+            log.error("数据接入执行自定义sql失败,ex:", e);
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, e.getMessage());
         } finally {
             AbstractCommonDbHelper.closeResultSet(rs);

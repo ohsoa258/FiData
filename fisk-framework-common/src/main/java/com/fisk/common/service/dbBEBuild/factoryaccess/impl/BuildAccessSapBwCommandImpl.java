@@ -2,8 +2,7 @@ package com.fisk.common.service.dbBEBuild.factoryaccess.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
-import com.fisk.common.core.enums.dbdatatype.OpenEdgeTypeEnum;
-import com.fisk.common.core.enums.dbdatatype.PgTypeEnum;
+import com.fisk.common.core.enums.dbdatatype.SapBwFieldTypeEnum;
 import com.fisk.common.core.enums.dbdatatype.SqlServerTypeEnum;
 import com.fisk.common.core.enums.factory.BusinessTimeEnum;
 import com.fisk.common.core.response.ResultEnum;
@@ -12,10 +11,7 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 
-public class BuildAccessOpenEdgeCommandImpl  implements IBuildAccessSqlCommand {
-
-    private static Integer sql_server_max_length = 4000;
-
+public class BuildAccessSapBwCommandImpl implements IBuildAccessSqlCommand {
     @Override
     public String buildUseExistTable() {
         return null;
@@ -51,66 +47,40 @@ public class BuildAccessOpenEdgeCommandImpl  implements IBuildAccessSqlCommand {
         return null;
     }
 
-    /**
-     * todo：open转pg mysql oracle暂时先不写
-     * @param dto
-     * @param typeEnum
-     * @return
-     */
     @Override
     public String[] dataTypeConversion(DataTypeConversionDTO dto, DataSourceTypeEnum typeEnum) {
         switch (typeEnum) {
             case SQLSERVER:
-                return openEdgeConversionSqlServer(dto);
+                return sapBwConversionSqlServer(dto);
             case POSTGRESQL:
-                return openEdgeConversionPg(dto);
+                return sapBwConversionPg(dto);
             case ORACLE:
-                return openEdgeConversionOracle(dto);
+                return sapBwConversionOracle(dto);
             case MYSQL:
-                return openEdgeConversionMySQL(dto);
+                return sapBwConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
     }
 
-    /**
-     * open数据类型转MySQL
-     * @param dto
-     * @return
-     */
-    private String[] openEdgeConversionMySQL(DataTypeConversionDTO dto) {
+    private String[] sapBwConversionMySQL(DataTypeConversionDTO dto) {
         return null;
     }
 
-    /**
-     * open数据类型转Oracle
-     * @param dto
-     * @return
-     */
-    private String[] openEdgeConversionOracle(DataTypeConversionDTO dto) {
+    private String[] sapBwConversionOracle(DataTypeConversionDTO dto) {
         return null;
     }
 
-    /**
-     * open数据类型转Pg
-     * @param dto
-     * @return
-     */
-    private String[] openEdgeConversionPg(DataTypeConversionDTO dto) {
+    private String[] sapBwConversionPg(DataTypeConversionDTO dto) {
         return null;
     }
 
-    /**
-     * openEdge数据类型转SqlServer
-     * @param dto
-     * @return
-     */
-    private String[] openEdgeConversionSqlServer(DataTypeConversionDTO dto) {
-        OpenEdgeTypeEnum typeEnum = OpenEdgeTypeEnum.getValue(dto.dataType);
+    private String[] sapBwConversionSqlServer(DataTypeConversionDTO dto) {
+        SapBwFieldTypeEnum typeEnum = SapBwFieldTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
         data[1] = dto.dataLength;
         switch (typeEnum) {
-            case INTEGER:
+            case INT:
                 data[0] = SqlServerTypeEnum.INT.getName();
                 break;
             case SMALLINT:
@@ -148,18 +118,7 @@ public class BuildAccessOpenEdgeCommandImpl  implements IBuildAccessSqlCommand {
 
     @Override
     public JSONObject dataTypeList() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("字符串型", "CHAR");
-        jsonObject.put("整型", "INTEGER");
-        jsonObject.put("位数据类型", "LOGICAL");
-        jsonObject.put("大整型", "DECIMAL");
-        jsonObject.put("日期类型", "DATE");
-        jsonObject.put("时间类型", "CHAR"); // OpenEdge中没有独立的时间类型，可以使用CHAR来表示时间
-        jsonObject.put("日期时间类型", "DATETIME");
-        jsonObject.put("时间戳类型", "TIMESTAMP");
-        jsonObject.put("浮点型", "FLOAT");
-        jsonObject.put("文本型", "LONGCHAR");
-        return jsonObject;
+        return null;
     }
 
     @Override

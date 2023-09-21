@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
  * @date 2022/6/13 14:51
  */
 @Data
-public class DataSourceDTO
-{
+public class DataSourceDTO {
     @ApiModelProperty(value = "数据源id")
     public Integer id;
 
@@ -240,4 +239,16 @@ public class DataSourceDTO
      */
     @ApiModelProperty(value = "api选择的身份验证方式")
     public int authenticationMethod;
+
+    /**
+     * JCO_SYSNR
+     */
+    @ApiModelProperty(value = "JCO_SYSNR", required = true)
+    public String sysNr;
+
+    /**
+     * JCO_LANG
+     */
+    @ApiModelProperty(value = "JCO_LANG", required = true)
+    public String lang;
 }

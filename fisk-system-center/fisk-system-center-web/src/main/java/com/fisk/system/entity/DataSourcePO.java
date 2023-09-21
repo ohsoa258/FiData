@@ -3,6 +3,7 @@ package com.fisk.system.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -13,8 +14,7 @@ import lombok.Data;
  */
 @Data
 @TableName("tb_datasource_config")
-public class DataSourcePO extends BasePO
-{
+public class DataSourcePO extends BasePO {
     /**
      * 连接名称
      */
@@ -171,4 +171,17 @@ public class DataSourcePO extends BasePO
      * 5:无需身份验证
      */
     public int authenticationMethod;
+
+    /**
+     * JCO_SYSNR
+     */
+    @ApiModelProperty(value = "JCO_SYSNR", required = true)
+    public String sysNr;
+
+    /**
+     * JCO_LANG
+     */
+    @ApiModelProperty(value = "JCO_LANG", required = true)
+    public String lang;
+
 }

@@ -83,25 +83,27 @@ public class DataSourceController {
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     *
      * @param dto
      * @return
      */
     @ApiOperation(value = "修改数据接入引用的平台配置数据源信息")
     @PostMapping("/editDataSourceByTask")
     public ResultEntity<Boolean> editDataSourceByTask(@RequestBody DataSourceSaveDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.editDataSource(dto));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.editDataSource(dto));
     }
 
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     *
      * @param id
      * @return
      */
     @ApiOperation(value = "根据SystemDataSourceId获取数据接入引用的数据源信息")
     @GetMapping("/getDataSourcesBySystemDataSourceId")
     public ResultEntity<List<AppDataSourceDTO>> getDataSourcesBySystemDataSourceId(@RequestParam("id") Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getDataSourcesBySystemDataSourceId(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourcesBySystemDataSourceId(id));
     }
 
     /**
@@ -118,6 +120,7 @@ public class DataSourceController {
 
     /**
      * 仅供数据资产模块调用使用,通过tb_app_datasource表内数据的id获取系统模块对应的数据源的信息
+     *
      * @param id
      * @return
      */

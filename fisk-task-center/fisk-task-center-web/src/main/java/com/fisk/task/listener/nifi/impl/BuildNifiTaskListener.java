@@ -1436,7 +1436,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, processorEntities1.get(processorEntities1.size() - 1).getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         }
 
-
         //创建执行删除组件
         /**
          * Exec Target Delete
@@ -1494,12 +1493,25 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //pg2doris不需要调用存储过程
         ProcessorEntity processorEntity1 = new ProcessorEntity();
         List<ProcessorEntity> excelProcessorEntity = new ArrayList<>();
-        /**
-         * 如果是普通表（数接的物理表、数仓的事实表和维度表）的nifi流程，则创建这个执行查询的组件：ExecuteSQLRecord
-         */
+
+        //如果是 DWTOOLAP  则创建执行查询的组件：ExecuteSQLRecord
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
+            // 如果是sapbw的流程
+            if (dto.sapBwFlow) {
+
+                /**
+                 * createSapBwProcessorEntity会返回一个集合，
+                 * 集合里面第一个是replaceTextForSapBwProcess组件
+                 * 第二个是invokeHTTPProcessorForSapBw组件
+                 */
+                // 虽然名字叫这个 但是只是为了下面流程连线逻辑不大改，其实还是sapbw的流程
+                excelProcessorEntity = createSapBwProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+
+                res.addAll(excelProcessorEntity);
+            }
+
             /**
              * 如果是sftp/ftp的excel表格
              */
@@ -1514,9 +1526,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                 res.addAll(excelProcessorEntity);
             } else {
-
                 /**
-                 * 数接 数仓的查询组件
+                 * 如果是普通表（数接的物理表、数仓的事实表和维度表）的nifi流程，则创建这个执行查询的组件：ExecuteSQLRecord
                  */
                 executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
                 componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
@@ -2091,6 +2102,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, replaceTextForFtpProcess.getId(), invokeHTTPForFtpProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         processorEntities.add(replaceTextForFtpProcess);
         processorEntities.add(invokeHTTPForFtpProcessor);
+        tableNifiSettingPO.csvReaderId = null;
+        tableNifiSettingPO.avroRecordSetWriterId = null;
+        tableNifiSettingPO.convertRecordProcessorId = null;
+        tableNifiSettingPO.mergeContentProcessorId = null;
+
+        return processorEntities;
+    }
+
+    public List<ProcessorEntity> createSapBwProcessorEntity(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
+
+        List<ProcessorEntity> processorEntities = new ArrayList<>();
+        /**
+         * 流程中的第1个replaceTextForSapBwProcess组件
+         */
+        ProcessorEntity replaceTextForSapBwProcess = replaceTextForSapBwProcess(config, groupId, dto);
+        tableNifiSettingPO.getFtpProcessorId = replaceTextForSapBwProcess.getId();
+        //componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        /**
+         * 流程中的第1个invokeHTTPProcessorForSapBw组件
+         */
+        ProcessorEntity invokeHTTPForSapBwProcessor = invokeHTTPForSapBwProcessor(groupId);
+        tableNifiSettingPO.convertExcelToCsvProcessorId = invokeHTTPForSapBwProcessor.getId();
+        componentConnector(groupId, replaceTextForSapBwProcess.getId(), invokeHTTPForSapBwProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        processorEntities.add(replaceTextForSapBwProcess);
+        processorEntities.add(invokeHTTPForSapBwProcessor);
         tableNifiSettingPO.csvReaderId = null;
         tableNifiSettingPO.avroRecordSetWriterId = null;
         tableNifiSettingPO.convertRecordProcessorId = null;
@@ -3357,6 +3393,34 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
+    private ProcessorEntity replaceTextForSapBwProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        HashMap<String, Object> map = new HashMap<>();
+        //放入topic
+        map.put("topic", "${kafka.topic}");
+        //放入大批次号
+        map.put("fidata_batch_code", "${fidata_batch_code}");
+
+        buildReplaceTextProcessorDTO.name = "replaceTextForSapBwProcess";
+        buildReplaceTextProcessorDTO.details = "query_phase";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        //设置替换值为map，也就是map里面装载的连个键值对
+        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * 调用api参数组件
+     *
+     * @param config  数据接入配置
+     * @param groupId 组id
+     * @return 组件对象
+     */
     private ProcessorEntity replaceTextForDwProcessv1(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         //校验通过修改字段集合
@@ -3406,7 +3470,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }
-
 
     /**
      * 调用api参数组件
@@ -3586,6 +3649,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/task/nifi/sftpDataUploadListener?Content-Type=application/json";
+        buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
+        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
+        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
+        List<String> autoEnd = new ArrayList<>();
+        autoEnd.add("Response");
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, autoEnd);
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * ftp调用api参数组件
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity invokeHTTPForSapBwProcessor(String groupId) {
+        BuildInvokeHttpProcessorDTO buildInvokeHttpProcessorDTO = new BuildInvokeHttpProcessorDTO();
+        buildInvokeHttpProcessorDTO.name = "invokeHTTPProcessorForSapBw";
+        buildInvokeHttpProcessorDTO.details = "query_phase";
+        buildInvokeHttpProcessorDTO.groupId = groupId;
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
+        buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
+        buildInvokeHttpProcessorDTO.httpMethod = "POST";
+        buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/task/nifi/sapBwToStg?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
         buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
         buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";

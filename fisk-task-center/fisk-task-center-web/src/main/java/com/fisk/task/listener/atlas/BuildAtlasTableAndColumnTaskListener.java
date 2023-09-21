@@ -156,6 +156,7 @@ public class BuildAtlasTableAndColumnTaskListener
                 bfd.openTransmission = buildPhysicalTableDTO.openTransmission;
                 bfd.excelFlow = buildPhysicalTableDTO.excelFlow;
                 bfd.sftpFlow = buildPhysicalTableDTO.sftpFlow;
+                bfd.sapBwFlow = buildPhysicalTable.sapBwFlow;
                 bfd.deltaTimes = deltaTimes;
                 bfd.generateVersionSql = buildPhysicalTableDTO.generateVersionSql;
                 bfd.maxRowsPerFlowFile = buildPhysicalTableDTO.maxRowsPerFlowFile;

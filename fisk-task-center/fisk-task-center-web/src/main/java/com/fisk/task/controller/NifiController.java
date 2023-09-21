@@ -20,6 +20,7 @@ import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
+import com.fisk.task.listener.nifi.ISapBwListener;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
@@ -58,6 +59,9 @@ public class NifiController {
     ISftpDataUploadListener iSftpDataUploadListener;
     @Resource
     INifiSchedulingComponentService iNifiSchedulingComponentService;
+    @Resource
+    private ISapBwListener sapBwListener;
+
     @ApiOperation("修改调度")
     @PostMapping("/modifyScheduling")
     public ResultEntity<Object> modifyScheduling(@RequestParam("groupId") String groupId, @RequestParam("ProcessorId") String ProcessorId, @RequestParam("schedulingStrategy") String schedulingStrategy, @RequestParam("schedulingPeriod") String schedulingPeriod) {
@@ -95,6 +99,7 @@ public class NifiController {
     public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
         iNifiCustomWorkFlow.deleteCustomWorkNifiFlow(nifiCustomWorkListDTO);
     }
+
     @ApiOperation("暂停自定义工作Nifi流程")
     @PostMapping("/suspendCustomWorkNifiFlow")
     public ResultEntity<Object> suspendCustomWorkNifiFlow(@RequestParam("nifiCustomWorkflowId") String nifiCustomWorkflowId, @RequestParam("ifFire") boolean ifFire) {
@@ -135,7 +140,8 @@ public class NifiController {
         }
 
         //RestfulApi无需在nifi创建全局变量，它不走nifi
-        if (dto.conType== DataSourceTypeEnum.RESTFULAPI){
+        //SAPBW同理 源--临时表的流程不走nifi    临时表-目标表的流程才走nifi
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW) {
             return resultEntity;
         }
 
@@ -192,7 +198,7 @@ public class NifiController {
             //在修改数据源的同时，连带修改数据接入引用了平台配置数据源的app应用的数据源信息
             //远程调用数据接入的方法
             ResultEntity<List<AppDataSourceDTO>> sources = dataAccessClient.getDataSourcesBySystemDataSourceId(dto.id);
-            if (!sources.getData().isEmpty()){
+            if (!sources.getData().isEmpty()) {
                 ResultEntity<Boolean> booleanResultEntity = dataAccessClient.editDataSourceByTask(dto);
                 if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                     log.error("数据接入服务修改数据源失败，[{}]", booleanResultEntity.getMsg());
@@ -205,7 +211,8 @@ public class NifiController {
         }
 
         //RestfulApi无需在nifi创建全局变量，它不走nifi
-        if (dto.conType== DataSourceTypeEnum.RESTFULAPI){
+        //SAPBW同理 源--临时表的流程不走nifi
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW) {
             return resultEntity;
         }
 
@@ -251,5 +258,17 @@ public class NifiController {
     @PostMapping("enableOrDisable")
     public ResultEntity<TableServiceDTO> enableOrDisable(@RequestBody TableServiceDTO tableServiceDTO) {
         return tableNifiSettingService.enableOrDisable(tableServiceDTO);
+    }
+
+    /**
+     * sapbw-Java代码同步
+     *
+     * @param kafkaReceive
+     * @return
+     */
+    @ApiOperation("sapbw-Java代码同步")
+    @PostMapping("/sapBwToStg")
+    public ResultEntity<Object> sapBwToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
+        return ResultEntityBuild.build(sapBwListener.sapBwToStg(JSON.toJSONString(kafkaReceive)));
     }
 }

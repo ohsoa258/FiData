@@ -49,4 +49,16 @@ public class DbConnectionDTO {
      */
     @ApiModelProperty(value = "连接密码", required = true)
     public String connectPwd;
+
+    /**
+     * JCO_SYSNR
+     */
+    @ApiModelProperty(value = "JCO_SYSNR", required = true)
+    public String sysNr;
+
+    /**
+     * JCO_LANG
+     */
+    @ApiModelProperty(value = "JCO_LANG", required = true)
+    public String lang;
 }
