@@ -176,6 +176,15 @@
             <systemPath>${pom.basedir}/src/main/resources/lib/openedge.jar</systemPath>
         </dependency>
 
+        <!-- sapbw jco驱动 -->
+        <dependency>
+            <groupId>com.sap.conn.jco</groupId>
+            <artifactId>sapjco3</artifactId>
+            <version>3.1.7</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/lib/sapjco3.jar</systemPath>
+        </dependency>
+
         <!-- ftp -->
         <dependency>
             <groupId>commons-net</groupId>

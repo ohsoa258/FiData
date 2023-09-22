@@ -225,7 +225,6 @@
             <systemPath>${project.basedir}/src/main/resources/lib/sapjco3.jar</systemPath>
         </dependency>
 
-
         <!-- jcraft start -->
         <dependency>
             <groupId>com.jcraft</groupId>

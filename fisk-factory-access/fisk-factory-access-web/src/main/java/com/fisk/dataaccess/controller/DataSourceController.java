@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -28,7 +29,7 @@ public class DataSourceController {
 
     @ApiOperation(value = "根据appId获取所有数据源以及数据库、表数据")
     @GetMapping("/getDataSourceMeta/{appId}")
-    public ResultEntity<Object> getDataSourceMeta(@PathVariable long appId) {
+    public ResultEntity<List<com.fisk.dataaccess.dto.v3.DataSourceDTO>> getDataSourceMeta(@PathVariable long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceMeta(appId));
     }
 
@@ -40,7 +41,7 @@ public class DataSourceController {
      */
     @ApiOperation(value = "数据接入，刷新redis里存储的表信息")
     @GetMapping("/refreshRedis/{appId}")
-    public ResultEntity<Object> refreshRedis(@PathVariable long appId) {
+    public ResultEntity<List<com.fisk.dataaccess.dto.v3.DataSourceDTO>> refreshRedis(@PathVariable long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.refreshRedis(appId));
     }
 //
@@ -58,7 +59,7 @@ public class DataSourceController {
 
     @PostMapping("/getSourceColumnMeta")
     @ApiOperation(value = "根据表名称获取字段信息")
-    public ResultEntity<Object> getSourceColumnMeta(@RequestBody SourceColumnMetaQueryDTO dto) {
+    public ResultEntity<List<TableStructureDTO>> getSourceColumnMeta(@RequestBody SourceColumnMetaQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceColumnMeta(dto));
     }
 
