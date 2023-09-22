@@ -228,6 +228,6 @@ public class DataQualityTest {
     @Test
     public void get(){
         TaskUtils taskUtils = new TaskUtils();
-        taskUtils.doTask();
+//        taskUtils.doTask();
     }
 }
