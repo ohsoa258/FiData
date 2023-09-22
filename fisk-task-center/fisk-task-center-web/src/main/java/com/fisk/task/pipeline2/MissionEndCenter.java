@@ -20,6 +20,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.dispatchlog.DispatchExceptionHandlingDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
@@ -235,22 +236,49 @@ public class MissionEndCenter {
                                         }
                                         log.info("consumerServerEnable参数，{}", consumerServerEnable);
                                         if (consumerServerEnable) {
-                                            // 通过管道id,查询关联表服务
-                                            ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
-                                            if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
-                                                List<BuildTableServiceDTO> list = result.data;
-                                                for (BuildTableServiceDTO buildTableService : list) {
-                                                    KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
-                                                    kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + ".0." + buildTableService.id;
-                                                    kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
-                                                    kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
-                                                    kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
-                                                    kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
-                                                    kafkaRkeceive.ifTaskStart = true;
-                                                    kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
-                                                    //pc.universalPublish(kafkaRkeceiveDTO);
-                                                    log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
-                                                    kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                                            if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.DATASERVICES.getValue())){
+                                                // 通过管道id,查询关联表服务
+                                                ResultEntity<List<BuildTableServiceDTO>> result = consumeServeiceClient.getTableListByPipelineId(Integer.valueOf(pipelineId));
+                                                if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
+                                                    List<BuildTableServiceDTO> list = result.data;
+                                                    for (BuildTableServiceDTO buildTableService : list) {
+                                                        if (buildTableService.enable == 0){
+                                                            continue;
+                                                        }
+                                                        KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
+                                                        kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATASERVICES.getValue() + buildTableService.tableAppId + buildTableService.id;
+                                                        kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
+                                                        kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                                                        kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
+                                                        kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
+                                                        kafkaRkeceive.ifTaskStart = true;
+                                                        kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                                                        //pc.universalPublish(kafkaRkeceiveDTO);
+                                                        log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
+                                                        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                                                    }
+                                                }
+                                            }else if (Objects.equals(Integer.parseInt(split[4]), OlapTableEnum.DATA_SERVICE_API.getValue())){
+                                                // 通过管道id,查询关联api服务
+                                                ResultEntity<List<BuildTableApiServiceDTO>> result = consumeServeiceClient.getTableApiListByPipelineId(Integer.valueOf(pipelineId));
+                                                if (result != null && result.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(result.data)) {
+                                                    List<BuildTableApiServiceDTO> list = result.data;
+                                                    for (BuildTableApiServiceDTO buildTableApiService : list) {
+                                                        if (buildTableApiService.enable == 0){
+                                                            continue;
+                                                        }
+                                                        KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
+                                                        kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATA_SERVICE_API.getValue() + "."+buildTableApiService.getAppId()+"." + buildTableApiService.id;
+                                                        kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
+                                                        kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
+                                                        kafkaRkeceive.fidata_batch_code = kafkaRkeceive.pipelTaskTraceId;
+                                                        kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
+                                                        kafkaRkeceive.ifTaskStart = true;
+                                                        kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+                                                        //pc.universalPublish(kafkaRkeceiveDTO);
+                                                        log.info("表服务关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
+                                                        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                                                    }
                                                 }
                                             }
                                         }
@@ -377,6 +405,7 @@ public class MissionEndCenter {
                             if (consumerServerEnable && Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {
                                 log.info("确定是表服务");
                                 TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
+                                tableServiceEmailDTO.appType = 1;
                                 tableServiceEmailDTO.appId = Integer.parseInt(split[4]);
                                 tableServiceEmailDTO.msg = taskMap.get(DispatchLogEnum.taskend.getValue()).toString();
                                 tableServiceEmailDTO.result = "【运行成功】";
@@ -401,7 +430,7 @@ public class MissionEndCenter {
                                         + tableServiceEmailDTO.pipelTraceId + "】";
                                 try {
                                     Map<String, String> hashMap = new HashMap<>();
-                                    hashMap.put("表服务名称", "");
+                                    hashMap.put("数据分发表服务名称", "");
                                     hashMap.put("表名", String.valueOf(Integer.valueOf(split[5])));
                                     hashMap.put("运行结果", tableServiceEmailDTO.result);
                                     hashMap.put("运行时长", tableServiceEmailDTO.duration);

@@ -86,6 +86,11 @@ public class MqConstants {
             public static final String BUILD_DELETE_TABLE_SERVER_FLOW = "task.build.delete.table.server.flow";
 
             public static final String BUILD_CUSTOMWORK_FLOW = "task.build.customwork.flow";
+
+            public static final String BUILD_DATA_SERVER_API_FLOW = "task.build.data.server.api.flow";
+
+            public static final String BUILD_DELETE_DATA_SERVER_API_FLOW = "task.build.delete.data.server.api.flow";
+
         }
 
         public static final class DorisTopicConstants{

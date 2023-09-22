@@ -101,7 +101,7 @@
         root: 设置输出级别，只有一个level属性
         root.level: 输出级别，默认是debug
         <root level="info">
-            <appender-ref ref="Console"/>
+            <appender-ref ref="Con sole"/>
         </root>
         -->
     </springProfile>

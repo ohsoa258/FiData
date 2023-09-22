@@ -32,6 +32,7 @@ public interface IPipelTaskLog extends IService<PipelTaskLogPO> {
      */
     public void savePipelTaskLog(String pipelTraceId, String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType);
 
+    List<PipelTaskLogVO> getPipelTaskLogVo(String taskTraceId);
     /**
      * 获取日志
      *

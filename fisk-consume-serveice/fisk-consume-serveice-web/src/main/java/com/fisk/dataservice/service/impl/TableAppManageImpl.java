@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -16,28 +17,35 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataservice.dto.GetConfigDTO;
-import com.fisk.dataservice.dto.tableservice.TableAppDTO;
-import com.fisk.dataservice.dto.tableservice.TableAppDatasourceDTO;
-import com.fisk.dataservice.dto.tableservice.TableAppPageDTO;
-import com.fisk.dataservice.dto.tableservice.TableAppQueryDTO;
+import com.fisk.dataservice.dto.tableapi.TableApiAuthRequestDTO;
+import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
+import com.fisk.dataservice.enums.AppTypeEnum;
+import com.fisk.dataservice.enums.InterfaceTypeEnum;
+import com.fisk.dataservice.map.TableApiAuthRequestMap;
+import com.fisk.dataservice.map.TableApiResultMap;
 import com.fisk.dataservice.map.TableAppDatasourceMap;
 import com.fisk.dataservice.map.TableAppMap;
 import com.fisk.dataservice.mapper.AppServiceConfigMapper;
 import com.fisk.dataservice.mapper.TableAppDatasourceMapper;
 import com.fisk.dataservice.mapper.TableAppMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
+import com.fisk.dataservice.service.ITableApiAuthRequestService;
+import com.fisk.dataservice.service.ITableApiResultService;
+import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
 import com.fisk.dataservice.vo.tableservice.TableAppDatasourceVO;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildDeleteTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -80,7 +88,12 @@ public class TableAppManageImpl
 
     @Resource
     private TableServiceImpl tableService;
-
+    @Resource
+    ITableApiService tableApiService;
+    @Resource
+    ITableApiResultService tableApiResultService;
+    @Resource
+    ITableApiAuthRequestService tableApiAuthRequestService;
     @Resource
     TableFieldImpl tableField;
 
@@ -125,7 +138,21 @@ public class TableAppManageImpl
                         t.setTableAppDatasourceVOS(tableAppDatasourceVOS);
                     }
                 }
-
+                LambdaQueryWrapper<TableApiServicePO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(TableApiServicePO::getAppId,t.id);
+                t.setItemCount(tableApiService.count(queryWrapper));
+                LambdaQueryWrapper<TableApiAuthRequestPO> apiAuthQueryWrapper = new LambdaQueryWrapper<>();
+                apiAuthQueryWrapper.eq(TableApiAuthRequestPO::getAppId, t.id);
+                List<TableApiAuthRequestPO> tableApiAuthRequestPOS = tableApiAuthRequestService.list(apiAuthQueryWrapper);
+                LambdaQueryWrapper<TableApiResultPO> apiResultQueryWrapper = new LambdaQueryWrapper<>();
+                apiResultQueryWrapper.eq(TableApiResultPO::getAppId,  t.id);
+                List<TableApiResultPO> apiResultPOS = tableApiResultService.list(apiResultQueryWrapper);
+                if (CollectionUtils.isNotEmpty(tableApiAuthRequestPOS)) {
+                    t.setApiAuthRequestDTO(TableApiAuthRequestMap.INSTANCES.listPoToDto(tableApiAuthRequestPOS));
+                }
+                if (CollectionUtils.isNotEmpty(apiResultPOS)) {
+                    t.setApiResultDTO(TableApiResultMap.INSTANCES.listPoToDto(apiResultPOS));
+                }
                 if (CollectionUtils.isNotEmpty(tableAppServiceCount)) {
                     AppServiceCountVO appServiceCountVO = tableAppServiceCount.stream().filter(k -> k.getAppId() == t.getId()).findFirst().orElse(null);
                     if (appServiceCountVO != null) {
@@ -135,6 +162,7 @@ public class TableAppManageImpl
             }
             if (CollectionUtils.isNotEmpty(tableAppServiceCount)) {
                 totalCount = tableAppServiceCount.stream().collect(Collectors.summingInt(AppServiceCountVO::getCount));
+                totalCount += tableApiService.count();
                 filter.getRecords().get(0).setTotalCount(totalCount);
             }
         }
@@ -145,7 +173,10 @@ public class TableAppManageImpl
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(TableAppDTO dto) {
         try {
-            if (dto == null || org.apache.commons.lang.StringUtils.isEmpty(dto.getAppName())) {
+            if (dto == null
+            || StringUtils.isEmpty(dto.getAppName())
+            || CollectionUtils.isEmpty(dto.getTableAppDatasourceDTOS())
+            || StringUtils.isEmpty(dto.appType)) {
                 return ResultEnum.PARAMTER_NOTNULL;
             }
             QueryWrapper<TableAppPO> tableAppPOQueryWrapper = new QueryWrapper<>();
@@ -163,9 +194,12 @@ public class TableAppManageImpl
             tableAppPO = TableAppMap.INSTANCES.dtoToPo(dto);
             tableAppPO.setCreateTime(LocalDateTime.now());
             tableAppPO.setCreateUser(String.valueOf(userHelper.getLoginUserInfo().getId()));
-            int i = baseMapper.insertOne(tableAppPO);
-            if (i <= 0) {
+            boolean save = save(tableAppPO);
+            if (!save) {
                 return ResultEnum.SAVE_DATA_ERROR;
+            }
+            if (dto.appType == AppTypeEnum.API_TYPE){
+                saveApiConfig(dto,tableAppPO.getId());
             }
             int tableAppId = Math.toIntExact(tableAppPO.getId());
             if (CollectionUtils.isNotEmpty(tableAppDatasourcePOList)) {
@@ -181,13 +215,50 @@ public class TableAppManageImpl
         return ResultEnum.SUCCESS;
     }
 
+    private void saveApiConfig(TableAppDTO dto,long appId){
+        if (dto.getInterfaceType() == InterfaceTypeEnum.REST_API){
+            switch (dto.getAuthenticationType()){
+                case NONE_VALIDATION:
+                    break;
+                case BASIC_VALIDATION:
+                    saveBasicValidation(dto,appId);
+                    break;
+                case JWT_VALIDATION:
+                    break;
+                case BEARER_TOKEN_VALIDATION:
+                    break;
+                case OAUTH_TWO_VALIDATION:
+                    break;
+                case API_KEY_VALIDATION:
+                    break;
+                default:
+                    break;
+            }
+        }else if (dto.getInterfaceType() == InterfaceTypeEnum.WEB_SERVICE){
+
+        }
+
+    }
+
+    private void saveBasicValidation(TableAppDTO dto,long appId){
+        List<TableApiAuthRequestDTO> apiAuthRequestDTO = dto.getApiAuthRequestDTO();
+        apiAuthRequestDTO = apiAuthRequestDTO.stream().map(i->{
+            i.setAppId((int) appId);
+            return i;
+        }).collect(Collectors.toList());
+        List<TableApiAuthRequestPO> tableApiAuthRequestPOS = TableApiAuthRequestMap.INSTANCES.listDtoToPo(apiAuthRequestDTO);
+        tableApiAuthRequestService.saveBatch(tableApiAuthRequestPOS);
+        tableApiResultService.saveApiResult(dto.getApiResultDTO(),appId);
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum editData(TableAppDTO dto) {
         try {
             if (dto == null || dto.getId() == 0
                     || org.apache.commons.lang.StringUtils.isEmpty(dto.getAppName())
-                    || CollectionUtils.isEmpty(dto.getTableAppDatasourceDTOS())) {
+                    || CollectionUtils.isEmpty(dto.getTableAppDatasourceDTOS())
+                    || StringUtils.isEmpty(dto.appType)) {
                 return ResultEnum.PARAMTER_NOTNULL;
             }
             TableAppPO tableAppPO = baseMapper.selectById(dto.getId());
@@ -205,6 +276,44 @@ public class TableAppManageImpl
             if (i <= 0) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
+            if (tableAppPO.appType == AppTypeEnum.API_TYPE.getValue()){
+                if (dto.appType == AppTypeEnum.TABLE_TYPE){
+                    deleteApiConfig(dto,tableAppPO.getId());
+                }else {
+                    editApiConfig(dto,tableAppPO.getId());
+                }
+            }else {
+                if (dto.appType == AppTypeEnum.API_TYPE){
+                    saveBasicValidation(dto,tableAppPO.getId());
+                }else {
+                    QueryWrapper<AppServiceConfigPO> appServiceConfigPoQueryWrapper = new QueryWrapper<>();
+                    appServiceConfigPoQueryWrapper.lambda().eq(AppServiceConfigPO::getDelFlag, 1)
+                            .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
+                            .eq(AppServiceConfigPO::getAppId, tableAppPO.getId())
+                            .eq(AppServiceConfigPO::getType, 2);
+                    List<AppServiceConfigPO> appServiceConfigPos = appServiceConfigMapper.selectList(appServiceConfigPoQueryWrapper);
+                    List<Long> tableServiceIdList = null;
+                    if (CollectionUtils.isNotEmpty(appServiceConfigPos)) {
+                        tableServiceIdList = appServiceConfigPos.stream().map(t -> Long.parseLong(String.valueOf(t.getServiceId()))).collect(Collectors.toList());
+                        // 根据表ID查询表配置详情
+                        QueryWrapper<TableServicePO> tableServicePoQueryWrapper = new QueryWrapper<>();
+                        tableServicePoQueryWrapper.lambda().eq(TableServicePO::getDelFlag, 1)
+                                .in(TableServicePO::getId, tableServiceIdList);
+                        List<TableServicePO> tableServicePos = tableServiceMapper.selectList(tableServicePoQueryWrapper);
+                        if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
+                            tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
+                            BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+                            buildDeleteTableService.appId = String.valueOf(tableAppPO.getId());
+                            buildDeleteTableService.ids = tableServiceIdList;
+                            buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
+                            buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+                            buildDeleteTableService.delBusiness = true;
+                            publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+                        }
+                    }
+                }
+            }
+
             if (CollectionUtils.isNotEmpty(tableAppDatasourcePOList)) {
                 tableAppDatasourcePOList.forEach(t -> {
                     t.setTableAppId(tableAppId);
@@ -217,6 +326,30 @@ public class TableAppManageImpl
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
         return ResultEnum.SUCCESS;
+    }
+
+    private void editApiConfig(TableAppDTO dto,long appId){
+        if (dto.getInterfaceType() == InterfaceTypeEnum.REST_API){
+            switch (dto.getAuthenticationType()){
+                case NONE_VALIDATION:
+                    break;
+                case BASIC_VALIDATION:
+                    deleteBasicValidation(appId);
+                    saveBasicValidation(dto,appId);
+                    break;
+                case JWT_VALIDATION:
+                    break;
+                case BEARER_TOKEN_VALIDATION:
+                    break;
+                case OAUTH_TWO_VALIDATION:
+                    break;
+                case API_KEY_VALIDATION:
+                    break;
+                default:
+                    break;
+            }
+        }else if (dto.getInterfaceType() == InterfaceTypeEnum.WEB_SERVICE){
+        }
     }
 
     @Override
@@ -240,33 +373,80 @@ public class TableAppManageImpl
                     .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
                     .eq(AppServiceConfigPO::getAppId, id)
                     .eq(AppServiceConfigPO::getType, 2);
-            List<AppServiceConfigPO> appServiceConfigPos = appServiceConfigMapper.selectList(appServiceConfigPoQueryWrapper);
-            List<Long> tableServiceIdList = null;
-            if (CollectionUtils.isNotEmpty(appServiceConfigPos)) {
-                tableServiceIdList = appServiceConfigPos.stream().map(t -> Long.parseLong(String.valueOf(t.getServiceId()))).collect(Collectors.toList());
-                // 根据表ID查询表配置详情
-                QueryWrapper<TableServicePO> tableServicePoQueryWrapper = new QueryWrapper<>();
-                tableServicePoQueryWrapper.lambda().eq(TableServicePO::getDelFlag, 1)
-                        .in(TableServicePO::getId, tableServiceIdList);
-                List<TableServicePO> tableServicePos = tableServiceMapper.selectList(tableServicePoQueryWrapper);
-                if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
-                    tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
-                    BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
-                    buildDeleteTableService.appId = String.valueOf(id);
-                    buildDeleteTableService.ids = tableServiceIdList;
-                    buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
-                    buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
-                    buildDeleteTableService.delBusiness = true;
-                    publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
-                }
-            }
+            if (tableAppPO.getAppType() == AppTypeEnum.TABLE_TYPE.getValue()){
+                List<AppServiceConfigPO> appServiceConfigPos = appServiceConfigMapper.selectList(appServiceConfigPoQueryWrapper);
+                List<Long> tableServiceIdList = null;
 
-            // 删除调度任务
+                if (CollectionUtils.isNotEmpty(appServiceConfigPos)) {
+                    tableServiceIdList = appServiceConfigPos.stream().map(t -> Long.parseLong(String.valueOf(t.getServiceId()))).collect(Collectors.toList());
+                    // 根据表ID查询表配置详情
+                    QueryWrapper<TableServicePO> tableServicePoQueryWrapper = new QueryWrapper<>();
+                    tableServicePoQueryWrapper.lambda().eq(TableServicePO::getDelFlag, 1)
+                            .in(TableServicePO::getId, tableServiceIdList);
+                    List<TableServicePO> tableServicePos = tableServiceMapper.selectList(tableServicePoQueryWrapper);
+                    if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
+                        tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
+                        BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+                        buildDeleteTableService.appId = String.valueOf(id);
+                        buildDeleteTableService.ids = tableServiceIdList;
+                        buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
+                        buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+                        buildDeleteTableService.delBusiness = true;
+                        publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+                    }
+                }
+            }else if (tableAppPO.getAppType() == AppTypeEnum.API_TYPE.getValue()){
+                LambdaQueryWrapper<TableApiServicePO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(TableApiServicePO::getAppId,id);
+                List<TableApiServicePO> tableApiServicePOS = tableApiService.list(queryWrapper);
+                List<Long> tableApiIdList = tableApiServicePOS.stream().map(BasePO::getId).collect(Collectors.toList());
+                        BuildDeleteTableApiServiceDTO buildDeleteTableApiServiceDTO = new BuildDeleteTableApiServiceDTO();
+                buildDeleteTableApiServiceDTO.ids = tableApiIdList;
+                buildDeleteTableApiServiceDTO.appId = String.valueOf(id);
+                buildDeleteTableApiServiceDTO.olapTableEnum = OlapTableEnum.DATA_SERVICE_API;
+                buildDeleteTableApiServiceDTO.userId = userHelper.getLoginUserInfo().id;
+                buildDeleteTableApiServiceDTO.delBusiness = true;
+                publishTaskClient.publishBuildDeleteDataServiceApi(buildDeleteTableApiServiceDTO);
+            }
         } catch (Exception ex) {
             log.error("【deleteRule】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
         return ResultEnum.SUCCESS;
+    }
+
+    public void deleteApiConfig(TableAppDTO dto,long appId){
+        if (dto.getInterfaceType() == InterfaceTypeEnum.REST_API){
+            switch (dto.getAuthenticationType()){
+                case NONE_VALIDATION:
+                    break;
+                case BASIC_VALIDATION:
+                    deleteBasicValidation(appId);
+                    break;
+                case JWT_VALIDATION:
+                    break;
+                case BEARER_TOKEN_VALIDATION:
+                    break;
+                case OAUTH_TWO_VALIDATION:
+                    break;
+                case API_KEY_VALIDATION:
+                    break;
+                default:
+                    break;
+            }
+        }else if (dto.getInterfaceType() == InterfaceTypeEnum.WEB_SERVICE){
+
+        }
+
+    }
+
+    private void deleteBasicValidation(long appId){
+        LambdaQueryWrapper<TableApiAuthRequestPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableApiAuthRequestPO::getAppId,appId);
+        tableApiAuthRequestService.remove(queryWrapper);
+        LambdaQueryWrapper<TableApiResultPO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(TableApiResultPO::getAppId,appId);
+        tableApiResultService.remove(lambdaQueryWrapper);
     }
 
     @Override

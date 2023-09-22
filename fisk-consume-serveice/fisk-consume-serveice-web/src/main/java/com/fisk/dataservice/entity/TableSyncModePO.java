@@ -1,5 +1,7 @@
 package com.fisk.dataservice.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
@@ -24,6 +26,7 @@ public class TableSyncModePO extends BasePO {
     /**
      * timer driver
      */
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     public String timerDriver;
 
     /**
@@ -49,6 +52,7 @@ public class TableSyncModePO extends BasePO {
     /**
      * 关联管道
      */
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     public Integer associatePipe;
 
     /**

@@ -11,23 +11,21 @@ import com.fisk.dataservice.dto.logs.LogQueryBasicsDTO;
 import com.fisk.dataservice.dto.logs.LogQueryDTO;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.entity.LogPO;
+import com.fisk.dataservice.entity.TableApiServicePO;
 import com.fisk.dataservice.entity.TableServicePO;
 import com.fisk.dataservice.mapper.AppServiceConfigMapper;
 import com.fisk.dataservice.mapper.LogsMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
 import com.fisk.dataservice.service.ILogsManageService;
-import com.fisk.dataservice.vo.logs.ApiLogVO;
-import com.fisk.dataservice.vo.logs.TableServiceLogDetailVO;
-import com.fisk.dataservice.vo.logs.TableServiceLogVO;
+import com.fisk.dataservice.service.ITableApiService;
+import com.fisk.dataservice.vo.logs.*;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogQueryVO;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.enums.OlapTableEnum;
-import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +52,9 @@ public class LogsManageImpl extends ServiceImpl<LogsMapper, LogPO> implements IL
 
     @Resource
     private PublishTaskClient publishTaskClient;
+
+    @Resource
+    ITableApiService tableApiService;
 
     @Override
     public Page<ApiLogVO> pageFilter(LogQueryDTO query) {
@@ -147,5 +148,73 @@ public class LogsManageImpl extends ServiceImpl<LogsMapper, LogPO> implements IL
             throw new FkException(ResultEnum.ERROR, "【pageTableServiceLog】 ex：" + ex);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableServiceLogVO);
+    }
+
+    @Override
+    public ResultEntity<TableApiServiceLogVO> pageTableApiServiceLog(LogQueryBasicsDTO dto) {
+        TableApiServiceLogVO tableApiServiceLogVO = new TableApiServiceLogVO();
+        try {
+            if (dto.getAppId() == 0 && dto.getTableServiceId() == 0) {
+                return ResultEntityBuild.build(ResultEnum.PARAMTER_NOTNULL, null);
+            }
+            // 第一步：判断表服务ID是否为空，为空则查询应用下所有的表服务ID
+            List<TableApiServicePO> tableApiServicePOS = new ArrayList<>();
+            if (dto.getTableServiceId() == 0) {
+                QueryWrapper<TableApiServicePO> queryWrapper = new QueryWrapper<>();
+                queryWrapper
+                        .lambda()
+                        .eq(TableApiServicePO::getAppId, dto.getAppId());
+                tableApiServicePOS = tableApiService.list(queryWrapper);
+            } else {
+                QueryWrapper<TableApiServicePO> queryWrapper = new QueryWrapper<>();
+                queryWrapper
+                        .lambda()
+                        .eq(TableApiServicePO::getId, dto.getTableServiceId());
+                tableApiServicePOS = tableApiService.list(queryWrapper);
+            }
+            if (CollectionUtils.isEmpty(tableApiServicePOS)) {
+                return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiServiceLogVO);
+            }
+            HashMap<Long, String> tableList = (HashMap<Long, String>) tableApiServicePOS.stream().collect(Collectors.toMap(TableApiServicePO::getId, TableApiServicePO::getDisplayName));
+            // 第三步：查询Task表服务日志同步详情
+            DataServiceTableLogQueryDTO queryDTO = new DataServiceTableLogQueryDTO();
+            queryDTO.setCurrent(dto.getCurrent());
+            queryDTO.setSize(dto.getSize());
+            queryDTO.setTableList(tableList);
+            queryDTO.setTableType(OlapTableEnum.DATA_SERVICE_API.getValue());
+            queryDTO.setKeyword(dto.getKeyword());
+            ResultEntity<DataServiceTableLogQueryVO> dataServiceTableLogVos = publishTaskClient.getDataServiceTableLogVos(queryDTO);
+            if (dataServiceTableLogVos == null
+                    || dataServiceTableLogVos.getCode() != ResultEnum.SUCCESS.getCode()
+                    || dataServiceTableLogVos.getData() == null
+                    || CollectionUtils.isEmpty(dataServiceTableLogVos.getData().getDataArray())) {
+                ResultEnum resultEnum = ResultEnum.getEnum(dataServiceTableLogVos.getCode());
+                return ResultEntityBuild.build(resultEnum, tableApiServiceLogVO);
+            }
+            // 第四步：结果赋值给页面VO对象
+            DataServiceTableLogQueryVO data = dataServiceTableLogVos.getData();
+            List<DataServiceTableLogVO> dataArray = data.getDataArray();
+
+            tableApiServiceLogVO.setCurrent(data.getCurrent());
+            tableApiServiceLogVO.setSize(data.getSize());
+            tableApiServiceLogVO.setPage(data.getPage());
+            tableApiServiceLogVO.setTotal(data.getTotal());
+            List<TableApiServiceLogDetailVO> logList = new ArrayList<>();
+            dataArray.forEach(t -> {
+                TableApiServiceLogDetailVO log = new TableApiServiceLogDetailVO();
+                log.setApiId(t.getTableId());
+                log.setTaskTraceId(t.getTaskTraceId());
+                log.setApiDisplayName(t.getTableDisplayName());
+                log.setStartTime(t.getStartTime());
+                log.setEndTime(t.getEndTime());
+                log.setMsg(t.getMsg());
+                logList.add(log);
+            });
+            tableApiServiceLogVO.setDataArray(logList);
+        } catch (Exception ex) {
+            log.error("【pageTableServiceLog】分页查询表服务同步日志异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, "【pageTableServiceLog】 ex：" + ex);
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiServiceLogVO);
     }
 }

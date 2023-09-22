@@ -12,7 +12,7 @@ public class TableServicePublishStatusDTO {
     /**
      * 表服务id
      */
-    @ApiModelProperty(value = "表服务id")
+    @ApiModelProperty(value = "表服务id or api服务")
     public int id;
     /**
      * 发布状态:0: 未发布  1: 发布成功  2: 发布失败

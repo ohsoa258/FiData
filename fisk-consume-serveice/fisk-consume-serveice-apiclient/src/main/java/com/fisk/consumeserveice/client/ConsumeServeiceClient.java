@@ -7,6 +7,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
+import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -31,6 +32,16 @@ public interface ConsumeServeiceClient {
     ResultEntity<List<BuildTableServiceDTO>> getTableListByPipelineId(@PathVariable("id") Integer id);
 
     /**
+     * 根据管道id获取数据分发api集合
+     *
+     * @param id
+     * @return
+     */
+    @ApiOperation("根据管道id获取数据分发api集合")
+    @GetMapping("/tableApiService/getTableApiListByPipelineId/{id}")
+    ResultEntity<List<BuildTableApiServiceDTO>> getTableApiListByPipelineId(@PathVariable("id") Integer id);
+
+    /**
      * 修改表服务发布状态
      *
      * @param dto
@@ -38,6 +49,15 @@ public interface ConsumeServeiceClient {
     @ApiOperation("修改表服务发布状态")
     @PutMapping("/tableService/updateTableServiceStatus")
     void updateTableServiceStatus(@RequestBody TableServicePublishStatusDTO dto);
+
+    /**
+     * 修改数据分发服务api发布状态
+     *
+     * @param dto
+     */
+    @ApiOperation("修改数据分发服务api发布状态")
+    @PutMapping("/tableApiService/updateTableApiStatus")
+    void updateTableApiStatus(@RequestBody TableServicePublishStatusDTO dto);
 
     /**
      * 根据表服务id构建发布数据

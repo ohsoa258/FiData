@@ -328,6 +328,7 @@ public enum ResultEnum {
     DS_ILLEGAL_REQUEST(10042, "非法的请求"),
     DS_PROXY_FORWARDING_ERROR(10043, "代理转发错误"),
     DS_THE_MESSAGE_NOTIFICATION_METHOD_DOES_NOT_EXIST(10044, "消息通知方式配置不存在"),
+    LOAD_FIDATA_DATA_SERVICE_DATA_ERROR(10045, "加载DataServiceData报错"),
 
     /**
      * 数据质量

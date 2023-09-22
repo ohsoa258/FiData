@@ -4,7 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TaskTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.dataservice.dto.tableapi.TableApiTaskDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.atlas.AtlasEntityDeleteDTO;
@@ -20,6 +23,7 @@ import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
 import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
+import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
 import io.swagger.annotations.Api;
@@ -49,6 +53,8 @@ public class PublishTaskController {
     BuildDataModelDorisTableListener buildDataModelDorisTableListener;
     @Value("${nifi.pipeline.topicName}")
     public String pipelineTopicName;
+    @Resource
+    IPipelTaskLog iPipelTaskLog;
 
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
@@ -87,6 +93,42 @@ public class PublishTaskController {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DELETE_TABLE_SERVER_TASK.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DELETE_TABLE_SERVER_FLOW,
+                data);
+    }
+
+    /**
+     * 保存task日志
+     * @param data
+     * @return
+     */
+
+    @ApiOperation(value = "保存task日志")
+    @PostMapping("/savePipelTaskLog")
+    public ResultEntity<Object> savePipelTaskLog(@RequestBody TableApiTaskDTO data) {
+        iPipelTaskLog.savePipelTaskLog(null,null,data.getPipelTaskTraceId(),data.getMsg(),null,String.valueOf(data.getApiId()),data.getTableType());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+    }
+
+    /**
+     * 发布表服务
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishBuildDataServiceApi")
+    @ApiOperation(value = "数据分发服务API同步")
+    public ResultEntity<Object> publishBuildDataServiceApi(@RequestBody BuildTableApiServiceDTO data) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATA_SERVER_API_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DATA_SERVER_API_FLOW,
+                data);
+    }
+
+    @PostMapping("/publishBuildDeleteDataServiceApi")
+    @ApiOperation(value = "删除数据分发服务APInifi流程")
+    public ResultEntity<Object> publishBuildDeleteDataServiceApi(@RequestBody BuildDeleteTableApiServiceDTO data) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_SERVER_DATA_SERVICE_API_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DELETE_DATA_SERVER_API_FLOW,
                 data);
     }
 

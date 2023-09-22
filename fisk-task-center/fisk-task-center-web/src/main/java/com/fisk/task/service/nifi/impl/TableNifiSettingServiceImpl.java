@@ -9,6 +9,7 @@ import com.davis.client.model.ProcessorRunStatusEntity;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataservice.dto.tableapi.TableApiServiceDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.mapper.TableNifiSettingMapper;
@@ -68,6 +69,40 @@ public class TableNifiSettingServiceImpl extends ServiceImpl<TableNifiSettingMap
         } catch (ApiException e) {
             log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEntityBuild.buildData(ResultEnum.TASK_PUBLISH_ERROR,tableServiceDTO);
+        }
+    }
+
+    @Override
+    public ResultEntity<TableApiServiceDTO> apiEnableOrDisable(TableApiServiceDTO tableApiServiceDTO) {
+        try {
+            LambdaQueryWrapper<TableNifiSettingPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(TableNifiSettingPO::getTableAccessId,tableApiServiceDTO.getId());
+            queryWrapper.eq(TableNifiSettingPO::getType, OlapTableEnum.DATA_SERVICE_API.getValue());
+            TableNifiSettingPO tableNifiSettingPO = this.getOne(queryWrapper);
+            String dispatchComponentId = tableNifiSettingPO.getDispatchComponentId();
+            ProcessorEntity processorEntity = NifiHelper.getProcessorsApi().getProcessor(dispatchComponentId);
+            ProcessorDTO.StateEnum state = processorEntity.getComponent().getState();
+
+            ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
+            processorRunStatusEntity.setRevision(processorEntity.getRevision());
+            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+            if (tableApiServiceDTO.getEnable() == 1){
+                tableApiServiceDTO.setEnable(0);
+                if (state != ProcessorDTO.StateEnum.STOPPED){
+                    processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
+                    NifiHelper.getProcessorsApi().updateRunStatus(dispatchComponentId,processorRunStatusEntity);
+                }
+            }else if (tableApiServiceDTO.getEnable() == 0){
+                tableApiServiceDTO.setEnable(1);
+                if (state != ProcessorDTO.StateEnum.RUNNING){
+                    processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUNNING);
+                    NifiHelper.getProcessorsApi().updateRunStatus(dispatchComponentId,processorRunStatusEntity);
+                }
+            }
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS,tableApiServiceDTO);
+        } catch (Exception e) {
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+            return ResultEntityBuild.buildData(ResultEnum.TASK_PUBLISH_ERROR,tableApiServiceDTO);
         }
     }
 

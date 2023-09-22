@@ -23,6 +23,7 @@ import com.fisk.task.dto.dispatchlog.PipelTaskMergeLogVO;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.dto.tableservice.TableServiceDetailDTO;
 import com.fisk.task.entity.PipelTaskLogPO;
+import com.fisk.task.entity.TaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -142,6 +143,24 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             this.saveBatch(pipelTaskLogs);
         }
 
+    }
+
+    @Override
+    public List<PipelTaskLogVO> getPipelTaskLogVo(String taskTraceId) {
+        LambdaQueryWrapper<PipelTaskLogPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(PipelTaskLogPO::getTaskTraceId,taskTraceId);
+        List<PipelTaskLogPO> pipelTaskLogPOS = pipelTaskLogMapper.selectList(queryWrapper);
+        List<PipelTaskLogVO> pipelTaskLogVOS = pipelTaskLogPOS.stream().map(i -> {
+            PipelTaskLogVO pipelTaskLogVO = new PipelTaskLogVO();
+            pipelTaskLogVO.setTaskId(i.getTaskId());
+            pipelTaskLogVO.setTaskTraceId(i.getTaskTraceId());
+            pipelTaskLogVO.setType(i.getType());
+            pipelTaskLogVO.setMsg(i.getMsg());
+            pipelTaskLogVO.setJobTraceId(i.getJobTraceId());
+            pipelTaskLogVO.setTableId(String.valueOf(i.getTableId()));
+            return pipelTaskLogVO;
+        }).collect(Collectors.toList());
+        return pipelTaskLogVOS;
     }
 
     @Override

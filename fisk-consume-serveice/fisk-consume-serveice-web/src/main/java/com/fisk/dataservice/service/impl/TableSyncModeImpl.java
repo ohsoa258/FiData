@@ -1,5 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
@@ -43,7 +44,7 @@ public class TableSyncModeImpl
     @Override
     public ResultEnum tableServiceTableSyncMode(TableSyncModeDTO dto) {
         TableSyncModePO po = this.query().eq("type_table_id", dto.typeTableId)
-                .eq("type", AppServiceTypeEnum.TABLE.getValue())
+                .eq("type", dto.type)
                 .one();
         if (po == null) {
             TableSyncModePO addPo = TableSyncModeMap.INSTANCES.tableServiceDtoToPo(dto);
@@ -62,9 +63,9 @@ public class TableSyncModeImpl
     }
 
     @Override
-    public TableSyncModeDTO getTableServiceSyncMode(long tableServiceId) {
+    public TableSyncModeDTO getTableServiceSyncMode(long tableServiceId, Integer type) {
         TableSyncModePO po = this.query().eq("type_table_id", tableServiceId)
-                .eq("type", AppServiceTypeEnum.TABLE.getValue())
+                .eq("type", type)
                 .one();
         if (po == null) {
             return null;
@@ -75,7 +76,7 @@ public class TableSyncModeImpl
     @Override
     public ResultEnum delTableServiceSyncMode(long tableServiceId, Integer type) {
         TableSyncModePO po = this.query().eq("type_table_id", tableServiceId)
-                .eq("type", AppServiceTypeEnum.TABLE.getValue())
+                .eq("type", type)
                 .one();
         if (po == null) {
             return ResultEnum.SUCCESS;
@@ -89,8 +90,11 @@ public class TableSyncModeImpl
 
     }
 
-    public List<Integer> getTableListByPipelineId(Integer pipelineId) {
-        List<TableSyncModePO> associatePipeline = this.query().eq("associate_pipe", pipelineId).list();
+    public List<Integer> getTableListByPipelineId(Integer pipelineId,Integer type) {
+        LambdaQueryWrapper<TableSyncModePO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableSyncModePO::getAssociatePipe,pipelineId);
+        queryWrapper.eq(TableSyncModePO::getType,type);
+        List<TableSyncModePO> associatePipeline = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(associatePipeline)) {
             return new ArrayList<>();
         }

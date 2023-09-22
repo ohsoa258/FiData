@@ -19,6 +19,11 @@ public class TableServiceEmailDTO extends BasePO {
     @ApiModelProperty(value = "邮件服务器id")
     public int emailserverConfigId;
     /**
+     * 1:table 2:api
+     */
+    @ApiModelProperty(value = "1:table 2:api")
+    public int appType;
+    /**
      * 管道id,数字id
      */
     @ApiModelProperty(value = "appId")

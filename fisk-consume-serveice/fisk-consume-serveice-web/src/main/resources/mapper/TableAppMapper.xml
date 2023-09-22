@@ -8,6 +8,12 @@
         app_desc,
         app_principal,
         app_principal_email,
+        app_type,
+        interface_type,
+        authentication_type,
+        authentication_url,
+        request_type,
+        auth_type,
         create_time
         from tb_table_app
         where del_flag=1

@@ -37,7 +37,8 @@ public enum OlapTableEnum implements BaseEnum {
      * POWERBI数据集刷新任务(PBI DataSet 刷新)
      */
     POWERBIDATASETREFRESHTASK(17,"PBI DataSet 刷新"),
-    MDM_DATA_ACCESS(18,"mdm-数据接入");
+    MDM_DATA_ACCESS(18,"mdm-数据接入"),
+    DATA_SERVICE_API(19,"数据分发服务API");
 
 
     OlapTableEnum(int value, String name) {

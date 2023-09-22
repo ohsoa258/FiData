@@ -1,5 +1,7 @@
 package com.fisk.dataservice.dto.tablesyncmode;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -13,7 +15,7 @@ public class TableSyncModeDTO {
     /**
      * 类型：1api服务 2表服务 3 文件服务
      */
-    @ApiModelProperty(value = "类型：1api服务 2表服务 3 文件服务")
+    @ApiModelProperty(value = "类型：1api服务 2表服务 3 文件服务 4 表服务api")
     public Integer type;
 
     /**
