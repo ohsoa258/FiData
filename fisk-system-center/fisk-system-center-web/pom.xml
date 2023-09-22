@@ -79,7 +79,7 @@
             <artifactId>sapjco3</artifactId>
             <version>3.1.7</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/lib/sapjco3.jar</systemPath>
+            <systemPath>${pom.basedir}/src/main/resources/lib/sapjco3.jar</systemPath>
         </dependency>
 
         <!-- feign接口调用 -->
