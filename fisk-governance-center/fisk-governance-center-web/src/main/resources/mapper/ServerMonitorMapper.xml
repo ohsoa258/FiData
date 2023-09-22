@@ -199,4 +199,13 @@
         </choose>
 
     </select>
+
+    <select id="getSystemServerList" resultType="com.fisk.datagovernance.vo.monitor.SystemServerVO">
+        SELECT t1.server_ip as ip,t1.server_name as name,t1.server_port as port, t2.status,t2.create_time as lastDate
+        FROM tb_server_monitor_config t1
+                 LEFT JOIN tb_server_monitor t2 ON t1.server_name = t2.server_name
+        WHERE t1.server_type = 1
+          AND t1.del_flag = 1
+          AND t2.create_time = (SELECT MAX(create_time) FROM tb_server_monitor)
+    </select>
 </mapper>
