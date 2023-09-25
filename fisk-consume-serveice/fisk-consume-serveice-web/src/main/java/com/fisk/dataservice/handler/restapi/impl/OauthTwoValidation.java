@@ -13,10 +13,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class OauthTwoValidation extends RestApiHandler {
-    @Override
-    public ApiResultDTO sendApi(long apiId) {
-        return null;
-    }
 
     @Override
     public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {

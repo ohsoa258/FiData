@@ -399,6 +399,7 @@ public class TableAppManageImpl
                 LambdaQueryWrapper<TableApiServicePO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(TableApiServicePO::getAppId,id);
                 List<TableApiServicePO> tableApiServicePOS = tableApiService.list(queryWrapper);
+
                 List<Long> tableApiIdList = tableApiServicePOS.stream().map(BasePO::getId).collect(Collectors.toList());
                         BuildDeleteTableApiServiceDTO buildDeleteTableApiServiceDTO = new BuildDeleteTableApiServiceDTO();
                 buildDeleteTableApiServiceDTO.ids = tableApiIdList;
