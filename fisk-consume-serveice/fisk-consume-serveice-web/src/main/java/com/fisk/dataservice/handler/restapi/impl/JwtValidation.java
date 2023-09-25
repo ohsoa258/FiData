@@ -11,10 +11,6 @@ import com.fisk.dataservice.handler.restapi.RestApiHandler;
  * @Description:
  */
 public class JwtValidation extends RestApiHandler {
-    @Override
-    public ApiResultDTO sendApi(long apiId) {
-        return null;
-    }
 
     @Override
     public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
