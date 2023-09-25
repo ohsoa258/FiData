@@ -31,10 +31,7 @@ import com.fisk.dataservice.mapper.AppServiceConfigMapper;
 import com.fisk.dataservice.mapper.TableAppDatasourceMapper;
 import com.fisk.dataservice.mapper.TableAppMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
-import com.fisk.dataservice.service.ITableApiAuthRequestService;
-import com.fisk.dataservice.service.ITableApiResultService;
-import com.fisk.dataservice.service.ITableApiService;
-import com.fisk.dataservice.service.ITableAppManageService;
+import com.fisk.dataservice.service.*;
 import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
 import com.fisk.dataservice.vo.tableservice.TableAppDatasourceVO;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
@@ -94,6 +91,10 @@ public class TableAppManageImpl
     ITableApiResultService tableApiResultService;
     @Resource
     ITableApiAuthRequestService tableApiAuthRequestService;
+    @Resource
+    ITableApiParameterService tableApiParameterService;
+    @Resource
+    TableSyncModeImpl tableSyncMode;
     @Resource
     TableFieldImpl tableField;
 
@@ -379,11 +380,27 @@ public class TableAppManageImpl
 
                 if (CollectionUtils.isNotEmpty(appServiceConfigPos)) {
                     tableServiceIdList = appServiceConfigPos.stream().map(t -> Long.parseLong(String.valueOf(t.getServiceId()))).collect(Collectors.toList());
+                    List<Long> configIds = appServiceConfigPos.stream().map(BasePO::getId).collect(Collectors.toList());
+                    appServiceConfigMapper.deleteBatchIds(configIds);
                     // 根据表ID查询表配置详情
                     QueryWrapper<TableServicePO> tableServicePoQueryWrapper = new QueryWrapper<>();
                     tableServicePoQueryWrapper.lambda().eq(TableServicePO::getDelFlag, 1)
                             .in(TableServicePO::getId, tableServiceIdList);
                     List<TableServicePO> tableServicePos = tableServiceMapper.selectList(tableServicePoQueryWrapper);
+                    tableService.remove(tableServicePoQueryWrapper);
+                    //删除app数据源配置信息
+                    LambdaQueryWrapper<TableAppDatasourcePO> datasourceQueryWrapper = new LambdaQueryWrapper<>();
+                    datasourceQueryWrapper.eq(TableAppDatasourcePO::getTableAppId,id);
+                    tableAppDatasourceManage.remove(datasourceQueryWrapper);
+                    //删除表字段
+                    LambdaQueryWrapper<TableFieldPO> filedQueryWrapper = new LambdaQueryWrapper<>();
+                    filedQueryWrapper.in(TableFieldPO::getTableServiceId,tableServiceIdList);
+                    tableField.remove(filedQueryWrapper);
+                    //删除表配置数据
+                    LambdaQueryWrapper<TableSyncModePO> syncQueryWrapper = new LambdaQueryWrapper<>();
+                    syncQueryWrapper.eq(TableSyncModePO::getType,4);
+                    syncQueryWrapper.in(TableSyncModePO::getTypeTableId,tableServiceIdList);
+                    tableSyncMode.remove(syncQueryWrapper);
                     if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
                         tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
                         BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
@@ -396,10 +413,34 @@ public class TableAppManageImpl
                     }
                 }
             }else if (tableAppPO.getAppType() == AppTypeEnum.API_TYPE.getValue()){
+                //删除所有app关联数据
                 LambdaQueryWrapper<TableApiServicePO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(TableApiServicePO::getAppId,id);
                 List<TableApiServicePO> tableApiServicePOS = tableApiService.list(queryWrapper);
-
+                List<Long> apiIds = tableApiServicePOS.stream().map(TableApiServicePO::getId).collect(Collectors.toList());
+                //删除api数据
+                tableApiService.remove(queryWrapper);
+                //删除app数据源配置信息
+                LambdaQueryWrapper<TableAppDatasourcePO> datasourceQueryWrapper = new LambdaQueryWrapper<>();
+                datasourceQueryWrapper.eq(TableAppDatasourcePO::getTableAppId,id);
+                tableAppDatasourceManage.remove(datasourceQueryWrapper);
+                //删除api认证请求配置返回数据
+                LambdaQueryWrapper<TableApiResultPO> resultQueryWrapper = new LambdaQueryWrapper<>();
+                resultQueryWrapper.eq(TableApiResultPO::getAppId,id);
+                tableApiResultService.remove(resultQueryWrapper);
+                //删除api认证请求配置数据
+                LambdaQueryWrapper<TableApiAuthRequestPO> authQueryWrapper = new LambdaQueryWrapper<>();
+                authQueryWrapper.eq(TableApiAuthRequestPO::getAppId,id);
+                tableApiAuthRequestService.remove(authQueryWrapper);
+                //删除api配置字段数据
+                LambdaQueryWrapper<TableApiParameterPO> apiParameterQueryWrapper = new LambdaQueryWrapper<>();
+                apiParameterQueryWrapper.in(TableApiParameterPO::getApiId,apiIds);
+                tableApiParameterService.remove(apiParameterQueryWrapper);
+                //删除api配置数据
+                LambdaQueryWrapper<TableSyncModePO> syncQueryWrapper = new LambdaQueryWrapper<>();
+                syncQueryWrapper.eq(TableSyncModePO::getType,4);
+                syncQueryWrapper.in(TableSyncModePO::getTypeTableId,apiIds);
+                tableSyncMode.remove(syncQueryWrapper);
                 List<Long> tableApiIdList = tableApiServicePOS.stream().map(BasePO::getId).collect(Collectors.toList());
                         BuildDeleteTableApiServiceDTO buildDeleteTableApiServiceDTO = new BuildDeleteTableApiServiceDTO();
                 buildDeleteTableApiServiceDTO.ids = tableApiIdList;
