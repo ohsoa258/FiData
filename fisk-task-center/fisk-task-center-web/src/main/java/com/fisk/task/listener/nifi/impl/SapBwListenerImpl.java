@@ -64,6 +64,7 @@ public class SapBwListenerImpl implements ISapBwListener {
         log.info("sapbw-Java代码同步参数:{}", data);
         Connection conn = null;
         PreparedStatement pstmt = null;
+        MyDestinationDataProvider myProvider = null;
 
         try {
             KafkaReceiveDTO kafkaReceive = JSON.parseObject(data, KafkaReceiveDTO.class);
@@ -110,7 +111,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                         myDestination(sapBwConfig.host, sapBwConfig.sysNr, sapBwConfig.port,
                                 sapBwConfig.connectAccount, sapBwConfig.connectPwd, sapBwConfig.lang);
                 JCoDestination destination = providerAndDestination.getDestination();
-                MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+                myProvider = providerAndDestination.getMyProvider();
 
                 //调用封装的方法 执行mdx语句并获得结果
                 List<List<String>> lists = excuteMdx(destination, myProvider, mdxSql);
@@ -197,6 +198,9 @@ public class SapBwListenerImpl implements ISapBwListener {
                 }
                 if (conn != null) {
                     conn.close();
+                }
+                if (myProvider != null) {
+                    Environment.unregisterDestinationDataProvider(myProvider);
                 }
             } catch (Exception e) {
                 log.error(StackTraceHelper.getStackTraceInfo(e));
