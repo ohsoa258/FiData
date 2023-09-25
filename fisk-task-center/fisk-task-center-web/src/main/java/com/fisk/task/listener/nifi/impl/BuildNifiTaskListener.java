@@ -1851,7 +1851,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         componentsConnector(groupId, delSqlRes.getId(), supervisionId, autoEndBranchTypeEnums);
         //supervisionId指的是nifi组件中报错后连接的第一个组件：queryForPipelineSupervision组件的id
-        componentConnector(groupId, processorEntity1.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
+        componentConnector(groupId, processorEntity1.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
 
         String lastId = "";
         Boolean isLastId = true;
