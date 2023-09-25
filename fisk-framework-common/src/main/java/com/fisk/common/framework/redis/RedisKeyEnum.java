@@ -51,7 +51,10 @@ public enum RedisKeyEnum implements BaseEnum {
 
     WEEK_MONITOR_SERVER(87000,"monitor:week:server"),
 
-    MONTH_MONITOR_SERVER(87000,"monitor:month:server")
+    MONTH_MONITOR_SERVER(87000,"monitor:month:server"),
+
+    EMAIL_SEND_STATUS(-1,"monitor:emailSendStatus")
+
     ;
 
     RedisKeyEnum(int value, String name) {

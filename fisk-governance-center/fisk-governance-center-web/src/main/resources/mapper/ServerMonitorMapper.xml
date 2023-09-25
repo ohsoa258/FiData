@@ -23,19 +23,19 @@
             <when test="type == 1">
                 WHERE
                 server_ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} MINUTE
+                AND create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i') - INTERVAL #{number} MINUTE
                 GROUP BY timestamp;
             </when>
             <when test="type == 2">
                 WHERE
                 server_ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} HOUR
+                AND create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:00') - INTERVAL #{number} HOUR
                 GROUP BY timestamp;
             </when>
             <when test="type == 3">
                 WHERE
                 server_ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} DAY
+                AND create_time >= CURDATE() - INTERVAL #{number} DAY
                 GROUP BY timestamp;
             </when>
         </choose>
@@ -58,7 +58,7 @@
             <when test="type == 2">
                 WHERE
                 server_ip = #{ip}
-                AND create_time >= DATE(NOW())
+                AND create_time >= CURDATE()
             </when>
         </choose>
         GROUP BY timestamp;
@@ -108,19 +108,19 @@
         FROM tb_server_monitor
         <choose>
             <when test="type == 1">
-                WHERE create_time >= NOW() - INTERVAL #{number} MINUTE
+                WHERE create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i') - INTERVAL #{number} MINUTE
                 AND server_ip = #{ip}
                 AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
             <when test="type == 2">
-                WHERE create_time >= NOW() - INTERVAL #{number} HOUR
+                WHERE create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:00') - INTERVAL #{number} HOUR
                 AND server_ip = #{ip}
                 AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
             </when>
             <when test="type == 3">
-                WHERE create_time >= NOW() - INTERVAL #{number} DAY
+                WHERE create_time >= CURDATE() - INTERVAL #{number} DAY
                 AND server_ip = #{ip}
                 AND server_name = #{name} AND server_port = #{port}
                 GROUP BY server_name, timestamp;
@@ -185,15 +185,15 @@
         FROM tb_server_monitor
         <choose>
             <when test="query.type == 1">
-                WHERE create_time >= NOW() - INTERVAL #{query.number} MINUTE
+                WHERE create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i') - INTERVAL #{query.number} MINUTE
                 and server_name = #{query.name} and server_port = #{query.port}
             </when>
             <when test="query.type == 2">
-                WHERE create_time >= NOW() - INTERVAL #{query.number} HOUR
+                WHERE create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:00') - INTERVAL #{query.number} HOUR
                 and server_name = #{query.name} and server_port = #{query.port}
             </when>
             <when test="query.type == 3">
-                WHERE create_time >= NOW() - INTERVAL #{query.number} DAY
+                WHERE create_time >= CURDATE() - INTERVAL #{query.number} DAY
                 and server_name = #{query.name} and server_port = #{query.port}
             </when>
         </choose>

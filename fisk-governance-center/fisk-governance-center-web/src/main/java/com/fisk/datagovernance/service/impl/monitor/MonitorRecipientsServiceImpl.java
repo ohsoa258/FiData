@@ -3,6 +3,7 @@ package com.fisk.datagovernance.service.impl.monitor;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -10,6 +11,8 @@ import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.datagovernance.dto.monitor.MonitorRecipientsDTO;
 import com.fisk.datagovernance.entity.monitor.MonitorRecipientsPO;
 import com.fisk.datagovernance.mapper.monitor.MonitorRecipientsMapper;
@@ -38,6 +41,8 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
 
     @Resource
     private UserClient userClient;
+    @Resource
+    private RedisUtil redisUtil;
 
     @Override
     public MonitorRecipientsVO getSystemMonitorAlarmNotice() {
@@ -120,6 +125,13 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
 
     @Override
     public ResultEnum sendSystemMonitorSendEmails(Map<String, String> body) {
+        String name = body.get("服务");
+        Object o = redisUtil.get(RedisKeyEnum.EMAIL_SEND_STATUS.getName() + ":" + name);
+        if (ObjectUtils.isNotEmpty(o)){
+            return ResultEnum.SUCCESS;
+        }else {
+            redisUtil.set(RedisKeyEnum.EMAIL_SEND_STATUS.getName() + ":" + name,"邮件已发送");
+        }
         // 发邮件
         List<MonitorRecipientsPO> email = this.list();
         //第一步：查询邮件服务器设置
@@ -217,7 +229,6 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
                 }
             }
         }
-
         return ResultEnum.SUCCESS;
     }
 }
