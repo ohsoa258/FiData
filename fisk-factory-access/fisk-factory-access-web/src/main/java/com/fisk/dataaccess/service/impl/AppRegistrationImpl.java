@@ -86,6 +86,7 @@ import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.ext.Environment;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -98,6 +99,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -997,6 +999,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // jdbc连接信息
         String url = null;
+        MyDestinationDataProvider myProvider = null;
         List<String> allDatabases = new ArrayList<>();
 
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
@@ -1044,7 +1047,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     ProviderAndDestination providerAndDestination =
                             DbConnectionHelper.myDestination(dto.host, dto.sysNr, dto.port, dto.connectAccount, dto.connectPwd, dto.lang);
                     JCoDestination destination = providerAndDestination.getDestination();
-                    MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+                    myProvider = providerAndDestination.getMyProvider();
                     // 测试连接
                     destination.ping();
                     log.info("注册SAPBW驱动程序后...");
@@ -1067,6 +1070,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
             log.error("测试连接失败:{}", e);
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
+        } finally {
+            if (myProvider != null) {
+                Environment.unregisterDestinationDataProvider(myProvider);
+            }
         }
 
         final int[] count = {1};
@@ -2096,9 +2103,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEnum.DATA_NOTEXISTS;
         }
         Integer mark = model.ifAllowDatatransfer;
-        if (mark == null){
+        if (mark == null) {
             mark = 1;
-        }else {
+        } else {
             if (mark == 0) {
                 mark = 1;
             } else {

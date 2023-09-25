@@ -28,6 +28,7 @@ import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.ext.Environment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -100,6 +101,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
     @Override
     public DataSourceDTO setDataSourceMeta(long appId, long appDataSourceId) {
+        MyDestinationDataProvider myProvider = null;
         try {
             DataSourceDTO dataSource = mapper.getDataSource(appDataSourceId);
             if (dataSource == null) {
@@ -146,7 +148,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 ProviderAndDestination providerAndDestination =
                         DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
                 JCoDestination destination = providerAndDestination.getDestination();
-                MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+                myProvider = providerAndDestination.getMyProvider();
                 dataSource.tableDtoList = SapBwUtils.getAllCubesV2(destination, myProvider);
             }
 
@@ -158,6 +160,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             log.error("查询数据源表信息失败：" + e);
             log.error(appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
             return null;
+        } finally {
+            if (myProvider != null) {
+                Environment.unregisterDestinationDataProvider(myProvider);
+            }
         }
     }
 
