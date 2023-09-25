@@ -33,6 +33,14 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
 
     @Override
     public ResultEnum saveServerMonitor(List<ServerMonitorDTO> serverMonitorDTO) {
+        for (ServerMonitorDTO monitorDTO : serverMonitorDTO) {
+            if (monitorDTO.getStatus() == 1){
+                Object o = redisUtil.get(RedisKeyEnum.EMAIL_SEND_STATUS.getName() + ":" + monitorDTO.getServerName());
+                if (ObjectUtils.isNotEmpty(o)){
+                    redisUtil.del(RedisKeyEnum.EMAIL_SEND_STATUS.getName() + ":" + monitorDTO.getServerName());
+                }
+            }
+        }
         List<ServerMonitorPO> serverMonitorPO = ServerMonitorMap.INSTANCES.dtoListToPoList(serverMonitorDTO);
         boolean save = this.saveBatch(serverMonitorPO);
         if (save) {

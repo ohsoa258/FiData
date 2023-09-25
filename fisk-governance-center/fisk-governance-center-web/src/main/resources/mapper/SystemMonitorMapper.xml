@@ -22,19 +22,19 @@
             <when test="type == 1">
                 WHERE
                 ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} MINUTE
+                AND create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i') - INTERVAL #{number} MINUTE
                 GROUP BY timestamp;
             </when>
             <when test="type == 2">
                 WHERE
                 ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} HOUR
+                AND create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:00') - INTERVAL #{number} HOUR
                 GROUP BY timestamp;
             </when>
             <when test="type == 3">
                 WHERE
                 ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} DAY
+                AND create_time >= CURDATE() - INTERVAL #{number} DAY
                 GROUP BY timestamp;
             </when>
         </choose>
@@ -60,19 +60,19 @@
             <when test="type == 1">
                 WHERE
                 ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} MINUTE
+                AND create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i') - INTERVAL #{number} MINUTE
                 GROUP BY timestamp;
             </when>
             <when test="type == 2">
                 WHERE
                 ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} HOUR
+                AND create_time >= DATE_FORMAT(NOW(), '%Y-%m-%d %H:00') - INTERVAL #{number} HOUR
                 GROUP BY timestamp;
             </when>
             <when test="type == 3">
                 WHERE
                 ip = #{ip}
-                AND create_time >= NOW() - INTERVAL #{number} DAY
+                AND create_time >= CURDATE() - INTERVAL #{number} DAY
                 GROUP BY timestamp;
             </when>
         </choose>
