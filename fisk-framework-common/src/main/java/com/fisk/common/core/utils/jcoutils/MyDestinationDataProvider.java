@@ -2,11 +2,9 @@ package com.fisk.common.core.utils.jcoutils;
 
 import com.sap.conn.jco.ext.DestinationDataEventListener;
 import com.sap.conn.jco.ext.DestinationDataProvider;
-import org.springframework.stereotype.Component;
 
 import java.util.Properties;
 
-@Component
 public class MyDestinationDataProvider implements DestinationDataProvider {
     private Properties destinationProps;
 
