@@ -208,7 +208,6 @@ public class SapBwUtils {
         try {
             // 启动连接上下文
             JCoContext.begin(destination);
-            Environment.registerDestinationDataProvider(myProvider);
             // 测试连接
             destination.ping();
             // 获取dimension信息  dimension：维度

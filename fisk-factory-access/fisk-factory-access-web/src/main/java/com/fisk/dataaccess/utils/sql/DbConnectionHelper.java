@@ -57,6 +57,7 @@ public class DbConnectionHelper {
             destination.ping();
             log.info("注册SAPBW驱动程序后...");
         } catch (JCoException e) {
+            Environment.unregisterDestinationDataProvider(myProvider);
             log.error("获取sapbw连接对象失败..");
             throw new FkException(ResultEnum.SAPBW_CONNECT_ERROR, e);
         }
