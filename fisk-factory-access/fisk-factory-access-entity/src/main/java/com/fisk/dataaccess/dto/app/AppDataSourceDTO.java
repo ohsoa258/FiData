@@ -108,6 +108,18 @@ import java.util.stream.Collectors;
     @ApiModelProperty(value = "系统数据源配置id", required = true)
     public Integer systemDataSourceId;
 
+    /**
+     * JCO_SYSNR
+     */
+    @ApiModelProperty(value = "JCO_SYSNR", required = true)
+    public String sysNr;
+
+    /**
+     * JCO_LANG
+     */
+    @ApiModelProperty(value = "JCO_LANG", required = true)
+    public String lang;
+
     public AppDataSourceDTO(BaseEntity entity) {
         super(entity);
     }
