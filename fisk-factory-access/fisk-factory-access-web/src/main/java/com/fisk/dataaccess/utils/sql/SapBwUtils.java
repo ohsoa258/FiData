@@ -187,7 +187,7 @@ public class SapBwUtils {
 
         } catch (Exception e) {
             log.error("sapbw获取cube参数报错:",e);
-            throw new FkException(ResultEnum.SAPBW_GETCUBES_ERROR, e);
+            throw new FkException(ResultEnum.SAPBW_GETVARS_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
         }
