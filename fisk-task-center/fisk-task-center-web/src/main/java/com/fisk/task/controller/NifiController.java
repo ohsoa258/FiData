@@ -272,6 +272,7 @@ public class NifiController {
     public ResultEntity<Object> sapBwToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
         return ResultEntityBuild.build(sapBwListener.sapBwToStg(JSON.toJSONString(kafkaReceive)));
     }
+
     @ApiOperation(value = "数据分发api启用或禁用")
     @PostMapping("/apiEnableOrDisable")
     public ResultEntity<TableApiServiceDTO> apiEnableOrDisable(@RequestBody TableApiServiceDTO tableServiceDTO) {

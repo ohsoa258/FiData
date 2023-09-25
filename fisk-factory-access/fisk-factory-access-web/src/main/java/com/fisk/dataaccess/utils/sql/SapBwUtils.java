@@ -65,8 +65,8 @@ public class SapBwUtils {
             }
             // 结束连接上下文
             JCoContext.end(destination);
-        } catch (JCoException e) {
-            log.error("sapbw获取所有cube名称报错..");
+        } catch (Exception e) {
+            log.error("sapbw获取所有cube名称报错..",e);
             throw new FkException(ResultEnum.SAPBW_GETCUBES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -112,8 +112,8 @@ public class SapBwUtils {
             }
             // 结束连接上下文
             JCoContext.end(destination);
-        } catch (JCoException e) {
-            log.error("sapbw获取所有cube名称报错..v2");
+        } catch (Exception e) {
+            log.error("sapbw获取所有cube名称报错..v2:",e);
             throw new FkException(ResultEnum.SAPBW_GETCUBES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -185,8 +185,8 @@ public class SapBwUtils {
             CubeDimsAndMeas dimsAndMeas = getDimsAndMeasByCubeName(destination, myProvider, cubeName);
             tableStructureDTO.setCubeDimsAndMeas(dimsAndMeas);
 
-        } catch (JCoException e) {
-            log.error("sapbw获取cube参数报错");
+        } catch (Exception e) {
+            log.error("sapbw获取cube参数报错:",e);
             throw new FkException(ResultEnum.SAPBW_GETCUBES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -256,7 +256,7 @@ public class SapBwUtils {
             // 结束连接上下文
             JCoContext.end(destination);
         } catch (Exception e) {
-            log.error("sapbw获取指定cube下的所有维度和指标报错");
+            log.error("sapbw获取指定cube下的所有维度和指标报错",e);
             throw new FkException(ResultEnum.SAPBW_GETDIMS_MES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -403,11 +403,11 @@ public class SapBwUtils {
                 // 结束连接上下文
                 JCoContext.end(destination);
             } catch (Exception e) {
-                log.error("sapbw执行mdx获取结果报错..");
+                log.error("sapbw执行mdx获取结果报错..",e);
                 throw new FkException(ResultEnum.SAPBW_EXECUATE_MDX_ERROR, e);
             }
-        } catch (JCoException e) {
-            log.error("sapbw执行mdx获取结果报错..");
+        } catch (Exception e) {
+            log.error("sapbw执行mdx获取结果报错..",e);
             throw new FkException(ResultEnum.SAPBW_EXECUATE_MDX_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
