@@ -191,6 +191,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                         tableAccessId = Integer.valueOf(topic[5]);
                         type = Integer.parseInt(topic[3]);
                         appId = Integer.valueOf(topic[4]);
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        String format = simpleDateFormat.format(new Date());
                         if (consumerServerEnable && Objects.equals(type, OlapTableEnum.DATASERVICES.getValue())) {
 
                             //错误日志修复
@@ -199,8 +201,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                     .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue())
                                     .eq(PipelTaskLogPO::getTableType, OlapTableEnum.DATASERVICES.getValue());
                             PipelTaskLogPO pipelTaskLogPO = iPipelTaskLog.getOne(queryWrapper);
-                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                            String format = simpleDateFormat.format(new Date());
+
                             if (pipelTaskLogPO != null) {
                                 pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
                                 iPipelTaskLog.updateById(pipelTaskLogPO);
@@ -231,7 +232,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                         + tableServiceEmailDTO.pipelTraceId + "】";
                                 try {
                                     Map<String, String> hashMap = new HashMap<>();
-                                    hashMap.put("表服务名称", "");
+                                    hashMap.put("数据分发表服务名称", "");
                                     hashMap.put("表名", String.valueOf(tableAccessId));
                                     hashMap.put("运行结果", tableServiceEmailDTO.result);
                                     hashMap.put("运行时长", tableServiceEmailDTO.duration);
@@ -251,6 +252,52 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                 pipelTaskLogPO1.setTableType(type);
                                 iPipelTaskLog.save(pipelTaskLogPO1);
                             }
+                        }else if (consumerServerEnable && Objects.equals(type, OlapTableEnum.DATA_SERVICE_API.getValue())){
+                            TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
+                            tableServiceEmailDTO.appId = appId;
+                            tableServiceEmailDTO.msg = NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message;
+                            tableServiceEmailDTO.result = "【运行失败】";
+                            tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                            List<PipelTaskLogPO> pos = iPipelTaskLog.query()
+                                    .eq("task_trace_id", nifiStageMessageDTO.pipelTaskTraceId)
+                                    .eq("type", DispatchLogEnum.taskstart.getValue())
+                                    .list();
+
+                            if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(pos)) {
+                                PipelTaskLogPO taskLogPO = pos.get(0);
+                                try {
+                                    Date date = new Date();
+                                    Date parse = simpleDateFormat.parse(taskLogPO.msg.substring(7, 26));
+                                    Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                                    Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                                    tableServiceEmailDTO.duration = minutes + "m " + second + "s";
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            tableServiceEmailDTO.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
+                                    + tableServiceEmailDTO.pipelTraceId + "】";
+                            try {
+                                Map<String, String> hashMap = new HashMap<>();
+                                hashMap.put("数据分发api服务名称", "");
+                                hashMap.put("表名", String.valueOf(tableAccessId));
+                                hashMap.put("运行结果", tableServiceEmailDTO.result);
+                                hashMap.put("运行时长", tableServiceEmailDTO.duration);
+                                hashMap.put("运行详情", tableServiceEmailDTO.msg);
+                                hashMap.put("TraceID", tableServiceEmailDTO.pipelTraceId);
+                                hashMap.put("页面地址", tableServiceEmailDTO.url);
+                                tableServiceEmailDTO.body = hashMap;
+                                consumeServeiceClient.tableServiceSendEmails(tableServiceEmailDTO);
+                            } catch (Exception e) {
+                                log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
+                            }
+                            PipelTaskLogPO pipelTaskLogPO1 = new PipelTaskLogPO();
+                            pipelTaskLogPO1.setTaskTraceId(nifiStageMessageDTO.pipelTaskTraceId);
+                            pipelTaskLogPO1.setType(DispatchLogEnum.taskend.getValue());
+                            pipelTaskLogPO1.setTableId(tableAccessId);
+                            pipelTaskLogPO1.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                            pipelTaskLogPO1.setTableType(type);
+                            iPipelTaskLog.save(pipelTaskLogPO1);
                         }
                     } else if (topic.length == 7) {
                         String pipelineId = topic[3];

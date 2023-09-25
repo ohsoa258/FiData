@@ -113,3 +113,10 @@ fk:
     crypt:
       secret: ${random.uuid}
       strength: 6
+
+# 数据分发服务定时任务配置
+table-service-job:
+  # 数据源tree执行时间 凌晨12点半
+  schedule: 0 30 0 * * ?
+  # 是否启用
+  enabled: true

@@ -118,6 +118,15 @@ public class DispatchLogController {
         return objectResultEntity;
     }
 
+    @ApiOperation("根据taskTraceId获取任务日志")
+    @GetMapping("/getPipelTaskLogVo")
+    public ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVo(@RequestParam String taskTraceId) {
+        ResultEntity<List<PipelTaskLogVO>> objectResultEntity = new ResultEntity<>();
+        objectResultEntity.data = iPipelTaskLog.getPipelTaskLogVo(taskTraceId);
+        objectResultEntity.code = 0;
+        return objectResultEntity;
+    }
+
     /**
      * 获取阶段日志
      *

@@ -95,7 +95,11 @@ public enum TaskTypeEnum implements BaseEnum {
 
     BATCH_APPROVAL_TASK(22, "流程批量审批"),
 
-    MDM_PUBLISH_TASK(23, "mdmETL发布");
+    MDM_PUBLISH_TASK(23, "mdmETL发布"),
+
+    BUILD_DATA_SERVER_API_TASK(24,"数据分发API同步"),
+
+    BUILD_SERVER_DATA_SERVICE_API_TASK(25,"删除数据分发API服务nifi流程");
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

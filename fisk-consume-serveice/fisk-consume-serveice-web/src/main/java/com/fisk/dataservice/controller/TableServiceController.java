@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -239,5 +242,23 @@ public class TableServiceController {
     @GetMapping("/enableOrDisable")
     public ResultEntity<List<String>> enableOrDisable(@RequestParam("id") Integer id) {
         return ResultEntityBuild.build(service.enableOrDisable(id));
+    }
+
+    @PostMapping("/getDataStructure")
+    @ApiOperation(value = "获取数据分发服务结构")
+    public ResultEntity<List<FiDataMetaDataDTO>> getDataServiceStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataServiceStructure(dto));
+    }
+
+    @PostMapping("/getDataTableStructure")
+    @ApiOperation(value = "获取数据分发服务表结构")
+    public ResultEntity<List<FiDataMetaDataTreeDTO>> getDataServiceTableStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataServiceTableStructure(dto));
+    }
+
+    @PostMapping("/setDataStructure")
+    @ApiOperation(value = "刷新数据分发服务结构")
+    public ResultEntity<Object> setDataServiceStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataServiceStructure(dto));
     }
 }

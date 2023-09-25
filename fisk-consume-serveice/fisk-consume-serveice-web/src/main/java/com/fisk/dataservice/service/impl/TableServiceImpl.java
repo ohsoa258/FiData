@@ -9,6 +9,8 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -18,21 +20,27 @@ import com.fisk.common.core.utils.email.dto.MailSenderDTO;
 import com.fisk.common.core.utils.email.dto.MailServeiceDTO;
 import com.fisk.common.core.utils.email.method.MailSenderUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
+import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datafactory.enums.SendModeEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
-import com.fisk.dataservice.entity.AppServiceConfigPO;
-import com.fisk.dataservice.entity.TableAppPO;
-import com.fisk.dataservice.entity.TableRecipientsPO;
-import com.fisk.dataservice.entity.TableServicePO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
+import com.fisk.dataservice.enums.AppTypeEnum;
+import com.fisk.dataservice.enums.JsonTypeEnum;
 import com.fisk.dataservice.map.DataSourceConMap;
 import com.fisk.dataservice.map.TableServiceMap;
 import com.fisk.dataservice.mapper.AppServiceConfigMapper;
 import com.fisk.dataservice.mapper.TableRecipientsMapper;
 import com.fisk.dataservice.mapper.TableServiceMapper;
+import com.fisk.dataservice.service.ITableApiParameterService;
+import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.dataservice.vo.tableservice.TableRecipientsVO;
 import com.fisk.dataservice.vo.tableservice.WechatUserVO;
@@ -96,6 +104,15 @@ public class TableServiceImpl
 
     @Resource
     private TableRecipientsManageImpl tableRecipientsManage;
+
+    @Resource
+    private ITableApiService tableApiService;
+
+    @Resource
+    private RedisUtil redisUtil;
+
+    @Resource
+    ITableApiParameterService tableApiParameterService;
 
     @Override
     public Page<TableServicePageDataDTO> getTableServiceListData(TableServicePageQueryDTO dto) {
@@ -181,7 +198,7 @@ public class TableServiceImpl
         TableServiceSaveDTO data = new TableServiceSaveDTO();
         data.tableService = TableServiceMap.INSTANCES.poToDto(po);
         data.tableFieldList = tableField.getTableServiceField(id, 0);
-        data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id);
+        data.tableSyncMode = tableSyncMode.getTableServiceSyncMode(id, AppServiceTypeEnum.TABLE.getValue());
         return data;
     }
 
@@ -225,7 +242,7 @@ public class TableServiceImpl
 
     @Override
     public List<BuildTableServiceDTO> getTableListByPipelineId(Integer pipelineId) {
-        List<Integer> tableListByPipelineId = tableSyncMode.getTableListByPipelineId(pipelineId);
+        List<Integer> tableListByPipelineId = tableSyncMode.getTableListByPipelineId(pipelineId, 2);
         if (CollectionUtils.isEmpty(tableListByPipelineId)) {
             return new ArrayList<>();
         }
@@ -398,16 +415,34 @@ public class TableServiceImpl
 
     @Override
     public ResultEnum tableServiceSendEmails(TableServiceEmailDTO tableServiceEmail) {
-        //获取单个管道配置
-        TableAppPO tableAppPO = tableAppManage.getById(tableServiceEmail.appId);
-        if (tableAppPO != null) {
-            tableServiceEmail.body.put("表服务名称", tableAppPO.getAppName());
+        String serviceName = null;
+        TableAppPO tableAppPO = null;
+        if (tableServiceEmail.appType == 1) {
+            serviceName = "数据分发表";
+            //获取单个管道配置
+            tableAppPO = tableAppManage.getById(tableServiceEmail.appId);
+            if (tableAppPO != null) {
+                tableServiceEmail.body.put(serviceName + "服务名称", tableAppPO.getAppName());
+            }
+            String tableId = tableServiceEmail.body.get("表名");
+            LambdaQueryWrapper<TableServicePO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(TableServicePO::getId, tableId);
+            TableServicePO tableServicePO = this.getOne(queryWrapper);
+            tableServiceEmail.body.put("表名", tableServicePO.getTableName());
+        } else if (tableServiceEmail.appType == 2) {
+            serviceName = "数据分发api";
+            //获取单个管道配置
+            tableAppPO = tableAppManage.getById(tableServiceEmail.appId);
+            if (tableAppPO != null) {
+                tableServiceEmail.body.put(serviceName + "服务名称", tableAppPO.getAppName());
+            }
+            String tableId = tableServiceEmail.body.get("表名");
+            LambdaQueryWrapper<TableApiServicePO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(TableApiServicePO::getId, tableId);
+            TableApiServicePO tableApiServicePO = tableApiService.getOne(queryWrapper);
+            tableServiceEmail.body.put("api名称", tableApiServicePO.getApiName());
         }
-        String tableId = tableServiceEmail.body.get("表名");
-        LambdaQueryWrapper<TableServicePO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(TableServicePO::getId, tableId);
-        TableServicePO tableServicePO = this.getOne(queryWrapper);
-        tableServiceEmail.body.put("表名", tableServicePO.getTableName());
+
         // 发邮件
         List<TableRecipientsPO> email = tableRecipientsManage.query().eq("table_app_id", tableServiceEmail.appId).list();
         //第一步：查询邮件服务器设置
@@ -459,7 +494,7 @@ public class TableServiceImpl
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("FiData表服务(%s)运行结果通知", tableAppPO.getAppName()));
+            mailSenderDTO.setSubject(String.format("FiData" + serviceName + "服务(%s)运行结果通知", tableAppPO.getAppName()));
             //邮件正文
             String body = "";
 
@@ -509,7 +544,7 @@ public class TableServiceImpl
                 params.put("msgtype", "textcard");
                 params.put("agentid", emailServerById.data.wechatAgentId.trim());
                 Map<String, Object> textcard = new HashMap<>();
-                textcard.put("title", "表服务告警通知");
+                textcard.put("title", serviceName + "服务告警通知");
                 textcard.put("description", content);
                 textcard.put("url", tableServiceEmail.url);
                 textcard.put("btntxt", "更多");
@@ -544,6 +579,7 @@ public class TableServiceImpl
 
     /**
      * 启用或禁用
+     *
      * @param id
      * @return
      */
@@ -552,9 +588,9 @@ public class TableServiceImpl
         TableServicePO tableServicePO = this.getById(id);
         TableServiceDTO tableServiceDTO = TableServiceMap.INSTANCES.poToDto(tableServicePO);
         ResultEntity<TableServiceDTO> result = publishTaskClient.enableOrDisable(tableServiceDTO);
-        if(result.getCode() != ResultEnum.SUCCESS.getCode()) {
+        if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-        }else {
+        } else {
             TableServiceDTO data = result.getData();
             TableServicePO tableService = TableServiceMap.INSTANCES.dtoToPo(data);
             if (mapper.updateById(tableService) == 0) {
@@ -562,6 +598,322 @@ public class TableServiceImpl
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<FiDataMetaDataDTO> getDataServiceStructure(FiDataMetaDataReqDTO dto) {
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataStructureKey(dto.dataSourceId));
+        if (!flag) {
+            // 将数据接入结构存入redis
+            setDataServiceStructure(dto);
+        }
+        List<FiDataMetaDataDTO> list = null;
+        String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataStructureKey(dto.dataSourceId)).toString();
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(dataAccessStructure)) {
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataDTO.class);
+        }
+        return list;
+    }
+
+    @Override
+    public List<FiDataMetaDataTreeDTO> getDataServiceTableStructure(FiDataMetaDataReqDTO dto) {
+        boolean flag = redisUtil.hasKey(RedisKeyBuild.buildFiDataTableStructureKey(dto.dataSourceId));
+        if (!flag) {
+            // 将数据接入结构存入redis
+            setDataServiceStructure(dto);
+        }
+        List<FiDataMetaDataTreeDTO> list = null;
+        String dataAccessStructure = redisUtil.get(RedisKeyBuild.buildFiDataTableStructureKey(dto.dataSourceId)).toString();
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(dataAccessStructure)) {
+            list = JSONObject.parseArray(dataAccessStructure, FiDataMetaDataTreeDTO.class);
+        }
+        return list;
+    }
+
+    @Override
+    public boolean setDataServiceStructure(FiDataMetaDataReqDTO reqDto) {
+        List<FiDataMetaDataDTO> list = new ArrayList<>();
+        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+        // FiData数据源id: 数据资产自定义
+        dto.setDataSourceId(Integer.parseInt(reqDto.dataSourceId));
+
+        // 第一层id
+        List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+        FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+        dataTree.setId(reqDto.dataSourceId);
+        dataTree.setParentId("-10");
+        dataTree.setLabel(reqDto.dataSourceName);
+        dataTree.setLabelAlias(reqDto.dataSourceName);
+        dataTree.setLevelType(LevelTypeEnum.DATABASE);
+        dataTree.setSourceType(1);
+        dataTree.setSourceId(Integer.parseInt(reqDto.dataSourceId));
+
+        // 封装data所有结构数据
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = buildChildren(reqDto.dataSourceId);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> next = hashMap.entrySet().iterator().next();
+        dataTree.setChildren(next.getValue());
+        dataTreeList.add(dataTree);
+
+        dto.setChildren(dataTreeList);
+        list.add(dto);
+
+        if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
+            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+        }
+        List<FiDataMetaDataTreeDTO> key = next.getKey();
+        if (!org.springframework.util.CollectionUtils.isEmpty(key)) {
+            String s = JSON.toJSONString(key);
+            redisUtil.set(RedisKeyBuild.buildFiDataTableStructureKey(reqDto.dataSourceId), s);
+        }
+        return true;
+    }
+
+    /**
+     * 构建data-access子集树
+     *
+     * @param id FiData数据源id
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/15 17:46
+     */
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildChildren(String id) {
+
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+
+        List<FiDataMetaDataTreeDTO> appTypeTreeList = new ArrayList<>();
+
+        FiDataMetaDataTreeDTO appTreeByRealTime = new FiDataMetaDataTreeDTO();
+        String appTreeByRealTimeGuid = UUID.randomUUID().toString().replace("-", "");;
+        appTreeByRealTime.setId(appTreeByRealTimeGuid);
+        appTreeByRealTime.setParentId(id);
+        appTreeByRealTime.setLabel("数据表");
+        appTreeByRealTime.setLabelAlias("数据表");
+        appTreeByRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        appTreeByRealTime.setSourceType(1);
+        appTreeByRealTime.setSourceId(Integer.parseInt(id));
+
+        FiDataMetaDataTreeDTO appTreeByNonRealTime = new FiDataMetaDataTreeDTO();
+        String appTreeByNonRealTimeGuid = UUID.randomUUID().toString().replace("-", "");;
+        appTreeByNonRealTime.setId(appTreeByNonRealTimeGuid);
+        appTreeByNonRealTime.setParentId(id);
+        appTreeByNonRealTime.setLabel("API");
+        appTreeByNonRealTime.setLabelAlias("API");
+        appTreeByNonRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        appTreeByNonRealTime.setSourceType(1);
+        appTreeByNonRealTime.setSourceId(Integer.parseInt(id));
+
+        // 所有应用
+        List<TableAppPO> tableAppPOS = tableAppManage.query().orderByDesc("create_time").list();
+        // 所有应用下表字段信息
+        List<FiDataMetaDataTreeDTO> tableFieldList = new ArrayList<>();
+        List<TableAppPO> tableApps = tableAppPOS.stream().filter(i -> i.getAppType() == AppTypeEnum.TABLE_TYPE.getValue()).collect(Collectors.toList());
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByRealTime = getFiDataMetaDataTreeByTable(appTreeByRealTimeGuid, id, tableApps);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByRealTime = fiDataMetaDataTreeByRealTime.entrySet().iterator().next();
+        appTreeByRealTime.setChildren(nextTreeByRealTime.getValue());
+        tableFieldList.addAll(nextTreeByRealTime.getKey());
+
+        List<TableAppPO> tableApis = tableAppPOS.stream().filter(i -> i.getAppType() == AppTypeEnum.API_TYPE.getValue()).collect(Collectors.toList());
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByNonRealTime = getFiDataMetaDataTreeByApi(appTreeByNonRealTimeGuid, id, tableApis);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByNonRealTime = fiDataMetaDataTreeByNonRealTime.entrySet().iterator().next();
+        appTreeByNonRealTime.setChildren(nextTreeByNonRealTime.getValue());
+        tableFieldList.addAll(nextTreeByNonRealTime.getKey());
+
+        appTypeTreeList.add(appTreeByRealTime);
+        appTypeTreeList.add(appTreeByNonRealTime);
+
+        // key是表字段 value是tree
+        hashMap.put(tableFieldList, appTypeTreeList);
+        return hashMap;
+    }
+
+    /**
+     * 获取实时应用结构
+     *
+     * @param appPoList 所有的应用实体对象
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/16 15:21
+     * @params id FiData数据源id
+     */
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByTable(String appTreeByTableGuid, String id, List<TableAppPO> appPoList) {
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+        List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> value = appPoList.stream().filter(Objects::nonNull)
+                // 表服务
+                .filter(e -> e.appType == 1).map(app -> {
+
+                    // 第一层: app层
+                    FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
+                    // 当前层默认生成的uuid
+                    String uuid_appId = UUID.randomUUID().toString().replace("-", "");
+                    appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
+                    // 上一级的id
+                    appDtoTree.setSourceType(1);
+                    appDtoTree.setSourceId(Integer.parseInt(id));
+                    appDtoTree.setParentId(appTreeByTableGuid);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appName);
+                    appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setLabelDesc(app.appDesc);
+
+                    LambdaQueryWrapper<AppServiceConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(AppServiceConfigPO::getAppId, app.id);
+                    List<AppServiceConfigPO> appServiceConfigPOS = appServiceConfigMapper.selectList(queryWrapper);
+                    if (CollectionUtils.isNotEmpty(appServiceConfigPOS)){
+                        List<Integer> tableServiceIds = appServiceConfigPOS.stream().map(AppServiceConfigPO::getServiceId).collect(Collectors.toList());
+                        // 当前app下的所有table
+                        List<FiDataMetaDataTreeDTO> tableTreeList = this.query().in("id", tableServiceIds).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                            FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                            String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                            tableDtoTree.setId(uuid_apiId);// String.valueOf(api.id)
+                            tableDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                            tableDtoTree.setLabel(table.tableName);
+                            tableDtoTree.setLabelAlias(table.displayName);
+                            tableDtoTree.setSourceType(1);
+                            tableDtoTree.setSourceId(Integer.parseInt(id));
+                            tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                            tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.DATA_SERVICE_TABLE.getValue());
+                            // 不是已发布的都当作未发布处理
+                            if (table.publish == null) {
+                                tableDtoTree.setPublishState("0");
+                            } else {
+                                tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                            }
+                            tableDtoTree.setLabelDesc(table.tableDes);
+                            // 第四层: field层
+                            List<FiDataMetaDataTreeDTO> fieldTreeList = tableField.query().eq("table_service_id", table.id).list().stream().filter(Objects::nonNull).map(field -> {
+
+                                FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                fieldDtoTree.setId(String.valueOf(field.id));
+                                fieldDtoTree.setParentId(String.valueOf(table.id));
+                                fieldDtoTree.setLabel(field.fieldName);
+                                fieldDtoTree.setLabelAlias(field.fieldName);
+                                fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                                fieldDtoTree.setLabelType(field.fieldType);
+                                fieldDtoTree.setLabelDesc(field.fieldDes);
+                                fieldDtoTree.setSourceType(1);
+                                fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                fieldDtoTree.setParentName(table.tableName);
+                                fieldDtoTree.setParentNameAlias(table.tableName);
+                                fieldDtoTree.setParentLabelRelName(table.tableName);
+                                fieldDtoTree.setParentLabelFramework(null);
+                                fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                return fieldDtoTree;
+                            }).collect(Collectors.toList());
+
+                            // table的子级
+                            tableDtoTree.setChildren(fieldTreeList);
+                            return tableDtoTree;
+                        }).collect(Collectors.toList());
+                        // 表字段信息单独再保存一份
+                        if (!org.springframework.util.CollectionUtils.isEmpty(tableTreeList)) {
+                            key.addAll(tableTreeList);
+                        }
+                        // app的子级
+                        appDtoTree.setChildren(tableTreeList);
+                    }
+                    return appDtoTree;
+                }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
+    }
+
+    /**
+     * 获取非实时应用结构
+     *
+     * @param id        guid
+     * @param appPoList 所有的应用实体对象
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/16 15:21
+     */
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByApi(String appTreeByApiGuid, String id, List<TableAppPO> appPoList) {
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+        List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> value = appPoList.stream().filter(Objects::nonNull)
+                // api服务
+                .filter(e -> e.appType == 2).map(app -> {
+
+                    // 第一层: app层
+                    FiDataMetaDataTreeDTO appDtoTree = new FiDataMetaDataTreeDTO();
+                    // 当前层默认生成的uuid
+                    String uuid_appId = UUID.randomUUID().toString().replace("-", "");
+                    appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
+                    // 上一级的id
+                    appDtoTree.setSourceType(1);
+                    appDtoTree.setSourceId(Integer.parseInt(id));
+                    appDtoTree.setParentId(appTreeByApiGuid);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appName);
+                    appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setLabelDesc(app.appDesc);
+                    // 当前app下的所有api
+                    List<FiDataMetaDataTreeDTO> apiTreeList = tableApiService.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(api -> {
+                        FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
+
+                        String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                        apiDtoTree.setId(uuid_apiId); // String.valueOf(api.id)
+                        apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                        apiDtoTree.setLabel(api.getApiName());
+                        apiDtoTree.setLabelAlias(api.getApiName());
+                        apiDtoTree.setSourceType(1);
+                        apiDtoTree.setSourceId(Integer.parseInt(id));
+                        apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                        apiDtoTree.setLabelBusinessType(TableBusinessTypeEnum.DATA_SERVICE_API.getValue());
+                        // 不是已发布的都当作未发布处理
+                        if (api.getPublish() == null) {
+                            apiDtoTree.setPublishState("0");
+                        } else {
+                            apiDtoTree.setPublishState(String.valueOf(api.getPublish() != 1 ? 0 : 1));
+                        }
+                        apiDtoTree.setLabelDesc(api.getApiDes());
+
+                        LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
+                        queryWrapper.eq(TableApiParameterPO::getApiId,api.id);
+                        List<TableApiParameterPO> apiParameters = tableApiParameterService.list(queryWrapper);
+                        List<TableApiParameterPO> apiParameterPOS = apiParameters.stream().filter(i -> i.getSelected() == 1).collect(Collectors.toList());
+                        apiParameters = apiParameters.stream().filter(i->i.getPid() == apiParameterPOS.get(0).getId()).collect(Collectors.toList());
+                        ;
+                        // 第四层: field层
+                        List<FiDataMetaDataTreeDTO> fieldTreeList = apiParameters.stream().filter(Objects::nonNull).map(field -> {
+
+                            FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                            fieldDtoTree.setId(String.valueOf(field.id));
+                            fieldDtoTree.setParentId(String.valueOf(api.id));
+                            fieldDtoTree.setLabel(field.getParameterName());
+                            fieldDtoTree.setLabelAlias(field.getParameterName());
+                            fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                            fieldDtoTree.setPublishState(String.valueOf(api.getPublish() != 1 ? 0 : 1));
+                            if (field.getParameterType() == JsonTypeEnum.NUMBER.getValue()){
+                                fieldDtoTree.setLabelType("INT");
+                            }else if(field.getParameterType() == JsonTypeEnum.STRING.getValue()){
+                                fieldDtoTree.setLabelType("NVARCHAR");
+                            }
+                            fieldDtoTree.setLabelDesc(field.getParameterName());
+                            fieldDtoTree.setSourceType(1);
+                            fieldDtoTree.setSourceId(Integer.parseInt(id));
+                            fieldDtoTree.setParentName(api.getApiName());
+                            fieldDtoTree.setParentNameAlias(api.getApiName());
+                            fieldDtoTree.setParentLabelRelName(api.getApiName());
+                            fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                            return fieldDtoTree;
+                        }).collect(Collectors.toList());
+                        // api的子级
+                        apiDtoTree.setChildren(fieldTreeList);
+                        return apiDtoTree;
+                    }).collect(Collectors.toList());
+                    // app的子级
+                    appDtoTree.setChildren(apiTreeList);
+                    // 表字段信息单独再保存一份
+                    if (!org.springframework.util.CollectionUtils.isEmpty(apiTreeList)) {
+                        key.addAll(apiTreeList);
+                    }
+                    return appDtoTree;
+                }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
     }
 
     /**
@@ -605,9 +957,7 @@ public class TableServiceImpl
         }
         po = TableServiceMap.INSTANCES.dtoToPo(dto);
         po.id = dto.id;
-        if (mapper.updateById(po) == 0) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }
+        mapper.updateById(po);
         return ResultEnum.SUCCESS;
 
     }

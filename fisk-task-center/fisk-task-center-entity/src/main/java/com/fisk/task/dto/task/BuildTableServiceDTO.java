@@ -109,4 +109,9 @@ public class BuildTableServiceDTO extends MQBaseDTO {
     @ApiModelProperty(value = "表应用描述")
     public String tableAppDesc;
 
+    /**
+     * 启用或禁用
+     */
+    @ApiModelProperty(value = "启用或禁用")
+    public Integer enable;
 }

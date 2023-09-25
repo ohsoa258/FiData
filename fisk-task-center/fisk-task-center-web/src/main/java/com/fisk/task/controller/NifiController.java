@@ -11,6 +11,7 @@ import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.dataservice.dto.tableapi.TableApiServiceDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -270,5 +271,10 @@ public class NifiController {
     @PostMapping("/sapBwToStg")
     public ResultEntity<Object> sapBwToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
         return ResultEntityBuild.build(sapBwListener.sapBwToStg(JSON.toJSONString(kafkaReceive)));
+    }
+    @ApiOperation(value = "数据分发api启用或禁用")
+    @PostMapping("/apiEnableOrDisable")
+    public ResultEntity<TableApiServiceDTO> apiEnableOrDisable(@RequestBody TableApiServiceDTO tableServiceDTO) {
+        return tableNifiSettingService.apiEnableOrDisable(tableServiceDTO);
     }
 }

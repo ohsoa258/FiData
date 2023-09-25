@@ -7,6 +7,7 @@ import com.fisk.dataservice.dto.logs.LogQueryBasicsDTO;
 import com.fisk.dataservice.dto.logs.LogQueryDTO;
 import com.fisk.dataservice.entity.LogPO;
 import com.fisk.dataservice.vo.logs.ApiLogVO;
+import com.fisk.dataservice.vo.logs.TableApiServiceLogVO;
 import com.fisk.dataservice.vo.logs.TableServiceLogVO;
 
 /**
@@ -36,4 +37,11 @@ public interface ILogsManageService extends IService<LogPO> {
      * @return 表服务日志列表
      */
     ResultEntity<TableServiceLogVO> pageTableServiceLog(LogQueryBasicsDTO dto);
+
+    /**
+     * 分页查询
+     *
+     * @return 数据分发api日志列表
+     */
+    ResultEntity<TableApiServiceLogVO> pageTableApiServiceLog(LogQueryBasicsDTO dto);
 }

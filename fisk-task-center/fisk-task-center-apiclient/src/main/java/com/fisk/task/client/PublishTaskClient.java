@@ -11,6 +11,8 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.widetableconfig.WideTableFieldConfigTaskDTO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.dataservice.dto.tableapi.TableApiServiceDTO;
+import com.fisk.dataservice.dto.tableapi.TableApiTaskDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -57,6 +59,8 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/publishBuildDataServices")
     ResultEntity<Object> publishBuildDataServices(@RequestBody BuildTableServiceDTO data);
 
+    @PostMapping("/publishTask/publishBuildDataServiceApi")
+    ResultEntity<Object> publishBuildDataServiceApi(@RequestBody BuildTableApiServiceDTO data);
     /**
      * 元数据实例&DB构建
      *
@@ -340,6 +344,13 @@ public interface PublishTaskClient {
     ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVos(@RequestBody List<PipelTaskLogVO> pipelTaskLogs);
 
     /**
+     * 根据taskTraceId获取任务日志
+     * @param taskTraceId
+     * @return
+     */
+    @GetMapping("/dispatchLog/getPipelTaskLogVo")
+    ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVo(@RequestParam String taskTraceId);
+    /**
      * 阶段日志
      *
      * @return
@@ -432,6 +443,12 @@ public interface PublishTaskClient {
     ResultEntity<Object> publishBuildDeleteDataServices(@RequestBody BuildDeleteTableServiceDTO data);
 
     /**
+     * @param data
+     * @return
+     */
+    @PostMapping("/publishTask/publishBuildDeleteDataServiceApi")
+    ResultEntity<Object> publishBuildDeleteDataServiceApi(@RequestBody BuildDeleteTableApiServiceDTO data);
+    /**
      * task.build.task.over
      *
      * @param dto
@@ -455,6 +472,14 @@ public interface PublishTaskClient {
      */
     @PostMapping("/nifi/enableOrDisable")
     public ResultEntity<TableServiceDTO> enableOrDisable(@RequestBody TableServiceDTO tableServiceDTO);
+
+    /**
+     * 数据分发api同步服务，启用或禁用
+     * @param tableServiceDTO
+     * @return
+     */
+    @PostMapping("/nifi/apiEnableOrDisable")
+    ResultEntity<TableApiServiceDTO> apiEnableOrDisable(@RequestBody TableApiServiceDTO tableServiceDTO);
     /**
      * 创建任务批量审批
      *
@@ -489,5 +514,7 @@ public interface PublishTaskClient {
     @ApiOperation("数据接入--首页展示信息--当日接入数据的成功次数和失败次数")
     @GetMapping("/pipeline/accessDataSuccessAndFailCount")
     ResultEntity<AccessDataSuccessAndFailCountDTO> accessDataSuccessAndFailCount();
+    @PostMapping("/publishTask/savePipelTaskLog")
+    ResultEntity<Object> savePipelTaskLog(@RequestBody TableApiTaskDTO data);
 
 }

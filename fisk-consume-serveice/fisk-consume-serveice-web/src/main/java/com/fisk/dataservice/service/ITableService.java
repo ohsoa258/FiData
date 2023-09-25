@@ -3,6 +3,9 @@ package com.fisk.dataservice.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
@@ -171,4 +174,28 @@ public interface ITableService {
      * @return
      */
     ResultEnum enableOrDisable(Integer id);
+
+    /**
+     * 获取数据分发服务结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataDTO> getDataServiceStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 获取数据分发服务表结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    List<FiDataMetaDataTreeDTO> getDataServiceTableStructure(FiDataMetaDataReqDTO dto);
+
+    /**
+     * 刷新数据分发服务结构
+     *
+     * @param dto dto
+     * @return list
+     */
+    boolean setDataServiceStructure(FiDataMetaDataReqDTO dto);
 }

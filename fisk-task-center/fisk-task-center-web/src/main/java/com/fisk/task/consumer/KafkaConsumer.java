@@ -266,6 +266,34 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.data.server.api.flow 发布数据分发api服务
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DATA_SERVER_API_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    public ResultEntity<Object> buildDataApi(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(iNifiTaskListener.buildDataApi(data, ack));
+    }
+
+    /**
+     * task.build.delete.data.server.api.flow
+     *
+     * @param data
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.DataServiceTopicConstants.BUILD_DELETE_DATA_SERVER_API_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    public ResultEntity<Object> buildDeleteDataApi(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(iNifiTaskListener.buildDeleteDataApi(data, ack));
+    }
+
+    /**
      * task.build.atlas.tablecolumn.flow
      *
      * @param data

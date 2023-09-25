@@ -14,10 +14,7 @@ import com.fisk.datagovernance.entity.monitor.ServerMonitorPO;
 import com.fisk.datagovernance.map.monitor.ServerMonitorMap;
 import com.fisk.datagovernance.mapper.monitor.ServerMonitorMapper;
 import com.fisk.datagovernance.service.monitor.ServerMonitorService;
-import com.fisk.datagovernance.vo.monitor.DelayPingVO;
-import com.fisk.datagovernance.vo.monitor.ServerMonitorDetailVO;
-import com.fisk.datagovernance.vo.monitor.ServerMonitorVO;
-import com.fisk.datagovernance.vo.monitor.ServerTableVO;
+import com.fisk.datagovernance.vo.monitor.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -180,5 +176,10 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
         Page<ServerTableVO> serverTableDetail = this.baseMapper.getServerTableDetail(page, serverMonitorPageDTO);
         serverMonitorDetailVO.setServerTableVOList(serverTableDetail);
         return serverMonitorDetailVO;
+    }
+
+    @Override
+    public List<SystemServerVO> getSystemServerList() {
+        return this.baseMapper.getSystemServerList();
     }
 }

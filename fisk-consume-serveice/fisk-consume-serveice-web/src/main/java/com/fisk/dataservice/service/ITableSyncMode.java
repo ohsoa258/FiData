@@ -30,9 +30,10 @@ public interface ITableSyncMode {
      * 获取表服务覆盖方式
      *
      * @param tableServiceId
+     * @param type
      * @return
      */
-    TableSyncModeDTO getTableServiceSyncMode(long tableServiceId);
+    TableSyncModeDTO getTableServiceSyncMode(long tableServiceId, Integer type);
 
     /**
      * 删除覆盖方式

@@ -10,9 +10,11 @@ public enum AppServiceTypeEnum implements BaseEnum {
     /**
      * api类型
      */
+    NONE(0,"NONE"),
     API(1, "API"),
     TABLE(2, "表"),
-    FILE(3, "文件");
+    FILE(3, "文件"),
+    TABLE_API(4, "数据分发API");
 
     private final int value;
     private final String name;
@@ -31,5 +33,12 @@ public enum AppServiceTypeEnum implements BaseEnum {
     public String getName() {
         return name;
     }
-
+    public static AppServiceTypeEnum getEnum(int value) {
+        for (AppServiceTypeEnum e : AppServiceTypeEnum.values()) {
+            if (e.getValue() == value) {
+                return e;
+            }
+        }
+        return null;
+    }
 }

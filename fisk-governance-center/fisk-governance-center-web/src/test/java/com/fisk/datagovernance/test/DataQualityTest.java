@@ -10,6 +10,7 @@ import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.Business
 import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleCountDTO;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
+import com.fisk.datagovernance.util.TaskUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -222,5 +223,11 @@ public class DataQualityTest {
             }
         }
         return list;
+    }
+
+    @Test
+    public void get(){
+        TaskUtils taskUtils = new TaskUtils();
+//        taskUtils.doTask();
     }
 }

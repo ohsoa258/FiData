@@ -1,5 +1,8 @@
 package com.fisk.dataservice.dto.tableservice;
 
+import com.fisk.dataservice.dto.tableapi.TableApiAuthRequestDTO;
+import com.fisk.dataservice.dto.tableapi.TableApiResultDTO;
+import com.fisk.dataservice.enums.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -42,4 +45,28 @@ public class TableAppDTO {
      */
     @ApiModelProperty(value = "表应用下数据源列表")
     public List<TableAppDatasourceDTO> tableAppDatasourceDTOS;
+
+    @ApiModelProperty(value = "1:数据表（table_service） 2:接口（api）")
+    public AppTypeEnum appType;
+
+    @ApiModelProperty(value = "1:Rest API 2:Web Service")
+    private InterfaceTypeEnum interfaceType;
+
+    @ApiModelProperty(value = "0:无身份验证 1:基础验证 2:JWT 3:Bearer Token 4:OAuth2.0")
+    private AuthenticationTypeEnum authenticationType;
+
+    @ApiModelProperty(value = "验证地址")
+    private String authenticationUrl;
+
+    @ApiModelProperty(value = "apiAuth请求参数")
+    private List<TableApiAuthRequestDTO> apiAuthRequestDTO;
+
+    @ApiModelProperty(value = "api返回值")
+    private List<TableApiResultDTO> apiResultDTO;
+
+    @ApiModelProperty(value = "认证参数位置")
+    private AuthTypeEnum authType;
+
+    @ApiModelProperty(value = "1:get 2:post")
+    private RequestTypeEnum requestType;
 }

@@ -9,6 +9,7 @@ import com.fisk.datagovernance.entity.monitor.ServerMonitorPO;
 import com.fisk.datagovernance.vo.monitor.ServerMonitorDetailVO;
 import com.fisk.datagovernance.vo.monitor.ServerMonitorVO;
 import com.fisk.datagovernance.vo.monitor.ServerTableVO;
+import com.fisk.datagovernance.vo.monitor.SystemServerVO;
 
 import java.util.List;
 
@@ -22,5 +23,7 @@ public interface ServerMonitorService extends IService<ServerMonitorPO> {
     List<ServerTableVO> searchServerMonitor(ServerMonitorQueryDTO serverMonitorQueryDTO);
 
     ServerMonitorDetailVO getServerMonitorDetail(ServerMonitorPageDTO serverMonitorPageDTO);
+
+    List<SystemServerVO> getSystemServerList();
 }
 

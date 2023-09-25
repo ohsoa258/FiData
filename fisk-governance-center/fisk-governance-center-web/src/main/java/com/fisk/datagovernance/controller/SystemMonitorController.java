@@ -7,6 +7,7 @@ import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.monitor.*;
 import com.fisk.datagovernance.service.monitor.*;
 import com.fisk.datagovernance.vo.monitor.ServerMonitorConfigVO;
+import com.fisk.datagovernance.vo.monitor.SystemServerVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -138,5 +139,11 @@ public class SystemMonitorController {
     @PostMapping("/sendSystemMonitorSendEmails")
     public ResultEntity<Object> sendSystemMonitorSendEmails(@RequestBody Map<String, String> body) {
         return ResultEntityBuild.build(monitorRecipientsService.sendSystemMonitorSendEmails(body));
+    }
+
+    @ApiOperation("获取主页系统状态信息")
+    @GetMapping("/getSystemServerList")
+    public ResultEntity<List<SystemServerVO>> getSystemServerList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorService.getSystemServerList());
     }
 }

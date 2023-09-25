@@ -9,6 +9,7 @@ import com.fisk.dataservice.dto.logs.LogQueryBasicsDTO;
 import com.fisk.dataservice.dto.logs.LogQueryDTO;
 import com.fisk.dataservice.service.ILogsManageService;
 import com.fisk.dataservice.vo.logs.ApiLogVO;
+import com.fisk.dataservice.vo.logs.TableApiServiceLogVO;
 import com.fisk.dataservice.vo.logs.TableServiceLogVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -43,5 +44,11 @@ public class LogsController {
     @PostMapping("/pageTableServiceLog")
     public ResultEntity<TableServiceLogVO> pageTableServiceLog(@RequestBody LogQueryBasicsDTO dto) {
         return service.pageTableServiceLog(dto);
+    }
+
+    @ApiOperation(value = "数据分发api日志")
+    @PostMapping("/pageTableApiServiceLog")
+    public ResultEntity<TableApiServiceLogVO> pageTableApiServiceLog(@RequestBody LogQueryBasicsDTO dto) {
+        return service.pageTableApiServiceLog(dto);
     }
 }
