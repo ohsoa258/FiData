@@ -185,6 +185,7 @@
             <systemPath>${pom.basedir}/src/main/resources/lib/sapjco3.jar</systemPath>
         </dependency>
 
+        <!-- 使用olap4j从SSAS中获取数据 -->
         <dependency>
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j</artifactId>
