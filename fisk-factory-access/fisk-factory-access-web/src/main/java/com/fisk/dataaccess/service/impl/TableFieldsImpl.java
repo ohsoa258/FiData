@@ -253,7 +253,8 @@ public class TableFieldsImpl
         accessPo.sqlScript = dto.sqlScript;
         if (!CollectionUtils.isEmpty(dto.mdxList)){
             List<String> mdxList = dto.mdxList;
-            mdxList.forEach(String::trim);
+            // 暂时不用去前后的空格
+//            mdxList.forEach(String::trim);
             accessPo.mdxSqlList = JSON.toJSONString(mdxList);
         }
         //判断where条件是否传递
@@ -395,7 +396,8 @@ public class TableFieldsImpl
         model.sqlScript = dto.sqlScript;
         if (!CollectionUtils.isEmpty(dto.mdxList)){
             List<String> mdxList = dto.mdxList;
-            mdxList.forEach(String::trim);
+            // 暂时不用去前后的空格
+//            mdxList.forEach(String::trim);
             model.mdxSqlList = JSON.toJSONString(mdxList);
         }
 
