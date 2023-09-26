@@ -5,7 +5,7 @@
 
     <resultMap id="DataSourceConVOMap" type="com.fisk.chartvisual.vo.DataSourceConVO">
         <id column="id" property="id"/>
-        <result property="con_type" column="conType"
+        <result property="conType" column="con_typ"
                 typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
     </resultMap>
 
