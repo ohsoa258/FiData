@@ -3,6 +3,8 @@ package com.fisk.task.dto.daconfig;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * SapBw配置项
  *
@@ -64,5 +66,8 @@ public class SapBwConfig {
      */
     @ApiModelProperty(value = "mdx语句")
     public String mdxSql;
+
+    @ApiModelProperty(value = "sapbw-mdx语句集合", required = true)
+    public List<String> mdxList;
 
 }

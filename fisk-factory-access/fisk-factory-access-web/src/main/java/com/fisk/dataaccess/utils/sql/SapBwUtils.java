@@ -66,7 +66,7 @@ public class SapBwUtils {
             // 结束连接上下文
             JCoContext.end(destination);
         } catch (Exception e) {
-            log.error("sapbw获取所有cube名称报错..",e);
+            log.error("sapbw获取所有cube名称报错..", e);
             throw new FkException(ResultEnum.SAPBW_GETCUBES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -106,14 +106,15 @@ public class SapBwUtils {
                 outputParams.setRow(i);
 
                 tablePyhNameDTO.setCubeName(outputParams.getString("CUBE_NAM"));
-                tablePyhNameDTO.setCatName(outputParams.getString("CAT_NAM"));
+//                tablePyhNameDTO.setCatName(outputParams.getString("CAT_NAM"));
+                tablePyhNameDTO.setCubeDscrptn(outputParams.getString("DSCRPTN"));
 
                 list.add(tablePyhNameDTO);
             }
             // 结束连接上下文
             JCoContext.end(destination);
         } catch (Exception e) {
-            log.error("sapbw获取所有cube名称报错..v2:",e);
+            log.error("sapbw获取所有cube名称报错..v2:", e);
             throw new FkException(ResultEnum.SAPBW_GETCUBES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -186,7 +187,7 @@ public class SapBwUtils {
             tableStructureDTO.setCubeDimsAndMeas(dimsAndMeas);
 
         } catch (Exception e) {
-            log.error("sapbw获取cube参数报错:",e);
+            log.error("sapbw获取cube参数报错:", e);
             throw new FkException(ResultEnum.SAPBW_GETVARS_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -255,7 +256,7 @@ public class SapBwUtils {
             // 结束连接上下文
             JCoContext.end(destination);
         } catch (Exception e) {
-            log.error("sapbw获取指定cube下的所有维度和指标报错",e);
+            log.error("sapbw获取指定cube下的所有维度和指标报错", e);
             throw new FkException(ResultEnum.SAPBW_GETDIMS_MES_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -272,22 +273,25 @@ public class SapBwUtils {
      * @param myProvider
      * @return
      */
-    public static OdsResultDTO excuteMdx(JCoDestination destination, MyDestinationDataProvider myProvider, String mdx) {
+    public static OdsResultDTO excuteMdx(JCoDestination destination, MyDestinationDataProvider myProvider, List<String> mdxList) {
         OdsResultDTO odsResultDTO = new OdsResultDTO();
         List<FieldNameDTO> fieldNameDTOS = new ArrayList<>();
         List<List<String>> allData = new ArrayList<>();
 
-        //将前端传递的mdx语句截取为每段50长度的字符串
-        int segmentLength = 50; // 每段字符串的长度
-        List<String> segments = new ArrayList<>();
-        for (int i = 0; i < mdx.length(); i += segmentLength) {
-            int endIndex = Math.min(i + segmentLength, mdx.length());
-            String segment = mdx.substring(i, endIndex);
-            segments.add(segment);
-        }
+        log.info("待执行的mdx语句:[{}]", mdxList);
+
+//        //将前端传递的mdx语句截取为每段50长度的字符串
+//        int segmentLength = 50; // 每段字符串的长度
+//        List<String> segments = new ArrayList<>();
+//        for (int i = 0; i < mdx.length(); i += segmentLength) {
+//            int endIndex = Math.min(i + segmentLength, mdx.length());
+//            String segment = mdx.substring(i, endIndex);
+//            segments.add(segment);
+//        }
 
         try {
             // 为了执行多个RFC函数，我们需要开启上下文，这行代码至关重要！！！
+            log.info("sap jco3:开启连接上下文");
             JCoContext.begin(destination);
 
             // 获取创建数据集的函数
@@ -298,7 +302,7 @@ public class SapBwUtils {
             try {
                 JCoTable table = tableParams.getTable("COMMAND_TEXT");
                 // 将每段要执行的mdx语句拼接起来
-                for (String mdxByPart : segments) {
+                for (String mdxByPart : mdxList) {
                     table.appendRow();
                     table.setValue("LINE", mdxByPart);
                 }
@@ -306,6 +310,7 @@ public class SapBwUtils {
                 tableParams.setValue("COMMAND_TEXT", table);
                 function_create.getTableParameterList().setValue("COMMAND_TEXT", table);
                 // 执行创建数据集的函数
+                log.info("执行创建数据集的函数: BAPI_MDDATASET_CREATE_OBJECT");
                 function_create.execute(destination);
                 // 获取刚刚创建的数据集的id
                 String datasetid = String.valueOf(function_create.getExportParameterList().getValue("DATASETID"));
@@ -315,6 +320,7 @@ public class SapBwUtils {
                 // 将刚创建的数据集的id作为我们查询的参数
                 function_select.getImportParameterList().setValue("DATASETID", datasetid);
                 // 执行查询函数
+                log.info("执行查询函数: BAPI_MDDATASET_SELECT_DATA");
                 function_select.execute(destination);
 
                 // 定义第三个函数：查询刚刚创建的数据集的列明细（字段详情）
@@ -324,6 +330,7 @@ public class SapBwUtils {
                 // 设置参数
                 axisInfoParam.setValue("DATASETID", datasetid);
                 // 执行函数
+                log.info("查询刚刚创建的数据集的列明细（字段详情）: BAPI_MDDATASET_GET_AXIS_INFO");
                 function_getAxisInfo.execute(destination);
 
                 JCoParameterList tableParameterList = function_getAxisInfo.getTableParameterList();
@@ -356,6 +363,7 @@ public class SapBwUtils {
                     // 设置axis参数，axis相当于每个字段
                     param.setValue("AXIS", s);
                     // 执行函数
+                    log.info("通过数据集id和要查询的列id,查询刚刚创建的数据集的数据: BAPI_MDDATASET_GET_AXIS_DATA");
                     function_getData.execute(destination);
 
                     // 获取查询到的数据
@@ -376,7 +384,7 @@ public class SapBwUtils {
                                 fieldNameDTO.setSourceFieldType("nvarchar");
                                 fieldNameDTOS.add(fieldNameDTO);
                             }
-                            if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))){
+                            if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))) {
                                 FieldNameDTO fieldNameDTO = new FieldNameDTO();
                                 fieldNameDTO.setSourceFieldName(mndtryPrptys.getString("LVL_UNAM"));
                                 fieldNameDTO.setSourceFieldType("nvarchar");
@@ -388,7 +396,7 @@ public class SapBwUtils {
                 // 执行查询后不管mdx语句查询多少列数据，返回的都在一列里面，因此我们需要根据列的个数对数据做处理
                 int size = fieldNameDTOS.size();
                 // 这一步是将unFormattedData集合里面装载的未处理的数据，转换为allData集合装载的处理过的数据
-                allData = convertToRowData(unFormattedData,size);
+                allData = convertToRowData(unFormattedData, size);
 
                 // 将转换后的数据设置给返回对象
                 odsResultDTO.setSapdataList(allData);
@@ -397,16 +405,18 @@ public class SapBwUtils {
                 // 删除前面创建的数据集
                 JCoFunction deleteObjectFunction = destination.getRepository().getFunction("BAPI_MDDATASET_DELETE_OBJECT");
                 deleteObjectFunction.getImportParameterList().setValue("DATASETID", datasetid);
+                log.info("删除前面创建的数据集: BAPI_MDDATASET_DELETE_OBJECT");
                 deleteObjectFunction.execute(destination);
 
                 // 结束连接上下文
+                log.info("sap jco3:结束连接上下文");
                 JCoContext.end(destination);
             } catch (Exception e) {
-                log.error("sapbw执行mdx获取结果报错..",e);
+                log.error("sapbw执行mdx获取结果报错..", e);
                 throw new FkException(ResultEnum.SAPBW_EXECUATE_MDX_ERROR, e);
             }
         } catch (Exception e) {
-            log.error("sapbw执行mdx获取结果报错..",e);
+            log.error("sapbw执行mdx获取结果报错..", e);
             throw new FkException(ResultEnum.SAPBW_EXECUATE_MDX_ERROR, e);
         } finally {
             Environment.unregisterDestinationDataProvider(myProvider);
@@ -420,7 +430,7 @@ public class SapBwUtils {
      * @param colList
      * @return
      */
-    private static List<List<String>> convertToRowData(List<String> colList,int size) {
+    private static List<List<String>> convertToRowData(List<String> colList, int size) {
         List<List<String>> formedData = new ArrayList<>();
         List<String> sublist = new ArrayList<>();
 

@@ -147,4 +147,9 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public Integer isImportantInterface;
 
+    /**
+     * sapbw-mdx语句集合
+     */
+    public String mdxSqlList;
+
 }

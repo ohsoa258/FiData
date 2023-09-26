@@ -151,6 +151,12 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "覆盖脚本")
     public String coverScript;
 
+    /**
+     * sapbw-mdx语句集合
+     */
+    @ApiModelProperty(value = "sapbw-mdx语句集合", required = true)
+    public List<String> mdxList;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }

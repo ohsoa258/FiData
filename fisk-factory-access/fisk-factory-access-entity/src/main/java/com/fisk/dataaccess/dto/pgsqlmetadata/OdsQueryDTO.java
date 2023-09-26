@@ -25,7 +25,6 @@ public class OdsQueryDTO {
     public String querySql;
     @ApiModelProperty(value = "预览的起始行", required = true)
     public Integer startRow;
-
     @ApiModelProperty(value = "当前物理表名称", required = true)
     public String tableName;
     @ApiModelProperty(value = "ftp文件后缀名类型", required = true)
@@ -34,6 +33,8 @@ public class OdsQueryDTO {
     public DataSourceTypeEnum dataSourceTypeEnum;
     @ApiModelProperty(value = "数据源id", required = true)
     public int appDataSourceId;
+    @ApiModelProperty(value = "sapbw-mdx语句集合", required = true)
+    public List<String> mdxList;
 
     /*
      * 接入的增量时间参数

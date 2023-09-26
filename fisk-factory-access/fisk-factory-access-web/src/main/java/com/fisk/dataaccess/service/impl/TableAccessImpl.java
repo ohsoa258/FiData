@@ -1115,6 +1115,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 sapBwConfig.setSysNr(modelDataSource.getSysNr());
                 sapBwConfig.setLang(modelDataSource.getLang());
                 sapBwConfig.setMdxSql(modelAccess.getSqlScript());
+                String mdxSqlList = modelAccess.getMdxSqlList();
+                //将数据库里存储的json格式的mdx语句集合转为List集合
+                List<String> list = JSONArray.parseArray(mdxSqlList, String.class);
+                sapBwConfig.setMdxList(list);
                 break;
             default:
                 break;
@@ -2269,7 +2273,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
 
                 // 执行mdx语句，返回结果
-                array = SapBwUtils.excuteMdx(destination, myProvider, query.querySql);
+                array = SapBwUtils.excuteMdx(destination, myProvider, query.mdxList);
                 Instant inst2 = Instant.now();
                 log.info("执行mdx时间 : " + Duration.between(inst1, inst2).toMillis());
 

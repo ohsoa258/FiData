@@ -251,6 +251,11 @@ public class TableFieldsImpl
         accessPo.coverScript = dto.coverScript;
         //获取数据的sql脚本
         accessPo.sqlScript = dto.sqlScript;
+        if (!CollectionUtils.isEmpty(dto.mdxList)){
+            List<String> mdxList = dto.mdxList;
+            mdxList.forEach(String::trim);
+            accessPo.mdxSqlList = JSON.toJSONString(mdxList);
+        }
         //判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;
         log.info("syncType类型，{}", syncType);
@@ -388,6 +393,11 @@ public class TableFieldsImpl
         model.coverScript = dto.coverScript;
         //获取数据的sql脚本
         model.sqlScript = dto.sqlScript;
+        if (!CollectionUtils.isEmpty(dto.mdxList)){
+            List<String> mdxList = dto.mdxList;
+            mdxList.forEach(String::trim);
+            model.mdxSqlList = JSON.toJSONString(mdxList);
+        }
 
         // 判断where条件是否传递
         int syncType = dto.tableSyncmodeDTO.syncMode;

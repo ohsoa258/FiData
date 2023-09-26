@@ -97,7 +97,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                 //获取sapbw配置信息
                 SapBwConfig sapBwConfig = config.sapBwConfig;
                 //mdx语句
-                String mdxSql = sapBwConfig.getMdxSql();
+                List<String> mdxList = sapBwConfig.getMdxList();
 
                 //通过表id,应用id,表类别从 tb_table_nifi_setting 表获取 TableNifiSettingPO 对象
                 TableNifiSettingPO one = tableNifiSettingService.query().eq("table_access_id", tableId).eq("app_id", appId).eq("type", OlapTableEnum.PHYSICS.getValue()).one();
@@ -114,10 +114,10 @@ public class SapBwListenerImpl implements ISapBwListener {
                 myProvider = providerAndDestination.getMyProvider();
 
                 //调用封装的方法 执行mdx语句并获得结果
-                List<List<String>> lists = excuteMdx(destination, myProvider, mdxSql);
+                List<List<String>> lists = excuteMdx(destination, myProvider, mdxList);
 
                 //获取列总数
-                Integer columnCount = tableFieldsList.size();
+                int columnCount = tableFieldsList.size();
 
                 // 构造 SQL 语句，? 代表需要填充的数据
                 //调用方法获取stg表名和目标表名
@@ -129,7 +129,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                     if (i > 0) {
                         sqlBuilder.append(", ");
                     }
-                    sqlBuilder.append("[" + tableFieldsList.get(i).fieldName + "]");
+                    sqlBuilder.append("[").append(tableFieldsList.get(i).fieldName).append("]");
                 }
                 sqlBuilder.append(") VALUES ('")
                         .append(fidata_batch_code)
@@ -216,24 +216,27 @@ public class SapBwListenerImpl implements ISapBwListener {
      * @param myProvider
      * @return
      */
-    private List<List<String>> excuteMdx(JCoDestination destination, MyDestinationDataProvider myProvider, String mdx) {
+    private List<List<String>> excuteMdx(JCoDestination destination, MyDestinationDataProvider myProvider, List<String> mdxList) {
         List<List<String>> allData = new ArrayList<>();
         List<FieldNameDTO> fieldNameDTOS = new ArrayList<>();
 
-        //将前端传递的mdx语句截取为每段50长度的字符串
-        int segmentLength = 50; // 每段字符串的长度
-        //存储每段mdx语句
-        List<String> segments = new ArrayList<>();
-        for (int i = 0; i < mdx.length(); i += segmentLength) {
-            int endIndex = Math.min(i + segmentLength, mdx.length());
-            String segment = mdx.substring(i, endIndex);
-            segments.add(segment);
-        }
+        log.info("待执行的mdx语句:[{}]", mdxList);
+
+//        //将前端传递的mdx语句截取为每段50长度的字符串
+//        int segmentLength = 50; // 每段字符串的长度
+//        //存储每段mdx语句
+//        List<String> segments = new ArrayList<>();
+//        for (int i = 0; i < mdx.length(); i += segmentLength) {
+//            int endIndex = Math.min(i + segmentLength, mdx.length());
+//            String segment = mdx.substring(i, endIndex);
+//            segments.add(segment);
+//        }
 
         String datasetid = null;
 
         try {
             // 为了执行多个RFC函数，我们需要开启上下文，这行代码至关重要！！！
+            log.info("sap jco3:开启连接上下文");
             JCoContext.begin(destination);
 
             // 获取创建数据集的函数
@@ -244,7 +247,7 @@ public class SapBwListenerImpl implements ISapBwListener {
             try {
                 JCoTable table = tableParams.getTable("COMMAND_TEXT");
                 // 将每段要执行的mdx语句拼接起来
-                for (String mdxByPart : segments) {
+                for (String mdxByPart : mdxList) {
                     table.appendRow();
                     table.setValue("LINE", mdxByPart);
                 }
@@ -252,6 +255,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                 tableParams.setValue("COMMAND_TEXT", table);
                 function_create.getTableParameterList().setValue("COMMAND_TEXT", table);
                 // 执行创建数据集的函数
+                log.info("执行创建数据集的函数: BAPI_MDDATASET_CREATE_OBJECT");
                 function_create.execute(destination);
                 // 获取刚刚创建的数据集的id
                 datasetid = String.valueOf(function_create.getExportParameterList().getValue("DATASETID"));
@@ -261,6 +265,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                 // 将刚创建的数据集的id作为我们查询的参数
                 function_select.getImportParameterList().setValue("DATASETID", datasetid);
                 // 执行查询函数
+                log.info("执行查询函数: BAPI_MDDATASET_SELECT_DATA");
                 function_select.execute(destination);
 
                 // 定义第三个函数：查询刚刚创建的数据集的列明细（字段详情）
@@ -270,6 +275,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                 // 设置参数
                 axisInfoParam.setValue("DATASETID", datasetid);
                 // 执行函数
+                log.info("查询刚刚创建的数据集的列明细（字段详情）: BAPI_MDDATASET_GET_AXIS_INFO");
                 function_getAxisInfo.execute(destination);
 
                 JCoParameterList tableParameterList = function_getAxisInfo.getTableParameterList();
@@ -301,6 +307,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                     // 设置axis参数，axis相当于每个字段
                     param.setValue("AXIS", s);
                     // 执行函数
+                    log.info("通过数据集id和要查询的列id,查询刚刚创建的数据集的数据: BAPI_MDDATASET_GET_AXIS_DATA");
                     function_getData.execute(destination);
 
                     // 获取查询到的数据
@@ -339,9 +346,11 @@ public class SapBwListenerImpl implements ISapBwListener {
                 // 删除前面创建的数据集
                 JCoFunction deleteObjectFunction = destination.getRepository().getFunction("BAPI_MDDATASET_DELETE_OBJECT");
                 deleteObjectFunction.getImportParameterList().setValue("DATASETID", datasetid);
+                log.info("删除前面创建的数据集: BAPI_MDDATASET_DELETE_OBJECT");
                 deleteObjectFunction.execute(destination);
 
                 // 结束连接上下文
+                log.info("sap jco3:结束连接上下文");
                 JCoContext.end(destination);
             } catch (Exception e) {
                 if (datasetid != null) {

@@ -35,11 +35,18 @@ public class TablePyhNameDTO extends BaseDTO {
     @ApiModelProperty(value = "sapbw cube名称", required = true)
     public String cubeName;
 
+    //暂时用不到
+//    /**
+//     * sapbw cat名称
+//     */
+//    @ApiModelProperty(value = "sapbw cat名称", required = true)
+//    public String catName;
+
     /**
-     * sapbw cat名称
+     * cube的描述 DSCRPTN
      */
-    @ApiModelProperty(value = "sapbw cat名称", required = true)
-    public String catName;
+    @ApiModelProperty(value = "cube数据最近的修改人")
+    public String cubeDscrptn;
 
     /**
      * 表字段
