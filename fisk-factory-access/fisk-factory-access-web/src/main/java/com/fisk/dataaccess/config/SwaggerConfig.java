@@ -65,6 +65,7 @@ public class SwaggerConfig {
     public static final String STATEMENT = "资产报表";
     public static final String API_STATE = "实时API接口状态控制器";
     public static final String MAIN_PAGE = "数据接入首页展示";
+    public static final String test = "测试";
 
 
 

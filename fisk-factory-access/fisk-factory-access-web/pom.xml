@@ -185,6 +185,12 @@
             <systemPath>${pom.basedir}/src/main/resources/lib/sapjco3.jar</systemPath>
         </dependency>
 
+        <dependency>
+            <groupId>org.olap4j</groupId>
+            <artifactId>olap4j</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+
         <!-- ftp -->
         <dependency>
             <groupId>commons-net</groupId>
