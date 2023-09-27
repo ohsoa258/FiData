@@ -55,8 +55,8 @@ public class TestController {
             String mdx = "EVALUATE\n" +
                     "SUMMARIZECOLUMNS(\n" +
                     "    'FBM_DIM_BW_Customer'[Customer_ID],\n" +
-                    "    SUM('FBM_Fact_BW_Sellin'[PracticalShipQTY],\n" +
-                    "    SUM('FBM_Fact_BW_Sellin'[PracticalShipAmt]\n" +
+                    "    SUM('FBM_Fact_BW_Sellin'[PracticalShipQTY]),\n" +
+                    "    SUM('FBM_Fact_BW_Sellin'[PracticalShipAmt])\n" +
                     ")";
             stmt = olapconn.createStatement();
             CellSet cellset = stmt.executeOlapQuery(mdx);

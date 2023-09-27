@@ -325,13 +325,11 @@ public class SapBwListenerImpl implements ISapBwListener {
                                 firstFieldName = mndtryPrptys.getString("LVL_UNAM");
                                 FieldNameDTO fieldNameDTO = new FieldNameDTO();
                                 fieldNameDTO.setSourceFieldName(firstFieldName);
-                                fieldNameDTO.setSourceFieldType("");
                                 fieldNameDTOS.add(fieldNameDTO);
                             }
                             if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))){
                                 FieldNameDTO fieldNameDTO = new FieldNameDTO();
                                 fieldNameDTO.setSourceFieldName(mndtryPrptys.getString("LVL_UNAM"));
-                                fieldNameDTO.setSourceFieldType("");
                                 fieldNameDTOS.add(fieldNameDTO);
                             }
                         }
