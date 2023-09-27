@@ -1795,23 +1795,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
-            // 如果是sapbw的流程
-            if (dto.sapBwFlow) {
-
-                /**
-                 * createSapBwProcessorEntity会返回一个集合，
-                 * 集合里面第一个是replaceTextForSapBwProcess组件
-                 * 第二个是invokeHTTPProcessorForSapBw组件
-                 */
-                // 虽然名字叫这个 但是只是为了下面流程连线逻辑不大改，其实还是sapbw的流程
-                excelProcessorEntity = createSapBwProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
-
-                res.addAll(excelProcessorEntity);
-                /**
-                 * 如果是sftp/ftp的excel表格
-                 */
-            }else if (dto.excelFlow) {
-
+            if (dto.excelFlow) {
                 //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
                 /**
                  * createExcelProcessorEntity2会返回一个集合，
@@ -1857,7 +1841,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
-            if (dto.excelFlow) {
+            // 如果是sapbw的流程
+            if (dto.sapBwFlow) {
+
+                /**
+                 * createSapBwProcessorEntity会返回一个集合，
+                 * 集合里面第一个是replaceTextForSapBwProcess组件
+                 * 第二个是invokeHTTPProcessorForSapBw组件
+                 */
+                // 虽然名字叫这个 但是只是为了下面流程连线逻辑不大改，其实还是sapbw的流程
+                excelProcessorEntity = createSapBwProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+
+                res.addAll(excelProcessorEntity);
+                /**
+                 * 如果是sftp/ftp的excel表格
+                 */
+            }else if (dto.excelFlow) {
                 ProcessorEntity IHP = new ProcessorEntity();
                 //如果开启数据校验，则新建两个组件
                 if (dataValidation) {

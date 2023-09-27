@@ -8,7 +8,9 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.olap4j.*;
+import org.olap4j.CellSet;
+import org.olap4j.OlapConnection;
+import org.olap4j.OlapStatement;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.DriverManager;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,13 @@ public class TestController {
 //        String xmlaDataBase = "Router";
 
         String address = "jdbc:xmla:Server=http://10.10.33.221/olap/msmdpump.dll;Catalog=test_wwj123";
+        // Connection connection = DriverManager.getConnection(
+        //"jdbc:xmla: Server=http://192.168.0.151/OLAP/msmdpump.dll;" +
+        //"Data Source=http://192.168.0.151/OLAP/msmdpump.dll;" +
+        //"Initial Catalog=AdventureWorksDW2014; " +
+        //"Integrated Security=Basic; " +
+        //"User ID=XXX; " +
+        //"Password=XXX;");
         OlapStatement stmt = null;
         OlapConnection olapconn = null;
         List<Map<String, Object>> result = new ArrayList<>();
@@ -51,10 +59,18 @@ public class TestController {
             //获取连接
             OlapConnection conn = (OlapConnection) DriverManager.getConnection(address);
             olapconn = conn.unwrap(OlapConnection.class);
+            //获取信息
+            String database = olapconn.getDatabase();
+            String catalog = olapconn.getCatalog();
+            String roleName = olapconn.getRoleName();
+            log.info("database:[{}]",database);
+            log.info("catalog:[{}]",catalog);
+            log.info("roleName:[{}]",roleName);
+
             log.info("连接成功...");
             //自定义MDX查询语句
 //            mdx = "EVALUATE SUMMARIZECOLUMNS('FBM_DIM_BW_Customer'[Customer_ID],[SUM_PracticalShipQTY])";
-            log.info("自定义MDX查询语句..",mdx);
+            log.info("自定义MDX查询语句：[{}]",mdx);
             stmt = olapconn.createStatement();
             log.info("开始执行查询...");
             CellSet cellset = stmt.executeOlapQuery(mdx);
