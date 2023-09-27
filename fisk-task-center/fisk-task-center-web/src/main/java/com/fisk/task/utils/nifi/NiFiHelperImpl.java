@@ -818,6 +818,10 @@ public class NiFiHelperImpl implements INiFiHelper {
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
         config.setComments(buildCallDbProcedureProcessorDTO.details);
+        if (buildCallDbProcedureProcessorDTO.concurrencyNums!=null){
+            // 组件并发数量
+            config.setConcurrentlySchedulableTaskCount(buildCallDbProcedureProcessorDTO.concurrencyNums);
+        }
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(buildCallDbProcedureProcessorDTO.name);

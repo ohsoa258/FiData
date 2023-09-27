@@ -3179,6 +3179,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
         callDbProcedureProcessorDTO.haveNextOne = true;
+        // 组件并发数量
+        callDbProcedureProcessorDTO.concurrencyNums = buildNifiFlow.concurrencyNums;
 
         //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
         log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
@@ -3224,6 +3226,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(13);
         callDbProcedureProcessorDTO.haveNextOne = true;
+        // 组件并发数量
+        callDbProcedureProcessorDTO.concurrencyNums = buildNifiFlow.concurrencyNums;
 
         //todo: CallDbProcedure组件：自定义的加载前sql和加载后sql
         log.info("数仓自定义加载前语句：{}", JSON.toJSONString(buildNifiFlow.customScriptBefore));
