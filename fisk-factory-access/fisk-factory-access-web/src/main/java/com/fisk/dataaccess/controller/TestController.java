@@ -53,20 +53,22 @@ public class TestController {
             log.info("连接成功...");
             //自定义MDX查询语句
             String mdx = "EVALUATE SUMMARIZECOLUMNS('FBM_DIM_BW_Customer'[Customer_ID],[SUM_PracticalShipQTY])";
+            log.info("自定义MDX查询语句..",mdx);
             stmt = olapconn.createStatement();
+            log.info("开始执行查询...");
             CellSet cellset = stmt.executeOlapQuery(mdx);
 
-            //todo:处理返回值
-            for (Position rowPos : cellset.getAxes().get(1)) {
-                Map<String, Object> rowResult = new HashMap<>();
-                for (Position colPos : cellset.getAxes().get(0)) {
-                    Cell cell = cellset.getCell(colPos, rowPos);
-                    String columnName = colPos.getMembers().get(0).getCaption();
-                    Object cellValue = cell.getValue();
-                    rowResult.put(columnName, cellValue);
-                }
-                result.add(rowResult);
-            }
+//            //todo:处理返回值
+//            for (Position rowPos : cellset.getAxes().get(1)) {
+//                Map<String, Object> rowResult = new HashMap<>();
+//                for (Position colPos : cellset.getAxes().get(0)) {
+//                    Cell cell = cellset.getCell(colPos, rowPos);
+//                    String columnName = colPos.getMembers().get(0).getCaption();
+//                    Object cellValue = cell.getValue();
+//                    rowResult.put(columnName, cellValue);
+//                }
+//                result.add(rowResult);
+//            }
 
             stmt.close();
             olapconn.close();
