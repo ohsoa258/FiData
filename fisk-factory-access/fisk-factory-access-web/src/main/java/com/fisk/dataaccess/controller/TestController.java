@@ -35,7 +35,7 @@ public class TestController {
      */
     @ApiOperation("测试使用olap4j从SSAS中获取数据--并发测试")
     @GetMapping("/testGetFromSSAS")
-    public ResultEntity<Object> testGetFromSSAS() {
+    public ResultEntity<Object> testGetFromSSAS(String mdx) {
 //        String password = "Password";
 //        String user = "admin";
 //        String xmlaDataBase = "Router";
@@ -52,7 +52,7 @@ public class TestController {
             olapconn = conn.unwrap(OlapConnection.class);
             log.info("连接成功...");
             //自定义MDX查询语句
-            String mdx = "EVALUATE SUMMARIZECOLUMNS('FBM_DIM_BW_Customer'[Customer_ID],[SUM_PracticalShipQTY])";
+//            mdx = "EVALUATE SUMMARIZECOLUMNS('FBM_DIM_BW_Customer'[Customer_ID],[SUM_PracticalShipQTY])";
             log.info("自定义MDX查询语句..",mdx);
             stmt = olapconn.createStatement();
             log.info("开始执行查询...");
@@ -72,7 +72,7 @@ public class TestController {
 
             stmt.close();
             olapconn.close();
-            log.info("测试完毕");
+            log.info("测试完毕..");
         } catch (Exception e) {
             log.error("测试异常.." + e);
             throw new FkException(ResultEnum.ERROR, e);
