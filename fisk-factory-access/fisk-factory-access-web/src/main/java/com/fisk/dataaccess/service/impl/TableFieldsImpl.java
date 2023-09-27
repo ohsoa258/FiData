@@ -723,6 +723,7 @@ public class TableFieldsImpl
                 data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
                 data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
                 data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
+                log.info("是否是sapbw...",data.sapBwFlow);
                 data.tableHistoryId = tableHistoryId;
 
                 // 执行发布

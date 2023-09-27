@@ -1807,12 +1807,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 excelProcessorEntity = createSapBwProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
 
                 res.addAll(excelProcessorEntity);
-            }
+                /**
+                 * 如果是sftp/ftp的excel表格
+                 */
+            }else if (dto.excelFlow) {
 
-            /**
-             * 如果是sftp/ftp的excel表格
-             */
-            if (dto.excelFlow) {
                 //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
                 /**
                  * createExcelProcessorEntity2会返回一个集合，
