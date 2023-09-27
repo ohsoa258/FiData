@@ -52,12 +52,7 @@ public class TestController {
             olapconn = conn.unwrap(OlapConnection.class);
             log.info("连接成功...");
             //自定义MDX查询语句
-            String mdx = "EVALUATE\n" +
-                    "SUMMARIZECOLUMNS(\n" +
-                    "    'FBM_DIM_BW_Customer'[Customer_ID],\n" +
-                    "    SUM('FBM_Fact_BW_Sellin'[PracticalShipQTY]),\n" +
-                    "    SUM('FBM_Fact_BW_Sellin'[PracticalShipAmt])\n" +
-                    ")";
+            String mdx = "EVALUATE SUMMARIZECOLUMNS('FBM_DIM_BW_Customer'[Customer_ID],[SUM_PracticalShipQTY])";
             stmt = olapconn.createStatement();
             CellSet cellset = stmt.executeOlapQuery(mdx);
 
@@ -77,8 +72,8 @@ public class TestController {
             olapconn.close();
             log.info("测试完毕");
         } catch (Exception e) {
-            log.error("测试异常.."+e);
-            throw new FkException(ResultEnum.ERROR,e);
+            log.error("测试异常.." + e);
+            throw new FkException(ResultEnum.ERROR, e);
         } finally {
             try {
                 if (stmt != null) stmt.close();
