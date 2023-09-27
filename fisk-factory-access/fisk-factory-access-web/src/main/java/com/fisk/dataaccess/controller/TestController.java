@@ -78,7 +78,7 @@ public class TestController {
             log.info("测试完毕");
         } catch (Exception e) {
             log.error("测试异常.."+e);
-            throw new FkException(ResultEnum.ERROR,e.getMessage());
+            throw new FkException(ResultEnum.ERROR,e);
         } finally {
             try {
                 if (stmt != null) stmt.close();
