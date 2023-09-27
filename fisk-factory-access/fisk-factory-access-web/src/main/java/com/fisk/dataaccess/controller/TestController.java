@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.olap4j.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.sql.DriverManager;
@@ -35,7 +36,7 @@ public class TestController {
      */
     @ApiOperation("测试使用olap4j从SSAS中获取数据--并发测试")
     @GetMapping("/testGetFromSSAS")
-    public ResultEntity<Object> testGetFromSSAS(String mdx) {
+    public ResultEntity<Object> testGetFromSSAS(@RequestParam("mdx") String mdx) {
 //        String password = "Password";
 //        String user = "admin";
 //        String xmlaDataBase = "Router";
