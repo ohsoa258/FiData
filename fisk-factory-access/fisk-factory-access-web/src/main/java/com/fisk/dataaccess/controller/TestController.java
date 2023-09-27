@@ -3,6 +3,7 @@ package com.fisk.dataaccess.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -76,8 +77,8 @@ public class TestController {
             olapconn.close();
             log.info("测试完毕");
         } catch (Exception e) {
-            log.info("测试异常");
-            e.printStackTrace();
+            log.error("测试异常.."+e);
+            throw new FkException(ResultEnum.ERROR,e.getMessage());
         } finally {
             try {
                 if (stmt != null) stmt.close();

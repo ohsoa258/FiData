@@ -378,16 +378,33 @@ public class SapBwUtils {
                             unFormattedData.add(value);
                             // 这一步是为了获取字段名称
                             if (i == 0) {
+                                //格式形如：[YYLABOR].[LEVEL01]
                                 firstFieldName = mndtryPrptys.getString("LVL_UNAM");
                                 FieldNameDTO fieldNameDTO = new FieldNameDTO();
                                 fieldNameDTO.setSourceFieldName(firstFieldName);
-                                fieldNameDTO.setSourceFieldType("nvarchar");
+                                //todo:sapbw数据的源字段类型暂时全设置为NVARCHAR
+                                fieldNameDTO.setSourceFieldType("NVARCHAR");
+                                //todo:sapbw数据的目标字段长度暂时全设置为2000
+                                fieldNameDTO.setFieldLength("2000");
+                                fieldNameDTO.setFieldLength(String.valueOf(value.length()));
+                                //格式化目标字段名称 去掉[ ]  替换 . 为 _
+                                String modifiedString = firstFieldName.replaceAll("[\\[\\]]", "")
+                                        .replaceAll("\\.", "_");
+                                fieldNameDTO.setFieldName(modifiedString);
                                 fieldNameDTOS.add(fieldNameDTO);
                             }
                             if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))) {
                                 FieldNameDTO fieldNameDTO = new FieldNameDTO();
-                                fieldNameDTO.setSourceFieldName(mndtryPrptys.getString("LVL_UNAM"));
-                                fieldNameDTO.setSourceFieldType("nvarchar");
+                                String lvlUname = mndtryPrptys.getString("LVL_UNAM");
+                                //格式化目标字段名称 去掉[ ]  替换 . 为 _
+                                String modifiedString = lvlUname.replaceAll("[\\[\\]]", "")
+                                        .replaceAll("\\.", "_");
+                                fieldNameDTO.setSourceFieldName(lvlUname);
+                                //todo:sapbw数据的源字段类型暂时全设置为NVARCHAR
+                                fieldNameDTO.setSourceFieldType("NVARCHAR");
+                                //todo:sapbw数据的目标字段长度暂时全设置为2000
+                                fieldNameDTO.setFieldLength("2000");
+                                fieldNameDTO.setFieldName(modifiedString);
                                 fieldNameDTOS.add(fieldNameDTO);
                             }
                         }
