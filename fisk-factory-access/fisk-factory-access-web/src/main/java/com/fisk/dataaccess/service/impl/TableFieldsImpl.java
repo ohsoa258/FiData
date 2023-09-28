@@ -1929,6 +1929,7 @@ public class TableFieldsImpl
         if (driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SFTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.FTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.API.getName()) ||
+                driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SAPBW.getName()) ||
                 driverTypes.contains(RESTFULAPI.getName())) {
             String regex = "AND fidata_flow_batch_code='\\$\\{fragment.index}'";
             finalSql = finalSql.replaceAll(regex, "");
