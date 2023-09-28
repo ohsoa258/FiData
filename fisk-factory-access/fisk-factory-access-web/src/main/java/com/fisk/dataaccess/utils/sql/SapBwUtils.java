@@ -374,8 +374,6 @@ public class SapBwUtils {
                     if (!mndtryPrptys.isEmpty()) {
                         for (int i = 0; i < mndtryPrptys.getNumRows(); i++) {
                             mndtryPrptys.setRow(i);
-                            String value = mndtryPrptys.getString("MEM_CAP");
-                            unFormattedData.add(value);
                             // 这一步是为了获取字段名称
                             if (i == 0) {
                                 //格式形如：[YYLABOR].[LEVEL01]
@@ -405,8 +403,18 @@ public class SapBwUtils {
                                 fieldNameDTO.setFieldLength("2000");
                                 fieldNameDTO.setFieldName(modifiedString);
                                 fieldNameDTOS.add(fieldNameDTO);
+                            } else {
+                                break;
                             }
                         }
+
+                        for (int i = 0; i < mndtryPrptys.getNumRows(); i++) {
+                            mndtryPrptys.setRow(i);
+                            String value = mndtryPrptys.getString("MEM_CAP");
+                            unFormattedData.add(value);
+                        }
+
+
                     }
                 }
                 // 执行查询后不管mdx语句查询多少列数据，返回的都在一列里面，因此我们需要根据列的个数对数据做处理

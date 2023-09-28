@@ -316,22 +316,47 @@ public class SapBwListenerImpl implements ISapBwListener {
 
                     String firstFieldName = null;
                     if (!mndtryPrptys.isEmpty()) {
+
+                        for (int i = 0; i < mndtryPrptys.getNumRows(); i++) {
+                            mndtryPrptys.setRow(i);
+                            // 这一步是为了获取字段名称
+                            if (i == 0) {
+                                //格式形如：[YYLABOR].[LEVEL01]
+                                firstFieldName = mndtryPrptys.getString("LVL_UNAM");
+                                FieldNameDTO fieldNameDTO = new FieldNameDTO();
+                                fieldNameDTO.setSourceFieldName(firstFieldName);
+                                //todo:sapbw数据的源字段类型暂时全设置为NVARCHAR
+                                fieldNameDTO.setSourceFieldType("NVARCHAR");
+                                //todo:sapbw数据的目标字段长度暂时全设置为2000
+                                fieldNameDTO.setFieldLength("2000");
+                                //格式化目标字段名称 去掉[ ]  替换 . 为 _
+                                String modifiedString = firstFieldName.replaceAll("[\\[\\]]", "")
+                                        .replaceAll("\\.", "_");
+                                fieldNameDTO.setFieldName(modifiedString);
+                                fieldNameDTOS.add(fieldNameDTO);
+                            }
+                            if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))) {
+                                FieldNameDTO fieldNameDTO = new FieldNameDTO();
+                                String lvlUname = mndtryPrptys.getString("LVL_UNAM");
+                                //格式化目标字段名称 去掉[ ]  替换 . 为 _
+                                String modifiedString = lvlUname.replaceAll("[\\[\\]]", "")
+                                        .replaceAll("\\.", "_");
+                                fieldNameDTO.setSourceFieldName(lvlUname);
+                                //todo:sapbw数据的源字段类型暂时全设置为NVARCHAR
+                                fieldNameDTO.setSourceFieldType("NVARCHAR");
+                                //todo:sapbw数据的目标字段长度暂时全设置为2000
+                                fieldNameDTO.setFieldLength("2000");
+                                fieldNameDTO.setFieldName(modifiedString);
+                                fieldNameDTOS.add(fieldNameDTO);
+                            } else {
+                                break;
+                            }
+                        }
+
                         for (int i = 0; i < mndtryPrptys.getNumRows(); i++) {
                             mndtryPrptys.setRow(i);
                             String value = mndtryPrptys.getString("MEM_CAP");
                             unFormattedData.add(value);
-                            // 这一步是为了获取字段名称
-                            if (i == 0) {
-                                firstFieldName = mndtryPrptys.getString("LVL_UNAM");
-                                FieldNameDTO fieldNameDTO = new FieldNameDTO();
-                                fieldNameDTO.setSourceFieldName(firstFieldName);
-                                fieldNameDTOS.add(fieldNameDTO);
-                            }
-                            if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))){
-                                FieldNameDTO fieldNameDTO = new FieldNameDTO();
-                                fieldNameDTO.setSourceFieldName(mndtryPrptys.getString("LVL_UNAM"));
-                                fieldNameDTOS.add(fieldNameDTO);
-                            }
                         }
                     }
                 }
@@ -339,7 +364,7 @@ public class SapBwListenerImpl implements ISapBwListener {
                 // 执行查询后不管mdx语句查询多少列数据，返回的都在一列里面，因此我们需要根据列的个数对数据做处理
                 int size = fieldNameDTOS.size();
                 // 这一步是将unFormattedData集合里面装载的未处理的数据，转换为allData集合装载的处理过的数据
-                allData = convertToRowData(unFormattedData,size);
+                allData = convertToRowData(unFormattedData, size);
 
                 // 删除前面创建的数据集
                 JCoFunction deleteObjectFunction = destination.getRepository().getFunction("BAPI_MDDATASET_DELETE_OBJECT");
@@ -375,7 +400,7 @@ public class SapBwListenerImpl implements ISapBwListener {
      * @param colList
      * @return
      */
-    private static List<List<String>> convertToRowData(List<String> colList,int size) {
+    private static List<List<String>> convertToRowData(List<String> colList, int size) {
         List<List<String>> formedData = new ArrayList<>();
         List<String> sublist = new ArrayList<>();
 
