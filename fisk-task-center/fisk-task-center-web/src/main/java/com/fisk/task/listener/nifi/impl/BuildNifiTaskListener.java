@@ -265,7 +265,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             /**
              * 创建表服务组件！！！
              */
-            List<ProcessorEntity> processorEntities = buildProcessorVersion3(taskGroupId, dataAccessConfig, taskGroupId, sourceControllerServiceId, targetControllerServiceId, cfgControllerServiceId, buildNifiFlow, buildTableService,targetDbId);
+            List<ProcessorEntity> processorEntities = buildProcessorVersion3(taskGroupId, dataAccessConfig, taskGroupId, sourceControllerServiceId, targetControllerServiceId, cfgControllerServiceId, buildNifiFlow, buildTableService, targetDbId);
 
             // 启动,保存
             enabledProcessor(taskGroupId, processorEntities);
@@ -566,12 +566,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, dispatchProcessor.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentConnector(groupId, processorEntity2.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //原变量字段
-        ProcessorEntity incrementProcessor = evaluateJsonPathProcessor(groupId,6);
+        ProcessorEntity incrementProcessor = evaluateJsonPathProcessor(groupId, 6);
         res.add(incrementProcessor);
         tableNifiSettingPO.setIncrementProcessorId = incrementProcessor.getId();
 
         //接受消息ConsumeKafka
-        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId,5);
+        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId, 5);
         List<ProcessorEntity> processorEntityList = new ArrayList<>();
         processorEntityList.add(consumeKafkaProcessor);
         enabledProcessor(groupId, processorEntityList);
@@ -590,16 +590,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, consumeKafkaProcessor.getId(), incrementProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
         tableNifiSettingPO.consumeKafkaProcessorId = consumeKafkaProcessor.getId();
-       //读取增量字段组件
+        //读取增量字段组件
         ProcessorEntity generateFlowFileProcessor = replaceTextForJson(groupId, dto);
         res.add(generateFlowFileProcessor);
         componentConnector(groupId, incrementProcessor.getId(), generateFlowFileProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         tableNifiSettingPO.generateFlowFileProcessorId = generateFlowFileProcessor.getId();
-       //创建数据转换json组件
+        //创建数据转换json组件
         ProcessorEntity invokeHTTPToTableApi = invokeHTTPToTableApi(groupId);
         res.add(invokeHTTPToTableApi);
         tableNifiSettingPO.invokeHttpProcessorId = invokeHTTPToTableApi.getId();
-       //连接器
+        //连接器
         componentConnector(groupId, generateFlowFileProcessor.getId(), invokeHTTPToTableApi.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentConnector(groupId, invokeHTTPToTableApi.getId(), invokeHTTPToTableApi.getId(), AutoEndBranchTypeEnum.RETRY2);
         componentsConnector(groupId, invokeHTTPToTableApi.getId(), supervisionId, autoEndBranchTypeEnums);
@@ -611,6 +611,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * 调用api参数组件
+     *
      * @param groupId 组id
      * @return 组件对象
      */
@@ -652,6 +653,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, new ArrayList<>());
         return processorEntityBusinessResult.data;
     }
+
     @Override
     public ResultEnum buildDeleteDataApi(String dataInfo, Acknowledgment acke) {
         log.info("数据分发api删除nifi流程参数:{}", dataInfo);
@@ -1665,14 +1667,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, dispatchProcessor.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }*/
         //原变量字段
-        ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId,3);
+        ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId, 3);
         tableNifiSettingPO.setIncrementProcessorId = evaluateJsonPathProcessor.getId();
 
         //接受消息ConsumeKafka
         /**
          * ConsumeKafka
          */
-        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId,2);
+        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId, 2);
         List<ProcessorEntity> processorEntityList = new ArrayList<>();
         processorEntityList.add(consumeKafkaProcessor);
         enabledProcessor(groupId, processorEntityList);
@@ -1759,7 +1761,6 @@ public class BuildNifiTaskListener implements INifiTaskListener {
          */
         if (dto.excelFlow && enable) {
             //ftp文件拷贝
-
             /**
              * replaceTextForFtpProcess组件，用于替换字符串为指定的格式
              */
@@ -1795,7 +1796,22 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             executeSQLRecord = createExecuteSQLRecordDoris(config, groupId, dto, targetDbPoolId);
         } else {
-            if (dto.excelFlow) {
+            // 如果是sapbw的流程
+            if (dto.sapBwFlow) {
+                /**
+                 * createSapBwProcessorEntity会返回一个集合，
+                 * 集合里面第一个是replaceTextForSapBwProcess组件
+                 * 第二个是invokeHTTPProcessorForSapBw组件
+                 */
+                // 虽然名字叫这个 但是只是为了下面流程连线逻辑不大改，其实还是sapbw的流程
+                excelProcessorEntity = createSapBwProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+
+                res.addAll(excelProcessorEntity);
+
+                /**
+                 * 如果是sftp/ftp的excel表格
+                 */
+            }else if (dto.excelFlow) {
                 //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
                 /**
                  * createExcelProcessorEntity2会返回一个集合，
@@ -1841,22 +1857,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
-            // 如果是sapbw的流程
-            if (dto.sapBwFlow) {
-
-                /**
-                 * createSapBwProcessorEntity会返回一个集合，
-                 * 集合里面第一个是replaceTextForSapBwProcess组件
-                 * 第二个是invokeHTTPProcessorForSapBw组件
-                 */
-                // 虽然名字叫这个 但是只是为了下面流程连线逻辑不大改，其实还是sapbw的流程
-                excelProcessorEntity = createSapBwProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
-
-                res.addAll(excelProcessorEntity);
-                /**
-                 * 如果是sftp/ftp的excel表格
-                 */
-            }else if (dto.excelFlow) {
+            if (dto.excelFlow) {
                 ProcessorEntity IHP = new ProcessorEntity();
                 //如果开启数据校验，则新建两个组件
                 if (dataValidation) {
@@ -2136,11 +2137,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, dispatchProcessor.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.SUCCESS);
         componentConnector(groupId, processorEntity2.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         //原变量字段
-        ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId,3);
+        ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId, 3);
         tableNifiSettingPO.setIncrementProcessorId = evaluateJsonPathProcessor.getId();
 
         //接受消息ConsumeKafka
-        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId,2);
+        ProcessorEntity consumeKafkaProcessor = createConsumeKafkaProcessor(config, dto, groupId, 2);
         List<ProcessorEntity> processorEntityList = new ArrayList<>();
         processorEntityList.add(consumeKafkaProcessor);
         enabledProcessor(groupId, processorEntityList);
@@ -4011,7 +4012,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
-    private ProcessorEntity evaluateJsonPathProcessor(String groupId,int position) {
+    private ProcessorEntity evaluateJsonPathProcessor(String groupId, int position) {
         ArrayList<String> strings = new ArrayList<>();
         //strings.add(NifiConstants.AttrConstants.INCREMENT_START);
         strings.add(NifiConstants.AttrConstants.START_TIME);
@@ -4085,7 +4086,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId   组id
      * @return 组件对象
      */
-    private ProcessorEntity createConsumeKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId,int postion) {
+    private ProcessorEntity createConsumeKafkaProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int postion) {
         BuildConsumeKafkaProcessorDTO buildConsumeKafkaProcessorDTO = new BuildConsumeKafkaProcessorDTO();
         buildConsumeKafkaProcessorDTO.name = "ConsumeKafka";
         buildConsumeKafkaProcessorDTO.details = "query_phase";
