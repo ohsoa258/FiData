@@ -1857,7 +1857,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
-            if (dto.excelFlow) {
+            if (dto.excelFlow || dto.sapBwFlow) {
                 ProcessorEntity IHP = new ProcessorEntity();
                 //如果开启数据校验，则新建两个组件
                 if (dataValidation) {
