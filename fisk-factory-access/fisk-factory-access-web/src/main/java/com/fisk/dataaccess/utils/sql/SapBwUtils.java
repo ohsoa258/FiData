@@ -386,7 +386,6 @@ public class SapBwUtils {
                                 fieldNameDTO.setSourceFieldType("NVARCHAR");
                                 //todo:sapbw数据的目标字段长度暂时全设置为2000
                                 fieldNameDTO.setFieldLength("2000");
-                                fieldNameDTO.setFieldLength(String.valueOf(value.length()));
                                 //格式化目标字段名称 去掉[ ]  替换 . 为 _
                                 String modifiedString = firstFieldName.replaceAll("[\\[\\]]", "")
                                         .replaceAll("\\.", "_");
