@@ -389,6 +389,7 @@ public class SapBwUtils {
                                         .replaceAll("\\.", "_");
                                 fieldNameDTO.setFieldName(modifiedString);
                                 fieldNameDTOS.add(fieldNameDTO);
+                                continue;
                             }
                             if (!firstFieldName.equals(mndtryPrptys.getString("LVL_UNAM"))) {
                                 FieldNameDTO fieldNameDTO = new FieldNameDTO();
