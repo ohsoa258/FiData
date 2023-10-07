@@ -72,6 +72,8 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     private UserHelper userHelper;
     @Resource
     private ITableService tableService;
+    @Resource
+    private ITableApiLogService tableApiLogService;
 
     @Value("${dataservice.scan.api_address}")
     private String dataserviceUrl;
@@ -286,12 +288,21 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         tableApiTaskDTO.setPipelTaskTraceId(pipelTaskTraceId);
         HashMap<Integer, Object> taskMap = new HashMap<>();
         String format = simpleDateFormat.format(new Date());
+        TableApiLogPO tableApiLogPO = new TableApiLogPO();
         if (apiResultDTO.getFlag()){
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format +" - " + apiResultDTO.getMsg());
+            tableApiLogPO.setApiId(dto.apiId.intValue());
+            tableApiLogPO.setNumber(apiResultDTO.getNumber());
+            tableApiLogPO.setStatus(1);
         }else{
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + apiResultDTO.getMsg());
+
+            tableApiLogPO.setApiId(dto.apiId.intValue());
+            tableApiLogPO.setNumber(apiResultDTO.getNumber());
+            tableApiLogPO.setStatus(0);
         }
         try {
+            tableApiLogService.save(tableApiLogPO);
             sendEmail(tableAppPO,apiResultDTO,Integer.valueOf(dto.getApiId().toString()),pipelTaskTraceId);
         }catch (Exception e){
             String msg = (String)taskMap.get(DispatchLogEnum.taskend.getValue());
