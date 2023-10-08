@@ -2493,6 +2493,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // queryDto.appId = modelAccess.appId;
             queryDto.appDataSourceId = dto.appDataSourceId;
             queryDto.querySql = dto.sqlScript;
+            queryDto.mdxList = dto.mdxList;
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
             return filterSqlFieldList(listField, queryDto);
         }
