@@ -623,7 +623,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableApiSyncDTO.appId = dto.appId;
         tableApiSyncDTO.tableType = dto.type.getValue();
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
-        checkByFieldMap.put("pipelTaskTraceId", "'${pipelTaskTraceId}'");
+        checkByFieldMap.put("pipelTaskTraceId", "${pipelTaskTraceId}");
         tableApiSyncDTO.setCheckByFieldMap(checkByFieldMap);
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
