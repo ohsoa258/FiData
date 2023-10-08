@@ -1,10 +1,10 @@
 #!/bin/bash
 
-failed_connections=()
+# failed_connections=()
 
-while true; do
+# while true; do
 
-    ip_ports_str=$(curl -X GET "http://192.168.11.130:8093/systemMonitor/getServerMonitorConfig" -H "accept: */*")
+    ip_ports_str=$(curl -X GET "http://192.168.21.21:8093/systemMonitor/getServerMonitorConfig" -H "accept: */*")
     echo "ip_port返回结果: ${ip_ports_str}"
 
     # 静态数组
@@ -32,19 +32,19 @@ while true; do
         if timeout 1 bash -c "</dev/tcp/$ip/$port" >/dev/null 2>&1; then
             status="1"
             # 从失败的连接中移除已经恢复的服务
-            failed_connections=("${failed_connections[@]/$ip_port}")
+            # failed_connections=("${failed_connections[@]/$ip_port}")
         else
             status="2"
             # 检查连接是否已经记录在失败的连接中
             if ! [[ " ${failed_connections[@]} " =~ " ${ip_port} " ]]; then
-                failed_connections+=("$ip_port")
+                # failed_connections+=("$ip_port")
                 json_output="{"
                 json_output+="\"服务\":\"$name\","
                 json_output+="\"运行环境\":\"开发环境\","
                 json_output+="\"错误信息\":\"$ip 的 $port 连接异常\""
                 json_output+="}"
                 echo "$json_output"
-                curl -X POST "http://192.168.11.130:8093/systemMonitor/sendSystemMonitorSendEmails" -H "accept: */*" -H "Content-Type: application/json" -d "$json_output"
+                curl -X POST "http://192.168.21.21:8093/systemMonitor/sendSystemMonitorSendEmails" -H "accept: */*" -H "Content-Type: application/json" -d "$json_output"
             fi
         fi
 
@@ -59,17 +59,16 @@ while true; do
             json_array+=",$json_object"
         fi
     done
-    #echo "-------------------------------------------------------------------------------------------"
+    echo "-------------------------------------------------------------------------------------------"
     # 结束JSON数组
     json_array+="]"
 
     echo "$json_array"
-    curl -X POST "http://192.168.11.130:8093/systemMonitor/saveServerMonitor" -H "accept: */*" -H "Content-Type: application/json" -d "$json_array"
-    #echo "===========================================运行成功========================================="
-    #输出失败链接的端口和IP
-    for failed_connection in "${failed_connections[@]}"; do
-        echo "$failed_connection"
-    done
-    #echo "-------------------------------------------------------------------------------------------正在睡觉"
-    sleep 30
-done
+    curl -X POST "http://192.168.21.21:8093/systemMonitor/saveServerMonitor" -H "accept: */*" -H "Content-Type: application/json" -d "$json_array"
+    echo "===========================================运行成功========================================="
+    # for failed_connection in "${failed_connections[@]}"; do
+    #     echo "$failed_connection"
+    # done
+    echo "运行结束"
+    #sleep 30
+# done
