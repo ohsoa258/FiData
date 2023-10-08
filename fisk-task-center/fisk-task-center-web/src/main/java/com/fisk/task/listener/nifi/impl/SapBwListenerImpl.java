@@ -442,10 +442,11 @@ public class SapBwListenerImpl implements ISapBwListener {
         MyDestinationDataProvider myProvider = new MyDestinationDataProvider();
         myProvider.addDestination("SAPBW", connProps);
         log.info("注册SAPBW驱动程序前...");
-        Environment.registerDestinationDataProvider(myProvider);
+
         // 创建JCo连接
         JCoDestination destination = null;
         try {
+            Environment.registerDestinationDataProvider(myProvider);
             destination = JCoDestinationManager.getDestination("SAPBW");
         } catch (IllegalStateException e) {
             log.info("该连接信息已经注册过 则直接使用即可");
