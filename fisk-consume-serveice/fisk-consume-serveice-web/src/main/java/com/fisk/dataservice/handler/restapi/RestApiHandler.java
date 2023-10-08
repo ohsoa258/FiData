@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -56,9 +57,11 @@ public abstract class RestApiHandler {
     public ApiResultDTO sendApi(long apiId) {
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);
+        int number = 0;
         if (tableApiServicePO == null){
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg("{\"error\":\"数据分发Api不存在apiId:"+apiId+"\"}");
+            apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -80,9 +83,12 @@ public abstract class RestApiHandler {
                 log.info("开始执行脚本:{}", tableApiServicePO.getSqlScript());
                 ResultSet resultSet = st.executeQuery(tableApiServicePO.getSqlScript());
                 resultJsonData = resultSetToJsonArray(resultSet);
+                number = resultJsonData.size();
+                apiResultDTO.setNumber(number);
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
                 apiResultDTO.setMsg("{\"error\":\"" + e.getMessage()+"\"}");
+                apiResultDTO.setNumber(number);
             } finally {
                 try {
                     assert st != null;
@@ -91,11 +97,13 @@ public abstract class RestApiHandler {
                 } catch (SQLException e) {
                     apiResultDTO.setFlag(false);
                     apiResultDTO.setMsg("{\"error\":\"" + e.getMessage()+"\"}");
+                    apiResultDTO.setNumber(number);
                 }
             }
         } else {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg("{\"error\":\"userclient无法查询到目标库的连接信息\"}");
+            apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
         JSONArray finalResultJsonData = resultJsonData;
@@ -114,6 +122,7 @@ public abstract class RestApiHandler {
         }).collect(Collectors.toList());
         JSONObject json = new TreeBuilder().buildTree(nodes);
         apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,json.toJSONString());
+        apiResultDTO.setNumber(number);
         return apiResultDTO;
     }
 

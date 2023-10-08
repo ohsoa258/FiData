@@ -7,8 +7,11 @@ import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceSyncDTO;
+import com.fisk.dataservice.service.ITableApiLogService;
 import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.dataservice.service.ITableAppManageService;
+import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
+import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.Api;
@@ -17,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 
@@ -24,8 +28,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/tableApiService")
 public class TableApiServiceController {
-    @Autowired
+    @Resource
     private ITableApiService tableApiService;
+
+    @Resource
+    ITableApiLogService tableApiLogService;
 
     @ApiOperation("分页获取数据分发服务Api数据")
     @PostMapping("/getTableApiListData")
@@ -85,5 +92,17 @@ public class TableApiServiceController {
     @GetMapping("/enableOrDisable")
     public ResultEntity<List<String>> enableOrDisable(@RequestParam("id") Integer id) {
         return ResultEntityBuild.build(tableApiService.enableOrDisable(id));
+    }
+
+    @ApiOperation("获取数据消费(当天)")
+    @GetMapping("/getConsumeServer")
+    public ResultEntity<ConsumeServerVO> getConsumeServer() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableApiLogService.getConsumeServer());
+    }
+
+    @ApiOperation("获取输出接口使用频率top5")
+    @GetMapping("/getTopFrequency")
+    public ResultEntity<List<TopFrequencyVO>> getTopFrequency() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableApiLogService.getTopFrequency());
     }
 }

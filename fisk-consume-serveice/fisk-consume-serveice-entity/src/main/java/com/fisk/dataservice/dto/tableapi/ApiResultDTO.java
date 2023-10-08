@@ -16,4 +16,7 @@ public class ApiResultDTO {
 
     @ApiModelProperty(value = "返回结果")
     private String msg;
+
+    @ApiModelProperty(value = "本次消费数量")
+    private Integer number;
 }

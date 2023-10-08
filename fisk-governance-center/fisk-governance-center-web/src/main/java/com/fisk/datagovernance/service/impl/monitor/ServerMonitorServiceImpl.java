@@ -129,11 +129,19 @@ public class ServerMonitorServiceImpl extends ServiceImpl<ServerMonitorMapper, S
                 serverTable = serverTableVOCacheList;
             }
             tableList = serverTable.stream().filter(i->{
-                if (i.getServerType().equals(serverMonitorQueryDTO.getServerType())
-                        && i.getStatus().equals(serverMonitorQueryDTO.getStatus())
-                        &&(i.getServerName().contains(serverMonitorQueryDTO.getSearchKey())
-                    || i.getServerUrl().contains(serverMonitorQueryDTO.getSearchKey()))){
-                    return true;
+                if (serverMonitorQueryDTO.getStatus() == 0){
+                    if (i.getServerType().equals(serverMonitorQueryDTO.getServerType())
+                            &&(i.getServerName().contains(serverMonitorQueryDTO.getSearchKey())
+                            || i.getServerUrl().contains(serverMonitorQueryDTO.getSearchKey()))){
+                        return true;
+                    }
+                }else {
+                    if (i.getServerType().equals(serverMonitorQueryDTO.getServerType())
+                            && i.getStatus().equals(serverMonitorQueryDTO.getStatus())
+                            &&(i.getServerName().contains(serverMonitorQueryDTO.getSearchKey())
+                            || i.getServerUrl().contains(serverMonitorQueryDTO.getSearchKey()))){
+                        return true;
+                    }
                 }
                 return false;
             }).collect(Collectors.toList());

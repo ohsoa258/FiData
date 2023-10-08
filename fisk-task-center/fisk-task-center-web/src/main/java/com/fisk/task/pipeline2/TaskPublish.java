@@ -1,6 +1,7 @@
 package com.fisk.task.pipeline2;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessGroupStatusDTO;
@@ -27,6 +28,7 @@ import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.PowerBiDataSetRefreshDTO;
 import com.fisk.task.dto.task.SftpCopyDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
+import com.fisk.task.entity.PipelLogPO;
 import com.fisk.task.entity.PipelTaskLogPO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.MyTopicStateEnum;
@@ -465,11 +467,26 @@ public class TaskPublish {
                         String[] split1 = topicName.split("\\.");
                         String pipelineId = split1[3];
                         String format = simpleDateFormat.format(new Date());
-                        Map<Integer, Object> pipelMap = new HashMap<>();
+
                         //管道开始日志
-                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + e.getMessage());
-                        log.info("第一处调用保存job日志");
-                        iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                        LambdaQueryWrapper<PipelLogPO> queryWrapper = new LambdaQueryWrapper<>();
+                        queryWrapper.eq(PipelLogPO::getPipelTraceId,pipelTraceId);
+                        List<PipelLogPO> list = iPipelLog.list(queryWrapper);
+                        if (CollectionUtils.isEmpty(list)){
+                            Map<Integer, Object> pipelMap = new HashMap<>();
+                            pipelMap.put(DispatchLogEnum.pipelstart.getValue(), NifiStageTypeEnum.START_RUN.getName() + " - " + format);
+                            log.info("第一处调用保存job日志");
+                            iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                            pipelMap = new HashMap<>();
+                            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + e.getMessage());
+                            log.info("保存job日志结束");
+                            iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                        }else {
+                            Map<Integer, Object> pipelMap = new HashMap<>();
+                            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + e.getMessage());
+                            log.info("第一处调用保存job日志");
+                            iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                        }
                         DispatchExceptionHandlingDTO exceptionDto = buildDispatchExceptionHandling(kafkaReceiveDTO);
                         try {
                             iPipelJobLog.exceptionHandlingLog(exceptionDto);
