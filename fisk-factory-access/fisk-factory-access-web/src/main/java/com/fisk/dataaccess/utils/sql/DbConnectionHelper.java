@@ -56,6 +56,25 @@ public class DbConnectionHelper {
             // 测试连接
             destination.ping();
             log.info("注册SAPBW驱动程序后...");
+          //如果报这个错，
+          // java.lang.IllegalStateException: DestinationDataProvider already registered [com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider
+          // 意味着该连接信息已经注册过 则直接使用即可
+        } catch (IllegalStateException e) {
+            log.info("该连接信息已经注册过 则直接使用即可");
+            providerAndDestination.setMyProvider(myProvider);
+            try {
+                destination = JCoDestinationManager.getDestination("SAPBW");
+                // 测试连接
+                log.info("【该连接信息已经注册过】--测试连接");
+                destination.ping();
+                log.info("【该连接信息已经注册过】-- 测试连接成功");
+            } catch (JCoException ex) {
+                Environment.unregisterDestinationDataProvider(myProvider);
+                log.error("【该连接信息已经注册过】--获取sapbw连接对象失败..");
+                throw new FkException(ResultEnum.SAPBW_CONNECT_ERROR, e);
+            }
+            providerAndDestination.setDestination(destination);
+            return providerAndDestination;
         } catch (JCoException e) {
             Environment.unregisterDestinationDataProvider(myProvider);
             log.error("获取sapbw连接对象失败..");
