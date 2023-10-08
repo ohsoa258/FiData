@@ -389,8 +389,6 @@ public class SapBwListenerImpl implements ISapBwListener {
         } catch (JCoException e) {
             log.error("sapbw执行mdx获取结果报错..");
             throw new FkException(ResultEnum.SAPBW_EXECUATE_MDX_ERROR, e);
-        } finally {
-            Environment.unregisterDestinationDataProvider(myProvider);
         }
         return allData;
     }
