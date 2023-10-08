@@ -170,6 +170,24 @@ case ${BASE_IP} in
                 SERVICE_INFO[15]="fisk-task-center:7005"
             ;;
         9)
+                # fisk 浦东惠南信创环境
+                BASE_profile="pdhnxc"
+                declare -A SERVICE_INFO
+                SERVICE_INFO[1]="fisk-api-serveice:"
+                SERVICE_INFO[2]="fisk-consume-serveice:30009"
+                SERVICE_INFO[3]="fisk-consume-visual:"
+                SERVICE_INFO[4]="fisk-datamanage-center:"
+                SERVICE_INFO[5]="fisk-factory-access:30007"
+                SERVICE_INFO[6]="fisk-factory-dispatch:30008"
+                SERVICE_INFO[7]="fisk-factory-model:"
+                SERVICE_INFO[8]="fisk-framework-authorization:30003"
+                SERVICE_INFO[9]="fisk-framework-gateway:30004"
+                SERVICE_INFO[10]="fisk-framework-registry:30002"
+                SERVICE_INFO[11]="fisk-governance-center:30010"
+                SERVICE_INFO[12]="fisk-license-registry:"
+                SERVICE_INFO[13]="fisk-mdm-model:"
+                SERVICE_INFO[14]="fisk-system-center:30006"
+                SERVICE_INFO[15]="fisk-task-center:30005"
             ;;
         10)
             ;;
@@ -533,6 +551,11 @@ while true; do
             ;;
         10)
             echo -e "${BOLD_YELLOW}启动即席查询...${RESET}"
+            if check_port "9093"; then
+                    echo -e "${BOLD_GREEN}端口 9093 已被占用${RESET}"
+                else
+                    echo -e "${BOLD_RED}端口 9093 服务 即席查询 启动失败${RESET}"
+            fi
               echo "脚本 system_monitor_linux.sh 未运行，正在启动..."
               nohup dotnet ${BASE_DIR}/chatGpt/semantic-kernel.dll --urls=http://*:9093 >log.txt &
               if check_port "9093"; then
