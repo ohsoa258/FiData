@@ -107,6 +107,14 @@ public abstract class RestApiHandler {
             return apiResultDTO;
         }
         JSONArray finalResultJsonData = resultJsonData;
+        Integer id = null;
+        for (TableApiParameterPO tableApiParameterPO : apiParameterPOList) {
+            if (tableApiParameterPO.getSelected() == 1){
+                id = (int)tableApiParameterPO.getId();
+            }
+        }
+        Integer finalId = id;
+        apiParameterPOList = apiParameterPOList.stream().filter(i->i.getPid() != finalId).collect(Collectors.toList());
         List<TreeBuilder.Node> nodes = apiParameterPOList.stream().map(i -> {
             TreeBuilder.Node node = new TreeBuilder.Node();
             node.setId(String.valueOf(i.getId()));

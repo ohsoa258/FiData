@@ -1,6 +1,5 @@
 package com.fisk.dataservice.handler.restapi.impl;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
@@ -18,7 +17,6 @@ import com.fisk.dataservice.util.HttpGetWithEntity;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
@@ -28,6 +26,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,6 +39,7 @@ import java.util.stream.Collectors;
  * @Date: 2023-09-14
  * @Description:
  */
+@Component
 public class BasicValidation extends RestApiHandler {
 
     private static ITableApiAuthRequestService tableApiAuthRequestService;
