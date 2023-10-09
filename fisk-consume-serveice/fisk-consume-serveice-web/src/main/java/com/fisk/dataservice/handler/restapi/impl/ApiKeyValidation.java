@@ -110,6 +110,7 @@ public class ApiKeyValidation extends RestApiHandler {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg(e.toString());
             e.printStackTrace();
+            response.setStatusCode(200);
         } finally {
             try {
                 if (response != null) {
@@ -119,6 +120,7 @@ public class ApiKeyValidation extends RestApiHandler {
                 apiResultDTO.setFlag(false);
                 apiResultDTO.setMsg(e.toString());
                 e.printStackTrace();
+                response.setStatusCode(200);
             }
         }
         return apiResultDTO;

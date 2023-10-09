@@ -48,6 +48,7 @@ public class NoneValidation extends RestApiHandler {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg(e.getMessage());
             e.printStackTrace();
+            response.setStatusCode(200);
         } finally {
             try {
                 if (response != null) {
@@ -57,6 +58,7 @@ public class NoneValidation extends RestApiHandler {
                 apiResultDTO.setFlag(false);
                 apiResultDTO.setMsg(e.getMessage());
                 e.printStackTrace();
+                response.setStatusCode(200);
             }
         }
         apiResultDTO.setFlag(true);
