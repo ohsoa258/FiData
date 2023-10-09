@@ -48,8 +48,8 @@ public class BearerTokenValidation extends RestApiHandler {
         CloseableHttpResponse response = null;
         String resultString = "";
         RequestConfig config = RequestConfig.custom().
-                setConnectTimeout(35000).setConnectionRequestTimeout(35000).
-                setSocketTimeout(60000).build();
+                setConnectTimeout(10000).setConnectionRequestTimeout(10000).
+                setSocketTimeout(20000).build();
         // 创建httpGet远程连接实例
         try {
             if (tableApiServicePO.getMethodType() == RequestTypeEnum.GET.getValue()) {
@@ -84,17 +84,16 @@ public class BearerTokenValidation extends RestApiHandler {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg(e.toString());
             e.printStackTrace();
-            response.setStatusCode(200);
         } finally {
-            try {
-                if (response != null) {
+            if (response != null) {
+                try {
                     response.close();
+
+                } catch (IOException e) {
+                    apiResultDTO.setFlag(false);
+                    apiResultDTO.setMsg(e.toString());
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg(e.toString());
-                e.printStackTrace();
-                response.setStatusCode(200);
             }
         }
         return apiResultDTO;

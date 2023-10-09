@@ -54,8 +54,8 @@ public class ApiKeyValidation extends RestApiHandler {
         CloseableHttpResponse response = null;
         String resultString = "";
         RequestConfig config = RequestConfig.custom().
-                setConnectTimeout(35000).setConnectionRequestTimeout(35000).
-                setSocketTimeout(60000).build();
+                setConnectTimeout(10000).setConnectionRequestTimeout(10000).
+                setSocketTimeout(20000).build();
         try {
             if (tableApiServicePO.getMethodType() == RequestTypeEnum.GET.getValue()) {
                 HttpGetWithEntity httpGetWithEntity = new HttpGetWithEntity(tableApiServicePO.getApiAddress());
@@ -110,17 +110,16 @@ public class ApiKeyValidation extends RestApiHandler {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg(e.toString());
             e.printStackTrace();
-            response.setStatusCode(200);
         } finally {
-            try {
-                if (response != null) {
+            if (response != null) {
+                try {
                     response.close();
+
+                } catch (IOException e) {
+                    apiResultDTO.setFlag(false);
+                    apiResultDTO.setMsg(e.toString());
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg(e.toString());
-                e.printStackTrace();
-                response.setStatusCode(200);
             }
         }
         return apiResultDTO;

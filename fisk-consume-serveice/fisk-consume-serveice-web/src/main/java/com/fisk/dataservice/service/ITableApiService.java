@@ -71,7 +71,7 @@ public interface ITableApiService extends IService<TableApiServicePO> {
      * api数据同步
      * @param dto
      */
-    void syncTableApi(TableApiSyncDTO dto);
+    ResultEnum syncTableApi(TableApiSyncDTO dto);
 
     /**
      * 根据管道id获取表服务集合

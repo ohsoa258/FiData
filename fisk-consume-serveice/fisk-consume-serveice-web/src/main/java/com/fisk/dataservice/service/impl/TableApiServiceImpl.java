@@ -266,7 +266,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     }
 
     @Override
-    public void syncTableApi(TableApiSyncDTO dto) {
+    public ResultEnum syncTableApi(TableApiSyncDTO dto) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         HashMap<String, Object> checkByFieldMap = dto.getCheckByFieldMap();
         String pipelTaskTraceId = (String) checkByFieldMap.get("pipelTaskTraceId");
@@ -311,7 +311,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         }
         tableApiTaskDTO.setMsg(taskMap);
         publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
-
+        return ResultEnum.SUCCESS;
     }
     void sendEmail(TableAppPO tableAppPO,ApiResultDTO apiResultDTO,Integer apiId,String taskTraceId) {
         TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
