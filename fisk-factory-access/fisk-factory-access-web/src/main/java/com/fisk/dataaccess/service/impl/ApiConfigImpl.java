@@ -113,6 +113,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     @Resource
     private TableAccessMapper tableAccessMapper;
     @Resource
+    private ApiConfigMapper apiConfigMapper;
+    @Resource
     private TableFieldsImpl tableFieldImpl;
     @Resource
     private AppRegistrationImpl appRegistrationImpl;
@@ -2275,6 +2277,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         } else {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
+    }
+
+    /**
+     * 根据应用id获取当前应用下api总数
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public Integer countTblByAppForApi(Integer appId) {
+        LambdaQueryWrapper<ApiConfigPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ApiConfigPO::getAppId, appId);
+        return apiConfigMapper.selectCount(wrapper);
     }
 
 //    public static void main(String[] args) {

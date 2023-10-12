@@ -187,5 +187,12 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return
      */
     ResultEntity<ApiConfigDTO> getOneApiById(Integer apiId);
+
+    /**
+     * 根据应用id获取当前应用下api总数
+     *
+     * @return
+     */
+    Integer countTblByAppForApi(Integer appId);
 }
 

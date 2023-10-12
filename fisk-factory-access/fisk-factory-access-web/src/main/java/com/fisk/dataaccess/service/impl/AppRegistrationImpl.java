@@ -46,9 +46,9 @@ import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
-import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.sapbw.CubesAndCats;
 import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
@@ -99,7 +99,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -963,8 +962,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
             if (driveTypePOList != null) {
                 for (AppRegistrationVO item : appRegistrationVOList) {
-                    item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
-                    item.setDriveType(driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null).getDriveType());
+                    String driveType = driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null).getDriveType();
+                    log.info("应用驱动类型：" + driveType);
+                    item.setDriveType(driveType);
+                    //实时和非实时计数方式不同
+                    if (item.appType == 0) {
+                        item.setTblCount(apiConfigImpl.countTblByAppForApi((int) item.id));
+                    } else {
+                        item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
+                    }
                 }
             }
             filter.setRecords(appRegistrationVOList);
