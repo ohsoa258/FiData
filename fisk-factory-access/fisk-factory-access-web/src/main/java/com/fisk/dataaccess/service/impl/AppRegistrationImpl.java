@@ -1125,7 +1125,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<LogMessageFilterVO> sourcePage = new ArrayList<>();
 
         // 实时api
-        if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
+        if (DbTypeEnum.RestfulAPI.getName().equalsIgnoreCase(appDataSourcePo.driveType)
+                || DbTypeEnum.webservice.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
             sourcePage = baseMapper.logMessageFilterByRestApi(Long.valueOf(dto.appId), dto.keyword, null);
             // 非实时api
         } else if (DbTypeEnum.api.getName().equalsIgnoreCase(appDataSourcePo.driveType)) {
@@ -1156,7 +1157,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 list.add(vo);
             }
         }
-
 
         log.info("接入组装后的数据: " + JSON.toJSONString(list));
         // 接入日志完善 对list进行改造,添加task日志信息

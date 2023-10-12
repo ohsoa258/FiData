@@ -216,6 +216,15 @@ public interface PublishTaskClient {
     ResultEntity<List<String>> getSqlForPgOds(@RequestBody DataAccessConfigDTO configDTO);
 
     /**
+     * getSqlForPgOds
+     *
+     * @param configDTO configDTO
+     * @return 返回值
+     */
+    @PostMapping("/nifi/getSqlForPgOdsV2")
+    ResultEntity<List<String>> getSqlForPgOdsV2(@RequestBody DataAccessConfigDTO configDTO);
+
+    /**
      * 获取管道内每张表的状态
      *
      * @param nifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO

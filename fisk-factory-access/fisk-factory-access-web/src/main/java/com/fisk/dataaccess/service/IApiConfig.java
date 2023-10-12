@@ -93,6 +93,14 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     ResultEntity<Object> pushData(ReceiveDataDTO dto);
 
     /**
+     * webService推送数据
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    String webServicePushData(ReceiveDataDTO dto);
+
+    /**
      * 获取实时api的临时token
      *
      * @param dto dto
@@ -115,6 +123,15 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return 执行结果
      */
     ResultEnum generateAppPdfDoc(List<GenerateDocDTO> list, HttpServletResponse response);
+
+    /**
+     * 生成webservice文档(以应用为单位)
+     *
+     * @param list     api集合
+     * @param response response
+     * @return 执行结果
+     */
+    ResultEnum generateWebServicePDFDocument(List<GenerateDocDTO> list, HttpServletResponse response);
 
     /**
      * 调度调用第三方api,接收数据,并导入到FiData平台

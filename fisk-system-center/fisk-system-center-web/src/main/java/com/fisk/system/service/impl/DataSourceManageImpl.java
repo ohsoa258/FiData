@@ -178,8 +178,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Override
     public ResultEnum updateDataSource(DataSourceSaveDTO dto) {
-        //RestfulApi类型的数据源的账号不允许重复
-        if (dto.conType == DataSourceTypeEnum.RESTFULAPI) {
+        //RestfulApi类型的数据源的账号不允许重复 WEBSERVICE的账号也不允许重复
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.WEBSERVICE) {
             QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(DataSourcePO::getConAccount, dto.getConAccount());
             List<DataSourcePO> list = list(queryWrapper);
@@ -267,8 +267,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 //        UserInfo userInfo = userHelper.getLoginUserInfo();
 //        String username = userInfo.getUsername();
 
-        //RestfulApi类型的数据源的账号不允许重复
-        if (dto.conType == DataSourceTypeEnum.RESTFULAPI) {
+        //RestfulApi类型的数据源的账号不允许重复 WEBSERVICE的账号也不允许重复
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.WEBSERVICE) {
             QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().eq(DataSourcePO::getConAccount, dto.getConAccount());
             List<DataSourcePO> list = list(queryWrapper);

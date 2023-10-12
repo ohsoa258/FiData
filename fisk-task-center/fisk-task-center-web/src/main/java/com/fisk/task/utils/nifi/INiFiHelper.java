@@ -487,6 +487,14 @@ public interface INiFiHelper {
     List<String> getSqlForPgOds(DataAccessConfigDTO config);
 
     /**
+     * getSqlForPgOds  API&WEBSERVICE
+     *
+     * @param config 配置信息
+     * @return List<String>
+     */
+    List<String> getSqlForPgOdsV2(DataAccessConfigDTO config);
+
+    /**
      * assemblySql
      *
      * @param config              配置信息

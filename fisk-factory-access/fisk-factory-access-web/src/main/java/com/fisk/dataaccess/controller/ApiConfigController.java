@@ -97,11 +97,22 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.generateDoc(dto, response));
     }
 
-
     @PostMapping("/generateAppPDFDocument")
     @ApiOperation(value = "生成api文档(以应用为单位)")
     public ResultEntity<Object> generateAppPdfDoc(@Validated @RequestBody List<GenerateDocDTO> list) {
         return ResultEntityBuild.build(service.generateAppPdfDoc(list, response));
+    }
+
+    /**
+     * 生成webservice文档(以应用为单位)
+     *
+     * @param list
+     * @return
+     */
+    @PostMapping("/generateWebServicePDFDocument")
+    @ApiOperation(value = "生成webservice文档(以应用为单位)")
+    public ResultEntity<Object> generateWebServicePDFDocument(@Validated @RequestBody List<GenerateDocDTO> list) {
+        return ResultEntityBuild.build(service.generateWebServicePDFDocument(list, response));
     }
 
     @PostMapping("/pushdata")
@@ -165,7 +176,6 @@ public class ApiConfigController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getSourceTableAndField(apiId));
     }
 
-
     @PostMapping("/addSourceField")
     @ApiOperation(value = "新增源字段")
     public ResultEntity<Object> addSourceField(@Validated @RequestBody List<ApiParameterDTO> dto) {
@@ -177,6 +187,7 @@ public class ApiConfigController {
     public ResultEntity<Object> editSourceField(@Validated @RequestBody ApiParameterDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.editSourceField(dto));
     }
+
     @DeleteMapping("/deleteSourceField/{id}")
     @ApiOperation(value = "删除源字段")
     public ResultEntity<Object> deleteSourceField(@PathVariable("id") long id) {

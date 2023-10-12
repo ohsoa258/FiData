@@ -95,6 +95,15 @@ public class NifiController {
         return SqlForPgOds;
     }
 
+    @ApiOperation("获取Pg Ods的Sql API&WEBSERVICE")
+    @PostMapping("/getSqlForPgOdsV2")
+    public ResultEntity<List<String>> getSqlForPgOdsV2(@RequestBody DataAccessConfigDTO configDTO) {
+        ResultEntity<List<String>> SqlForPgOds = new ResultEntity<>();
+        SqlForPgOds.data = iNiFiHelper.getSqlForPgOdsV2(configDTO);
+        SqlForPgOds.code = 0;
+        return SqlForPgOds;
+    }
+
     @ApiOperation("删除自定义工作Nifi流程")
     @PostMapping("/deleteCustomWorkNifiFlow")
     public void deleteCustomWorkNifiFlow(@RequestBody NifiCustomWorkListDTO nifiCustomWorkListDTO) {
@@ -141,8 +150,11 @@ public class NifiController {
         }
 
         //RestfulApi无需在nifi创建全局变量，它不走nifi
+        //WEBSERVICE和RestfulApi同理  都不走nifi
         //SAPBW同理 源--临时表的流程不走nifi    临时表-目标表的流程才走nifi
-        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW) {
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI
+                || dto.conType == DataSourceTypeEnum.SAPBW
+                || dto.conType == DataSourceTypeEnum.WEBSERVICE) {
             return resultEntity;
         }
 

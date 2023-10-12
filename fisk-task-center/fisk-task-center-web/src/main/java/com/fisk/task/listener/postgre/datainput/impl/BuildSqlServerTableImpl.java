@@ -81,7 +81,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         stgSql.append("fi_createtime DATETIME DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime DATETIME,fi_version varchar(50),fi_enableflag varchar(50)," +
                 "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
 
-        sqlFileds.append("fi_createtime DATETIME,fi_updatetime DATETIME,fi_version varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
+        sqlFileds.append("fi_createtime DATETIME DEFAULT (format(GETDATE(),'yyyy-MM-dd HH:mm:ss') ),fi_updatetime DATETIME,fi_version varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50) NOT NULL DEFAULT (newid())");
         String havePk = pksql.toString();
         sqlFileds.append(")");
         stgSql.append(");");
@@ -122,7 +122,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                     + buildPhysicalTableDTO.appAbbreviation + "' and ";
             for (String tableName : buildPhysicalTableDTO.apiTableNames) {
 
-                selectTable += " st.name='" + buildPhysicalTableDTO.appAbbreviation + "." + tableName + "' or";
+                selectTable += " st.name='" + tableName + "' or";
             }
             selectTable = selectTable.substring(0, selectTable.length() - 2);
         } else {
@@ -205,6 +205,8 @@ public class BuildSqlServerTableImpl implements IbuildTable {
                 sql += ",0,'',0,'','',0,'','',0,'')";
             } else if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
                 sql += ",0,'',0,'','',0,'','',0,'')";
+            } else if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName())) {
+                sql += ",0,'',0,'','',0,'','',0,'')";
             }
         } else {
             //模式
@@ -230,7 +232,8 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             //其他逻辑  业务覆盖单位
             sql += (business.rangeDateUnitStandby == null ? ",''" : ",'" + business.rangeDateUnitStandby) + "')";
         }
-        if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
+        if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())
+                || Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName()) ) {
             if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
                 //String s = associatedConditions(config);
                 String s = "";

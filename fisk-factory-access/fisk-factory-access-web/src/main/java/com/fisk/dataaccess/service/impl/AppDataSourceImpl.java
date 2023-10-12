@@ -372,6 +372,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.WEBSERVICE.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 14) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
         }
         return dataSourceDTOS;
     }
@@ -619,6 +625,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.OPENEDGE.getName();
         } else if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.SAPBW.getName();
+        } else if (DataSourceTypeEnum.WEBSERVICE.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.WEBSERVICE.getName();
         }
         return driverName;
     }

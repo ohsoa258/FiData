@@ -6,6 +6,7 @@ public enum FuncNameEnum implements BaseEnum {
     PG_DATA_STG_TO_ODS_TOTAL(1, "pg_data_stg_to_ods_total"),
     PG_DATA_STG_TO_ODS_DELETE(2, "pg_data_stg_to_ods_delete"),
     PG_DATA_STG_TO_ODS_TOTAL_OUTPUT(3, "pg_data_stg_to_ods_total_ouput"),
+    PG_DATA_STG_TO_ODS_TOTAL_API_WS(4, "pg_data_stg_to_ods_total_api_ws"),
     ;
 
     private final String name;

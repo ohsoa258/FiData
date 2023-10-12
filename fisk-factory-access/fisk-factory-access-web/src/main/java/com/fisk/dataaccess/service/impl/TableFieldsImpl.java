@@ -723,7 +723,7 @@ public class TableFieldsImpl
                 data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
                 data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
                 data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
-                log.info("是否是sapbw...",data.sapBwFlow);
+                log.info("是否是sapbw--",data.sapBwFlow);
                 data.tableHistoryId = tableHistoryId;
 
                 // 执行发布
@@ -750,7 +750,9 @@ public class TableFieldsImpl
                 if ((registration.appType == 0
                         && DataSourceTypeEnum.RestfulAPI.getName().equals(dataSourcePo.driveType))
                         || (registration.appType == 1
-                        && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))) {
+                        && DataSourceTypeEnum.API.getName().equals(dataSourcePo.driveType))
+                        || (registration.appType == 0
+                        && DataSourceTypeEnum.WEBSERVICE.getName().equals(dataSourcePo.driveType))) {
                     // 传入apiId和api下所有表
                     List<TableAccessPO> tablePoList = tableAccessImpl.query().eq("api_id", accessPo.apiId).list();
                     // api下所有表

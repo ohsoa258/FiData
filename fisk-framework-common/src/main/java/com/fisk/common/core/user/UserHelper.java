@@ -183,4 +183,43 @@ public class UserHelper {
         Claims claims = claimsJws.getBody();
         return Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class));
     }
+
+    /**
+     * 获取通过webService方式登录的用户
+     * 获取不到用户信息抛出异常
+     *
+     * @return 用户信息
+     */
+    public UserInfo getWebServiceLoginUserInfo(String token) {
+        if (StringUtils.isEmpty(token)) {
+            log.error("获取token失败，错误原因：webService请求参数中缺少token");
+            throw new FkException(ResultEnum.UNAUTHENTICATE, ResultEnum.AUTH_TOKEN_IS_NOTNULL.getMsg());
+        }
+        token = token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        // 解析token
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        // 获取claims
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        // 获取userId
+        long userId = Long.parseLong(claims.get(SystemConstants.CLAIM_ATTR_ID, String.class));
+        // 根据token中的id查询用户信息
+        Object redisData = redis.get(RedisKeyBuild.buildLoginUserInfo(userId));
+        if (redisData == null) {
+            log.error("用户登录信息不存在。用户id：" + userId);
+            throw new FkException(ResultEnum.UNAUTHENTICATE, ResultEnum.AUTH_LOGIN_INFO_INVALID.getMsg());
+        }
+        UserInfo userInfo = (UserInfo) redisData;
+        // 如果请求中的token和redis中存储的token不一样，说明用户账号已经在其他地方重新登录，token已过期。
+        String loginToken = userInfo.token.replace(SystemConstants.AUTH_TOKEN_HEADER, "");
+        if (!loginToken.equals(token)) {
+            log.error("token验证失败，错误原因：请求中的token与redis不一致。请求token：{}，redis中token：{}", token, loginToken);
+            throw new FkException(ResultEnum.UNAUTHENTICATE, ResultEnum.AUTH_LOGIN_INFO_INVALID.getMsg());
+        }
+        return userInfo;
+    }
+
 }

@@ -30,6 +30,9 @@ config-driverType: MYSQL
 # 配置库 tb_table_access 表名  根据各个客户环境改变
 config-tb-name: tb_table_access
 
+# webService创建客户端的地址：与当前包部署地址保持一致--根据客户环境的不同而改变
+webService-ip-address: 192.168.11.130
+
 # pdf文档模板
 dataservice:
   pdf:

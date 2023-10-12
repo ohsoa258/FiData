@@ -125,9 +125,10 @@ public class BuildDataInputPgTableListener {
                 log.info("oracle_cdc建表完成");
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
-            } else if ((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0) ||
-                    Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api) ||
-                    Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.RestfulAPI)) {
+            } else if ((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0)
+                    || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api)
+                    || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.RestfulAPI)
+                    || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.webservice)) {
                 int tableCount = 0;
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 String selectTable = dbCommand.queryTableNum(buildPhysicalTableDTO);

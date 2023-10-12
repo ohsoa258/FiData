@@ -219,6 +219,11 @@ public enum ResultEnum {
     SAPBW_GETDIMS_MES_ERROR(5094, "SAPBW获取cube维度和指标报错"),
     SAPBW_CONNECT_ERROR(5095, "创建SAPBW连接失败"),
     SAPBW_NIFI_SYNC_ERROR(5096, "SAPBW-NIFI同步报错"),
+    WEBSERVICE_CODE_NULL_ERROR(5097, "推送的webServiceCode不可为空"),
+    WEBSERVICE_NOT_EXIST(5098, "当前推送的webService不存在"),
+    WEBSERVICE_TOKEN_NOT_EXIST(5099, "webService携带的token为空"),
+    WEBSERVICE_GET_TOKEN_ERROR(5100, "webService获取token报错"),
+    WEBSERVICE_PUSH_DATA_ERROR(5101, "webService推送数据报错"),
 
 
     /**

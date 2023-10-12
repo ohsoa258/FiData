@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.webservice.entity;
+package com.fisk.dataaccess.webservice.service;
 
 import lombok.Data;
 

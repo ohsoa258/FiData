@@ -809,10 +809,10 @@ public class TestController {
 
     public static void main(String[] args) {
         ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-        receiveDataDTO.apiCode = 194L;
-        receiveDataDTO.executeConfigFlag = false;
-        receiveDataDTO.flag = false;
-        receiveDataDTO.pushData = "{\"data\": [\n" +
+        receiveDataDTO.setApiCode(194L);
+        receiveDataDTO.setExecuteConfigFlag(false);
+        receiveDataDTO.setFlag(false);
+        receiveDataDTO.setPushData("{\"data\": [\n" +
                 " {\n" +
                 " \"id\": \"\",\n" +
                 " \"sensor_id\": \"\",\n" +
@@ -874,9 +874,9 @@ public class TestController {
                 " \"level\": \"\",\n" +
                 " \"level_desc\": \"蓝色\" }\n" +
                 " ]\n" +
-                "}\n";
+                "}\n");
         System.out.print(JSON.toJSONString(receiveDataDTO));
-        String dd = receiveDataDTO.pushData;
+        String dd = receiveDataDTO.getPushData();
         JSONObject jsonObject = JSON.parseObject(dd);
         ObjectMapper objectMapper = new ObjectMapper();
         try {

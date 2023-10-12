@@ -2413,7 +2413,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 && !dto.driveType.getName().equals(DbTypeEnum.api.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.oracle_cdc.getName())
                 && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
-                && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())) {
+                && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.webservice.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             DataTranDTO dtDto = new DataTranDTO();
             dtDto.tableName = tableName;

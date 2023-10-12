@@ -18,6 +18,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
@@ -300,16 +301,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 发布之后,按照配置推送一次实时api
         } else if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
             ReceiveDataDTO receiveDataDto = new ReceiveDataDTO();
-            receiveDataDto.apiCode = dto.id;
+            receiveDataDto.setApiCode(dto.id);
             // 系统内部调用
-            receiveDataDto.flag = true;
+            receiveDataDto.setFlag(true);
             // 实时推送示例数据
-            receiveDataDto.executeConfigFlag = true;
+            receiveDataDto.setExecuteConfigFlag(true);
             String pushData = dto.pushData;
             if (StringUtils.isNotBlank(pushData)) {
                 String pushDataStr = pushData.replace("&nbsp;", "").replace("<br/>", "").replace("\\\\n\\n", "");
                 log.info("pushDataStr = " + pushDataStr);
-                receiveDataDto.pushData = pushDataStr;
+                receiveDataDto.setPushData(pushDataStr);
             }
             pushData(receiveDataDto);
         }
@@ -421,16 +422,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 // 发布之后,按照配置推送一次实时api
             } else if (d.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
                 ReceiveDataDTO receiveDataDto = new ReceiveDataDTO();
-                receiveDataDto.apiCode = d.id;
+                receiveDataDto.setApiCode(d.id);
                 // 系统内部调用
-                receiveDataDto.flag = true;
+                receiveDataDto.setFlag(true);
                 // 实时推送示例数据
-                receiveDataDto.executeConfigFlag = true;
+                receiveDataDto.setExecuteConfigFlag(true);
                 String pushData = d.pushData;
                 if (StringUtils.isNotBlank(pushData)) {
                     String pushDataStr = pushData.replace("&nbsp;", "").replace("<br/>", "").replace("\\\\n\\n", "");
                     log.info("pushDataStr = " + pushDataStr);
-                    receiveDataDto.pushData = pushDataStr;
+                    receiveDataDto.setPushData(pushDataStr);
                 }
                 pushData(receiveDataDto);
             }
@@ -576,12 +577,50 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         long timeMillis = System.currentTimeMillis();
         String fileName = "APIServiceDoc" + timeMillis + ".pdf";
 
-        // 生成PDF文件
-        OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl", templatePath, fileName, "接口文档", docDTO, response);
         try {
+            // 生成PDF文件
+            OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
+                    templatePath, fileName, "接口文档", docDTO, response);
             outputStream.flush();
             outputStream.close();
         } catch (IOException ex) {
+            log.error("生成PDF文档失败:"+ex);
+            throw new FkException(ResultEnum.GENERATE_PDF_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum generateWebServicePDFDocument(List<GenerateDocDTO> list, HttpServletResponse response) {
+
+        List<ApiConfigDTO> dtoList = new ArrayList<>();
+        // 去重
+        list.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList()).forEach(generateDocDTO -> {
+            ApiConfigDTO data = getData(generateDocDTO.apiId);
+            if (data != null & generateDocDTO.tableIsEmpty) {
+                data.pushDataJson = generateDocDTO.pushDataJson;
+                dtoList.add(data);
+            }
+        });
+
+        // api信息转换为文档实体
+        ApiDocDTO docDTO = createApiDocDTOForWebService(dtoList);
+        // 生成pdf,返回文件名称
+        PDFHeaderFooter headerFooter = new PDFHeaderFooter();
+        PDFKit kit = new PDFKit();
+        kit.setHeaderFooterBuilder(headerFooter);
+        // 系统时间戳
+        long timeMillis = System.currentTimeMillis();
+        String fileName = "webServiceDoc" + timeMillis + ".pdf";
+
+        try {
+            // 生成PDF文件
+            OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
+                    templatePath, fileName, "接口文档", docDTO, response);
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException ex) {
+            log.error("生成 webServiceDoc PDF文档失败:"+ex);
             throw new FkException(ResultEnum.GENERATE_PDF_ERROR);
         }
         return ResultEnum.SUCCESS;
@@ -604,17 +643,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         StringBuilder msg = new StringBuilder("");
         Date startTime = new Date();
         try {
-            if (dto.apiCode == null) {
+            if (dto.getApiCode() == null) {
                 return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
             }
 
-            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.apiCode);
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
             if (apiConfigPo == null) {
                 return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
             }
 
             // flag=false: 第三方调用,需要验证账号是否属于当前api
-            if (!dto.flag) {
+            if (!dto.isFlag()) {
                 AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
                 if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
                     return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
@@ -626,7 +665,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("json解析的根节点参数为: " + jsonKey);
 
             // 根据api_id查询所有物理表
-            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiCode).list();
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
             if (CollectionUtils.isEmpty(accessPoList)) {
                 return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
             }
@@ -646,9 +685,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
 
             // 防止\未被解析
-            String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
+            String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
             log.info("stg表数据用完即删");
-            pushDataStgToOds(dto.apiCode, 0);
+            pushDataStgToOds(dto.getApiCode(), 0);
 
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
@@ -658,7 +697,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
-                ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             } else {
                 return ResultEntityBuild.build(resultEnum, result.data);
@@ -667,19 +706,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 保存本次的日志信息
             // 非实时api
             // 系统内部调用 && 实时推送示例数据
-            if (dto.flag && !dto.executeConfigFlag) {
+            if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
                 savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
                 // 实时调用
                 // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
-            } else if (dto.flag) {
+            } else if (dto.isFlag()) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
                 }
                 savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            } else if (!dto.executeConfigFlag) {
+            } else if (!dto.isExecuteConfigFlag()) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
@@ -692,10 +731,133 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             return ResultEntityBuild.build(resultEnum, msg);
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
-            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.getApiCode(), dto.getPushData()), e);
             return ResultEntityBuild.build(resultEnum, msg);
         }
         return ResultEntityBuild.build(resultEnum, msg);
+    }
+
+    /**
+     * 该接口用于第三方以webService方式推送数据 调用需谨慎
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @Override
+    public String webServicePushData(ReceiveDataDTO dto) {
+
+        // 2023-08-29 新增需求，数据接入页面新增大开关，控制实时应用推数据的接口是否启用
+        ApiStateDTO apiState = apiStateService.getApiState();
+        if (apiState != null) {
+            Integer state = apiState.getApiState();
+            // 0 接口禁用  1 接口启用
+            if (state == 0) {
+                return "当前调用的接口已被禁用，请联系系统管理员...";
+            }
+        }
+
+        ResultEnum resultEnum = null;
+        StringBuilder msg = new StringBuilder("");
+        Date startTime = new Date();
+        try {
+            if (dto.getApiCode() == null) {
+                return "推送的webServiceCode不可为空";
+            }
+
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
+            if (apiConfigPo == null) {
+                return "当前推送的webService不存在";
+            }
+
+
+            //如果是通过webService调用
+            if (dto.isIfWebService()) {
+                AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
+                String webServiceToken = dto.getWebServiceToken();
+                if (webServiceToken == null) {
+                    return "webService携带的token为空";
+                }
+                UserInfo userInfo = userHelper.getWebServiceLoginUserInfo(webServiceToken);
+                if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userInfo.username)) {
+                    return "该账号无权操作当前webService,请检查账号";
+                }
+            }
+
+            // json解析的根节点
+            String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+            log.info("json解析的根节点参数为: " + jsonKey);
+
+            // 根据api_id查询所有物理表
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
+            if (CollectionUtils.isEmpty(accessPoList)) {
+                return "当前物理表不存在or已删除";
+            }
+            // 获取当前api下的所有表数据
+            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
+//            apiTableDtoList.forEach(System.out::println);
+
+            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+            if (modelApp == null) {
+                return "当前API所属应用已删除";
+            }
+
+            // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+            // 0 接口禁用  1 接口启用
+            if (modelApp.ifAllowDatatransfer == 0) {
+                return "当前调用的接口已被禁用，请联系系统管理员...";
+            }
+
+            // 防止\未被解析
+            String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
+            log.info("stg表数据用完即删");
+            pushDataStgToOds(dto.getApiCode(), 0);
+
+            // 将数据同步到pgsql
+            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
+            resultEnum = ResultEnum.getEnum(result.code);
+            msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
+
+            // stg同步到ods(联调task)
+            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+                ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
+                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+            } else {
+                return resultEnum.getMsg() + result.data;
+            }
+
+            // 保存本次的日志信息
+            // 非实时api
+            // 系统内部调用 && 实时推送示例数据
+            if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                // 实时调用
+                // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+            } else if (dto.isFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+                }
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            } else if (!dto.isExecuteConfigFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            }
+
+        } catch (FkException ex) {
+            resultEnum = ex.getResultEnum();
+            msg.append(ex.getErrorMsg());
+            return resultEnum.getMsg() + msg;
+        } catch (Exception e) {
+            resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.getApiCode(), dto.getPushData()), e);
+            return resultEnum.getMsg() + msg;
+        }
+        return resultEnum.getMsg() + msg;
     }
 
     /**
@@ -712,17 +874,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         StringBuilder msg = new StringBuilder("");
         Date startTime = new Date();
         try {
-            if (dto.apiCode == null) {
+            if (dto.getApiCode() == null) {
                 return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
             }
 
-            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.apiCode);
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
             if (apiConfigPo == null) {
                 return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
             }
 
             // flag=false: 第三方调用,需要验证账号是否属于当前api
-            if (!dto.flag) {
+            if (!dto.isFlag()) {
                 AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
                 if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
                     return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
@@ -734,7 +896,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("json解析的根节点参数为: " + jsonKey);
 
             // 根据api_id查询所有物理表
-            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.apiCode).list();
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
             if (CollectionUtils.isEmpty(accessPoList)) {
                 return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
             }
@@ -747,9 +909,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
             }
             // 防止\未被解析
-            String jsonStr = StringEscapeUtils.unescapeJava(dto.pushData);
+            String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
             log.info("根据配置删除stg和ods表数据");
-            pushDataStgToOds(dto.apiCode, 0);
+            pushDataStgToOds(dto.getApiCode(), 0);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
@@ -758,26 +920,26 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
-                ResultEnum resultEnum1 = pushDataStgToOds(dto.apiCode, 1);
+                ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
 
             // 保存本次的日志信息
             // 非实时api
             // 系统内部调用 && 实时推送示例数据
-            if (dto.flag && !dto.executeConfigFlag) {
+            if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
                 savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
                 // 实时调用
                 // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
-            } else if (dto.flag) {
+            } else if (dto.isFlag()) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
                 }
                 savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            } else if (!dto.executeConfigFlag) {
+            } else if (!dto.isExecuteConfigFlag()) {
                 if (StringUtils.isNotBlank(msg)) {
                     msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
                 }
@@ -786,7 +948,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         } catch (Exception e) {
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
-            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.apiCode, dto.pushData), e);
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.getApiCode(), dto.getPushData()), e);
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
@@ -806,7 +968,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @params msg
      */
     private void savePushDataLogToTask(ApiImportDataDTO importDataDto, Date startTime, ReceiveDataDTO dto, ResultEnum resultEnum, int topicType, String msg) {
-        ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiCode).one();
+        ApiConfigPO apiConfigPo = this.query().eq("id", dto.getApiCode()).one();
         if (apiConfigPo == null) {
             throw new FkException(ResultEnum.APICONFIG_ISNULL);
         }
@@ -823,7 +985,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL / 2;
-            nifiStageMessageDto.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+            nifiStageMessageDto.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + topicType + "." + apiConfigPo.appId + "." + dto.getApiCode();
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
                 nifiStageDto.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
                 nifiStageDto.transitionPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
@@ -852,7 +1014,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.startTime = startTime;
             nifiStageMessageDto.endTime = endTime;
             nifiStageMessageDto.counts = COUNT_SQL;
-            nifiStageMessageDto.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + topicType + "." + apiConfigPo.appId + "." + dto.apiCode;
+            nifiStageMessageDto.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + topicType + "." + apiConfigPo.appId + "." + dto.getApiCode();
             // 非实时日志详情
             if (importDataDto != null) {
                 nifiStageMessageDto.pipelTaskTraceId = importDataDto.pipelTaskTraceId;
@@ -1080,7 +1242,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             List<AppDataSourcePO> appDataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
             if (!CollectionUtils.isEmpty(appDataSourcePo)) {
                 for (AppDataSourcePO item : appDataSourcePo) {
-                    if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(item.driveType) || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(item.driveType)) {
+                    if (DataSourceTypeEnum.API.getName().equalsIgnoreCase(item.driveType)
+                            || DataSourceTypeEnum.RestfulAPI.getName().equalsIgnoreCase(item.driveType)
+                            || DataSourceTypeEnum.WEBSERVICE.getName().equalsIgnoreCase(item.driveType)) {
                         appRegistrationPoList.add(e);
                     }
                 }
@@ -1239,14 +1403,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
             receiveDataDTO = new ReceiveDataDTO();
-            receiveDataDTO.apiCode = dto.apiId;
+            receiveDataDTO.setApiCode(dto.apiId);
             data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             log.info("data = " + data);
-            receiveDataDTO.pushData = String.valueOf(data);
+            receiveDataDTO.setPushData(String.valueOf(data));
             //系统内部调用(非实时推送)
-            receiveDataDTO.flag = true;
-            receiveDataDTO.executeConfigFlag = false;
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
 
 
         } else if (dataSourcePo.authenticationMethod == 5) { // 没有身份验证方式
@@ -1275,14 +1439,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
             receiveDataDTO = new ReceiveDataDTO();
-            receiveDataDTO.apiCode = dto.apiId;
+            receiveDataDTO.setApiCode(dto.apiId);
             data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             log.info("data = " + data);
-            receiveDataDTO.pushData = String.valueOf(data);
+            receiveDataDTO.setPushData(String.valueOf(data));
             // 系统内部调用(非实时推送)
-            receiveDataDTO.flag = true;
-            receiveDataDTO.executeConfigFlag = false;
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
 
             // 推送数据
             //pushDataByImportData(dto, receiveDataDTO);
@@ -1314,14 +1478,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
             receiveDataDTO = new ReceiveDataDTO();
-            receiveDataDTO.apiCode = dto.apiId;
+            receiveDataDTO.setApiCode(dto.apiId);
             data = String.valueOf(jsonObject);
             log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
             log.info("data = " + data);
-            receiveDataDTO.pushData = String.valueOf(data);
+            receiveDataDTO.setPushData(String.valueOf(data));
             // 系统内部调用(非实时推送)
-            receiveDataDTO.flag = true;
-            receiveDataDTO.executeConfigFlag = false;
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
             // 推送数据
             //pushDataByImportData(dto, receiveDataDTO);
         }
@@ -1573,7 +1737,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         try {
             // 调用task,获取同步数据的sql
             log.info("同步sql入参AE87: " + JSON.toJSONString(configDTO));
-            ResultEntity<List<String>> result = publishTaskClient.getSqlForPgOds(configDTO);
+            ResultEntity<List<String>> result = publishTaskClient.getSqlForPgOdsV2(configDTO);
             log.info("task返回的执行sqlAE88: " + JSON.toJSONString(result));
             if (result.code == ResultEnum.SUCCESS.getCode()) {
                 List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
@@ -1790,6 +1954,162 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
 
             // 设置目录
+            // 设置目录
+            ApiCatalogueDTO apiCatalogueDTO = new ApiCatalogueDTO();
+            BigDecimal incrementIndex = new BigDecimal("0.1");
+            BigDecimal addIndex = catalogueIndex.add(incrementIndex);
+            // 目录等级
+            apiCatalogueDTO.grade = 3;
+            // 目录序号
+            apiCatalogueDTO.catalogueIndex = addIndex + ".";
+            // 目录名称
+            apiCatalogueDTO.catalogueName = dto.apiName;
+            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO);
+            catalogueIndex = addIndex;
+
+            // 设置API基础信息(2.5.-2.5.5)
+            ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
+            apiBasicInfoDTO.apiName = dto.apiName;
+            apiBasicInfoDTO.apiAddress = "/dataAccess/apiConfig/pushdata";
+            apiBasicInfoDTO.apiDesc = dto.apiDes;
+            apiBasicInfoDTO.apiRequestType = "POST";
+            apiBasicInfoDTO.apiContentType = "application/json";
+            apiBasicInfoDTO.apiHeader = "Authorization: Bearer {token}";
+
+            // 设置API请求参数(2.5.7 参数body)
+            List<ApiRequestDTO> apiRequestDtoS = new ArrayList<>();
+            ApiRequestDTO apiId = new ApiRequestDTO();
+            apiId.parmName = "apiCode";
+            apiId.isRequired = "是";
+            apiId.parmType = "String";
+            apiId.parmDesc = "api唯一标识: " + dto.id + " (真实数据)";
+            apiId.trStyle = "background-color: #fff";
+            ApiRequestDTO pushData = new ApiRequestDTO();
+            pushData.parmName = "pushData";
+            pushData.isRequired = "是";
+            pushData.parmType = "String";
+            pushData.parmDesc = "json序列化数据(参数格式及字段类型参考本小节【pushData json格式】及【json字段描述】)";
+            pushData.trStyle = "background-color: #f8f8f8";
+            apiRequestDtoS.add(apiId);
+            apiRequestDtoS.add(pushData);
+            apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
+            apiBasicInfoDTO.apiRequestExamples = String.format("{\n" + " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" + " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" + "}", addIndex + ".7");
+
+            // 参数(body)表格(2.5.9返回参数说明)
+            List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
+            ApiResponseDTO code = new ApiResponseDTO();
+            code.parmName = "code";
+            code.parmType = "int";
+            code.parmDesc = "调用结果状态";
+            ApiResponseDTO msg = new ApiResponseDTO();
+            msg.parmName = "msg";
+            msg.parmType = "String";
+            msg.parmDesc = "调用结果描述";
+            ApiResponseDTO data = new ApiResponseDTO();
+            data.parmName = "data";
+            data.parmType = "String";
+            data.parmDesc = "返回的数据";
+            apiResponseDtoS.add(code);
+            apiResponseDtoS.add(msg);
+            apiResponseDtoS.add(data);
+            apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
+
+            //设置API返回参数,即返回示例(3)
+            apiBasicInfoDTO.apiResponseExamples = String.format("{\n" + " &nbsp;&nbsp;\"code\": 0,\n" + " &nbsp;&nbsp;\"msg\": \"xxx\",\n" + " &nbsp;&nbsp;\"data\": null\n" + "}", addIndex + ".9");
+
+            // pushData json格式
+            if (StringUtils.isNotBlank(dto.pushDataJson)) {
+                apiBasicInfoDTO.pushDataJson = dto.pushDataJson;
+            } else {// 防止模板报错
+                apiBasicInfoDTO.pushDataJson = "&nbsp;&nbsp;No parameters";
+            }
+
+
+            // pushData json字段描述
+            List<ApiResponseDTO> pushDataDtos = new ArrayList<>();
+            List<TableAccessNonDTO> list = dto.list;
+            if (!CollectionUtils.isEmpty(list)) {
+                final int[] trIndex = {1};
+                list.forEach(e -> {
+                    e.list.forEach(f -> {
+                        ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+                        apiResponseDTO.tableName = e.tableName;
+                        apiResponseDTO.parmName = f.fieldName;
+                        apiResponseDTO.parmType = f.fieldType;
+                        apiResponseDTO.parmDesc = f.fieldDes;
+                        apiResponseDTO.parmPushRule = f.fieldPushRule;
+                        apiResponseDTO.parmPushExample = f.fieldPushExample;
+                        apiResponseDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+                        pushDataDtos.add(apiResponseDTO);
+                        trIndex[0]++;
+                    });
+                });
+            } else {// 防止模板报错
+                ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+                apiResponseDTO.tableName = "No parameters";
+                apiResponseDTO.parmName = "No parameters";
+                apiResponseDTO.parmType = "No parameters";
+                apiResponseDTO.parmDesc = "No parameters";
+                apiResponseDTO.trStyle = "background-color: #f8f8f8";
+                pushDataDtos.add(apiResponseDTO);
+            }
+            apiBasicInfoDTO.pushDataDtos = pushDataDtos;
+
+
+            //设置API目录
+            /* 设置API目录 start */
+            apiBasicInfoDTO.apiNameCatalogue = addIndex + ".";
+            apiBasicInfoDTO.apiAddressCatalogue = addIndex + ".1";
+            apiBasicInfoDTO.apiDescCatalogue = addIndex + ".2";
+            apiBasicInfoDTO.apiRequestTypeCatalogue = addIndex + ".3";
+            apiBasicInfoDTO.apiContentTypeCatalogue = addIndex + ".4";
+            apiBasicInfoDTO.apiHeaderCatalogue = addIndex + ".5";
+            apiBasicInfoDTO.apiRequestExamplesCatalogue = addIndex + ".6";
+            apiBasicInfoDTO.apiRequestCatalogue = addIndex + ".7";
+            apiBasicInfoDTO.apiResponseExamplesCatalogue = addIndex + ".8";
+            apiBasicInfoDTO.apiResponseCatalogue = addIndex + ".9";
+            /* 设置API目录 end */
+
+            apiBasicInfoDtoS.add(apiBasicInfoDTO);
+        }
+
+        apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDtoS);
+        return apiDocDTO;
+    }
+
+    /**
+     * 创建 webService 接口文档模板填充数据所需的对象(以应用为单位)
+     *
+     * @description 创建模板填充数据所需的对象(以应用为单位)
+     * @author lsj
+     * @param dtoList
+     * @return ApiDocDTO
+     */
+    private ApiDocDTO createApiDocDTOForWebService(List<ApiConfigDTO> dtoList) {
+
+        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address).replace("{api_prd_address}", pdf_prd_address);
+
+        ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
+
+        // API文档代码示例 c#
+        apiDocDTO.apiCodeExamplesNet = DATAACCESS_APICODEEXAMPLES_NET.replace("{api_prd_address}", pdf_uat_address);
+        // API文档代码示例 java
+        apiDocDTO.apiCodeExamplesJava = DATAACCESS_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", pdf_uat_address);
+
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" + "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" + "&nbsp;&nbsp; \"password\": \"xxx\"\n" + "}";
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" + "&nbsp;&nbsp; \"code\": 0,\n" + "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" + "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" + "}", "2.4.9");
+        BigDecimal catalogueIndex = new BigDecimal("2.4");
+
+        // API基本信息对象
+        List<ApiBasicInfoDTO> apiBasicInfoDtoS = new ArrayList<>();
+
+        for (int i = 0; i < dtoList.size(); i++) {
+            ApiConfigDTO dto = dtoList.get(i);
+            List<TableAccessNonDTO> tableAccessDtoList = dto.list;
+            if (CollectionUtils.isEmpty(tableAccessDtoList)) {
+                return apiDocDTO;
+            }
+
             // 设置目录
             ApiCatalogueDTO apiCatalogueDTO = new ApiCatalogueDTO();
             BigDecimal incrementIndex = new BigDecimal("0.1");

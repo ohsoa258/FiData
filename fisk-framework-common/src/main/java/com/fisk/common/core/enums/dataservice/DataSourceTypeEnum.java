@@ -39,7 +39,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     OPENEDGE(12, "OPENEDGE", "com.ddtek.jdbc.openedge.OpenEdgeDriver", "opt/nifi/nifi-current/jdbcdriver/openedge.jar"),
 
-    SAPBW(13, "SAPBW", "", "");
+    SAPBW(13, "SAPBW", "", ""),
+
+    WEBSERVICE(14, "WEBSERVICE", "", "");
 
     DataSourceTypeEnum(int value, String name, String driverName, String driverLocation) {
         this.driverName = driverName;

@@ -66,6 +66,7 @@ public class SwaggerConfig {
     public static final String API_STATE = "实时API接口状态控制器";
     public static final String MAIN_PAGE = "数据接入首页展示";
     public static final String test = "测试";
+    public static final String WebService_Api = "测试WebService接口";
 
 
 
@@ -94,6 +95,7 @@ public class SwaggerConfig {
                 .tags(new Tag(STATEMENT,"资产报表"))
                 .tags(new Tag(API_STATE,"实时API接口状态控制器"))
                 .tags(new Tag(MAIN_PAGE,"数据接入首页展示"))
+                .tags(new Tag(test,"测试"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

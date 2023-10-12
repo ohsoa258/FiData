@@ -2502,6 +2502,18 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     @Override
+    public List<String> getSqlForPgOdsV2(DataAccessConfigDTO config) {
+        List<String> SqlForPgOds = new ArrayList<>();
+        String name = config.processorConfig.targetTableName;
+        String deleteSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), null);
+        //config.processorConfig.targetTableName = "stg_" + name;
+        String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName(), null);
+        SqlForPgOds.add(deleteSql);
+        SqlForPgOds.add(toOdaSql);
+        return JSON.parseArray(JSON.toJSONString(SqlForPgOds).toLowerCase(), String.class);
+    }
+
+    @Override
     public String assemblySql(DataAccessConfigDTO config, SynchronousTypeEnum synchronousTypeEnum, String funcName, BuildNifiFlowDTO buildNifiFlow) {
         String sql = "";
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
