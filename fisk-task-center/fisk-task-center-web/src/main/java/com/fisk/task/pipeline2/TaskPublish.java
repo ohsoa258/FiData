@@ -543,7 +543,7 @@ public class TaskPublish {
                 execScript.pipelTraceId = pipelTraceId;
                 execScript.taskId = split[6];
                 log.info("执行脚本任务发送卡夫卡请求参数:{}", JSON.toJSONString(execScript));
-                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
+                kafkaTemplateHelper.sendMessageAsync(topic, JSON.toJSONString(execScript));
             } else if (Objects.equals(type, OlapTableEnum.SFTPFILECOPYTASK)) {
                 SftpCopyDTO sftpCopy = getSftpCopy(pipelTraceId, jobTraceId, taskHierarchy.taskTraceId, split[6], null);
                 log.info("执行SFTP文件复制发送卡夫卡请求参数:{}", JSON.toJSONString(sftpCopy));
@@ -604,8 +604,8 @@ public class TaskPublish {
                 execScript.pipelJobTraceId = iPipelineTaskPublishCenter.getDispatchJobHierarchyByTaskId(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).jobTraceId;
                 execScript.pipelTaskTraceId = iPipelineTaskPublishCenter.getTaskHierarchy(kafkaReceiveDTO.pipelTraceId, String.valueOf(taskId)).taskTraceId;
                 execScript.taskId = taskId;
-                log.info("发送的执行脚本topic:{},内容:{}", MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
-                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, JSON.toJSONString(execScript));
+                log.info("发送的执行脚本topic:{},内容:{}", kafkaReceiveDTO.topic, JSON.toJSONString(execScript));
+                kafkaTemplateHelper.sendMessageAsync(kafkaReceiveDTO.topic, JSON.toJSONString(execScript));
                 //job开始日志
                 Map<Integer, Object> jobMap = new HashMap<>();
                 NifiGetPortHierarchyDTO nifiGetPortHierarchy = iOlap.getNifiGetPortHierarchy(pipelineId, OlapTableEnum.CUSTOMIZESCRIPT.getValue(), null, 0);

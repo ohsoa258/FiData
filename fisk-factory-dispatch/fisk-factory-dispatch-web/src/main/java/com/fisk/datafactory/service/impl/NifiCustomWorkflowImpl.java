@@ -1,6 +1,7 @@
 package com.fisk.datafactory.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -561,5 +562,13 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
 
         NifiCustomWorkflowPO po = mapper.selectById(taskResult.data);
         return po == null ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) : ResultEntityBuild.build(ResultEnum.SUCCESS, po);
+    }
+
+    @Override
+    public NifiCustomWorkflowDTO getNifiCustomWorkFlow(String workflowId) {
+        LambdaQueryWrapper<NifiCustomWorkflowPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NifiCustomWorkflowPO::getWorkflowId,workflowId);
+        NifiCustomWorkflowPO nifiCustomWorkflowPO = getOne(queryWrapper);
+        return NifiCustomWorkflowMap.INSTANCES.poToDto(nifiCustomWorkflowPO);
     }
 }

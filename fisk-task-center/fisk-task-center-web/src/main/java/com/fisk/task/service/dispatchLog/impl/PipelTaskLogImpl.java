@@ -314,11 +314,31 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                     }
                     resultMap = (Map<Integer,String>)tables.getData();
                     break;
+                case CUSTOMIZESCRIPT:
+                    Map<Integer,String> map1 = new HashMap<>();
+                    map1.put(1,"自定义脚本任务");
+                    resultMap = map1;
+                    break;
+                case SFTPFILECOPYTASK:
+                    Map<Integer,String> map2 = new HashMap<>();
+                    map2.put(1,"SFTP文件复制");
+                    resultMap = map2;
+                    break;
+                case POWERBIDATASETREFRESHTASK:
+                    Map<Integer,String> map3 = new HashMap<>();
+                    map3.put(1,"PBI DataSet 刷新");
+                    resultMap = map3;
+                    break;
                 default:
                     break;
             }
             for (PipelTaskMergeLogVO pipelTaskMergeLogVO : stringListEntry.getValue()) {
-                pipelTaskMergeLogVO.setTableName(resultMap.get(pipelTaskMergeLogVO.getTableId()));
+                String tableName = resultMap.get(pipelTaskMergeLogVO.getTableId());
+                if (StringUtils.isEmpty(tableName)){
+                    pipelTaskMergeLogVO.setTableName(resultMap.get(1));
+                }else {
+                    pipelTaskMergeLogVO.setTableName(tableName);
+                }
                 result.add(pipelTaskMergeLogVO);
             }
         }

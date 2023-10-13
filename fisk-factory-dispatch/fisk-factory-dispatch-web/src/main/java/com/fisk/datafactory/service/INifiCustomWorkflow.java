@@ -117,4 +117,6 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
      * @return
      */
     ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId);
+
+    NifiCustomWorkflowDTO getNifiCustomWorkFlow(String workflowId);
 }

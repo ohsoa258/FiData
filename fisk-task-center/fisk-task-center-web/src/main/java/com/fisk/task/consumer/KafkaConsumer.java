@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
+import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.access.BuildMdmAccessETLListener;
@@ -570,19 +571,24 @@ public class KafkaConsumer {
         return ResultEntityBuild.build(metaDataListener.metaData(dataInfo, ack));
     }
 
-    /**
-     * build.exec.script.flow
-     *
-     * @param dataInfo
-     * @param ack
-     * @return
-     */
-    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, containerFactory = "batchFactory",
-            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
-    public ResultEntity<Object> buildExecScript(String dataInfo, Acknowledgment ack) {
-        return ResultEntityBuild.build(iExecScriptListener.execScript(dataInfo, ack));
-    }
+//    /**
+//     * build.exec.script.flow
+//     *
+//     * @param dataInfo
+//     * @param ack
+//     * @return
+//     */
+//    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW, containerFactory = "batchFactory",
+//            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+//    public ResultEntity<Object> buildExecScript(String dataInfo, Acknowledgment ack) {
+//        return ResultEntityBuild.build(iExecScriptListener.execScript(dataInfo, ack));
+//    }
 
+    @KafkaListener(topics = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW_NEXT, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> buildExecScript(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(iExecScriptListener.execScriptToDispatch(data, ack));
+    }
     /**
      * build.sftpFile.copy
      *
