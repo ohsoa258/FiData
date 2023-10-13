@@ -144,6 +144,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private String templatePath;
     @Value("${dataservice.pdf.uat_address}")
     private String pdf_uat_address;
+    @Value("${webService-ip-address}")
+    private String webservice_ip_address;
     @Value("${dataservice.pdf.prd_address}")
     private String pdf_prd_address;
     @Resource
@@ -586,7 +588,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             outputStream.flush();
             outputStream.close();
         } catch (IOException ex) {
-            log.error("生成PDF文档失败:"+ex);
+            log.error("生成PDF文档失败:" + ex);
             throw new FkException(ResultEnum.GENERATE_PDF_ERROR);
         }
         return ResultEnum.SUCCESS;
@@ -617,12 +619,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         try {
             // 生成PDF文件
-            OutputStream outputStream = kit.exportToResponse("apiserviceTemplate.ftl",
+            OutputStream outputStream = kit.exportToResponse("webserviceTemplate.ftl",
                     templatePath, fileName, "接口文档", docDTO, response);
             outputStream.flush();
             outputStream.close();
         } catch (IOException ex) {
-            log.error("生成 webServiceDoc PDF文档失败:"+ex);
+            log.error("生成 webServiceDoc PDF文档失败:" + ex);
             throw new FkException(ResultEnum.GENERATE_PDF_ERROR);
         }
         return ResultEnum.SUCCESS;
@@ -822,7 +824,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // stg同步到ods(联调task)
             if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
-                ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
+                ResultEnum resultEnum1 = pushDataStgToOdsV2(dto.getApiCode(), 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             } else {
                 return resultEnum.getMsg() + result.data;
@@ -1726,6 +1728,79 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     /**
+     * 将数据从stg同步到ods webService
+     *
+     * @param apiId apiId
+     * @param flag  0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @return void
+     * @author Lock
+     * @date 2022/2/25 16:41
+     */
+    private ResultEnum pushDataStgToOdsV2(Long apiId, int flag) {
+
+        try {
+            // 1.根据apiId获取api所有信息
+            ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
+            if (apiConfigPo == null) {
+                return ResultEnum.API_NOT_EXIST;
+            }
+            // 2.根据appId获取app所有信息
+            AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
+            if (app == null) {
+                return ResultEnum.APP_NOT_EXIST;
+            }
+
+            // 3.根据apiId查询所有物理表详情
+            ApiConfigDTO dto = getData(apiId);
+            List<TableAccessNonDTO> tablelist = dto.list;
+            if (CollectionUtils.isEmpty(tablelist)) {
+                // 当前api下没有物理表
+                return ResultEnum.TABLE_NOT_EXIST;
+            }
+
+            // 4.组装参数,调用tasdk,获取推送数据所需的sql
+            for (TableAccessNonDTO e : tablelist) {
+                TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
+                DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
+                // 表名
+                ProcessorConfig processorConfig = new ProcessorConfig();
+                processorConfig.targetTableName = TableNameGenerateUtils.buildTableName(e.tableName, app.appAbbreviation, app.whetherSchema);
+                // 同步方式
+                DataSourceConfig dataSourceConfig = new DataSourceConfig();
+                dataSourceConfig.syncMode = syncmodePo.syncMode;
+                // 装接入数据库api的字段
+                List<TableFieldsPO> list = tableFieldImpl.query().eq("table_access_id", e.id).eq("del_flag", 1).list();
+                dataSourceConfig.tableFieldsList = TableFieldsMap.INSTANCES.listPoToDto(list);
+                // 增量对象
+                if (syncmodePo.syncMode == 4) {
+                    TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
+                    configDTO.businessDTO = TableBusinessMap.INSTANCES.poToDto(businessPo);
+                }
+
+                // 业务主键集合(逗号隔开)
+                List<TableFieldsDTO> fieldList = e.list;
+                if (!CollectionUtils.isEmpty(fieldList)) {
+                    String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                    // 去掉最后一位逗号","
+                    if (StringUtils.isNotBlank(collect)) {
+                        configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
+                    }
+                }
+
+                configDTO.processorConfig = processorConfig;
+                configDTO.targetDsConfig = dataSourceConfig;
+
+                // 获取同步数据的sql并执行
+                return getSynchroDataSqlAndExcuteV2(configDTO, flag, app.targetDbId);
+            }
+        } catch (Exception e) {
+            return ResultEnum.PUSH_DATA_ERROR;
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
      * 获取同步数据的sql并执行
      *
      * @param configDTO task需要的参数
@@ -1735,6 +1810,35 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @date 2022/2/25 16:06
      */
     private ResultEnum getSynchroDataSqlAndExcute(DataAccessConfigDTO configDTO, int flag, int targetDbId) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        try {
+            // 调用task,获取同步数据的sql
+            log.info("同步sql入参AE87: " + JSON.toJSONString(configDTO));
+            ResultEntity<List<String>> result = publishTaskClient.getSqlForPgOds(configDTO);
+            log.info("task返回的执行sqlAE88: " + JSON.toJSONString(result));
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+                List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
+                if (!CollectionUtils.isEmpty(sqlList)) {
+
+                    resultEnum = pgsqlUtils.stgToOds(sqlList, flag, targetDbId);
+                }
+            }
+        } catch (SQLException e) {
+            return ResultEnum.STG_TO_ODS_ERROR_DETAIL;
+        }
+        return resultEnum;
+    }
+
+    /**
+     * 获取同步数据的sql并执行
+     *
+     * @param configDTO task需要的参数
+     * @param flag      0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @return void
+     * @author Lock
+     * @date 2022/2/25 16:06
+     */
+    private ResultEnum getSynchroDataSqlAndExcuteV2(DataAccessConfigDTO configDTO, int flag, int targetDbId) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 调用task,获取同步数据的sql
@@ -1921,7 +2025,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     /**
-     * 创建模板填充数据所需的对象(以应用为单位)
+     * 创建 webService 接口文档模板填充数据所需的对象(以应用为单位)
      *
      * @return com.fisk.dataaccess.dto.api.doc.doc.ApiDocDTO
      * @description 创建模板填充数据所需的对象(以应用为单位)
@@ -1930,9 +2034,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params dtoList
      */
-    private ApiDocDTO createApiDocDTO(List<ApiConfigDTO> dtoList) {
+    private ApiDocDTO createApiDocDTOForWebService(List<ApiConfigDTO> dtoList) {
 
-        String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address).replace("{api_prd_address}", pdf_prd_address);
+        String jsonResult = DATAACCESS_WEBSERVICE_BASICINFO.replace("{api_uat_address}/{apiaddress}", webservice_ip_address + "/webservice/fidata-api?wsdl");
 
         ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
 
@@ -1941,8 +2045,38 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // API文档代码示例 java
         apiDocDTO.apiCodeExamplesJava = DATAACCESS_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", pdf_uat_address);
 
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" + "&nbsp;&nbsp; \"useraccount\": \"xxx\",\n" + "&nbsp;&nbsp; \"password\": \"xxx\"\n" + "}";
-        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format("{\n" + "&nbsp;&nbsp; \"code\": 0,\n" + "&nbsp;&nbsp; \"msg\": \"xxx\", --%s\n" + "&nbsp;&nbsp; \"data\": \"temporary token value\"\n" + "}", "2.4.9");
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples =
+                "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                        "(soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"http://service.webservice.dataaccess.fisk.com/\")\n" +
+                        "   (soapenv:Header/)\n" +
+                        "   (soapenv:Body)\n" +
+                        "      (ser:webServiceGetToken)\n" +
+                        "         (userDTO)\n" +
+                        "            (password)123456(/password)\n" +
+                        "            (useraccount)lsjtest(/useraccount)\n" +
+                        "         (/userDTO)\n" +
+                        "      (/ser:webServiceGetToken)\n" +
+                        "   (/soapenv:Body)\n" +
+                        "(/soapenv:Envelope)";
+
+        String apiResponseExamples =
+                "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                        "HTTP/1.1 200 \n" +
+                        "Content-Type: text/xml;charset=UTF-8\n" +
+                        "Content-Length: 466\n" +
+                        "Date: Fri, 13 Oct 2023 03:53:09 GMT\n" +
+                        "Keep-Alive: timeout=60\n" +
+                        "Connection: keep-alive\n" +
+                        "\n" +
+                        "(soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\")\n" +
+                        "(soap:Body)\n" +
+                        "(ns2:webServiceGetTokenResponse xmlns:ns2=\"http://service.webservice.dataaccess.fisk.com/\")\n" +
+                        "(token)Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIzMTBmZjViYTVlMWQ0MzEzYjM4MmViZWEzNjcxODY4MSIsInVzZXIiOiJ7XCJpZFwiOjIwMDAwNSxcInVzZXJBY2NvdW50XCI6XCJsc2p0ZXN0XCJ9IiwiaWQiOiIyMDAwMDUifQ.DODg1mGQuIEEM_nnra2Wpnncw0pyl_0TmO7dpNIYKpM(/token)\n" +
+                        "(/ns2:webServiceGetTokenResponse)\n" +
+                        "(/soap:Body)\n" +
+                        "(/soap:Envelope)";
+        apiDocDTO.apiBasicInfoDTOS.get(0).apiResponseExamples = String.format(apiResponseExamples, "2.4.9");
+
         BigDecimal catalogueIndex = new BigDecimal("2.4");
 
         // API基本信息对象
@@ -1955,7 +2089,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return apiDocDTO;
             }
 
-            // 设置目录
             // 设置目录
             ApiCatalogueDTO apiCatalogueDTO = new ApiCatalogueDTO();
             BigDecimal incrementIndex = new BigDecimal("0.1");
@@ -1972,30 +2105,52 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 设置API基础信息(2.5.-2.5.5)
             ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
             apiBasicInfoDTO.apiName = dto.apiName;
-            apiBasicInfoDTO.apiAddress = "/dataAccess/apiConfig/pushdata";
+            apiBasicInfoDTO.apiAddress = "/http://192.168.11.130:8089/webservice/fidata-api?wsdl        【webservice推送数据的方法名称：webServicePushData】";
             apiBasicInfoDTO.apiDesc = dto.apiDes;
-            apiBasicInfoDTO.apiRequestType = "POST";
-            apiBasicInfoDTO.apiContentType = "application/json";
-            apiBasicInfoDTO.apiHeader = "Authorization: Bearer {token}";
+            apiBasicInfoDTO.apiRequestType = "WebService(SOAP)";
+            apiBasicInfoDTO.apiContentType = "xml";
+            apiBasicInfoDTO.apiHeader = "无";
 
             // 设置API请求参数(2.5.7 参数body)
             List<ApiRequestDTO> apiRequestDtoS = new ArrayList<>();
             ApiRequestDTO apiId = new ApiRequestDTO();
-            apiId.parmName = "apiCode";
+            apiId.parmName = "webServiceCode";
             apiId.isRequired = "是";
             apiId.parmType = "String";
-            apiId.parmDesc = "api唯一标识: " + dto.id + " (真实数据)";
+            apiId.parmDesc = "webservice唯一标识: " + dto.id + " (真实数据)";
             apiId.trStyle = "background-color: #fff";
+            ApiRequestDTO token = new ApiRequestDTO();
+            token.parmName = "token";
+            token.isRequired = "是";
+            token.parmType = "String";
+            token.parmDesc = "webservice推送数据身份验证token";
+            token.trStyle = "background-color: #fff";
             ApiRequestDTO pushData = new ApiRequestDTO();
-            pushData.parmName = "pushData";
+            pushData.parmName = "data";
             pushData.isRequired = "是";
             pushData.parmType = "String";
-            pushData.parmDesc = "json序列化数据(参数格式及字段类型参考本小节【pushData json格式】及【json字段描述】)";
+            pushData.parmDesc = "json序列化数据(参数格式及字段类型参考本小节【webServicePushData json格式】及【json字段描述】";
             pushData.trStyle = "background-color: #f8f8f8";
             apiRequestDtoS.add(apiId);
             apiRequestDtoS.add(pushData);
+            apiRequestDtoS.add(token);
             apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
-            apiBasicInfoDTO.apiRequestExamples = String.format("{\n" + " &nbsp;&nbsp;\"apiCode\": \"xxx\",\n" + " &nbsp;&nbsp;\"pushData\": \"xxx\"\n" + "}", addIndex + ".7");
+            String apiRequestExamples =
+                    "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                            "(soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"http://service.webservice.dataaccess.fisk.com/\")\n" +
+                            "   (soapenv:Header/)\n" +
+                            "   (soapenv:Body)\n" +
+                            "      (ser:webServicePushData)\n" +
+                            "         (!--Optional:--)\n" +
+                            "         (dataDTO)\n" +
+                            "            (data){\"data\": [{\"count\": \"1\",\"address\": \"上海市闵行开发区\",\"name\": \"康饮供应链\"}]}(/data)\n" +
+                            "            (token)Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI5NjY1OTY2MTZkYjk0YTgzOGI4NzZiY2Q4Yzc2N2RkNSIsInVzZXIiOiJ7XCJpZFwiOjIwMDAwNSxcInVzZXJBY2NvdW50XCI6XCJsc2p0ZXN0XCJ9IiwiaWQiOiIyMDAwMDUifQ.OABgEKRkus4imC-YtvVL_QFSs6D4UVXEwdMaKFPqy5g(/token)\n" +
+                            "            (webServiceCode)2(/webServiceCode)\n" +
+                            "         (/dataDTO)\n" +
+                            "      (/ser:webServicePushData)\n" +
+                            "   (/soapenv:Body)\n" +
+                            "(/soapenv:Envelope)";
+            apiBasicInfoDTO.apiRequestExamples = String.format(apiRequestExamples, addIndex + ".7");
 
             // 参数(body)表格(2.5.9返回参数说明)
             List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
@@ -2010,14 +2165,21 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             ApiResponseDTO data = new ApiResponseDTO();
             data.parmName = "data";
             data.parmType = "String";
-            data.parmDesc = "返回的数据";
+            data.parmDesc = "返回的结果";
             apiResponseDtoS.add(code);
             apiResponseDtoS.add(msg);
             apiResponseDtoS.add(data);
             apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
 
             //设置API返回参数,即返回示例(3)
+//            String apiResponseExamples1 = "<xs:complexType name=\"webServicePushDataResponse\">\n" +
+//                    "<xs:sequence>\n" +
+//                    "<xs:element minOccurs=\"0\" name=\"result\" type=\"xs:string\"/>\n" +
+//                    "</xs:sequence>\n" +
+//                    "</xs:complexType>";
+//            apiBasicInfoDTO.apiResponseExamples = String.format(apiResponseExamples1, addIndex + ".9");
             apiBasicInfoDTO.apiResponseExamples = String.format("{\n" + " &nbsp;&nbsp;\"code\": 0,\n" + " &nbsp;&nbsp;\"msg\": \"xxx\",\n" + " &nbsp;&nbsp;\"data\": null\n" + "}", addIndex + ".9");
+
 
             // pushData json格式
             if (StringUtils.isNotBlank(dto.pushDataJson)) {
@@ -2080,14 +2242,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     /**
-     * 创建 webService 接口文档模板填充数据所需的对象(以应用为单位)
+     * 创建模板填充数据所需的对象(以应用为单位)
      *
-     * @description 创建模板填充数据所需的对象(以应用为单位)
-     * @author lsj
      * @param dtoList
      * @return ApiDocDTO
+     * @description 创建模板填充数据所需的对象(以应用为单位)
+     * @author lsj
      */
-    private ApiDocDTO createApiDocDTOForWebService(List<ApiConfigDTO> dtoList) {
+    private ApiDocDTO createApiDocDTO(List<ApiConfigDTO> dtoList) {
 
         String jsonResult = DATAACCESS_APIBASICINFO.replace("{api_uat_address}", pdf_uat_address).replace("{api_prd_address}", pdf_prd_address);
 

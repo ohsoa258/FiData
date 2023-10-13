@@ -1,8 +1,6 @@
 package com.fisk.task.client;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
@@ -61,6 +59,7 @@ public interface PublishTaskClient {
 
     @PostMapping("/publishTask/publishBuildDataServiceApi")
     ResultEntity<Object> publishBuildDataServiceApi(@RequestBody BuildTableApiServiceDTO data);
+
     /**
      * 元数据实例&DB构建
      *
@@ -354,11 +353,13 @@ public interface PublishTaskClient {
 
     /**
      * 根据taskTraceId获取任务日志
+     *
      * @param taskTraceId
      * @return
      */
     @GetMapping("/dispatchLog/getPipelTaskLogVo")
     ResultEntity<List<PipelTaskLogVO>> getPipelTaskLogVo(@RequestParam String taskTraceId);
+
     /**
      * 阶段日志
      *
@@ -457,6 +458,7 @@ public interface PublishTaskClient {
      */
     @PostMapping("/publishTask/publishBuildDeleteDataServiceApi")
     ResultEntity<Object> publishBuildDeleteDataServiceApi(@RequestBody BuildDeleteTableApiServiceDTO data);
+
     /**
      * task.build.task.over
      *
@@ -468,6 +470,7 @@ public interface PublishTaskClient {
 
     /**
      * 数据库同步服务，手动同步按钮
+     *
      * @param dto
      * @return
      */
@@ -476,6 +479,7 @@ public interface PublishTaskClient {
 
     /**
      * 数据库同步服务，启用或禁用
+     *
      * @param tableServiceDTO
      * @return
      */
@@ -484,11 +488,13 @@ public interface PublishTaskClient {
 
     /**
      * 数据分发api同步服务，启用或禁用
+     *
      * @param tableServiceDTO
      * @return
      */
     @PostMapping("/nifi/apiEnableOrDisable")
     ResultEntity<TableApiServiceDTO> apiEnableOrDisable(@RequestBody TableApiServiceDTO tableServiceDTO);
+
     /**
      * 创建任务批量审批
      *
@@ -500,6 +506,7 @@ public interface PublishTaskClient {
 
     /**
      * 执行一次管道
+     *
      * @param id
      * @return
      */
@@ -523,6 +530,7 @@ public interface PublishTaskClient {
     @ApiOperation("数据接入--首页展示信息--当日接入数据的成功次数和失败次数")
     @GetMapping("/pipeline/accessDataSuccessAndFailCount")
     ResultEntity<AccessDataSuccessAndFailCountDTO> accessDataSuccessAndFailCount();
+
     @PostMapping("/publishTask/savePipelTaskLog")
     ResultEntity<Object> savePipelTaskLog(@RequestBody TableApiTaskDTO data);
 

@@ -1031,4 +1031,198 @@ public class ApiConstants {
             "    }\n" +
             "}\n";
 
+    public static final String DATAACCESS_WEBSERVICE_BASICINFO = "{\n" +
+            "    \"title\":\"FiData一体化数据赋能平台 webService(SOAP协议)接口文档\",\n" +
+            "    \"docVersion\":\"文档版本 V1.0\",\n" +
+            "    \"isuCompany\":\"\",\n" +
+            "    \"isuDate\":\"发布日期：20231012\",\n" +
+            "    \"footerName\":\"webservice接口文档\",\n" +
+            "    \"docPurpose\":\"本文用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
+            "    \"readers\":\"预期读者包括需要推送数据到FiData一体化数据赋能平台的第三方平台。\",\n" +
+            "    \"standard\":\"接口采用SOAP协议，数据传输格式采用非加密的xml格式。文本编码格式为UTF-8；\",\n" +
+            "    \"standard_query\":\" 暂无\",\n" +
+            "    \"authStandard\":\"第三方系统在访问平台WEBSERVICE时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
+            "    \"uatAddress\":\"{api_uat_address}/{apiaddress}\",\n" +
+//            "    \"prdAddress\":\"生产环境：{api_prd_address}(预留地址,暂不使用)\",\n" +
+            "    \"apiCatalogueDTOS\":[\n" +
+            "        {\n" +
+            "            \"grade\":1,\n" +
+            "            \"catalogueIndex\":\"\",\n" +
+            "            \"catalogueName\":\"目录\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":2,\n" +
+            "            \"catalogueIndex\":\"一.\",\n" +
+            "            \"catalogueName\":\"文档概述\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"1.1.\",\n" +
+            "            \"catalogueName\":\"文档目的\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"1.2.\",\n" +
+            "            \"catalogueName\":\"读者对象\"\n" +
+            "        },\n" +
+//            "        {\n" +
+//            "            \"grade\":3,\n" +
+//            "            \"catalogueIndex\":\"1.3.\",\n" +
+//            "            \"catalogueName\":\"相关联系人\"\n" +
+//            "        },\n" +
+            "        {\n" +
+            "            \"grade\":2,\n" +
+            "            \"catalogueIndex\":\"二.\",\n" +
+            "            \"catalogueName\":\"WebService 接口\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"2.1.\",\n" +
+            "            \"catalogueName\":\"接口对接规范\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"2.2.\",\n" +
+            "            \"catalogueName\":\"登录授权\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"2.3.\",\n" +
+            "            \"catalogueName\":\"接口地址\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"2.4.\",\n" +
+            "            \"catalogueName\":\"获取Token接口\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":2,\n" +
+            "            \"catalogueIndex\":\"三.\",\n" +
+            "            \"catalogueName\":\"C#代码调用示例\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":2,\n" +
+            "            \"catalogueIndex\":\"四.\",\n" +
+            "            \"catalogueName\":\"java代码调用示例\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"grade\":2,\n" +
+            "            \"catalogueIndex\":\"五.\",\n" +
+            "            \"catalogueName\":\"WebService返回代码示例\"\n" +
+            "        }\n" +
+            "    ],\n" +
+            "    \"apiBasicInfoDTOS\":[\n" +
+            "        {\n" +
+            "            \"apiName\":\"获取Token接口\",\n" +
+            "            \"apiNameCatalogue\":\"2.4.\",\n" +
+            "            \"apiAddress\":\"/http://192.168.11.130:8089/webservice/fidata-api?wsdl        【webservice获取token的方法名称：webServiceGetToken】\",\n" +
+            "            \"apiAddressCatalogue\":\"2.4.1.\",\n" +
+            "            \"apiDesc\":\"获取身份凭证，后续请求中将此凭证作为身份标识传给业务接口，业务接口将验证身份凭证是否合法，合法则返回业务数据。\",\n" +
+            "            \"apiDescCatalogue\":\"2.4.2.\",\n" +
+            "            \"apiRequestType\":\"WebService(SOAP)\",\n" +
+            "            \"apiRequestTypeCatalogue\":\"2.4.3.\",\n" +
+            "            \"apiContentType\":\"xml\",\n" +
+            "            \"apiContentTypeCatalogue\":\"2.4.4\",\n" +
+            "            \"apiHeader\":\"无\",\n" +
+            "            \"apiHeaderCatalogue\":\"2.4.5.\",\n" +
+            "            \"apiRequestExamplesCatalogue\":\"2.4.6.\",\n" +
+            "            \"apiRequestDTOS\":[\n" +
+            "                {\n" +
+            "                    \"parmName\":\"useraccount\",\n" +
+            "                    \"isRequired\":\"是\",\n" +
+            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmDesc\":\"应用账号\"\n" +
+            "                },\n" +
+            "                {\n" +
+            "                    \"parmName\":\"password\",\n" +
+            "                    \"isRequired\":\"是\",\n" +
+            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmDesc\":\"应用密码\"\n" +
+            "                }\n" +
+            "            ],\n" +
+            "            \"apiRequestCatalogue\":\"2.4.7.\",\n" +
+            "            \"apiResponseExamples\":\"\",\n" +
+            "            \"apiResponseExamplesCatalogue\":\"2.4.8.\",\n" +
+            "            \"apiResponseDTOS\":[\n" +
+            "                {\n" +
+            "                    \"parmName\":\"token\",\n" +
+            "                    \"parmType\":\"String\",\n" +
+            "                    \"parmDesc\":\"用于验证的token\"\n" +
+            "                }\n" +
+            "            ],\n" +
+            "            \"apiResponseCatalogue\":\"2.4.9.\"\n" +
+            "        }\n" +
+            "    ],\n" +
+//            "    \"apiContactsDTOS\":[\n" +
+//            "        {\n" +
+//            "            \"category\":\"接口负责人\",\n" +
+//            "            \"company\":\"技术部\",\n" +
+//            "            \"fullName\":\"徐阳辉\",\n" +
+//            "            \"mailbox\":\"yhxu@fisksoft.com\",\n" +
+//            "            \"trStyle\":\"background-color: #fff\"\n" +
+//            "        },\n" +
+//            "        {\n" +
+//            "            \"category\":\"接口负责人\",\n" +
+//            "            \"company\":\"技术部\",\n" +
+//            "            \"fullName\":\"赵飞鸿\",\n" +
+//            "            \"mailbox\":\"feihongz@fisksoft.com.cn\",\n" +
+//            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+//            "        }\n" +
+//            "    ],\n" +
+            "    \"apiVersionDTOS\":[\n" +
+            "        {\n" +
+            "            \"version\":\"0.1\",\n" +
+            "            \"startDate\":\"2023/10/12\",\n" +
+            "            \"endDate\":\"2023/10/12\",\n" +
+            "            \"modifier\":\"TenLi\",\n" +
+            "            \"explain\":\"文档创建、编写\",\n" +
+            "            \"state\":\"初稿\"\n" +
+            "        }\n" +
+            "    ],\n" +
+            "    \"apiResponseCodeDTOS\":[\n" +
+            "        {\n" +
+            "            \"code\":\"0\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"推送数据成功\",\n" +
+            "            \"trStyle\":\"background-color: #fff\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"500\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"API服务器异常\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"1017\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"获取token失败\",\n" +
+            "            \"trStyle\":\"background-color: #fff\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5010\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"API下不存在表\",\n" +
+            "            \"trStyle\":\"background-color: #fff\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5023\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"推送数据失败\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5027\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"API唯一标识未发送,请检查请求参数\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"code\":\"5028\",\n" +
+            "            \"type\":\"int\",\n" +
+            "            \"desc\":\"当前API所属应用已删除\",\n" +
+            "            \"trStyle\":\"background-color: #f8f8f8\"\n" +
+            "        }\n" +
+            "    ]\n" +
+            "}";
+
 }

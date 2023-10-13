@@ -48,7 +48,7 @@ public class WebServiceTestController {
             // 创建动态客户端
             JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
             // webService的动态客户端的地址 http://localhost:8089/webservice/fidata-api?wsdl
-            Client client = dcf.createClient("http://" + webIp + ":8089/webservice/fidata-api?wsdl");
+            Client client = dcf.createClient("http://" + webIp + "/webservice/fidata-api?wsdl");
             // 设置超时时间
             HTTPConduit conduit = (HTTPConduit) client.getConduit();
             HTTPClientPolicy policy = new HTTPClientPolicy();
@@ -89,7 +89,7 @@ public class WebServiceTestController {
             // 创建动态客户端
             JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
             // webService的动态客户端的地址http://localhost:8089/webservice/fidata-api?wsdl
-            Client client = dcf.createClient("http://" + webIp + ":8089/webservice/fidata-api?wsdl");
+            Client client = dcf.createClient("http://" + webIp + "/webservice/fidata-api?wsdl");
             // 设置超时时间
             HTTPConduit conduit = (HTTPConduit) client.getConduit();
             HTTPClientPolicy policy = new HTTPClientPolicy();
