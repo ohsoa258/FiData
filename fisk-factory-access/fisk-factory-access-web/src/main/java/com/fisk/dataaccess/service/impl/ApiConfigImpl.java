@@ -2041,12 +2041,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ApiDocDTO apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
 
         // API文档代码示例 c#
-        apiDocDTO.apiCodeExamplesNet = DATAACCESS_APICODEEXAMPLES_NET.replace("{api_prd_address}", pdf_uat_address);
+        apiDocDTO.apiCodeExamplesNet = "Not supported for now";
         // API文档代码示例 java
-        apiDocDTO.apiCodeExamplesJava = DATAACCESS_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", pdf_uat_address);
+        apiDocDTO.apiCodeExamplesJava = DATAACCESS_WEBSERVICECODEEXAMPLES_JAVA.replace("{web_service_address}", webservice_ip_address + "/webservice/fidata-api?wsdl");
 
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples =
                 "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                        "\n" +
+                        "--------------------\n" +
                         "(soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"http://service.webservice.dataaccess.fisk.com/\")\n" +
                         "   (soapenv:Header/)\n" +
                         "   (soapenv:Body)\n" +
@@ -2061,6 +2063,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         String apiResponseExamples =
                 "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                        "\n" +
+                        "--------------------\n" +
                         "HTTP/1.1 200 \n" +
                         "Content-Type: text/xml;charset=UTF-8\n" +
                         "Content-Length: 466\n" +
@@ -2137,6 +2141,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiBasicInfoDTO.apiRequestDTOS = apiRequestDtoS;
             String apiRequestExamples =
                     "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                            "\n" +
+                            "--------------------\n" +
                             "(soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:ser=\"http://service.webservice.dataaccess.fisk.com/\")\n" +
                             "   (soapenv:Header/)\n" +
                             "   (soapenv:Body)\n" +
@@ -2154,32 +2160,33 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // 参数(body)表格(2.5.9返回参数说明)
             List<ApiResponseDTO> apiResponseDtoS = new ArrayList<>();
-            ApiResponseDTO code = new ApiResponseDTO();
-            code.parmName = "code";
-            code.parmType = "int";
-            code.parmDesc = "调用结果状态";
             ApiResponseDTO msg = new ApiResponseDTO();
-            msg.parmName = "msg";
+            msg.parmName = "result";
             msg.parmType = "String";
             msg.parmDesc = "调用结果描述";
-            ApiResponseDTO data = new ApiResponseDTO();
-            data.parmName = "data";
-            data.parmType = "String";
-            data.parmDesc = "返回的结果";
-            apiResponseDtoS.add(code);
             apiResponseDtoS.add(msg);
-            apiResponseDtoS.add(data);
             apiBasicInfoDTO.apiResponseDTOS = apiResponseDtoS;
 
             //设置API返回参数,即返回示例(3)
-//            String apiResponseExamples1 = "<xs:complexType name=\"webServicePushDataResponse\">\n" +
-//                    "<xs:sequence>\n" +
-//                    "<xs:element minOccurs=\"0\" name=\"result\" type=\"xs:string\"/>\n" +
-//                    "</xs:sequence>\n" +
-//                    "</xs:complexType>";
-//            apiBasicInfoDTO.apiResponseExamples = String.format(apiResponseExamples1, addIndex + ".9");
-            apiBasicInfoDTO.apiResponseExamples = String.format("{\n" + " &nbsp;&nbsp;\"code\": 0,\n" + " &nbsp;&nbsp;\"msg\": \"xxx\",\n" + " &nbsp;&nbsp;\"data\": null\n" + "}", addIndex + ".9");
-
+            String apiResponseExamples1 =
+                    "Note: For normal PDF generation, angle brackets are replaced with parentheses in the example below. \n" +
+                            "\n" +
+                            "--------------------\n" +
+                            "HTTP/1.1 200 \n" +
+                            "Content-Type: text/xml;charset=UTF-8\n" +
+                            "Content-Length: 406\n" +
+                            "Date: Fri, 13 Oct 2023 03:10:17 GMT\n" +
+                            "Keep-Alive: timeout=60\n" +
+                            "Connection: keep-alive\n" +
+                            "\n" +
+                            "(soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\")/n" +
+                            "(soap:Body)\n" +
+                            "(ns2:webServicePushDataResponse xmlns:ns2=\"http://service.webservice.dataaccess.fisk.com/\")\n" +
+                            "(result)Success: Data pushed to [table_name] Success: Successful, the number of messages pushed is: 999; Data synchronization to [ODS]: Successful. --[The data of this synchronization is official data](/result)\n" +
+                            "(/ns2:webServicePushDataResponse)\n" +
+                            "(/soap:Body)\n" +
+                            "(/soap:Envelope)";
+            apiBasicInfoDTO.apiResponseExamples = String.format(apiResponseExamples1, addIndex + ".9");
 
             // pushData json格式
             if (StringUtils.isNotBlank(dto.pushDataJson)) {

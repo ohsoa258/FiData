@@ -930,8 +930,8 @@ public class ApiConstants {
             "        // set request parameters\n" +
             "        GetDataRequest getDataRequest = new GetDataRequest();\n" +
             "        getDataRequest.apiCode = \"94\";\n" +
-            "        getDataRequest.pushData = "  +
-            "       \"{\\\"data\\\": []\\n}\\n\";\n"+
+            "        getDataRequest.pushData = " +
+            "       \"{\\\"data\\\": []\\n}\\n\";\n" +
             "        String getDataParams = JSONObject.toJSONString(getDataRequest);\n" +
             "        // send request\n" +
             "        GetDataResponse getDataResponse = sendPostWebRequest(GetDataResponse.class,\n" +
@@ -1224,5 +1224,187 @@ public class ApiConstants {
             "        }\n" +
             "    ]\n" +
             "}";
+
+    public static final String DATAACCESS_WEBSERVICECODEEXAMPLES_JAVA = "\n" +
+            "package com.fisk.dataaccess.test;\n" +
+            "\n" +
+            "import com.alibaba.fastjson.JSON;\n" +
+            "import com.fisk.dataaccess.webservice.service.WebServiceReceiveDataDTO;\n" +
+            "import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;\n" +
+            "import lombok.extern.slf4j.Slf4j;\n" +
+            "import org.apache.cxf.endpoint.Client;\n" +
+            "import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;\n" +
+            "import org.apache.cxf.transport.http.HTTPConduit;\n" +
+            "import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;\n" +
+            "\n" +
+            "@Slf4j\n" +
+            "public class WebServiceDemo {\n" +
+            "\n" +
+            "    /**\n" +
+            "     * FiData java code example\n" +
+            "     * Third-party companies call FiData webService to push data interface by Java code\n" +
+            "     *\n" +
+            "     * @Date 2023/10/13\n" +
+            "     * @Version 1.0\n" +
+            "     */\n" +
+            "    public static void main(String[] args) {\n" +
+            "        Client client = null;\n" +
+            "        try {\n" +
+            "            JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();\n" +
+            "            client = dcf.createClient(\"{web_service_address}\");\n" +
+            "\n" +
+            "            // config HTTPConduit\n" +
+            "            HTTPConduit conduit = (HTTPConduit) client.getConduit();\n" +
+            "            HTTPClientPolicy policy = new HTTPClientPolicy();\n" +
+            "            policy.setAllowChunking(false);\n" +
+            "            // ConnectionTimeout 60 seconds\n" +
+            "            policy.setConnectionTimeout(60000);\n" +
+            "            // ReceiveTimeout 60 seconds\n" +
+            "            policy.setReceiveTimeout(60000);\n" +
+            "            conduit.setClient(policy);\n" +
+            "\n" +
+            "            // webServiceGetToken - variable\n" +
+            "            WebServiceUserDTO webServiceUserDTO = new WebServiceUserDTO();\n" +
+            "            webServiceUserDTO.setPassword(\"pwd\");\n" +
+            "            webServiceUserDTO.setUseraccount(\"username\");\n" +
+            "            // invoke methods : webServiceGetToken\n" +
+            "            Object[] objects = client.invoke(\"webServiceGetToken\", webServiceUserDTO);\n" +
+            "            // webServiceGetToken receive data : token\n" +
+            "            String token = objects[0].toString();\n" +
+            "\n" +
+            "            // webServicePushData - variable\n" +
+            "            WebServiceReceiveDataDTO webServiceReceiveDataDTO = new WebServiceReceiveDataDTO();\n" +
+            "            // WebServiceCode\n" +
+            "            webServiceReceiveDataDTO.setWebServiceCode(123L);\n" +
+            "            // your Json data\n" +
+            "            webServiceReceiveDataDTO.setData(\"your Json data\");\n" +
+            "            // token\n" +
+            "            webServiceReceiveDataDTO.setToken(token);\n" +
+            "            // Start calling method - invoke(\"method name\", parameter 1, parameter 2, parameter 3....);\n" +
+            "            Object[] result = client.invoke(\"webServicePushData\", webServiceReceiveDataDTO);\n" +
+            "            // webServicePushData receive data : result\n" +
+            "            String msg = JSON.toJSONString(result);\n" +
+            "            // print result or do sth else\n" +
+            "            System.out.println(msg);\n" +
+            "        } catch (Exception e) {\n" +
+            "            log.error(\"webService error--\" + e);\n" +
+            "        }finally {\n" +
+            "            if (client != null) {\n" +
+            "                try {\n" +
+            "                    client.close();\n" +
+            "                } catch (Exception e) {\n" +
+            "                    log.error(\"webService error--\" + e);\n" +
+            "                }\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "}\n" +
+            "\n" +
+            "package com.fisk.dataaccess.webservice.service;\n" +
+            "\n" +
+            "import io.swagger.annotations.ApiModelProperty;\n" +
+            "import lombok.Data;\n" +
+            "\n" +
+            "import javax.xml.bind.annotation.XmlElement;\n" +
+            "import javax.xml.bind.annotation.XmlRootElement;\n" +
+            "\n" +
+            "/**\n" +
+            " * @author TenLi\n" +
+            " * @date 2023/10/9\n" +
+            " */\n" +
+            "@Data\n" +
+            "public class WebServiceUserDTO {\n" +
+            "    /**\n" +
+            "     * 账号\n" +
+            "     */\n" +
+            "    @ApiModelProperty(value = \"账号\", required = true)\n" +
+            "    private String useraccount;\n" +
+            "\n" +
+            "    /**\n" +
+            "     * 密码\n" +
+            "     */\n" +
+            "    @ApiModelProperty(value = \"密码\", required = true)\n" +
+            "    private String password;\n" +
+            "\n" +
+            "    @XmlElement(name = \"useraccount\", nillable = false,required = true)\n" +
+            "    public String getUseraccount() {\n" +
+            "        return useraccount;\n" +
+            "    }\n" +
+            "\n" +
+            "    public void setUseraccount(String useraccount) {\n" +
+            "        this.useraccount = useraccount;\n" +
+            "    }\n" +
+            "\n" +
+            "    @XmlElement(name = \"password\", nillable = false,required = true)\n" +
+            "    public String getPassword() {\n" +
+            "        return password;\n" +
+            "    }\n" +
+            "\n" +
+            "    public void setPassword(String password) {\n" +
+            "        this.password = password;\n" +
+            "    }\n" +
+            "}" +
+            "package com.fisk.dataaccess.webservice.service;\n" +
+            "\n" +
+            "import io.swagger.annotations.ApiModelProperty;\n" +
+            "import lombok.Data;\n" +
+            "\n" +
+            "import javax.xml.bind.annotation.XmlElement;\n" +
+            "import java.io.Serializable;\n" +
+            "\n" +
+            "/**\n" +
+            " * @author TenLi\n" +
+            " * @date 2023/10/9\n" +
+            " */\n" +
+            "@Data\n" +
+            "public class WebServiceReceiveDataDTO implements Serializable {\n" +
+            "\n" +
+            "    /**\n" +
+            "     * webServiceCode\n" +
+            "     */\n" +
+            "    @ApiModelProperty(value = \"webServiceCode\", required = true)\n" +
+            "    private Long webServiceCode;\n" +
+            "\n" +
+            "    /**\n" +
+            "     * webService推送的数据\n" +
+            "     */\n" +
+            "    @ApiModelProperty(value = \"webService推送的数据\", required = true)\n" +
+            "    private String data;\n" +
+            "\n" +
+            "\n" +
+            "    /**\n" +
+            "     * webService携带的token\n" +
+            "     */\n" +
+            "    @ApiModelProperty(value = \"webService携带的token\", required = true)\n" +
+            "    private String token;\n" +
+            "\n" +
+            "    @XmlElement(name = \"webServiceCode\", nillable = false, required = true)\n" +
+            "    public Long getWebServiceCode() {\n" +
+            "        return webServiceCode;\n" +
+            "    }\n" +
+            "\n" +
+            "    public void setWebServiceCode(Long webServiceCode) {\n" +
+            "        this.webServiceCode = webServiceCode;\n" +
+            "    }\n" +
+            "\n" +
+            "    @XmlElement(name = \"data\", nillable = false, required = true)\n" +
+            "    public String getData() {\n" +
+            "        return data;\n" +
+            "    }\n" +
+            "\n" +
+            "    public void setData(String data) {\n" +
+            "        this.data = data;\n" +
+            "    }\n" +
+            "\n" +
+            "    @XmlElement(name = \"token\", nillable = false, required = true)\n" +
+            "    public String getToken() {\n" +
+            "        return token;\n" +
+            "    }\n" +
+            "\n" +
+            "    public void setToken(String token) {\n" +
+            "        this.token = token;\n" +
+            "    }\n" +
+            "}\n";
 
 }

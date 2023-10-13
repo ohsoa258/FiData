@@ -1,6 +1,5 @@
 package com.fisk.dataaccess.webservice;
 
-import com.fisk.dataaccess.webservice.service.UserDTO;
 import com.fisk.dataaccess.webservice.service.WebServiceReceiveDataDTO;
 import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
 
@@ -10,14 +9,6 @@ import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
  * 该接口用于提供webService客户端方式可调用的方法--实现类的父接口
  */
 public interface IWebServiceServer {
-
-    /**
-     * 简单测试
-     *
-     * @param str
-     * @return
-     */
-    UserDTO getUser(Long str);
 
     /**
      * webService推送数据

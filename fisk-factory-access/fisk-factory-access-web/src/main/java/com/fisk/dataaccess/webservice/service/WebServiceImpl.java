@@ -39,23 +39,6 @@ public class WebServiceImpl implements IWebServiceServer {
     private AppDataSourceImpl appDataSourceImpl;
 
     /**
-     * 简单测试
-     *
-     * @param id
-     * @return
-     */
-    @Override
-    @WebMethod
-    public UserDTO getUser(@WebParam(name = "id") Long id) {
-        UserDTO user = new UserDTO();
-        user.setId(id);
-        user.setAddress("上海市浦东新区");
-        user.setAge(25);
-        user.setName("gongj");
-        return user;
-    }
-
-    /**
      * webService推送数据
      *
      * @param dataDTO
