@@ -33,7 +33,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author cfk
@@ -120,7 +119,7 @@ public class BuildExecScriptListener implements IExecScriptListener {
             throw new FkException(ResultEnum.ERROR);
         } finally {
             if (acke != null) {
-                execScriptToDispatch(exec);
+//                execScriptToDispatch(exec);
                 acke.acknowledge();
             }
         }
@@ -128,30 +127,58 @@ public class BuildExecScriptListener implements IExecScriptListener {
 
     /**
      * 调用管道下一级task
-     *
-     * @param dto dto
-     * @author cfk
-     * @date 2022/6/22 11:31
+     * @param data
+     * @param acke
+     * @return
      */
-    public void execScriptToDispatch(ExecScriptDTO dto) {
-        KafkaReceiveDTO kafkaReceiveDTO = KafkaReceiveDTO.builder().build();
-        kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
-        kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
-        kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
-        kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
-        kafkaReceiveDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
-        NifiGetPortHierarchyDTO nifiGetPortHierarchy = new NifiGetPortHierarchyDTO();
-        nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
-        ResultEntity<TaskHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
-        if (nifiPortHierarchy.code == ResultEnum.SUCCESS.getCode()) {
-            TaskHierarchyDTO data = nifiPortHierarchy.data;
-            kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + data.pipelineId + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + dto.taskId;
-        } else {
-            log.error("查找执行脚本任务失败2" + nifiPortHierarchy.msg);
+    @Override
+    public ResultEnum execScriptToDispatch(String data,Acknowledgment acke) {
+        ExecScriptDTO dto = new ExecScriptDTO();
+        try {
+            log.info("执行调度脚本参数:{}", data);
+            data = "[" + data + "]";
+            List<ExecScriptDTO> execScripts = JSON.parseArray(data, ExecScriptDTO.class);
+            for (ExecScriptDTO exec : execScripts) {
+                dto = exec;
+                KafkaReceiveDTO kafkaReceiveDTO = KafkaReceiveDTO.builder().build();
+                kafkaReceiveDTO.pipelTraceId = dto.pipelTraceId;
+                kafkaReceiveDTO.pipelTaskTraceId = dto.pipelTaskTraceId;
+                kafkaReceiveDTO.pipelStageTraceId = dto.pipelStageTraceId;
+                kafkaReceiveDTO.pipelJobTraceId = dto.pipelJobTraceId;
+                kafkaReceiveDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+                NifiGetPortHierarchyDTO nifiGetPortHierarchy = new NifiGetPortHierarchyDTO();
+                nifiGetPortHierarchy.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
+                ResultEntity<TaskHierarchyDTO> nifiPortHierarchy = dataFactoryClient.getNifiPortHierarchy(nifiGetPortHierarchy);
+                if (nifiPortHierarchy.code == ResultEnum.SUCCESS.getCode()) {
+                    TaskHierarchyDTO taskData = nifiPortHierarchy.data;
+                    kafkaReceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + taskData.pipelineId + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + dto.taskId;
+                } else {
+                    log.error("查找执行脚本任务失败2" + nifiPortHierarchy.msg);
+                }
+                kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
+                kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
+                log.info("执行脚本任务完成,现在去往任务发布中心" + JSON.toJSONString(kafkaReceiveDTO));
+                kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceiveDTO));
+            }
+            return ResultEnum.SUCCESS;
+        }catch (Exception e){
+            DispatchExceptionHandlingDTO exceptionDto = new DispatchExceptionHandlingDTO();
+            exceptionDto.pipelTraceId = dto.pipelTraceId;
+            exceptionDto.pipelTaskTraceId = dto.pipelTaskTraceId;
+            exceptionDto.pipelJobTraceId = dto.pipelJobTraceId;
+            exceptionDto.pipelStageTraceId = dto.pipelStageTraceId;
+            exceptionDto.comment = "调用管道下一级task报错";
+            try {
+                iPipelJobLog.exceptionHandlingLog(exceptionDto);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            log.error("调用管道下一级task报错" + StackTraceHelper.getStackTraceInfo(e));
+            throw new FkException(ResultEnum.ERROR);
+        }finally {
+            if (acke != null) {
+                acke.acknowledge();
+            }
         }
-        kafkaReceiveDTO.nifiCustomWorkflowDetailId = Long.valueOf(dto.taskId);
-        kafkaReceiveDTO.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
-        log.info("执行脚本任务完成,现在去往任务发布中心" + JSON.toJSONString(kafkaReceiveDTO));
-        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW, JSON.toJSONString(kafkaReceiveDTO));
     }
 }

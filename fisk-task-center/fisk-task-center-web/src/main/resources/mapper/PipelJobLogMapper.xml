@@ -20,7 +20,7 @@
                t1.job_trace_id,
                t1.pipel_id,
                t3.id as componentId,
-               t3.component_type as componentName,
+               t3.component_name as componentName,
                t1.create_time as start_time,
                t2.create_time as end_time,
                CASE

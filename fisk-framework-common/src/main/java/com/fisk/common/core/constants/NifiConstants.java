@@ -68,6 +68,7 @@ public class NifiConstants {
         public static final String INCREMENTAL_OBJECTIVESCORE_END="incremental_objectivescore_end";
         public static final String INCREMENTAL_OBJECTIVESCORE_START="incremental_objectivescore_start";
         public static final String TOPIC_TYPE="topicType";
+        public static final String TASK_ID="taskId";
 
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;

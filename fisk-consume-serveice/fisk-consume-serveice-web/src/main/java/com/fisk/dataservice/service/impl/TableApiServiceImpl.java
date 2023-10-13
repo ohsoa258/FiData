@@ -24,6 +24,8 @@ import com.fisk.dataservice.enums.AuthenticationTypeEnum;
 import com.fisk.dataservice.enums.InterfaceTypeEnum;
 import com.fisk.dataservice.handler.restapi.RestApiHandler;
 import com.fisk.dataservice.handler.restapi.factory.InterfaceRestApiFactory;
+import com.fisk.dataservice.handler.webservice.WebServiceHandler;
+import com.fisk.dataservice.handler.webservice.factory.InterfaceWebServiceFactory;
 import com.fisk.dataservice.map.TableApiParameterMap;
 import com.fisk.dataservice.map.TableApiServiceMap;
 import com.fisk.dataservice.mapper.TableApiServiceMapper;
@@ -279,7 +281,8 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             RestApiHandler handler = InterfaceRestApiFactory.getRestApiHandlerByType(AuthenticationTypeEnum.getEnum(tableAppPO.authenticationType));
             apiResultDTO = handler.sendApi(dto.apiId);
         } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
-
+            WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
+            apiResultDTO = webServiceHandler.sendApi(dto.apiId);
         }
         //记日志
         TableApiTaskDTO tableApiTaskDTO = new TableApiTaskDTO();
@@ -353,8 +356,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             tableServiceEmailDTO.body = hashMap;
             tableService.tableServiceSendEmails(tableServiceEmailDTO);
         } catch (Exception e) {
-            log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
-            throw new FkException(ResultEnum.ERROR,e.getMessage());
+            log.error("发邮件出错,但是不影响主流程。异常如下：" + e.getMessage());
         }
     }
 

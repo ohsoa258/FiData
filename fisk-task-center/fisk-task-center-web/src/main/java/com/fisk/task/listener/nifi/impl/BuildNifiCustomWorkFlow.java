@@ -3,6 +3,7 @@ package com.fisk.task.listener.nifi.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.MqConstants;
@@ -22,6 +23,7 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.tasknifi.NifiPortsDTO;
 import com.fisk.datafactory.dto.tasknifi.PortRequestParamDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.controller.PublishTaskController;
 import com.fisk.task.dto.nifi.FunnelDTO;
 import com.fisk.task.dto.nifi.*;
@@ -149,7 +151,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
 
     }
 
-    private void deleteCustomWorkNifiFlow(NifiCustomWorkListDTO nifiCustomWorkListDTO, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) {
+    private void deleteCustomWorkNifiFlow(NifiCustomWorkListDTO nifiCustomWorkListDTO, NifiCustomWorkflowDTO nifiCustomWorkflowDTO) throws ApiException {
         //tb_app_nifi_setting. tb_table_nifi_setting. tb_nifi_scheduling_component. tb_pipeline_configuration
         //重复发布需要处理这四张表里的老数据
         //暂停原流程
@@ -169,6 +171,15 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
                 scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
                 NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
+                Integer activeThreadCount;
+                do {
+                    Thread.sleep(3000);
+                    ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
+                    ProcessGroupStatusDTO status = processGroup.getStatus();
+                    //activeThreadCount 组内活跃线程数量，为0代表没有正在工作的组件
+                    activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
+                    log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
+                } while (activeThreadCount != 0 );
                 //清空队列
                 ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
                 if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
@@ -584,6 +595,7 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                                 topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
                                 tableTopic.updateTableTopicByComponentId(topicDTO);
                                 commonTask = true;
+                                createNifiScriptToDispatch(groupStructure,nifiNode);
                                 break;
                             //SFTP文件复制
                             case SFTPFILECOPYTASK:
@@ -722,6 +734,8 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                         topicDTO.topicName = TopicName + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + nifiNode.workflowDetailId;
                         topicDTO.tableType = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
                         tableTopic.updateTableTopicByComponentId(topicDTO);
+
+                        createNifiScriptToDispatch(groupStructure,nifiNode);
                         break;
                     //SFTP文件复制
                     case SFTPFILECOPYTASK:
@@ -1378,6 +1392,15 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
                 scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
                 scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
                 NifiHelper.getFlowApi().scheduleComponents(appComponentId, scheduleComponentsEntity);
+                Integer activeThreadCount;
+                do {
+                    Thread.sleep(3000);
+                    ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(appComponentId);
+                    ProcessGroupStatusDTO status = processGroup.getStatus();
+                    //activeThreadCount 组内活跃线程数量，为0代表没有正在工作的组件
+                    activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
+                    log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
+                } while (activeThreadCount != 0 );
                 //清空队列
                 ResultEnum resultEnum = nifiComponentsBuild.emptyNifiConnectionQueue(appComponentId);
                 if (Objects.equals(resultEnum, ResultEnum.TASK_NIFI_EMPTY_ALL_CONNECTIONS_REQUESTS_ERROR)) {
@@ -1421,4 +1444,29 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             return ResultEnum.ERROR;
         }
     }
+
+    public void createNifiScriptToDispatch(String groupStructure,BuildNifiCustomWorkFlowDTO nifiNode){
+        ResultEntity<NifiCustomWorkflowDetailDTO> data = dataFactoryClient.getData(nifiNode.workflowDetailId);
+        NifiCustomWorkflowDTO nifiCustomWorkflow;
+        NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO;
+        if (Objects.equals(data.code, ResultEnum.SUCCESS.getCode())) {
+            nifiCustomWorkflowDetailDTO = data.data;
+        }else {
+            log.error("远程调用失败");
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        ResultEntity<NifiCustomWorkflowDTO> nifiCustomWorkFlow = dataFactoryClient.getNifiCustomWorkFlow(nifiCustomWorkflowDetailDTO.workflowId);
+        if (Objects.equals(nifiCustomWorkFlow.code, ResultEnum.SUCCESS.getCode())) {
+            nifiCustomWorkflow = nifiCustomWorkFlow.data;
+        }else {
+            log.error("远程调用失败");
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        ProcessGroupEntity processGroupEntity = buildNifiTaskListener.buildTaskGroup(nifiCustomWorkflowDetailDTO.componentName,nifiCustomWorkflowDetailDTO.componentDesc, groupStructure);
+        List<ProcessorEntity> processorEntities = buildNifiTaskListener.buildScriptProcessor(processGroupEntity.getId(), nifiCustomWorkflow, nifiCustomWorkflowDetailDTO);
+        // 启动,保存
+        buildNifiTaskListener.enabledProcessor(processGroupEntity.getId(), processorEntities);
+    }
+
 }

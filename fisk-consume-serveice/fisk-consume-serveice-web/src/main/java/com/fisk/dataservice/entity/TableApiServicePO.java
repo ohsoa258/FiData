@@ -45,4 +45,7 @@ public class TableApiServicePO extends BasePO {
     @ApiModelProperty(value = "请求方式1:get2:post")
     private Integer methodType;
 
+    @ApiModelProperty(value = "方法名称")
+    private String methodName;
+
 }

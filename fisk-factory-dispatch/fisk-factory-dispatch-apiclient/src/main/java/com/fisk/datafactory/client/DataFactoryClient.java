@@ -194,5 +194,7 @@ public interface DataFactoryClient {
     @ApiOperation(value = "数据接入-校验非实时物理表是否被配置到管道")
     ResultEntity<List<NifiCustomWorkflowDetailDTO>> checkPhyTableIfExists(@RequestBody CheckPhyDimFactTableIfExistsDTO dto);
 
-
+    @GetMapping("/nifiCustomWorkflow/getNifiCustomWorkFlow/{workflowId}")
+    @ApiOperation(value = "根据workflowId获取管道信息")
+    ResultEntity<NifiCustomWorkflowDTO> getNifiCustomWorkFlow(@PathVariable("workflowId")String workflowId);
 }

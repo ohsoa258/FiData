@@ -69,4 +69,7 @@ public class TableAppDTO {
 
     @ApiModelProperty(value = "1:get 2:post")
     private RequestTypeEnum requestType;
+
+    @ApiModelProperty(value = "方法名称")
+    private String methodName;
 }

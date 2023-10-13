@@ -26,6 +26,8 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.enums.*;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.enums.TableServicePublicStatusEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datamodel.client.DataModelClient;
@@ -3335,6 +3337,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return querySqlRes.data;
     }
 
+    private ProcessorEntity queryNumbers(String groupId, String targetControllerServiceId,NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Query numbers Field";
+        querySqlDto.details = "insert_phase";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = "select '${pipelTraceId}' as pipelTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId,'${pipelStageTraceId}' as pipelStageTraceId,'${taskId}' as taskId;";
+        querySqlDto.dbConnectionId = targetControllerServiceId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
     private ProcessorEntity CallDbLogProcedure(DataAccessConfigDTO config, String groupId, String cfgDbPoolId) {
         BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
         callDbProcedureProcessorDTO.name = "CallDbLogProcedure";
@@ -4055,25 +4070,21 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * 执行sql 查询增量字段组件
-     *
-     * @param config      数据接入配置
-     * @param groupId     组id
-     * @param cfgDbPoolId 增量配置库连接池id
-     * @return 组件对象
+     * @param groupId
+     * @param targetControllerServiceId
+     * @param nifiCustomWorkflowDetailDTO
+     * @return
      */
-    private ProcessorEntity queryIncrementFieldProcessor(DataAccessConfigDTO config, String groupId, String cfgDbPoolId, BuildNifiFlowDTO dto) {
+    private ProcessorEntity queryIncrementFieldProcessor(String groupId, String targetControllerServiceId,NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query Increment Field";
         querySqlDto.details = "query_phase";
         querySqlDto.groupId = groupId;
-        querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName);
-        if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
-            querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName + OlapTableEnum.KPI.getValue());
-        }
-        querySqlDto.dbConnectionId = cfgDbPoolId;
+        querySqlDto.querySql = nifiCustomWorkflowDetailDTO.customScript;
+        querySqlDto.dbConnectionId = targetControllerServiceId;
         /*querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
         querySqlDto.scheduleType = config.processorConfig.scheduleType;*/
-        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(3);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
@@ -4155,11 +4166,37 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * createPublishKafkaForPipelineProcessor
-     *
-     * @param configDTO 数据接入配置
-     * @param groupId   组id
+     * @param groupId
+     * @param x
+     * @param y
+     * @return
+     */
+    public ProcessorEntity createPublishKafkaForPipelineProcessor(String groupId, int x, int y) {
+        BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
+        Map<String, String> variable = new HashMap<>();
+        variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
+        componentsBuild.buildNifiGlobalVariable(variable);
+        buildPublishKafkaProcessorDTO.KafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+        buildPublishKafkaProcessorDTO.KafkaKey = "${uuid}";
+        buildPublishKafkaProcessorDTO.groupId = groupId;
+        buildPublishKafkaProcessorDTO.name = "PublishKafka";
+        buildPublishKafkaProcessorDTO.details = "insert_phase";
+        buildPublishKafkaProcessorDTO.UseTransactions = "false";
+        buildPublishKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(x, y);
+        buildPublishKafkaProcessorDTO.TopicName = MqConstants.QueueConstants.BUILD_EXEC_SCRIPT_FLOW_NEXT;
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildPublishKafkaProcessor(buildPublishKafkaProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * script
+     * @param configDTO
      * @param dto
-     * @return 组件对象
+     * @param groupId
+     * @param x
+     * @param y
+     * @return
      */
     public ProcessorEntity createPublishKafkaForPipelineProcessor(DataAccessConfigDTO configDTO, BuildNifiFlowDTO dto, String groupId, int x, int y) {
         BuildPublishKafkaProcessorDTO buildPublishKafkaProcessorDTO = new BuildPublishKafkaProcessorDTO();
@@ -4291,7 +4328,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId    groupId
      * @param processors 需要启用的组件
      */
-    private void enabledProcessor(String groupId, List<ProcessorEntity> processors) {
+    public void enabledProcessor(String groupId, List<ProcessorEntity> processors) {
         componentsBuild.enabledProcessor(groupId, processors);
     }
 
@@ -4738,4 +4775,220 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return querySqlRes.data;
     }
 
+    /**
+     * 创建任务组
+     * @param name
+     * @param groupId
+     * @return
+     */
+    public ProcessGroupEntity buildTaskGroup(String name,String detail, String groupId) {
+        BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
+        dto.name = name;
+        dto.details = detail;
+        dto.groupId = groupId;
+        //根据组个数，定义坐标
+        int count = componentsBuild.getGroupCount(groupId);
+        dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count+10);
+        //创建组件
+        BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
+        if (res.success) {
+            return res.data;
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
+        }
+    }
+    public List<ProcessorEntity> buildScriptProcessor(String groupId, NifiCustomWorkflowDTO nifiCustomWorkflow, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO){
+        String targetControllerServiceId = "";
+        // 目标
+        targetControllerServiceId = saveDbconfig(nifiCustomWorkflowDetailDTO.dataSourceId);
+        List<ProcessorEntity> res = new ArrayList<>();
+        TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
+        TableNifiSettingPO tableNifiSettingPO1 = new TableNifiSettingPO();
+        tableNifiSettingPO1 = tableNifiSettingService.query().eq("table_access_id", nifiCustomWorkflowDetailDTO.id).eq("type", OlapTableEnum.CUSTOMIZESCRIPT.getValue()).one();
+
+        if (tableNifiSettingPO1 != null) {
+            tableNifiSettingPO = tableNifiSettingPO1;
+        }
+        tableNifiSettingPO.tableComponentId = groupId;
+        tableNifiSettingPO.type = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
+        tableNifiSettingPO.tableName = nifiCustomWorkflowDetailDTO.componentName;
+        //日志监控
+        List<ProcessorEntity> processorEntities = pipelineSupervision(groupId, tableNifiSettingPO);
+        String supervisionId = processorEntities.get(0).getId();
+        //调度组件,在数据接入的时候调一次
+        ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(nifiCustomWorkflow, nifiCustomWorkflowDetailDTO, groupId, 1);
+        tableNifiSettingPO.publishKafkaProcessorId = publishKafkaProcessor.getId();
+        //原变量字段
+        ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId);
+        tableNifiSettingPO.setIncrementProcessorId = evaluateJsonPathProcessor.getId();
+        res.add(evaluateJsonPathProcessor);
+        //接受消息ConsumeKafka
+        componentConnector(groupId, publishKafkaProcessor.getId(), evaluateJsonPathProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+        ProcessorEntity queryField = queryIncrementFieldProcessor(groupId, targetControllerServiceId,nifiCustomWorkflowDetailDTO);
+        componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
+        componentConnector(groupId, queryField.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
+        tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
+        ProcessorEntity queryNumbers = queryNumbers(groupId, targetControllerServiceId,nifiCustomWorkflowDetailDTO);
+        componentConnector(groupId, queryField.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
+        //转json
+        ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 0, 5);
+        componentConnector(groupId, queryNumbers.getId(),numberToJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        tableNifiSettingPO.convertNumbersToJsonProcessorId = numberToJsonRes.getId();
+
+        ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(groupId, 0, 6);
+        componentConnector(groupId, numberToJsonRes.getId(),publishKafkaForPipelineProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        tableNifiSettingPO.publishKafkaPipelineProcessorId = publishKafkaForPipelineProcessor.getId();
+        res.addAll(processorEntities);
+        tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
+        return res;
+    }
+
+
+    public List<ProcessorEntity> pipelineSupervision(String groupId, TableNifiSettingPO TableNifiSettingPO) {
+        List<ProcessorEntity> processorEntityList = new ArrayList<>();
+        //查询
+        ProcessorEntity processorEntity = queryForPipelineSupervision(groupId);
+        TableNifiSettingPO.queryForSupervisionProcessorId = processorEntity.getId();
+        processorEntityList.add(processorEntity);
+        //转string convertJsonForSupervision
+        ProcessorEntity convertJsonForSupervision = specificSymbolProcessor(groupId);
+        TableNifiSettingPO.convertJsonForSupervisionProcessorId = convertJsonForSupervision.getId();
+        componentConnector(groupId, processorEntity.getId(), convertJsonForSupervision.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        processorEntityList.add(convertJsonForSupervision);
+        //发消息
+        ProcessorEntity publishKafkaForSupervisionProcessor = createPublishKafkaForSupervisionProcessor(groupId, 3);
+        TableNifiSettingPO.publishKafkaForSupervisionProcessorId = publishKafkaForSupervisionProcessor.getId();
+        componentConnector(groupId, convertJsonForSupervision.getId(), publishKafkaForSupervisionProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        processorEntityList.add(publishKafkaForSupervisionProcessor);
+        return processorEntityList;
+    }
+
+    private ProcessorEntity queryForPipelineSupervision(String groupId) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        buildReplaceTextProcessorDTO.name = "queryForPipelineSupervision";
+        buildReplaceTextProcessorDTO.details = "queryForPipelineSupervision";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(1, 3);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        NifiMessageDTO nifiMessage = new NifiMessageDTO();
+        nifiMessage.message = "${executesql.error.message:escapeJson()}";
+        nifiMessage.topic = "${kafka.topic}";
+        nifiMessage.groupId = groupId;
+        nifiMessage.startTime = "${start_time}";
+        nifiMessage.endTime = "${end_time}";
+        nifiMessage.counts = "${numbers}";
+        nifiMessage.pipelStageTraceId = "${pipelStageTraceId}";
+        nifiMessage.pipelTaskTraceId = "${pipelTaskTraceId}";
+        nifiMessage.pipelJobTraceId = "${pipelJobTraceId}";
+        nifiMessage.pipelTraceId = "${pipelTraceId}";
+        nifiMessage.entryDate = "${entryDate:format('YYYY-MM-dd HH:mm:ss')}";
+        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(nifiMessage);
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    private ProcessorEntity specificSymbolProcessor(String groupId) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        buildReplaceTextProcessorDTO.name = "specificSymbol";
+        buildReplaceTextProcessorDTO.details = "specificSymbol";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(2, 3);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.replacementValue = "$1";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+
+    /**
+     * 创建变量组件
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity evaluateJsonPathProcessor(String groupId) {
+        ArrayList<String> strings = new ArrayList<>();
+        //strings.add(NifiConstants.AttrConstants.INCREMENT_START);
+        strings.add(NifiConstants.AttrConstants.START_TIME);
+        strings.add(NifiConstants.AttrConstants.FIDATA_BATCH_CODE);
+        strings.add(NifiConstants.AttrConstants.PIPEL_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_JOB_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_TASK_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_STAGE_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.TOPIC_TYPE);
+        strings.add(NifiConstants.AttrConstants.TASK_ID);
+        //strings.add(NifiConstants.AttrConstants.START_TIME);
+        BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
+        dto.name = "Set Increment Field";
+        dto.details = "query_phase";
+        dto.groupId = groupId;
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(2);
+        dto.selfDefinedParameter = strings;
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
+    /**
+     * createPublishKafkaProcessor
+     * @param nifiCustomWorkflow
+     * @param nifiCustomWorkflowDetailDTO
+     * @param groupId
+     * @param position
+     * @return
+     */
+    public ProcessorEntity createPublishKafkaProcessor(NifiCustomWorkflowDTO nifiCustomWorkflow,NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO, String groupId, int position) {
+
+        BuildConsumeKafkaProcessorDTO buildConsumeKafkaProcessorDTO = new BuildConsumeKafkaProcessorDTO();
+        buildConsumeKafkaProcessorDTO.name = "ConsumeKafka";
+        buildConsumeKafkaProcessorDTO.details = "query_phase";
+        buildConsumeKafkaProcessorDTO.groupId = groupId;
+        //管道id
+        buildConsumeKafkaProcessorDTO.GroupId = "dmp.nifi.datafactory.pipeline";
+        buildConsumeKafkaProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(position);
+        Map<String, String> variable = new HashMap<>();
+        variable.put(ComponentIdTypeEnum.KAFKA_BROKERS.getName(), KafkaBrokers);
+        componentsBuild.buildNifiGlobalVariable(variable);
+        buildConsumeKafkaProcessorDTO.kafkaBrokers = "${" + ComponentIdTypeEnum.KAFKA_BROKERS.getName() + "}";
+        buildConsumeKafkaProcessorDTO.honorTransactions = false;
+        buildConsumeKafkaProcessorDTO.topicNames = MqConstants.TopicPrefix.TOPIC_PREFIX + nifiCustomWorkflow.id + "." + OlapTableEnum.CUSTOMIZESCRIPT.getValue() + ".0." + nifiCustomWorkflowDetailDTO.id;
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildConsumeKafkaProcessor(buildConsumeKafkaProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+
+    }
+
+    /**
+     * 执行sql 查询增量字段组件
+     *
+     * @param config      数据接入配置
+     * @param groupId     组id
+     * @param cfgDbPoolId 增量配置库连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity queryIncrementFieldProcessor(DataAccessConfigDTO config, String groupId, String cfgDbPoolId, BuildNifiFlowDTO dto) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Query Increment Field";
+        querySqlDto.details = "query_phase";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName);
+        if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
+            querySqlDto.querySql = buildIncrementSql(config.processorConfig.targetTableName + OlapTableEnum.KPI.getValue());
+        }
+        querySqlDto.dbConnectionId = cfgDbPoolId;
+        /*querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
+        querySqlDto.scheduleType = config.processorConfig.scheduleType;*/
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(4);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
 }
