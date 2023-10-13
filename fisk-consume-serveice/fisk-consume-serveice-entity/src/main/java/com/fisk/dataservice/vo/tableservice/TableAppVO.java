@@ -81,4 +81,7 @@ public class TableAppVO {
 
     @ApiModelProperty(value = "1:get 2:post")
     private Integer requestType;
+
+    @ApiModelProperty(value = "方法名称")
+    private String methodName;
 }

@@ -60,4 +60,9 @@ public class TableAppPO extends BasePO {
      *1:get 2:post
      */
     public Integer requestType;
+
+    /**
+     * 方法名称
+     */
+    private String methodName;
 }

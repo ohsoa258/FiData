@@ -40,6 +40,9 @@ public class TableApiServiceDTO {
     @ApiModelProperty(value = "1:数组对象2:对象", required = true)
     public Integer jsonType;
 
-    @ApiModelProperty(value = "请求方式1:get2:post", required = true)
+    @ApiModelProperty(value = "请求方式1:get2:post")
     public Integer methodType;
+
+    @ApiModelProperty(value = "方法名称")
+    public String methodName;
 }
