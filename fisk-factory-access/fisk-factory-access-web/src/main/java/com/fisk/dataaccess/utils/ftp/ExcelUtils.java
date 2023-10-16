@@ -126,7 +126,7 @@ public class ExcelUtils {
                         //System.out.println("坐标:"+i+","+j);
                         //获取当前单元格
                         Cell cell = Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j);
-                        Object obj = getCellFormatValue(cell);
+                        Object obj = getCellFormatValue(cell,wb);
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
@@ -222,7 +222,7 @@ public class ExcelUtils {
      * @version v1.0
      * @params cell excel单元格对象
      */
-    private static Object getCellFormatValue(Cell cell) {
+    private static Object getCellFormatValue(Cell cell,Workbook workbook) {
         Object cellvalue = "";
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -238,13 +238,12 @@ public class ExcelUtils {
 
                         //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
                         //至少保证预览没问题
-                        double excelValue = cell.getNumericCellValue();
-                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
-                        //减去时差
-                        cellvalue = new Date(timeInMilliSeconds + 1 - TimeZone.getDefault().getRawOffset());
+//                        double excelValue = cell.getNumericCellValue();
+//                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
+//                        //减去时差
+//                        cellvalue = new Date(timeInMilliSeconds + 1 - TimeZone.getDefault().getRawOffset());
 
-                        //直接调用该方法会导致精度损失
-//                        cellvalue = cell.getDateCellValue();
+                        cellvalue = cell.getDateCellValue();
                     } else {
                         //浮点数，excel是什么值，就存储什么值
                         cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
@@ -263,22 +262,25 @@ public class ExcelUtils {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
-                                //该方法可以直接获取excel单元格里的真正值（并非显示的数值，而是表达式）
-//                                cellvalue = new DataFormatter().formatCellValue(cell);
-
-                                //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
-                                //至少保证预览没问题
-                                double excelValue = cell.getNumericCellValue();
-                                long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
-                                //减去时差
-                                cellvalue = new Date(timeInMilliSeconds + 1 - TimeZone.getDefault().getRawOffset());
-
                                 //直接调用该方法会导致精度损失
 //                                cellvalue = cell.getDateCellValue();
+
+                                //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
+                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                CellValue evaluate = evaluator.evaluate(cell);
+                                double numberValue = evaluate.getNumberValue();
+                                long timeInMilliSeconds = (long) ((numberValue - 25569) * 86400 * 1000);
+                                cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
                             } else {
-                                //浮点数，excel是什么值，就存储什么值
-                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
-//                                cellvalue = cell.getNumericCellValue();
+                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                CellValue cellValue = evaluator.evaluate(cell);
+                                cellvalue = NumberToTextConverter.toText(cellValue.getNumberValue());
+
+                                //下面的代码在2023年 10月16号弃用
+                                //原因：在读取excel公式值=184+TODAY()-C2时候(C2=2023/9/19) 比如excel中显示的值是211，
+                                //但是使用下面方法读取到的值却是208，出现了日期丢失情况，因此改用上面的方法
+//                                double numericCellValue = cell.getNumericCellValue();
+//                                cellvalue = NumberToTextConverter.toText(numericCellValue);
                             }
                             break;
                         case BOOLEAN:

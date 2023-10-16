@@ -302,7 +302,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
                     List<Object> col = new ArrayList<>();
                     for (int j = 0; j < lastCellNum; j++) {
                         //System.out.println("坐标:"+i+","+j);
-                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j), physicalNumberOfRows);
+                        Object obj = getCellFormatValue(Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j), physicalNumberOfRows, wb);
 
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
 //                        //如果获取到的单元格数据是日期类型，就格式化后再存储 todo:
@@ -338,7 +338,7 @@ public class InsertExcelData implements ISftpDataUploadListener {
      * @version v1.0
      * @params cell excel单元格对象
      */
-    private static Object getCellFormatValue(Cell cell, int physicalNumberOfRows) {
+    private static Object getCellFormatValue(Cell cell, int physicalNumberOfRows, Workbook workbook) {
         Object cellvalue = "";
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -386,33 +386,26 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
-//                        //2023-06-05 李世纪解决poi读取excel表格中的日期数据时，因为代码读取的数值精度过高，导致的时间数值精度损失问题
-//                        //获取excel单元格的日期值和1900年1月1日0时0分相差的天数，带小数点 例：44561.99999999191
-//                        double excelValue = cell.getNumericCellValue();
-//                        //excel日期起始日期为1900年1月1日0时0分0秒 java Date起始日期为1970年1月1日0时0分0秒
-//                        long timeInMilliSeconds = (long) ((excelValue - 25569) * 86400 * 1000);
-//                        //+1毫秒可以保证4500条数据不出现精度损失问题，
-//                        //那么这里就加个判断，如果数据小于4500条，就加2，是4500条的二倍时就+4，以此类推,不足二倍则+3
-//                        if (physicalNumberOfRows < 4500) {
-//                            timeInMilliSeconds = timeInMilliSeconds + 1;
-//                        } else {
-//                            //整除
-//                            int i = physicalNumberOfRows / 4500;
-//                            //保留小数
-//                            double v = (double) physicalNumberOfRows / 4500d;
-//                            //如果保留小数的商(v)大于整除的i且小于整除的i+1,则多加1
-//                            if (v>i && v<i+1) {
-//                                i = i+1;
-//                            }
-//                            timeInMilliSeconds = timeInMilliSeconds + physicalNumberOfRows / 4500 + i;
-//                        }
-//                        cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+                                //直接调用该方法会导致精度损失
+//                                cellvalue = cell.getDateCellValue();
 
-                                cellvalue = cell.getDateCellValue();
+                                //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
+                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                CellValue evaluate = evaluator.evaluate(cell);
+                                double numberValue = evaluate.getNumberValue();
+                                long timeInMilliSeconds = (long) ((numberValue - 25569) * 86400 * 1000);
+                                cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
                             } else {
+                                //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
+                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                CellValue cellValue = evaluator.evaluate(cell);
+                                cellvalue = NumberToTextConverter.toText(cellValue.getNumberValue());
+
+                                //下面的代码在2023年 10月16号弃用
+                                //原因：在读取excel公式值=184+TODAY()-C2时候(C2=2023/9/19) 比如excel中显示的值是211，
+                                //但是使用下面方法读取到的值却是208，出现了日期丢失情况，因此改用上面的方法
                                 //浮点数，excel是什么值，就存储什么值
-                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
-//                                cellvalue = cell.getNumericCellValue();
+//                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
                             }
                             break;
                         case BOOLEAN:
