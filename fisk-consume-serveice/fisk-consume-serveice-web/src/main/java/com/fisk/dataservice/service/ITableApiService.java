@@ -95,5 +95,12 @@ public interface ITableApiService extends IService<TableApiServicePO> {
      * @return
      */
     ResultEnum enableOrDisable(Integer id);
+
+    /**
+     * 重点或非重点接口
+     * @param id
+     * @return
+     */
+    ResultEnum importantOrUnimportant(Integer id);
 }
 
