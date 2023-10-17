@@ -144,6 +144,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("12");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("SAPBW")) {
                             filterQueryDTO.setColumnValue("13");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("WEBSERVICE")) {
+                            filterQueryDTO.setColumnValue("14");
                         }
                     }
                 });
