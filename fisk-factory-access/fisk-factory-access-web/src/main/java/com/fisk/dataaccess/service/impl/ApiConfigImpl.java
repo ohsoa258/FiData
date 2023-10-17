@@ -1650,7 +1650,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
         }
 
-
         return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());
     }
 
@@ -1664,7 +1663,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @date 2022/2/25 16:41
      */
     private ResultEnum pushDataStgToOds(Long apiId, int flag) {
-
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 1.根据apiId获取api所有信息
             ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
@@ -1684,7 +1683,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 // 当前api下没有物理表
                 return ResultEnum.TABLE_NOT_EXIST;
             }
-
             // 4.组装参数,调用tasdk,获取推送数据所需的sql
             for (TableAccessNonDTO e : tablelist) {
                 TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
@@ -1718,13 +1716,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 configDTO.targetDsConfig = dataSourceConfig;
 
                 // 获取同步数据的sql并执行
-                return getSynchroDataSqlAndExcute(configDTO, flag, app.targetDbId);
+                resultEnum = getSynchroDataSqlAndExcute(configDTO, flag, app.targetDbId);
             }
+            return resultEnum;
         } catch (Exception e) {
             return ResultEnum.PUSH_DATA_ERROR;
         }
-
-        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -1737,7 +1734,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @date 2022/2/25 16:41
      */
     private ResultEnum pushDataStgToOdsV2(Long apiId, int flag) {
-
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
         try {
             // 1.根据apiId获取api所有信息
             ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
@@ -1791,13 +1788,12 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 configDTO.targetDsConfig = dataSourceConfig;
 
                 // 获取同步数据的sql并执行
-                return getSynchroDataSqlAndExcuteV2(configDTO, flag, app.targetDbId);
+                resultEnum = getSynchroDataSqlAndExcuteV2(configDTO, flag, app.targetDbId);
             }
+            return resultEnum;
         } catch (Exception e) {
             return ResultEnum.PUSH_DATA_ERROR;
         }
-
-        return ResultEnum.SUCCESS;
     }
 
     /**
