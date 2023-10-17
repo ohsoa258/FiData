@@ -48,4 +48,7 @@ public class TableApiServicePO extends BasePO {
     @ApiModelProperty(value = "方法名称")
     private String methodName;
 
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    private Integer importantInterface;
+
 }

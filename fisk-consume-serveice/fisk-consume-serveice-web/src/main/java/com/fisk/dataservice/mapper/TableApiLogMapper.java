@@ -23,7 +23,7 @@ public interface TableApiLogMapper extends BaseMapper<TableApiLogPO> {
     int getFrequency();
     @Select("select count(1) FROM (SELECT api_id FROM `tb_table_api_log` WHERE create_time >= CURDATE() and del_flag = 1 GROUP BY api_id) as api_log")
     int getApiNumber();
-    @Select("SELECT sum(number) FROM `tb_table_api_log` WHERE status = 1 and del_flag = 1")
+    @Select("SELECT count(important_interface) FROM `tb_table_api_log` WHERE create_time >= CURDATE() and important_interface = 1 and status = 1 and del_flag = 1")
     int focusApiTotalNumber();
     @Select("SELECT count(1) FROM `tb_table_api_log` WHERE create_time >= CURDATE() and status = 1 and del_flag = 1")
     int successNumber();

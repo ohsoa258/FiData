@@ -26,4 +26,7 @@ public class TableApiLogPO extends BasePO {
     @ApiModelProperty(value = "消费状态")
     private Integer status;
 
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    private Integer importantInterface;
+
 }

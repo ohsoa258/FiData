@@ -284,6 +284,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
             apiResultDTO = webServiceHandler.sendApi(dto.apiId);
         }
+        TableApiServicePO tableApiServicePO = baseMapper.selectById(dto.getApiId());
         //记日志
         TableApiTaskDTO tableApiTaskDTO = new TableApiTaskDTO();
         tableApiTaskDTO.setApiId(dto.getApiId());
@@ -296,6 +297,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format +" - " + apiResultDTO.getMsg());
             tableApiLogPO.setApiId(dto.apiId.intValue());
             tableApiLogPO.setNumber(apiResultDTO.getNumber());
+            tableApiLogPO.setImportantInterface(tableApiServicePO.getImportantInterface());
             tableApiLogPO.setStatus(1);
         }else{
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + apiResultDTO.getMsg());
@@ -435,6 +437,20 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             if (baseMapper.updateById(tableApiService) == 0) {
                 throw new FkException(ResultEnum.SAVE_DATA_ERROR);
             }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum importantOrUnimportant(Integer id) {
+        TableApiServicePO tableApiServicePO = this.getById(id);
+        if (tableApiServicePO.getImportantInterface() == 0){
+            tableApiServicePO.setImportantInterface(1);
+        }else if (tableApiServicePO.getImportantInterface() == 1){
+            tableApiServicePO.setImportantInterface(0);
+        }
+        if (baseMapper.updateById(tableApiServicePO) == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
     }

@@ -45,4 +45,7 @@ public class TableApiServiceDTO {
 
     @ApiModelProperty(value = "方法名称")
     public String methodName;
+
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    public int importantInterface;
 }
