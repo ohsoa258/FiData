@@ -3,7 +3,6 @@ package com.fisk.dataaccess.test;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.endpoint.Client;
@@ -15,7 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * @author: lsj
@@ -64,6 +63,19 @@ public class WebServiceTest {
         } catch (Exception e) {
             log.error("webService报错--" + e);
         }
+    }
+
+    @Test
+    public void testDynamicVar(){
+        int[] ints = new int[3];
+        ints[0] =1;
+        ints[1] =2;
+        ints[2] =3;
+        System.out.println(sum(ints));
+    }
+
+    private int sum(int...ints){
+        return Arrays.stream(ints).sum();
     }
 
 }

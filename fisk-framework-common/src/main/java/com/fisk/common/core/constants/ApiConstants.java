@@ -1032,16 +1032,16 @@ public class ApiConstants {
             "}\n";
 
     public static final String DATAACCESS_WEBSERVICE_BASICINFO = "{\n" +
-            "    \"title\":\"FiData一体化数据赋能平台 webService(SOAP协议)接口文档\",\n" +
+            "    \"title\":\"汎得立体库前置机 webService(SOAP协议)接口文档\",\n" +
             "    \"docVersion\":\"文档版本 V1.0\",\n" +
             "    \"isuCompany\":\"\",\n" +
             "    \"isuDate\":\"发布日期：20231012\",\n" +
             "    \"footerName\":\"webservice接口文档\",\n" +
-            "    \"docPurpose\":\"本文用于第三方平台对接FiData一体化数据赋能平台。\",\n" +
-            "    \"readers\":\"预期读者包括需要推送数据到FiData一体化数据赋能平台的第三方平台。\",\n" +
+            "    \"docPurpose\":\"本文用于第三方平台对接汎得立体库前置机。\",\n" +
+            "    \"readers\":\"预期读者包括需要推送数据到汎得立体库前置机的第三方平台。\",\n" +
             "    \"standard\":\"接口采用SOAP协议，数据传输格式采用非加密的xml格式。文本编码格式为UTF-8；\",\n" +
             "    \"standard_query\":\" 暂无\",\n" +
-            "    \"authStandard\":\"第三方系统在访问平台WEBSERVICE时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
+            "    \"authStandard\":\"第三方系统在访问前置机WEBSERVICE时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（6小时有效期）。\",\n" +
             "    \"uatAddress\":\"{api_uat_address}/{apiaddress}\",\n" +
 //            "    \"prdAddress\":\"生产环境：{api_prd_address}(预留地址,暂不使用)\",\n" +
             "    \"apiCatalogueDTOS\":[\n" +
@@ -1117,7 +1117,7 @@ public class ApiConstants {
             "            \"apiNameCatalogue\":\"2.4.\",\n" +
             "            \"apiAddress\":\"/http://192.168.11.130:8089/webservice/fidata-api?wsdl        【webservice获取token的方法名称：webServiceGetToken】\",\n" +
             "            \"apiAddressCatalogue\":\"2.4.1.\",\n" +
-            "            \"apiDesc\":\"获取身份凭证，后续请求中将此凭证作为身份标识传给业务接口，业务接口将验证身份凭证是否合法，合法则返回业务数据。\",\n" +
+            "            \"apiDesc\":\"获取身份凭证，后续请求中将此凭证作为身份标识传给业务接口，业务接口将验证身份凭证是否合法，合法则返回处理结果。\",\n" +
             "            \"apiDescCatalogue\":\"2.4.2.\",\n" +
             "            \"apiRequestType\":\"WebService(SOAP)\",\n" +
             "            \"apiRequestTypeCatalogue\":\"2.4.3.\",\n" +
