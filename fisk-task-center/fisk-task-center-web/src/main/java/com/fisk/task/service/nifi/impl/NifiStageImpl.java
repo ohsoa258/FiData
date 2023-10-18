@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.davis.client.model.BulletinEntity;
 import com.davis.client.model.ProcessGroupEntity;
 import com.davis.client.model.ProcessorEntity;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -316,7 +317,11 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                         nifiStagePO.componentId = Math.toIntExact(itselfPort.id);
                         log.info("失败调用发布中心");
                         if (!StringUtils.isEmpty(nifiStageMessageDTO.message)) {
-                            sendPublishCenter(nifiStageMessageDTO, itselfPort);
+                            if (Objects.equals(Integer.parseInt(topic[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
+                                sendPublishCenter(nifiStageMessageDTO, itselfPort,MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW);
+                            }else {
+                                sendPublishCenter(nifiStageMessageDTO, itselfPort,MqConstants.QueueConstants.TASK_PUBLIC_CENTER_TOPIC_NAME);
+                            }
                         }
                     } else if (topic.length == 4) {
                         //长度为4的只可能为nifi流程,可以通过groupid区分
@@ -447,7 +452,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         }
     }
 
-    public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort) {
+    public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort,String topic) {
         KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
         kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
         kafkaReceive.topic = nifiStageMessage.topic;
@@ -473,7 +478,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        kafkaTemplateHelper.sendMessageAsync("my-topic", param);
+        kafkaTemplateHelper.sendMessageAsync(topic, param);
     }
 
     @Override

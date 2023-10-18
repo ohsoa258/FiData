@@ -4812,6 +4812,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.tableComponentId = groupId;
         tableNifiSettingPO.type = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
         tableNifiSettingPO.tableName = nifiCustomWorkflowDetailDTO.componentName;
+        tableNifiSettingPO.tableAccessId = (int)nifiCustomWorkflowDetailDTO.id;
         //日志监控
         List<ProcessorEntity> processorEntities = pipelineSupervision(groupId, tableNifiSettingPO);
         String supervisionId = processorEntities.get(0).getId();
