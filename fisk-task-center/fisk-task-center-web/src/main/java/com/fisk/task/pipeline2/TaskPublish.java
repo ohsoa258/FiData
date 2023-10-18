@@ -798,7 +798,16 @@ public class TaskPublish {
                 pipelTaskLogVos = pipelTaskLogVos.stream().filter(i -> i.endTime == null).collect(Collectors.toList());
                 boolean verify = true;
                 for (PipelTaskMergeLogVO pipelTaskLogVo : pipelTaskLogVos) {
-                    TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(pipelTaskLogVo.getTableId()), Long.parseLong(pipelTaskLogVo.getTableType()));
+                    TableNifiSettingPO tableNifiSetting;
+                    if (Integer.parseInt(pipelTaskLogVo.getTableType()) == OlapTableEnum.CUSTOMIZESCRIPT.getValue()){
+                        tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(pipelTaskLogVo.getTaskId()), Long.parseLong(pipelTaskLogVo.getTableType()));
+                    }else {
+                        if (Integer.parseInt(pipelTaskLogVo.getTableId()) == 0){
+                            continue;
+                        }
+                        tableNifiSetting = iTableNifiSettingService.getByTableId(Long.parseLong(pipelTaskLogVo.getTableId()), Long.parseLong(pipelTaskLogVo.getTableType()));
+                    }
+
                     if (tableNifiSetting == null){
                         Map<Integer, Object> pipelMap = new HashMap<>();
                         pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + pipelstart + " - ErrorMessage:" + "TableNifiSettingPO中没有表ID为"+pipelTaskLogVo.getTableId()+"，表类型为"+OlapTableEnum.getNameByValue(Integer.valueOf(pipelTaskLogVo.getTableType()))+"的表");
@@ -824,6 +833,7 @@ public class TaskPublish {
                         }
                         if (!flag){
                             verify = false;
+                            break;
                         }
                 }
                 if (verify){
