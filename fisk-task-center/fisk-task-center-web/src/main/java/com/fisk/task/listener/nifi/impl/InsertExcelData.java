@@ -386,26 +386,28 @@ public class InsertExcelData implements ISftpDataUploadListener {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
-                                //直接调用该方法会导致精度损失
-//                                cellvalue = cell.getDateCellValue();
-
-                                //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
-                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-                                CellValue evaluate = evaluator.evaluate(cell);
-                                double numberValue = evaluate.getNumberValue();
-                                long timeInMilliSeconds = (long) ((numberValue - 25569) * 86400 * 1000);
-                                cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+//                                直接调用该方法会导致精度损失
+                                String cellFormula = cell.getCellFormula();
+                                if (cellFormula.contains("TODAY()")){
+                                    //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
+                                    FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                    CellValue evaluate = evaluator.evaluate(cell);
+                                    double numberValue = evaluate.getNumberValue();
+                                    long timeInMilliSeconds = (long) ((numberValue - 25569) * 86400 * 1000);
+                                    cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+                                }else {
+                                    cellvalue = cell.getDateCellValue();
+                                }
                             } else {
-                                //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
-                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-                                CellValue cellValue = evaluator.evaluate(cell);
-                                cellvalue = NumberToTextConverter.toText(cellValue.getNumberValue());
-
-                                //下面的代码在2023年 10月16号弃用
-                                //原因：在读取excel公式值=184+TODAY()-C2时候(C2=2023/9/19) 比如excel中显示的值是211，
-                                //但是使用下面方法读取到的值却是208，出现了日期丢失情况，因此改用上面的方法
-                                //浮点数，excel是什么值，就存储什么值
-//                                cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+                                String cellFormula = cell.getCellFormula();
+                                if (cellFormula.contains("TODAY()")){
+                                    //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
+                                    FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                    CellValue cellValue = evaluator.evaluate(cell);
+                                    cellvalue = NumberToTextConverter.toText(cellValue.getNumberValue());
+                                }else {
+                                    cellvalue = NumberToTextConverter.toText(cell.getNumericCellValue());
+                                }
                             }
                             break;
                         case BOOLEAN:

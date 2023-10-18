@@ -118,7 +118,7 @@ public class ExcelUtils {
                     } else {
                         row = sheet.createRow(i);
                     }
-                    if (i - getRow == 11) {
+                    if (getRow - startRow == 11) {
                         break;
                     }
                     List<Object> col = new ArrayList<>();
@@ -126,7 +126,7 @@ public class ExcelUtils {
                         //System.out.println("坐标:"+i+","+j);
                         //获取当前单元格
                         Cell cell = Objects.nonNull(row.getCell(j)) ? row.getCell(j) : row.createCell(j);
-                        Object obj = getCellFormatValue(cell,wb);
+                        Object obj = getCellFormatValue(cell, wb);
                         obj = (obj instanceof Date) ? simpleDateFormat.format((Date) obj) : obj;
                         col.add(obj);
                     }
@@ -222,7 +222,7 @@ public class ExcelUtils {
      * @version v1.0
      * @params cell excel单元格对象
      */
-    private static Object getCellFormatValue(Cell cell,Workbook workbook) {
+    private static Object getCellFormatValue(Cell cell, Workbook workbook) {
         Object cellvalue = "";
         if (cell != null) {
             switch (cell.getCellType()) {
@@ -262,25 +262,28 @@ public class ExcelUtils {
                             break;
                         case NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell)) {
-                                //直接调用该方法会导致精度损失
-//                                cellvalue = cell.getDateCellValue();
-
-                                //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
-                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-                                CellValue evaluate = evaluator.evaluate(cell);
-                                double numberValue = evaluate.getNumberValue();
-                                long timeInMilliSeconds = (long) ((numberValue - 25569) * 86400 * 1000);
-                                cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+                                String cellFormula = cell.getCellFormula();
+                                if (cellFormula.contains("TODAY()")){
+                                    //使用Apache POI的Evaluation功能，可以计算公式的值，而不仅仅是返回公式本身。
+                                    FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                    CellValue evaluate = evaluator.evaluate(cell);
+                                    double numberValue = evaluate.getNumberValue();
+                                    long timeInMilliSeconds = (long) ((numberValue - 25569) * 86400 * 1000);
+                                    cellvalue = new Date(timeInMilliSeconds - TimeZone.getDefault().getRawOffset());
+                                }else {
+                                    cellvalue = cell.getDateCellValue();
+                                }
                             } else {
-                                FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
-                                CellValue cellValue = evaluator.evaluate(cell);
-                                cellvalue = NumberToTextConverter.toText(cellValue.getNumberValue());
+                                String cellFormula = cell.getCellFormula();
+                                if (cellFormula.contains("TODAY()")){
+                                    FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+                                    CellValue cellValue = evaluator.evaluate(cell);
+                                    cellvalue = NumberToTextConverter.toText(cellValue.getNumberValue());
+                                }else {
+                                    double numericCellValue = cell.getNumericCellValue();
+                                    cellvalue = NumberToTextConverter.toText(numericCellValue);
+                                }
 
-                                //下面的代码在2023年 10月16号弃用
-                                //原因：在读取excel公式值=184+TODAY()-C2时候(C2=2023/9/19) 比如excel中显示的值是211，
-                                //但是使用下面方法读取到的值却是208，出现了日期丢失情况，因此改用上面的方法
-//                                double numericCellValue = cell.getNumericCellValue();
-//                                cellvalue = NumberToTextConverter.toText(numericCellValue);
                             }
                             break;
                         case BOOLEAN:
