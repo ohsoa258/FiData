@@ -367,8 +367,8 @@ public class ApiConstants {
             "    \"apiVersionDTOS\":[\n" +
             "        {\n" +
             "            \"version\":\"0.1\",\n" +
-            "            \"startDate\":\"2022/01/01\",\n" +
-            "            \"endDate\":\"2022/01/01\",\n" +
+            "            \"startDate\":\"{apiVersion_StartDate}\",\n" +
+            "            \"endDate\":\"{apiVersion_EndDate}\",\n" +
             "            \"modifier\":\"lijiawen\",\n" +
             "            \"explain\":\"文档创建、编写\",\n" +
             "            \"state\":\"初稿\"\n" +

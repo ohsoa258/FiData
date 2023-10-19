@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.EnCryptUtils;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
@@ -491,7 +492,10 @@ public class AppRegisterManageImpl
                                    List<FieldConfigPO> fieldList) {
         ApiDocDTO apiDocDTO = new ApiDocDTO();
         // API文档基础信息
-        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_prd_address}", api_address);
+        String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_prd_address}", api_address)
+                .replace("{apiVersion_StartDate}", DateTimeUtils.getNowToShortDate())
+                .replace("{apiVersion_EndDate}", DateTimeUtils.getNowToShortDate());
+
         // log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         // API文档代码示例 c#
