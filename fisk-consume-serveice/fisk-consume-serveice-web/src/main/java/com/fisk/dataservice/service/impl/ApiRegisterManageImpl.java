@@ -13,7 +13,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.Dto.SqlParmDto;
-import com.fisk.common.core.utils.Dto.SqlWhereDto;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -30,6 +29,8 @@ import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
+import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -320,6 +321,37 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         batchAddAppServiceConfig(poList);
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum importantOrUnimportant(Integer id) {
+        ApiConfigPO apiConfigPO = this.getById(id);
+        if (apiConfigPO.getImportantInterface() == 0){
+            apiConfigPO.setImportantInterface(1);
+        }else if (apiConfigPO.getImportantInterface() == 1){
+            apiConfigPO.setImportantInterface(0);
+        }
+        if (baseMapper.updateById(apiConfigPO) == 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ConsumeServerVO getConsumeServer() {
+        ConsumeServerVO consumeServerVO = new ConsumeServerVO();
+        consumeServerVO.setTotalNumber(this.baseMapper.getTotalNumber());
+        consumeServerVO.setFocusApiTotalNumber(this.baseMapper.focusApiTotalNumber());
+        consumeServerVO.setApiNumber(this.baseMapper.getApiNumber());
+        consumeServerVO.setFrequency(this.baseMapper.getFrequency());
+        consumeServerVO.setFaildNumber(this.baseMapper.faildNumber());
+        consumeServerVO.setSuccessNumber(this.baseMapper.successNumber());
+        return consumeServerVO;
+    }
+
+    @Override
+    public List<TopFrequencyVO> getTopFrequency() {
+        return this.baseMapper.getTopFrequency();
     }
 
     public ResultEnum delAppServiceConfig(Integer appId, Integer type) {

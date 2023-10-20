@@ -112,4 +112,11 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "api代理地址")
     public String apiProxyUrl;
+
+
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    private int importantInterface;
 }
