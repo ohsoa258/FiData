@@ -9,7 +9,8 @@
         a.api_name,
         a.display_name,
         a.publish,
-        a.enable
+        a.enable,
+        a.important_interface
         FROM tb_table_api_service a
         WHERE
         a.del_flag = 1
