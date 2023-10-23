@@ -263,7 +263,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         }
 
         // 重置api发布装填
-        dto.setPublish(0);
+//        dto.setPublish(0);
 
         // dto -> po
         // 执行修改
