@@ -132,4 +132,10 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "创建人")
     public String createUser;
+
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    private int importantInterface;
 }

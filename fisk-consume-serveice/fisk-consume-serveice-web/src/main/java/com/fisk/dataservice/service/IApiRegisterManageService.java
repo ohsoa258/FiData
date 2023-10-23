@@ -10,6 +10,8 @@ import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
+import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 
 import java.util.List;
@@ -114,5 +116,24 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      * @return
      */
     ResultEnum appTableServiceConfig(List<AppTableServiceConfigDTO> dtoList);
+
+    /**
+     * 重点或非重点接口
+     * @param id
+     * @return
+     */
+    ResultEnum importantOrUnimportant(Integer id);
+
+    /**
+     * 获取数据消费(当天)
+     * @return
+     */
+    ConsumeServerVO getConsumeServer();
+
+    /**
+     * 获取输出接口使用频率top5
+     * @return
+     */
+    List<TopFrequencyVO> getTopFrequency();
 
 }

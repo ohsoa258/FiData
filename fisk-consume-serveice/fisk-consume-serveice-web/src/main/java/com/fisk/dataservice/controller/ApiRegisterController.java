@@ -11,6 +11,8 @@ import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
+import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
+import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -105,4 +107,21 @@ public class ApiRegisterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.appTableServiceConfig(dto));
     }
 
+    @ApiOperation("重点接口标记")
+    @GetMapping("/importantOrUnimportant")
+    public ResultEntity<List<String>> importantOrUnimportant(@RequestParam("id") Integer id) {
+        return ResultEntityBuild.build(service.importantOrUnimportant(id));
+    }
+
+    @ApiOperation("获取数据消费(当天)")
+    @GetMapping("/getConsumeServer")
+    public ResultEntity<ConsumeServerVO> getConsumeServer() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getConsumeServer());
+    }
+
+    @ApiOperation("获取输出接口使用频率top5")
+    @GetMapping("/getTopFrequency")
+    public ResultEntity<List<TopFrequencyVO>> getTopFrequency() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getTopFrequency());
+    }
 }

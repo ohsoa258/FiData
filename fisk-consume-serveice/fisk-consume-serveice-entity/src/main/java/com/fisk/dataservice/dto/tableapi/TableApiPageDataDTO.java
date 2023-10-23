@@ -23,4 +23,7 @@ public class TableApiPageDataDTO {
 
     @ApiModelProperty(value = "1:启用 0:禁用")
     public Integer enable;
+
+    @ApiModelProperty(value = "是否是重点接口 0否，1是")
+    public Integer importantInterface;
 }

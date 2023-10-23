@@ -88,4 +88,9 @@ public class ApiConfigPO extends BasePO
      * api代理地址
      */
     public String apiProxyUrl;
+
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    private Integer importantInterface;
 }

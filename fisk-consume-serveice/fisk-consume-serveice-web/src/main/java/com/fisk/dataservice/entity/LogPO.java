@@ -2,6 +2,7 @@ package com.fisk.dataservice.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -77,4 +78,14 @@ public class LogPO extends BasePO {
      * 应用id，逗号分隔
      */
     public String appIds;
+
+    /**
+     * 消费数量
+     */
+    private Integer number;
+
+    /**
+     * 是否是重点接口 0否，1是
+     */
+    private Integer importantInterface;
 }

@@ -344,6 +344,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             logPO.setLogResponseInfo(String.valueOf(totalCount));
             logPO.setBusinessState("成功");
             logPO.setResponseStatus(HttpStatus.OK.getReasonPhrase());
+            logPO.setNumber(totalCount);
+            logPO.setImportantInterface(apiInfo.getImportantInterface());
         } catch (Exception e) {
             logPO.setLogLevel(LogLevelTypeEnum.ERROR.getName());
             logPO.setLogInfo(e.toString());

@@ -5,6 +5,7 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.api.ApiRegisterQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
+import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -55,4 +56,21 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      * @return 查询结果
      */
     List<ApiConfigPO> getListByAppApiIds(@Param("apiIds") List<Integer> apiIds, @Param("appId") Integer appId);
+
+    @Select("SELECT sum(number) FROM `tb_logs` WHERE create_time >= CURDATE() and del_flag = 1")
+    int getTotalNumber();
+    @Select("SELECT count(1) FROM `tb_logs` WHERE create_time >= CURDATE() and del_flag = 1")
+    int getFrequency();
+    @Select("select count(1) FROM (SELECT api_id FROM `tb_logs` WHERE create_time >= CURDATE() and del_flag = 1 GROUP BY api_id) as api_log")
+    int getApiNumber();
+    @Select("SELECT count(important_interface) FROM `tb_logs` WHERE create_time >= CURDATE() and important_interface = 1 and business_state = '成功' and del_flag = 1")
+    int focusApiTotalNumber();
+    @Select("SELECT count(1) FROM `tb_logs` WHERE create_time >= CURDATE() and business_state = '成功' and del_flag = 1")
+    int successNumber();
+    @Select("SELECT count(1) FROM `tb_logs` WHERE create_time >= CURDATE() and business_state = '失败' and del_flag = 1")
+    int faildNumber();
+
+    @Select("SELECT t1.frequency,t2.api_name as apiName from (SELECT api_id,count(1) as frequency FROM `tb_logs` WHERE create_time >= CURDATE() and business_state = '成功' and del_flag = 1 GROUP BY api_id ORDER BY frequency DESC limit 5) as t1\n" +
+            "LEFT JOIN tb_api_config t2 on t1.api_id = t2.id")
+    List<TopFrequencyVO> getTopFrequency();
 }

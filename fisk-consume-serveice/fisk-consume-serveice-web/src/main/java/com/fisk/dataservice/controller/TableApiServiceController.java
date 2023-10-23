@@ -106,7 +106,7 @@ public class TableApiServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,tableApiLogService.getTopFrequency());
     }
 
-    @ApiOperation("表服务启用或禁用")
+    @ApiOperation("重点接口标记")
     @GetMapping("/importantOrUnimportant")
     public ResultEntity<List<String>> importantOrUnimportant(@RequestParam("id") Integer id) {
         return ResultEntityBuild.build(tableApiService.importantOrUnimportant(id));
