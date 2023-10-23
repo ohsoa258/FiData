@@ -19,7 +19,8 @@
         api_proxy_url,
         create_api_type,
         api.create_time,
-        api.create_user
+        api.create_user,
+        api.important_interface
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
@@ -50,7 +51,8 @@
         api_proxy_url,
         create_api_type,
         api.create_time,
-        create_user
+        create_user,
+        api.important_interface
         FROM
         tb_api_config AS api
         WHERE
@@ -74,7 +76,8 @@
         api.api_type,
         api.datasource_id,
         api.create_sql,
-        api.create_count_sql
+        api.create_count_sql,
+        api.important_interface
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id

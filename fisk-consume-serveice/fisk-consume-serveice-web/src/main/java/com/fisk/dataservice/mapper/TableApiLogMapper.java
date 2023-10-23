@@ -17,7 +17,7 @@ import java.util.List;
 @Mapper
 public interface TableApiLogMapper extends BaseMapper<TableApiLogPO> {
 
-    @Select("SELECT sum(number) FROM `tb_table_api_log` WHERE create_time >= CURDATE() and del_flag = 1")
+    @Select("SELECT IFNULL(SUM(number), 0) FROM `tb_table_api_log` WHERE create_time >= CURDATE() and del_flag = 1")
     int getTotalNumber();
     @Select("SELECT count(1) FROM `tb_table_api_log` WHERE create_time >= CURDATE() and del_flag = 1")
     int getFrequency();

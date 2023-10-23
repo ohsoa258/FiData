@@ -57,7 +57,7 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
      */
     List<ApiConfigPO> getListByAppApiIds(@Param("apiIds") List<Integer> apiIds, @Param("appId") Integer appId);
 
-    @Select("SELECT sum(number) FROM `tb_logs` WHERE create_time >= CURDATE() and del_flag = 1")
+    @Select("SELECT IFNULL(SUM(number), 0) FROM `tb_logs` WHERE create_time >= CURDATE() and del_flag = 1")
     int getTotalNumber();
     @Select("SELECT count(1) FROM `tb_logs` WHERE create_time >= CURDATE() and del_flag = 1")
     int getFrequency();
