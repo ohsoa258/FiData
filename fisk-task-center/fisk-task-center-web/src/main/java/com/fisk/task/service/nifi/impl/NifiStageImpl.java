@@ -253,7 +253,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                 pipelTaskLogPO1.setTableType(type);
                                 iPipelTaskLog.save(pipelTaskLogPO1);
                             }
-                        }else if (consumerServerEnable && Objects.equals(type, OlapTableEnum.DATA_SERVICE_API.getValue())){
+                        } else if (consumerServerEnable && Objects.equals(type, OlapTableEnum.DATA_SERVICE_API.getValue())) {
                             TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
                             tableServiceEmailDTO.appId = appId;
                             tableServiceEmailDTO.msg = NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message;
@@ -318,9 +318,9 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                         log.info("失败调用发布中心");
                         if (!StringUtils.isEmpty(nifiStageMessageDTO.message)) {
                             if (Objects.equals(Integer.parseInt(topic[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
-                                sendPublishCenter(nifiStageMessageDTO, itselfPort,MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW);
-                            }else {
-                                sendPublishCenter(nifiStageMessageDTO, itselfPort,MqConstants.QueueConstants.TASK_PUBLIC_CENTER_TOPIC_NAME);
+                                sendPublishCenter(nifiStageMessageDTO, itselfPort, MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW);
+                            } else {
+                                sendPublishCenter(nifiStageMessageDTO, itselfPort, MqConstants.QueueConstants.TASK_PUBLIC_CENTER_TOPIC_NAME);
                             }
                         }
                     } else if (topic.length == 4) {
@@ -452,7 +452,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         }
     }
 
-    public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort,String topic) {
+    public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort, String topic) {
         KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
         kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();
         kafkaReceive.topic = nifiStageMessage.topic;
@@ -551,7 +551,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         //查询失败的
         LambdaQueryWrapper<PipelineTableLogPO> wrapper1 = new LambdaQueryWrapper<>();
         wrapper1.in(PipelineTableLogPO::getTableType, types)
-                //3成功
+                //4失败
                 .eq(PipelineTableLogPO::getState, 4)
                 .between(PipelineTableLogPO::getCreateTime, start, end);
         List<PipelineTableLogPO> failureList = iPipelineTableLog.list(wrapper1);
@@ -560,7 +560,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         LambdaQueryWrapper<TBETLlogPO> wrapper2 = new LambdaQueryWrapper<>();
         //1成功的
         wrapper2.eq(TBETLlogPO::getStatus, 1)
-                .between(TBETLlogPO::getCreatetime, start, end);
+                .between(TBETLlogPO::getCreatetime, start, end)
+                .between(TBETLlogPO::getStartdate, start, end);
         int successCount = etlLog.list(wrapper2).size();
 
         LambdaQueryWrapper<TBETLlogPO> wrapper3 = new LambdaQueryWrapper<>();
