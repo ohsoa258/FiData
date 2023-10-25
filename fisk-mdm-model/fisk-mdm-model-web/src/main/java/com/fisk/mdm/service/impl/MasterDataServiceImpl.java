@@ -1062,6 +1062,23 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @return
      */
     public ResultEnum OperateMasterData(MasterDataDTO dto, EventTypeEnum eventTypeEnum) {
+        //如果配置流程则走流程
+        boolean flag;
+        try {
+            ResultEnum resultEnum = processService.verifyProcessApply(dto.getEntityId());
+            switch (resultEnum){
+                case VERIFY_APPROVAL:
+                    flag = true;
+                    break;
+                case VERIFY_NOT_APPROVAL:
+                    flag = false;
+                    break;
+                default:
+                    throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
+            }
+        }catch (FkException e){
+            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR,e.getMessage());
+        }
         EntityPO entityPO = entityMapper.selectById(dto.getEntityId());
         if (entityPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
@@ -1102,75 +1119,58 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     //code是否验证已存在
                     Map<String, String> codeList = getCodeAndLockList(TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName()), columnName, dto.getVersionId());
                     if (codeList.containsKey(mapData.get("code"))) {
-                        throw new FkException(ResultEnum.CODE_EXIST);
+                        throw new FkException(ResultEnum.CODE_EXIST,"code:"+mapData.get("code"));
+                    }
+                }
+            }else {
+                String mdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName());
+                StringBuilder queryConditions = new StringBuilder();
+                queryConditions.append(" and fidata_id ='")
+                        .append(mapDataItem.get("fidataId"))
+                        .append("' and fidata_lock_tag ='1'");
+                IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
+                String sql = buildSqlCommand.buildQueryData(mdmTableName, queryConditions.toString());
+                Connection connection = getConnection();
+                List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, connection);
+                if(!org.springframework.util.CollectionUtils.isEmpty(maps)){
+                    throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
+                }
+                if(flag){
+                    StringBuilder update = new StringBuilder();
+                    update.append("update \"")
+                            .append(mdmTableName)
+                            .append("\" set fidata_lock_tag = 1 where fidata_id ='")
+                            .append(mapDataItem.get("fidataId")).append("'");
+                    PreparedStatement statement = null;
+                    try {
+                        statement = getConnection().prepareStatement(update.toString());
+                        statement.execute();
+                    } catch (SQLException ex) {
+                        // 回滚事务
+                        rollbackConnection(connection);
+                        // 记录日志
+                        log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + update + "【原因:】" + ex.getMessage());
+                        throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
+                    }finally {
+                        AbstractDbHelper.closeConnection(connection);
+                        AbstractDbHelper.closeStatement(statement);
                     }
                 }
             }
             mapData.put("fidata_update_time", CommonMethods.getFormatDate(date));
             mapData.put("fidata_update_user", userId);
+            mapData.remove("fidataId");
             //生成批次号
-
             members.add(mapData);
         }
         String batchNumber = UUID.randomUUID().toString();
         boolean delete = eventTypeEnum == EventTypeEnum.DELETE ? true : false;
-        //如果配置流程则走流程
-        boolean flag;
-        try {
-            ResultEnum resultEnum = processService.verifyProcessApply(dto.getEntityId());
-            switch (resultEnum){
-                case VERIFY_APPROVAL:
-                    flag = true;
-                    break;
-                case VERIFY_NOT_APPROVAL:
-                    flag = false;
-                    break;
-                default:
-                    throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR);
-            }
-        }catch (FkException e){
-            throw new FkException(ResultEnum.VERIFY_PROCESS_APPLY_ERROR,e.getMessage());
-        }
-
-        if (eventTypeEnum != EventTypeEnum.SAVE){
-            String mdmTableName = TableNameGenerateUtils.generateMdmTableName(modelPO.getName(), entityPO.getName());
-            StringBuilder queryConditions = new StringBuilder();
-            queryConditions.append(" and fidata_id ='")
-                    .append(dto.getFidataId())
-                    .append("' and fidata_lock_tag ='1'");
-            IBuildSqlCommand buildSqlCommand = BuildFactoryHelper.getDBCommand(type);
-            String sql = buildSqlCommand.buildQueryData(mdmTableName, queryConditions.toString());
-            Connection connection = getConnection();
-            List<Map<String, Object>> maps = AbstractDbHelper.execQueryResultMaps(sql, connection);
-            if(!org.springframework.util.CollectionUtils.isEmpty(maps)){
-                throw new FkException(ResultEnum.PROCESS_APPLY_EXIST);
-            }else {
-                StringBuilder update = new StringBuilder();
-                update.append("update \"")
-                        .append(mdmTableName)
-                        .append("\" set fidata_lock_tag = 1 where fidata_id ='")
-                        .append(dto.getFidataId()).append("'");
-                PreparedStatement statement = null;
-                try {
-                    statement = getConnection().prepareStatement(update.toString());
-                    statement.execute();
-                } catch (SQLException ex) {
-                    // 回滚事务
-                    rollbackConnection(connection);
-                    // 记录日志
-                    log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + update + "【原因:】" + ex.getMessage());
-                    throw new FkException(ResultEnum.FACT_ATTRIBUTE_FAILD);
-                }finally {
-                    AbstractDbHelper.closeConnection(connection);
-                    AbstractDbHelper.closeStatement(statement);
-                }
-            }
-        }
         int flat = templateDataSubmitStg(members, tableName, batchNumber, dto.getVersionId(),
                 userId, ImportTypeEnum.MANUALLY_ENTER, delete);
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }else if(flag){
+        }
+        if(flag){
             //添加工单
             return processService.addProcessApply(dto.getEntityId(),dto.getDescription(),batchNumber,eventTypeEnum);
         }
