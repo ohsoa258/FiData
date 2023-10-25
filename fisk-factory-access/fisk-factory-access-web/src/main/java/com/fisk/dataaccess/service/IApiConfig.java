@@ -101,6 +101,14 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     String webServicePushData(ReceiveDataDTO dto);
 
     /**
+     * webService推送数据-ksf定制统一推数据接口
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    String KsfWebServicePushData(ReceiveDataDTO dto);
+
+    /**
      * 获取实时api的临时token
      *
      * @param dto dto

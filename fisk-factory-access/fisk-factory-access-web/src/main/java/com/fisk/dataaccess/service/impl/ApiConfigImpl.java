@@ -865,6 +865,231 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     /**
+     * 该接口用于第三方以webService方式推送数据 调用需谨慎
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @Override
+    public String KsfWebServicePushData(ReceiveDataDTO dto) {
+
+        // 2023-08-29 新增需求，数据接入页面新增大开关，控制实时应用推数据的接口是否启用
+        ApiStateDTO apiState = apiStateService.getApiState();
+        if (apiState != null) {
+            Integer state = apiState.getApiState();
+            // 0 接口禁用  1 接口启用
+            if (state == 0) {
+                return "当前调用的接口已被禁用，请联系系统管理员...";
+            }
+        }
+
+        ResultEnum resultEnum = null;
+        StringBuilder msg = new StringBuilder("");
+        Date startTime = new Date();
+        try {
+            if (dto.getApiCode() == null) {
+                return "推送的webServiceCode不可为空";
+            }
+
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
+            if (apiConfigPo == null) {
+                return "当前推送的webService不存在";
+            }
+
+            // json解析的根节点
+            String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+            log.info("json解析的根节点参数为: " + jsonKey);
+
+            // 根据api_id查询所有物理表
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
+            if (CollectionUtils.isEmpty(accessPoList)) {
+                return "当前物理表不存在or已删除";
+            }
+            // 获取当前api下的所有表数据
+            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
+//            apiTableDtoList.forEach(System.out::println);
+
+            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+            if (modelApp == null) {
+                return "当前API所属应用已删除";
+            }
+
+            // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+            // 0 接口禁用  1 接口启用
+            if (modelApp.ifAllowDatatransfer == 0) {
+                return "当前调用的接口已被禁用，请联系系统管理员...";
+            }
+
+            // 防止\未被解析
+            String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
+            log.info("stg表数据用完即删");
+            // 这一步是去清空当前apicode下的所有stg表
+            pushDataStgToOds(dto.getApiCode(), 0);
+
+            // 将数据同步到pgsql
+            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+            // 这一步是将数据同步到stg临时表
+            ResultEntity<Object> result = ksfPushPgSql(jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
+            resultEnum = ResultEnum.getEnum(result.code);
+            msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
+
+            // stg同步到ods(联调task)
+            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+                ResultEnum resultEnum1 = pushDataStgToOdsV2(dto.getApiCode(), 1);
+                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+            } else {
+                return resultEnum.getMsg() + result.data;
+            }
+
+            // 保存本次的日志信息
+            // 非实时api
+            // 系统内部调用 && 实时推送示例数据
+            if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                // 实时调用
+                // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+            } else if (dto.isFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+                }
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            } else if (!dto.isExecuteConfigFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            }
+
+        } catch (FkException ex) {
+            resultEnum = ex.getResultEnum();
+            msg.append(ex.getErrorMsg());
+            return resultEnum.getMsg() + msg;
+        } catch (Exception e) {
+            resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.getApiCode(), dto.getPushData()), e);
+            return resultEnum.getMsg() + msg;
+        }
+        return resultEnum.getMsg() + msg;
+    }
+
+    /**
+     * 将数据同步到pgsql  -- 康师傅前置机定制  请勿引用
+     *
+     * @param jsonStr         json数据
+     * @param apiTableDtoList 当前api下的所有表(父子级结构)
+     * @param tablePrefixName stg_应用简称
+     * @param targetDbId      targetDbId
+     * @param jsonKey         json解析的根节点(一般为data)
+     * @return void
+     * @description 将数据同步到pgsql
+     * @author Lock
+     * @date 2022/2/16 19:17
+     */
+    private ResultEntity<Object> ksfPushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList,
+                                              String tablePrefixName, String jsonKey, Integer targetDbId) {
+        ResultEnum resultEnum;
+        // 初始化数据
+        StringBuilder checkResultMsg = new StringBuilder();
+        // ods_应用简称
+        String replaceTablePrefixName = tablePrefixName.replace("stg_", "ods_");
+        List<String> tableNameList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tableName).collect(Collectors.toList());
+        // 获取物理表id
+        List<Long> tableIdList = apiTableDtoList.stream().map(tableDTO -> tableDTO.tblId).collect(Collectors.toList());
+        JsonUtils jsonUtils = new JsonUtils();
+        List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
+        // 获取Json的schema信息
+        List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
+        // json根节点处理
+        try {
+            JSONObject json = JSON.parseObject(jsonStr);
+            jsonUtils.rootNodeHandler(schemas, json, targetTable);
+        } catch (Exception e) {
+            log.error(String.format("解析Json数据失败，表名称：%s，Json: %s", tablePrefixName, jsonStr), e);
+            return ResultEntityBuild.build(ResultEnum.JSON_ROOTNODE_HANDLER_ERROR);
+        }
+        targetTable.forEach(System.out::println);
+
+        //康师傅前置机暂时不做数据校验 2023-10-25
+//        try {
+//            // TODO 先去数据质量验证
+//            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
+//            if (!CollectionUtils.isEmpty(targetTable)) {
+//                DataCheckWebDTO dto = new DataCheckWebDTO();
+//                dto.setFiDataDataSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
+//                String uuid = UUID.randomUUID().toString().replace("-", "");
+//                dto.setBatchNumber(uuid);
+//                dto.setSmallBatchNumber(uuid);
+//                HashMap<String, JSONArray> body = new HashMap<>();
+////                for (JsonTableData jsonTableData : targetTable) {
+////                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
+////                }
+//                for (int i = 0; i < targetTable.size(); i++) {
+//                    body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
+//                }
+//
+//
+//                dto.body = body;
+//                // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
+//                ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
+//                log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
+//                // 数据校验结果
+//                if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
+//                    List<DataCheckResultVO> data = result.data;
+//                    if (!CollectionUtils.isEmpty(data)) {
+//                        StringBuilder checkResult = new StringBuilder("校验结果详情：");
+//                        for (DataCheckResultVO d : data) {
+//                            checkResult.append(d.checkResultMsg).append("。 ");
+//                        }
+//                        for (DataCheckResultVO e : data) {
+//                            // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
+//                            if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
+//                                checkResult.append("本次校验结果中存在未通过的强规则，数据同步失败！");
+//                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
+//                            } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
+//                                checkResultMsg.append(e.checkResultMsg).append("；");
+//                            } else {
+//                                return ResultEntityBuild.build(ResultEnum.getEnum(result.code), result.msg);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            log.error(String.format("调用数据质量接口报错，表名称：%s", tablePrefixName), e);
+//            return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
+//        }
+
+        log.info("开始执行sql!!!");
+
+        // stg_abbreviationName_tableName
+        ResultEntity<Object> excuteResult;
+        try {
+            //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
+            String fidata_batch_code = UUID.randomUUID().toString();
+            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(fidata_batch_code,tablePrefixName, targetTable, apiTableDtoList, targetDbId);
+        } catch (Exception e) {
+            log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);
+        }
+        resultEnum = ResultEnum.getEnum(excuteResult.code);
+
+        List<ApiSqlResultDTO> list = JSONArray.parseArray(excuteResult.msg.toString(), ApiSqlResultDTO.class);
+        if (!CollectionUtils.isEmpty(list)) {
+            for (ApiSqlResultDTO e : list) {
+                checkResultMsg.append("数据推送到").append("[").append(e.getTableName()).append("]").append(": ").append(e.getMsg()).append(",").append("推送的条数为: ").append(e.getCount()).append("；");
+                COUNT_SQL = e.getCount();
+                // 推送条数累加值
+                COUNT_SQL += COUNT_SQL;
+            }
+        }
+
+        return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());
+    }
+
+    /**
      * task添加日志执行的推送数据方法
      *
      * @param importDataDto 管道传递的参数

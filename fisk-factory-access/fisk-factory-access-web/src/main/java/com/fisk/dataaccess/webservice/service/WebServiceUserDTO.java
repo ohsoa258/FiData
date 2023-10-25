@@ -5,6 +5,7 @@ import lombok.Data;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 /**
  * @author lsj
@@ -17,7 +18,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @date 2023/10/9
  */
 @Data
-public class WebServiceUserDTO {
+public class WebServiceUserDTO implements Serializable {
     /**
      * 账号
      */

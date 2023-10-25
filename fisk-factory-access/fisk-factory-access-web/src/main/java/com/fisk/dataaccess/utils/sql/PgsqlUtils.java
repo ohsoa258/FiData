@@ -205,7 +205,6 @@ public class PgsqlUtils {
         con.setAutoCommit(false);
         //这里需要注意，SQL语句的格式必须是预处理的这种，就是values(?,?,...,?)，否则批处理不起作用
         ////PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
-
         // TODO 调用JsonUtils获取表对象集合
         int countSql = 0;
         List<ApiSqlResultDTO> list = new ArrayList<>();
@@ -249,6 +248,104 @@ public class PgsqlUtils {
                     }
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
                     insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
+                    inserSql = insertSqlIndex + insertSqlLast;
+                    log.info("数据推送到stg的sql为: " + inserSql);
+                    countSql++;
+                    statement.addBatch(inserSql);
+                }
+                // 批量执行sql
+                statement.executeBatch();
+
+                // 保存本次信息
+                apiSqlResultDto.setCount(countSql);
+                // 多表插入时重新清空条数
+                countSql = 0;
+                // stg表名
+                apiSqlResultDto.setTableName(tablePrefixName + tableName);
+                apiSqlResultDto.setMsg("成功");
+
+                list.add(apiSqlResultDto);
+            }
+            log.info("本次添加的sql个数为: " + countSql);
+            // 提交要执行的批处理，防止 JDBC 执行事务处理
+            con.commit();
+        } catch (SQLException e) {
+            log.error(String.format("批量执行SQL异常: %s", e.getMessage()), e);
+            // 执行sql异常,重置记录的条数
+            countSql = 0;
+            ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
+            apiSqlResultDto.setMsg("失败");
+            apiSqlResultDto.setCount(0);
+            list.add(apiSqlResultDto);
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(con);
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, JSON.toJSONString(list));
+    }
+
+    /**
+     * 批量执行sql stg -> ods  ksf前置机定制接口
+     *
+     * @param res             json数据
+     * @param tablePrefixName pg中的物理表前缀名
+     */
+    public ResultEntity<Object> ksfExecuteBatchPgsql(String fidata_batch_code, String tablePrefixName,
+                                                     List<JsonTableData> res,
+                                                     List<ApiTableDTO> apiTableDtoList,
+                                                     Integer targetDbId) throws Exception {
+        Connection con = getPgConn(targetDbId);
+        Statement statement = con.createStatement();
+        //这里必须设置为false，我们手动批量提交
+        con.setAutoCommit(false);
+        //这里需要注意，SQL语句的格式必须是预处理的这种，就是values(?,?,...,?)，否则批处理不起作用
+        ////PreparedStatement statement = con.prepareStatement("insert into student(id,`name`,age) values(?,?,?)");
+        // TODO 调用JsonUtils获取表对象集合
+        int countSql = 0;
+        List<ApiSqlResultDTO> list = new ArrayList<>();
+        try {
+            JSONArray data = new JSONArray();
+            for (JsonTableData re : res) {
+
+                ApiSqlResultDTO apiSqlResultDto = new ApiSqlResultDTO();
+                for (ApiTableDTO apiTable : apiTableDtoList) {
+                    if (Objects.equals(apiTable.tableName, re.table)) {
+                        List<TableFieldsDTO> tableFields = apiTable.list;
+                        Map<String, String> map = new HashMap<>();
+                        for (TableFieldsDTO tableField : tableFields) {
+                            if (!Objects.equals(tableField.sourceFieldName, tableField.fieldName)) {
+                                map.put(tableField.sourceFieldName, tableField.fieldName);
+                            }
+                        }
+                        data = re.data;
+                        if (map.size() != 0) {
+                            String newData = JsonUtils.updateJsonArray(JSON.toJSONString(data), map);
+                            data = JSON.parseArray(newData);
+                        }
+                    }
+                }
+                String tableName = re.table;
+                for (Object datum : data) {
+                    String insertSqlIndex = "insert into ";
+                    String insertSqlLast = "(";
+                    String inserSql = "";
+                    insertSqlIndex = insertSqlIndex + tablePrefixName + tableName + "(";
+                    JSONObject object = (JSONObject) datum;
+                    Iterator<Map.Entry<String, Object>> iter = object.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        Map.Entry entry = iter.next();
+                        insertSqlIndex = insertSqlIndex + entry.getKey() + ",";
+                        if (StringUtils.isEmpty(entry.getValue() == null ? "" : entry.getValue().toString())) {
+                            insertSqlLast = insertSqlLast + "null" + ",";
+                            continue;
+                        }
+                        insertSqlLast = insertSqlLast + "'" + entry.getValue() + "'" + ",";
+                    }
+                    //大批次号
+                    insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ",fidata_batch_code) values";
+                    insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ",'" + fidata_batch_code + "')";
                     inserSql = insertSqlIndex + insertSqlLast;
                     log.info("数据推送到stg的sql为: " + inserSql);
                     countSql++;

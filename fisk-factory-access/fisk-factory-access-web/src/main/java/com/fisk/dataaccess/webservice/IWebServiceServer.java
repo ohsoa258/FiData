@@ -1,5 +1,7 @@
 package com.fisk.dataaccess.webservice;
 
+import com.fisk.dataaccess.webservice.service.KSF_Notice;
+import com.fisk.dataaccess.webservice.service.KSF_NoticeResult;
 import com.fisk.dataaccess.webservice.service.WebServiceReceiveDataDTO;
 import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
 
@@ -26,5 +28,12 @@ public interface IWebServiceServer {
      */
     String webServiceGetToken(WebServiceUserDTO dto);
 
+    /**
+     * 康师傅前置机定制接口--通知单
+     *
+     * @param KSF_Notice
+     * @return
+     */
+    KSF_NoticeResult ksf_notice(KSF_Notice KSF_Notice);
 
 }

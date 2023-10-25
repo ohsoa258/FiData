@@ -1,5 +1,10 @@
 package com.fisk.dataaccess.webservice.service;
 
+import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
@@ -96,6 +101,46 @@ public class WebServiceImpl implements IWebServiceServer {
             log.error("远程调用失败,方法名: 【auth-service:getToken】");
             return "远程调用失败,方法名: 【auth-service:getToken】";
         }
+    }
+
+    /**
+     * 康师傅前置机定制接口--通知单
+     *
+     * @param KSF_Notice
+     * @return
+     */
+    @Override
+    @WebMethod
+    @WebResult(name = "KSF_NoticeResult")
+    public KSF_NoticeResult ksf_notice(@WebParam(name = "KSF_Notice") KSF_Notice KSF_Notice) {
+        //将webservice接收到的xml格式的数据转换为json格式的数据
+        KsfNoticeDTO data = new KsfNoticeDTO();
+        data.setSourceSys(KSF_Notice.getAPI_Message().getSourceSys());
+        data.setTargetSys(KSF_Notice.getAPI_Message().getTargetSys());
+        data.setUpdateTime(KSF_Notice.getAPI_Message().getUpdateTime());
+        data.setGuid(KSF_Notice.getAPI_Message().getGuid());
+        data.setSingleTargetSys(KSF_Notice.getAPI_Message().getSingleTargetSys());
+        data.setAppKey(KSF_Notice.getAPI_Message().getAppKey());
+        data.setIsTest(KSF_Notice.getAPI_Message().getIsTest());
+        data.setIsManualSend(KSF_Notice.getAPI_Message().getIsManualSend());
+        data.setHeaders(KSF_Notice.getElements().getElement().getHEADER());
+        data.setDetails(KSF_Notice.getElements().getElement().getDETAIL());
+        String pushData = JSON.toJSONString(data);
+        //json解析的根节点 data
+        String rebuild = "{\"data\": [" + pushData + "]}";
+
+        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+        //建完应用-api之后写回来
+        receiveDataDTO.setApiCode(11L);
+        receiveDataDTO.setPushData(rebuild);
+        receiveDataDTO.setIfWebService(true);
+        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
+
+        //统一报文返回类型
+        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
+        ksf_noticeResult.setSTATUS(result);
+        ksf_noticeResult.setINFOTEXT(result);
+        return ksf_noticeResult;
     }
 
 }
