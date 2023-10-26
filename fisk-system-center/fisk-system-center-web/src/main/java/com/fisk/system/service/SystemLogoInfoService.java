@@ -33,8 +33,7 @@ public interface SystemLogoInfoService {
      * 更新系统logo及系统名称
      *
      * @param systemLogoInfoDTO
-     * @param file
      * @return
      */
-    ResultEnum updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, MultipartFile file);
+    ResultEnum updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO);
 }

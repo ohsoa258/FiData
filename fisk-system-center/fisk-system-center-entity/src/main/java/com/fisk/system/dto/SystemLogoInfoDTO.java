@@ -27,5 +27,8 @@ public class SystemLogoInfoDTO {
     private Boolean overStriking;
     @ApiModelProperty(value = "是否展示logo图片")
     private Integer ifShowLogo;
-
+    @ApiModelProperty(value = "标签页名称")
+    private String tabName;
+    @ApiModelProperty(value = "标签页logo")
+    private String tabLogo;
 }

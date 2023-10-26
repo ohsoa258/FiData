@@ -76,7 +76,6 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
     @Override
     public ResultEntity<Object> getLogoInfo() {
         SystemLogoInfoDTO info = mapper.selectOne(null);
-        info.setLogo("data:image/png;base64," + info.getLogo());
         return ResultEntityBuild.build(ResultEnum.SUCCESS, info);
     }
 
@@ -84,11 +83,10 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
      * 更新系统logo及系统名称
      *
      * @param systemLogoInfoDTO
-     * @param file
      * @return
      */
     @Override
-    public ResultEnum updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO, MultipartFile file) {
+    public ResultEnum updateLogoInfo(SystemLogoInfoDTO systemLogoInfoDTO) {
         if (systemLogoInfoDTO.getId() == null || systemLogoInfoDTO.getId() <= 0){
             return ResultEnum.DATA_NOTEXISTS;
         }
@@ -99,17 +97,8 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
         }
 
         // 文件不为空则处理文件
-        if (file != null && file.getSize() != 0){
-            String fileStr = "";
-            // 通过base64来转化图片
-            try {
-                fileStr = Base64.encodeBase64String(file.getBytes());
-                fileStr = fileStr.replaceAll("[\\s*\t\n\r]", "");
-            } catch (IOException e) {
-                log.error("文件转码出错", e);
-                return ResultEnum.SAVE_DATA_ERROR;
-            }
-            info.setLogo(fileStr);
+        if (StringUtils.isNotEmpty(systemLogoInfoDTO.getLogo())){
+            info.setLogo(systemLogoInfoDTO.getLogo());
         }
         // 标题不为空，则设置标题
         if (StringUtils.isNotEmpty(systemLogoInfoDTO.getTitle())){
@@ -130,7 +119,12 @@ public class SystemLogoInfoServiceImpl implements SystemLogoInfoService {
         if (systemLogoInfoDTO.getIfShowLogo() != null){
             info.setIfShowLogo(systemLogoInfoDTO.getIfShowLogo());
         }
-
+        if (StringUtils.isNotEmpty(systemLogoInfoDTO.getTabLogo())){
+            info.setTabLogo(systemLogoInfoDTO.getTabLogo());
+        }
+        if (StringUtils.isNotEmpty(systemLogoInfoDTO.getTabName())){
+            info.setTabName(systemLogoInfoDTO.getTabName());
+        }
         int update = mapper.updateById(info);
         return update > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
