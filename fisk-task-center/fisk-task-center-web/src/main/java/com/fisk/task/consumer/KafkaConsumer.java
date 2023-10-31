@@ -239,6 +239,18 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.delete.access.mdm.nifi.flow
+     * @param data
+     * @param ack
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.NifiTopicConstants.BUILD_DELETE_ACCESS_MDM_NIFI_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog
+    public ResultEntity<Object> buildDeleteAccessMdmTaskListener(String data, Acknowledgment ack) {
+        return ResultEntityBuild.build(accessMdmNifiTaskListener.buildDeleteAccessMdm(data, ack));
+    }
+    /**
      * task.build.table.server.flow 发布表服务
      *
      * @param data

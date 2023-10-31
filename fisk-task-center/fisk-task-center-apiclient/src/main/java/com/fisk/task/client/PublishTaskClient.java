@@ -445,6 +445,8 @@ public interface PublishTaskClient {
     @GetMapping("/dispatchLog/getPipelStates")
     ResultEntity<List<String>> getPipelStates(@RequestParam("pipelTraceId") String pipelTraceId);
 
+    @PostMapping("/publishTask/deleteAccessMdmNifiFlow")
+    ResultEntity<Object> publishDeleteAccessMdmNifiFlowTask(@RequestBody BuildDeleteTableServiceDTO data);
     /**
      * @param data
      * @return

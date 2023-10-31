@@ -3,6 +3,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.access.AccessAttributeAddDTO;
 import com.fisk.mdm.dto.access.AccessSqlDTO;
@@ -80,5 +81,11 @@ public class AccessDataController {
     @ApiOperation(value = "获取实体表id")
     public ResultEntity<List<ChannelDataDTO>> getTableId(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,accessDataService.getTableId());
+    }
+
+    @ApiOperation("获取表发布历史列表")
+    @GetMapping("/getTableHistoryList")
+    public ResultEntity<Object> getTableHistoryList(@RequestParam("tableId") Integer tableId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.getTableHistoryList(tableId));
     }
 }

@@ -18,11 +18,6 @@ public class TableHistoryDTO {
     @ApiModelProperty(value = "发布表id")
     public Integer tableId;
     /**
-     * 发布表类型 0：RestfulAPI 1：非实时表  2:  api
-     */
-    @ApiModelProperty(value = "发布表类型 0：RestfulAPI 1：非实时表  2:  api")
-    public Integer tableType;
-    /**
      * 发布备注
      */
     @ApiModelProperty(value = "发布备注")

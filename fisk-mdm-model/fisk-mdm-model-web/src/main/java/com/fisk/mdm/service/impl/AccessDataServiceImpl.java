@@ -19,6 +19,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.mdm.dto.access.TableHistoryQueryDTO;
 import com.fisk.mdm.dto.access.TableHistoryDTO;
 import com.fisk.mdm.enums.SystemVariableTypeEnum;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
@@ -30,6 +31,7 @@ import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.map.AccessTransformationMap;
 import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.map.SyncModeMap;
+import com.fisk.mdm.map.TableHistoryMap;
 import com.fisk.mdm.mapper.AccessDataMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
@@ -552,6 +554,13 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         }).collect(Collectors.toList());
 
         return channelDataDTOS;
+    }
+
+    @Override
+    public List<TableHistoryDTO> getTableHistoryList(Integer tableId) {
+        QueryWrapper<TableHistoryPO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(TableHistoryPO::getTableId,tableId);
+        return TableHistoryMap.INSTANCES.poListToDtoList(tableHistoryMapper.selectList(queryWrapper));
     }
 
     @Override

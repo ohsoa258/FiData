@@ -73,6 +73,15 @@ public class PublishTaskController {
                 data);
     }
 
+    @PostMapping("/deleteAccessMdmNifiFlow")
+    @ApiOperation(value = "删除接入至mdm同步数据nifi流程")
+    public ResultEntity<Object> publishDeleteAccessMdmNifiFlowTask(@RequestBody BuildDeleteTableServiceDTO data) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DELETE_TABLE_SERVER_FLOW.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.NifiTopicConstants.BUILD_DELETE_ACCESS_MDM_NIFI_FLOW,
+                data);
+    }
+
     /**
      * 发布表服务
      * @param data

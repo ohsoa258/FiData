@@ -4,10 +4,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
-import com.fisk.mdm.dto.access.AccessAttributeAddDTO;
-import com.fisk.mdm.dto.access.AccessAttributeListDTO;
-import com.fisk.mdm.dto.access.AccessSqlDTO;
-import com.fisk.mdm.dto.access.OverlayCodePreviewAccessDTO;
+import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
+import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.entity.AccessDataPO;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
@@ -89,5 +87,12 @@ public interface AccessDataService extends IService<AccessDataPO> {
      * @return
      */
     List<ChannelDataDTO> getTableId();
+
+    /**
+     * 根据参数,获取发布列表
+     * @param tableId
+     * @return
+     */
+    List<TableHistoryDTO> getTableHistoryList(Integer tableId);
 }
 

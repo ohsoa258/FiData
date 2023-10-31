@@ -51,6 +51,8 @@ public class MqConstants {
 
             public static final String BUILD_ACCESS_MDM_NIFI_FLOW = "task.build.access.mdm.nifi.flow";
 
+            public static final String BUILD_DELETE_ACCESS_MDM_NIFI_FLOW = "task.build.delete.access.mdm.nifi.flow";
+
             public static final String BUILD_IMMEDIATELYSTART_FLOW = "task.build.immediatelyStart.flow";
         }
 

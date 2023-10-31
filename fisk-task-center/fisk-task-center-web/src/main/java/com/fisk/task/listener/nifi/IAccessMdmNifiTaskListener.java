@@ -15,4 +15,12 @@ public interface IAccessMdmNifiTaskListener {
      * @return
      */
     ResultEnum accessMdmMsg(String dataInfo, Acknowledgment acke);
+
+    /**
+     * 删除mdm nifi流程
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    ResultEnum buildDeleteAccessMdm(String dataInfo, Acknowledgment acke);
 }

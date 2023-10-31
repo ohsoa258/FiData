@@ -17,10 +17,6 @@ public class TableHistoryPO extends BasePO {
      */
     public Integer tableId;
     /**
-     * 发布表类型 0：实时api 1：非实时表
-     */
-    public Integer tableType;
-    /**
      * 发布备注
      */
     public String  remark;

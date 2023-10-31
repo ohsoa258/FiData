@@ -36,6 +36,7 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.mdmconfig.*;
 import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
 import com.fisk.task.dto.nifi.*;
+import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.TableTopicDTO;
 import com.fisk.task.enums.DataClassifyEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -267,6 +268,29 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             if (acke != null) {
                 acke.acknowledge();
             }
+        }
+    }
+
+    @Override
+    public ResultEnum buildDeleteAccessMdm(String dataInfo, Acknowledgment acke) {
+        log.info("表服务删除nifi流程参数:{}", dataInfo);
+        try {
+            BuildDeleteTableServiceDTO buildDeleteTableService = JSON.parseObject(dataInfo, BuildDeleteTableServiceDTO.class);
+            DataModelVO dataModelVO = new DataModelVO();
+            dataModelVO.delBusiness = buildDeleteTableService.delBusiness;
+            DataModelTableVO dataModelTableVO = new DataModelTableVO();
+            dataModelTableVO.ids = buildDeleteTableService.ids;
+            dataModelTableVO.type = buildDeleteTableService.olapTableEnum;
+            dataModelVO.tableServerIdList = dataModelTableVO;
+            dataModelVO.businessId = buildDeleteTableService.appId;
+            dataModelVO.dataClassifyEnum = DataClassifyEnum.MDM_DATA_ACCESS;
+            dataModelVO.userId = buildDeleteTableService.userId;
+            return componentsBuild.deleteNifiFlow(dataModelVO);
+        } catch (Exception e) {
+            log.error("表服务流程删除失败" + StackTraceHelper.getStackTraceInfo(e));
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        } finally {
+            acke.acknowledge();
         }
     }
 

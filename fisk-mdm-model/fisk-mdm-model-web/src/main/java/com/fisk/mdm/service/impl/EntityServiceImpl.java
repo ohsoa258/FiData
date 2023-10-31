@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
@@ -31,12 +32,16 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
+import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -60,6 +65,10 @@ public class EntityServiceImpl implements EntityService {
     AttributeMapper attributeMapper;
     @Resource
     AttributeGroupService groupService;
+    @Resource
+    PublishTaskClient publishTaskClient;
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public EntityVO getDataById(Integer id) {
@@ -193,8 +202,8 @@ public class EntityServiceImpl implements EntityService {
 
     @Override
     public ResultEnum deleteData(Integer id) {
-        boolean entity = this.isExistEntity(id);
-        if (entity == false){
+        EntityPO entityPo = entityMapper.selectById(id);
+        if (entityPo == null){
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -211,6 +220,13 @@ public class EntityServiceImpl implements EntityService {
         // 记录日志
         logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
 
+        BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+        buildDeleteTableService.appId = String.valueOf(entityPo.getModelId());
+        buildDeleteTableService.ids = Arrays.asList(entityPo.id);
+        buildDeleteTableService.olapTableEnum = OlapTableEnum.MDM_DATA_ACCESS;
+        buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+        buildDeleteTableService.delBusiness = true;
+        publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableService);
         return ResultEnum.SUCCESS;
     }
 

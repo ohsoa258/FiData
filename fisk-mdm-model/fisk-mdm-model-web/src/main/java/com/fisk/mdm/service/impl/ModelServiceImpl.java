@@ -2,10 +2,12 @@ package com.fisk.mdm.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -26,6 +28,7 @@ import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
+import com.fisk.mdm.entity.AccessDataPO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.entity.ModelVersionPO;
@@ -45,7 +48,11 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.task.BuildDeleteTableApiServiceDTO;
+import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
+import com.fisk.task.enums.OlapTableEnum;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,6 +97,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Resource
     RedisUtil redisUtil;
+
+    @Autowired
+    AccessDataService accessDataService;
 
     /**
      * 通过id查询
@@ -222,6 +232,17 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         if (baseMapper.deleteById(id) <= 0) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        LambdaQueryWrapper<AccessDataPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AccessDataPO::getModelId,id);
+        List<AccessDataPO> tableApiServicePOS = accessDataService.list(queryWrapper);
+        List<Long> tableApiIdList = tableApiServicePOS.stream().map(i->i.getEntityId().longValue()).collect(Collectors.toList());
+        BuildDeleteTableServiceDTO buildDeleteTableApiServiceDTO = new BuildDeleteTableServiceDTO();
+        buildDeleteTableApiServiceDTO.ids = tableApiIdList;
+        buildDeleteTableApiServiceDTO.appId = String.valueOf(id);
+        buildDeleteTableApiServiceDTO.olapTableEnum = OlapTableEnum.MDM_DATA_ACCESS;
+        buildDeleteTableApiServiceDTO.userId = userHelper.getLoginUserInfo().id;
+        buildDeleteTableApiServiceDTO.delBusiness = true;
+        publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableApiServiceDTO);
 
         // 记录日志
         String desc = "删除一个模型,id:" + id;
