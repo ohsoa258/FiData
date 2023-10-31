@@ -11,6 +11,8 @@ import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
@@ -92,6 +94,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserClient userClient;
+    @Resource
+    private UserHelper userHelper;
 
     @Value("${pgsql-mdm.url}")
     private String pgJdbcStr;
@@ -192,7 +196,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         }
 
         //系统变量
-        if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
+        if (!CollectionUtils.isEmpty(dto.deltaTimes)) {
             systemVariables.addSystemVariables(dto.accessId, dto.deltaTimes);
         }
 
@@ -210,10 +214,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         //删除字段属性
         QueryWrapper<AccessTransformationPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("access_id", dto.accessId);
-        boolean remove = transformationService.remove(queryWrapper);
-        if (!remove) {
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        transformationService.remove(queryWrapper);
         //添加或修改字段
         List<AccessTransformationPO> poList = AccessTransformationMap.INSTANCES.dtoListToPoList(dto.list);
         poList.stream().map(e -> {
@@ -228,6 +229,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         accessDataPO.publish = PublicStatusEnum.UN_PUBLIC.getValue();
         accessDataPO.setLoadingSql(dto.coverScript);
         accessDataPO.setVersionId(dto.versionId);
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        dto.setUserId(userInfo.id);
         if (mapper.updateById(accessDataPO) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }

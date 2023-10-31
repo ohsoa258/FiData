@@ -16,6 +16,8 @@ public class CodePreviewHelper {
                 return new FactoryCodePreviewSqlServerImpl();
             case POSTGRESQL:
                 return new FactoryCodePreviewPgSqlImpl();
+            case DORIS:
+                return new FactoryCodePreviewDorisSqlImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

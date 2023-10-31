@@ -24,6 +24,8 @@ public class BuildFactoryAccessHelper {
                 return new BuildAccessOpenEdgeCommandImpl();
             case SAPBW:
                 return new BuildAccessSapBwCommandImpl();
+            case DORIS:
+                return new BuildAccessDorisCommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

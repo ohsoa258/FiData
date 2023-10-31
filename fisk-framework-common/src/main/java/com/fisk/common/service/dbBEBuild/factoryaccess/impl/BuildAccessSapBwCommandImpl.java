@@ -57,6 +57,7 @@ public class BuildAccessSapBwCommandImpl implements IBuildAccessSqlCommand {
             case ORACLE:
                 return sapBwConversionOracle(dto);
             case MYSQL:
+            case DORIS:
                 return sapBwConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

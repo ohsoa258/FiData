@@ -152,6 +152,7 @@ public class BuildAccessSqlServerCommandImpl implements IBuildAccessSqlCommand {
             case ORACLE:
                 return sqlServerConversionOracle(dto);
             case MYSQL:
+            case DORIS:
                 return sqlServerConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

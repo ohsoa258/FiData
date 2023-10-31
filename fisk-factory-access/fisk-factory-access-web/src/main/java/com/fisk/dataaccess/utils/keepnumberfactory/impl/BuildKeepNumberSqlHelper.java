@@ -15,6 +15,8 @@ public class BuildKeepNumberSqlHelper {
                 return new KeepNumberSqlServerImpl();
             case POSTGRESQL:
                 return new KeepNumberPgImpl();
+            case DORIS:
+                return new KeepNumberDorisImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

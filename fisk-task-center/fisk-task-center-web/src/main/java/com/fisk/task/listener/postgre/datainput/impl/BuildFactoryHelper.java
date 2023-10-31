@@ -19,6 +19,8 @@ public class BuildFactoryHelper {
                 return new BuildPgTableImpl();
             case MYSQL:
                 return new BuildMysqlTableImpl();
+            case DORIS:
+                return new BuildDorisTableImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

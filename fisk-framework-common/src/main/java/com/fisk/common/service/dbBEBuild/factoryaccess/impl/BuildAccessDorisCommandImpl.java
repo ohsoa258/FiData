@@ -16,7 +16,7 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.dto.TableBusinessTimeDTO;
 /**
  * @author JianWenYang
  */
-public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
+public class BuildAccessDorisCommandImpl implements IBuildAccessSqlCommand {
 
     private static Integer sql_server_max_length = 4000;
 
@@ -59,14 +59,14 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
     public String[] dataTypeConversion(DataTypeConversionDTO dto, DataSourceTypeEnum typeEnum) {
         switch (typeEnum) {
             case SQLSERVER:
-                return mySqlConversionSqlServer(dto);
+                return dorisConversionSqlServer(dto);
             case POSTGRESQL:
-                return mySqlConversionPg(dto);
+                return dorisConversionPg(dto);
             case ORACLE:
-                return mySqlConversionOracle(dto);
+                return dorisConversionOracle(dto);
             case MYSQL:
             case DORIS:
-                return mySqlConversionMySQL(dto);
+                return dorisConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
@@ -94,12 +94,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
     }
 
     /**
-     * mySql转MySQL
+     * doris转MySQL
      *
      * @param dto
      * @return
      */
-    private String[] mySqlConversionMySQL(DataTypeConversionDTO dto) {
+    private String[] dorisConversionMySQL(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
         data[1] = dto.dataLength;
@@ -143,12 +143,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
     }
 
     /**
-     * mySql转Pg
+     * doris转Pg
      *
      * @param dto
      * @return
      */
-    private String[] mySqlConversionPg(DataTypeConversionDTO dto) {
+    private String[] dorisConversionPg(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
         data[1] = dto.dataLength;
@@ -188,12 +188,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
     }
 
     /**
-     * mySql转SqlServer
+     * doris转SqlServer
      *
      * @param dto
      * @return
      */
-    private String[] mySqlConversionSqlServer(DataTypeConversionDTO dto) {
+    private String[] dorisConversionSqlServer(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
         data[1] = dto.dataLength;
@@ -242,12 +242,12 @@ public class BuildAccessMySqlCommandImpl implements IBuildAccessSqlCommand {
     }
 
     /**
-     * mySql转Oracle
+     * doris转Oracle
      *
      * @param dto
      * @return
      */
-    private String[] mySqlConversionOracle(DataTypeConversionDTO dto) {
+    private String[] dorisConversionOracle(DataTypeConversionDTO dto) {
         MySqlTypeEnum typeEnum = MySqlTypeEnum.getValue(dto.dataType);
         String[] data = new String[2];
         data[1] = dto.dataLength;

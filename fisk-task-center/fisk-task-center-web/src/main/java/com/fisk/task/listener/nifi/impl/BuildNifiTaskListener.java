@@ -2881,12 +2881,24 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         putDatabaseRecordDTO.groupId = groupId;
         //putDatabaseRecordDTO.databaseConnectionPoolingService=config.targetDsConfig.componentId;
         putDatabaseRecordDTO.databaseConnectionPoolingService = targetDbPoolId;
-        putDatabaseRecordDTO.databaseType = "MS SQL 2012+";//数据库类型,定义枚举
+        //数据库类型,定义枚举
+        switch (config.targetDsConfig.type){
+            case MYSQL:
+            case DORIS:
+                putDatabaseRecordDTO.databaseType = "MySQL";
+                break;
+            case SQLSERVER:
+                putDatabaseRecordDTO.databaseType = "MS SQL 2012+";
+                break;
+            default:
+                putDatabaseRecordDTO.databaseType = "MS SQL 2012+";
+                break;
+        }
         putDatabaseRecordDTO.recordReader = id;
         putDatabaseRecordDTO.statementType = "INSERT";
         putDatabaseRecordDTO.putDbRecordTranslateFieldNames = "false";
         //得到stg表名
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(dto.targetDbId);
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
@@ -2908,6 +2920,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 } else if (Objects.equals(dataSource.conType, DataSourceTypeEnum.POSTGRESQL)) {
                     putDatabaseRecordDTO.TableName = stgTableName;
                     putDatabaseRecordDTO.schemaName = "public";
+                } else if (Objects.equals(dataSource.conType, DataSourceTypeEnum.DORIS)) {
+                    putDatabaseRecordDTO.TableName = stgTableName;
                 }
 
             }

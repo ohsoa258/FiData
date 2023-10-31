@@ -67,6 +67,7 @@ public class BuildAccessOpenEdgeCommandImpl  implements IBuildAccessSqlCommand {
             case ORACLE:
                 return openEdgeConversionOracle(dto);
             case MYSQL:
+            case DORIS:
                 return openEdgeConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

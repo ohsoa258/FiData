@@ -137,6 +137,7 @@ public class BuildAccessPgCommandImpl implements IBuildAccessSqlCommand {
             case ORACLE:
                 return pgConversionOracle(dto);
             case MYSQL:
+            case DORIS:
                 return pgConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

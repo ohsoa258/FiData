@@ -65,6 +65,7 @@ public class BuildAccessOracleCommandImpl implements IBuildAccessSqlCommand {
             case ORACLE:
                 return oracleConversionOracle(dto);
             case MYSQL:
+            case DORIS:
                 return oracleConversionMySQL(dto);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

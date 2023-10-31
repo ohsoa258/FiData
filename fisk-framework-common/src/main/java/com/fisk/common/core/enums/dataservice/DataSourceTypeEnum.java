@@ -23,7 +23,7 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     POSTGRESQL(4, "POSTGRESQL", "org.postgresql.Driver", "opt/nifi/nifi-current/jdbcdriver/postgresql-42.2.23.jar"),
 
-    DORIS(5, "DORIS", "com.mysql.jdbc.Driver", "opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-8.0.25.jar"),
+    DORIS(5, "DORIS", "com.mysql.jdbc.Driver", "opt/nifi/nifi-current/jdbcdriver/mysql-connector-java-5.1.47.jar"),
 
     ORACLE(6, "ORACLE", "oracle.jdbc.driver.OracleDriver", "opt/nifi/nifi-current/jdbcdriver/ojdbc7.jar"),
 
