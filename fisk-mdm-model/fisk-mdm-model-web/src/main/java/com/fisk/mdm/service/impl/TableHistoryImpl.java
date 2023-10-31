@@ -52,8 +52,7 @@ public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHisto
     @Override
     public List<TableHistoryDTO> getTableHistoryList(TableHistoryDTO dto) {
         QueryWrapper<TableHistoryPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TableHistoryPO::getTableId, dto.tableId)
-                .eq(TableHistoryPO::getTableType, dto.tableType);
+        queryWrapper.lambda().eq(TableHistoryPO::getTableId, dto.tableId);
         List<TableHistoryDTO> list = TableHistoryMap.INSTANCES.poListToDtoList(mapper.selectList(queryWrapper));
         list.forEach(
                 e -> {
