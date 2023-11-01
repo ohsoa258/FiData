@@ -695,6 +695,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         StringBuilder str = new StringBuilder();
         str.append(alias + "." + MARK + "id").append(",");
         str.append(alias + "." + MARK + "version_id").append(",");
+        str.append(alias + "." + MARK + "lock_tag").append(",");
         str.append(alias + "." + MARK + "create_time").append(",");
         str.append(alias + "." + MARK + "create_user").append(",");
         str.append(alias + "." + MARK + "update_time").append(",");

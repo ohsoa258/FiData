@@ -62,6 +62,7 @@ public class MetadataEntityExportTemplateServiceImpl extends ServiceImpl<Metadat
     @Override
     public ResultEnum edit(EditMetadataExportTemplateDto dto) {
         if (dto.getId().equals(1)){
+            //不能修改默认模板
             return ResultEnum.DETAULT_EDIT_ERROR;
         }else {
             MetadataEntityExportTemplatePO metadataEntityExportTemplatePO = MetadataEntityExportTemplateMap.INSTANCES.editDtoToPo(dto);
