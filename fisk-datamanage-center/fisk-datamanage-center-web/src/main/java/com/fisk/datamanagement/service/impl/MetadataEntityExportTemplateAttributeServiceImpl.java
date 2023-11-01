@@ -58,6 +58,8 @@ public class MetadataEntityExportTemplateAttributeServiceImpl extends ServiceImp
         List<MetadataEntityExportTemplateAttributePO> metadataEntityExportTemplateAttributePOList=new ArrayList<>();
         for (MetadataExportTemplateAttributeDto metadataExportTemplateAttributeDto : dtoList) {
             MetadataEntityExportTemplateAttributePO oneAttributePO = MetadataEntityExportTemplateAttributeMap.INSTANCES.dtoToPo(metadataExportTemplateAttributeDto);
+            //一级默认为选中状态
+            oneAttributePO.setChecked(true);
             metadataEntityExportTemplateAttributePOList.add(oneAttributePO);
             List<MetadataEntityExportTemplateAttributePO> twoLevelAttributeList = MetadataEntityExportTemplateAttributeMap.INSTANCES.dtoToPoList(metadataExportTemplateAttributeDto.getChildren());
             metadataEntityExportTemplateAttributePOList.addAll(twoLevelAttributeList);

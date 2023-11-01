@@ -782,7 +782,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         //获取code编码规则
         List<CodeRuleVO> codeRuleVOS= codeRuleService.getDataByEntityId(dto.getEntityId());
         List<CodeRuleDTO> codeRuleDTO=null;
-        if (CollectionUtils.isEmpty(codeRuleVOS)){
+        if (CollectionUtils.isNotEmpty(codeRuleVOS)){
             codeRuleDTO= codeRuleVOS.get(0).getGroupDetailsList();
         }
         //code生成规则
@@ -815,6 +815,19 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     AttributeInfoDTO newCode = new AttributeInfoDTO();
                     newCode.setName("fidata_new_code");
                     attributePoList.add(newCode);
+                    continue;
+                }
+                //判断是否为基于域字段,基于域字段存在两列，xxxx_编码 xxxx_名称
+                AttributeInfoDTO domainAttributeCode = list.stream().filter(e -> e.getDataType().equals(DataTypeEnum.DOMAIN.getName())&&(e.getDisplayName() + "_编码").equals(cell.getStringCellValue())).findFirst().orElse(null);
+                if(domainAttributeCode!=null){
+                    AttributeInfoDTO domainColumnCode = new AttributeInfoDTO();
+                    domainColumnCode.setName(domainAttributeCode.getName());
+                    attributePoList.add(domainColumnCode);
+                    continue;
+                }
+                AttributeInfoDTO domainAttributeName = list.stream().filter(e -> e.getDataType().equals(DataTypeEnum.DOMAIN.getName())&&(e.getDisplayName() + "_名称").equals(cell.getStringCellValue())).findFirst().orElse(null);
+                if(domainAttributeName!=null){
+                    attributePoList.add(null);
                     continue;
                 }
                 Optional<AttributeInfoDTO> data = list.stream().filter(e -> cell.getStringCellValue().equals(e.getDisplayName())).findFirst();
@@ -859,15 +872,17 @@ public class MasterDataServiceImpl implements IMasterDataService {
                                 for (int col = 0; col < columnNum; col++) {
                                     Cell cell = nowRow.getCell(col);
                                     String value = "";
-                                    //判断字段类型
-                                    if (cell != null) {
-                                        ImportDataVerifyDTO cellDataDTO = MasterDataFormatVerifyUtils.getCellDataType(cell,
-                                                attributePoList.get(col).getDisplayName(),
-                                                attributePoList.get(col).getDataType());
-                                        value = cellDataDTO.getValue();
-                                        errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
+                                    if(attributePoList.get(col)!=null){
+                                        //判断字段类型
+                                        if (cell != null) {
+                                            ImportDataVerifyDTO cellDataDTO = MasterDataFormatVerifyUtils.getCellDataType(cell,
+                                                    attributePoList.get(col).getDisplayName(),
+                                                    attributePoList.get(col).getDataType());
+                                            value = cellDataDTO.getValue();
+                                            errorMsg += cellDataDTO.getSuccess() ? "" : cellDataDTO.getErrorMsg();
+                                        }
+                                        jsonObj.put(attributePoList.get(col).getName(), dto.getRemoveSpace() ? value.trim() : value);
                                     }
-                                    jsonObj.put(attributePoList.get(col).getName(), dto.getRemoveSpace() ? value.trim() : value);
                                 }
                                 //验证code
                                 ImportDataVerifyDTO verifyDTO = MasterDataFormatVerifyUtils.verifyCode(jsonObj);
@@ -1264,7 +1279,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             stat.executeUpdate(sql);
             //关闭连接
             AbstractDbHelper.closeStatement(stat);
-            AbstractDbHelper.rollbackConnection(conn);
+//            AbstractDbHelper.rollbackConnection(conn);
         } catch (SQLException e) {
             log.error("verifyRepeatCode:", e);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
