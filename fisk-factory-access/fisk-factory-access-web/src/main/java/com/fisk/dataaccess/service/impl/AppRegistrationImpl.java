@@ -973,11 +973,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
             if (driveTypePOList != null) {
                 for (AppRegistrationVO item : appRegistrationVOList) {
-                    String driveType = driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null).getDriveType();
+                    String driveType = Objects.requireNonNull(driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null)).getDriveType();
                     log.info("应用驱动类型：" + driveType);
                     item.setDriveType(driveType);
                     //实时和非实时计数方式不同
                     if (item.appType == 0) {
+                        if (DbTypeEnum.hive.getName().equalsIgnoreCase(driveType)) {
+                            item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
+                            continue;
+                        }
                         item.setTblCount(apiConfigImpl.countTblByAppForApi((int) item.id));
                     } else {
                         item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
