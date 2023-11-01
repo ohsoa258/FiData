@@ -1,6 +1,7 @@
 package com.fisk.task.listener.mdm.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.chartvisual.DataSourceTypeEnum;
@@ -18,8 +19,10 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.DataTypeEnum;
+import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
@@ -1009,9 +1012,12 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                     // 获取域字段名称
                     AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
-
+                    EntityInfoVO entity = mdmClient.getAttributeById(dto.getEntityId(),null).getData();
+                    ModelInfoVO model = mdmClient.getEntityById(entityInfoVo.getModelId()).getData();
+                    //获取mdm表最新code
+                    String tableName = TableNameGenerateUtils.generateMdmTableName(model.getName(), entity.getName());
                     String alias = PRIMARY_TABLE + amount1.incrementAndGet();
-                    String tableName = "\"" + mdmTableName + "\" " + alias;
+                    tableName = "\"" + tableName + "\" " + alias;
                     String on = " ON " + PRIMARY_TABLE + "." + MARK + "version_id" + " = " + alias + "." + MARK + "version_id" +
                             " AND " + PRIMARY_TABLE + ".\"" + data.getColumnName() + "\" = " + alias + "." + MARK + "id";
                     String str1 = tableName + " " + on;
