@@ -776,17 +776,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         dto.setTblId(id);
         dto.setChannelDataEnum(ChannelDataEnum.getName(3));
         ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(dto);
-        if (booleanResultEntity.getCode()!=ResultEnum.SUCCESS.getCode()){
+        if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
             return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
         }
         List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
-        if (!CollectionUtils.isEmpty(data)){
+        if (!CollectionUtils.isEmpty(data)) {
             //这里的getWorkflowId 已经被替换为 workflowName
             List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
-            log.info("当前要删除的表存在于以下管道中："+ collect);
+            log.info("当前要删除的表存在于以下管道中：" + collect);
             NifiVO nifiVO = new NifiVO();
             nifiVO.setWorkFlowName(collect);
-            return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH,nifiVO);
+            return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH, nifiVO);
         }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -2427,6 +2427,31 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
         }
         //        dto.selectSql = tableAccessPo.sqlScript;
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
+    }
+
+    @Override
+    public ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTOForHive(long tableId, long appId) {
+
+        //获取信息................
+        //新建对象
+        BuildPhysicalTableDTO dto = new BuildPhysicalTableDTO();
+        //获取数据源
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("id", appId).one();
+        //获取应用信息
+        AppRegistrationPO registrationPo = appRegistrationImpl.query().eq("id", dataSourcePo.appId).one();
+        //获取物理表信息
+        TableAccessPO tableAccessPo = this.query().eq("id", tableId).one();
+        if (tableAccessPo == null || registrationPo == null) {
+            return ResultEntityBuild.build(ResultEnum.NIFI_NOT_FIND_DATA);
+        }
+        //装载参数................
+        //装载数据源驱动
+        dto.driveType = DbTypeEnum.getValue(dataSourcePo.driveType);
+        //装载应用简称
+        dto.appAbbreviation = registrationPo.appAbbreviation;
+        //装载物理表名
+        dto.tableName = tableAccessPo.tableName;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
     }
 

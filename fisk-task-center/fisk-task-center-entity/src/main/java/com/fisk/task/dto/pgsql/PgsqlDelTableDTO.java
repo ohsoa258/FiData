@@ -1,6 +1,7 @@
 package com.fisk.task.dto.pgsql;
 
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.task.dto.MQBaseDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -33,6 +34,15 @@ public class PgsqlDelTableDTO extends MQBaseDTO {
 
     @ApiModelProperty(value = "业务类型枚举")
     public BusinessTypeEnum businessTypeEnum;
+
+    @ApiModelProperty(value = "应用引用的数据源集合")
+    public List<AppDataSourceDTO> appSources;
+
+    /**
+     * 应用简称
+     */
+    @ApiModelProperty(value = "应用简称")
+    public String appAbbreviation;
 
 }
 

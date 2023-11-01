@@ -351,6 +351,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     AppRegistrationDTO getAppNameById(Long id);
 
     /**
+     * 根据appId获取app应用信息
+     *
+     * @param id
+     * @return
+     */
+    AppRegistrationDTO getAppById(Long id);
+
+    /**
      * 根据应用名称获取单个应用详情
      *
      * @param appName

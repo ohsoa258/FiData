@@ -41,7 +41,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     SAPBW(13, "SAPBW", "", ""),
 
-    WEBSERVICE(14, "WEBSERVICE", "", "");
+    WEBSERVICE(14, "WEBSERVICE", "", ""),
+
+    HIVE(15, "HIVE", "org.apache.hive.jdbc.HiveDriver", "");
 
     DataSourceTypeEnum(int value, String name, String driverName, String driverLocation) {
         this.driverName = driverName;

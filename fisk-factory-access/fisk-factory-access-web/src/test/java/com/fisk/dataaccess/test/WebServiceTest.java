@@ -15,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Arrays;
+import java.sql.*;
+import java.util.List;
 
 /**
  * @author: lsj
@@ -64,6 +66,26 @@ public class WebServiceTest {
             log.error("webService报错--" + e);
         }
     }
+
+    @Test
+    public void getPrimaryKeys() throws Exception {
+        DatabaseMetaData databaseMetaData = null;
+        ResultSet rs = null;
+        Connection connection = DriverManager.getConnection("jdbc:mysql://192.168.11.134:9030/dmp_ods",
+                "root", "Password01!");
+        try {
+            databaseMetaData = connection.getMetaData();
+            rs = databaseMetaData.getPrimaryKeys(null, "dmp_ods", "stg_doris_test_doris_test01");
+            ResultSetMetaData resultSetMetaData = rs.getMetaData();
+            while (rs.next()) {
+                System.out.println(rs.getString("COLUMN_NAME"));
+                for (int i = 1; i <= resultSetMetaData.getColumnCount(); i++) {
+                    System.out.println("Label: " + resultSetMetaData.getColumnLabel(i) + "  Value:" + rs.getString(i));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }}
 
     @Test
     public void testDynamicVar(){

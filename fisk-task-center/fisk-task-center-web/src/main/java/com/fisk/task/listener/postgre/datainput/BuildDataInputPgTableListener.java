@@ -74,9 +74,10 @@ public class BuildDataInputPgTableListener {
         //获取版本号和修改表结构的参数
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
         //获取ods数据源的信息  dataSourceOdsId=2 ->  ods
+        //开发doris-hive外部目录测试 暂时改为13
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
         DataSourceTypeEnum conType = null;
-        log.info("ods数据源信息{}",JSON.toJSONString(fiDataDataSource));
+        log.info("ods数据源信息{}", JSON.toJSONString(fiDataDataSource));
 
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             //获取成功
@@ -89,7 +90,7 @@ public class BuildDataInputPgTableListener {
             log.error("userclient无法查询到ods库的连接信息");
             throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
         }
-        log.info("连接类型:{}",conType);
+        log.info("连接类型:{}", conType);
         //分辨库的类别，获取对应数据库的建表
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(conType);
         log.info("开始保存ods版本号,参数为{}", dto);
@@ -100,31 +101,53 @@ public class BuildDataInputPgTableListener {
         String version = df.format(calendar.getTime());
         ResultEnum resultEnum = ResultEnum.SQL_ERROR;
         try {
-            //保存接入相关表结构数据(保存版本号)
-            resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
-            log.info("数接执行修改表结构的存储过程返回结果:" + resultEnum);
 
-            log.info("保存版本号方法执行成功");
+            //非hudi 原非实时物理表流程和实时api流程
+            if (!buildPhysicalTableDTO.ifHive) {
+                //保存接入相关表结构数据(保存版本号)
+                resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
+                log.info("数接执行修改表结构的存储过程返回结果:" + resultEnum);
 
-            //获取建表语句
-            List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
-            log.info("建表语句:" + JSON.toJSONString(sqlList));
-            //执行第二条建表语句--创建stg表
-            BusinessResult result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
-            if (!result.success) {
-                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
-            }
-            if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                //执行第一条建表语句--创建目标表
+                log.info("保存版本号方法执行成功");
+                //获取建表语句
+                List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
+                log.info("建表语句:" + JSON.toJSONString(sqlList));
+                //执行第二条建表语句--创建stg表
+                BusinessResult result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
+                if (!result.success) {
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                }
+                if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                    //执行第一条建表语句--创建目标表
+                    iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
+                    log.info("【PGSTG】" + sqlList.get(0));
+                    log.info("pg：建表完成");
+                }
+                //hive(hudi)只建doris的外部目录
+            } else {
+                //如果是hive 切换成建doris外部目录的实现类
+                dbCommand = BuildFactoryHelper.getDBCommand(DataSourceTypeEnum.HIVE);
+                //获取建表语句
+                List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
+                log.info("hive_doris建外部目录语句:" + JSON.toJSONString(sqlList));
+                //执行建表语句--创建doris-hive外部表
                 iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
-                log.info("【PGSTG】" + sqlList.get(0));
-                log.info("pg：建表完成");
+                log.info("【doris-hive】" + sqlList.get(0));
+                log.info("doris-hive：建表完成");
             }
+
             //实时应用改状态
             if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.oracle_cdc)) {
                 log.info("oracle_cdc建表完成");
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
+            } else if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.hive)) {
+                log.info("doris-hive外部目录建立完成");
+                ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
+                modelPublishStatus.publish = PublishTypeEnum.SUCCESS.getValue();
+                modelPublishStatus.tableId = Long.parseLong(buildPhysicalTableDTO.dbId);
+                dc.updateTablePublishStatus(modelPublishStatus);
+                return ResultEnum.SUCCESS;
             } else if ((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0)
                     || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api)
                     || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.RestfulAPI)
@@ -139,7 +162,7 @@ public class BuildDataInputPgTableListener {
                     String countString = countList.get(0).toString();
                     Map countMap = JSON.parseObject(countString, Map.class);
                     Object count = countMap.get("count");
-                    if (count==null){
+                    if (count == null) {
                         count = countMap.get("");
                     }
                     tableCount = Integer.parseInt(count.toString());

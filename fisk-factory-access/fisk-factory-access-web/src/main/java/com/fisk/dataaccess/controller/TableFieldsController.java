@@ -52,6 +52,18 @@ public class TableFieldsController {
         return ResultEntityBuild.build(service.updateData(dto));
     }
 
+    /**
+     * 保存&发布  hudi(hive)建立doris外部目录
+     *
+     * @param dto
+     * @return
+     */
+    @PutMapping("/editForHive")
+    @ApiOperation(value = "保存&发布  hudi(hive)建立doris外部目录")
+    public ResultEntity<Object> editForHive(@Validated @RequestBody TableAccessNonDTO dto) {
+        return ResultEntityBuild.build(service.editForHive(dto));
+    }
+
     @PostMapping("/loadDepend")
     @ApiOperation(value = "对表进行操作时,查询依赖")
     public ResultEntity<Object> loadDepend(@RequestBody OperateTableDTO dto) {

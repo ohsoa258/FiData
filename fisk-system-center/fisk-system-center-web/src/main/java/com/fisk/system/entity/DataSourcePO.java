@@ -3,7 +3,6 @@ package com.fisk.system.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -175,13 +174,11 @@ public class DataSourcePO extends BasePO {
     /**
      * JCO_SYSNR
      */
-    @ApiModelProperty(value = "JCO_SYSNR", required = true)
     public String sysNr;
 
     /**
      * JCO_LANG
      */
-    @ApiModelProperty(value = "JCO_LANG", required = true)
     public String lang;
 
 }

@@ -150,6 +150,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 JCoDestination destination = providerAndDestination.getDestination();
                 myProvider = providerAndDestination.getMyProvider();
                 dataSource.tableDtoList = SapBwUtils.getAllCubesV2(destination, myProvider);
+            } else if (DataSourceTypeEnum.HIVE.getName().equalsIgnoreCase(dataSource.driveType)) {
+                dataSource.tableDtoList = null;
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -378,6 +380,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.HIVE.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 15) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
         }
         return dataSourceDTOS;
     }
@@ -597,6 +605,20 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     }
 
     /**
+     * 通过应用id获取应用引用的所有数据源信息
+     *
+     * @param appId
+     * @return
+     */
+    @Override
+    public List<AppDataSourceDTO> getAppSourcesByAppId(long appId) {
+        LambdaQueryWrapper<AppDataSourcePO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AppDataSourcePO::getAppId, appId);
+        List<AppDataSourcePO> list = list(wrapper);
+        return AppDataSourceMap.INSTANCES.listPoToDto(list);
+    }
+
+    /**
      * 枚举数值转换
      *
      * @param driverName
@@ -627,6 +649,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.SAPBW.getName();
         } else if (DataSourceTypeEnum.WEBSERVICE.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.WEBSERVICE.getName();
+        } else if (DataSourceTypeEnum.HIVE.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.HIVE.getName();
         }
         return driverName;
     }

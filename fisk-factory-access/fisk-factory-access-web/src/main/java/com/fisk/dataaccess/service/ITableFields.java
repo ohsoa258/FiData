@@ -50,6 +50,14 @@ public interface ITableFields extends IService<TableFieldsPO> {
     ResultEnum updateData(TableAccessNonDTO dto);
 
     /**
+     * 保存&发布  hudi(hive)建立doris外部目录
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum editForHive(TableAccessNonDTO dto);
+
+    /**
      * 对表进行操作时,查询依赖
      *
      * @param dto dto

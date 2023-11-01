@@ -18,8 +18,9 @@ import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
-import com.fisk.dataaccess.dto.app.AppRegistrationInfoDTO;
+import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -37,6 +38,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -60,6 +62,8 @@ public class AppRegistrationController {
     private TableAccessImpl tableAccessImpl;
     @Resource
     private PublishTaskClient publishTaskClient;
+    @Autowired
+    private AppDataSourceImpl dataSource;
 
     @PostMapping("/add")
     @ApiOperation(value = "添加")
@@ -120,7 +124,11 @@ public class AppRegistrationController {
         pgsqlDelTableDTO.userId = nifiVO.userId;
         pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
         pgsqlDelTableDTO.delApp = true;
-        pgsqlDelTableDTO.businessTypeEnum= BusinessTypeEnum.DATAINPUT;
+        pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
+        List<AppDataSourceDTO> appSourcesByAppId = dataSource.getAppSourcesByAppId(Long.parseLong(nifiVO.appId));
+        pgsqlDelTableDTO.setAppSources(appSourcesByAppId);
+        AppRegistrationDTO appById = service.getAppById(Long.parseLong(nifiVO.appId));
+        pgsqlDelTableDTO.appAbbreviation = appById.getAppAbbreviation();
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
 
             pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
@@ -140,14 +148,14 @@ public class AppRegistrationController {
             log.info("删除pg库的数据为,{}", pgsqlDelTableDTO);
             ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
             DataModelVO dataModelVO = new DataModelVO();
-            dataModelVO.delBusiness=true;
+            dataModelVO.delBusiness = true;
             DataModelTableVO dataModelTableVO = new DataModelTableVO();
-            dataModelTableVO.ids=nifiVO.tableIdList;
-            dataModelTableVO.type= OlapTableEnum.PHYSICS;
-            dataModelVO.physicsIdList=dataModelTableVO;
-            dataModelVO.businessId=nifiVO.appId;
-            dataModelVO.dataClassifyEnum= DataClassifyEnum.DATAACCESS;
-            dataModelVO.userId=nifiVO.userId;
+            dataModelTableVO.ids = nifiVO.tableIdList;
+            dataModelTableVO.type = OlapTableEnum.PHYSICS;
+            dataModelVO.physicsIdList = dataModelTableVO;
+            dataModelVO.businessId = nifiVO.appId;
+            dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
+            dataModelVO.userId = nifiVO.userId;
             // 删除nifi流程
             publishTaskClient.deleteNifiFlow(dataModelVO);
             log.info("task删除应用{}", task);
@@ -170,7 +178,7 @@ public class AppRegistrationController {
 
     @GetMapping("/getDriveTypeByAppId/{appId}")
     @ApiOperation(value = "通过appid获取特定数据源驱动类型")
-    public ResultEntity<List<AppDriveTypeDTO>> getDriveTypeByAppId(@PathVariable("appId")Long appid) {
+    public ResultEntity<List<AppDriveTypeDTO>> getDriveTypeByAppId(@PathVariable("appId") Long appid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDriveTypeByAppId(appid));
     }
 
@@ -346,7 +354,7 @@ public class AppRegistrationController {
 
     @PostMapping("/getBatchTargetDbIdByAppIds")
     @ApiOperation(value = "依据应用id集合查询目标源id集合")
-    public ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds){
+    public ResultEntity<List<AppRegistrationInfoDTO>> getBatchTargetDbIdByAppIds(@RequestBody List<Integer> appIds) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBatchTargetDbIdByAppIds(appIds));
     }
 
@@ -364,12 +372,13 @@ public class AppRegistrationController {
 
     /**
      * 数据接入--应用级别修改应用下的接口是否允许推送数据
+     *
      * @param appId
      * @return
      */
     @PostMapping("/appIfAllowDataTransfer")
     @ApiOperation(value = "数据接入--应用级别修改应用下的接口是否允许推送数据")
-    public ResultEntity<Object> appIfAllowDataTransfer(@RequestParam("appId") Long appId){
+    public ResultEntity<Object> appIfAllowDataTransfer(@RequestParam("appId") Long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.appIfAllowDataTransfer(appId));
     }
 }

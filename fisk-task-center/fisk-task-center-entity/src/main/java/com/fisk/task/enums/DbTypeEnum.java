@@ -28,7 +28,8 @@ public enum DbTypeEnum implements BaseEnum {
     sftp(9, "sftp"),
     openedge(10,"openedge"),
     sapbw(11,"sapbw"),
-    webservice(12,"webservice");
+    webservice(12,"webservice"),
+    hive(13,"hive");
 
     DbTypeEnum(int value, String name) {
         this.value = value;

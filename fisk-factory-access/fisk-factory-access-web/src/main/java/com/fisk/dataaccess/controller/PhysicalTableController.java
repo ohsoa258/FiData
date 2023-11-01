@@ -9,7 +9,9 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppNameDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
@@ -18,6 +20,7 @@ import com.fisk.dataaccess.dto.table.TableAccessQueryDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.ITableAccess;
+import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
@@ -38,6 +41,7 @@ import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,6 +70,10 @@ public class PhysicalTableController {
     private DataFactoryClient dataFactoryClient;
     @Resource
     DataManageClient dataManageClient;
+    @Autowired
+    private AppDataSourceImpl dataSource;
+    @Resource
+    private IAppRegistration appRegistration;
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
@@ -234,6 +242,12 @@ public class PhysicalTableController {
         pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
         pgsqlDelTableDTO.delApp = false;
         pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
+
+        List<AppDataSourceDTO> appSourcesByAppId = dataSource.getAppSourcesByAppId(Long.parseLong(nifiVO.appId));
+        pgsqlDelTableDTO.setAppSources(appSourcesByAppId);
+        AppRegistrationDTO appById = appRegistration.getAppById(Long.parseLong(nifiVO.appId));
+        pgsqlDelTableDTO.appAbbreviation = appById.getAppAbbreviation();
+
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
 
             pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
@@ -274,12 +288,7 @@ public class PhysicalTableController {
             MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
             metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
             metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    dataManageClient.deleteMetaData(metaDataDeleteAttributeDto);
-                }
-            }).start();
+            new Thread(() -> dataManageClient.deleteMetaData(metaDataDeleteAttributeDto)).start();
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);

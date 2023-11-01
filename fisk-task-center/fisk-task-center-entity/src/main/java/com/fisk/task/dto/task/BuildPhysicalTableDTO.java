@@ -189,4 +189,16 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     @ApiModelProperty(value = "是否是sapbw")
     public boolean sapBwFlow;
 
+    /**
+     * 是否是hive
+     */
+    @ApiModelProperty(value = "是否是hive")
+    public boolean ifHive;
+
+    /**
+     * hive创建doris-cataLog时所需的配置信息
+     */
+    @ApiModelProperty(value = "数据源连接字符串or身份验证地址")
+    public String connectStr;
+
 }

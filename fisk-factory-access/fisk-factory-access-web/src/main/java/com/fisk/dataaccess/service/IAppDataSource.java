@@ -120,4 +120,12 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     List<DataSourceDTO> refreshRedis(long appId);
+
+    /**
+     * 通过应用id获取应用引用的所有数据源信息
+     *
+     * @param appId
+     * @return
+     */
+    List<AppDataSourceDTO> getAppSourcesByAppId(long appId);
 }

@@ -308,6 +308,15 @@ public interface ITableAccess extends IService<TableAccessPO> {
     ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTO(long tableId, long appId);
 
     /**
+     * 封装hive参数给nifi
+     *
+     * @param tableId tableId
+     * @param appId   appId
+     * @return dto
+     */
+    ResultEntity<BuildPhysicalTableDTO> getBuildPhysicalTableDTOForHive(long tableId, long appId);
+
+    /**
      * 更新发布状态
      *
      * @param dto dto

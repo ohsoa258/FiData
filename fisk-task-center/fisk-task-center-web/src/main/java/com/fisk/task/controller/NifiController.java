@@ -141,7 +141,7 @@ public class NifiController {
         //新增数据源时,相同数据库类型,相同ip,相同库名不允许重复添加
         if (resultEntity.getCode() == ResultEnum.DATA_SOURCE_ALREADY_EXISTS.getCode()) {
             log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
-            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ALREADY_EXISTS,resultEntity.getData());
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ALREADY_EXISTS, resultEntity.getData());
         }
 
         if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
@@ -152,9 +152,11 @@ public class NifiController {
         //RestfulApi无需在nifi创建全局变量，它不走nifi
         //WEBSERVICE和RestfulApi同理  都不走nifi
         //SAPBW同理 源--临时表的流程不走nifi    临时表-目标表的流程才走nifi
+        //HIVE同理
         if (dto.conType == DataSourceTypeEnum.RESTFULAPI
                 || dto.conType == DataSourceTypeEnum.SAPBW
-                || dto.conType == DataSourceTypeEnum.WEBSERVICE) {
+                || dto.conType == DataSourceTypeEnum.WEBSERVICE
+                || dto.conType == DataSourceTypeEnum.HIVE) {
             return resultEntity;
         }
 
@@ -225,7 +227,8 @@ public class NifiController {
 
         //RestfulApi无需在nifi创建全局变量，它不走nifi
         //SAPBW同理 源--临时表的流程不走nifi
-        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW) {
+        //HIVE同理
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW || dto.conType == DataSourceTypeEnum.WEBSERVICE || dto.conType == DataSourceTypeEnum.HIVE) {
             return resultEntity;
         }
 
@@ -267,6 +270,7 @@ public class NifiController {
     public ResultEntity<Object> runOnce(@RequestParam("id") Long id) {
         return ResultEntityBuild.build(iNifiSchedulingComponentService.runOnce(id));
     }
+
     @ApiOperation(value = "表服务启用或禁用")
     @PostMapping("enableOrDisable")
     public ResultEntity<TableServiceDTO> enableOrDisable(@RequestBody TableServiceDTO tableServiceDTO) {

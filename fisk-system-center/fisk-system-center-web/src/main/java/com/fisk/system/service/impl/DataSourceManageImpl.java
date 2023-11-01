@@ -146,6 +146,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("13");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("WEBSERVICE")) {
                             filterQueryDTO.setColumnValue("14");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("HIVE")) {
+                            filterQueryDTO.setColumnValue("15");
                         }
                     }
                 });
@@ -409,6 +411,16 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     // 测试连接
                     destination.ping();
                     log.info("注册SAPBW驱动程序后...");
+                    return ResultEnum.SUCCESS;
+                case HIVE:
+                    log.info("注册HIVE驱动程序前...");
+                    // 加载Hive驱动
+                    Class.forName("org.apache.hive.jdbc.HiveDriver");
+
+                    // 建立Hive连接
+//                    Connection con = DriverManager.getConnection("jdbc:hive2://192.168.11.136:10001/default", "root", "root123");
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    log.info("注册HIVE驱动程序后...");
                     return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;

@@ -265,9 +265,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.userId = userId;
         vo.appId = String.valueOf(po.getId());
 
-        //是否添加schema
-        if (appRegistrationDTO.whetherSchema) {
-            VerifySchema(po.appAbbreviation, po.targetDbId);
+        //hive不要在doris建schema
+        boolean ifHive = false;
+        for (AppDataSourcePO appDataSourcePO : modelDataSource) {
+            if (DbTypeEnum.hive.getName().equalsIgnoreCase(appDataSourcePO.driveType)) {
+                ifHive = true;
+                break;
+            }
+        }
+
+        if (!ifHive) {
+            //是否添加schema
+            if (appRegistrationDTO.whetherSchema) {
+                VerifySchema(po.appAbbreviation, po.targetDbId);
+            }
         }
 
         if (openMetadata) {
@@ -539,16 +550,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         // 实时应用
         if (po.appType == 0) {
-
             for (AppDataSourceDTO item : appDatasourceDTO) {
-                QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
-                wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, item.realtimeAccount).eq(AppDataSourcePO::getAppId, item.appId);
-                AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
-                if (appDataSourcePo != null && appDataSourcePo.id != item.id) {
-                    throw new FkException(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
+                if (!DbTypeEnum.hive.getName().equalsIgnoreCase(item.driveType)) {
+                    QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
+                    wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, item.realtimeAccount).eq(AppDataSourcePO::getAppId, item.appId);
+                    AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
+                    if (appDataSourcePo != null && appDataSourcePo.id != item.id) {
+                        throw new FkException(ResultEnum.REALTIME_ACCOUNT_ISEXIST);
+                    }
                 }
             }
-
         }
 
         // 2.2修改数据
@@ -1064,6 +1075,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     List<String> catNames = allCubes.getCatNames();
                     // 只返回cubeNames
                     allDatabases.addAll(cubeNames);
+                case HIVE:
+                    log.info("注册HIVE驱动程序前...");
+                    // 加载Hive驱动
+                    Class.forName("org.apache.hive.jdbc.HiveDriver");
+
+                    // 建立Hive连接
+//                    Connection con = DriverManager.getConnection("jdbc:hive2://192.168.11.136:10001/default", "root", "root123");
+                    conn = DriverManager.getConnection(dto.host, dto.connectAccount, dto.connectPwd);
+                    log.info("注册HIVE驱动程序后...");
+                    allDatabases.addAll(HiveUtils.getAllDatabases(conn));
                 default:
                     break;
             }
@@ -2076,6 +2097,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public AppRegistrationDTO getAppNameById(Long id) {
         QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id).select("app_name");
+        AppRegistrationPO one = getOne(wrapper);
+        return AppRegistrationMap.INSTANCES.poToDto(one);
+    }
+
+    /**
+     * 根据应用名称获取单个应用详情
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public AppRegistrationDTO getAppById(Long id) {
+        QueryWrapper<AppRegistrationPO> wrapper = new QueryWrapper<>();
+        wrapper.eq("id", id);
         AppRegistrationPO one = getOne(wrapper);
         return AppRegistrationMap.INSTANCES.poToDto(one);
     }

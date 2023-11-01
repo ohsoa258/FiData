@@ -23,7 +23,8 @@ public enum DataSourceTypeEnum implements BaseEnum {
     SFTP(9, "sftp"),
     OPENEDGE(10, "openedge"),
     SAPBW(11, "sapbw"),
-    WEBSERVICE(12, "webservice");
+    WEBSERVICE(12, "webservice"),
+    HIVE(13, "hive");
 
     DataSourceTypeEnum(int value, String name) {
         this.name = name;

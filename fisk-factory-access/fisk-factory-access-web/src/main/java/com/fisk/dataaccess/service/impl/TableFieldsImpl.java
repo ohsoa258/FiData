@@ -251,7 +251,7 @@ public class TableFieldsImpl
         accessPo.coverScript = dto.coverScript;
         //获取数据的sql脚本
         accessPo.sqlScript = dto.sqlScript;
-        if (!CollectionUtils.isEmpty(dto.mdxList)){
+        if (!CollectionUtils.isEmpty(dto.mdxList)) {
             List<String> mdxList = dto.mdxList;
             // 暂时不用去前后的空格
 //            mdxList.forEach(String::trim);
@@ -394,7 +394,7 @@ public class TableFieldsImpl
         model.coverScript = dto.coverScript;
         //获取数据的sql脚本
         model.sqlScript = dto.sqlScript;
-        if (!CollectionUtils.isEmpty(dto.mdxList)){
+        if (!CollectionUtils.isEmpty(dto.mdxList)) {
             List<String> mdxList = dto.mdxList;
             // 暂时不用去前后的空格
 //            mdxList.forEach(String::trim);
@@ -437,6 +437,31 @@ public class TableFieldsImpl
 
         // 发布
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
+    /**
+     * 保存&发布  hudi(hive)建立doris外部目录
+     *
+     * @param dto dto
+     * @return
+     */
+    @Override
+    public ResultEnum editForHive(TableAccessNonDTO dto) {
+        // 查询物理表
+        TableAccessPO model = tableAccessImpl.getById(dto.id);
+
+        // 若为空则返回 数据不存在
+        if (model == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        // 修改发布状态
+        model.publish = 0;
+
+        publishForHive(model.appId, model.id, true, model.appDataSourceId, dto.tableHistorys);
+
+        // 发布
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -723,7 +748,9 @@ public class TableFieldsImpl
                 data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
                 data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
                 data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
-                log.info("是否是sapbw--",data.sapBwFlow);
+                data.ifHive = DataSourceTypeEnum.HIVE.getName().equals(dataSourcePo.driveType);
+                log.info("是否是sapbw...", data.sapBwFlow);
+                log.info("是否是hive...", data.ifHive);
                 data.tableHistoryId = tableHistoryId;
 
                 // 执行发布
@@ -800,6 +827,93 @@ public class TableFieldsImpl
         //oracle-cdc类型需要上传脚本
         if (dataSourcePo.driveType.equalsIgnoreCase("ORACLE-CDC")) {
             cdcScriptUploadFlink(cdcDto, accessId);
+        }
+    }
+
+    /**
+     * 保存&发布  hudi(hive)建立doris外部目录
+     *
+     * @param appId            应用id
+     * @param accessId         物理表id
+     * @param openTransmission 发布时,是否立即同步数据
+     * @param appDataSourceId  应用数据源id
+     * @param dto              发布历史
+     */
+    private void publishForHive(long appId,
+                                long accessId,
+                                boolean openTransmission,
+                                Integer appDataSourceId,
+                                List<TableHistoryDTO> dto) {
+
+        AppDataSourcePO dataSourcePo = null;
+        ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
+        modelPublishStatus.tableId = accessId;
+        try {
+            //获取应用数据源
+            dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
+            //获取不到则抛出异常
+            if (dataSourcePo == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+
+            //获取应用信息
+            AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
+            //获取不到则抛出异常
+            if (appRegistrationPo == null) {
+                throw new FkException(ResultEnum.DATAACCESS_DATASOURCE_ERROR);
+            }
+
+            long tableHistoryId = 0L;
+            //如果发布历史不为空
+            if (!CollectionUtils.isEmpty(dto)) {
+                log.info("开始记录发布日志");
+                for (TableHistoryDTO tableHistory : dto) {
+                    if (tableHistory.tableId.longValue() == accessId) {
+                        log.info("记录发布日志的表id:{}", accessId);
+                        List<TableHistoryDTO> list = new ArrayList<>();
+                        list.add(tableHistory);
+                        tableHistoryId = iTableHistory.addTableHistory(list);
+                    }
+                }
+            }
+
+            UserInfo userInfo = userHelper.getLoginUserInfo();
+            //调用方法：封装参数给nifi
+            ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTOForHive(accessId, appDataSourceId);
+            BuildPhysicalTableDTO data = result.data;
+            //装载应用id
+            data.appId = String.valueOf(appId);
+            //数据库id为什么传物理表id???????????   变量名虽为dbid,实际上是物理表id
+            data.dbId = String.valueOf(accessId);
+            //用户id
+            data.userId = userInfo.id;
+            //是否发布
+            data.openTransmission = openTransmission;
+
+            //来源和目标数据源id
+            data.dataSourceDbId = dataSourcePo.systemDataSourceId;
+            //目标ods数据源id
+            data.targetDbId = appRegistrationPo.targetDbId;
+            //获取应用信息
+            AppRegistrationPO registration = iAppRegistration.getById(appId);
+            //是否使用应用简称
+            data.whetherSchema = registration.whetherSchema;
+            data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
+            data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
+            data.ifHive = DataSourceTypeEnum.HIVE.getName().equals(dataSourcePo.driveType);
+            data.connectStr = dataSourcePo.connectStr;
+            // 是否小铃铛弹窗
+//            data.popout = true;
+            log.info("是否是sapbw:[{}]", data.sapBwFlow);
+            log.info("是否是hive:[{}]", data.sapBwFlow);
+            data.tableHistoryId = tableHistoryId;
+            List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
+            publishTaskClient.publishBuildPhysicsTableTask(data);
+        } catch (Exception e) {
+            //更新tb_table_access的发布状态   dmp_datainput_db
+            modelPublishStatus.publishErrorMsg = e.getMessage();
+            modelPublishStatus.publish = PublishTypeEnum.FAIL.getValue();
+            tableAccessImpl.updateTablePublishStatus(modelPublishStatus);
         }
     }
 
