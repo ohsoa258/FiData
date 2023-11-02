@@ -18,7 +18,6 @@ import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
-import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
@@ -247,6 +246,37 @@ public class AppRegistrationController {
     @GetMapping("/getAllDataAppRegistrationMeta")
     public ResultEntity<Object> getAllDataAppRegistrationMeta() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getAllDataAppRegistrationMeta());
+    }
+
+    /**
+     * 获取指定doris外部目录catalog下的所有db以及所有表
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     */
+    @ApiOperation(value = "获取指定doris外部目录catalog下的所有db以及所有表")
+    @GetMapping("/getDorisCatalogTreeByCatalogName")
+    public ResultEntity<Object> getDorisCatalogTreeByCatalogName(@RequestParam("dbID") Integer dbID,
+                                                                 @RequestParam("catalogName") String catalogName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDorisCatalogTreeByCatalogName(dbID, catalogName));
+    }
+
+    /**
+     * 获取指定doris外部目录catalog下的指定表的表结构
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     * @param dbName      数据库名
+     * @param tblName     表名
+     */
+    @ApiOperation(value = "获取指定doris外部目录catalog下的指定表的表结构")
+    @GetMapping("/getDorisCatalogTblSchema")
+    public ResultEntity<Object> getDorisCatalogTblSchema(@RequestParam("dbID") Integer dbID,
+                                                         @RequestParam("catalogName") String catalogName,
+                                                         @RequestParam("dbName") String dbName,
+                                                         @RequestParam("tblName") String tblName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,
+                tableAccessImpl.getDorisCatalogTblSchema(dbID, catalogName, dbName, tblName));
     }
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")

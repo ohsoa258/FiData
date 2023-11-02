@@ -26,6 +26,7 @@ import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
@@ -49,6 +50,7 @@ import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
+import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -182,6 +184,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private DataManageClient dataManageClient;
     @Resource
     GetConfigDTO getConfig;
+    @Resource
+    RedisUtil redisUtil;
 
     @Value("${sftp.nifi-file-path}")
     private String nifiFilePath;
@@ -2872,6 +2876,122 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.ACCESS_MAINPAGE_SELECT_FAILURE, e);
         }
     }
+
+    /**
+     * 获取指定doris外部目录catalog下的所有db以及所有表
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     */
+    @Override
+    public Object getDorisCatalogTreeByCatalogName(Integer dbID, String catalogName) {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet databases = null;
+        ResultSet tbls = null;
+
+        //新建map集合 预装载  数据库名:数据库下所有的表
+        Map<String, List<String>> dbAndTbls = new HashMap<>();
+        try {
+            // 查询redis缓存里有没有doris外部目录的库表结构数据
+            boolean flag = redisUtil.hasKey(catalogName);
+            if (flag) {
+                //有的话直接返回
+                return redisUtil.get(catalogName);
+            }
+
+            ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbID);
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+            DataSourceDTO data = result.getData();
+            connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+            statement = connection.createStatement();
+            statement.executeQuery("SWITCH " + catalogName + ";");
+            databases = statement.executeQuery("SHOW DATABASES");
+
+            //新建集合预装载查询出来的doris的 catalog下的数据库名称
+            ArrayList<String> dbs = new ArrayList<>();
+            while (databases.next()) {
+                String database = databases.getString("Database");
+                if ("default".equals(database)) continue;
+                dbs.add(database);
+            }
+
+            //查询数据库下的所有表
+            for (String db : dbs) {
+                List<String> tblNames = new ArrayList<>();
+                statement.executeQuery("USE " + db + ";");
+                tbls = statement.executeQuery("SHOW TABLES;");
+                while (tbls.next()) {
+                    String tblName = tbls.getString("Tables_in_" + db);
+                    tblNames.add(tblName);
+                }
+                dbAndTbls.put(db, tblNames);
+            }
+
+            //结构存入redis
+            //不设置过期时间，但提供手动刷新redis的接口
+            redisUtil.set(catalogName, dbAndTbls);
+        } catch (Exception e) {
+            log.error("获取doris外部类目录失败：" + e);
+            throw new FkException(ResultEnum.DORIS_GET_CATALOG_ERROR, e);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(databases);
+            AbstractCommonDbHelper.closeResultSet(tbls);
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(connection);
+        }
+        return dbAndTbls;
+    }
+
+    /**
+     * 获取指定doris外部目录catalog下的指定表的表结构
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     * @param dbName      数据库名
+     * @param tblName     表名
+     */
+    @Override
+    public Object getDorisCatalogTblSchema(Integer dbID, String catalogName, String dbName, String tblName) {
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet tblSchema = null;
+        List<DorisTblSchemaDTO> tblSchemas = new ArrayList<>();
+
+        try {
+            ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbID);
+            if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+            DataSourceDTO data = result.getData();
+            connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+            statement = connection.createStatement();
+            statement.executeQuery("SWITCH " + catalogName + ";");
+            statement.executeQuery("USE " + dbName + ";");
+            tblSchema = statement.executeQuery("DESC " + tblName);
+            while (tblSchema.next()) {
+                DorisTblSchemaDTO tblSchemaDTO = new DorisTblSchemaDTO();
+                tblSchemaDTO.setFieldName(tblSchema.getString("Field"));
+                tblSchemaDTO.setType(tblSchema.getString("Type"));
+                tblSchemaDTO.setIfNull(tblSchema.getString("Null"));
+                tblSchemaDTO.setKey(tblSchema.getString("Key"));
+                tblSchemaDTO.setDefaultValue(tblSchema.getString("Default"));
+                tblSchemaDTO.setExtra(tblSchema.getString("Extra"));
+                tblSchemas.add(tblSchemaDTO);
+            }
+        } catch (Exception e) {
+            log.error("获取doris外部类目录失败：" + e);
+            throw new FkException(ResultEnum.DORIS_GET_CATALOG_ERROR, e);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(tblSchema);
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(connection);
+        }
+        return tblSchemas;
+    }
+
 
     /**
      * 查询数据接入-ods库的存储数据总量（包括stg）

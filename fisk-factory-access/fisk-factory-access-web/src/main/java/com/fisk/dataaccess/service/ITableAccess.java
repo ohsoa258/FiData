@@ -187,7 +187,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     List<TableNameDTO> getTableName(long id);
 
-    Map<Integer,String> getTableNames(TableQueryDTO tableQueryDTO);
+    Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO);
 
     /**
      * 根据表id获取表详情
@@ -415,4 +415,21 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     AccessMainPageVO countTotal();
 
+    /**
+     * 获取指定doris外部目录catalog下的所有db以及所有表
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     */
+    Object getDorisCatalogTreeByCatalogName(Integer dbID, String catalogName);
+
+    /**
+     * 获取指定doris外部目录catalog下的指定表的表结构
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     * @param dbName      数据库名
+     * @param tblName     表名
+     */
+    Object getDorisCatalogTblSchema(Integer dbID, String catalogName, String dbName, String tblName);
 }
