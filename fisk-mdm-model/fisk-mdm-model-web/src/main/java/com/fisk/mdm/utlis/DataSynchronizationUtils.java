@@ -160,6 +160,7 @@ public class DataSynchronizationUtils {
                         StringBuilder str = new StringBuilder();
                         str.append("SELECT fidata_id FROM \"" + mdmTableName1 + "\"");
                         str.append(" WHERE \"" + data.getColumnName() + "\" = '" + item.get(key)  +"'");
+                        str.append(" AND \"fidata_version_id\" = '" + resultList.get(0).get("fidata_version_id")  +"'");
                         // 查询域字段数据
                         List<MdmDTO> ids = execQueryResultList(str.toString(), connection, MdmDTO.class,false);
 

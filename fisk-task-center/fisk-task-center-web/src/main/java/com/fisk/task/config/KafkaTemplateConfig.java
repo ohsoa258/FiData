@@ -84,7 +84,6 @@ public class KafkaTemplateConfig {
         // 值的序列化方式
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializer);
 
-        props.put("max.poll.interval.ms", "60000");
         if (Objects.equals(enableAuthentication, NifiConstants.enableAuthentication.ENABLE)) {
             props.put("sasl.kerberos.service.name", "kafka");     //认证代码
             props.put("sasl.mechanism", "GSSAPI");                //认证代码

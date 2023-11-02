@@ -184,14 +184,13 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // a.开启事务
             connection.getAutoCommit();
             connection.setAutoCommit(false);
-
+            // 1.viw视图重新生成
+            this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo, modelInfoVO);
             // 1.stg表删了重新生成
             this.updateStgTable(abstractDbHelper, connection, sqlBuilder, entityInfoVo, modelInfoVO, noSubmitAttributeList);
             EntityInfoVO data = mdmClient.getAttributeById(entityId,null).getData();
             // 2.mdm表更新、log表更新
             List<AttributeStatusDTO> dtoList = this.updateMdmTable(abstractDbHelper, connection, sqlBuilder, data.getAttributeList(), entityInfoVo, modelInfoVO);
-            // 3.viw视图重新生成
-            this.createViwTable(abstractDbHelper, sqlBuilder, connection, entityInfoVo, modelInfoVO);
             // 3.1更新事实属性表
             this.updateFactTable(sqlBuilder, connection, entityInfoVo.getAttributeList());
 
@@ -1012,8 +1011,8 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
                     // 获取域字段名称
                     AttributeInfoDTO data = this.getDomainName(foreignList, e.getId());
-                    EntityInfoVO entity = mdmClient.getAttributeById(dto.getEntityId(),null).getData();
-                    ModelInfoVO model = mdmClient.getEntityById(entityInfoVo.getModelId()).getData();
+                    EntityInfoVO entity = mdmClient.getAttributeById(e.getEntityId(),null).getData();
+                    ModelInfoVO model = mdmClient.getEntityById(e.getModelId()).getData();
                     //获取mdm表最新code
                     String tableName = TableNameGenerateUtils.generateMdmTableName(model.getName(), entity.getName());
                     String alias = PRIMARY_TABLE + amount1.incrementAndGet();

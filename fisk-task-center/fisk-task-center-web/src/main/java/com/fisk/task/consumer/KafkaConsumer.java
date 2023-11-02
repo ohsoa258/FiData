@@ -8,7 +8,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
-import com.fisk.task.dto.task.ExecScriptDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.extend.aop.MQConsumerLog;
 import com.fisk.task.listener.access.BuildMdmAccessETLListener;
@@ -65,8 +64,8 @@ public class KafkaConsumer {
     private String keyDeserializer;
     @Value("${spring.kafka.consumer.value-deserializer}")
     private String valueDeserializer;
-    @Value("${spring.kafka.consumer.session.timeout.ms}")
-    private String sessionTimeoutMs;
+    @Value("${spring.kafka.consumer.max.poll.interval.ms}")
+    private String maxPollIntervalMs;
     @Value("${nifi.pipeline.waitTime}")
     private String waitTime;
     @Value("${nifi.Enable-Authentication}")
@@ -170,7 +169,7 @@ public class KafkaConsumer {
         }
         //每次最多消费3条,慢慢来
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 3);
-        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, sessionTimeoutMs);
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, maxPollIntervalMs);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         return props;
     }
