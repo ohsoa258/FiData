@@ -750,11 +750,12 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 break;
             // 数据湖表任务
             case DATALAKE_TASK:
-                //主数据表任务
-            case MDM_TABLE_TASK:
                 // 数据湖ftp任务
             case DATALAKE_FTP_TASK:
                 return OlapTableEnum.CUSTOMWORKPHYSICS;
+            //主数据表任务
+            case MDM_TABLE_TASK:
+                return OlapTableEnum.MDM_DATA_ACCESS;
             // 数据湖非实时api任务
             case DATALAKE_API_TASK:
                 return OlapTableEnum.PHYSICS_API;

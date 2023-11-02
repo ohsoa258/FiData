@@ -226,7 +226,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
 
                 List<ProcessorEntity> processors = buildMdmProcessor(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto);
                 enabledProcessor(taskGroupEntity.getId(), processors);
-                //7. 如果是接入,同步一次,然后把调度组件停掉
+                //7. 如果是接入,同步一次
                 if (dto.groupStructureId == null && dto.openTransmission) {
                     String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.modelId + "." + dto.id;
                     int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
@@ -919,6 +919,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
         }
         tableNifiSettingPO.tableComponentId = groupId;
         tableNifiSettingPO.appId = Math.toIntExact(dto.modelId);
+        tableNifiSettingPO.tableAccessId = Math.toIntExact(dto.entityId);
         tableNifiSettingPO.type = dto.type.getValue();
         tableNifiSettingPO.tableName = config.targetDsConfig.targetTableName;
         //日志监控

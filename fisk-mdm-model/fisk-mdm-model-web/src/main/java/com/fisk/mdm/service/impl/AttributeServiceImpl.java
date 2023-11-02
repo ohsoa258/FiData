@@ -2,6 +2,7 @@ package com.fisk.mdm.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
@@ -549,7 +550,19 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                 .eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
                 .eq(AttributePO::getSyncStatus, AttributeSyncStatusEnum.SUCCESS);
         List<AttributePO> list = baseMapper.selectList(queryWrapper);
-        return AttributeMap.INSTANCES.poToDtoList(list);
+        List<Integer> domainIds = list.stream().filter(i -> i.getDomainId() != null).map(i -> i.getDomainId()).collect(Collectors.toList());
+        LambdaQueryWrapper<AttributePO> queryWrapper1 = new LambdaQueryWrapper<>();
+        queryWrapper1.in(AttributePO::getId,domainIds);
+        List<AttributePO> attributePOS = baseMapper.selectList(queryWrapper1);
+        Map<Integer, AttributePO> attributeMap = attributePOS.stream().collect(Collectors.toMap(i -> (int)i.getId(), i -> i));
+        List<AttributeInfoDTO> attributeInfoDTOS = AttributeMap.INSTANCES.poToDtoList(list);
+        attributeInfoDTOS = attributeInfoDTOS.stream().map(i->{
+            if (i.getDomainId() != null){
+                i.setDomainEntityId(attributeMap.get(i.getDomainId()).getEntityId());
+            }
+            return i;
+        }).collect(Collectors.toList());
+        return attributeInfoDTOS;
     }
 
     @Override
