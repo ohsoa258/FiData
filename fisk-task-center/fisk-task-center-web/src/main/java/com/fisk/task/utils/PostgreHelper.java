@@ -54,7 +54,7 @@ public class PostgreHelper {
                 }
             } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                 //开发doris-hive外部目录测试 暂时改为13
-                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt("dataSourceOdsId"));
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     DataSourceDTO data = fiDataDataSource.data;
                     // 加载驱动类
