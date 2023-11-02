@@ -607,7 +607,9 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             case MYSQL:
                 break;
             case POSTGRESQL:
-                finalSql = this.buildMerge(attributeList, stgTableName, mdmTableName, accessDataPO.versionId);
+                List<AttributeInfoDTO> attributeInfoDTOS = attributeService.listPublishedAttribute((int)entityPO.getId());
+                attributeInfoDTOS = attributeInfoDTOS.stream().filter(i -> i.getDomainId() != null).collect(Collectors.toList());
+                finalSql = this.buildMerge(attributeInfoDTOS,attributeList, stgTableName, mdmTableName, accessDataPO.versionId);
                 break;
             case ORACLE:
                 break;
@@ -617,7 +619,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         return finalSql;
     }
 
-    String buildMerge(List<AccessAttributeDTO> attributeList, String souceTableName, String targetTableName, Integer versionId) {
+    String buildMerge(List<AttributeInfoDTO> attributeInfoDTOS,List<AccessAttributeDTO> attributeList, String souceTableName, String targetTableName, Integer versionId) {
         //获取stg表列名
         List<String> sourceColumnNames = attributeList.stream()
                 .map(i -> "\"" + i.getFieldName() + "\"")
@@ -634,26 +636,51 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if (CollectionUtils.isEmpty(code)) {
             flag = true;
         }
+        String prefix = "a";
         StringBuilder str = new StringBuilder();
         //调用存储过程并拼接同步sql
         str.append("call \"public\".\"sync_mdm_table\"('DECLARE\nsource_row RECORD;\n");
         str.append("BEGIN\n");
         str.append("    FOR source_row IN SELECT\n");
-        str.append("    fidata_version_id,\n");
-        str.append("    fidata_create_time,\n");
-        str.append("    fidata_create_user,\n");
-        str.append("    fidata_del_flag,\n");
-        str.append("    fidata_batch_code,\n");
+        str.append("    "+prefix+".fidata_version_id,\n");
+        str.append("    "+prefix+".fidata_create_time,\n");
+        str.append("    "+prefix+".fidata_create_user,\n");
+        str.append("    "+prefix+".fidata_del_flag,\n");
+        str.append("    "+prefix+".fidata_batch_code,\n");
         if (flag) {
-            str.append("    \"code\",\n");
+            str.append("    "+prefix+".\"code\",\n");
         }
-        str.append("    " + org.apache.commons.lang.StringUtils.join(sourceColumnNames, ",\n    ") + "\n");
+        List<String> collect1 = sourceColumnNames.stream().map(i -> prefix + "." + i).collect(Collectors.toList());
+        int num = 1;
+        if (CollectionUtils.isNotEmpty(attributeInfoDTOS)){
+            for (AttributeInfoDTO attributeInfoDTO : attributeInfoDTOS) {
+                sourceColumnNames.add("\"" + attributeInfoDTO.getName() + "\"");
+                targetColumnNames.add("\"" + attributeInfoDTO.getColumnName() + "\"");
+                collect1.add(prefix+num+ ".fidata_id as " + attributeInfoDTO.getName());
+                num++;
+            }
+        }
+        num = 1;
+        str.append("    " + org.apache.commons.lang.StringUtils.join(collect1, ",\n    ") + "\n");
 
         str.append("  FROM\n");
-        str.append("    \"" + souceTableName + "\"\n");
+        str.append("    \"" + souceTableName + "\" "+prefix+"\n");
+
+        if (CollectionUtils.isNotEmpty(attributeInfoDTOS)){
+            List<Integer> entityIds = attributeInfoDTOS.stream().map(AttributeInfoDTO::getDomainEntityId).collect(Collectors.toList());
+            LambdaQueryWrapper<EntityPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.in(EntityPO::getId,entityIds);
+            Map<Integer, String> tableMap = attributeInfoDTOS.stream().collect(Collectors.toMap(AttributeInfoDTO::getDomainEntityId, AttributeInfoDTO::getName));
+            List<EntityPO> entityPOS = entityMapper.selectList(queryWrapper);
+            for (EntityPO item : entityPOS) {
+                str.append("  LEFT JOIN \""+item.getTableName()+"\" "+prefix+num+" ON "+prefix+".fidata_version_id = "+prefix+num+".fidata_version_id \n" +
+                        " AND "+prefix+".\""+tableMap.get((int)item.id)+"\" = "+prefix+num+".column_code");
+                num++;
+            }
+        }
         str.append("  WHERE\n");
-        str.append("    fidata_batch_code = ''${fidata_batch_code}''\n");
-        str.append("    AND fidata_version_id = ''" + versionId + "''\n");
+        str.append("    "+prefix+".fidata_batch_code = ''${fidata_batch_code}''\n");
+        str.append("    AND "+prefix+".fidata_version_id = ''" + versionId + "''\n");
         str.append("  LOOP\n");
         str.append("    BEGIN\n");
         str.append("        UPDATE \"" + targetTableName + "\"\n");
@@ -667,6 +694,14 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         str.append("        fidata_batch_code = source_row.fidata_batch_code,\n");
         if (flag) {
             str.append("        column_code = uuid_generate_v4(),\n");
+        }
+        if (CollectionUtils.isNotEmpty(attributeInfoDTOS)){
+            for (AttributeInfoDTO attributeInfoDTO : attributeInfoDTOS) {
+                AccessAttributeDTO accessAttributeDTO = new AccessAttributeDTO();
+                accessAttributeDTO.setMdmFieldName(attributeInfoDTO.getColumnName());
+                accessAttributeDTO.setFieldName(attributeInfoDTO.getName());
+                attributeList.add(accessAttributeDTO);
+            }
         }
         str.append(attributeList.stream().map(i ->
                 "       \"" + i.getMdmFieldName() + "\" = source_row.\"" + i.getFieldName() + "\""
