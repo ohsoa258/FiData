@@ -613,7 +613,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             case POSTGRESQL:
                 List<AttributeInfoDTO> attributeInfoDTOS = attributeService.listPublishedAttribute((int)entityPO.getId());
                 attributeInfoDTOS = attributeInfoDTOS.stream().filter(i -> i.getDomainId() != null).collect(Collectors.toList());
-                finalSql = this.buildMerge(attributeInfoDTOS,attributeList, stgTableName, mdmTableName, accessDataPO.versionId);
+                finalSql = this.buildMerge(attributeInfoDTOS,attributeList, stgTableName, mdmTableName, dto.versionId);
                 break;
             case ORACLE:
                 break;
