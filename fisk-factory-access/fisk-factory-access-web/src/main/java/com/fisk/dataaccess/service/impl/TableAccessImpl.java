@@ -2884,7 +2884,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param catalogName 目录名
      */
     @Override
-    public Object getDorisCatalogTreeByCatalogName(Integer dbID, String catalogName) {
+    public Map<String, List<String>> getDorisCatalogTreeByCatalogName(Integer dbID, String catalogName) {
         Connection connection = null;
         Statement statement = null;
         ResultSet databases = null;
@@ -2897,7 +2897,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             boolean flag = redisUtil.hasKey(catalogName);
             if (flag) {
                 //有的话直接返回
-                return redisUtil.get(catalogName);
+                return (Map<String, List<String>>) redisUtil.get(catalogName);
             }
 
             ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbID);
@@ -2954,7 +2954,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param tblName     表名
      */
     @Override
-    public Object getDorisCatalogTblSchema(Integer dbID, String catalogName, String dbName, String tblName) {
+    public List<DorisTblSchemaDTO> getDorisCatalogTblSchema(Integer dbID, String catalogName, String dbName, String tblName) {
         Connection connection = null;
         Statement statement = null;
         ResultSet tblSchema = null;
@@ -2990,6 +2990,29 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             AbstractCommonDbHelper.closeConnection(connection);
         }
         return tblSchemas;
+    }
+
+    /**
+     * 刷新doris外部目录catalog存储的redis缓存
+     *
+     * @param catalogName 目录名
+     */
+    @Override
+    public Map<String, List<String>> refreshDorisCatalog(Integer dbID, String catalogName) {
+        Map<String, List<String>> map = null;
+        try {
+            // 查询redis缓存里有没有doris外部目录的库表结构数据
+            boolean flag = redisUtil.hasKey(catalogName);
+            if (flag) {
+                //先删除
+                redisUtil.del(catalogName);
+                map = getDorisCatalogTreeByCatalogName(dbID, catalogName);
+            }
+        } catch (Exception e) {
+            log.error("刷新dorsi外部目录的redis失败:" + e.getMessage());
+            throw new FkException(ResultEnum.REFRESH_REDIS_DORIS_CATALOG_ERROR, e);
+        }
+        return map;
     }
 
 
