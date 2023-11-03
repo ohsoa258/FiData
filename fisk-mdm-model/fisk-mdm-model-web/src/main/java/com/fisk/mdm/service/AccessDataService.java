@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
-import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
 import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.entity.AccessDataPO;
