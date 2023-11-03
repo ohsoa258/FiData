@@ -692,7 +692,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         str.append("        fidata_version_id = source_row.fidata_version_id,\n");
         str.append("        fidata_create_time = source_row.fidata_create_time,\n");
         str.append("        fidata_create_user =  source_row.fidata_create_user,\n");
-        str.append("        fidata_update_time = CURRENT_TIMESTAMP,\n");
+        str.append("        fidata_update_time = to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),\n");
         str.append("        fidata_update_user = source_row.fidata_create_user,\n");
         str.append("        fidata_del_flag = source_row.fidata_del_flag,\n");
         str.append("        fidata_batch_code = source_row.fidata_batch_code,\n");

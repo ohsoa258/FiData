@@ -224,16 +224,10 @@ public class ViwGroupServiceImpl implements ViwGroupService {
             AbstractDbHelper dbHelper = new AbstractDbHelper();
             connection = dbHelper.connection(connectionStr, acc,
                     pwd,type);
-
-            // 判断视图是否存在
-            boolean exits = this.isExits(sqlCommand, dbHelper, connection, viwName);
-            if (exits == true) {
-                // 1.创建Sql(删除视图Sql)
-                sql = sqlCommand.dropViw(viwName);
-
-                // 2.执行SQL
-                dbHelper.executeSql(sql, connection);
-            }
+            // 1.创建Sql(删除视图Sql)
+            sql = sqlCommand.dropViw(viwName);
+            // 2.执行SQL
+            dbHelper.executeSql(sql, connection);
         }catch (SQLException ex){
             log.error("【删除自定义视图Sql】:" + sql + "【删除自定义视图失败,异常信息】:" + ex);
             ex.printStackTrace();
