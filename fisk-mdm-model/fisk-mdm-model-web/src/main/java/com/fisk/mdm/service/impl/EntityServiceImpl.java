@@ -1,5 +1,6 @@
 package com.fisk.mdm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -14,6 +15,7 @@ import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.entity.AccessDataPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.enums.*;
@@ -69,7 +71,8 @@ public class EntityServiceImpl implements EntityService {
     PublishTaskClient publishTaskClient;
     @Resource
     UserHelper userHelper;
-
+    @Resource
+    AccessDataServiceImpl accessDataService;
     @Override
     public EntityVO getDataById(Integer id) {
         EntityPO entityPo = entityMapper.selectById(id);
@@ -207,14 +210,14 @@ public class EntityServiceImpl implements EntityService {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
-        int res = entityMapper.deleteById(id);
-        if (res <= 0){
-            return ResultEnum.SAVE_DATA_ERROR;
-        }
+        entityMapper.deleteById(id);
 
         // 删除实体下的属性
         this.deleteAttrByEntityId(id);
-
+        LambdaQueryWrapper<AccessDataPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AccessDataPO::getModelId,entityPo.getModelId());
+        queryWrapper.eq(AccessDataPO::getEntityId,entityPo.getId());
+        accessDataService.remove(queryWrapper);
         String desc = "删除了一个实体,id:" + id;
 
         // 记录日志
@@ -426,10 +429,7 @@ public class EntityServiceImpl implements EntityService {
             List<Long> ids = list.stream().filter(Objects::nonNull).map(e -> {
                 return e.getId();
             }).collect(Collectors.toList());
-            boolean res = attributeService.removeByIds(ids);
-            if (res == false){
-                throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-            }
+            attributeService.removeByIds(ids);
         }
     }
 

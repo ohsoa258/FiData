@@ -535,7 +535,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
 
         channelDataDTOS = channelDataDTOS.stream().map(dto -> {
             List<AccessDataPO> list1 = this.list(Wrappers.<AccessDataPO>lambdaQuery()
-                    .eq(AccessDataPO::getModelId, dto.getId()).eq(AccessDataPO::getPublish, 1));
+                    .eq(AccessDataPO::getModelId, dto.getId())
+                    .eq(AccessDataPO::getPublish, 1));
             if (CollectionUtils.isEmpty(list1)){
                 return dto;
             }
@@ -544,10 +545,13 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             Map<Integer, EntityPO> entityPOMap = entityPOS.stream().collect(Collectors.toMap(i->(int)i.getId(), i -> i));
             List<ChannelDataChildDTO> channelDataChildDTOS = new ArrayList<>();
             for (AccessDataPO accessDataPO : list1) {
-                ChannelDataChildDTO channelDataChildDTO = new ChannelDataChildDTO();
-                channelDataChildDTO.setId(accessDataPO.getEntityId());
-                channelDataChildDTO.setTableName(entityPOMap.get(accessDataPO.getEntityId()).getTableName());
-                channelDataChildDTOS.add(channelDataChildDTO);
+                EntityPO entityPO = entityPOMap.get(accessDataPO.getEntityId());
+                if(entityPO !=null){
+                    ChannelDataChildDTO channelDataChildDTO = new ChannelDataChildDTO();
+                    channelDataChildDTO.setId(accessDataPO.getEntityId());
+                    channelDataChildDTO.setTableName(entityPO.getTableName());
+                    channelDataChildDTOS.add(channelDataChildDTO);
+                }
             }
             dto.setList(channelDataChildDTOS);
             return dto;
@@ -688,7 +692,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         str.append("        fidata_version_id = source_row.fidata_version_id,\n");
         str.append("        fidata_create_time = source_row.fidata_create_time,\n");
         str.append("        fidata_create_user =  source_row.fidata_create_user,\n");
-        str.append("        fidata_update_time = CURRENT_TIMESTAMP,\n");
+        str.append("        fidata_update_time = to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS'),\n");
         str.append("        fidata_update_user = source_row.fidata_create_user,\n");
         str.append("        fidata_del_flag = source_row.fidata_del_flag,\n");
         str.append("        fidata_batch_code = source_row.fidata_batch_code,\n");

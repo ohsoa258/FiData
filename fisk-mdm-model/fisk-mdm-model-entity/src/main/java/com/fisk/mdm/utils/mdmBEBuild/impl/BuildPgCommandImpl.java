@@ -27,6 +27,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         int pk = (int)(Math.random()*8999)+1000+1;
 
         StringBuilder str = new StringBuilder();
+        str.append("DROP TABLE IF EXISTS " + PUBLIC + ".");
+        str.append("\""+tableName+"\";");
         str.append("CREATE TABLE public.\"" + tableName+"\"").append("(");
         str.append("id serial NOT NULL,");
         str.append("constraint pk_" + tableName + "_id_" + pk + " primary key(id),");
@@ -50,6 +52,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildStgTable(EntityInfoVO entityInfoVo,String tableName) {
         StringBuilder str = new StringBuilder();
+        str.append("DROP TABLE IF EXISTS " + PUBLIC + ".");
+        str.append("\""+tableName+"\";");
         str.append("CREATE TABLE " + PUBLIC + ".");
         str.append("\""+tableName+"\"").append("(");
 
@@ -95,6 +99,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String buildLogTable(EntityInfoVO entityInfoVo, String tableName,String code) {
         StringBuilder str = new StringBuilder();
+        str.append("DROP TABLE IF EXISTS " + PUBLIC + ".");
+        str.append("\""+tableName+"\";");
         str.append("CREATE TABLE " + PUBLIC + ".");
         str.append("\""+tableName+"\"").append("(");
 
@@ -171,6 +177,8 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     public String buildMdmTable(EntityInfoVO entityInfoVo,String tableName,String code) {
 
         StringBuilder str = new StringBuilder();
+        str.append("DROP TABLE IF EXISTS " + PUBLIC + ".");
+        str.append("\""+tableName+"\";");
         str.append("CREATE TABLE " + PUBLIC + ".");
         str.append("\""+tableName+"\"").append("(");
 
@@ -271,7 +279,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
     @Override
     public String dropViw(String viwName) {
         StringBuilder str = new StringBuilder();
-        str.append("DROP VIEW ").append(PUBLIC + ".").append("\""+viwName+"\"");
+        str.append("DROP VIEW IF EXISTS ").append(PUBLIC + ".").append("\""+viwName+"\"");
         return str.toString();
     }
 
