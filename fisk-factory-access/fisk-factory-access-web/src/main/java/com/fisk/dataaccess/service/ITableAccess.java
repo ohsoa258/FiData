@@ -11,6 +11,7 @@ import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
+import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -431,5 +432,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param dbName      数据库名
      * @param tblName     表名
      */
-    Object getDorisCatalogTblSchema(Integer dbID, String catalogName, String dbName, String tblName);
+    List<DorisTblSchemaDTO> getDorisCatalogTblSchema(Integer dbID, String catalogName, String dbName, String tblName);
+
+    /**
+     * 刷新doris外部目录catalog存储的redis缓存
+     *
+     * @param catalogName 目录名
+     */
+    Map<String, List<String>> refreshDorisCatalog(Integer dbID, String catalogName);
 }
