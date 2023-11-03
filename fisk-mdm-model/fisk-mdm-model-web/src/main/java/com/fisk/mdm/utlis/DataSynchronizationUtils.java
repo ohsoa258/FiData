@@ -15,6 +15,7 @@ import com.fisk.common.service.mdmBEBuild.IBuildSqlCommand;
 import com.fisk.common.service.mdmBEBuild.dto.DataSourceConDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.stgbatch.MdmDTO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.AttributeStatusEnum;
 import com.fisk.mdm.enums.SyncStatusTypeEnum;
@@ -23,6 +24,7 @@ import com.fisk.mdm.service.EntityService;
 import com.fisk.mdm.service.IModelService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
+import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -153,9 +155,18 @@ public class DataSynchronizationUtils {
                     if (e.getName().equals(key)) {
                         // 查询出域字段信息
                         AttributeVO data = attributeService.getById(e.getDomainId()).getData();
-
+                        EntityVO entityVO = entityService.getDataById(data.getEntityId());
+                        if (entityVO == null) {
+                            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                        }
+                        LambdaQueryWrapper<ModelPO> modelQueryWrapper = new LambdaQueryWrapper<>();
+                        modelQueryWrapper.eq(ModelPO::getId, data.getModelId());
+                        ModelPO model = modelService.getOne(modelQueryWrapper);
+                        if (model == null) {
+                            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                        }
                         // 域字段的表名称
-                        String mdmTableName1 = generateMdmTableName(modelPO.getName(), entityInfoVo.getName());
+                        String mdmTableName1 = generateMdmTableName(model.getName(), entityVO.getName());
 
                         StringBuilder str = new StringBuilder();
                         str.append("SELECT fidata_id FROM \"" + mdmTableName1 + "\"");
