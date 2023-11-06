@@ -174,12 +174,11 @@ public class FactAttributeImpl
         //获取表名称
         String dimensionTabName = factPo.factTabName;
         //拼接删除临时表的脚本
-        StringBuilder delSql = new StringBuilder("TRUNCATE TABLE ");
-        delSql.append(prefixTempName)
-                .append("_")
-                .append(dimensionTabName)
-                .append(";");
-        factPo.deleteTempScript = String.valueOf(delSql);
+        String delSql = "TRUNCATE TABLE " + prefixTempName +
+                "_" +
+                dimensionTabName +
+                ";";
+        factPo.deleteTempScript = delSql;
 
         if (factMapper.updateById(factPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);

@@ -127,9 +127,18 @@ public class TableNameGenerateUtils {
         String tableKey = "";
         List<String> tableNames = new ArrayList<>();
         log.info("getStgTableName的表名称{}", tableName);
-        stgTableName = "stg_" + tableName;
-        odsTableName = "ods_" + tableName;
-        tableKey = tableName + "key";
+        if (!tableName.contains(".")) {
+            stgTableName = "stg_" + tableName;
+            odsTableName = "ods_" + tableName;
+            tableKey = tableName + "key";
+        } else {
+            String[] split = tableName.split("\\.");
+            String tblName = split[1];
+            String schemaName = split[0];
+            stgTableName = schemaName + ".stg_" + tblName;
+            odsTableName = tableName;
+            tableKey = schemaName + "_" + tblName + "key";
+        }
         tableNames.add(stgTableName);
         tableNames.add(odsTableName);
         tableNames.add(tableKey);

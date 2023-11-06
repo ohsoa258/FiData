@@ -12,8 +12,8 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
-import com.fisk.common.core.enums.task.nifi.*;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
+import com.fisk.common.core.enums.task.nifi.*;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.sftp.SftpUtils;
@@ -1813,7 +1813,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 /**
                  * 如果是sftp/ftp的excel表格
                  */
-            }else if (dto.excelFlow) {
+            } else if (dto.excelFlow) {
                 //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
                 /**
                  * createExcelProcessorEntity2会返回一个集合，
@@ -2882,7 +2882,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //putDatabaseRecordDTO.databaseConnectionPoolingService=config.targetDsConfig.componentId;
         putDatabaseRecordDTO.databaseConnectionPoolingService = targetDbPoolId;
         //数据库类型,定义枚举
-        switch (config.targetDsConfig.type){
+        switch (config.targetDsConfig.type) {
             case MYSQL:
             case DORIS:
                 putDatabaseRecordDTO.databaseType = "MySQL";
@@ -3351,7 +3351,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return querySqlRes.data;
     }
 
-    private ProcessorEntity queryNumbers(String groupId, String targetControllerServiceId,NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+    private ProcessorEntity queryNumbers(String groupId, String targetControllerServiceId, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query numbers Field";
         querySqlDto.details = "insert_phase";
@@ -4084,12 +4084,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * 执行sql 查询增量字段组件
+     *
      * @param groupId
      * @param targetControllerServiceId
      * @param nifiCustomWorkflowDetailDTO
      * @return
      */
-    private ProcessorEntity queryIncrementFieldProcessor(String groupId, String targetControllerServiceId,NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
+    private ProcessorEntity queryIncrementFieldProcessor(String groupId, String targetControllerServiceId, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
         BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
         querySqlDto.name = "Query Increment Field";
         querySqlDto.details = "query_phase";
@@ -4180,6 +4181,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * createPublishKafkaForPipelineProcessor
+     *
      * @param groupId
      * @param x
      * @param y
@@ -4205,6 +4207,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * script
+     *
      * @param configDTO
      * @param dto
      * @param groupId
@@ -4791,18 +4794,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * 创建任务组
+     *
      * @param name
      * @param groupId
      * @return
      */
-    public ProcessGroupEntity buildTaskGroup(String name,String detail, String groupId) {
+    public ProcessGroupEntity buildTaskGroup(String name, String detail, String groupId) {
         BuildProcessGroupDTO dto = new BuildProcessGroupDTO();
         dto.name = name;
         dto.details = detail;
         dto.groupId = groupId;
         //根据组个数，定义坐标
         int count = componentsBuild.getGroupCount(groupId);
-        dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count+10);
+        dto.positionDTO = NifiPositionHelper.buildXPositionDTO(count + 10);
         //创建组件
         BusinessResult<ProcessGroupEntity> res = componentsBuild.buildProcessGroup(dto);
         if (res.success) {
@@ -4811,7 +4815,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, res.msg);
         }
     }
-    public List<ProcessorEntity> buildScriptProcessor(String groupId, NifiCustomWorkflowDTO nifiCustomWorkflow, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO){
+
+    public List<ProcessorEntity> buildScriptProcessor(String groupId, NifiCustomWorkflowDTO nifiCustomWorkflow, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO) {
         String targetControllerServiceId = "";
         // 目标
         targetControllerServiceId = saveDbconfig(nifiCustomWorkflowDetailDTO.dataSourceId);
@@ -4826,7 +4831,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.tableComponentId = groupId;
         tableNifiSettingPO.type = OlapTableEnum.CUSTOMIZESCRIPT.getValue();
         tableNifiSettingPO.tableName = nifiCustomWorkflowDetailDTO.componentName;
-        tableNifiSettingPO.tableAccessId = (int)nifiCustomWorkflowDetailDTO.id;
+        tableNifiSettingPO.tableAccessId = (int) nifiCustomWorkflowDetailDTO.id;
         //日志监控
         List<ProcessorEntity> processorEntities = pipelineSupervision(groupId, tableNifiSettingPO);
         String supervisionId = processorEntities.get(0).getId();
@@ -4840,20 +4845,20 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //接受消息ConsumeKafka
         componentConnector(groupId, publishKafkaProcessor.getId(), evaluateJsonPathProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
 
-        ProcessorEntity queryField = queryIncrementFieldProcessor(groupId, targetControllerServiceId,nifiCustomWorkflowDetailDTO);
+        ProcessorEntity queryField = queryIncrementFieldProcessor(groupId, targetControllerServiceId, nifiCustomWorkflowDetailDTO);
         componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
         componentConnector(groupId, queryField.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
         tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
-        ProcessorEntity queryNumbers = queryNumbers(groupId, targetControllerServiceId,nifiCustomWorkflowDetailDTO);
+        ProcessorEntity queryNumbers = queryNumbers(groupId, targetControllerServiceId, nifiCustomWorkflowDetailDTO);
         componentConnector(groupId, queryField.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //转json
         ProcessorEntity numberToJsonRes = convertJsonProcessor(groupId, 0, 5);
-        componentConnector(groupId, queryNumbers.getId(),numberToJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, queryNumbers.getId(), numberToJsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
         tableNifiSettingPO.convertNumbersToJsonProcessorId = numberToJsonRes.getId();
 
         ProcessorEntity publishKafkaForPipelineProcessor = createPublishKafkaForPipelineProcessor(groupId, 0, 6);
-        componentConnector(groupId, numberToJsonRes.getId(),publishKafkaForPipelineProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        componentConnector(groupId, numberToJsonRes.getId(), publishKafkaForPipelineProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         tableNifiSettingPO.publishKafkaPipelineProcessorId = publishKafkaForPipelineProcessor.getId();
         res.addAll(processorEntities);
         tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
@@ -4954,13 +4959,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     /**
      * createPublishKafkaProcessor
+     *
      * @param nifiCustomWorkflow
      * @param nifiCustomWorkflowDetailDTO
      * @param groupId
      * @param position
      * @return
      */
-    public ProcessorEntity createPublishKafkaProcessor(NifiCustomWorkflowDTO nifiCustomWorkflow,NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO, String groupId, int position) {
+    public ProcessorEntity createPublishKafkaProcessor(NifiCustomWorkflowDTO nifiCustomWorkflow, NifiCustomWorkflowDetailDTO nifiCustomWorkflowDetailDTO, String groupId, int position) {
 
         BuildConsumeKafkaProcessorDTO buildConsumeKafkaProcessorDTO = new BuildConsumeKafkaProcessorDTO();
         buildConsumeKafkaProcessorDTO.name = "ConsumeKafka";
