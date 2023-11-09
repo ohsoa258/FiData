@@ -1,9 +1,6 @@
 package com.fisk.dataaccess.webservice;
 
-import com.fisk.dataaccess.webservice.service.KSF_Notice;
-import com.fisk.dataaccess.webservice.service.KSF_NoticeResult;
-import com.fisk.dataaccess.webservice.service.WebServiceReceiveDataDTO;
-import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
+import com.fisk.dataaccess.webservice.service.*;
 
 /**
  * @author lsj
@@ -35,5 +32,21 @@ public interface IWebServiceServer {
      * @return
      */
     KSF_NoticeResult ksf_notice(KSF_Notice KSF_Notice);
+
+    /**
+     * 康师傅前置机定制接口--物料主数据
+     *
+     * @param item
+     * @return
+     */
+    KSF_NoticeResult ksf_item_data(KSF_Item item);
+
+    /**
+     * 康师傅前置机定制接口--库存状态变更
+     *
+     * @param inventory_status
+     * @return
+     */
+    KSF_NoticeResult ksf_inventory_data(KSF_Inventory_Status inventory_status);
 
 }
