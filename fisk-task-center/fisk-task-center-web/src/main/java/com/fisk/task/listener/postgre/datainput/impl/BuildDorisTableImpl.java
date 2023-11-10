@@ -439,6 +439,19 @@ public class BuildDorisTableImpl implements IbuildTable {
         StringBuilder sqlFileds = new StringBuilder();
         StringBuilder stgSqlFileds = new StringBuilder();
         log.info("pg_dw建表字段信息:" + fieldList);
+        //主键模型 重新排序
+        //主键放在前面
+        fieldList.sort((o1, o2) -> {
+            if (o1.isBusinessKey == 1 && o2.isBusinessKey == 0) {
+                return -1; // o1排在o2前面
+            } else if (o1.isBusinessKey == 0 && o2.isBusinessKey == 1) {
+                return 1; // o2排在o1前面
+            } else {
+                return 0; // 保持原有顺序
+            }
+        });
+        log.info("doris主键模型重新排序后的字段信息:" + fieldList);
+
         fieldList.forEach((l) -> {
             if (l.fieldType.contains("FLOAT")) {
                 sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");

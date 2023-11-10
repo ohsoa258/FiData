@@ -3,7 +3,6 @@ package com.fisk.common.service.factorycodepreview.impl;
 import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -150,170 +149,170 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //业务标识覆盖方式--删除插入和追加的区别在于：多了一段delete TARGET...
         StringBuilder suffixSql =
                 new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList));
-        //获取业务标识覆盖方式标识的字段
-        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+//        //获取业务标识覆盖方式标识的字段
+//        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
 
-        //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
-        String suffix = "DELETE TARGET FROM " +
-                tableName +
-                "TARGET JOIN (SELECT fidata_batch_code," +
-                "?" +
-                "FROM" +
-                sourceTableName +
-                "WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}' " +
-                "GROUP BY fidata_batch_code," +
-                "<?>" +
-                ") SOURCE ON " +
-                "TARGET.fidata_batch_code <> SOURCE.fidata_batch_code";
+//        //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
+//        String suffix = "DELETE TARGET FROM " +
+//                tableName +
+//                "TARGET JOIN (SELECT fidata_batch_code," +
+//                "?" +
+//                "FROM" +
+//                sourceTableName +
+//                "WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}' " +
+//                "GROUP BY fidata_batch_code," +
+//                "<?>" +
+//                ") SOURCE ON " +
+//                "TARGET.fidata_batch_code <> SOURCE.fidata_batch_code";
+//
+//        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
+//        StringBuilder pkFieldNames = new StringBuilder();
+//        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  <?>
+//        StringBuilder pkFieldNames1 = new StringBuilder();
+//        if (!CollectionUtils.isEmpty(pkFields)) {
+//            //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
+//            for (PublishFieldDTO pkField : pkFields) {
+//                if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
+//                    pkFieldNames.append(" FROM_UNIXTIME(")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`)")
+//                            .append(" AS ")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`")
+//                            .append(",");
+//                } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
+//                    pkFieldNames.append(" FROM_UNIXTIME(")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`)")
+//                            .append(" AS ")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`")
+//                            .append(",");
+//                } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
+//                    pkFieldNames.append(" FROM_UNIXTIME(")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`)")
+//                            .append(" AS ")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`")
+//                            .append(",");
+//                } else if ("DATETIME".equalsIgnoreCase(pkField.fieldType)) {
+//                    pkFieldNames.append(" FROM_UNIXTIME(")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`)")
+//                            .append(" AS ")
+//                            .append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`")
+//                            .append(",");
+//                } else {
+//                    pkFieldNames.append("`")
+//                            .append(pkField.fieldEnName)
+//                            .append("`")
+//                            .append(",");
+//                }
+//            }
+//            //删除最后一个多余的逗号
+//            pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
+//        }
+//
+//        //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
+//        // 去掉上一个循环的 AS ")
+//        //                            .append("[")
+//        //                            .append(pkField.fieldEnName)
+//        //                            .append("] ");
+//        //替换第二个占位符 <?>
+//        for (PublishFieldDTO pkField : pkFields) {
+//
+//            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
+//                pkFieldNames1.append(" FROM_UNIXTIME(")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`)")
+//                        .append(" AS ")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`")
+//                        .append(",");
+//            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
+//                pkFieldNames1.append(" FROM_UNIXTIME(")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`)")
+//                        .append(" AS ")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`")
+//                        .append(",");
+//            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
+//                pkFieldNames1.append(" FROM_UNIXTIME(")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`)")
+//                        .append(" AS ")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`")
+//                        .append(",");
+//            } else if ("DATETIME".equalsIgnoreCase(pkField.fieldType)) {
+//                pkFieldNames1.append(" FROM_UNIXTIME(")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`)")
+//                        .append(" AS ")
+//                        .append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`")
+//                        .append(",");
+//            }  else {
+//                pkFieldNames1.append("`")
+//                        .append(pkField.fieldEnName)
+//                        .append("`")
+//                        .append(",");
+//            }
+//        }
+//        //删除最后一个多余的逗号
+//        pkFieldNames1.deleteCharAt(pkFieldNames1.lastIndexOf(","));
+//
+//        //替换规则
+//        String regex = "\\?";
+//        String regex1 = "<\\?>";
+//        //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
+//        String halfSql = suffix.replaceFirst(regex, String.valueOf(pkFieldNames));
+//        //将所有的占位符 <?> 替换成我们拼接完成的业务覆盖标识字段字符串
+//        halfSql = halfSql.replaceFirst(regex1, String.valueOf(pkFieldNames1));
+//
+//        //String halfSql转为StringBulider,准备拼接
+//        StringBuilder matchAgain = new StringBuilder(halfSql);
+//        //第二次拼接开始：AND TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
+//        for (PublishFieldDTO pkField : pkFields) {
+//            matchAgain.append(" AND ")
+//                    .append("TARGET")
+//                    .append(".")
+//                    .append("`")
+//                    .append(pkField.fieldEnName)
+//                    .append("`")
+//                    .append(" = ")
+//                    .append("SOURCE.")
+//                    .append("`")
+//                    .append(pkField.fieldEnName)
+//                    .append("`")
+//                    .append(" ");
+//        }
+//        //拼接分号，拼成最终的sql
+//        String finalSql = String.valueOf(matchAgain.append(";   "));
 
-        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
-        StringBuilder pkFieldNames = new StringBuilder();
-        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  <?>
-        StringBuilder pkFieldNames1 = new StringBuilder();
-        if (!CollectionUtils.isEmpty(pkFields)) {
-            //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
-            for (PublishFieldDTO pkField : pkFields) {
-                if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" FROM_UNIXTIME(")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`)")
-                            .append(" AS ")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`")
-                            .append(",");
-                } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" FROM_UNIXTIME(")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`)")
-                            .append(" AS ")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`")
-                            .append(",");
-                } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" FROM_UNIXTIME(")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`)")
-                            .append(" AS ")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`")
-                            .append(",");
-                } else if ("DATETIME".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" FROM_UNIXTIME(")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`)")
-                            .append(" AS ")
-                            .append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`")
-                            .append(",");
-                } else {
-                    pkFieldNames.append("`")
-                            .append(pkField.fieldEnName)
-                            .append("`")
-                            .append(",");
-                }
-            }
-            //删除最后一个多余的逗号
-            pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
-        }
-
-        //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
-        // 去掉上一个循环的 AS ")
-        //                            .append("[")
-        //                            .append(pkField.fieldEnName)
-        //                            .append("] ");
-        //替换第二个占位符 <?>
-        for (PublishFieldDTO pkField : pkFields) {
-
-            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" FROM_UNIXTIME(")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`)")
-                        .append(" AS ")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`")
-                        .append(",");
-            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" FROM_UNIXTIME(")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`)")
-                        .append(" AS ")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`")
-                        .append(",");
-            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" FROM_UNIXTIME(")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`)")
-                        .append(" AS ")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`")
-                        .append(",");
-            } else if ("DATETIME".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" FROM_UNIXTIME(")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`)")
-                        .append(" AS ")
-                        .append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`")
-                        .append(",");
-            }  else {
-                pkFieldNames1.append("`")
-                        .append(pkField.fieldEnName)
-                        .append("`")
-                        .append(",");
-            }
-        }
-        //删除最后一个多余的逗号
-        pkFieldNames1.deleteCharAt(pkFieldNames1.lastIndexOf(","));
-
-        //替换规则
-        String regex = "\\?";
-        String regex1 = "<\\?>";
-        //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
-        String halfSql = suffix.replaceFirst(regex, String.valueOf(pkFieldNames));
-        //将所有的占位符 <?> 替换成我们拼接完成的业务覆盖标识字段字符串
-        halfSql = halfSql.replaceFirst(regex1, String.valueOf(pkFieldNames1));
-
-        //String halfSql转为StringBulider,准备拼接
-        StringBuilder matchAgain = new StringBuilder(halfSql);
-        //第二次拼接开始：AND TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
-        for (PublishFieldDTO pkField : pkFields) {
-            matchAgain.append(" AND ")
-                    .append("TARGET")
-                    .append(".")
-                    .append("`")
-                    .append(pkField.fieldEnName)
-                    .append("`")
-                    .append(" = ")
-                    .append("SOURCE.")
-                    .append("`")
-                    .append(pkField.fieldEnName)
-                    .append("`")
-                    .append(" ");
-        }
-        //拼接分号，拼成最终的sql
-        String finalSql = String.valueOf(matchAgain.append(";   "));
-
-        //返回的sql前加上需要的前缀finalSql
-        StringBuilder delInsertSql = suffixSql.insert(0, finalSql);
+//        //返回的sql前加上需要的前缀finalSql
+//        StringBuilder delInsertSql = suffixSql.insert(0, finalSql);
         //返回拼接后完整的删除插入sql
-        return String.valueOf(delInsertSql);
+        return String.valueOf(suffixSql);
     }
 
     /**
