@@ -1,8 +1,8 @@
 package com.fisk.dataservice.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,9 +15,11 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
@@ -276,6 +278,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         mdmClient.setMDMDataStructure(reqDTO);
                         break;
                 }
+                if (dataSourceConPO.conType == DataSourceTypeEnum.DORIS.getValue()){
+                    setDataDorisStructure(dataSourceConPO);
+                }
             }
         } else {
             setMetaDataToRedis(dataSourceConPO, 2);
@@ -283,6 +288,47 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "已重新加载数据源");
     }
 
+    public boolean setDataDorisStructure(DataSourceConPO dataSourceConPO) {
+
+        List<FiDataMetaDataDTO> list = new ArrayList<>();
+        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+        // FiData数据源id: 数据资产自定义
+        dto.setDataSourceId(dataSourceConPO.getDatasourceId());
+
+        // 第一层id
+        List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+        FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+        dataTree.setId(String.valueOf(dataSourceConPO.getDatasourceId()));
+        dataTree.setParentId("-10");
+        dataTree.setLabel(dataSourceConPO.conDbname);
+        dataTree.setLabelAlias(dataSourceConPO.conDbname);
+        dataTree.setLevelType(LevelTypeEnum.DATABASE);
+        dataTree.setSourceType(1);
+        dataTree.setSourceId(dataSourceConPO.getDatasourceId());
+        List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeTableView = new ArrayList<>();
+
+        FiDataMetaDataTreeDTO fiDataMetaDataTreeView = new FiDataMetaDataTreeDTO();
+        String uuid_CataLogFOLDERId = UUID.randomUUID().toString().replace("-", "");
+        fiDataMetaDataTreeView.setId(uuid_CataLogFOLDERId);
+        fiDataMetaDataTreeView.setParentId(String.valueOf(dataSourceConPO.getDatasourceId()));
+        fiDataMetaDataTreeView.setLabel("CATALOG");
+        fiDataMetaDataTreeView.setLabelAlias("CATALOG");
+        fiDataMetaDataTreeView.setLevelType(LevelTypeEnum.FOLDER);
+        fiDataMetaDataTreeView.setChildren(getCustomizeMetaData_CataLog(dataSourceConPO, uuid_CataLogFOLDERId,SourceTypeEnum.FiData));
+        fiDataMetaDataTreeTableView.add(fiDataMetaDataTreeView);
+        // 封装doris所有结构数据
+
+        dataTree.setChildren(fiDataMetaDataTreeTableView);
+        dataTreeList.add(dataTree);
+
+        dto.setChildren(dataTreeList);
+        list.add(dto);
+
+        if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
+            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(String.valueOf(dataSourceConPO.getDatasourceId())), JSON.toJSONString(list));
+        }
+        return true;
+    }
     /**
      * @return com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO
      * @description 获取自定义表信息
@@ -331,28 +377,40 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         fiDataMetaDataTreeDateBase.setLabel(dataSourceConPO.conDbname);
         fiDataMetaDataTreeDateBase.setLabelAlias(dataSourceConPO.conDbname);
         fiDataMetaDataTreeDateBase.setLevelType(LevelTypeEnum.DATABASE);
-
         List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeTableView = new ArrayList<>();
-        FiDataMetaDataTreeDTO fiDataMetaDataTreeTable = new FiDataMetaDataTreeDTO();
-        String uuid_TableFOLDERId = UUID.randomUUID().toString().replace("-", "");
-        fiDataMetaDataTreeTable.setId(uuid_TableFOLDERId);
-        fiDataMetaDataTreeTable.setParentId(String.valueOf(dataSourceConPO.id));
-        fiDataMetaDataTreeTable.setLabel("TABLE");
-        fiDataMetaDataTreeTable.setLabelAlias("TABLE");
-        fiDataMetaDataTreeTable.setLevelType(LevelTypeEnum.FOLDER);
-        fiDataMetaDataTreeTable.setChildren(getCustomizeMetaData_Table(dataSourceConPO, uuid_TableFOLDERId));
-        fiDataMetaDataTreeTableView.add(fiDataMetaDataTreeTable);
+        DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.conType];
+        if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS){
 
-        FiDataMetaDataTreeDTO fiDataMetaDataTreeView = new FiDataMetaDataTreeDTO();
-        String uuid_ViewFOLDERId = UUID.randomUUID().toString().replace("-", "");
-        fiDataMetaDataTreeView.setId(uuid_ViewFOLDERId);
-        fiDataMetaDataTreeView.setParentId(String.valueOf(dataSourceConPO.id));
-        fiDataMetaDataTreeView.setLabel("VIEW");
-        fiDataMetaDataTreeView.setLabelAlias("VIEW");
-        fiDataMetaDataTreeView.setLevelType(LevelTypeEnum.FOLDER);
-        fiDataMetaDataTreeView.setChildren(getCustomizeMetaData_View(dataSourceConPO, uuid_ViewFOLDERId));
-        fiDataMetaDataTreeTableView.add(fiDataMetaDataTreeView);
+            FiDataMetaDataTreeDTO fiDataMetaDataTreeView = new FiDataMetaDataTreeDTO();
+            String uuid_CataLogFOLDERId = UUID.randomUUID().toString().replace("-", "");
+            fiDataMetaDataTreeView.setId(uuid_CataLogFOLDERId);
+            fiDataMetaDataTreeView.setParentId(String.valueOf(dataSourceConPO.id));
+            fiDataMetaDataTreeView.setLabel("CATALOG");
+            fiDataMetaDataTreeView.setLabelAlias("CATALOG");
+            fiDataMetaDataTreeView.setLevelType(LevelTypeEnum.FOLDER);
+            fiDataMetaDataTreeView.setChildren(getCustomizeMetaData_CataLog(dataSourceConPO, uuid_CataLogFOLDERId,SourceTypeEnum.custom));
+            fiDataMetaDataTreeTableView.add(fiDataMetaDataTreeView);
+        }else {
+            FiDataMetaDataTreeDTO fiDataMetaDataTreeTable = new FiDataMetaDataTreeDTO();
+            String uuid_TableFOLDERId = UUID.randomUUID().toString().replace("-", "");
+            fiDataMetaDataTreeTable.setId(uuid_TableFOLDERId);
+            fiDataMetaDataTreeTable.setParentId(String.valueOf(dataSourceConPO.id));
+            fiDataMetaDataTreeTable.setLabel("TABLE");
+            fiDataMetaDataTreeTable.setLabelAlias("TABLE");
+            fiDataMetaDataTreeTable.setLevelType(LevelTypeEnum.FOLDER);
+            fiDataMetaDataTreeTable.setChildren(getCustomizeMetaData_Table(dataSourceConPO, uuid_TableFOLDERId));
+            fiDataMetaDataTreeTableView.add(fiDataMetaDataTreeTable);
 
+            FiDataMetaDataTreeDTO fiDataMetaDataTreeView = new FiDataMetaDataTreeDTO();
+            String uuid_ViewFOLDERId = UUID.randomUUID().toString().replace("-", "");
+            fiDataMetaDataTreeView.setId(uuid_ViewFOLDERId);
+            fiDataMetaDataTreeView.setParentId(String.valueOf(dataSourceConPO.id));
+            fiDataMetaDataTreeView.setLabel("VIEW");
+            fiDataMetaDataTreeView.setLabelAlias("VIEW");
+            fiDataMetaDataTreeView.setLevelType(LevelTypeEnum.FOLDER);
+            fiDataMetaDataTreeView.setChildren(getCustomizeMetaData_View(dataSourceConPO, uuid_ViewFOLDERId));
+            fiDataMetaDataTreeTableView.add(fiDataMetaDataTreeView);
+        }
         fiDataMetaDataTreeDateBase.setChildren(fiDataMetaDataTreeTableView);
         fiDataMetaDataTreeDateBases.add(fiDataMetaDataTreeDateBase);
 
@@ -373,6 +431,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         PostgresConUtils postgresConUtils = new PostgresConUtils();
+        DorisConUtils dorisConUtils = new DorisConUtils();
         try {
             DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[conPo.conType];
             Connection connection = getStatement(dataSourceTypeEnum, conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
@@ -390,6 +449,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 case POSTGRESQL:
                     // 表结构
                     tableNameAndColumns = postgresConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
+                    break;
+                case DORIS:
+                    // 表结构
+                    tableNameAndColumns = dorisConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
                     break;
             }
             connection.close();
@@ -448,6 +511,120 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     /**
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 自定义元数据，CataLog信息
+     * @author dick
+     * @date 2022/7/21 11:03
+     * @version v1.0
+     * @params conPo
+     */
+    public List<FiDataMetaDataTreeDTO> getCustomizeMetaData_CataLog(DataSourceConPO conPo, String uuid_TableFOLDERId,SourceTypeEnum sourceTypeEnum) {
+        List<FiDataMetaDataTreeDTO> fiDataMetaDataTrees = new ArrayList<>();
+        DorisConUtils dorisConUtils = new DorisConUtils();
+        try {
+            DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[conPo.conType];
+            // 表结构
+            List<DorisCatalogDTO> cataLogNames = dorisConUtils.getCataLogNames(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
+
+            if (CollectionUtils.isNotEmpty(cataLogNames)) {
+                for (DorisCatalogDTO catalogDTO : cataLogNames) {
+                    String uuid_cataLog_id = UUID.randomUUID().toString().replace("-", "");
+                    FiDataMetaDataTreeDTO fiDataMetaDataTree_CataLog = new FiDataMetaDataTreeDTO();
+                    fiDataMetaDataTree_CataLog.setId(uuid_cataLog_id);
+                    fiDataMetaDataTree_CataLog.setParentId(uuid_TableFOLDERId);
+                    fiDataMetaDataTree_CataLog.setLabel(catalogDTO.catalogName);
+                    fiDataMetaDataTree_CataLog.setLabelAlias(catalogDTO.catalogName);
+                    fiDataMetaDataTree_CataLog.setLabelFramework(catalogDTO.catalogName);
+                    fiDataMetaDataTree_CataLog.setLabelRelName(catalogDTO.catalogName);
+                    fiDataMetaDataTree_CataLog.setSourceId(Math.toIntExact(conPo.id));
+                    fiDataMetaDataTree_CataLog.setSourceType(sourceTypeEnum.getValue());
+                    fiDataMetaDataTree_CataLog.setLevelType(LevelTypeEnum.FOLDER);
+                    fiDataMetaDataTree_CataLog.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                    fiDataMetaDataTree_CataLog.setPublishState("1");
+                    List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Database_Children = new ArrayList<>();
+                    List<DorisCatalogDTO.CataLogDatabase> cataLogDatabases = catalogDTO.getCataLogDatabases();
+                    if (CollectionUtils.isNotEmpty(cataLogDatabases)) {
+                        for (DorisCatalogDTO.CataLogDatabase cataLogDatabase : cataLogDatabases) {
+                            String uuid_database_id = UUID.randomUUID().toString().replace("-", "");
+                            FiDataMetaDataTreeDTO fiDataMetaDataTree_Database = new FiDataMetaDataTreeDTO();
+                            fiDataMetaDataTree_Database.setId(uuid_database_id);
+                            fiDataMetaDataTree_Database.setParentId(uuid_cataLog_id);
+                            fiDataMetaDataTree_Database.setLabel(cataLogDatabase.databaseName);
+                            fiDataMetaDataTree_Database.setLabelAlias(cataLogDatabase.databaseName);
+                            fiDataMetaDataTree_CataLog.setLabelFramework(cataLogDatabase.databaseName);
+                            fiDataMetaDataTree_CataLog.setLabelRelName(cataLogDatabase.databaseName);
+                            fiDataMetaDataTree_Database.setSourceId(Math.toIntExact(conPo.id));
+                            fiDataMetaDataTree_Database.setSourceType(sourceTypeEnum.getValue());
+                            fiDataMetaDataTree_Database.setLevelType(LevelTypeEnum.DATABASE);
+                            fiDataMetaDataTree_Database.setParentName(catalogDTO.catalogName);
+                            fiDataMetaDataTree_Database.setParentNameAlias(catalogDTO.catalogName);
+                            fiDataMetaDataTree_Database.setParentLabelFramework(catalogDTO.catalogName);
+                            fiDataMetaDataTree_Database.setParentLabelRelName(catalogDTO.catalogName);
+                            fiDataMetaDataTree_Database.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                            fiDataMetaDataTree_Database.setPublishState("1");
+                            fiDataMetaDataTree_Database_Children.add(fiDataMetaDataTree_Database);
+                            List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Table_Children = new ArrayList<>();
+                            List<DorisCatalogDTO.CataLogTables> cataLogTables = cataLogDatabase.getCataLogTables();
+                            if (CollectionUtils.isNotEmpty(cataLogTables)){
+                                for (DorisCatalogDTO.CataLogTables cataLogTable : cataLogTables) {
+                                    String uuid_table_id = UUID.randomUUID().toString().replace("-", "");
+                                    FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = new FiDataMetaDataTreeDTO();
+                                    fiDataMetaDataTree_Table.setId(uuid_table_id);
+                                    fiDataMetaDataTree_Table.setParentId(uuid_database_id);
+                                    fiDataMetaDataTree_Table.setLabel(cataLogTable.tableName);
+                                    fiDataMetaDataTree_Table.setLabelAlias(cataLogTable.tableName);
+                                    fiDataMetaDataTree_CataLog.setLabelFramework(cataLogTable.tableName);
+                                    fiDataMetaDataTree_CataLog.setLabelRelName(cataLogTable.tableName);
+                                    fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
+                                    fiDataMetaDataTree_Table.setSourceType(sourceTypeEnum.getValue());
+                                    fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.DATABASE);
+                                    fiDataMetaDataTree_Table.setParentName(catalogDTO.catalogName);
+                                    fiDataMetaDataTree_Table.setParentNameAlias(catalogDTO.catalogName);
+                                    fiDataMetaDataTree_Table.setParentLabelFramework(catalogDTO.catalogName);
+                                    fiDataMetaDataTree_Table.setParentLabelRelName(catalogDTO.catalogName);
+                                    fiDataMetaDataTree_Table.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                    fiDataMetaDataTree_Table.setPublishState("1");
+                                    fiDataMetaDataTree_Table_Children.add(fiDataMetaDataTree_Table);
+                                    List<FiDataMetaDataTreeDTO> fiDataMetaDataTree_Field_Children = new ArrayList<>();
+                                    List<DorisCatalogDTO.CataLogField> cataLogFields = cataLogTable.getCataLogFields();
+                                    if (CollectionUtils.isNotEmpty(cataLogFields)){
+                                        for (DorisCatalogDTO.CataLogField cataLogField : cataLogFields) {
+                                            String uuid_FieldId = UUID.randomUUID().toString().replace("-", "");
+                                            FiDataMetaDataTreeDTO fiDataMetaDataTree_Field = new FiDataMetaDataTreeDTO();
+                                            fiDataMetaDataTree_Field.setId(uuid_FieldId);
+                                            fiDataMetaDataTree_Field.setParentId(uuid_table_id);
+                                            fiDataMetaDataTree_Field.setLabel(cataLogField.fieldName);
+                                            fiDataMetaDataTree_Field.setLabelAlias(cataLogField.fieldName);
+                                            fiDataMetaDataTree_Field.setSourceId(Math.toIntExact(conPo.id));
+                                            fiDataMetaDataTree_Field.setSourceType(sourceTypeEnum.getValue());
+                                            fiDataMetaDataTree_Field.setLevelType(LevelTypeEnum.FIELD);
+                                            fiDataMetaDataTree_Field.setLabelType(cataLogField.type);
+                                            fiDataMetaDataTree_Field.setParentName(cataLogTable.tableName);
+                                            fiDataMetaDataTree_Field.setParentNameAlias(cataLogTable.tableName);
+                                            fiDataMetaDataTree_Field.setParentLabelFramework(cataLogTable.tableName);
+                                            fiDataMetaDataTree_Field.setParentLabelRelName(cataLogTable.tableName);
+                                            fiDataMetaDataTree_Field.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                            fiDataMetaDataTree_Field.setPublishState("1");
+                                            fiDataMetaDataTree_Field_Children.add(fiDataMetaDataTree_Field);
+                                        }
+                                    }
+                                    fiDataMetaDataTree_Table.setChildren(fiDataMetaDataTree_Field_Children);
+                                }
+                            }
+                            fiDataMetaDataTree_Database.setChildren(fiDataMetaDataTree_Table_Children);
+                        }
+                    }
+                    fiDataMetaDataTree_CataLog.setChildren(fiDataMetaDataTree_Database_Children);
+                    fiDataMetaDataTrees.add(fiDataMetaDataTree_CataLog);
+                }
+            }
+        } catch (Exception ex) {
+            return fiDataMetaDataTrees;
+        }
+        return fiDataMetaDataTrees;
+    }
+
+    /**
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @description 自定义元数据，视图信息
      * @author dick
      * @date 2022/7/21 11:02
@@ -459,6 +636,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         PostgresConUtils postgresConUtils = new PostgresConUtils();
+        DorisConUtils dorisConUtils = new DorisConUtils();
         try {
             List<DataBaseViewDTO> viewNameAndColumns = null;
             switch (DataSourceTypeEnum.values()[conPo.conType]) {

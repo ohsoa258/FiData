@@ -226,7 +226,7 @@ public enum ResultEnum {
     WEBSERVICE_PUSH_DATA_ERROR(5101, "webService推送数据报错"),
     DORIS_GET_CATALOG_ERROR(5102, "获取doris外部类目录失败"),
     REFRESH_REDIS_DORIS_CATALOG_ERROR(5103, "刷新dorsi外部目录的redis失败"),
-
+    DATAACCESS_GETCATALOG_ERROR(5103, "获取数据库catalog名称失败"),
 
     /**
      * 后台任务模块
