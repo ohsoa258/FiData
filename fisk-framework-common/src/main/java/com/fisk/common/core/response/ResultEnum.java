@@ -271,6 +271,7 @@ public enum ResultEnum {
     FACT_FIELD_EXIST(8013, "当前设置的目标英文名称已存在,请重新设置"),
     QUERY_CONDITION_NOTNULL(8014, "表关联关系不能为空"),
     FACT_NAME_NOTNULL(8015, "操作的事实表名不允许为空"),
+    DATA_MODEL_FIELD_NOT_EXISTS(8016, "数仓建模-发布表修改表结构失败，tb_task_pg_table_structure表无字段！"),
 
     /**
      * 数据工厂

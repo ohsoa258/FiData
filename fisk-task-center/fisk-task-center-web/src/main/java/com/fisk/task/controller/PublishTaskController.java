@@ -110,7 +110,6 @@ public class PublishTaskController {
      * @param data
      * @return
      */
-
     @ApiOperation(value = "保存task日志")
     @PostMapping("/savePipelTaskLog")
     public ResultEntity<Object> savePipelTaskLog(@RequestBody TableApiTaskDTO data) {

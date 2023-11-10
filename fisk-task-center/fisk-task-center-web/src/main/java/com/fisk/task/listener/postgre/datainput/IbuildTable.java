@@ -50,6 +50,13 @@ public interface IbuildTable {
     String prepareCallSql();
 
     /**
+     * 获取doris数据库版本修改语句的函数执行语句
+     *
+     * @return String
+     */
+    String prepareCallSqlForDoris(String version, int type);
+
+    /**
      * 查询同步数据条数语句
      *
      * @return String
@@ -116,5 +123,21 @@ public interface IbuildTable {
      * @return
      */
     String getEsqlAutoCommit();
+
+    /**
+     * 创建建模dim表 - doris主键模型
+     *
+     * @param modelPublishTableDTO modelPublishTableDTO
+     * @return List<String>  返回两条建表语句
+     */
+    List<String> buildDorisDimTables(ModelPublishTableDTO modelPublishTableDTO);
+
+    /**
+     * 创建建模fact表 - doris冗余模型
+     *
+     * @param modelPublishTableDTO modelPublishTableDTO
+     * @return List<String>  返回两条建表语句
+     */
+    List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO);
 
 }

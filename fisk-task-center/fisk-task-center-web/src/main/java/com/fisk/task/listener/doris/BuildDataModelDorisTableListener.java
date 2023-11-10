@@ -6,6 +6,7 @@ import com.davis.client.ApiException;
 import com.davis.client.model.*;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.datamodel.DataModelTblTypeEnum;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
@@ -139,7 +140,7 @@ public class BuildDataModelDorisTableListener
                 //conType==1  SqlServer
                 conType = dataSource.conType;
             } else {
-                log.error("userclient无法查询到ods库的连接信息");
+                log.error("userclient无法查询到dw库的连接信息");
                 throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
             }
             //遍历维度列表
@@ -154,13 +155,24 @@ public class BuildDataModelDorisTableListener
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
 
+                //todo：doris数据库不支持存储过程，因此这里先将doris数仓排除在外
                 //调用方法，保存建模相关表结构数据(保存版本号)
-                ResultEnum resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
-                if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
-                    taskPgTableStructureMapper.updatevalidVersion(version);
-                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
+                ResultEnum resultEnum = null;
+                if (!DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())) {
+                    resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
+                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                        taskPgTableStructureMapper.updatevalidVersion(version);
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
+                    }
+                    log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
+                }else {
+                    resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                        taskPgTableStructureMapper.updatevalidVersion(version);
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
+                    }
+                    log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
                 }
-                log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
 
                 //生成建表语句
                 List<String> pgdbTable2 = new ArrayList<>();
@@ -170,10 +182,48 @@ public class BuildDataModelDorisTableListener
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     //获取数据源
                     DataSourceDTO dataSource = fiDataDataSource.data;
-                    //根据数据源连接类型，获取建表实现类   pg/sqlServer
+                    //根据数据源连接类型，获取建表实现类   pg/sqlServer/doris
                     IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
-                    //根据维度列表字段，调用方法，返回两条建表语句
-                    pgdbTable2 = dbCommand.buildDwStgAndOdsTable(modelPublishTableDTO);
+
+                    //todo:针对doris作为数仓  当创建dim维度表的时候，创建的是主键模型
+                    //todo:当创建fact事实表（fact/help/config）表的时候，创建的是Duplicate 明细模型（冗余模型），即对进表的源数据不做任何操作
+                    //     事实表如果有主键 则建的表也是主键模型
+                    //todo:上文仅针对dw表 不针对temp临时表，临时表统一是冗余模型
+                    if (DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())) {
+                        //获取此次发布类型 dim or fact
+                        DataModelTblTypeEnum dimOrFact = inpData.getDimOrFact();
+                        log.info("此次数仓表发布类型：" + dimOrFact);
+                        switch (dimOrFact) {
+                            case DIM:
+                                pgdbTable2 = dbCommand.buildDorisDimTables(modelPublishTableDTO);
+                                break;
+                            case FACT:
+                            case HELP:
+                            case CONFIG:
+                                //校验事实表是否有主键
+                                boolean ifUnique = false;
+                                for (ModelPublishFieldDTO dto : modelPublishTableDTO.fieldList) {
+                                    if (dto.isBusinessKey == 1) {
+                                        ifUnique = true;
+                                        break;
+                                    }
+                                }
+                                //如果没有主键 则是冗余模型
+                                if (!ifUnique) {
+                                    pgdbTable2 = dbCommand.buildDorisFactTables(modelPublishTableDTO);
+                                } else {
+                                    //如果有主键 则是主键模型
+                                    pgdbTable2 = dbCommand.buildDorisDimTables(modelPublishTableDTO);
+                                }
+                                break;
+                            default:
+                                throw new FkException(ResultEnum.ENUM_TYPE_ERROR, String.valueOf(dimOrFact));
+                        }
+                    } else {
+                        //根据维度列表字段，调用方法，返回两条建表语句
+                        pgdbTable2 = dbCommand.buildDwStgAndOdsTable(modelPublishTableDTO);
+                    }
+
                     //新建map集合，预装载键值对
                     HashMap<String, Object> map = new HashMap<>();
                     //放入表名称
@@ -203,7 +253,15 @@ public class BuildDataModelDorisTableListener
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
 
-                if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                if (resultEnum != null) {
+                    if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                        //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
+                        BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
+                        if (!businessResult1.success) {
+                            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                        }
+                    }
+                } else {
                     //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
                     BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
                     if (!businessResult1.success) {
@@ -282,14 +340,14 @@ public class BuildDataModelDorisTableListener
 
                 //获取表名 为了拼接临时表主键名称
                 String tableName = modelPublishTableDTO.tableName;
-                if (conType == DataSourceTypeEnum.POSTGRESQL){
+                if (conType == DataSourceTypeEnum.POSTGRESQL) {
                     if (modelPublishTableDTO.createType == 0) {
                         //临时表主键名称
                         bfd.pkName = tableName.substring(4) + "key";
                     } else {
                         bfd.pkName = tableName.substring(5) + "key";
                     }
-                }else {
+                } else {
                     bfd.pkName = tableName.substring(tableName.indexOf("_") + 1) + "key";
                 }
 

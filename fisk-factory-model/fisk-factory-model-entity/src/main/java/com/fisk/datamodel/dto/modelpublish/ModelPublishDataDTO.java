@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.modelpublish;
 
+import com.fisk.common.core.enums.datamodel.DataModelTblTypeEnum;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -25,4 +26,10 @@ public class ModelPublishDataDTO extends MQBaseDTO {
     public List<ModelPublishTableDTO> dimensionList;
     @ApiModelProperty(value = "nifi自定义管道Id")
     public String nifiCustomWorkflowId;
+
+    /**
+     * dim表 or fact表
+     */
+    @ApiModelProperty(value = "dim表 or fact表")
+    public DataModelTblTypeEnum dimOrFact;
 }

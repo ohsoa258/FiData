@@ -47,6 +47,11 @@ public class BuildDorisHiveCatalogImpl implements IbuildTable {
     }
 
     @Override
+    public String prepareCallSqlForDoris(String version, int type) {
+        return null;
+    }
+
+    @Override
     public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         return null;
     }
@@ -88,6 +93,16 @@ public class BuildDorisHiveCatalogImpl implements IbuildTable {
 
     @Override
     public String getEsqlAutoCommit() {
+        return null;
+    }
+
+    @Override
+    public List<String> buildDorisDimTables(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
+    }
+
+    @Override
+    public List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO) {
         return null;
     }
 }

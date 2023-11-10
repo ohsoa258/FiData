@@ -233,7 +233,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             sql += (business.rangeDateUnitStandby == null ? ",''" : ",'" + business.rangeDateUnitStandby) + "')";
         }
         if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())
-                || Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName()) ) {
+                || Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName())) {
             if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
                 //String s = associatedConditions(config);
                 String s = "";
@@ -262,6 +262,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     }
 
     @Override
+    public String prepareCallSqlForDoris(String version, int type) {
+        return null;
+    }
+
+    @Override
     public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         //convert(varchar(100),getdate(),120)
         List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
@@ -285,7 +290,6 @@ public class BuildSqlServerTableImpl implements IbuildTable {
 
         }
         return querySql;
-
     }
 
     @Override
@@ -344,6 +348,16 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     @Override
     public String getEsqlAutoCommit() {
         return "true";
+    }
+
+    @Override
+    public List<String> buildDorisDimTables(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
+    }
+
+    @Override
+    public List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
     }
 
     @Override

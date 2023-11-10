@@ -22,7 +22,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param tableName       真实表名
      * @param sourceTableName 来源表名（临时表名）
      * @param fieldList       前端传递的源表字段属性集合
-     * @return
      */
     @Override
     public String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
@@ -30,9 +29,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder prefix = new StringBuilder("INSERT INTO " + tableName + " (");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            prefix.append("\"")
+            prefix.append("`")
                     .append(f.fieldEnName)
-                    .append("\"")
+                    .append("`")
                     .append(",");
 
         }
@@ -46,80 +45,50 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
             if ("DATE".equalsIgnoreCase(f.fieldType)) {
-                suffix.append(" CASE WHEN CAST(")
-                        .append("\"")
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN TO_DATE(")
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
-                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
-                        .append("CAST(")
-                        .append("\"")
-                        .append(f.fieldEnName)
-                        .append("\"")
-                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END AS ")
-                        .append("\"")
-                        .append(f.fieldEnName)
-                        .append("\"")
+                        .append("`")
                         .append(",");
             } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
-                suffix.append(" CASE WHEN CAST(")
-                        .append("\"")
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN CAST(")
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
-                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
-                        .append("CAST(")
-                        .append("\"")
-                        .append(f.fieldEnName)
-                        .append("\"")
-                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END AS ")
-                        .append("\"")
-                        .append(f.fieldEnName)
-                        .append("\"")
+                        .append("`")
                         .append(",");
             } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
-                suffix.append(" CASE WHEN CAST(")
-                        .append("\"")
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(")
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
-                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(")
-                        .append("\"")
-                        .append(f.fieldEnName)
-                        .append("\"")
-                        .append("::bigint / 1000) AT TIME ZONE 'Asia/Shanghai' END AS ")
-                        .append("\"")
-                        .append(f.fieldEnName)
-                        .append("\"")
+                        .append("`")
                         .append(",");
-            }
-//            else if (f.fieldType.equalsIgnoreCase("INT") || f.fieldType.equalsIgnoreCase("BIGINT")) {
-//                suffix.append("CAST(")
-//                        .append("\"")
-//                        .append(f.fieldEnName)
-//                        .append("\"")
-//                        .append("::")
-//                        .append(f.fieldType)
-//                        .append(" AS ")
-//                        .append("\"")
-//                        .append(f.fieldEnName)
-//                        .append("\"")
-//                        .append(",");
-//            }
-            else {
-                suffix.append("CAST(")
-                        .append("\"")
+            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else {
+                suffix.append("CAST(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
                 if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
@@ -130,9 +99,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                     suffix.append(")");
                 }
                 suffix.append(" AS ")
-                        .append("\"")
+                        .append("`")
                         .append(f.fieldEnName)
-                        .append("\"")
+                        .append("`")
                         .append(",");
             }
         }
@@ -142,7 +111,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("fidata_batch_code")
                 .append(" FROM ")
                 .append(sourceTableName)
-                .append(" SOURCE WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
         //拼接select完毕
 
         //返回拼接完成的追加覆盖方式拼接的sql
@@ -155,7 +124,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param tableName       真实表名
      * @param sourceTableName 来源表名（临时表名）
      * @param fieldList       前端传递的源表字段属性集合
-     * @return
      */
     @Override
     public String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
@@ -176,7 +144,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param tableName       真实表名
      * @param sourceTableName 来源表名（临时表名）
      * @param fieldList       前端传递的源表字段属性集合
-     * @return
      */
     @Override
     public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
@@ -187,19 +154,17 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
 
         //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
-        StringBuilder suffix = new StringBuilder();
-        suffix.append("DELETE FROM ")
-                .append(tableName)
-                .append(" USING(SELECT fidata_batch_code,")
-                .append("?")
-                .append("FROM")
-                .append(sourceTableName)
-                .append("WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}' ")
-                .append("GROUP BY fidata_batch_code,")
-                .append("<?>")
-                .append(") SOURCE WHERE ")
-                .append(tableName)
-                .append(".fidata_batch_code <> SOURCE.fidata_batch_code");
+        String suffix = "DELETE TARGET FROM " +
+                tableName +
+                "TARGET JOIN (SELECT fidata_batch_code," +
+                "?" +
+                "FROM" +
+                sourceTableName +
+                "WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}' " +
+                "GROUP BY fidata_batch_code," +
+                "<?>" +
+                ") SOURCE ON " +
+                "TARGET.fidata_batch_code <> SOURCE.fidata_batch_code";
 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
         StringBuilder pkFieldNames = new StringBuilder();
@@ -209,65 +174,49 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
             for (PublishFieldDTO pkField : pkFields) {
                 if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" CASE WHEN CAST(")
-                            .append("\"")
+                    pkFieldNames.append(" FROM_UNIXTIME(")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append(" AS numeric) <=0 THEN TO_DATE(")
-                            .append("\"")
+                            .append("`)")
+                            .append(" AS ")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
-                            .append("CAST(")
-                            .append("\"")
-                            .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END AS ")
-                            .append("\"")
-                            .append(pkField.fieldEnName)
-                            .append("\"")
+                            .append("`")
                             .append(",");
                 } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" CASE WHEN CAST(")
-                            .append("\"")
+                    pkFieldNames.append(" FROM_UNIXTIME(")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append(" AS numeric) <=0 THEN CAST(")
-                            .append("\"")
+                            .append("`)")
+                            .append(" AS ")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
-                            .append("CAST(")
-                            .append("\"")
-                            .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END AS ")
-                            .append("\"")
-                            .append(pkField.fieldEnName)
-                            .append("\"")
+                            .append("`")
                             .append(",");
                 } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
-                    pkFieldNames.append(" CASE WHEN CAST(")
-                            .append("\"")
+                    pkFieldNames.append(" FROM_UNIXTIME(")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append(" AS numeric) <=0 THEN TO_TIMESTAMP(")
-                            .append("\"")
+                            .append("`)")
+                            .append(" AS ")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(")
-                            .append("\"")
+                            .append("`")
+                            .append(",");
+                } else if ("DATETIME".equalsIgnoreCase(pkField.fieldType)) {
+                    pkFieldNames.append(" FROM_UNIXTIME(")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
-                            .append("::bigint / 1000) AT TIME ZONE 'Asia/Shanghai' END AS ")
-                            .append("\"")
+                            .append("`)")
+                            .append(" AS ")
+                            .append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
+                            .append("`")
                             .append(",");
                 } else {
-                    pkFieldNames.append("\"")
+                    pkFieldNames.append("`")
                             .append(pkField.fieldEnName)
-                            .append("\"")
+                            .append("`")
                             .append(",");
                 }
             }
@@ -284,56 +233,49 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         for (PublishFieldDTO pkField : pkFields) {
 
             if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" CASE WHEN CAST(")
-                        .append("\"")
+                pkFieldNames1.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN TO_DATE(")
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
-                        .append("CAST(")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END")
+                        .append("`")
                         .append(",");
             } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" CASE WHEN CAST(")
-                        .append("\"")
+                pkFieldNames1.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN CAST(")
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
-                        .append("CAST(")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END")
+                        .append("`")
                         .append(",");
             } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
-                pkFieldNames1.append(" CASE WHEN CAST(")
-                        .append("\"")
+                pkFieldNames1.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(")
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append("::bigint / 1000) AT TIME ZONE 'Asia/Shanghai' END")
+                        .append("`")
                         .append(",");
-            } else {
-                pkFieldNames1.append("\"")
+            } else if ("DATETIME".equalsIgnoreCase(pkField.fieldType)) {
+                pkFieldNames1.append(" FROM_UNIXTIME(")
+                        .append("`")
                         .append(pkField.fieldEnName)
-                        .append("\"")
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(pkField.fieldEnName)
+                        .append("`")
+                        .append(",");
+            }  else {
+                pkFieldNames1.append("`")
+                        .append(pkField.fieldEnName)
+                        .append("`")
                         .append(",");
             }
         }
@@ -344,7 +286,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         String regex = "\\?";
         String regex1 = "<\\?>";
         //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
-        String halfSql = String.valueOf(suffix).replaceFirst(regex, String.valueOf(pkFieldNames));
+        String halfSql = suffix.replaceFirst(regex, String.valueOf(pkFieldNames));
         //将所有的占位符 <?> 替换成我们拼接完成的业务覆盖标识字段字符串
         halfSql = halfSql.replaceFirst(regex1, String.valueOf(pkFieldNames1));
 
@@ -353,77 +295,17 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //第二次拼接开始：AND TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
         for (PublishFieldDTO pkField : pkFields) {
             matchAgain.append(" AND ")
-                    .append(tableName)
+                    .append("TARGET")
                     .append(".")
-                    .append("\"")
+                    .append("`")
                     .append(pkField.fieldEnName)
-                    .append("\"")
-                    .append(" = ");
-
-//            if ("DATE".equalsIgnoreCase(pkField.fieldType)) {
-//                matchAgain.append(" CASE WHEN CAST(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append(" AS numeric) <=0 THEN TO_DATE(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append(",'YYYY-MM-DD') ELSE TO_DATE(TO_CHAR(TIMESTAMP 'epoch' + ")
-//                        .append("CAST(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append("AS bigint) * INTERVAL '1 millisecond', 'YYYY-MM-DD'),'YYYY-MM-DD') END")
-//                        .append(" ");
-//            } else if ("TIME".equalsIgnoreCase(pkField.fieldType)) {
-//                matchAgain.append(" CASE WHEN CAST(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append(" AS numeric) <=0 THEN CAST(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append("AS TIME) ELSE CAST(TO_CHAR(TIMESTAMP 'epoch' + ")
-//                        .append("CAST(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append("AS bigint) * INTERVAL '1 millisecond', 'HH24:MI:SS') AS TIME) END")
-//                        .append(" ");
-//            } else if ("TIMESTAMP".equalsIgnoreCase(pkField.fieldType)) {
-//                matchAgain.append(" CASE WHEN CAST(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append(" AS numeric) <=0 THEN TO_TIMESTAMP(SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append(",'YYYY-MM-DD HH24:MI:SS') ELSE TO_TIMESTAMP(")
-//                        .append("SOURCE.")
-//                        .append("\"")
-//                        .append(pkField.fieldEnName)
-//                        .append("\"")
-//                        .append("::bigint / 1000) AT TIME ZONE 'Asia/Shanghai' END")
-//                        .append(" ");
-//            }
-            if ("INT4".equalsIgnoreCase(pkField.fieldType) || "INT8".equalsIgnoreCase(pkField.fieldType) || "FLOAT4".equalsIgnoreCase(pkField.fieldType)) {
-                matchAgain.append("CAST(SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" AS ")
-                        .append(pkField.fieldType)
-                        .append(") ");
-            } else {
-                matchAgain.append("SOURCE.")
-                        .append("\"")
-                        .append(pkField.fieldEnName)
-                        .append("\"")
-                        .append(" ");
-            }
+                    .append("`")
+                    .append(" = ")
+                    .append("SOURCE.")
+                    .append("`")
+                    .append(pkField.fieldEnName)
+                    .append("`")
+                    .append(" ");
         }
         //拼接分号，拼成最终的sql
         String finalSql = String.valueOf(matchAgain.append(";   "));
@@ -440,7 +322,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param tableName       真实表名
      * @param sourceTableName 来源表名（临时表名）
      * @param fieldList       前端传递的源表字段属性集合
-     * @return
      */
     @Override
     public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
@@ -494,7 +375,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param sourceTableName         来源表名（临时表名）
      * @param fieldList               前端传递的源表字段属性集合
      * @param previewTableBusinessDTO 业务时间覆盖方式页面选择的逻辑
-     * @return
      */
     @Override
     public String businessTimeOverLay(String tableName, String sourceTableName,

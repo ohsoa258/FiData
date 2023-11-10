@@ -1,6 +1,5 @@
 package com.fisk.task.utils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -14,12 +13,12 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.listener.postgre.datainput.impl.BuildDorisTableImpl;
 import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -27,7 +26,6 @@ import javax.annotation.Resource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +40,8 @@ public class TaskPgTableStructureHelper
     TaskPgTableStructureMapper taskPgTableStructureMapper;
     @Resource
     UserClient userClient;
+    @Resource
+    private BuildDorisTableImpl buildDorisTable;
 
 
     public static String taskdbUrl;
@@ -154,11 +154,86 @@ public class TaskPgTableStructureHelper
             if (!saveResult) {
                 return ResultEnum.SAVE_DATA_ERROR;
             }
-            //保存成功,调用存储过程,获取修改表结构SQL语句
+            //保存成功,调用方法,获取doris修改表结构SQL语句
             String sql = execProcedure(version, type, dataSourceType);
             log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
             //判断是否有修改语句
             return updatePgTableStructure(sql, version, dto.createType);
+        } catch (Exception ex) {
+            log.error("saveTableStructure:" + ex);
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
+        }
+    }
+
+    /**
+     * 保存建模相关表结构数据(保存版本号)  doris
+     *
+     * @param dto            版本号和修改表结构的参数
+     * @param version        时间戳版本号
+     * @param dataSourceType 数据源连接类型
+     */
+    public ResultEnum saveTableStructureForDoris(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
+        try {
+            List<TaskPgTableStructurePO> poList = new ArrayList<>();
+            Thread.sleep(200);
+            //创建表方式 2:维度 1:事实 3: 数据接入
+            int type = dto.createType == 0 ? 2 : dto.createType;
+            //遍历字段列表
+            for (ModelPublishFieldDTO item : dto.fieldList) {
+                //获取 表版本结构表的对象   dmp_task_db -> tb_task_pg_table_structure
+                TaskPgTableStructurePO po = new TaskPgTableStructurePO();
+                //装载时间戳版本号
+                po.version = version;
+                //判断是否为维度
+                po.tableType = type;
+                //字段对应的表id
+                po.tableId = String.valueOf(dto.tableId);
+                //字段所属表名
+                po.tableName = dto.tableName;
+                //字段id
+                po.fieldId = String.valueOf(item.fieldId);
+                //字段名称
+                po.fieldName = item.fieldEnName;
+                //字段类型
+                po.fieldType = item.fieldType;
+                //是否为主键
+                po.primaryKey = item.isPrimaryKey != 0;
+                //默认为1
+                po.validVersion = 1;
+                if (item.fieldType.contains("VARCHAR")) {
+                    po.fieldType = item.fieldType + "(" + item.fieldLength + ")";
+                }
+                if ("FLOAT".equals(item.fieldType)) {
+                    po.fieldType = item.fieldType;
+                }
+                poList.add(po);
+                if (item.associateDimensionId != 0 && item.associateDimensionFieldId != 0) {
+                    TaskPgTableStructurePO po2 = new TaskPgTableStructurePO();
+                    po2.version = version;
+                    po2.tableType = type;
+                    po2.tableId = String.valueOf(dto.tableId);
+                    po2.tableName = dto.tableName;
+                    po2.fieldId = String.valueOf(item.associateDimensionId);
+                    po2.fieldName = (item.associateDimensionName.substring(4) + "key");
+                    po2.fieldType = "VARCHAR(255)";
+                    //默认为1
+                    po2.validVersion = 1;
+                    poList.add(po2);
+                }
+            }
+            //保存表结构到tb_task_pg_table_structure
+            List<TaskPgTableStructurePO> pos = poList.stream().distinct().collect(Collectors.toList());
+            boolean saveResult = this.saveBatch(pos);
+            log.info("保存表结构到tb_task_pg_table_structure保存结果：{}", saveResult);
+            if (!saveResult) {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
+
+            //保存成功,调用存储过程,获取修改表结构SQL语句
+            String sql = getTblSchemaChangeSqlForDoris(version, type, dataSourceType);
+            log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
+            //判断是否有修改语句
+            return updateTableStructureForDoris(sql, version, dto.createType);
         } catch (Exception ex) {
             log.error("saveTableStructure:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
@@ -242,6 +317,22 @@ public class TaskPgTableStructureHelper
     }
 
     /**
+     * 获取doris修改表结构SQL语句
+     *
+     * @param version
+     * @return
+     */
+    public String getTblSchemaChangeSqlForDoris(String version, int type, DataSourceTypeEnum dataSourceType) {
+        try {
+            //拼接SQL
+            return buildDorisTable.prepareCallSqlForDoris(version, type);
+        } catch (Exception e) {
+            log.error("获取doris表结构修改语句失败:" + e);
+            return "";
+        }
+    }
+
+    /**
      * 根据语句修改PgTable表结构
      *
      * @param sql
@@ -249,6 +340,92 @@ public class TaskPgTableStructureHelper
      * @return
      */
     public ResultEnum updatePgTableStructure(String sql, String version, int createType) throws Exception {
+        String pgsqlOdsUrl = "";
+        String pgsqlOdsUsername = "";
+        String pgsqlOdsPassword = "";
+        String pgsqlOdsDriverClass = "";
+        String pgsqlDwUrl = "";
+        String pgsqlDwUsername = "";
+        String pgsqlDwPassword = "";
+        String pgsqlDwDriverClass = "";
+        DataSourceTypeEnum type = null;
+        DataSourceDTO odsData = new DataSourceDTO();
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            odsData = fiDataDataSource.data;
+            pgsqlOdsUrl = odsData.conStr;
+            pgsqlOdsUsername = odsData.conAccount;
+            pgsqlOdsPassword = odsData.conPassword;
+            pgsqlOdsDriverClass = odsData.conType.getDriverName();
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            return ResultEnum.ERROR;
+        }
+        DataSourceDTO dwData = new DataSourceDTO();
+        ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+        if (fiDataDataDwSource.code == ResultEnum.SUCCESS.getCode()) {
+            dwData = fiDataDataDwSource.data;
+            pgsqlDwUrl = dwData.conStr;
+            pgsqlDwUsername = dwData.conAccount;
+            pgsqlDwPassword = dwData.conPassword;
+            pgsqlDwDriverClass = dwData.conType.getDriverName();
+        } else {
+            log.error("userclient无法查询到dw库的连接信息");
+            return ResultEnum.ERROR;
+        }
+
+        Connection conn;
+        Statement st = null;
+        if (createType == 3) {
+            Class.forName(pgsqlOdsDriverClass);
+            // 数据接入
+            conn = DriverManager.getConnection(pgsqlOdsUrl, pgsqlOdsUsername, pgsqlOdsPassword);
+            type = odsData.conType;
+        } else {
+            Class.forName(pgsqlDwDriverClass);
+            // 数据建模
+            conn = DriverManager.getConnection(pgsqlDwUrl, pgsqlDwUsername, pgsqlDwPassword);
+            type = dwData.conType;
+        }
+        try {
+            //检查版本
+            ResultEnum resultEnum = checkVersion(version, conn, type);
+            if (resultEnum == ResultEnum.TASK_TABLE_NOT_EXIST) {
+                return resultEnum;
+            }
+            log.info("执行存储过程返回修改语句:" + sql);
+            if (!StringUtils.isEmpty(sql) && sql.contains("DECLARE")) {
+                sql = subSql(sql);
+            }
+
+            //修改表结构
+            if (sql != null && sql.length() > 0) {
+                st = conn.createStatement();
+                //无需判断ddl语句执行结果,因为如果执行失败会进catch
+                st.execute(sql);
+            }
+            return ResultEnum.SUCCESS;
+        } catch (SQLException e) {
+            log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
+            //如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
+//            taskPgTableStructureMapper.updatevalidVersion(version);
+            throw new FkException(ResultEnum.SQL_ERROR, StackTraceHelper.getStackTraceInfo(e));
+        } finally {
+            if (st != null) {
+                st.close();
+            }
+            conn.close();
+        }
+    }
+
+    /**
+     * 根据语句修改PgTable表结构
+     *
+     * @param sql
+     * @param version
+     * @return
+     */
+    public ResultEnum updateTableStructureForDoris(String sql, String version, int createType) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";

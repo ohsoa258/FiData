@@ -321,6 +321,7 @@ public class KafkaConsumer {
 
     /**
      * task.build.datamodel.doris.table.flow
+     * 数仓建模-建表
      *
      * @param dataInfo
      * @param acke
@@ -390,6 +391,7 @@ public class KafkaConsumer {
 
     /**
      * task.build.datainput.pgsql.table.flow
+     * 数据接入-建表
      *
      * @param dataInfo
      * @param acke

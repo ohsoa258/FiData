@@ -1,7 +1,12 @@
 package com.fisk.task.listener.postgre.datainput.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.task.SynchronousTypeEnum;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.mdmconfig.AccessMdmConfigDTO;
@@ -10,18 +15,27 @@ import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.entity.TaskPgTableStructurePO;
+import com.fisk.task.enums.OlapTableEnum;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
+import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Component
 @Slf4j
 public class BuildDorisTableImpl implements IbuildTable {
+
+    @Resource
+    TaskPgTableStructureMapper structureMapper;
+
     @Override
     public List<String> buildStgAndOdsTable(BuildPhysicalTableDTO buildPhysicalTableDTO) {
         log.info("保存版本号方法执行成功");
@@ -62,9 +76,8 @@ public class BuildDorisTableImpl implements IbuildTable {
             }
 
         });
-        stgSql.append("fi_updatetime DATETIME,fi_version varchar(50),fi_enableflag varchar(50)," +
-                "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50)");
-        sqlFileds.insert(0,"fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,");
+        stgSql.append("fi_updatetime DATETIME,fi_version varchar(50),fi_enableflag varchar(50)," + "fi_error_message varchar(250),fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3'," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50)");
+        sqlFileds.insert(0, "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,");
         sqlFileds.append("fi_updatetime DATETIME,fi_version varchar(50),fidata_batch_code varchar(50)," + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + "key" + " varchar(50)");
         String havePk = pksql.toString();
         sqlFileds.append(") ENGINE=OLAP DISTRIBUTED BY HASH(fi_createtime) BUCKETS 10 PROPERTIES(\"replication_num\" =\"1\");");
@@ -75,12 +88,12 @@ public class BuildDorisTableImpl implements IbuildTable {
         String odsTableName = "";
         if (buildPhysicalTableDTO.whetherSchema) {
             odsTableName = buildPhysicalTableDTO.appAbbreviation + "." + buildPhysicalTableDTO.tableName;
-            stg_sql1 = sql.toString().replace("fi_tableName",    buildPhysicalTableDTO.tableName);
-            stg_sql2 = stgSql.toString().replace("fi_tableName",  "stg_" + buildPhysicalTableDTO.tableName);
+            stg_sql1 = sql.toString().replace("fi_tableName", buildPhysicalTableDTO.tableName);
+            stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
         } else {
             odsTableName = "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName;
-            stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName );
+            stg_sql1 = sql.toString().replace("fi_tableName", "ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = stgSql.toString().replace("fi_tableName", "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName);
             stg_sql2 = "DROP TABLE IF EXISTS " + "stg_" + buildPhysicalTableDTO.appAbbreviation + "_" + buildPhysicalTableDTO.tableName + ";" + stg_sql2;
         }
@@ -107,8 +120,192 @@ public class BuildDorisTableImpl implements IbuildTable {
     }
 
     @Override
+    public String prepareCallSqlForDoris(String version, int type) {
+        //新版本字段个数
+        int newFieldCount = 0;
+        //上个版本字段个数
+        int oldFieldCount = 0;
+
+        //新表名
+        String newTblName = "";
+        //原表名
+        String oldTblName = "";
+
+        //表唯一id
+        int tblId = 0;
+        //上一个版本该表的版本号
+        String oldVersion = "";
+
+        //修改表结构的sql
+        StringBuilder sql = new StringBuilder();
+
+        //查询新版本表详情
+        LambdaQueryWrapper<TaskPgTableStructurePO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TaskPgTableStructurePO::getVersion, version)
+                .eq(TaskPgTableStructurePO::getTableType, type)
+                .eq(TaskPgTableStructurePO::getValidVersion, 1);
+        List<TaskPgTableStructurePO> newVersionTbl = structureMapper.selectList(wrapper);
+        if (CollectionUtils.isEmpty(newVersionTbl)) {
+            log.error("数仓建模-发布表修改表结构失败，tb_task_pg_table_structure表无字段！");
+            throw new FkException(ResultEnum.DATA_MODEL_FIELD_NOT_EXISTS, "数仓建模-发布表修改表结构失败，tb_task_pg_table_structure表无字段！");
+        }
+        tblId = Integer.parseInt(newVersionTbl.get(0).getTableId());
+
+        //查询该表拥有的所有版本 并筛选出上一个版本号
+        QueryWrapper<TaskPgTableStructurePO> wrapper1 = new QueryWrapper<>();
+        wrapper1.select(" DISTINCT version")
+                .lambda()
+                .eq(TaskPgTableStructurePO::getTableId, tblId)
+                .orderByDesc(TaskPgTableStructurePO::getVersion);
+        List<TaskPgTableStructurePO> versions = structureMapper.selectList(wrapper1);
+        for (TaskPgTableStructurePO structurePO : versions) {
+            if (!Objects.equals(structurePO.getVersion(), version)) {
+                oldVersion = structurePO.getVersion();
+                break;
+            }
+        }
+
+        //查询上一个版本号的信息
+        LambdaQueryWrapper<TaskPgTableStructurePO> wrapper2 = new LambdaQueryWrapper<>();
+        wrapper2.eq(TaskPgTableStructurePO::getVersion, oldVersion)
+                .eq(TaskPgTableStructurePO::getTableType, type)
+                .eq(TaskPgTableStructurePO::getValidVersion, 1)
+                .eq(TaskPgTableStructurePO::getTableId, tblId);
+        List<TaskPgTableStructurePO> oldVersionTbl = structureMapper.selectList(wrapper2);
+        if (CollectionUtils.isEmpty(oldVersionTbl)) {
+            log.info("此数仓表是新发布的不存在历史结构信息...");
+            return "";
+        }
+
+        //是否修改表名
+        oldTblName = oldVersionTbl.get(0).getTableName();
+        newTblName = newVersionTbl.get(0).getTableName();
+
+        //找出属性改变的字段，生成sql
+        //doris字段名不支持修改
+        for (TaskPgTableStructurePO newPo : newVersionTbl) {
+            TaskPgTableStructurePO field = null;
+            //将新版本字段和老版本里面相同字段id的字段对比
+            Optional<TaskPgTableStructurePO> first = oldVersionTbl.stream().filter(dto ->
+                    Objects.equals(dto.getFieldId(), newPo.fieldId)).findFirst();
+            if (first.isPresent()) {
+                field = first.get();
+            }
+
+            //如果不存在则是新增
+            if (field == null) {
+                //如果新增的是主键
+                if (newPo.isPrimaryKey()) {
+                    sql.append("ALTER TABLE `")
+                            .append(oldTblName)
+                            .append("` ADD COLUMN `")
+                            .append(newPo.fieldName)
+                            .append("` ")
+                            .append(newPo.fieldType)
+                            .append(" KEY; ");
+                } else {
+                    //ALTER TABLE example_db.my_table
+                    //ADD COLUMN new_col INT
+                    sql.append("ALTER TABLE `")
+                            .append(oldTblName)
+                            .append("` ADD COLUMN `")
+                            .append(newPo.fieldName)
+                            .append("` ")
+                            .append(newPo.fieldType)
+                            .append("; ");
+                }
+            } else {
+                //如果存在，但属性有变化则是修改
+                if (!Objects.equals(newPo.fieldName, field.fieldName)
+                        || !Objects.equals(newPo.fieldType, field.fieldType)) {
+                    //如果修改的是主键
+                    if (newPo.isPrimaryKey()) {
+                        //ALTER TABLE example_db.my_table
+                        //MODIFY COLUMN col1 BIGINT KEY DEFAULT "1" AFTER col2;
+                        sql.append("ALTER TABLE `")
+                                .append(oldTblName)
+                                .append("` MODIFY COLUMN `")
+                                .append(newPo.fieldName)
+                                .append("` ")
+                                .append(newPo.fieldType)
+                                .append(" KEY; ");
+                    } else {
+                        sql.append("ALTER TABLE `")
+                                .append(oldTblName)
+                                .append("` MODIFY COLUMN `")
+                                .append(newPo.fieldName)
+                                .append("` ")
+                                .append(newPo.fieldType)
+                                .append("; ");
+                    }
+                }
+            }
+        }
+
+        //新版本字段个数
+        newFieldCount = newVersionTbl.size();
+        //旧版本字段个数
+        oldFieldCount = oldVersionTbl.size();
+
+        //if true 则存在需要删除的字段
+        boolean addOrDel = oldFieldCount > newFieldCount;
+        if (addOrDel) {
+            //找出需要删除的字段，生成sql
+            //doris字段名不支持修改
+            for (TaskPgTableStructurePO oldPo : oldVersionTbl) {
+                TaskPgTableStructurePO field = null;
+                //将老版本字段和新版本里面相同字段id的字段对比
+                Optional<TaskPgTableStructurePO> first = oldVersionTbl.stream().filter(dto ->
+                        Objects.equals(dto.getFieldId(), oldPo.fieldId)).findFirst();
+                if (first.isPresent()) {
+                    field = first.get();
+                }
+                if (field != null) {
+                    continue;
+                }
+
+                //删除字段
+                //ALTER TABLE example_db.my_table
+                //DROP COLUMN col2
+                sql.append("ALTER TABLE `")
+                        .append(oldTblName)
+                        .append("` DROP COLUMN `")
+                        .append(oldPo.fieldName)
+                        .append("` ; ");
+
+            }
+        }
+
+        //如果表名不相同，则修改表名
+        if (!Objects.equals(oldTblName, newTblName)) {
+            //ALTER TABLE table1 RENAME table2;
+            sql.append("ALTER TABLE `")
+                    .append(oldTblName)
+                    .append("` RENAME `")
+                    .append(newTblName)
+                    .append("`; ");
+        }
+
+        return sql.toString();
+    }
+
+    @Override
     public String queryNumbersField(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
-        return null;
+        List<String> stgAndTableName = getStgAndTableName(config.processorConfig.targetTableName);
+        if (config.processorConfig.targetTableName.contains("\\.")) {
+        }
+        String querySql = "";
+        if (Objects.equals(dto.type, OlapTableEnum.WIDETABLE) || Objects.equals(dto.type, OlapTableEnum.KPI)) {
+            querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers , CURRENT_TIMESTAMP() as end_time," + "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," + "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName;
+        } else {
+            if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers , CURRENT_TIMESTAMP() as end_time," + "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," + "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + stgAndTableName.get(1) + " where  fidata_batch_code='${fidata_batch_code}'";
+            } else {
+                querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers , CURRENT_TIMESTAMP() as end_time," + "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," + "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + config.processorConfig.targetTableName + " where fidata_batch_code='${fidata_batch_code}'";
+            }
+
+        }
+        return querySql;
     }
 
     @Override
@@ -160,9 +357,7 @@ public class BuildDorisTableImpl implements IbuildTable {
                 stgSqlFileds.append("" + l.fieldEnName + " varchar(4000),");
             }
             if (l.isPrimaryKey == 1) {
-                pksql.append("")
-                        .append(l.fieldEnName)
-                        .append(" ,");
+                pksql.append("").append(l.fieldEnName).append(" ,");
             }
 
         });
@@ -201,13 +396,11 @@ public class BuildDorisTableImpl implements IbuildTable {
     public String queryNumbersFieldForTableServer(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId) {
         String querySql = "";
         String targetTableName = config.processorConfig.targetTableName;
-        if (targetTableName.indexOf(".")>0){
+        if (targetTableName.indexOf(".") > 0) {
             //去掉.前面的部分
             targetTableName = targetTableName.substring(targetTableName.indexOf('.') + 1);
         }
-        querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s') AS end_time," +
-                "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," +
-                "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + targetTableName;
+        querySql = "select '${kafka.topic}' as topic," + dto.id + " as table_id, " + dto.type.getValue() + " as table_type, count(*) as numbers ,DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s') AS end_time," + "'${pipelStageTraceId}' as pipelStageTraceId,'${pipelJobTraceId}' as pipelJobTraceId,'${pipelTaskTraceId}' as pipelTaskTraceId," + "'${pipelTraceId}' as pipelTraceId,'${topicType}' as topicType  from " + targetTableName;
 
         return querySql;
     }
@@ -225,5 +418,174 @@ public class BuildDorisTableImpl implements IbuildTable {
     @Override
     public String getEsqlAutoCommit() {
         return null;
+    }
+
+    /**
+     * 创建建模dim表 - doris主键模型
+     *
+     * @param modelPublishTableDTO modelPublishTableDTO
+     * @return
+     */
+    @Override
+    public List<String> buildDorisDimTables(ModelPublishTableDTO modelPublishTableDTO) {
+        List<String> sqlList = new ArrayList<>();
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        String tableName = modelPublishTableDTO.tableName;
+        String tablePk = "";
+        // 前缀问题
+        tablePk = tableName.substring(tableName.indexOf("_") + 1) + "key";
+        StringBuilder pksql = new StringBuilder("UNIQUE KEY ( ");
+        StringBuilder pkName = new StringBuilder();
+        StringBuilder sqlFileds = new StringBuilder();
+        StringBuilder stgSqlFileds = new StringBuilder();
+        log.info("pg_dw建表字段信息:" + fieldList);
+        fieldList.forEach((l) -> {
+            if (l.fieldType.contains("FLOAT")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("INT")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TEXT")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                stgSqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(",");
+            } else if (l.fieldType.equalsIgnoreCase("DATE")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.equalsIgnoreCase("TIME")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(" datetime, ");
+            } else {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append("), ");
+            }
+            // 修改stg表,字段类型
+            if (!l.fieldType.contains("TEXT")) {
+                stgSqlFileds.append("`").append(l.fieldEnName).append("` varchar(4000),");
+            }
+            if (l.isBusinessKey == 1) {
+                pksql.append("`").append(l.fieldEnName).append("` ,");
+                pkName.append("`").
+                        append(l.fieldEnName)
+                        .append("` ,");
+            }
+
+        });
+        //删掉多余逗号
+        pkName.deleteCharAt(pkName.lastIndexOf(","));
+
+        String sql1 = "CREATE TABLE IF NOT EXISTS `" + modelPublishTableDTO.tableName + "` ( ";
+        //String associatedKey = associatedConditions(fieldList);
+        String associatedKey = "";
+        String sql2 = sqlFileds + associatedKey;
+        sql2 += ("`" + tablePk + "` BIGINT,fi_createtime DATETIME,fi_updatetime DATETIME");
+        sql2 += ",fidata_batch_code varchar(50)";
+        String sql3 = "";
+        if (Objects.equals("", sql3)) {
+            sql1 += sql2;
+        } else {
+            sql1 += sql2 + sql3;
+        }
+        sql1 += ") ";
+
+        // UNIQUE KEY
+        String havePk = pksql.toString();
+        if (havePk.length() != 14) {
+            sql1 += havePk.substring(0, havePk.length() - 1) + ")";
+        }
+
+        sql1 += "DISTRIBUTED BY HASH(" + pkName + ") BUCKETS 10 " +
+                //副本数为1
+                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ");";
+
+        //创建表
+        log.info("pg_dw建表语句" + sql1);
+        String stgTable = "DROP TABLE IF EXISTS " + modelPublishTableDTO.prefixTempName + tableName + "; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` ( `" + tablePk + "` BIGINT," + stgSqlFileds + associatedKey + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
+                //hash分桶
+                " DISTRIBUTED BY HASH(" + pkName + ") BUCKETS 10 " +
+                //副本数为1
+                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ");";
+        sqlList.add(stgTable);
+        sqlList.add(sql1);
+        return sqlList;
+    }
+
+    /**
+     * 创建建模fact表 - doris冗余模型
+     *
+     * @param modelPublishTableDTO modelPublishTableDTO
+     * @return
+     */
+    @Override
+    public List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO) {
+        List<String> sqlList = new ArrayList<>();
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        String tableName = modelPublishTableDTO.tableName;
+        String tablePk = "";
+        // 前缀问题
+        tablePk = tableName.substring(tableName.indexOf("_") + 1) + "key";
+        StringBuilder pksql = new StringBuilder("DUPLICATE KEY ( ");
+        StringBuilder sqlFileds = new StringBuilder();
+        StringBuilder stgSqlFileds = new StringBuilder();
+        log.info("pg_dw建表字段信息:" + fieldList);
+        fieldList.forEach((l) -> {
+            if (l.fieldType.contains("FLOAT")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("INT")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TEXT")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                stgSqlFileds.append(l.fieldEnName).append(" ").append(l.fieldType.toLowerCase()).append(",");
+            } else if (l.fieldType.equalsIgnoreCase("DATE")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.equalsIgnoreCase("TIME")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+            } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                sqlFileds.append("`").append(l.fieldEnName).append("` datetime, ");
+            } else {
+                sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append("), ");
+            }
+            // 修改stg表,字段类型
+            if (!l.fieldType.contains("TEXT")) {
+                stgSqlFileds.append("`").append(l.fieldEnName).append("` varchar(4000),");
+            }
+            if (l.isBusinessKey == 1) {
+                pksql.append(l.fieldEnName).append(" ,");
+            }
+
+        });
+
+        String sql1 = "CREATE TABLE  IF NOT EXISTS `" + modelPublishTableDTO.tableName + "` (";
+        //String associatedKey = associatedConditions(fieldList);
+        String associatedKey = "";
+        String sql2 = sqlFileds + associatedKey;
+        sql2 += ("`" + tablePk + "` BIGINT,fi_createtime DATETIME,fi_updatetime DATETIME");
+        sql2 += ",fidata_batch_code varchar(50)";
+        String sql3 = "";
+        if (Objects.equals("", sql3)) {
+            sql1 += sql2;
+        } else {
+            sql1 += sql2 + sql3;
+        }
+        sql1 += ") ";
+        if (modelPublishTableDTO.synMode == 3
+                || modelPublishTableDTO.synMode == 5) {
+            String havePk = pksql.toString();
+            if (havePk.length() != 14) {
+                sql1 += havePk.substring(0, havePk.length() - 1) + ")";
+            }
+        }
+
+        sql1 = sql1 + "DISTRIBUTED BY HASH(" + tablePk + ") BUCKETS 10 " +
+                //副本数为1
+                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ");";
+
+        //创建表
+        log.info("pg_dw建表语句" + sql1);
+        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "`; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` (`" + tablePk + "` BIGINT," + stgSqlFileds + associatedKey + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
+                //hash分桶
+                "DISTRIBUTED BY HASH(" + tablePk + ") BUCKETS 10 " +
+                //副本数为1
+                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ");";
+        sqlList.add(stgTable);
+        sqlList.add(sql1);
+        return sqlList;
     }
 }

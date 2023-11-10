@@ -1402,6 +1402,14 @@ public class BusinessAreaImpl
             String prefixTempName = buildNifiFlow.prefixTempName;
             //拼接临时表名称
             tempTableName = "\"" + prefixTempName + "_" + tableName1 + "\"";
+        } else if (sourceType.getValue() == DataSourceTypeEnum.DORIS.getValue()) {
+            //获取表名
+            tableName = "`" + configDTO.processorConfig.targetTableName + "`";
+            String tableName1 = configDTO.processorConfig.targetTableName;
+            //获取临时表前缀
+            String prefixTempName = buildNifiFlow.prefixTempName;
+            //拼接临时表名称
+            tempTableName = "`" + prefixTempName + "_" + tableName1 + "`";
         }
 
         //获取前端传递的表字段集合
