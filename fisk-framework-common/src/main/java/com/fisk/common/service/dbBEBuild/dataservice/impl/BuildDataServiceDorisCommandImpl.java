@@ -27,7 +27,7 @@ public class BuildDataServiceDorisCommandImpl implements IBuildDataServiceSqlCom
         if (StringUtils.isNotEmpty(orderBy)) {
             str.append(" ORDER BY " + orderBy);
         }
-        str.append(" LIMIT " + pageSize + " OFFSET " + pageIndex);
+        str.append(String.format(" LIMIT %s,%s ", (pageIndex -1)*pageSize, pageIndex*pageSize));
         return str.toString();
     }
 
@@ -41,7 +41,7 @@ public class BuildDataServiceDorisCommandImpl implements IBuildDataServiceSqlCom
         if (StringUtils.isNotEmpty(orderBy)) {
             str.append(" ORDER BY " + orderBy);
         }
-        str.append(" LIMIT " + pageSize + " OFFSET " + pageIndex);
+        str.append(String.format(" LIMIT %s,%s ", (pageIndex -1)*pageSize, pageIndex*pageSize));
         return str.toString();
     }
 
@@ -60,7 +60,7 @@ public class BuildDataServiceDorisCommandImpl implements IBuildDataServiceSqlCom
         }
 //        str.append(" LIMIT " + pageSize + " OFFSET " + pageIndex);
         // OFFSET 从0开始
-        str.append(String.format(" LIMIT %s,%s ", pageSize, (pageIndex - 1) * pageSize));
+        str.append(String.format(" LIMIT %s,%s ", (pageIndex -1)*pageSize, pageIndex*pageSize));
         return str.toString();
     }
 

@@ -576,7 +576,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                                     fiDataMetaDataTree_CataLog.setLabelRelName(cataLogTable.tableName);
                                     fiDataMetaDataTree_Table.setSourceId(Math.toIntExact(conPo.id));
                                     fiDataMetaDataTree_Table.setSourceType(sourceTypeEnum.getValue());
-                                    fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.DATABASE);
+                                    fiDataMetaDataTree_Table.setLevelType(LevelTypeEnum.TABLE);
                                     fiDataMetaDataTree_Table.setParentName(catalogDTO.catalogName);
                                     fiDataMetaDataTree_Table.setParentNameAlias(catalogDTO.catalogName);
                                     fiDataMetaDataTree_Table.setParentLabelFramework(catalogDTO.catalogName);
