@@ -673,21 +673,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             String fields = dto.getApiDTO().getCreateSql();
             String orderBy = fields.split(",")[0];
             List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.getParmDTO());
-            if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS){
-                if (dto.apiDTO.apiType == 2){
-                    List<SqlParmDto> pageNo = sqlParamsDto.stream().filter(i -> i.parmName == "@start" || i.parmName == "@end").collect(Collectors.toList());
-                    if (CollectionUtils.isEmpty(pageNo)){
-                        SqlParmDto sqlParmStart = new SqlParmDto();
-                        sqlParmStart.parmName = "start";
-                        sqlParmStart.parmValue = String.valueOf((current-1) * size);
-                        SqlParmDto sqlParmEnd = new SqlParmDto();
-                        sqlParmEnd.parmName = "end";
-                        sqlParmEnd.parmValue = String.valueOf(current * size);
-                        sqlParamsDto.add(sqlParmStart);
-                        sqlParamsDto.add(sqlParmEnd);
-                    }
-                }
-            }
             String sql_Where = SqlParmUtils.SqlParams(sqlParamsDto, "@");
             if (StringUtils.isNotEmpty(sql_Where)) {
                 sql_Where = SqlParmUtils.SqlParams(sqlParamsDto, sql_Where, "@", dataSourceConVO.getConType());

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -293,6 +294,19 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 log.info("数据服务【getData】普通模式SQL参数【countSql】：" + countSql);
             } else if (apiInfo.getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
                 List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listPoToSqlParmDto(paramList);
+                if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS){
+                    List<SqlParmDto> pageNo = sqlParamsDto.stream().filter(i -> i.parmName == "@start" || i.parmName == "@end").collect(Collectors.toList());
+                    if (CollectionUtils.isEmpty(pageNo)){
+                        SqlParmDto sqlParmStart = new SqlParmDto();
+                        sqlParmStart.parmName = "start";
+                        sqlParmStart.parmValue = String.valueOf((current-1) * size);
+                        SqlParmDto sqlParmEnd = new SqlParmDto();
+                        sqlParmEnd.parmName = "end";
+                        sqlParmEnd.parmValue = String.valueOf(current * size);
+                        sqlParamsDto.add(sqlParmStart);
+                        sqlParamsDto.add(sqlParmEnd);
+                    }
+                }
                 sql = SqlParmUtils.SqlParams(sqlParamsDto, apiInfo.getCreateSql(), "@", dataSourceConVO.getConType());
                 countSql = SqlParmUtils.SqlParams(sqlParamsDto, apiInfo.getCreateCountSql(), "@", dataSourceConVO.getConType());
                 log.info("数据服务【getData】自定义模式SQL参数【sql】：" + sql);
