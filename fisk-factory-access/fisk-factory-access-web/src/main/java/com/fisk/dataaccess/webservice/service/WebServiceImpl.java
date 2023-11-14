@@ -1,10 +1,6 @@
 package com.fisk.dataaccess.webservice.service;
 
 import com.alibaba.fastjson.JSON;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
@@ -113,6 +109,7 @@ public class WebServiceImpl implements IWebServiceServer {
     @WebMethod
     @WebResult(name = "KSF_NoticeResult")
     public KSF_NoticeResult ksf_notice(@WebParam(name = "KSF_Notice") KSF_Notice KSF_Notice) {
+        log.debug("通知单推送的数据：" + JSON.toJSONString(KSF_Notice));
         //将webservice接收到的xml格式的数据转换为json格式的数据
         KsfNoticeDTO data = new KsfNoticeDTO();
         data.setSourceSys(KSF_Notice.getAPI_Message().getSourceSys());
@@ -153,6 +150,7 @@ public class WebServiceImpl implements IWebServiceServer {
     @WebMethod
     @WebResult(name = "KSF_NoticeResult")
     public KSF_NoticeResult ksf_item_data(@WebParam(name = "KSF_Item") KSF_Item item) {
+        log.debug("物料主数据推送的数据：" + JSON.toJSONString(item));
         //将webservice接收到的xml格式的数据转换为json格式的数据
         KsfItemDTO data = new KsfItemDTO();
         data.setSourceSys(item.getAPI_Message().getSourceSys());
@@ -191,7 +189,8 @@ public class WebServiceImpl implements IWebServiceServer {
     @Override
     @WebMethod
     @WebResult(name = "KSF_NoticeResult")
-    public KSF_NoticeResult ksf_inventory_data(@WebParam(name = "KSF_Inventory_Status")KSF_Inventory_Status inventory) {
+    public KSF_NoticeResult ksf_inventory_data(@WebParam(name = "KSF_Inventory_Status") KSF_Inventory_Status inventory) {
+        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(inventory));
         //将webservice接收到的xml格式的数据转换为json格式的数据
         KsfInventoryDTO data = new KsfInventoryDTO();
         data.setSourceSys(inventory.getAPI_Message().getSourceSys());
