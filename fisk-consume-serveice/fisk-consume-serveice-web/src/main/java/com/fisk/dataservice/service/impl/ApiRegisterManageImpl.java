@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -683,8 +684,22 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             log.info("数据服务【preview】普通模式SQL参数【countSql】：" + countSql);
         } else if (dto.getApiDTO().getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
             List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.getParmDTO());
+            if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS){
+                List<SqlParmDto> pageNo = sqlParamsDto.stream().filter(i -> i.parmName == "@start" || i.parmName == "@end").collect(Collectors.toList());
+                if (CollectionUtils.isEmpty(pageNo)){
+                    SqlParmDto sqlParmStart = new SqlParmDto();
+                    sqlParmStart.parmName = "start";
+                    sqlParmStart.parmValue = String.valueOf((current-1) * size);
+                    SqlParmDto sqlParmEnd = new SqlParmDto();
+                    sqlParmEnd.parmName = "end";
+                    sqlParmEnd.parmValue = String.valueOf(current * size);
+                    sqlParamsDto.add(sqlParmStart);
+                    sqlParamsDto.add(sqlParmEnd);
+                }
+            }
             sql = SqlParmUtils.SqlParams(sqlParamsDto, dto.getApiDTO().getCreateSql(), "@", dataSourceConVO.getConType());
             countSql = SqlParmUtils.SqlParams(sqlParamsDto, dto.getApiDTO().getCreateCountSql(), "@", dataSourceConVO.getConType());
+
             log.info("数据服务【preview】自定义模式SQL参数【sql】：" + sql);
             log.info("数据服务【preview】自定义模式SQL参数【countSql】：" + countSql);
         }
@@ -720,7 +735,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS);
+            apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS,dataSourceConVO.getConType());
             rs.close();
             int totalCount = 0;
             if (StringUtils.isNotEmpty(countSql)) {
@@ -765,7 +780,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @return target
      */
     private static ApiPreviewVO resultSetToJsonArray(Connection conn, IBuildDataServiceSqlCommand dbCommand,
-                                                     ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS)
+                                                     ResultSet rs, ApiPreviewDTO pvDTO, List<FieldConfigPO> fieldConfigPOS,
+                                                     DataSourceTypeEnum conType)
             throws SQLException, JSONException {
         ApiPreviewVO data = new ApiPreviewVO();
 
@@ -789,7 +805,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         List<FieldInfoVO> tableFieldList = null;
         if (pvDTO.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()
                 && StringUtils.isNotEmpty(pvDTO.apiDTO.getTableRelName())) {
-            tableFieldList = getTableFieldList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
+            if (conType == DataSourceTypeEnum.DORIS){
+                tableFieldList = getTableFieldByDorisList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
+            }else {
+                tableFieldList = getTableFieldList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
+            }
         }
 
         //获取列名、描述
@@ -862,6 +882,46 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 fieldInfoVO.tableName = resultSet.getString("tableName");
                 fieldInfoVO.fieldName = resultSet.getString("fieldName");
                 fieldInfoVO.fieldDesc = resultSet.getString("fieldDesc");
+                if (StringUtils.isNotEmpty(fieldInfoVO.tableName) && StringUtils.isNotEmpty(fieldInfoVO.fieldName)
+                        && StringUtils.isNotEmpty(fieldInfoVO.fieldDesc)) {
+                    fieldList.add(fieldInfoVO);
+                }
+            }
+        } catch (Exception ex) {
+            log.error("【getTableFieldList】系统异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, ":" + ex.getMessage());
+        }
+        return fieldList;
+    }
+
+    /**
+     * 查询表字段信息Doris
+     *
+     * @param conn           连接
+     * @param dbCommand      数据库sql
+     * @param tableFramework 表架构名
+     * @param tableRelName   表名称，不带架构名
+     * @return statement
+     */
+    private static List<FieldInfoVO> getTableFieldByDorisList(Connection conn, IBuildDataServiceSqlCommand dbCommand,
+                                                       String tableFramework, String tableRelName) {
+        String[] split = tableRelName.split(".");
+        String tableName = split[split.length-1];
+        List<FieldInfoVO> fieldList = new ArrayList<>();
+        if (StringUtils.isEmpty(tableRelName))
+            return fieldList;
+        String sql = dbCommand.buildUseExistTableFiled(tableFramework, tableRelName);
+        log.info("【getTableFieldList】查询字段sql语句：" + sql);
+        if (sql == null || sql.isEmpty())
+            return fieldList;
+        try {
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                FieldInfoVO fieldInfoVO = new FieldInfoVO();
+                fieldInfoVO.tableName = tableName;
+                fieldInfoVO.fieldName = resultSet.getString("Field");
+                fieldInfoVO.fieldDesc = resultSet.getString("Extar");
                 if (StringUtils.isNotEmpty(fieldInfoVO.tableName) && StringUtils.isNotEmpty(fieldInfoVO.fieldName)
                         && StringUtils.isNotEmpty(fieldInfoVO.fieldDesc)) {
                     fieldList.add(fieldInfoVO);

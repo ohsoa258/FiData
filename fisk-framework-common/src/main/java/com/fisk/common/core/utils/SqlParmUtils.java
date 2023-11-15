@@ -84,7 +84,11 @@ public class SqlParmUtils {
                             .map(s -> finalFlag + "'" + s.trim() + "'")
                             .collect(Collectors.joining(", "));
                 } else {
-                    paramValue_In = flag + "'" + item.parmValue + "'";
+                    if (dataSourceType == DataSourceTypeEnum.DORIS){
+                        paramValue_In = flag + item.parmValue;
+                    }else {
+                        paramValue_In = flag + "'" + item.parmValue + "'";
+                    }
                 }
             }
 
