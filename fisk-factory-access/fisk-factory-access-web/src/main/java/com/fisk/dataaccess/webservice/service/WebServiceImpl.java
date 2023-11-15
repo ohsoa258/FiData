@@ -148,7 +148,7 @@ public class WebServiceImpl implements IWebServiceServer {
      */
     @Override
     @WebMethod
-    @WebResult(name = "KSF_NoticeResult")
+    @WebResult(name = "KSF_ItemResult")
     public KSF_NoticeResult ksf_item_data(@WebParam(name = "KSF_Item") KSF_Item item) {
         log.debug("物料主数据推送的数据：" + JSON.toJSONString(item));
         //将webservice接收到的xml格式的数据转换为json格式的数据
@@ -188,7 +188,7 @@ public class WebServiceImpl implements IWebServiceServer {
      */
     @Override
     @WebMethod
-    @WebResult(name = "KSF_NoticeResult")
+    @WebResult(name = "KSF_Inventory_StatusResult")
     public KSF_NoticeResult ksf_inventory_data(@WebParam(name = "KSF_Inventory_Status") KSF_Inventory_Status inventory) {
         log.debug("库存状态变更推送的数据：" + JSON.toJSONString(inventory));
         //将webservice接收到的xml格式的数据转换为json格式的数据
@@ -218,6 +218,25 @@ public class WebServiceImpl implements IWebServiceServer {
         ksf_noticeResult.setSTATUS(result);
         ksf_noticeResult.setINFOTEXT(result);
         return ksf_noticeResult;
+    }
+
+    /**
+     * wms-推送确认单数据
+     *
+     * @param data
+     * @return 执行结果
+     */
+    @Override
+    @WebMethod()
+    @WebResult(name = "KSF_Acknowledgement_Result")
+    public String ksf_acknowledgement_data(@WebParam(name = "AcknowledgementData") String data) {
+        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(data));
+        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+        //todo：建完应用-api之后写回来
+        receiveDataDTO.setApiCode(1L);
+        receiveDataDTO.setPushData(data);
+        receiveDataDTO.setIfWebService(true);
+        return apiConfig.KsfWebServicePushData(receiveDataDTO);
     }
 
 }

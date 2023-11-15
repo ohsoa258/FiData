@@ -121,20 +121,48 @@ public class BuildPgTableImpl implements IbuildTable {
 
     @Override
     public String queryTableNum(BuildPhysicalTableDTO buildPhysicalTableDTO) {
-        String selectTable = "select count(1) from pg_class t2,information_schema.tables t1 where t1.\"table_name\" = t2.relname and ";
+        StringBuilder selectTable = new StringBuilder("select count(1) from pg_class t2,information_schema.tables t1 where t1.\"table_name\" = t2.relname and ");
         if (buildPhysicalTableDTO.whetherSchema) {
-            selectTable += "table_schema = '" + buildPhysicalTableDTO.appAbbreviation + "' and ";
-            for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-                selectTable += "( relname='" + tableName + "' or";
+            selectTable.append("table_schema = '").append(buildPhysicalTableDTO.appAbbreviation).append("' and ");
+//            for (String tableName : buildPhysicalTableDTO.apiTableNames) {
+//                selectTable.append("( relname='").append(tableName).append("' or");
+//            }
+            for (int i = 0; i < buildPhysicalTableDTO.apiTableNames.size(); i++) {
+                String tableName = buildPhysicalTableDTO.apiTableNames.get(i);
+                if (i == 0) {
+                    selectTable.append("( relname='")
+                            .append(tableName)
+                            .append("'");
+                } else {
+                    selectTable.append("or relname= '")
+                            .append(tableName)
+                            .append("'");
+                }
             }
         } else {
-            selectTable += "table_schema = 'public' and ";
-            for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-                selectTable += "( relname='ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
+            selectTable.append("table_schema = 'public' and ");
+//            for (String tableName : buildPhysicalTableDTO.apiTableNames) {
+//                selectTable.append("( relname='ods_").append(buildPhysicalTableDTO.appAbbreviation).append("_").append(tableName).append("' or");
+//            }
+            for (int i = 0; i < buildPhysicalTableDTO.apiTableNames.size(); i++) {
+                String tableName = buildPhysicalTableDTO.apiTableNames.get(i);
+                if (i == 0) {
+                    selectTable.append("( relname='ods_")
+                            .append(buildPhysicalTableDTO.appAbbreviation)
+                            .append("_")
+                            .append(tableName)
+                            .append("'");
+                } else {
+                    selectTable.append("or relname= 'ods_")
+                            .append(buildPhysicalTableDTO.appAbbreviation)
+                            .append("_")
+                            .append(tableName)
+                            .append("'");
+                }
             }
         }
-        selectTable = selectTable.substring(0, selectTable.length() - 2) + " ) ";
-        return selectTable.toLowerCase();
+        selectTable.append(" ) ");
+        return selectTable.toString().toLowerCase();
     }
 
 

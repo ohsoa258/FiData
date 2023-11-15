@@ -49,4 +49,12 @@ public interface IWebServiceServer {
      */
     KSF_NoticeResult ksf_inventory_data(KSF_Inventory_Status inventory_status);
 
+    /**
+     * wms-推送确认单数据
+     *
+     * @param data
+     * @return 执行结果
+     */
+    String ksf_acknowledgement_data(String data);
+
 }
