@@ -1,10 +1,8 @@
 package com.fisk.dataaccess.webservice.service;
 
 import com.alibaba.fastjson.JSON;
-import com.fisk.auth.client.AuthClient;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
-import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.webservice.IServerItemData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -61,9 +59,13 @@ public class ItemDataImpl implements IServerItemData {
         receiveDataDTO.setIfWebService(true);
         String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
 
-        //统一报文返回类型
         KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
-        ksf_noticeResult.setSTATUS(result);
+        //统一报文返回类型
+        if (result.contains("失败") || !result.contains("成功")) {
+            ksf_noticeResult.setSTATUS("0");
+        } else {
+            ksf_noticeResult.setSTATUS("1");
+        }
         ksf_noticeResult.setINFOTEXT(result);
         return ksf_noticeResult;
     }

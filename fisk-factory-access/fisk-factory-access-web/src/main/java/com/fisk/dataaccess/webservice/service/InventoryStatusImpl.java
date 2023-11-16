@@ -62,9 +62,13 @@ public class InventoryStatusImpl implements IServerInventoryStatus {
         receiveDataDTO.setIfWebService(true);
         String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
 
-        //统一报文返回类型
         KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
-        ksf_noticeResult.setSTATUS(result);
+        //统一报文返回类型
+        if (result.contains("失败") || !result.contains("成功")) {
+            ksf_noticeResult.setSTATUS("0");
+        } else {
+            ksf_noticeResult.setSTATUS("1");
+        }
         ksf_noticeResult.setINFOTEXT(result);
         return ksf_noticeResult;
     }
