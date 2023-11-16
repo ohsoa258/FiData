@@ -43,7 +43,7 @@ public class CxfConfig {
      */
     @Bean
     public ServletRegistrationBean cxfServlet() {
-        return new ServletRegistrationBean(new CXFServlet(), "/fisksoft/*");
+        return new ServletRegistrationBean(new CXFServlet(), "/fisk/*");
     }
 
     @Bean(name = Bus.DEFAULT_BUS_ID)
