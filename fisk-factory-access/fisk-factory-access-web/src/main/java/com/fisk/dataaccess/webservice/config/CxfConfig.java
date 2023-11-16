@@ -1,10 +1,14 @@
 package com.fisk.dataaccess.webservice.config;
 
+import com.fisk.dataaccess.webservice.IServerAcknowledgement;
+import com.fisk.dataaccess.webservice.IServerInventoryStatus;
+import com.fisk.dataaccess.webservice.IServerItemData;
 import com.fisk.dataaccess.webservice.IWebServiceServer;
 import org.apache.cxf.Bus;
 import org.apache.cxf.bus.spring.SpringBus;
 import org.apache.cxf.jaxws.EndpointImpl;
 import org.apache.cxf.transport.servlet.CXFServlet;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +27,15 @@ public class CxfConfig {
     @Resource(type = IWebServiceServer.class)
     private IWebServiceServer webServiceServer;
 
+    @Resource(type = IServerItemData.class)
+    private IServerItemData serverItemData;
+
+    @Resource(type = IServerInventoryStatus.class)
+    private IServerInventoryStatus serverInventoryStatus;
+
+    @Resource(type = IServerAcknowledgement.class)
+    private IServerAcknowledgement serverAcknowledgement;
+
     /**
      * 注入Servlet 注意beanName不能为dispatcherServlet
      *
@@ -30,7 +43,7 @@ public class CxfConfig {
      */
     @Bean
     public ServletRegistrationBean cxfServlet() {
-        return new ServletRegistrationBean(new CXFServlet(), "/webservice/*");
+        return new ServletRegistrationBean(new CXFServlet(), "/fisksoft/*");
     }
 
     @Bean(name = Bus.DEFAULT_BUS_ID)
@@ -40,9 +53,35 @@ public class CxfConfig {
 
 
     @Bean
+    @Qualifier("endpoint")
     public Endpoint endpoint() {
         EndpointImpl endpoint = new EndpointImpl(springBus(), webServiceServer);
-        endpoint.publish("/fidata-api");
+        endpoint.publish("/KsfNotice");
         return endpoint;
     }
+
+    @Bean
+    @Qualifier("endpoint1")
+    public Endpoint endpoint1() {
+        EndpointImpl endpoint = new EndpointImpl(springBus(), serverItemData);
+        endpoint.publish("/ItemData");
+        return endpoint;
+    }
+
+    @Bean
+    @Qualifier("endpoint2")
+    public Endpoint endpoint2() {
+        EndpointImpl endpoint = new EndpointImpl(springBus(), serverInventoryStatus);
+        endpoint.publish("/InventoryStatus");
+        return endpoint;
+    }
+
+    @Bean
+    @Qualifier("endpoint3")
+    public Endpoint endpoint3() {
+        EndpointImpl endpoint = new EndpointImpl(springBus(), serverAcknowledgement);
+        endpoint.publish("/Acknowledgement");
+        return endpoint;
+    }
+
 }

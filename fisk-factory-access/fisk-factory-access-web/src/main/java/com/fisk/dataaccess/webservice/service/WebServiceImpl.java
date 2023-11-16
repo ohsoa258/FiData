@@ -140,103 +140,103 @@ public class WebServiceImpl implements IWebServiceServer {
         return ksf_noticeResult;
     }
 
-    /**
-     * 康师傅前置机定制接口--物料主数据
-     *
-     * @param item
-     * @return
-     */
-    @Override
-    @WebMethod
-    @WebResult(name = "KSF_ItemResult")
-    public KSF_NoticeResult ksf_item_data(@WebParam(name = "KSF_Item") KSF_Item item) {
-        log.debug("物料主数据推送的数据：" + JSON.toJSONString(item));
-        //将webservice接收到的xml格式的数据转换为json格式的数据
-        KsfItemDTO data = new KsfItemDTO();
-        data.setSourceSys(item.getAPI_Message().getSourceSys());
-        data.setTargetSys(item.getAPI_Message().getTargetSys());
-        data.setUpdateTime(item.getAPI_Message().getUpdateTime());
-        data.setGuid(item.getAPI_Message().getGuid());
-        data.setSingleTargetSys(item.getAPI_Message().getSingleTargetSys());
-        data.setAppKey(item.getAPI_Message().getAppKey());
-        data.setIsTest(item.getAPI_Message().getIsTest());
-        data.setIsManualSend(item.getAPI_Message().getIsManualSend());
-        data.setItemData(item.getItemData());
-        String pushData = JSON.toJSONString(data);
-        //json解析的根节点 data
-        String rebuild = "{\"data\": [" + pushData + "]}";
-
-        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-        //todo：建完应用-api之后写回来
-        receiveDataDTO.setApiCode(11L);
-        receiveDataDTO.setPushData(rebuild);
-        receiveDataDTO.setIfWebService(true);
-        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
-
-        //统一报文返回类型
-        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
-        ksf_noticeResult.setSTATUS(result);
-        ksf_noticeResult.setINFOTEXT(result);
-        return ksf_noticeResult;
-    }
-
-    /**
-     * 康师傅前置机定制接口--库存状态变更
-     *
-     * @param inventory
-     * @return
-     */
-    @Override
-    @WebMethod
-    @WebResult(name = "KSF_Inventory_StatusResult")
-    public KSF_NoticeResult ksf_inventory_data(@WebParam(name = "KSF_Inventory_Status") KSF_Inventory_Status inventory) {
-        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(inventory));
-        //将webservice接收到的xml格式的数据转换为json格式的数据
-        KsfInventoryDTO data = new KsfInventoryDTO();
-        data.setSourceSys(inventory.getAPI_Message().getSourceSys());
-        data.setTargetSys(inventory.getAPI_Message().getTargetSys());
-        data.setUpdateTime(inventory.getAPI_Message().getUpdateTime());
-        data.setGuid(inventory.getAPI_Message().getGuid());
-        data.setSingleTargetSys(inventory.getAPI_Message().getSingleTargetSys());
-        data.setAppKey(inventory.getAPI_Message().getAppKey());
-        data.setIsTest(inventory.getAPI_Message().getIsTest());
-        data.setIsManualSend(inventory.getAPI_Message().getIsManualSend());
-        data.setKSF_Inventory(inventory.getKSF_Inventory());
-        String pushData = JSON.toJSONString(data);
-        //json解析的根节点 data
-        String rebuild = "{\"data\": [" + pushData + "]}";
-
-        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-        //todo：建完应用-api之后写回来
-        receiveDataDTO.setApiCode(11L);
-        receiveDataDTO.setPushData(rebuild);
-        receiveDataDTO.setIfWebService(true);
-        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
-
-        //统一报文返回类型
-        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
-        ksf_noticeResult.setSTATUS(result);
-        ksf_noticeResult.setINFOTEXT(result);
-        return ksf_noticeResult;
-    }
-
-    /**
-     * wms-推送确认单数据
-     *
-     * @param data
-     * @return 执行结果
-     */
-    @Override
-    @WebMethod()
-    @WebResult(name = "KSF_Acknowledgement_Result")
-    public String ksf_acknowledgement_data(@WebParam(name = "AcknowledgementData") String data) {
-        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(data));
-        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
-        //todo：建完应用-api之后写回来
-        receiveDataDTO.setApiCode(1L);
-        receiveDataDTO.setPushData(data);
-        receiveDataDTO.setIfWebService(true);
-        return apiConfig.KsfWebServicePushData(receiveDataDTO);
-    }
+//    /**
+//     * 康师傅前置机定制接口--物料主数据
+//     *
+//     * @param item
+//     * @return
+//     */
+//    @Override
+//    @WebMethod
+//    @WebResult(name = "KSF_ItemResult")
+//    public KSF_NoticeResult ksf_item_data(@WebParam(name = "KSF_Item") KSF_Item item) {
+//        log.debug("物料主数据推送的数据：" + JSON.toJSONString(item));
+//        //将webservice接收到的xml格式的数据转换为json格式的数据
+//        KsfItemDTO data = new KsfItemDTO();
+//        data.setSourceSys(item.getAPI_Message().getSourceSys());
+//        data.setTargetSys(item.getAPI_Message().getTargetSys());
+//        data.setUpdateTime(item.getAPI_Message().getUpdateTime());
+//        data.setGuid(item.getAPI_Message().getGuid());
+//        data.setSingleTargetSys(item.getAPI_Message().getSingleTargetSys());
+//        data.setAppKey(item.getAPI_Message().getAppKey());
+//        data.setIsTest(item.getAPI_Message().getIsTest());
+//        data.setIsManualSend(item.getAPI_Message().getIsManualSend());
+//        data.setItemData(item.getItemData());
+//        String pushData = JSON.toJSONString(data);
+//        //json解析的根节点 data
+//        String rebuild = "{\"data\": [" + pushData + "]}";
+//
+//        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+//        //todo：建完应用-api之后写回来
+//        receiveDataDTO.setApiCode(11L);
+//        receiveDataDTO.setPushData(rebuild);
+//        receiveDataDTO.setIfWebService(true);
+//        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
+//
+//        //统一报文返回类型
+//        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
+//        ksf_noticeResult.setSTATUS(result);
+//        ksf_noticeResult.setINFOTEXT(result);
+//        return ksf_noticeResult;
+//    }
+//
+//    /**
+//     * 康师傅前置机定制接口--库存状态变更
+//     *
+//     * @param inventory
+//     * @return
+//     */
+//    @Override
+//    @WebMethod
+//    @WebResult(name = "KSF_Inventory_StatusResult")
+//    public KSF_NoticeResult ksf_inventory_data(@WebParam(name = "KSF_Inventory_Status") KSF_Inventory_Status inventory) {
+//        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(inventory));
+//        //将webservice接收到的xml格式的数据转换为json格式的数据
+//        KsfInventoryDTO data = new KsfInventoryDTO();
+//        data.setSourceSys(inventory.getAPI_Message().getSourceSys());
+//        data.setTargetSys(inventory.getAPI_Message().getTargetSys());
+//        data.setUpdateTime(inventory.getAPI_Message().getUpdateTime());
+//        data.setGuid(inventory.getAPI_Message().getGuid());
+//        data.setSingleTargetSys(inventory.getAPI_Message().getSingleTargetSys());
+//        data.setAppKey(inventory.getAPI_Message().getAppKey());
+//        data.setIsTest(inventory.getAPI_Message().getIsTest());
+//        data.setIsManualSend(inventory.getAPI_Message().getIsManualSend());
+//        data.setKSF_Inventory(inventory.getKSF_Inventory());
+//        String pushData = JSON.toJSONString(data);
+//        //json解析的根节点 data
+//        String rebuild = "{\"data\": [" + pushData + "]}";
+//
+//        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+//        //todo：建完应用-api之后写回来
+//        receiveDataDTO.setApiCode(11L);
+//        receiveDataDTO.setPushData(rebuild);
+//        receiveDataDTO.setIfWebService(true);
+//        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
+//
+//        //统一报文返回类型
+//        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
+//        ksf_noticeResult.setSTATUS(result);
+//        ksf_noticeResult.setINFOTEXT(result);
+//        return ksf_noticeResult;
+//    }
+//
+//    /**
+//     * wms-推送确认单数据
+//     *
+//     * @param data
+//     * @return 执行结果
+//     */
+//    @Override
+//    @WebMethod()
+//    @WebResult(name = "KSF_Acknowledgement_Result")
+//    public String ksf_acknowledgement_data(@WebParam(name = "AcknowledgementData") String data) {
+//        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(data));
+//        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+//        //todo：建完应用-api之后写回来
+//        receiveDataDTO.setApiCode(1L);
+//        receiveDataDTO.setPushData(data);
+//        receiveDataDTO.setIfWebService(true);
+//        return apiConfig.KsfWebServicePushData(receiveDataDTO);
+//    }
 
 }
