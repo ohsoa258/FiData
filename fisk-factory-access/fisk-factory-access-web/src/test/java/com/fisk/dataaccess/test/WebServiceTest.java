@@ -3,6 +3,11 @@ package com.fisk.dataaccess.test;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.service.impl.ApiConfigImpl;
+import com.fisk.dataaccess.webservice.service.KSF_Inventory_Status;
+import com.fisk.dataaccess.webservice.service.KSF_NoticeResult;
+import com.fisk.dataaccess.webservice.service.KsfInventoryDTO;
 import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.endpoint.Client;
@@ -14,9 +19,9 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
+import javax.annotation.Resource;
 import java.sql.*;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * @author: lsj
@@ -85,19 +90,58 @@ public class WebServiceTest {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }}
+        }
+    }
 
     @Test
-    public void testDynamicVar(){
+    public void testDynamicVar() {
         int[] ints = new int[3];
-        ints[0] =1;
-        ints[1] =2;
-        ints[2] =3;
+        ints[0] = 1;
+        ints[1] = 2;
+        ints[2] = 3;
         System.out.println(sum(ints));
     }
 
-    private int sum(int...ints){
+    private int sum(int... ints) {
         return Arrays.stream(ints).sum();
+    }
+
+    @Resource
+    private ApiConfigImpl apiConfig;
+
+    @Test
+    public void ksf_inventory_data() {
+        KSF_Inventory_Status inventory = JSONObject.parseObject("{\"aPI_Message\":{\"appKey\":\"?\",\"guid\":\"?\",\"isManualSend\":\"?\",\"isTest\":\"?\",\"singleTargetSys\":\"?\",\"sourceSys\":\"?\",\"targetSys\":\"?\",\"updateTime\":\"?\"},\"kSF_Inventory\":[{\"ANLN1\":\"?\",\"AUFNR\":\"?\",\"BELNR\":\"?\",\"BKTXT\":\"?\",\"BLART\":\"?\",\"BLDAT\":\"?\",\"BUDAT\":\"?\",\"BUKRS\":\"?\",\"BUTXT\":\"?\",\"BWART\":\"?\",\"CHARG\":\"?\",\"CPUDT\":\"?\",\"CPUTM\":\"?\",\"DMBTR\":\"?\",\"EBELN\":\"?\",\"EBELP\":\"?\",\"ERFME\":\"?\",\"ERFMG\":\"?\",\"GRUND\":\"?\",\"HSDAT\":\"?\",\"INSMK\":\"?\",\"KDAUF\":\"?\",\"KDPOS\":\"?\",\"KNAME1\":\"?\",\"KOSTL\":\"?\",\"KUNNR\":\"?\",\"KZBEW\":\"?\",\"KZZUG\":\"?\",\"LGOBE\":\"?\",\"LGORT\":\"?\",\"LGPLA\":\"?\",\"LIFNR\":\"?\",\"LNAME1\":\"?\",\"MAKTX\":\"?\",\"MATKL\":\"?\",\"MATNR\":\"?\",\"MBLNR\":\"?\",\"MEINS\":\"?\",\"MENGE\":\"?\",\"MJAHR\":\"?\",\"MTART\":\"?\",\"SAKTO\":\"?\",\"SGTXT\":\"?\",\"SOBKZ\":\"?\",\"UMCHA\":\"?\",\"UMLGO\":\"?\",\"UMMAT\":\"?\",\"UMWRK\":\"?\",\"USNAM\":\"?\",\"VFDAT\":\"?\",\"VTXTK\":\"?\",\"WAERS\":\"?\",\"WEMPF\":\"?\",\"WERKS\":\"?\",\"WNAME1\":\"?\",\"XAUTO\":\"?\",\"XBLNR\":\"?\",\"ZEILE\":\"?\"}]}", KSF_Inventory_Status.class);
+        //将webservice接收到的xml格式的数据转换为json格式的数据
+        KsfInventoryDTO data = new KsfInventoryDTO();
+        data.setSourceSys(inventory.getAPI_Message().getSourceSys());
+        data.setTargetSys(inventory.getAPI_Message().getTargetSys());
+        data.setUpdateTime(inventory.getAPI_Message().getUpdateTime());
+        data.setGuid(inventory.getAPI_Message().getGuid());
+        data.setSingleTargetSys(inventory.getAPI_Message().getSingleTargetSys());
+        data.setAppKey(inventory.getAPI_Message().getAppKey());
+        data.setIsTest(inventory.getAPI_Message().getIsTest());
+        data.setIsManualSend(inventory.getAPI_Message().getIsManualSend());
+        data.setKSF_Inventory(inventory.getKSF_Inventory());
+        String pushData = JSON.toJSONString(data);
+        //json解析的根节点 data
+        String rebuild = "{\"data\": [" + pushData + "]}";
+
+        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+        //todo：建完应用-api之后写回来
+        receiveDataDTO.setApiCode(4L);
+        receiveDataDTO.setPushData(rebuild);
+        receiveDataDTO.setIfWebService(true);
+        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
+
+        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
+        //统一报文返回类型
+        if (result.contains("失败") || !result.contains("成功")) {
+            ksf_noticeResult.setSTATUS("0");
+        } else {
+            ksf_noticeResult.setSTATUS("1");
+        }
+        ksf_noticeResult.setINFOTEXT(result);
     }
 
 }
