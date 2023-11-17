@@ -236,6 +236,8 @@ public class BuildPgTableImpl implements IbuildTable {
                 sql += ",0,'',0,'','',0,'','',0,'')";
             } else if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
                 sql += ",0,'',0,'','',0,'','',0,'')";
+            } else if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName())) {
+                sql += ",0,'',0,'','',0,'','',0,'')";
             }
         } else {
             //模式
@@ -261,7 +263,8 @@ public class BuildPgTableImpl implements IbuildTable {
             //其他逻辑  业务覆盖单位
             sql += (business.rangeDateUnitStandby == null ? ",''" : ",'" + business.rangeDateUnitStandby) + "')";
         }
-        if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())) {
+        if (Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName())
+                || Objects.equals(funcName, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL_API_WS.getName())) {
             if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
                 //String s = associatedConditions(config);
                 String s = "";

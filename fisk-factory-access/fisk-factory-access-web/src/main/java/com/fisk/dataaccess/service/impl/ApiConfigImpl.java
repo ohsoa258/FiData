@@ -1980,7 +1980,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return ResultEnum.TABLE_NOT_EXIST;
             }
 
-            // 4.组装参数,调用tasdk,获取推送数据所需的sql
+            // 4.组装参数,调用task,获取推送数据所需的sql
             for (TableAccessNonDTO e : tablelist) {
                 TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
                 DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
