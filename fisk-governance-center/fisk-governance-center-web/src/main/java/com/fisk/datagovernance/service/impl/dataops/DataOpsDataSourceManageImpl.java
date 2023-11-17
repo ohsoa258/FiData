@@ -7,6 +7,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -21,6 +22,7 @@ import com.fisk.common.service.dbBEBuild.governance.BuildGovernanceHelper;
 import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
+import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -30,7 +32,6 @@ import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.entity.dataquality.AttachmentInfoPO;
 import com.fisk.datagovernance.mapper.dataquality.AttachmentInfoMapper;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
@@ -48,7 +49,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 
 import javax.annotation.Resource;
 import java.sql.*;
@@ -197,7 +197,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             if (postgreDTO == null) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, executeResultVO);
             }
-            if (StringUtils.isEmpty(dto.executeSql)){
+            if (StringUtils.isEmpty(dto.executeSql)) {
                 return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, executeResultVO);
             }
             conn = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(),
@@ -211,8 +211,14 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             DML主要指数据的增删查改: SELECT、DELETE、UPDATE、INSERT、CALL(执行存储过程)
            * */
             String sql = dto.executeSql;
+            DataSourceTypeEnum dataSourceTypeEnum = postgreDTO.getDataSourceTypeEnum();
+            //doris走mysql协议
+            if (DataSourceTypeEnum.DORIS.getName().equals(dataSourceTypeEnum.getName())) {
+                postgreDTO.dataSourceTypeEnum = DataSourceTypeEnum.MYSQL;
+            }
+
             SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(
-                    sql, postgreDTO.getDataSourceTypeEnum().getName().toLowerCase());
+                    sql, postgreDTO.dataSourceTypeEnum.getName().toLowerCase());
             if (Token.SELECT.equals(parser.getExprParser().getLexer().token())) {
                 // SQL 语句是查询操作
                 String tableName = String.format("(%s) AS tb_page", dto.executeSql);
@@ -390,30 +396,30 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     }
 
 
-    public String createTableStructureTemplate(GetDataOpsFieldSourceDTO dto){
+    public String createTableStructureTemplate(GetDataOpsFieldSourceDTO dto) {
         // 第一步：获取表字段
         ResultEntity<List<DataOpsTableFieldVO>> dataOpsFieldSource = getDataOpsFieldSource(dto);
-        List<String> fieldNameList=new ArrayList<>();
-        if (dataOpsFieldSource!=null && CollectionUtils.isNotEmpty(dataOpsFieldSource.getData())){
-            dataOpsFieldSource.getData().forEach(t->{
+        List<String> fieldNameList = new ArrayList<>();
+        if (dataOpsFieldSource != null && CollectionUtils.isNotEmpty(dataOpsFieldSource.getData())) {
+            dataOpsFieldSource.getData().forEach(t -> {
                 fieldNameList.add(t.getFieldName());
             });
         }
-        if (CollectionUtils.isEmpty(fieldNameList)){
+        if (CollectionUtils.isEmpty(fieldNameList)) {
             return "";
         }
 
         // 第二步：生成Excel
         List<SheetDto> sheetList = new ArrayList<>();
         SheetDto sheet = new SheetDto();
-        String sheetName ="" ;
-        if (StringUtils.isNotEmpty(dto.getTableFramework())){
-            sheetName=dto.getTableFramework()+".";
+        String sheetName = "";
+        if (StringUtils.isNotEmpty(dto.getTableFramework())) {
+            sheetName = dto.getTableFramework() + ".";
         }
-        if (StringUtils.isNotEmpty(dto.getTableName())){
-            sheetName+=dto.getTableName();
+        if (StringUtils.isNotEmpty(dto.getTableName())) {
+            sheetName += dto.getTableName();
         }
-        sheetName+="_"+dto.getDatasourceId();
+        sheetName += "_" + dto.getDatasourceId();
         sheet.setSheetName(sheetName);
         List<RowDto> singRows = createTableStructureTemplate_GetSingRows(fieldNameList);
         sheet.setSingRows(singRows);
@@ -430,7 +436,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         attachmentInfoPO.setCurrentFileName(currentFileName);
         attachmentInfoPO.setExtensionName(".xlsx");
         attachmentInfoPO.setAbsolutePath(uploadUrl);
-        attachmentInfoPO.setOriginalName(String.format("%s上传模板%s.xlsx",dto.getTableName(), DateTimeUtils.getNowToShortDate().replace("-", "")));
+        attachmentInfoPO.setOriginalName(String.format("%s上传模板%s.xlsx", dto.getTableName(), DateTimeUtils.getNowToShortDate().replace("-", "")));
         attachmentInfoPO.setCategory(500);
         attachmentInfoMapper.insertOne(attachmentInfoPO);
 
@@ -449,6 +455,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         // 第二步：读取数据源下的库、表
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+        DorisConUtils dorisConUtils = new DorisConUtils();
         try {
             List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
             for (String conIp : conIps) {
@@ -469,6 +476,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             tablesPlus = postgresConUtils.getTablesPlus(connection);
                         } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
                             tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
+                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
+                            tablesPlus = dorisConUtils.getTablesPlusForOps(connection);
                         }
                         if (CollectionUtils.isNotEmpty(tablesPlus)) {
                             tablesPlus.forEach(t -> {
@@ -550,7 +559,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         return dataBaseList;
     }
 
-    public List<RowDto>  createTableStructureTemplate_GetSingRows(List<String> fieldNameList){
+    public List<RowDto> createTableStructureTemplate_GetSingRows(List<String> fieldNameList) {
         List<RowDto> singRows = new ArrayList<>();
         RowDto rowDto = new RowDto();
         rowDto.setRowIndex(0);

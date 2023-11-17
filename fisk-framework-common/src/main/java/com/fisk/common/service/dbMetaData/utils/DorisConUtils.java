@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.dbMetaData.dto.*;
+import com.fisk.common.service.dbMetaData.dto.DorisCatalogDTO;
+import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
+import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -29,7 +31,7 @@ public class DorisConUtils {
 
             int tag = 0;
             List<String> tableNames = getTablesPlus(conn);
-            if (CollectionUtils.isNotEmpty(tableNames)){
+            if (CollectionUtils.isNotEmpty(tableNames)) {
                 for (String tableName : tableNames) {
                     // mysql没有架构概念
                     List<TableStructureDTO> colNames = getColNames(stmt, tableName);
@@ -46,7 +48,7 @@ public class DorisConUtils {
         } catch (Exception e) {
             log.error("【getTableNameAndColumns】获取表名报错：", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
-        }finally {
+        } finally {
             try {
                 if (stmt != null) {
                     stmt.close();
@@ -83,6 +85,28 @@ public class DorisConUtils {
     }
 
     /**
+     * 获取数据库中所有表名称
+     */
+    public List<TablePyhNameDTO> getTablesPlusForOps(Connection conn) {
+        // MySql没有架构概念，此处直接查表
+        List<TablePyhNameDTO> tableList = new ArrayList<>();
+        try {
+            DatabaseMetaData databaseMetaData = conn.getMetaData();
+            ResultSet tables = databaseMetaData.getTables(null, null, "%", new String[]{"TABLE"});
+            while (tables.next()) {
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(tables.getString("TABLE_NAME"));
+                tablePyhNameDTO.setTableFullName(tables.getString("TABLE_NAME"));
+                tableList.add(tablePyhNameDTO);
+            }
+        } catch (SQLException e) {
+            log.error("【getTablesPlus】获取数据库中所有表名称异常", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
+        }
+        return tableList;
+    }
+
+    /**
      * 获取表中所有字段名称
      */
     public List<TableStructureDTO> getColNames(Statement st, String tableName) {
@@ -113,7 +137,7 @@ public class DorisConUtils {
         return colNameList;
     }
 
-    public List<DorisCatalogDTO> getCataLogNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum){
+    public List<DorisCatalogDTO> getCataLogNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum) {
         List<DorisCatalogDTO> cataLogList = null;
         Connection conn = null;
         try {
@@ -124,20 +148,20 @@ public class DorisConUtils {
             cataLogList = new ArrayList<>();
             while (catalogs.next()) {
                 String catalogId = catalogs.getString("CatalogId");
-                if (catalogId != "0"){
+                if (catalogId != "0") {
                     DorisCatalogDTO catalogDTO = new DorisCatalogDTO();
                     catalogDTO.catalogName = catalogs.getString("CatalogName");
                     cataLogList.add(catalogDTO);
                 }
             }
-            cataLogList = cataLogList.stream().map(i->{
+            cataLogList = cataLogList.stream().map(i -> {
                 try {
                     List<DorisCatalogDTO.CataLogDatabase> databaseList = new ArrayList<>();
                     statement.executeQuery("SWITCH " + i.getCatalogName() + ";");
                     ResultSet databases = statement.executeQuery("SHOW DATABASES;");
                     while (databases.next()) {
                         String database = databases.getString("Database");
-                        switch (database){
+                        switch (database) {
                             case "default":
                             case "__internal_schema":
                             case "information_schema":
@@ -148,7 +172,7 @@ public class DorisConUtils {
                         cataLogDatabase.databaseName = database;
                         databaseList.add(cataLogDatabase);
                     }
-                    databaseList = databaseList.stream().map(v->{
+                    databaseList = databaseList.stream().map(v -> {
                         List<DorisCatalogDTO.CataLogTables> tableList = new ArrayList<>();
                         try {
                             statement.executeQuery("USE " + v.getDatabaseName() + ";");
@@ -159,9 +183,9 @@ public class DorisConUtils {
                                 cataLogTables.tableName = tableName;
                                 tableList.add(cataLogTables);
                             }
-                            tableList = tableList.stream().map(n->{
+                            tableList = tableList.stream().map(n -> {
                                 try {
-                                    ResultSet tblField = statement.executeQuery("DESC " + n.tableName+";");
+                                    ResultSet tblField = statement.executeQuery("DESC " + n.tableName + ";");
                                     List<DorisCatalogDTO.CataLogField> cataLogFieldList = new ArrayList<>();
                                     while (tblField.next()) {
                                         DorisCatalogDTO.CataLogField cataLogField = new DorisCatalogDTO.CataLogField();
@@ -174,30 +198,30 @@ public class DorisConUtils {
                                         cataLogFieldList.add(cataLogField);
                                     }
                                     n.setCataLogFields(cataLogFieldList);
-                                    if (tblField != null){
+                                    if (tblField != null) {
                                         tblField.close();
                                     }
-                                }catch (Exception e){
+                                } catch (Exception e) {
                                     log.error("【getCataLogNames】获取表字段名称异常", e);
                                     return n;
                                 }
                                 return n;
                             }).collect(Collectors.toList());
                             v.setCataLogTables(tableList);
-                            if (tables != null){
+                            if (tables != null) {
                                 tables.close();
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             log.error("【getTablesPlus】获取表名称异常", e);
                             return v;
                         }
                         return v;
                     }).collect(Collectors.toList());
                     i.setCataLogDatabases(databaseList);
-                    if (databases != null){
+                    if (databases != null) {
                         databases.close();
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     log.error("【getCataLogNames】获取数据库名称异常", e);
                     return i;
                 }
@@ -206,13 +230,13 @@ public class DorisConUtils {
             if (statement != null) {
                 statement.close();
             }
-            if (catalogs != null){
+            if (catalogs != null) {
                 catalogs.close();
             }
         } catch (Exception e) {
             log.error("【getCataLogNames】获取数据库中所有CataLog名称异常", e);
             return cataLogList;
-        }finally {
+        } finally {
             try {
                 if (conn != null) {
                     conn.close();
