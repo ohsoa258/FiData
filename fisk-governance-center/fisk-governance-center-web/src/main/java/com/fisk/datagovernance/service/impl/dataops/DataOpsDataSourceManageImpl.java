@@ -23,6 +23,7 @@ import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
+import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -124,42 +125,52 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Override
     public ResultEntity<List<DataOpsTableFieldVO>> getDataOpsFieldSource(GetDataOpsFieldSourceDTO dto) {
-        List<DataOpsTableFieldVO> dataOpsTableFieldVOS = new ArrayList<>();
-        if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableName())) {
-            return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, dataOpsTableFieldVOS);
-        }
-        List<PostgreDTO> postgreDTOList = getPostgreDTOList();
-        if (CollectionUtils.isEmpty(postgreDTOList)) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOS);
-        }
-        PostgreDTO postgreDTO = postgreDTOList.stream().filter(t -> t.getId() == dto.getDatasourceId()).findFirst().orElse(null);
-        if (postgreDTO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOS);
-        }
-        PostgresConUtils postgresConUtils = new PostgresConUtils();
-        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-        Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
+        try {
+            List<DataOpsTableFieldVO> dataOpsTableFieldVOS = new ArrayList<>();
+            if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableName())) {
+                return ResultEntityBuild.buildData(ResultEnum.PARAMTER_NOTNULL, dataOpsTableFieldVOS);
+            }
+            List<PostgreDTO> postgreDTOList = getPostgreDTOList();
+            if (CollectionUtils.isEmpty(postgreDTOList)) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOS);
+            }
+            PostgreDTO postgreDTO = postgreDTOList.stream().filter(t -> t.getId() == dto.getDatasourceId()).findFirst().orElse(null);
+            if (postgreDTO == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_OPS_CONFIG_EXISTS, dataOpsTableFieldVOS);
+            }
+            PostgresConUtils postgresConUtils = new PostgresConUtils();
+            SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+            MysqlConUtils mysqlConUtils = new MysqlConUtils();
+            Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
 
-        List<TableStructureDTO> columns = null;
-        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
-            String tableFullName = StringUtils.isEmpty(dto.getTableFramework()) ? dto.getTableName() : dto.getTableFramework() + "." + dto.getTableName();
-            columns = postgresConUtils.getColumns(connection, tableFullName);
-        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
-            columns = sqlServerPlusUtils.getColumns(connection, dto.getTableName(), dto.getTableFramework());
-        }
-        if (CollectionUtils.isEmpty(columns)) {
+            List<TableStructureDTO> columns = null;
+            if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
+                String tableFullName = StringUtils.isEmpty(dto.getTableFramework()) ? dto.getTableName() : dto.getTableFramework() + "." + dto.getTableName();
+                columns = postgresConUtils.getColumns(connection, tableFullName);
+            } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
+                columns = sqlServerPlusUtils.getColumns(connection, dto.getTableName(), dto.getTableFramework());
+            } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
+                Statement statement = connection.createStatement();
+                columns = mysqlConUtils.getColNames(statement, dto.getTableName());
+            }
+            if (CollectionUtils.isEmpty(columns)) {
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
+            }
+
+            columns.forEach(tableStructureDTO -> {
+                DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
+                dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
+                dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
+                dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
+                dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
+                dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
+            });
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
+        } catch (Exception e) {
+            log.error("数据库运维获取数据库表列信息失败：" + e);
+            return ResultEntityBuild.build(ResultEnum.DATA_OPS_GET_TABLE_SCHEMA_ERROR);
         }
 
-        columns.forEach(tableStructureDTO -> {
-            DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
-            dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
-            dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
-            dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
-            dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
-            dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
-        });
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
     }
 
     @Override
