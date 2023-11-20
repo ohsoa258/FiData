@@ -3,6 +3,7 @@ package com.fisk.dataaccess.webservice.service;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 
 /**
@@ -23,4 +24,22 @@ public class KSF_Notice implements Serializable {
      */
     @ApiModelProperty(value = "业务数据表头传入 & 业务数据行传入")
     private Elements Elements;
+
+    @XmlElement(name = "API_Message", nillable = false, required = true)
+    public com.fisk.dataaccess.webservice.service.API_Message getAPI_Message() {
+        return API_Message;
+    }
+
+    public void setAPI_Message(com.fisk.dataaccess.webservice.service.API_Message API_Message) {
+        this.API_Message = API_Message;
+    }
+
+    @XmlElement(name = "Elements", nillable = false, required = true)
+    public com.fisk.dataaccess.webservice.service.Elements getElements() {
+        return Elements;
+    }
+
+    public void setElements(com.fisk.dataaccess.webservice.service.Elements elements) {
+        Elements = elements;
+    }
 }

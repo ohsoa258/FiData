@@ -13,14 +13,6 @@ import java.io.Serializable;
  */
 @Data
 public class DETAIL implements Serializable {
-
-    /**
-     * 单据号码
-     */
-    @ApiModelProperty(value = "单据号码")
-    @JSONField(name = "EBELN")
-    private String EBELN;
-
     /**
      * 项目收货日期（ETA）
      */
@@ -119,6 +111,13 @@ public class DETAIL implements Serializable {
     @JSONField(name = "CHARG")
     private String CHARG;
 
+    /**
+     * 单据号码
+     */
+    @ApiModelProperty(value = "单据号码")
+    @JSONField(name = "EBELN")
+    private String EBELN;
+
     @XmlElement(name = "EBELN", nillable = false, required = true)
     public String getEBELN() {
         return EBELN;
@@ -162,7 +161,7 @@ public class DETAIL implements Serializable {
         this.PSTYV = PSTYV;
     }
 
-    @XmlElement(name = "SourceSys", nillable = false, required = true)
+    @XmlElement(name = "MATNR", nillable = false, required = true)
     public String getMATNR() {
         return MATNR;
     }

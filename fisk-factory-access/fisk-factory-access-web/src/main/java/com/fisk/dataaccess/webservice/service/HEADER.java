@@ -32,15 +32,15 @@ public class HEADER implements Serializable {
      * 仓库代码
      */
     @ApiModelProperty(value = "仓库代码")
-    @JSONField(name = "SORT1")
-    private String SORT1;
+    @JSONField(name = "LGPLA")
+    private String LGPLA;
 
     /**
      * 货主代码
      */
     @ApiModelProperty(value = "货主代码")
-    @JSONField(name = "LGPLA")
-    private String LGPLA;
+    @JSONField(name = "VTXTK")
+    private String VTXTK;
 
     /**
      * 供应商/送达方
@@ -109,15 +109,6 @@ public class HEADER implements Serializable {
         this.EBELN = EBELN;
     }
 
-    @XmlElement(name = "SORT1", nillable = false, required = true)
-    public String getSORT1() {
-        return SORT1;
-    }
-
-    public void setSORT1(String SORT1) {
-        this.SORT1 = SORT1;
-    }
-
     @XmlElement(name = "LGPLA", nillable = false, required = true)
     public String getLGPLA() {
         return LGPLA;
@@ -125,6 +116,15 @@ public class HEADER implements Serializable {
 
     public void setLGPLA(String LGPLA) {
         this.LGPLA = LGPLA;
+    }
+
+    @XmlElement(name = "VTXTK", nillable = false, required = true)
+    public String getVTXTK() {
+        return VTXTK;
+    }
+
+    public void setVTXTK(String VTXTK) {
+        this.VTXTK = VTXTK;
     }
 
     @XmlElement(name = "LIFNR", nillable = false, required = true)

@@ -12,6 +12,11 @@ import java.io.Serializable;
  */
 @Data
 public class API_Message implements Serializable {
+    /**
+     * 消息标识
+     */
+    @ApiModelProperty(value = "消息标识")
+    private String Guid;
 
     /**
      * 源系统ID
@@ -26,22 +31,16 @@ public class API_Message implements Serializable {
     private String TargetSys;
 
     /**
-     * 数据时间戳
-     */
-    @ApiModelProperty(value = "数据时间戳",required = true)
-    private String UpdateTime;
-
-    /**
-     * 消息标识
-     */
-    @ApiModelProperty(value = "消息标识")
-    private String Guid;
-
-    /**
      * 单个目标系统标识
      */
     @ApiModelProperty(value = "单个目标系统标识")
     private String SingleTargetSys;
+
+    /**
+     * 数据时间戳
+     */
+    @ApiModelProperty(value = "数据时间戳",required = true)
+    private String UpdateTime;
 
     /**
      * 接口访问的验证信息
