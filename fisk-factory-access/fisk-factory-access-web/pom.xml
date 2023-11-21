@@ -199,6 +199,13 @@
             </exclusions>
         </dependency>
 
+        <!-- 达梦数据库驱动 -->
+        <dependency>
+            <groupId>com.dameng</groupId>
+            <artifactId>DmJdbcDriver18</artifactId>
+            <version>8.1.1.193</version>
+        </dependency>
+
         <!-- 使用olap4j从SSAS中获取数据 -->
         <!-- https://mvnrepository.com/artifact/org.olap4j/olap4j -->
         <dependency>

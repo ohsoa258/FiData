@@ -37,6 +37,7 @@ public class SqlFactoryServiceImpl implements SqlFactoryService {
             case "postgresql":
             case "sqlserver":
             case "openedge":
+            case "dm8":
                 flag = true;
                 break;
             default:

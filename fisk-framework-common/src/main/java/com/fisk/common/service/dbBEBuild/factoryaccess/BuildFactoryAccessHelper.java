@@ -26,6 +26,8 @@ public class BuildFactoryAccessHelper {
                 return new BuildAccessSapBwCommandImpl();
             case DORIS:
                 return new BuildAccessDorisCommandImpl();
+            case DM8:
+                return new BuildAccessDM8CommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

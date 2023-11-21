@@ -293,7 +293,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             list.forEach(dataSourcePO -> {
                 sourceNames.add(dataSourcePO.name);
             });
-            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ALREADY_EXISTS,sourceNames);
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ALREADY_EXISTS, sourceNames);
         }
 
         QueryWrapper<DataSourcePO> queryWrapper = new QueryWrapper<>();
@@ -387,8 +387,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     }
                 case OPENEDGE:
                     log.info("注册OpenEdge驱动程序前...");
-//                    // 注册OpenEdge驱动程序
-//                    DriverManager.registerDriver(new OpenEdgeDriver());
+                    // 注册OpenEdge驱动程序
+                    // DriverManager.registerDriver(new OpenEdgeDriver());
                     Class.forName(DataSourceTypeEnum.OPENEDGE.getDriverName());
                     log.info("注册OpenEdge驱动程序后...");
 
@@ -412,15 +412,22 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     destination.ping();
                     log.info("注册SAPBW驱动程序后...");
                     return ResultEnum.SUCCESS;
+
+                //todo:hudi(hive)因jar包冲突问题,暂时不做测试连接操作,前端页面没有测试连接选项
                 case HIVE:
                     log.info("注册HIVE驱动程序前...");
                     // 加载Hive驱动
                     Class.forName("org.apache.hive.jdbc.HiveDriver");
 
                     // 建立Hive连接
-//                    Connection con = DriverManager.getConnection("jdbc:hive2://192.168.11.136:10001/default", "root", "root123");
+                    // Connection con = DriverManager.getConnection("jdbc:hive2://192.168.11.136:10001/default", "root", "root123");
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     log.info("注册HIVE驱动程序后...");
+                    return ResultEnum.SUCCESS;
+                // 达梦数据库
+                case DM8:
+                    Class.forName(DataSourceTypeEnum.DM8.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;

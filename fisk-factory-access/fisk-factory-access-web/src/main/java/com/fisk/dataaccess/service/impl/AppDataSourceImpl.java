@@ -54,6 +54,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Resource
     PgsqlUtils pgsqlUtils;
     @Resource
+    DM8Utils dm8Utils;
+    @Resource
     AppRegistrationImpl appRegistration;
 
     @Resource
@@ -152,6 +154,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSource.tableDtoList = SapBwUtils.getAllCubesV2(destination, myProvider);
             } else if (DataSourceTypeEnum.HIVE.getName().equalsIgnoreCase(dataSource.driveType)) {
                 dataSource.tableDtoList = null;
+            } else if (DataSourceTypeEnum.DM8.getName().equalsIgnoreCase(dataSource.driveType)) {
+                // 表结构
+                dataSource.tableDtoList = dm8Utils.getTableNameAndColumns(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8), po.getDbName());
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -203,6 +208,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             JCoDestination destination = providerAndDestination.getDestination();
             MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
             return SapBwUtils.getVariablesByCubeName(destination, myProvider, dto.name);
+        } else if (DataSourceTypeEnum.DM8.getName().equalsIgnoreCase(dataSource.driveType)) {
+            Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8);
+            return dm8Utils.getColumnsName(con, dto.name, po.dbName);
         }
         return null;
     }
@@ -383,6 +391,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.HIVE.getName())) {
             data.forEach(dataSourceDTO -> {
                 if (dataSourceDTO.conType.getValue() == 15) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.DM8.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 16) {
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
@@ -651,6 +665,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.WEBSERVICE.getName();
         } else if (DataSourceTypeEnum.HIVE.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.HIVE.getName();
+        } else if (DataSourceTypeEnum.DM8.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.DM8.getName();
         }
         return driverName;
     }

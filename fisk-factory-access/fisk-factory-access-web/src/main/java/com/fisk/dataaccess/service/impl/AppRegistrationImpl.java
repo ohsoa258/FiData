@@ -161,6 +161,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Resource
     RedisUtil redisUtil;
     @Resource
+    DM8Utils dm8Utils;
+    @Resource
+    HiveUtils hiveUtils;
+    @Resource
     GetConfigDTO getConfig;
 
     @Value("${spring.open-metadata}")
@@ -1086,9 +1090,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     // 建立Hive连接
 //                    Connection con = DriverManager.getConnection("jdbc:hive2://192.168.11.136:10001/default", "root", "root123");
-                    conn = DriverManager.getConnection(dto.host, dto.connectAccount, dto.connectPwd);
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     log.info("注册HIVE驱动程序后...");
-                    allDatabases.addAll(HiveUtils.getAllDatabases(conn));
+                    allDatabases.addAll(hiveUtils.getAllDatabases(conn));
+                    // 达梦数据库
+                case DM8:
+                    log.info("注册达梦数据库驱动程序前...");
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8.getDriverName());
+                    log.info("注册达梦数据库驱动程序后...");
+                    conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
+                    log.info("连接达梦数据库成功...");
+                    allDatabases.addAll(dm8Utils.getAllDatabases(conn));
                 default:
                     break;
             }

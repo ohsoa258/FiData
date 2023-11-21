@@ -392,6 +392,7 @@ public class AbstractCommonDbHelper {
             case ORACLE:
             case OPENEDGE:
             case HIVE:
+            case DM8:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             default:
                 return null;

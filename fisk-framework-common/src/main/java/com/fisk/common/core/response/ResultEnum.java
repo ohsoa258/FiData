@@ -420,6 +420,7 @@ public enum ResultEnum {
     SMART_PUBLISH_REMOTE_ACCESS_FAIL(14015, "数据接入-智能发布失败-调用数据接入模块接口报错"),
     SMART_PUBLISH_VARIABLES_MISSING_ERROR(14016, "数据接入-智能发布失败-调用数据接入模块接口报错"),
     SMART_PUBLISH_GET_APPINFO_FALIURE(14017, "智能发布-获取应用信息失败"),
+    DATA_OPS_GET_TABLE_SCHEMA_ERROR(14018, "数据库运维获取数据库表列信息失败"),
 
     /**
      * mdm

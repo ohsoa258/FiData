@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class HiveUtils {
 
-    public static List<String> getAllDatabases(Connection conn) {
+    public List<String> getAllDatabases(Connection conn) {
 
         List<String> dbName = new ArrayList<>();
         Statement stmt = null;
