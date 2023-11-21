@@ -684,6 +684,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
 
+        // 删除应用之前，先查出应用简称
+        AppRegistrationDTO appById = getAppById(Long.parseLong(String.valueOf(id)));
+
         // 1.删除tb_app_registration表数据
         int deleteReg = mapper.deleteByIdWithFill(model);
         if (deleteReg < 0) {
@@ -783,6 +786,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         vo.tableList = tableList;
         vo.qualifiedNames = qualifiedNames;
         vo.classifications = model.appName;
+        vo.appAbbreviation = appById.getAppAbbreviation();
         log.info("删除的应用信息,{}", vo);
 
         if (openMetadata) {

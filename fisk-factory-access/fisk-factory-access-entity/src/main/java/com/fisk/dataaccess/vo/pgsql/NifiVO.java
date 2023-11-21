@@ -51,4 +51,10 @@ public class NifiVO {
      * 管道名称
      */
     public List<String> workFlowName;
+
+    /**
+     * 应用简称
+     */
+    public String appAbbreviation;
+
 }

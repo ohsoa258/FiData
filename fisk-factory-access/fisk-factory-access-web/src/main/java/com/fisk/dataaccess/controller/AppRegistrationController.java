@@ -128,8 +128,7 @@ public class AppRegistrationController {
         pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
         List<AppDataSourceDTO> appSourcesByAppId = dataSource.getAppSourcesByAppId(Long.parseLong(nifiVO.appId));
         pgsqlDelTableDTO.setAppSources(appSourcesByAppId);
-        AppRegistrationDTO appById = service.getAppById(Long.parseLong(nifiVO.appId));
-        pgsqlDelTableDTO.appAbbreviation = appById.getAppAbbreviation();
+        pgsqlDelTableDTO.appAbbreviation = nifiVO.getAppAbbreviation();
         if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
 
             pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
