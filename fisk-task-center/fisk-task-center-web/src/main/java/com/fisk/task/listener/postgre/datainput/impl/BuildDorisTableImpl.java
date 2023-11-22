@@ -488,7 +488,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds + associatedKey;
-        sql2 += ("`" + tablePk + "` BIGINT,fi_createtime DATETIME,fi_updatetime DATETIME");
+        sql2 += ("`" + tablePk + "` varchar(50),fi_createtime DATETIME,fi_updatetime DATETIME");
         sql2 += ",fidata_batch_code varchar(50)";
         String sql3 = "";
         if (Objects.equals("", sql3)) {
@@ -569,7 +569,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         //String associatedKey = associatedConditions(fieldList);
         String associatedKey = "";
         String sql2 = sqlFileds + associatedKey;
-        sql2 += ("`" + tablePk + "` BIGINT,fi_createtime DATETIME,fi_updatetime DATETIME");
+        sql2 += ("`" + tablePk + "` varchar(50),fi_createtime DATETIME,fi_updatetime DATETIME");
         sql2 += ",fidata_batch_code varchar(50)";
         String sql3 = "";
         if (Objects.equals("", sql3)) {

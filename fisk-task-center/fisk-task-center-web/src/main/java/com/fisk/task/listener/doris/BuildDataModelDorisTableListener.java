@@ -165,7 +165,7 @@ public class BuildDataModelDorisTableListener
                         throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
                     }
                     log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
-                }else {
+                } else {
                     resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
                     if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                         taskPgTableStructureMapper.updatevalidVersion(version);
@@ -198,8 +198,6 @@ public class BuildDataModelDorisTableListener
                                 pgdbTable2 = dbCommand.buildDorisDimTables(modelPublishTableDTO);
                                 break;
                             case FACT:
-                            case HELP:
-                            case CONFIG:
                                 //校验事实表是否有主键
                                 boolean ifUnique = false;
                                 for (ModelPublishFieldDTO dto : modelPublishTableDTO.fieldList) {

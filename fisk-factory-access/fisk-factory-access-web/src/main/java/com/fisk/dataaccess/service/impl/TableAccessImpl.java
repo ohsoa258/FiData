@@ -1461,7 +1461,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())) {
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())) {
                             f.type = "数据湖表任务";
                         }
                         if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {

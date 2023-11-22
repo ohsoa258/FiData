@@ -33,6 +33,7 @@ public class SqlFactoryServiceImpl implements SqlFactoryService {
         boolean flag;
         switch (dbType) {
             case "mysql":
+            case "doris":
             case "oracle":
             case "postgresql":
             case "sqlserver":

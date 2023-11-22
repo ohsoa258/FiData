@@ -136,9 +136,9 @@ public class WebServiceImpl implements IWebServiceServer {
         KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
         //统一报文返回类型
         if (result.contains("失败") || !result.contains("成功")) {
-            ksf_noticeResult.setSTATUS("0");
-        } else {
             ksf_noticeResult.setSTATUS("1");
+        } else {
+            ksf_noticeResult.setSTATUS("0");
         }
         ksf_noticeResult.setINFOTEXT(result);
         return ksf_noticeResult;
