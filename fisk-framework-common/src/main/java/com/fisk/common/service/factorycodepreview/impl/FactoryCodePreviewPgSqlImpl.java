@@ -26,6 +26,10 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      */
     @Override
     public String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+        //字段名转为小写  原因：task建pg表时，字段名都转为了小写
+        fieldList.forEach(publishFieldDTO -> {
+            publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();
+        });
         //拼接insert into...
         StringBuilder prefix = new StringBuilder("INSERT INTO " + tableName + " (");
         //遍历字段集合
@@ -159,6 +163,10 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      */
     @Override
     public String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+        //字段名转为小写  原因：task建pg表时，字段名都转为了小写
+        fieldList.forEach(publishFieldDTO -> {
+            publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();
+        });
         //全量和追加的区别在于：多了一段DELETE FROM tableName...
         //调用封装的追加方式拼接sql方法
         StringBuilder suffixSql =
@@ -180,6 +188,10 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      */
     @Override
     public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+        //字段名转为小写  原因：task建pg表时，字段名都转为了小写
+        fieldList.forEach(publishFieldDTO -> {
+            publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();
+        });
         //业务标识覆盖方式--删除插入和追加的区别在于：多了一段delete TARGET...
         StringBuilder suffixSql =
                 new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList));
@@ -444,6 +456,10 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      */
     @Override
     public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+        //字段名转为小写  原因：task建pg表时，字段名都转为了小写
+        fieldList.forEach(publishFieldDTO -> {
+            publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();
+        });
         //获取业务标识覆盖方式标识的字段
         List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
         String startSql = insertAndSelectSql(tableName, sourceTableName, fieldList);
@@ -499,6 +515,10 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
     @Override
     public String businessTimeOverLay(String tableName, String sourceTableName,
                                       List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO) {
+        //字段名转为小写  原因：task建pg表时，字段名都转为了小写
+        fieldList.forEach(publishFieldDTO -> {
+            publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();
+        });
 //        //主键字段剔除
 //        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //获取页面选择的逻辑类型：1普通模式    2高级模式

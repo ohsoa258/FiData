@@ -19,6 +19,8 @@ public class ModelKeyScriptHelper {
                 return new FactoryModelKeyScriptSqlServerImpl();
             case POSTGRESQL:
                 return new FactoryModelKeyScriptPgSqlImpl();
+            case DORIS:
+                return new FactoryModelKeyScriptDorisSqlImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
