@@ -976,6 +976,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
             case DATALAKE_API_TASK:
                 ResultEntity<List<ChannelDataDTO>> result = dataAccessClient.getTableId();
                 list = result.data;
+                log.info("数据湖非实时物理表任务" + list.toString());
                 break;
             // 数仓维度表任务
             case DW_DIMENSION_TASK:
