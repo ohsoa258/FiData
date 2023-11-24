@@ -5,6 +5,7 @@ import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
@@ -135,4 +136,23 @@ public interface DataManageClient {
      */
     @GetMapping("/MetaData/queryMetadaFildes/{tableId}/{fldeId}")
     List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId")Integer tableId, @PathVariable("fldeId")Integer fldeId);
+
+
+    /**
+     * 元数据实时同步
+     *
+     * @param entityList
+     * @return
+     */
+    @PostMapping("/MetaData/syncDataConsumptionMetaData")
+    ResultEntity<Object> syncDataConsumptionMetaData(@RequestBody  List<MetaDataEntityDTO> entityList);
+
+    /**
+     * 元数据实时同步
+     *
+     * @param entityList
+     * @return
+     */
+    @PostMapping("/MetaData/deleteConsumptionMetaData")
+    ResultEntity<Object> deleteConsumptionMetaData(@RequestBody  List<MetaDataEntityDTO> entityList);
 }

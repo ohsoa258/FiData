@@ -30,7 +30,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.datamodel.client",
         "com.fisk.mdm.client",
         "com.fisk.task.client",
-        "com.fisk.datafactory.client"
+        "com.fisk.datafactory.client",
+        "com.fisk.datamanage.client"
 })
 @EnableHystrix
 public class FiskConsumeServeiceApplication {

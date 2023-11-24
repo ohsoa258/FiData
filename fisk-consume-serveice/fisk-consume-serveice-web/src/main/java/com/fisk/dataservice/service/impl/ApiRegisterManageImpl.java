@@ -19,6 +19,8 @@ import com.fisk.common.core.utils.SqlParmUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.*;
@@ -93,10 +95,16 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     private FileServiceMapper fileServiceMapper;
 
     @Resource
+    private AppRegisterManageImpl appRegisterManage;
+
+    @Resource
     UserHelper userHelper;
 
     @Resource
     private UserClient userClient;
+
+    @Resource
+    private DataManageClient dataManageClient;
 
     @Value("${dataservice.proxyservice.api_address}")
     private String proxyServiceApiAddress;
@@ -131,7 +139,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         PageDTO<ApiSubVO> pageDTO = new PageDTO<>();
 
         List<ApiSubVO> apiSubVOS = new ArrayList<>();
-        Integer createApiType = dto.getAppType() == 2 ? 3 : dto.getAppType() ;
+        Integer createApiType = dto.getAppType() == 2 ? 3 : dto.getAppType();
         List<ApiConfigPO> apiConfigPOS = baseMapper.getList(dto.getKeyword(), createApiType);
         if (CollectionUtils.isNotEmpty(apiConfigPOS)) {
             apiSubVOS = ApiRegisterMap.INSTANCES.poToApiSubVO(apiConfigPOS);
@@ -327,9 +335,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     public ResultEnum importantOrUnimportant(Integer id) {
         ApiConfigPO apiConfigPO = this.getById(id);
-        if (apiConfigPO.getImportantInterface() == 0){
+        if (apiConfigPO.getImportantInterface() == 0) {
             apiConfigPO.setImportantInterface(1);
-        }else if (apiConfigPO.getImportantInterface() == 1){
+        } else if (apiConfigPO.getImportantInterface() == 1) {
             apiConfigPO.setImportantInterface(0);
         }
         if (baseMapper.updateById(apiConfigPO) == 0) {
@@ -353,6 +361,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     public List<TopFrequencyVO> getTopFrequency() {
         return this.baseMapper.getTopFrequency();
+    }
+
+    @Override
+    public Long getApiIdByApiName(String apiName) {
+        return null;
     }
 
     public ResultEnum delAppServiceConfig(Integer appId, Integer type) {
@@ -455,6 +468,10 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             return tableSyncModeImpl.addApiTableSyncMode(dto.syncModeDTO);
         }
 
+        //同步元数据
+        List<MetaDataEntityDTO> apiMetaData = appRegisterManage.getApiMetaDataById((long) apiId);
+        dataManageClient.syncDataConsumptionMetaData(apiMetaData);
+
         return ResultEnum.SUCCESS;
     }
 
@@ -536,16 +553,31 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             if (!isUpdate)
                 return ResultEnum.SAVE_DATA_ERROR;
         }
+
+        //同步元数据
+        List<MetaDataEntityDTO> apiMetaData = appRegisterManage.getApiMetaDataById((long) apiId);
+        dataManageClient.syncDataConsumptionMetaData(apiMetaData);
         return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum deleteData(int apiId) {
+        //查询同步元数据
+        List<MetaDataEntityDTO> apiMetaDataList = appRegisterManage.getApiMetaDataById((long) apiId);
+
         ApiConfigPO model = baseMapper.selectById(apiId);
         if (model == null) {
             return ResultEnum.DS_API_EXISTS;
         }
-        return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        int i = baseMapper.deleteByIdWithFill(model);
+        if (i > 0) {
+            //同步元数据
+            dataManageClient.deleteConsumptionMetaData(apiMetaDataList);
+            return ResultEnum.SUCCESS;
+        } else {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
     }
 
     @Override

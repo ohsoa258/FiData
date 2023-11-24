@@ -73,4 +73,18 @@ public interface IDataViewThemeService extends IService<DataViewThemePO> {
      * @return
      */
     List<MetaDataEntityDTO> getViewServiceMetaData();
+
+    /**
+     * 通过ID集合获取视图元数据
+     * @param ids
+     * @return
+     */
+    List<MetaDataEntityDTO> getViewServiceMetaDataByIds(List<Long> ids);
+
+    /**
+     * 通过ID获取视图元数据
+     * @param id
+     * @return
+     */
+    List<MetaDataEntityDTO> getViewServiceMetaDataById(Long id);
 }

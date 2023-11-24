@@ -25,7 +25,9 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.datafactory.enums.SendModeEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
@@ -114,6 +116,10 @@ public class TableServiceImpl
     @Resource
     ITableApiParameterService tableApiParameterService;
 
+
+    @Resource
+    DataManageClient dataManageClient;
+
     @Override
     public Page<TableServicePageDataDTO> getTableServiceListData(TableServicePageQueryDTO dto) {
         return mapper.getTableServiceListData(dto.page, dto);
@@ -186,6 +192,9 @@ public class TableServiceImpl
         //推送task
         publishTaskClient.publishBuildDataServices(buildTableServiceDTO);
 
+        //同步元数据
+        List<MetaDataEntityDTO> tableSyncMetaDataById = tableAppManage.getTableSyncMetaDataById(dto.getTableService().getId());
+        dataManageClient.syncDataConsumptionMetaData(tableSyncMetaDataById);
         return ResultEnum.SUCCESS;
     }
 
@@ -205,6 +214,8 @@ public class TableServiceImpl
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum delTableServiceById(long id) {
+        List<MetaDataEntityDTO> tableSyncMetaDataById = tableAppManage.getTableSyncMetaDataById(id);
+
         TableServicePO po = mapper.selectById(id);
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -237,6 +248,10 @@ public class TableServiceImpl
         buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
         buildDeleteTableService.delBusiness = false;
         publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+
+        //删除元数据
+        dataManageClient.deleteConsumptionMetaData(tableSyncMetaDataById);
+
         return ResultEnum.SUCCESS;
     }
 

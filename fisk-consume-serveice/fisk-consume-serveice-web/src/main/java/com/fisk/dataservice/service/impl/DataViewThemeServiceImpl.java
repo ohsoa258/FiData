@@ -715,21 +715,12 @@ public class DataViewThemeServiceImpl
         for (DataViewThemePO dataViewThemePO : allDataViewThemePOList) {
             //获取应用下的视图
             List<DataViewPO> ThemeTheViewPOList = allDataViewPOList.stream().filter(e -> e.getViewThemeId() == dataViewThemePO.getId()).collect(Collectors.toList());
-            //添加应用下的API
+            //添加应用下的视图
             for (DataViewPO dataViewPO : ThemeTheViewPOList) {
-                MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
-                metaDataEntityDTO.setName(dataViewPO.getName());
-                metaDataEntityDTO.setDisplayName(dataViewPO.getDisplayName());
-                metaDataEntityDTO.setQualifiedName("view_" + dataViewThemePO.getId() + "_" + dataViewPO.getId());
-                metaDataEntityDTO.setDescription(dataViewPO.getViewDesc());
-                metaDataEntityDTO.setCreateSql(dataViewPO.getViewScript());
-                metaDataEntityDTO.setDatasourceDbId(dataViewThemePO.getTargetDbId());
-                metaDataEntityDTO.setEntityType(13);
-                metaDataEntityDTO.setOwner(dataViewThemePO.getThemePrincipal());
-                metaDataEntityDTO.setAppName(dataViewThemePO.getThemeName());
-                //获取API下的字段
+                MetaDataEntityDTO metaDataEntityDTO= buildMetaEntityDto(dataViewPO, dataViewThemePO);
+                //获取视图下的字段
                 List<ViewFieldsPO> viewFieldsPOList = allViewFieldsPOList.stream().filter(e -> e.getViewId() == dataViewPO.getId()).collect(Collectors.toList());
-                //添加AP下的字段
+                //添加视图下的字段
                 List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
                 for (ViewFieldsPO fieldConfigVO : viewFieldsPOList) {
                     MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
@@ -745,5 +736,66 @@ public class DataViewThemeServiceImpl
             }
         }
         return metaDataEntityDTOList;
+    }
+
+
+    /**
+     * 获取视图元数据
+     *
+     * @return
+     */
+    @Override
+    public  List<MetaDataEntityDTO> getViewServiceMetaDataById(Long id){
+        List<Long> ids=new ArrayList<>();
+        ids.add(id);
+        return getViewServiceMetaDataByIds(ids);
+    }
+
+    /**
+     * 获取视图元数据
+     *
+     * @return
+     */
+    @Override
+    public List<MetaDataEntityDTO> getViewServiceMetaDataByIds(List<Long> ids) {
+        //获取视图
+        List<DataViewPO> dataViewPOList = dataViewService.query().eq("id",ids).list();
+        List<MetaDataEntityDTO> metaDataEntityDTOList = new ArrayList<>();
+        //添加应用下的视图
+        for (DataViewPO dataViewPO : dataViewPOList) {
+            DataViewThemePO dataViewThemePO = this.query().eq("id", dataViewPO.getViewThemeId()).one();
+            MetaDataEntityDTO metaDataEntityDTO = buildMetaEntityDto(dataViewPO, dataViewThemePO);
+            //获取视图下的字段
+            List<ViewFieldsPO> viewFieldsPOList = dataViewFieldsService.query().eq("view_id",dataViewPO.getId()).list();
+            //添加视图下的字段
+            List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
+            for (ViewFieldsPO fieldConfigVO : viewFieldsPOList) {
+                MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
+                metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
+                metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
+                metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
+                metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName() + "_" + fieldConfigVO.getId());
+                metaDataColumnAttributeDTO.setOwner(dataViewThemePO.getThemePrincipal());
+                metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+            }
+            metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
+            metaDataEntityDTOList.add(metaDataEntityDTO);
+        }
+
+        return metaDataEntityDTOList;
+    }
+
+    private MetaDataEntityDTO buildMetaEntityDto(DataViewPO dataViewPO, DataViewThemePO dataViewThemePO) {
+        MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
+        metaDataEntityDTO.setName(dataViewPO.getName());
+        metaDataEntityDTO.setDisplayName(dataViewPO.getDisplayName());
+        metaDataEntityDTO.setQualifiedName("view_" + dataViewThemePO.getId() + "_" + dataViewPO.getId());
+        metaDataEntityDTO.setDescription(dataViewPO.getViewDesc());
+        metaDataEntityDTO.setCreateSql(dataViewPO.getViewScript());
+        metaDataEntityDTO.setDatasourceDbId(dataViewThemePO.getTargetDbId());
+        metaDataEntityDTO.setEntityType(13);
+        metaDataEntityDTO.setOwner(dataViewThemePO.getThemePrincipal());
+        metaDataEntityDTO.setAppName(dataViewThemePO.getThemeName());
+        return metaDataEntityDTO;
     }
 }

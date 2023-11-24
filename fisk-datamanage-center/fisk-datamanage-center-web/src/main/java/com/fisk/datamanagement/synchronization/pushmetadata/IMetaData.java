@@ -1,9 +1,11 @@
 package com.fisk.datamanagement.synchronization.pushmetadata;
 
+import com.fisk.common.core.enums.datamanage.MetaDataSyncTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 
@@ -61,4 +63,21 @@ public interface IMetaData {
      * 刷新Redis缓存key
      */
     void refreshRedisExcelMetadata();
+
+    /**
+     * 同步数据消费元数据
+     * @param entityList
+     * @param currUserName
+     * @return
+     */
+    ResultEnum syncDataConsumptionMetaData(List<MetaDataEntityDTO> entityList, String currUserName);
+
+    /**
+     * 删除数据消费元数据
+     * @param entityList
+     * @return
+     */
+    ResultEnum deleteDataConsumptionMetaData(List<MetaDataEntityDTO> entityList);
+
+//    ResultEnum iSyncMetaData(MetaDataSyncTypeEnum syncTypeEnum,int operationType);
 }
