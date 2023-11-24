@@ -136,11 +136,10 @@ public class DimensionAttributeImpl
         //获取表名称
         String dimensionTabName = dimensionPo.dimensionTabName;
         //拼接删除临时表的脚本
-        StringBuilder delSql = new StringBuilder("TRUNCATE TABLE ");
-        delSql.append(prefixTempName)
-                .append("_")
-                .append(dimensionTabName)
-                .append(";");
+        String delSql = "TRUNCATE TABLE " + prefixTempName +
+                "_" +
+                dimensionTabName +
+                ";";
         dimensionPo.deleteTempScript = String.valueOf(delSql);
 
         dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;

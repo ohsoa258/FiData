@@ -3007,8 +3007,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (flag) {
                 //先删除
                 redisUtil.del(catalogName);
-                map = getDorisCatalogTreeByCatalogName(dbID, catalogName);
             }
+            map = getDorisCatalogTreeByCatalogName(dbID, catalogName);
         } catch (Exception e) {
             log.error("刷新dorsi外部目录的redis失败:" + e.getMessage());
             throw new FkException(ResultEnum.REFRESH_REDIS_DORIS_CATALOG_ERROR, e);

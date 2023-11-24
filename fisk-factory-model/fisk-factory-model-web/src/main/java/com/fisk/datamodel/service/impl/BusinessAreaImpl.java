@@ -1235,7 +1235,6 @@ public class BusinessAreaImpl
         IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(conType);
         return command.dataTypeList();
 
-
     }
 
     /**
