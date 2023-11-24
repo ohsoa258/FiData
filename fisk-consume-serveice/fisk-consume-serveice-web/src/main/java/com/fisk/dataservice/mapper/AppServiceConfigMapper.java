@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.app.AppApiSubQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
+import com.fisk.dataservice.entity.AppConfigPO;
 import com.fisk.dataservice.entity.AppServiceConfigPO;
 import com.fisk.dataservice.vo.app.AppApiBindVO;
 import com.fisk.dataservice.vo.app.AppApiSubVO;
@@ -149,6 +150,23 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tAND t1.del_flag = 1 \n" +
             "\tAND t2.del_flag = 1 ")
     List<ApiConfigPO> getApiTheAppList(@Param("appId") int appId);
+
+    /**
+     * 根据APIid查询此API下的应用。
+     *
+     * @return 查询结果
+     */
+    @Select("SELECT\n" +
+            "t2.*\n" +
+            "FROM\n" +
+            "\ttb_app_service_config t1\n" +
+            "\tLEFT JOIN tb_app_config t2 ON t1.app_id = t2.id \n" +
+            "WHERE\n" +
+            "\tt1.service_id = #{apiId} \n" +
+            "\tAND t1.type = 1 \n" +
+            "\tAND t1.del_flag = 1 \n" +
+            "\tAND t2.del_flag = 1 ")
+    List<AppConfigPO> getAppByApiList(@Param("apiId") int apiId);
 
     @Select("SELECT\n" +
             "\tt1.app_id as appId,\n" +

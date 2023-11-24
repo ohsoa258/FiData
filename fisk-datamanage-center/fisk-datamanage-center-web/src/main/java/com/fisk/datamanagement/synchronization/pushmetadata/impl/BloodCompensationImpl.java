@@ -125,6 +125,9 @@ public class BloodCompensationImpl
         synchronousDataBaseSyncMetaData(currUserName);
 
 
+        log.info("*******六.开始主数据相关元数据信息********");
+        log.info("********1.开始主数据模型******************");
+
         return ResultEnum.SUCCESS;
 
 

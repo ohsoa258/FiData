@@ -136,4 +136,11 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      */
     List<TopFrequencyVO> getTopFrequency();
 
+    /**
+     * 通过API获取
+     * @param apiName
+     * @return
+     */
+    Long getApiIdByApiName(String apiName);
+
 }

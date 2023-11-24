@@ -67,4 +67,17 @@ public interface ITableAppManageService extends IService<TableAppPO> {
      * @return
      */
     List<MetaDataEntityDTO> getTableSyncMetaData();
+
+    /**
+     * 获取表同步服务元数据
+     * @return
+     */
+    List<MetaDataEntityDTO> getTableSyncMetaDataById(Long id);
+
+    /**
+     *
+     * @return
+     */
+    List<MetaDataEntityDTO> getTableSyncMetaDataByIds(List<Long> ids);
+
 }

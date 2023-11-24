@@ -974,9 +974,7 @@ public class MetaDataImpl implements IMetaData {
     @Override
     public ResultEnum deleteMetaData(MetaDataDeleteAttributeDTO dto) {
         for (String qualifiedName : dto.qualifiedNames) {
-            QueryWrapper<MetadataMapAtlasPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(MetadataMapAtlasPO::getQualifiedName, qualifiedName);
-            MetadataMapAtlasPO po = metadataMapAtlasMapper.selectOne(queryWrapper);
+            MetadataEntityPO po = metadataEntity.getEntityByQualifiedNames(qualifiedName);
             if (po == null) {
                 continue;
             }
@@ -984,23 +982,25 @@ public class MetaDataImpl implements IMetaData {
             //删除表业务分类关联
             ClassificationDelAssociatedEntityDTO associatedEntityDto = new ClassificationDelAssociatedEntityDTO();
             associatedEntityDto.classificationName = dto.classifications;
-            associatedEntityDto.entityGuid = po.atlasGuid;
+            associatedEntityDto.entityGuid = String.valueOf(po.getId());
             ResultEnum delResult = classification.classificationDelAssociatedEntity(associatedEntityDto);
             if (delResult.getCode() != ResultEnum.SUCCESS.getCode()) {
                 continue;
             }
 
             //删除元数据实体
-            ResultEnum resultEnum = entityImpl.deleteEntity(po.atlasGuid);
+            List<Integer> metadataIds=new ArrayList<>();
+            metadataIds.add((int) po.getId());
+            ResultEnum resultEnum = metadataEntity.delMetadataEntity(metadataIds);
             if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                 continue;
             }
 
-            //删除元数据配置
-            int flat = metadataMapAtlasMapper.delete(queryWrapper);
-            if (flat > 0) {
-                delete(po.atlasGuid);
-            }
+//            //删除元数据配置
+//            int flat = metadataMapAtlasMapper.delete(queryWrapper);
+//            if (flat > 0) {
+//                delete(po.atlasGuid);
+//            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -1261,6 +1261,7 @@ public class MetaDataImpl implements IMetaData {
      * @param entityList
      * @return
      */
+    @Override
     public ResultEnum syncDataConsumptionMetaData(List<MetaDataEntityDTO> entityList, String currUserName) {
 
 
@@ -1295,8 +1296,25 @@ public class MetaDataImpl implements IMetaData {
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public ResultEnum deleteDataConsumptionMetaData(List<MetaDataEntityDTO> entityList) {
+        List<String> metadataEntityQualifiedNameList=new ArrayList<>();
+        entityList.forEach(e->{
+            metadataEntityQualifiedNameList.add(e.getQualifiedName());
+            e.getAttributeDTOList().forEach(a->{
+                metadataEntityQualifiedNameList.add(a.getQualifiedName());
+            });
+        });
+        List<Integer> metadataIds=new ArrayList<>();
+        for (String qualifiedName : metadataEntityQualifiedNameList) {
+            MetadataEntityPO po = metadataEntity.getEntityByQualifiedNames(qualifiedName);
+            metadataIds.add((int) po.getId());
+        }
+        return metadataEntity.delMetadataEntity(metadataIds);
+    }
+
     /**
-     * 同步外部数据源的实例和数据库元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
+     * 同步来源的实例和数据库元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
      *
      * @param entityList
      */

@@ -204,6 +204,10 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         buildTableApiServiceDTO.userId = userInfo.id;
         //推送task
         publishTaskClient.publishBuildDataServiceApi(buildTableApiServiceDTO);
+
+
+
+
         return ResultEnum.SUCCESS;
     }
 

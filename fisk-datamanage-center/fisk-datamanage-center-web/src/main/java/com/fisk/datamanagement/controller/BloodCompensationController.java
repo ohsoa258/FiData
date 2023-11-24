@@ -31,7 +31,7 @@ public class BloodCompensationController {
     @Resource
     IBloodCompensation service;
 
-    @ApiOperation("同步元数据")
+    @ApiOperation("初始化元数据")
     @GetMapping("/systemSynchronousBlood")
     public ResultEntity<Object> systemSynchronousBlood(
             @ApiParam(value = "执行账号", required = true) @RequestParam("currUserName") String currUserName,

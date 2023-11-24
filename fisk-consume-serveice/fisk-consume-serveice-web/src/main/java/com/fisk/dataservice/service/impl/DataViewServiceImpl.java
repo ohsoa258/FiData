@@ -26,11 +26,13 @@ import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.dataanalysisview.*;
 import com.fisk.dataservice.entity.DataViewPO;
 import com.fisk.dataservice.entity.DataViewRolePO;
@@ -44,6 +46,7 @@ import com.fisk.dataservice.mapper.DataViewRoleMapper;
 import com.fisk.dataservice.mapper.DataViewThemeMapper;
 import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
+import com.fisk.dataservice.service.IDataViewThemeService;
 import com.fisk.dataservice.util.DbConnectionHelper;
 import com.fisk.dataservice.util.PgsqlUtils;
 import com.fisk.dataservice.util.SqlServerPlusUtils;
@@ -88,6 +91,9 @@ public class DataViewServiceImpl
     private UserClient userClient;
 
     @Resource
+    private DataManageClient dataManageClient;
+
+    @Resource
     private RedisUtil redisUtil;
 
     @Resource
@@ -101,6 +107,9 @@ public class DataViewServiceImpl
 
     @Resource
     private DataViewRoleMapper dataViewRoleMapper;
+
+    @Resource
+    private IDataViewThemeService dataViewThemeService;
 
     @Override
     public PageDTO<DataViewDTO> getViewList(Integer viewThemeId, Integer pageNum, Integer pageSize) {
@@ -356,6 +365,10 @@ public class DataViewServiceImpl
         // 为关联的主题角色授权视图权限
         relationGrant(model, dsDto);
 
+        //同步元数据
+        List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(po.getId());
+        dataManageClient.syncDataConsumptionMetaData(metaDataEntityDTO);
+
         return ResultEnum.SUCCESS;
     }
 
@@ -399,6 +412,7 @@ public class DataViewServiceImpl
     @Override
     public ResultEnum removeDataView(Integer viewId) {
         // 查询数据视图是否存在
+        List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(viewId.longValue());
         DataViewPO model = baseMapper.selectById(viewId);
         if (Objects.isNull(model)) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
@@ -416,6 +430,8 @@ public class DataViewServiceImpl
 
         // 删除数据库视图
         removeView(model, dsDto);
+        //同步元数据
+        dataManageClient.deleteConsumptionMetaData(metaDataEntityDTO);
         return ResultEnum.SUCCESS;
 
     }
@@ -469,6 +485,11 @@ public class DataViewServiceImpl
 
         // 修改角色权限
         relationGrant(preModel, dataSourceDTO);
+
+
+        //同步元数据
+        List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(dto.getViewId().longValue());
+        dataManageClient.syncDataConsumptionMetaData(metaDataEntityDTO);
         return ResultEnum.SUCCESS;
     }
 

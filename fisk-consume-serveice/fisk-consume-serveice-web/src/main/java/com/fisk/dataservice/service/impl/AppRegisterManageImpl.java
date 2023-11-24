@@ -93,6 +93,7 @@ public class AppRegisterManageImpl
     @Resource
     private ApiRegisterManageImpl apiRegisterManage;
 
+
     @Resource
     GetConfigDTO getConfig;
 
@@ -683,36 +684,67 @@ public class AppRegisterManageImpl
             List<ApiConfigPO> apiTheAppList = appApiMapper.getApiTheAppList((int) appConfigPO.getId());
             //添加应用下的API
             for (ApiConfigPO apiConfigPO : apiTheAppList) {
-                MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
-                metaDataEntityDTO.setQualifiedName("api_" + appConfigPO.getId() + "_" + apiConfigPO.getId());
-                metaDataEntityDTO.setName(apiConfigPO.getApiName());
-                metaDataEntityDTO.setDisplayName(apiConfigPO.getApiName());
-                metaDataEntityDTO.setDescription(apiConfigPO.getApiDesc());
-                metaDataEntityDTO.setCreateSql(apiConfigPO.getCreateSql());
-                metaDataEntityDTO.setApiType(apiConfigPO.getApiType());
-                metaDataEntityDTO.setTableName(apiConfigPO.getTableName());
-                metaDataEntityDTO.setDatasourceDbId(apiConfigPO.getDatasourceId());
-                metaDataEntityDTO.setEntityType(5);
-                metaDataEntityDTO.setCreateApiType(apiConfigPO.getCreateApiType());
-                metaDataEntityDTO.setOwner(appConfigPO.getAppAccount());
-                metaDataEntityDTO.setAppName(appConfigPO.getAppName());
-                //获取API下的字段
-                List<FieldConfigVO> fieldConfigVOList = apiRegisterManage.getFieldAll((int) apiConfigPO.getId());
-                //添加AP下的字段
-                List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
-                for (FieldConfigVO fieldConfigVO : fieldConfigVOList) {
-                    MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
-                    metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName() + "_" + fieldConfigVO.getId());
-                    metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
-                    metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
-                    metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
-                    metaDataColumnAttributeDTO.setOwner(appConfigPO.getAppAccount());
-                    metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
-                }
-                metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
+                MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO,apiConfigPO);
                 metaDataEntityDTOList.add(metaDataEntityDTO);
             }
         }
         return metaDataEntityDTOList;
     }
+
+    @Override
+    public List<MetaDataEntityDTO> getApiMetaDataById(Long id) {
+        List<Long> ids = new ArrayList<>();
+        ids.add(id);
+        return getApiMetaDataByIds(ids);
+    }
+
+    @Override
+    public List<MetaDataEntityDTO> getApiMetaDataByIds(List<Long> ids) {
+
+        List<MetaDataEntityDTO> metaDataEntityDTOList = new ArrayList<>();
+        //获取API
+        List<ApiConfigPO> apiTheAppList = apiRegisterMapper.selectBatchIds(ids);
+        //添加应用下的API
+        for (ApiConfigPO apiConfigPO : apiTheAppList) {
+            AppConfigPO appConfigPO = appApiMapper.getAppByApiList((int) apiConfigPO.getId()).stream().findFirst().orElse(null);
+            if(appConfigPO==null){
+                return metaDataEntityDTOList;
+            }
+            MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO,apiConfigPO);
+            metaDataEntityDTOList.add(metaDataEntityDTO);
+        }
+        return metaDataEntityDTOList;
+    }
+
+    public MetaDataEntityDTO buildApiMetaDataEntity(AppConfigPO appConfigPO,ApiConfigPO apiConfigPO){
+        MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
+        metaDataEntityDTO.setQualifiedName("api_" + appConfigPO.getId() + "_" + apiConfigPO.getId());
+        metaDataEntityDTO.setName(apiConfigPO.getApiName());
+        metaDataEntityDTO.setDisplayName(apiConfigPO.getApiName());
+        metaDataEntityDTO.setDescription(apiConfigPO.getApiDesc());
+        metaDataEntityDTO.setCreateSql(apiConfigPO.getCreateSql());
+        metaDataEntityDTO.setApiType(apiConfigPO.getApiType());
+        metaDataEntityDTO.setTableName(apiConfigPO.getTableName());
+        metaDataEntityDTO.setDatasourceDbId(apiConfigPO.getDatasourceId());
+        metaDataEntityDTO.setEntityType(5);
+        metaDataEntityDTO.setCreateApiType(apiConfigPO.getCreateApiType());
+        metaDataEntityDTO.setOwner(appConfigPO.getAppAccount());
+        metaDataEntityDTO.setAppName(appConfigPO.getAppName());
+        //获取API下的字段
+        List<FieldConfigVO> fieldConfigVOList = apiRegisterManage.getFieldAll((int) apiConfigPO.getId());
+        //添加AP下的字段
+        List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
+        for (FieldConfigVO fieldConfigVO : fieldConfigVOList) {
+            MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
+            metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName() + "_" + fieldConfigVO.getId());
+            metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
+            metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
+            metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
+            metaDataColumnAttributeDTO.setOwner(appConfigPO.getAppAccount());
+            metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+        }
+        metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
+        return metaDataEntityDTO;
+    }
+
 }

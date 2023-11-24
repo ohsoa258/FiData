@@ -118,7 +118,25 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      */
     ResultEnum setParam(AppApiBuiltinParmEditDTO dto);
 
-
+    /**
+     * 获取API元数据
+     * @return
+     */
     List<MetaDataEntityDTO> getApiMetaData();
+
+
+    /**
+     * 通过ID获取API元数据
+     * @param id
+     * @return
+     */
+    List<MetaDataEntityDTO> getApiMetaDataById(Long id);
+
+    /**
+     * 通过ID集合获取API元数据
+     * @param ids
+     * @return
+     */
+    List<MetaDataEntityDTO> getApiMetaDataByIds(List<Long> ids);
 
 }
