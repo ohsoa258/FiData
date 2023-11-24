@@ -22,10 +22,10 @@ public class KSF_NoticeResult {
     @ApiModelProperty(value = "文本信息")
     private String INFOTEXT;
 
-    /**
-     * 物料凭证编号
-     */
-    @ApiModelProperty(value = "物料凭证编号")
-    private String MBLNR;
+//    /**
+//     * 物料凭证编号
+//     */
+//    @ApiModelProperty(value = "物料凭证编号")
+//    private String MBLNR;
 
 }

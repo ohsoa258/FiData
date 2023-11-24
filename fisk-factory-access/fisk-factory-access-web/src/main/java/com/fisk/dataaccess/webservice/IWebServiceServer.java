@@ -1,9 +1,6 @@
 package com.fisk.dataaccess.webservice;
 
-import com.fisk.dataaccess.webservice.service.KSF_Notice;
-import com.fisk.dataaccess.webservice.service.KSF_NoticeResult;
-import com.fisk.dataaccess.webservice.service.WebServiceReceiveDataDTO;
-import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
+import com.fisk.dataaccess.webservice.service.*;
 
 /**
  * @author lsj
@@ -31,10 +28,11 @@ public interface IWebServiceServer {
     /**
      * 康师傅前置机定制接口--通知单
      *
-     * @param KSF_Notice
+     * @param api_message 系统数据
+     * @param elements 明细数据
      * @return
      */
-    KSF_NoticeResult ksf_notice(KSF_Notice KSF_Notice);
+    KSF_NoticeResult KSF_Notice(API_Message api_message,Elements elements);
 
 //    /**
 //     * 康师傅前置机定制接口--物料主数据

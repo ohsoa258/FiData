@@ -102,26 +102,28 @@ public class WebServiceImpl implements IWebServiceServer {
     /**
      * 康师傅前置机定制接口--通知单
      *
-     * @param KSF_Notice
+     * @param api_message
+     * @param elements
      * @return
      */
     @Override
     @WebMethod
     @WebResult(name = "KSF_NoticeResult")
-    public KSF_NoticeResult ksf_notice(@WebParam(name = "KSF_Notice") KSF_Notice KSF_Notice) {
-        log.debug("通知单推送的数据：" + JSON.toJSONString(KSF_Notice));
+    public KSF_NoticeResult KSF_Notice(@WebParam(name = "API_Message") API_Message api_message, @WebParam(name = "Elements") Elements elements) {
+        log.debug("通知单推送的系统数据：" + JSON.toJSONString(api_message));
+        log.debug("通知单推送的明细数据：" + JSON.toJSONString(elements));
         //将webservice接收到的xml格式的数据转换为json格式的数据
         KsfNoticeDTO data = new KsfNoticeDTO();
-        data.setSourceSys(KSF_Notice.getAPI_Message().getSourceSys());
-        data.setTargetSys(KSF_Notice.getAPI_Message().getTargetSys());
-        data.setUpdateTime(KSF_Notice.getAPI_Message().getUpdateTime());
-        data.setGuid(KSF_Notice.getAPI_Message().getGuid());
-        data.setSingleTargetSys(KSF_Notice.getAPI_Message().getSingleTargetSys());
-        data.setAppKey(KSF_Notice.getAPI_Message().getAppKey());
-        data.setIsTest(KSF_Notice.getAPI_Message().getIsTest());
-        data.setIsManualSend(KSF_Notice.getAPI_Message().getIsManualSend());
-        data.setHeaders(KSF_Notice.getElements().getElement().getHEADER());
-        data.setDetails(KSF_Notice.getElements().getElement().getDETAIL());
+        data.setSourceSys(api_message.getSourceSys());
+        data.setTargetSys(api_message.getTargetSys());
+        data.setUpdateTime(api_message.getUpdateTime());
+        data.setGuid(api_message.getGuid());
+        data.setSingleTargetSys(api_message.getSingleTargetSys());
+        data.setAppKey(api_message.getAppKey());
+        data.setIsTest(api_message.getIsTest());
+        data.setIsManualSend(api_message.getIsManualSend());
+        data.setHeaders(elements.getElement().getHEADER());
+        data.setDetails(elements.getElement().getDETAIL());
         String pushData = JSON.toJSONString(data);
         //json解析的根节点 data
         String rebuild = "{\"data\": [" + pushData + "]}";
