@@ -30,4 +30,6 @@ public class AccessTransformationPO extends BasePO{
 	@ApiModelProperty(value = "是否业务主键 1：主键 0：不是主键 ")
 	private Integer businessKey;
 
+	@ApiModelProperty(value = "是否业务主键 1：基本映射 2：基于域映射 ")
+	private Integer mappingType;
 }

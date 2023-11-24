@@ -56,6 +56,10 @@ public class AccessMdmPublishTableDTO {
     /**
      * 自定义脚本
      */
+
+    @ApiModelProperty(value = "基于域字段更新脚本")
+    public String domainUpdateSql;
+
     @ApiModelProperty(value = "自定义脚本")
     public String customScript;
 
