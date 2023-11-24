@@ -360,6 +360,11 @@ public class BusinessProcessImpl
         fieldDTO.associateDimensionId = attributePo.associateDimensionId;
         fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
         fieldDTO.isBusinessKey = attributePo.isBusinessKey;
+        fieldDTO.isPrimaryKey = attributePo.isPrimaryKey;
+        fieldDTO.isPartitionKey = attributePo.isPartitionKey;
+        fieldDTO.isDistributedKey = attributePo.isDistributedKey;
+        fieldDTO.dorisPartitionType = attributePo.dorisPartitionType;
+        fieldDTO.dorisPartitionValues = attributePo.dorisPartitionValues;
         //判断是否关联维度
         if (attributePo.associateDimensionId != 0 && attributePo.associateDimensionFieldId != 0) {
             DimensionPO dimensionPo = dimensionMapper.selectById(attributePo.associateDimensionId);

@@ -453,6 +453,11 @@ public class DimensionFolderImpl
         fieldDTO.associateDimensionId = attributePo.associateDimensionId;
         fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
         fieldDTO.isBusinessKey = attributePo.isPrimaryKey;
+        fieldDTO.isPrimaryKey = attributePo.isBusinessKey;
+        fieldDTO.isPartitionKey = attributePo.isPartitionKey;
+        fieldDTO.isDistributedKey = attributePo.isDistributedKey;
+        fieldDTO.dorisPartitionType = attributePo.dorisPartitionType;
+        fieldDTO.dorisPartitionValues = attributePo.dorisPartitionValues;
         //判断是否关联维度
         if (attributePo.associateDimensionId != 0 && attributePo.associateDimensionFieldId != 0) {
             DimensionPO dimensionPo = dimensionMapper.selectById(attributePo.associateDimensionId);

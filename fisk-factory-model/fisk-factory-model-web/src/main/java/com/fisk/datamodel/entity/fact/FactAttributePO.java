@@ -23,7 +23,7 @@ public class FactAttributePO extends BasePO {
     /**
      * 业务过程字段表字段类型
      */
-    public  String factFieldType;
+    public String factFieldType;
     /**
      * 业务过程字段表字段长度
      */
@@ -63,7 +63,33 @@ public class FactAttributePO extends BasePO {
     public String configDetails;
 
     /**
-     * 是否是业务覆盖表示字段 1：是  0：不是
+     * 是否是业务主键字段 1：是  0：不是
      */
     public int isBusinessKey;
+
+    /**
+     * 是否是业务覆盖标识字段 1：是  0：不是
+     */
+    public int isPrimaryKey;
+
+    /**
+     * 是否是doris分区字段 1：是 0：不是
+     */
+    public int isPartitionKey;
+
+    /**
+     * doris分区类型 RANGE 或 LIST
+     */
+    public String dorisPartitionType;
+
+    /**
+     * doris分区属性值
+     */
+    public String dorisPartitionValues;
+
+    /**
+     * 是否是doris分桶字段 1：是 0：不是
+     */
+    public int isDistributedKey;
+
 }
