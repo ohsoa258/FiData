@@ -111,6 +111,7 @@ public class BuildMdmAccessETLListener {
                 bfd.openTransmission = accessPublishDataDTO.openTransmission;
                 bfd.dataSourceDbId = accessPublishDataDTO.access.dataSourceDbId;
                 bfd.targetDbId = accessPublishDataDTO.access.targetDbId;
+                bfd.setDomainUpdateSql(accessPublishDataDTO.access.domainUpdateSql);
                 bfd.customScriptBefore = accessPublishDataDTO.access.customScript;
                 bfd.customScriptAfter = accessPublishDataDTO.access.customScriptAfter;
 //                // 设置预览SQL执行语句

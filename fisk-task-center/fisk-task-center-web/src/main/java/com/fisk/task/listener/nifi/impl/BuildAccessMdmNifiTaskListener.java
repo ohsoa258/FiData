@@ -408,7 +408,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             buildAvroRecordSetWriterServiceDTO.groupId = appGroupId;
         }
         List<String> sourceFieldName = new ArrayList<>();
-        sourceFieldName = config.mdmPublishFieldDTOList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        sourceFieldName = config.mdmPublishFieldDTOList.stream().filter(i->i.mappingType == 1).map(e -> e.fieldName).collect(Collectors.toList());
         if (StringUtils.isNotEmpty(dto.generateVersionSql)) {
             sourceFieldName.add(NifiConstants.AttrConstants.FI_VERSION);
         }
@@ -1305,10 +1305,23 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
         }
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToMdmSql));
+        String preQuery = null;
+        if (StringUtils.isNotEmpty(buildNifiFlow.domainUpdateSql)){
+            preQuery  = buildNifiFlow.domainUpdateSql.replace("${fidata_version_id}", buildNifiFlow.versionId.toString());
+        }
+        if (StringUtils.isNotEmpty(buildNifiFlow.customScriptBefore)){
+            if (StringUtils.isNotEmpty(preQuery)){
+                preQuery = preQuery +";"+buildNifiFlow.customScriptBefore;
+            }else {
+                preQuery = buildNifiFlow.customScriptBefore;
+            }
+
+        }
+        log.info("SQL主数据基于域更新预览语句：{}", JSON.toJSONString(buildNifiFlow.domainUpdateSql));
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToMdmSql) ? buildNifiFlow.syncStgToMdmSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(12);
         callDbProcedureProcessorDTO.haveNextOne = true;
-        callDbProcedureProcessorDTO.sqlPreQuery = buildNifiFlow.customScriptBefore;
+        callDbProcedureProcessorDTO.sqlPreQuery = preQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -1326,7 +1339,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             data.groupId = appGroupId;
         }
         List<String> sourceFieldName = new ArrayList<>();
-        sourceFieldName = config.mdmPublishFieldDTOList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        sourceFieldName = config.mdmPublishFieldDTOList.stream().filter(i->i.mappingType == 1).map(e -> e.fieldName).collect(Collectors.toList());
         if (StringUtils.isNotEmpty(dto.generateVersionSql)) {
             sourceFieldName.add(NifiConstants.AttrConstants.FI_VERSION);
         }
@@ -1409,7 +1422,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             buildAvroRecordSetWriterServiceDTO.groupId = mdmGroupId;
         }
         List<String> sourceFieldName = new ArrayList<>();
-        sourceFieldName = config.mdmPublishFieldDTOList.stream().map(e -> e.fieldName).collect(Collectors.toList());
+        sourceFieldName = config.mdmPublishFieldDTOList.stream().filter(i->i.mappingType == 1).map(e -> e.fieldName).collect(Collectors.toList());
         String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
         buildAvroRecordSetWriterServiceDTO.schemaArchitecture = schemaArchitecture;
         buildAvroRecordSetWriterServiceDTO.schemaWriteStrategy = "avro-embedded";
@@ -1426,6 +1439,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             buildAvroReaderServiceDTO.groupId = mdmGroupId;
         }
         List<AccessAttributeDTO> modelPublishFieldDTOS = config.mdmPublishFieldDTOList;
+        modelPublishFieldDTOS = modelPublishFieldDTOS.stream().filter(i->i.mappingType == 1).collect(Collectors.toList());
         for (AccessAttributeDTO accessAttributeDTO : modelPublishFieldDTOS) {
             if (!Objects.equals(accessAttributeDTO.fieldName, accessAttributeDTO.getSourceFieldName())) {
                 buildParameter.put("/" + accessAttributeDTO.fieldName, "/" + accessAttributeDTO.getSourceFieldName());

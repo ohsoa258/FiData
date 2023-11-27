@@ -38,6 +38,8 @@ public class AccessDataPO extends BasePO {
 	@ApiModelProperty(value = "发布错误信息")
 	private String publishErrorMsg;
 
+	@ApiModelProperty(value = "基于域字段更新脚本")
+	public String domainUpdateSql;
 	@ApiModelProperty(value = "版本id")
 	public Integer versionId;
 }

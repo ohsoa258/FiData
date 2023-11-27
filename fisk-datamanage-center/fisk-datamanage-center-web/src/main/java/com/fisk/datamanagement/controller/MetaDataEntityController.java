@@ -106,4 +106,6 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getInstanceDetail(guid));
     }
 
+
+
 }

@@ -18,6 +18,7 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.*;
 import java.util.List;
@@ -115,22 +116,28 @@ public abstract class RestApiHandler {
         }
         Integer finalId = id;
         apiParameterPOList = apiParameterPOList.stream().filter(i->i.getPid() != finalId).collect(Collectors.toList());
-        List<TreeBuilder.Node> nodes = apiParameterPOList.stream().map(i -> {
-            TreeBuilder.Node node = new TreeBuilder.Node();
-            node.setId(String.valueOf(i.getId()));
-            node.setPid(String.valueOf(i.getPid()));
-            JSONObject json = new JSONObject();
-            if (i.getSelected() == 1){
-                json.put(i.getParameterName(), finalResultJsonData);
-            }else {
-                json.put(i.getParameterName(), i.getParameterValue());
-            }
-            node.setParameter(json);
-            return node;
-        }).collect(Collectors.toList());
-        JSONObject json = new TreeBuilder().buildTree(nodes);
-        apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,json.toJSONString());
-        apiResultDTO.setNumber(number);
+        List<TableApiParameterPO> collect = apiParameterPOList.stream().filter(i -> i.getSelected() == 1).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(collect)){
+            apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,finalResultJsonData.toJSONString());
+            apiResultDTO.setNumber(number);
+        }else {
+            List<TreeBuilder.Node> nodes = apiParameterPOList.stream().map(i -> {
+                TreeBuilder.Node node = new TreeBuilder.Node();
+                node.setId(String.valueOf(i.getId()));
+                node.setPid(String.valueOf(i.getPid()));
+                JSONObject json = new JSONObject();
+                if (i.getSelected() == 1){
+                    json.put(i.getParameterName(), finalResultJsonData);
+                }else {
+                    json.put(i.getParameterName(), i.getParameterValue());
+                }
+                node.setParameter(json);
+                return node;
+            }).collect(Collectors.toList());
+            JSONObject json = new TreeBuilder().buildTree(nodes);
+            apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,json.toJSONString());
+            apiResultDTO.setNumber(number);
+        }
         return apiResultDTO;
     }
 

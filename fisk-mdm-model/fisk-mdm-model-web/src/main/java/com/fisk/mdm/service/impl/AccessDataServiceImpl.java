@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -17,21 +19,24 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
+import com.fisk.common.service.dbBEBuild.datamodel.IBuildDataModelSqlCommand;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.factorymdmdomainscript.IBuildMdmScript;
+import com.fisk.common.service.factorymdmdomainscript.impl.MdmScriptHelper;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
-import com.fisk.mdm.dto.access.TableHistoryQueryDTO;
-import com.fisk.mdm.dto.access.TableHistoryDTO;
-import com.fisk.mdm.enums.SystemVariableTypeEnum;
+import com.fisk.datamodel.enums.DataBaseTypeEnum;
+import com.fisk.datamodel.enums.RelateTableTypeEnum;
+import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
-import com.fisk.mdm.entity.*;
-import com.fisk.mdm.enums.PublicStatusEnum;
-import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
-import com.fisk.mdm.map.AccessTransformationMap;
-import com.fisk.mdm.map.ModelMap;
-import com.fisk.mdm.map.SyncModeMap;
-import com.fisk.mdm.map.TableHistoryMap;
+import com.fisk.mdm.entity.*;
+import com.fisk.mdm.enums.DataTypeEnum;
+import com.fisk.mdm.enums.PublicStatusEnum;
+import com.fisk.mdm.enums.SystemVariableTypeEnum;
+import com.fisk.mdm.map.*;
 import com.fisk.mdm.mapper.AccessDataMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
@@ -56,6 +61,7 @@ import java.util.stream.Collectors;
 
 import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateMdmTableName;
 import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateStgTableName;
+import static java.util.stream.Collectors.groupingBy;
 
 @Service("accessDataService")
 @Slf4j
@@ -90,6 +96,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     private EntityMapper entityMapper;
     @Resource
     private TableHistoryMapper tableHistoryMapper;
+    @Resource
+    private TableSourceRelationsService tableSourceRelationsService;
     @Resource
     private ITableHistory iTableHistory;
     @Resource
@@ -134,6 +142,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         //获取sql脚本
         data.sqlScript = accessPo.getExtractionSql();
         data.dataSourceId = accessPo.getSouceSystemId();
+        data.domainUpdateSql = accessPo.domainUpdateSql;
         data.versionId = accessPo.versionId;
         //获取表字段详情
         data.attributeInfoDTOS = attributeService.listPublishedAttribute(entityId);
@@ -147,6 +156,11 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         }
         data.syncModeDTO = SyncModeMap.INSTANCES.poToDto(syncModePo);
 
+        LambdaQueryWrapper<TableSourceRelationsPO> queryRelations = new LambdaQueryWrapper<>();
+        queryRelations.eq(TableSourceRelationsPO::getAccessId,accessPo.id);
+        List<TableSourceRelationsPO> tableSourceRelations = tableSourceRelationsService.list(queryRelations);
+        List<TableSourceRelationsDTO> tableSourceRelationsDTOS = TableSourceRelationsMap.INSTANCES.poListToDtoList(tableSourceRelations);
+        data.setTableSourceRelationsDTO(tableSourceRelationsDTOS);
         //自定义脚本
         CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
         queryDto.tableId = (int) accessPo.getId();
@@ -209,7 +223,18 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if (!syncMode || !tableBusiness) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-
+        //更新表基于域表源关系
+        if (CollectionUtils.isNotEmpty(dto.tableSourceRelationsDTO)){
+            LambdaQueryWrapper<TableSourceRelationsPO> queryRelations = new LambdaQueryWrapper<>();
+            queryRelations.eq(TableSourceRelationsPO::getAccessId,dto.accessId);
+            tableSourceRelationsService.remove(queryRelations);
+            List<TableSourceRelationsPO> tableSourceRelationsPOS = TableSourceRelationsMap.INSTANCES.dtoListToPoList(dto.tableSourceRelationsDTO);
+            tableSourceRelationsPOS = tableSourceRelationsPOS.stream().map(i->{
+                i.setAccessId(dto.accessId);
+                return i;
+            }).collect(Collectors.toList());
+            tableSourceRelationsService.saveBatch(tableSourceRelationsPOS);
+        }
         //自定义脚本
         customScript.addOrUpdateCustomScript(dto.customScriptList);
 
@@ -231,6 +256,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         accessDataPO.publish = PublicStatusEnum.UN_PUBLIC.getValue();
         accessDataPO.setLoadingSql(dto.coverScript);
         accessDataPO.setVersionId(dto.versionId);
+        accessDataPO.setDomainUpdateSql(dto.domainUpdateSql);
         UserInfo userInfo = userHelper.getLoginUserInfo();
         dto.setUserId(userInfo.id);
         if (mapper.updateById(accessDataPO) == 0) {
@@ -299,6 +325,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             //表详情
             AccessMdmPublishTableDTO accessMdmPublishTableDTO = new AccessMdmPublishTableDTO();
             accessMdmPublishTableDTO.setTableHistoryId(tableHistoryId);
+            accessMdmPublishTableDTO.setDomainUpdateSql(dto.domainUpdateSql);
             accessMdmPublishTableDTO.coverScript = dto.getCoverScript();
             accessMdmPublishTableDTO.setUserId(dto.userId);
             accessMdmPublishTableDTO.setVersionId(dto.versionId);
@@ -568,6 +595,91 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     }
 
     @Override
+    public List<EntityTableDTO> getEntityTable(long modelId) {
+        LambdaQueryWrapper<EntityPO> queryEntity = new LambdaQueryWrapper<>();
+        queryEntity.eq(EntityPO::getModelId,modelId);
+        List<EntityPO> entityPOS = entityMapper.selectList(queryEntity);
+        //查询表名列表
+        List<EntityTableDTO> entityTableListDTO = entityPOS.stream().map(i -> {
+            EntityTableDTO entityTableDTO = new EntityTableDTO();
+            entityTableDTO.setId((int) i.getId());
+            entityTableDTO.setTableName(i.getTableName());
+            return entityTableDTO;
+        }).collect(Collectors.toList());
+        List<Long> entityIds = entityPOS.stream().map(BasePO::getId).collect(Collectors.toList());
+        LambdaQueryWrapper<AttributePO> queryAttribute = new LambdaQueryWrapper<>();
+        queryAttribute.in(AttributePO::getEntityId,entityIds);
+        List<AttributePO> attributePOList = attributeService.list(queryAttribute);
+        Map<Integer, List<AttributePO>> attributePOMap = attributePOList.stream().collect(groupingBy(AttributePO::getEntityId));
+        //表名关联字段返回列表
+        return entityTableListDTO.stream().map(i->{
+            List<AttributePO> attributePO = attributePOMap.get(i.getId());
+            List<AttributeInfoDTO> attributeInfoDTOS = AttributeMap.INSTANCES.poToVoList(attributePO);
+            i.setFields(attributeInfoDTOS);
+            return i;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public EntityTableDTO getEntityStgTable(long entityId, long modelId) {
+        EntityPO entityPO = entityMapper.selectById(entityId);
+        if (entityPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        ModelPO modelPO = modelMapper.selectById(modelId);
+        if (modelPO == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        String stgTableName = generateStgTableName(modelPO.getName(), entityPO.getName());
+        EntityTableDTO entityTableDTO = new EntityTableDTO();
+        entityTableDTO.setId((int)entityId);
+        entityTableDTO.setTableName(stgTableName);
+        LambdaQueryWrapper<AttributePO> queryAttribute = new LambdaQueryWrapper<>();
+        queryAttribute.eq(AttributePO::getEntityId,entityId);
+        List<AttributePO> attributePOList = attributeService.list(queryAttribute);
+        List<AttributeInfoDTO> attributeInfoDTOS = AttributeMap.INSTANCES.poToVoList(attributePOList);
+        entityTableDTO.setFields(attributeInfoDTOS);
+        return entityTableDTO;
+    }
+
+    @Override
+    public Object buildDomainUpdateScript(List<TableSourceRelationsDTO> dto) {
+        if (org.springframework.util.CollectionUtils.isEmpty(dto)) {
+            return "";
+        }
+        //获取连接类型
+        DataSourceTypeEnum conType = getTargetDbInfo(targetDbId).conType;
+
+        //获取对应连接类型的IBuildMdmScript
+        IBuildMdmScript iBuildMdmScript = MdmScriptHelper.getDomainScriptHelperByConType(conType);
+
+        return iBuildMdmScript.buildMdmScript(dto);
+    }
+
+    /**
+     * 获取数据源信息
+     *
+     * @param id
+     * @return
+     */
+    private DataSourceDTO getTargetDbInfo(Integer id) {
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            dataSourceConfig = userClient.getFiDataDataSourceById(id);
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            if (Objects.isNull(dataSourceConfig.data)) {
+                throw new FkException(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS);
+            }
+        } catch (Exception e) {
+            log.error("调用userClient服务获取数据源失败,", e);
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return dataSourceConfig.data;
+    }
+
+    @Override
     public Object mdmOverlayCodePreview(OverlayCodePreviewAccessDTO dto) {
 
         // 查询表数据
@@ -611,9 +723,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             case MYSQL:
                 break;
             case POSTGRESQL:
-                List<AttributeInfoDTO> attributeInfoDTOS = attributeService.listPublishedAttribute((int)entityPO.getId());
-                attributeInfoDTOS = attributeInfoDTOS.stream().filter(i -> i.getDomainId() != null).collect(Collectors.toList());
-                finalSql = this.buildMerge(attributeInfoDTOS,attributeList, stgTableName, mdmTableName, dto.versionId);
+                finalSql = this.buildMerge(attributeList, stgTableName, mdmTableName, dto.versionId);
                 break;
             case ORACLE:
                 break;
@@ -623,71 +733,46 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         return finalSql;
     }
 
-    String buildMerge(List<AttributeInfoDTO> attributeInfoDTOS,List<AccessAttributeDTO> attributeList, String souceTableName, String targetTableName, Integer versionId) {
+    String buildMerge(List<AccessAttributeDTO> attributeList,String souceTableName,String targetTableName,Integer versionId) {
         //获取stg表列名
         List<String> sourceColumnNames = attributeList.stream()
-                .map(i -> "\"" + i.getFieldName() + "\"")
+                .map(i->"\""+i.getFieldName() +"\"")
                 .collect(Collectors.toList());
         //获取mdm表列名
         List<String> targetColumnNames = attributeList.stream()
-                .map(i -> "\"" + i.getMdmFieldName() + "\"")
+                .map(i->"\""+i.getMdmFieldName()+"\"")
                 .collect(Collectors.toList());
         //获取主键
         List<AccessAttributeDTO> businessKeys = attributeList.stream().filter(i -> i.getBusinessKey() == 1).collect(Collectors.toList());
         //如果code是主键就正常同步如果code非主键则添加code并自动生成uuid
         List<AccessAttributeDTO> code = businessKeys.stream().filter(i -> i.getFieldName().equals("code")).collect(Collectors.toList());
         boolean flag = false;
-        if (CollectionUtils.isEmpty(code)) {
+        if (CollectionUtils.isEmpty(code)){
             flag = true;
         }
-        String prefix = "a";
         StringBuilder str = new StringBuilder();
         //调用存储过程并拼接同步sql
         str.append("call \"public\".\"sync_mdm_table\"('DECLARE\nsource_row RECORD;\n");
         str.append("BEGIN\n");
         str.append("    FOR source_row IN SELECT\n");
-        str.append("    "+prefix+".fidata_version_id,\n");
-        str.append("    "+prefix+".fidata_create_time,\n");
-        str.append("    "+prefix+".fidata_create_user,\n");
-        str.append("    "+prefix+".fidata_del_flag,\n");
-        str.append("    "+prefix+".fidata_batch_code,\n");
-        if (flag) {
-            str.append("    "+prefix+".\"code\",\n");
+        str.append("    fidata_version_id,\n");
+        str.append("    fidata_create_time,\n");
+        str.append("    fidata_create_user,\n");
+        str.append("    fidata_del_flag,\n");
+        str.append("    fidata_batch_code,\n");
+        if(flag){
+            str.append("    \"code\",\n");
         }
-        List<String> collect1 = sourceColumnNames.stream().map(i -> prefix + "." + i).collect(Collectors.toList());
-        int num = 1;
-        if (CollectionUtils.isNotEmpty(attributeInfoDTOS)){
-            for (AttributeInfoDTO attributeInfoDTO : attributeInfoDTOS) {
-                sourceColumnNames.add("\"" + attributeInfoDTO.getName() + "\"");
-                targetColumnNames.add("\"" + attributeInfoDTO.getColumnName() + "\"");
-                collect1.add(prefix+num+ ".fidata_id as " + attributeInfoDTO.getName());
-                num++;
-            }
-        }
-        num = 1;
-        str.append("    " + org.apache.commons.lang.StringUtils.join(collect1, ",\n    ") + "\n");
+        str.append("    "+org.apache.commons.lang.StringUtils.join(sourceColumnNames, ",\n    ")+"\n");
 
         str.append("  FROM\n");
-        str.append("    \"" + souceTableName + "\" "+prefix+"\n");
-
-        if (CollectionUtils.isNotEmpty(attributeInfoDTOS)){
-            List<Integer> entityIds = attributeInfoDTOS.stream().map(AttributeInfoDTO::getDomainEntityId).collect(Collectors.toList());
-            LambdaQueryWrapper<EntityPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.in(EntityPO::getId,entityIds);
-            Map<Integer, String> tableMap = attributeInfoDTOS.stream().collect(Collectors.toMap(AttributeInfoDTO::getDomainEntityId, AttributeInfoDTO::getName));
-            List<EntityPO> entityPOS = entityMapper.selectList(queryWrapper);
-            for (EntityPO item : entityPOS) {
-                str.append("  LEFT JOIN \""+item.getTableName()+"\" "+prefix+num+" ON "+prefix+".fidata_version_id = "+prefix+num+".fidata_version_id \n" +
-                        " AND "+prefix+".\""+tableMap.get((int)item.id)+"\" = "+prefix+num+".column_code");
-                num++;
-            }
-        }
+        str.append("    \""+souceTableName+"\"\n");
         str.append("  WHERE\n");
-        str.append("    "+prefix+".fidata_batch_code = ''${fidata_batch_code}''\n");
-        str.append("    AND "+prefix+".fidata_version_id = ''" + versionId + "''\n");
+        str.append("    fidata_batch_code = ''${fidata_batch_code}''\n");
+        str.append("    AND fidata_version_id = ''"+versionId+"''\n");
         str.append("  LOOP\n");
         str.append("    BEGIN\n");
-        str.append("        UPDATE \"" + targetTableName + "\"\n");
+        str.append("        UPDATE \""+targetTableName+"\"\n");
         str.append("        SET\n");
         str.append("        fidata_version_id = source_row.fidata_version_id,\n");
         str.append("        fidata_create_time = source_row.fidata_create_time,\n");
@@ -696,33 +781,25 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         str.append("        fidata_update_user = source_row.fidata_create_user,\n");
         str.append("        fidata_del_flag = source_row.fidata_del_flag,\n");
         str.append("        fidata_batch_code = source_row.fidata_batch_code,\n");
-        if (flag) {
+        if(flag){
             str.append("        column_code = uuid_generate_v4(),\n");
         }
-        if (CollectionUtils.isNotEmpty(attributeInfoDTOS)){
-            for (AttributeInfoDTO attributeInfoDTO : attributeInfoDTOS) {
-                AccessAttributeDTO accessAttributeDTO = new AccessAttributeDTO();
-                accessAttributeDTO.setMdmFieldName(attributeInfoDTO.getColumnName());
-                accessAttributeDTO.setFieldName(attributeInfoDTO.getName());
-                attributeList.add(accessAttributeDTO);
-            }
-        }
-        str.append(attributeList.stream().map(i ->
-                "       \"" + i.getMdmFieldName() + "\" = source_row.\"" + i.getFieldName() + "\""
+        str.append(attributeList.stream().map(i->
+                "       \""+i.getMdmFieldName()+"\" = source_row.\""+i.getFieldName()+"\""
         ).collect(Collectors.joining(",\n")));
         str.append("\n      WHERE\n");
-        str.append("        fidata_version_id = ''" + versionId + "''\n");
-        str.append(businessKeys.stream().map(i ->
-                "        AND \"" + i.getMdmFieldName() + "\" = source_row.\"" + i.getFieldName() + "\"").collect(Collectors.joining(",\n")));
+        str.append("        fidata_version_id = ''"+versionId+"''\n");
+        str.append(businessKeys.stream().map(i->
+                "        AND \""+i.getMdmFieldName()+"\" = source_row.\""+i.getFieldName()+"\"").collect(Collectors.joining(",\n")));
         str.append(";\n");
         str.append("      IF\n");
         str.append("        NOT FOUND THEN\n");
 
-        str.append("          insert into \"" + targetTableName + "\" (");
+        str.append("          insert into \"" + targetTableName+"\" (");
 
 
         str.append("fidata_version_id, fidata_create_time, fidata_create_user, fidata_del_flag, fidata_batch_code,");
-        if (flag) {
+        if(flag){
             str.append("\"column_code\",");
         }
         str.append(org.apache.commons.lang.StringUtils.join(targetColumnNames, ","));
@@ -736,7 +813,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         str.append("            source_row.fidata_create_user,\n");
         str.append("            source_row.fidata_del_flag,\n");
         str.append("            source_row.fidata_batch_code,\n");
-        if (flag) {
+        if(flag){
             str.append("            uuid_generate_v4(),\n");
         }
         str.append(columnNames);
@@ -749,19 +826,42 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             str1.append("%");
             return str1;
         }).collect(Collectors.joining(","));
-        if (flag) {
-            collect += ",%";
+        if(flag){
+            collect+=",%";
         }
-        str.append("      RAISE NOTICE''Duplicate key value (" + collect + ") found. Skipping.'',");
-        if (flag) {
+        str.append("      RAISE NOTICE''Duplicate key value ("+collect+") found. Skipping.'',");
+        if(flag){
             str.append("source_row.\"code\",");
         }
         str.append(businessKeys.stream().map(i ->
-                "source_row.\"" + i.getFieldName() + "\"").collect(Collectors.joining(",")));
+                "source_row.\"" + i.getFieldName()+"\"").collect(Collectors.joining(",")));
         str.append(";\n    END;\n");
         str.append("  END LOOP;')\n");
         return str.toString();
 
     }
 
+
+    /**
+     * SQL拼接关联表
+     *
+     * @param relations
+     * @return
+     */
+    public String appendRelateTable(List<TableSourceRelationsDTO> relations) {
+        ResultEntity<List<DataSourceDTO>> all = userClient.getAll();
+        if (all.getCode() != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(all.data)) {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        List<DataSourceDTO> dataSourceDTOS = all.data.stream().filter(i -> i.getSourceType() == 1 && i.getSourceBusinessType() == SourceBusinessTypeEnum.MDM).collect(Collectors.toList());
+
+        if (dataSourceDTOS.get(0).conType.getValue() == DataBaseTypeEnum.MYSQL.getValue()) {
+            List<TableSourceRelationsDTO> fullJoin = relations.stream().filter(e -> RelateTableTypeEnum.FULL_JOIN.getName().equals(e.joinType)).collect(Collectors.toList());
+            if (!org.springframework.util.CollectionUtils.isEmpty(fullJoin)) {
+                throw new FkException(ResultEnum.NOT_SUPPORT_FULL_JOIN);
+            }
+        }
+        IBuildDataModelSqlCommand command = BuildDataModelHelper.getDBCommand(dataSourceDTOS.get(0).conType);
+        return command.buildAppendRelationTable(relations);
+    }
 }

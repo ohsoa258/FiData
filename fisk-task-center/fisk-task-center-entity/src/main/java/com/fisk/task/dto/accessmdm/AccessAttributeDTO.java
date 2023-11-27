@@ -34,7 +34,11 @@ public class AccessAttributeDTO {
      */
     public String fieldName;
     /**
-     * stg字段名字
+     * mdm字段名字
      */
     public String mdmFieldName;
+    /**
+     * 映射类型1:基础映射:2基于域映射
+     */
+    public Integer mappingType;
 }
