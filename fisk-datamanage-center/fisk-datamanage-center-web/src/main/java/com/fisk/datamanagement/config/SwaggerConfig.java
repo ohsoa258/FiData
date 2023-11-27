@@ -56,6 +56,7 @@ public class SwaggerConfig {
     public static final String MetadataAttribute = "元数据属性";
     public static final String AZURE_SERVER = "Azure服务 OpenAI";
     public static final String EXPORT_TEMPLATE = "元数据导出模板";
+    public static final String BUSINESS_Category = "指标数据对象";
 
     public static final String STANDARDS = "数据标准";
 
@@ -89,6 +90,7 @@ public class SwaggerConfig {
                 .tags(new Tag(AZURE_SERVER, "Azure服务 OpenAI"))
                 .tags(new Tag(EXPORT_TEMPLATE, "元数据导出模板"))
                 .tags(new Tag(STANDARDS,"数据标准"))
+                .tags(new Tag(BUSINESS_Category, "指标数据对象"))
                 .securityContexts(securityContexts());
     }
 
