@@ -238,7 +238,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", "", dto.current, dto.size);
                 dto.executeSql = buildQuerySchemaSql;
             }
+            log.info("数据库运维执行的sql语句：" + dto.executeSql);
             boolean execute = st.execute(dto.executeSql);
+            log.info("数据库运维执行的结果：" + execute);
             if (execute) {
                 executeResultVO.setExecuteType(1);
                 ResultSet rs = st.getResultSet();
