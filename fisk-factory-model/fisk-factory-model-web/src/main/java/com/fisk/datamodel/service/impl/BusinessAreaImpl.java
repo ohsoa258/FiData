@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
@@ -204,7 +205,7 @@ public class BusinessAreaImpl
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(dto.businessName);
             classificationInfoDto.setDescription(dto.businessDes);
-            classificationInfoDto.setSourceType(2);
+            classificationInfoDto.setSourceType(ClassificationTypeEnum.ANALYZE_DATA);
             classificationInfoDto.setDelete(false);
             try {
                 dataManageClient.appSynchronousClassification(classificationInfoDto);
@@ -336,7 +337,7 @@ public class BusinessAreaImpl
                 ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
                 classificationInfoDto.setName(model.getBusinessName());
                 classificationInfoDto.setDescription(model.getBusinessDes());
-                classificationInfoDto.setSourceType(2);
+                classificationInfoDto.setSourceType(ClassificationTypeEnum.ANALYZE_DATA);
                 classificationInfoDto.setDelete(true);
                 try {
                     dataManageClient.appSynchronousClassification(classificationInfoDto);
