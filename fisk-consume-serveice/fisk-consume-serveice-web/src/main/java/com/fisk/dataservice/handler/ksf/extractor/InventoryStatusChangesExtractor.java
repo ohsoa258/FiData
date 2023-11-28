@@ -1,6 +1,6 @@
 package com.fisk.dataservice.handler.ksf.extractor;
 
-import com.fisk.dataservice.dto.ksfwebservice.Inventory.InventoryStatusChangesDTO;
+import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChangesDTO;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.ResultSetExtractor;
 

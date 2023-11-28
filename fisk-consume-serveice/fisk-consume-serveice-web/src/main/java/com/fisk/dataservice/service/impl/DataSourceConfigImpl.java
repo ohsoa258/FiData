@@ -150,7 +150,7 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
 
         //过滤数据
         Optional<DataSourceDTO> first = allFiDataDataSource.stream()
-                .filter(e -> e.conDbname.equals(dto.dbName)).findFirst();
+                .filter(e -> e.name.equals(dto.dbName)).findFirst();
         if (!first.isPresent()) {
             return new ArrayList<>();
         }

@@ -1,15 +1,15 @@
-package com.fisk.dataservice.dto.ksfwebservice.item;
+package com.fisk.dataservice.dto.ksfwebservice.Inventory;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
 /**
  * @Author: wangjian
- * 物料主数据
+ * 库存状态变更
  * @Date: 2023-10-24
  * @Description:
  */
 
-public class ItemDataDTO {
+public class InventoryStatusChangesDTO {
     @JSONField(name = "SourceSys")
     private String SourceSys;
     @JSONField(name = "TargetSys")
@@ -60,4 +60,5 @@ public class ItemDataDTO {
     public void setData(Data data) {
         Data = data;
     }
+
 }
