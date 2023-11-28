@@ -2,16 +2,16 @@ package com.fisk.dataservice.handler.ksf.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataservice.dto.ksfwebservice.item.Data;
-import com.fisk.dataservice.dto.ksfwebservice.item.ItemData;
-import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
+import com.fisk.dataservice.dto.ksfwebservice.notice.Data;
+import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeData;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeDetail;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
-import com.fisk.dataservice.entity.*;
+import com.fisk.dataservice.entity.TableApiParameterPO;
+import com.fisk.dataservice.entity.TableApiServicePO;
+import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
 import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.system.client.UserClient;
@@ -21,13 +21,19 @@ import org.apache.axis.client.Call;
 import org.apache.axis.client.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.xml.namespace.QName;
 import java.net.URL;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.groupingBy;
 
 /**
  * @Author: wangjian
@@ -65,7 +71,7 @@ public class KsfNotice extends KsfWebServiceHandler {
         }
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        List<ItemData> resultJsonData = null;
+        List<NoticeData> resultJsonData = null;
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
@@ -93,10 +99,12 @@ public class KsfNotice extends KsfWebServiceHandler {
 
                 String[] split = tableApiServicePO.getSqlScript().split(";");
                 String systemDataSql = split[0].replace("${startTime}", startTime).replace("${endTime}", endTime);
-                String statusChangesSql = split[1].replace("${startTime}", startTime).replace("${endTime}", endTime);
+                String noticeDataSql = split[1].replace("${startTime}", startTime).replace("${endTime}", endTime);
+                String noticeDetailSql = split[2].replace("${startTime}", startTime).replace("${endTime}", endTime);
                 ResultSet systemData = st1.executeQuery(systemDataSql);
-                ResultSet items = st2.executeQuery(statusChangesSql);
-                resultJsonData = assembleInventoryStatusChangesDTO(systemData, items);
+                ResultSet noticeData = st2.executeQuery(noticeDataSql);
+                ResultSet noticeDetail = st3.executeQuery(noticeDetailSql);
+                resultJsonData = assembleInventoryStatusChangesDTO(systemData, noticeData,noticeDetail);
                 number = resultJsonData.size();
                 apiResultDTO.setNumber(number);
             } catch (Exception e) {
@@ -224,116 +232,105 @@ public class KsfNotice extends KsfWebServiceHandler {
 
         return apiResultDTO;
     }
-    public List<ItemData> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
-//        Map<String, ItemData> dtoMap = new HashMap<>();
-//        // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
-//        while (resultSet1.next()) {
-//            String batchCode = resultSet1.getString("fidata_batch_code");
-//
-//            ItemData dto = dtoMap.get(batchCode);
-//            if (dto == null) {
-//                dto = new ItemData();
-//                dto.setSourceSys(resultSet1.getString("sourcesys"));
-//                dto.setTargetSys(resultSet1.getString("targetsys"));
-//                dto.setPushSeqNo((int) System.currentTimeMillis());
-//                dto.setWMSID("ZTJ1");
-//                dto.setData(new Data());
-//                dtoMap.put(batchCode, dto);
-//            }
-//        }
-//        Map<String,Map<String, List<NoticeDetail>>> detailMap = new HashMap<>();
-//        // 遍历第三个结果集，将子表数据组装到对应的父表对象中
-//        Map<String, List<NoticeDetail>> detailMap1 = new HashMap<>();
-//        while (resultSet3.next()) {
-//            String batchCode = resultSet3.getString("fidata_batch_code");
-//            Map<String, List<NoticeDetail>> dto = detailMap.get(batchCode);
-//            if (dto != null){
-//                //单据号
-//                List<NoticeDetail> noticeDetails = resultSet3.getString("ebeln");
-//                detailMap1.get()
-//
-//                detailMap.put(batchCode,)
-//            }else {
-//                List<NoticeDetail> lsit = new ArrayList<>();
-//                NoticeDetail noticeDetail = new NoticeDetail();
-//                noticeDetail.setEBELN(resultSet3.getString("ebeln"));
-//                noticeDetail.setEINDT(resultSet3.getString("eindt"));
-//                noticeDetail.setPOSNR(resultSet3.getString("posnr"));
-//                noticeDetail.setLTEXT(resultSet3.getString("ltext"));
-//                noticeDetail.setPSTYV(resultSet3.getString("pstyv"));
-//                noticeDetail.setMATNR(resultSet3.getString("matnr"));
-//                noticeDetail.setMENGE(resultSet3.getString("menge"));
-//                noticeDetail.setMEINS(resultSet3.getString("meins"));
-//                noticeDetail.setNETPR(resultSet3.getString("netpr"));
-//                noticeDetail.setWERKS(resultSet3.getString("werks"));
-//                noticeDetail.setNAME1(resultSet3.getString("name1"));
-//                noticeDetail.setLGORT(resultSet3.getString("lgort"));
-//                noticeDetail.setLGOBE(resultSet3.getString("lgobe"));
-//                noticeDetail.setINSMK(resultSet3.getString("insmk"));
-//                noticeDetail.setCHARG(resultSet3.getString("charg"));
-//                lsit.add(noticeDetail);
-//                detailMap1.put(resultSet3.getString("ebeln"),lsit);
-//            }
-//        }
-//
-//
-//        // 遍历第二个结果集，将子表数据组装到对应的父表对象中
-//        while (resultSet2.next()) {
-//            String batchCode = resultSet2.getString("fidata_batch_code");
-//
-//            ItemData dto = dtoMap.get(batchCode);
-//            if (dto != null) {
-//                Data data = dto.getData();
-//                if (data.getKsfGoods() == null) {
-//                    data.setKsfGoods(new ArrayList<>());
-//                }
-//
-//                KsfGoods ksfGoods = new KsfGoods();
-//                // 设置其他字段的值
-//                ksfGoods.setMTART(resultSet2.getString("mtart"));
-//                ksfGoods.setMTBEZ(resultSet2.getString("mtbez"));
-//                ksfGoods.setMATNR(resultSet2.getString("matnr"));
-//                ksfGoods.setMAKTX(resultSet2.getString("maktx"));
-//                ksfGoods.setNORMT(resultSet2.getString("normt"));
-//                ksfGoods.setMEINS(resultSet2.getString("meins"));
-//                ksfGoods.setVBAMG(resultSet2.getString("vbamg"));
-//                data.getKsfGoods().add(ksfGoods);
-//            }
-//        }
-//
-//        while (resultSet3.next()) {
-//            String batchCode = resultSet3.getString("fidata_batch_code");
-//
-//            ItemData dto = dtoMap.get(batchCode);
-//            if (dto != null) {
-//                Data data = dto.getData();
-//                if (data.getKsfGoods() == null) {
-//                    data.setKsfGoods(new ArrayList<>());
-//                }
-//
-//                KsfGoods ksfGoods = new KsfGoods();
-//                // 设置其他字段的值
-//                ksfGoods.setMTART(resultSet2.getString("mtart"));
-//                ksfGoods.setMTBEZ(resultSet2.getString("mtbez"));
-//                ksfGoods.setMATNR(resultSet2.getString("matnr"));
-//                ksfGoods.setMAKTX(resultSet2.getString("maktx"));
-//                ksfGoods.setNORMT(resultSet2.getString("normt"));
-//                ksfGoods.setMEINS(resultSet2.getString("meins"));
-//                ksfGoods.setVBAMG(resultSet2.getString("vbamg"));
-//                data.getKsfGoods().add(ksfGoods);
-//            }
-//        }
-//
-//        // 设置 DocCount 属性为 MATDOCTAB 的 size
-//        for (ItemData dto : dtoMap.values()) {
-//            Data data = dto.getData();
-//            if (data != null && data.getKsfGoods() != null) {
-//                data.setDocCount(data.getKsfGoods().size());
-//            }
-//        }
-//        resultSet1.close();
-//        resultSet2.close();
-//        return new ArrayList<>(dtoMap.values());
-        return null;
+    public List<NoticeData> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2, ResultSet resultSet3) throws SQLException {
+        Map<String, NoticeData> dtoMap = new HashMap<>();
+        // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
+        while (resultSet1.next()) {
+            String batchCode = resultSet1.getString("fidata_batch_code");
+
+            NoticeData dto = dtoMap.get(batchCode);
+            if (dto == null) {
+                dto = new NoticeData();
+                dto.setSourceSys(resultSet1.getString("sourcesys"));
+                dto.setTargetSys(resultSet1.getString("targetsys"));
+                dto.setPushSeqNo((int) System.currentTimeMillis());
+                dto.setWMSID("ZTJ1");
+                dto.setData(new Data());
+                dtoMap.put(batchCode, dto);
+            }
+        }
+        Map<String,Map<String, List<NoticeDetail>>> detailMap = new HashMap<>();
+        // 遍历第三个结果集，将子表数据组装到对应的父表对象中
+
+        Map<String,List<NoticeDetail>> noticeMap = new HashMap<>();
+        while (resultSet3.next()) {
+            String batchCode = resultSet1.getString("fidata_batch_code");
+            List<NoticeDetail> details = noticeMap.get(batchCode);
+
+            NoticeDetail noticeDetail = new NoticeDetail();
+            noticeDetail.setEBELN(resultSet3.getString("ebeln"));
+            noticeDetail.setEINDT(resultSet3.getString("eindt"));
+            noticeDetail.setPOSNR(resultSet3.getString("posnr"));
+            noticeDetail.setLTEXT(resultSet3.getString("ltext"));
+            noticeDetail.setPSTYV(resultSet3.getString("pstyv"));
+            noticeDetail.setMATNR(resultSet3.getString("matnr"));
+            noticeDetail.setMENGE(resultSet3.getString("menge"));
+            noticeDetail.setMEINS(resultSet3.getString("meins"));
+            noticeDetail.setNETPR(resultSet3.getString("netpr"));
+            noticeDetail.setWERKS(resultSet3.getString("werks"));
+            noticeDetail.setNAME1(resultSet3.getString("name1"));
+            noticeDetail.setLGORT(resultSet3.getString("lgort"));
+            noticeDetail.setLGOBE(resultSet3.getString("lgobe"));
+            noticeDetail.setINSMK(resultSet3.getString("insmk"));
+            noticeDetail.setCHARG(resultSet3.getString("charg"));
+            if (details == null) {
+                details = new ArrayList<>();
+                details.add(noticeDetail);
+                noticeMap.put(batchCode, details);
+            }else {
+                details.add(noticeDetail);
+                noticeMap.put(batchCode, details);
+            }
+        }
+
+        for (Map.Entry<String, List<NoticeDetail>> stringListEntry : noticeMap.entrySet()) {
+            Map<String, List<NoticeDetail>> ebelnToDetails = stringListEntry.getValue().stream().collect(groupingBy(NoticeDetail::getEBELN));
+            detailMap.put(stringListEntry.getKey(),ebelnToDetails);
+        }
+
+        // 遍历第二个结果集，将子表数据组装到对应的父表对象中
+        while (resultSet2.next()) {
+            String batchCode = resultSet2.getString("fidata_batch_code");
+            NoticeData noticeData = dtoMap.get(batchCode);;
+            if (noticeData != null) {
+                Data data = noticeData.getData();
+                if (data.getKsfNotices() == null) {
+                    data.setKsfNotices(new ArrayList<>());
+                }
+
+                com.fisk.dataservice.dto.ksfwebservice.notice.KsfNotice ksfNotice = new com.fisk.dataservice.dto.ksfwebservice.notice.KsfNotice();
+                // 设置其他字段的值
+                String ebeln = resultSet2.getString("ebeln");
+                ksfNotice.setBSART(resultSet2.getString("bsart"));
+                ksfNotice.setEBELN(ebeln);
+                ksfNotice.setLGPLA(resultSet2.getString("lgpla"));
+                ksfNotice.setVTXTK(resultSet2.getString("vtxtk"));
+                ksfNotice.setLIFNR(resultSet2.getString("lifnr"));
+                ksfNotice.setNAME1(resultSet2.getString("name1"));
+                ksfNotice.setKUNAG(resultSet2.getString("kunag"));
+                ksfNotice.setKUNNR(resultSet2.getString("kunnr"));
+                ksfNotice.setNAME2(resultSet2.getString("name2"));
+                ksfNotice.setHTEXT(resultSet2.getString("htext"));
+                ksfNotice.setBUDAT(resultSet2.getString("budat"));
+                Map<String, List<NoticeDetail>> stringListMap = detailMap.get(batchCode);
+                if (!CollectionUtils.isEmpty(stringListMap)){
+                    List<NoticeDetail> noticeDetails = stringListMap.get(ebeln);
+                    ksfNotice.setDETAIL(noticeDetails);
+                }
+
+                data.getKsfNotices().add(ksfNotice);
+            }
+        }
+
+        // 设置 DocCount 属性为 MATDOCTAB 的 size
+        for (NoticeData dto : dtoMap.values()) {
+            Data data = dto.getData();
+            if (data != null && data.getKsfNotices() != null) {
+                data.setDocCount(data.getKsfNotices().size());
+            }
+        }
+        resultSet1.close();
+        resultSet2.close();
+        return new ArrayList<>(dtoMap.values());
     }
 }

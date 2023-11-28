@@ -1,7 +1,6 @@
 package com.fisk.dataservice.dto.ksfwebservice.notice;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fisk.dataservice.dto.ksfwebservice.item.Data;
 
 /**
  * @Author: wangjian
@@ -22,4 +21,43 @@ public class NoticeData {
     @JSONField(name = "Data")
     private Data Data;
 
+    public String getSourceSys() {
+        return SourceSys;
+    }
+
+    public void setSourceSys(String sourceSys) {
+        SourceSys = sourceSys;
+    }
+
+    public String getTargetSys() {
+        return TargetSys;
+    }
+
+    public void setTargetSys(String targetSys) {
+        TargetSys = targetSys;
+    }
+
+    public Integer getPushSeqNo() {
+        return PushSeqNo;
+    }
+
+    public void setPushSeqNo(Integer pushSeqNo) {
+        PushSeqNo = pushSeqNo;
+    }
+
+    public String getWMSID() {
+        return WMSID;
+    }
+
+    public void setWMSID(String WMSID) {
+        this.WMSID = WMSID;
+    }
+
+    public Data getData() {
+        return Data;
+    }
+
+    public void setData(Data data) {
+        Data = data;
+    }
 }

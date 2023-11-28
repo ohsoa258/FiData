@@ -122,14 +122,24 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             switch (SpecialTypeEnum.getEnum(data.specialType)){
                 case KSF_NOTICE:
                     data.setApiName("ksf_notice");
-                    data.setSqlScript("");
+                    data.setSqlScript("select * from ods_sap_ksf_notice " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP " +
+                            "AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP; " +
+                            "select * from ods_sap_headers WHERE fidata_batch_code in " +
+                            "(select fidata_batch_code from ods_sap_ksf_notice " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
+                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);" +
+                            " select * from ods_sap_details WHERE fidata_batch_code in (select fidata_batch_code" +
+                            " from ods_sap_ksf_notice " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
+                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
                     break;
                 case KSF_ITEM_DATA:
                     data.setApiName("ksf_item_data");
-                    data.setSqlScript("select * from ods_sap_itemdata " +
+                    data.setSqlScript("select * from ods_sap_ksf_inventory_sys " +
                             "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
                             " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP;" +
-                            " select * from ods_sap_item_sys WHERE fidata_batch_code in " +
+                            " select * from ods_sap_itemdata WHERE fidata_batch_code in " +
                             "(select fidata_batch_code from ods_sap_ksf_inventory_sys " +
                             "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
                             " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
