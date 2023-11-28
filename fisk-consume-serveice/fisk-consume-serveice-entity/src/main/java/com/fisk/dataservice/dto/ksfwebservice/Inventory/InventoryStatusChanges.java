@@ -9,7 +9,7 @@ import com.alibaba.fastjson.annotation.JSONField;
  * @Description:
  */
 
-public class InventoryStatusChangesDTO {
+public class InventoryStatusChanges {
     @JSONField(name = "SourceSys")
     private String SourceSys;
     @JSONField(name = "TargetSys")
