@@ -1,4 +1,4 @@
-package com.fisk.dataservice.dto.ksfwebservice.Inventory;
+package com.fisk.dataservice.dto.ksfwebservice.inventory;
 
 import com.alibaba.fastjson.annotation.JSONField;
 

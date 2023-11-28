@@ -100,8 +100,8 @@ public class KsfNotice extends KsfWebServiceHandler {
                 String[] split = tableApiServicePO.getSqlScript().split(";");
                 String systemDataSql = split[0].replace("${startTime}", startTime).replace("${endTime}", endTime);
                 String statusChangesSql = split[1].replace("${startTime}", startTime).replace("${endTime}", endTime);
-                ResultSet systemData = st.executeQuery(systemDataSql);
-                ResultSet items = st1.executeQuery(statusChangesSql);
+                ResultSet systemData = st1.executeQuery(systemDataSql);
+                ResultSet items = st2.executeQuery(statusChangesSql);
                 resultJsonData = assembleInventoryStatusChangesDTO(systemData, items);
                 number = resultJsonData.size();
                 apiResultDTO.setNumber(number);
@@ -111,12 +111,15 @@ public class KsfNotice extends KsfWebServiceHandler {
                 apiResultDTO.setNumber(number);
             } finally {
                 try {
-                    assert st != null;
-                    st.close();
-                    conn.close();
                     assert st1 != null;
                     st1.close();
                     conn1.close();
+                    assert st2 != null;
+                    st2.close();
+                    conn2.close();
+                    assert st3 != null;
+                    st3.close();
+                    conn3.close();
                 } catch (SQLException e) {
                     apiResultDTO.setFlag(false);
                     apiResultDTO.setMsg("{\"error\":\"" + e.getMessage() + "\"}");
