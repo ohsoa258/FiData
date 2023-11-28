@@ -387,7 +387,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
      * @return
      */
     @Override
-    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type) {
         //业务标识覆盖方式--删除插入和追加的区别在于：多了一段delete TARGET...
         StringBuilder suffixSql =
                 new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList));
@@ -739,10 +739,11 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
      * @param tableName       真实表名
      * @param sourceTableName 来源表名（临时表名）
      * @param fieldList       前端传递的源表字段属性集合
+     * @param type       前端传递的源表字段属性集合
      * @return
      */
     @Override
-    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type) {
 //        //筛选出只有源字段的字段
 //        fieldList = fieldList.stream().filter(f -> !StringUtils.isEmpty(f.sourceFieldName)).collect(Collectors.toList());
 

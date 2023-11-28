@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
@@ -19,7 +18,6 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
-import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
@@ -530,6 +528,42 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         List<FactPO> factPOList = this.query()
                 .eq("business_id", businessId)
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .list();
+        if (CollectionUtils.isEmpty(factPOList)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (FactPO fact : factPOList) {
+
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = fact.factTableDesc;
+            table.name = fact.factTabName;
+            table.comment = String.valueOf(fact.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
+            table.displayName = fact.factTableCnName;
+            table.owner = businessAdmin;
+
+            //字段
+            table.columnList = getFactAttributeMetaData(fact.id, table);
+
+            tableList.add(table);
+        }
+
+        return tableList;
+    }
+
+    public List<MetaDataTableAttributeDTO> getFactMetaDataOfOneTbl(long businessId,
+                                                           long tblId,
+                                                           String dbQualifiedName,
+                                                           Integer dataModelType,
+                                                           String businessAdmin) {
+        List<FactPO> factPOList = this.query()
+                .eq("business_id", businessId)
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .eq("id",tblId)
                 .list();
         if (CollectionUtils.isEmpty(factPOList)) {
             return new ArrayList<>();

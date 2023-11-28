@@ -11,7 +11,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
@@ -46,6 +48,7 @@ import com.fisk.datamodel.mapper.fact.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
+import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionFolderImpl;
@@ -107,6 +110,15 @@ public class BusinessProcessImpl
     CustomScriptImpl customScript;
     @Resource
     SyncModeMapper syncModeMapper;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
+
+    @Resource
+    private DataManageClient dataManageClient;
+
+    @Resource
+    private BusinessAreaImpl businessAreaImpl;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto) {
@@ -341,12 +353,29 @@ public class BusinessProcessImpl
                 //发送消息,建表
                 log.info("数据建模发布表任务json: " + JSON.toJSONString(data));
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
+
+                //同步单表元数据
+                if (openMetadata){
+                    List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDataModelMetaData();
+                    consumeMetaData()
+
+                }
             }
         } catch (FkException ex) {
             log.error(ex.getMessage());
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 调用元数据
+     *
+     * @param list
+     */
+    private void consumeMetaData(List<MetaDataInstanceAttributeDTO> list) {
+        log.info("数仓建模构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
     }
 
     public ModelPublishFieldDTO pushField(FactAttributePO attributePo) {

@@ -1,8 +1,6 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
@@ -40,6 +38,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Lock
@@ -431,6 +430,7 @@ public interface DataAccessClient {
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 配合task模块，当平台配置修改数据源信息时，数据接入引用的数据源信息一并修改
+     *
      * @param dto
      * @return
      */
@@ -441,6 +441,7 @@ public interface DataAccessClient {
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 根据SystemDataSourceId获取数据接入引用的数据源信息
+     *
      * @param id
      * @return
      */
@@ -451,6 +452,7 @@ public interface DataAccessClient {
     /**
      * 仅供task模块远程调用--引用需谨慎！
      * 根据appId获取app应用名称
+     *
      * @param id
      * @return
      */
@@ -480,6 +482,7 @@ public interface DataAccessClient {
 
     /**
      * 仅供数据资产模块调用使用,通过tb_app_datasource表内数据的id获取系统模块对应的数据源的信息
+     *
      * @param id
      * @return
      */
@@ -490,5 +493,16 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/getAppByAppName")
     @ApiOperation(value = "根据应用名称获取单个应用详情")
     ResultEntity<AppRegistrationDTO> getAppByAppName(@RequestParam("appName") String appName);
+
+    /**
+     * 获取指定doris外部目录catalog下的所有db以及所有表
+     *
+     * @param dbID        平台配置数据库id
+     * @param catalogName 目录名
+     */
+    @ApiOperation(value = "获取指定doris外部目录catalog下的所有db以及所有表")
+    @GetMapping("/getDorisCatalogTreeByCatalogName")
+    ResultEntity<Map<String, List<String>>> getDorisCatalogTreeByCatalogName(@RequestParam("dbID") Integer dbID,
+                                                                                    @RequestParam("catalogName") String catalogName);
 
 }

@@ -5,6 +5,7 @@ import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewT
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,9 +154,167 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param fieldList       前端传递的源表字段属性集合
      */
     @Override
-    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type) {
         //获取业务标识覆盖方式标识的字段
-        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+        List<PublishFieldDTO> pkFields = new ArrayList<>();
+        if (type != null) {
+            //维度表  业务标识覆盖字段用的是isBusinessKey = 1
+            if (type == 1) {
+                pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+            } else {
+                //fact那些表  业务标识覆盖字段用的是isPrimaryKey = 1
+                pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+            }
+        }
+
+        //获取业务主键字段
+        List<PublishFieldDTO> pkFields1 = new ArrayList<>();
+        if (type != null) {
+            //维度表  主键标识用的是isPrimaryKey = 1
+            if (type == 1) {
+                pkFields1 = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+            } else {
+                //fact那些表  主键标识用的是isBusinessKey = 1
+                pkFields1 = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+            }
+        }
+
+        //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
+        StringBuilder delete = new StringBuilder();
+        delete.append("DELETE FROM ")
+                .append(tableName)
+                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' ")
+                .append("<?>");
+
+
+        //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
+        String tabNameWithoutPre = tableName.substring(tableName.indexOf("_") + 1);
+        tabNameWithoutPre = tabNameWithoutPre.replace("`", "");
+
+        //拼接insert into...
+        StringBuilder prefix = new StringBuilder("INSERT INTO " + tableName + " (");
+        //遍历字段集合
+        for (PublishFieldDTO f : fieldList) {
+            prefix.append("`")
+                    .append(f.fieldEnName)
+                    .append("`")
+                    .append(",");
+
+        }
+        prefix.append("fi_createtime,")
+                .append("fi_updatetime,")
+                .append("fidata_batch_code,`")
+                .append(tabNameWithoutPre)
+                .append("key`)");
+        //拼接insert into完毕
+
+        //拼接select...
+        StringBuilder suffix = new StringBuilder("SELECT ");
+        //遍历字段集合
+        for (PublishFieldDTO f : fieldList) {
+            if ("DATE".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else {
+                suffix.append("CAST(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(" AS ")
+                        .append(f.fieldType);
+                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                    suffix.append("(")
+                            .append(f.fieldLength)
+                            .append("))");
+                } else {
+                    suffix.append(")");
+                }
+                suffix.append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            }
+        }
+
+        suffix.append("now(),")
+                .append("now(),")
+                .append("fidata_batch_code,")
+                .append("md5(concat(\"\"lishiji))")
+                .append(" FROM ")
+                .append(sourceTableName)
+                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+        //替换lishiji为主键字段
+        String regex = "lishiji";
+        StringBuilder pkSql = new StringBuilder();
+        for (PublishFieldDTO pkField : pkFields1) {
+            pkSql.append(",`")
+                    .append(pkField.fieldEnName)
+                    .append("`");
+        }
+        suffix = new StringBuilder(suffix.toString().replaceAll(regex, String.valueOf(pkSql)));
+
+        //返回拼接完成的追加覆盖方式拼接的sql
+        return prefix + "   " + suffix;
+    }
+
+    /**
+     * 业务标识覆盖方式--merge覆盖（业务标识可以作为业务主键）--拼接的sql代码
+     *
+     * @param tableName       真实表名
+     * @param sourceTableName 来源表名（临时表名）
+     * @param fieldList       前端传递的源表字段属性集合
+     */
+    @Override
+    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type) {
+        //获取业务主键字段
+        List<PublishFieldDTO> pkFields = new ArrayList<>();
+        if (type != null) {
+            //维度表  主键标识用的是isPrimaryKey = 1
+            if (type == 1) {
+                pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+            } else {
+                //fact那些表  主键标识用的是isBusinessKey = 1
+                pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+            }
+        }
 
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
         String tabNameWithoutPre = tableName.substring(tableName.indexOf("_") + 1);
@@ -264,58 +423,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //返回拼接完成的追加覆盖方式拼接的sql
         String sql = prefix + "   " + suffix;
         return String.valueOf(sql);
-    }
-
-    /**
-     * 业务标识覆盖方式--merge覆盖（业务标识可以作为业务主键）--拼接的sql代码
-     *
-     * @param tableName       真实表名
-     * @param sourceTableName 来源表名（临时表名）
-     * @param fieldList       前端传递的源表字段属性集合
-     */
-    @Override
-    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
-        //获取业务标识覆盖方式标识的字段
-        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
-        String startSql = insertAndSelectSql(tableName, sourceTableName, fieldList);
-        startSql = startSql.substring(0, startSql.lastIndexOf(sourceTableName));
-        StringBuilder firstSql = new StringBuilder(startSql);
-        firstSql.append(sourceTableName)
-                .append(" AS source WHERE source.fidata_batch_code = '${fidata_batch_code}' AND source.fidata_flow_batch_code = '${fragment.index}' ")
-                .append("ON CONFLICT (");
-
-        //遍历业务标识覆盖方式标识的字段集合
-        for (PublishFieldDTO f : pkFields) {
-            firstSql.append("\"")
-                    .append(f.fieldEnName)
-                    .append("\"")
-                    .append(",");
-        }
-        //删除最后一个多余的逗号
-        firstSql.deleteCharAt(firstSql.lastIndexOf(","));
-        //补上最后一个括号
-        firstSql.append(") ");
-
-        //继续拼接
-        //开始拼接后半段
-        StringBuilder endSql = firstSql;
-        endSql.append("DO UPDATE ")
-                .append("SET ");
-
-        //遍历字段集合--不包含主键
-        for (PublishFieldDTO f : fieldList) {
-            endSql.append("\"")
-                    .append(f.fieldEnName)
-                    .append("\"")
-                    .append(" = EXCLUDED.")
-                    .append("\"")
-                    .append(f.fieldEnName)
-                    .append("\"")
-                    .append(",");
-        }
-        endSql.append("\"fi_updatetime\"=NOW();");
-
-        return String.valueOf(endSql);
     }
 
     /**

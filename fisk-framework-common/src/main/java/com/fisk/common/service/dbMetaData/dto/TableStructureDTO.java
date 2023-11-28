@@ -3,10 +3,13 @@ package com.fisk.common.service.dbMetaData.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * <p>
- *     表结构对象
+ * 表结构对象
  * </p>
+ *
  * @author Lock
  */
 @Data
@@ -32,4 +35,10 @@ public class TableStructureDTO {
      */
     @ApiModelProperty(value = "字段描述", required = true)
     public String fieldDes;
+
+    /**
+     * doris表名
+     */
+    @ApiModelProperty(value = "doris表名", required = true)
+    public List<String> dorisTblNames;
 }

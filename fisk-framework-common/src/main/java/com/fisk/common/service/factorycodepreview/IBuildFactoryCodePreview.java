@@ -39,7 +39,7 @@ public interface IBuildFactoryCodePreview {
      * @param fieldList       前端传递的源表字段属性集合
      * @return
      */
-    String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList);
+    String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type);
 
     /**
      * 业务标识覆盖方式--merge覆盖（业务标识可以作为业务主键）--拼接的sql代码
@@ -49,7 +49,7 @@ public interface IBuildFactoryCodePreview {
      * @param fieldList       前端传递的源表字段属性集合
      * @return
      */
-    String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList);
+    String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type);
 
     /**
      * 业务时间覆盖方式拼接的sql代码

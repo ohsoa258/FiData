@@ -3,6 +3,8 @@ package com.fisk.datagovernance.vo.dataops;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author dick
  * @version 1.0
@@ -34,4 +36,10 @@ public class DataOpsTableFieldVO {
      */
     @ApiModelProperty(value = "字段描述")
     public String fieldDes;
+
+    /**
+     * doris表名
+     */
+    @ApiModelProperty(value = "doris表名", required = true)
+    public List<String> dorisTblNames;
 }
