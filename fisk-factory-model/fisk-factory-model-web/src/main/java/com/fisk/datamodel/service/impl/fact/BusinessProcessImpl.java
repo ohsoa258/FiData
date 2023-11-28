@@ -111,8 +111,8 @@ public class BusinessProcessImpl
     @Resource
     SyncModeMapper syncModeMapper;
 
-    @Value("${open-metadata}")
-    private Boolean openMetadata;
+//    @Value("${open-metadata}")
+//    private Boolean openMetadata;
 
     @Resource
     private DataManageClient dataManageClient;
@@ -354,12 +354,12 @@ public class BusinessProcessImpl
                 log.info("数据建模发布表任务json: " + JSON.toJSONString(data));
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
 
-                //同步单表元数据
-                if (openMetadata){
-                    List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDataModelMetaData();
-//                    consumeMetaData()
-
-                }
+//                //同步单表元数据
+//                if (openMetadata){
+//                    List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDataModelMetaData();
+////                    consumeMetaData()
+//
+//                }
             }
         } catch (FkException ex) {
             log.error(ex.getMessage());
