@@ -7,7 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.ksfwebservice.item.Data;
 import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
-import com.fisk.dataservice.dto.ksfwebservice.item.ItemDataDTO;
+import com.fisk.dataservice.dto.ksfwebservice.item.ItemData;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
 import com.fisk.dataservice.entity.TableApiParameterPO;
 import com.fisk.dataservice.entity.TableApiServicePO;
@@ -69,7 +69,7 @@ public class KsfItemData extends KsfWebServiceHandler {
         }
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        List<ItemDataDTO> resultJsonData = null;
+        List<ItemData> resultJsonData = null;
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
@@ -223,15 +223,15 @@ public class KsfItemData extends KsfWebServiceHandler {
     }
 
 
-    public List<ItemDataDTO> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
-        Map<String, ItemDataDTO> dtoMap = new HashMap<>();
+    public List<ItemData> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
+        Map<String, ItemData> dtoMap = new HashMap<>();
         // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
         while (resultSet1.next()) {
             String batchCode = resultSet1.getString("fidata_batch_code");
 
-            ItemDataDTO dto = dtoMap.get(batchCode);
+            ItemData dto = dtoMap.get(batchCode);
             if (dto == null) {
-                dto = new ItemDataDTO();
+                dto = new ItemData();
                 dto.setSourceSys(resultSet1.getString("sourcesys"));
                 dto.setTargetSys(resultSet1.getString("targetsys"));
                 dto.setPushSeqNo((int) System.currentTimeMillis());
@@ -245,7 +245,7 @@ public class KsfItemData extends KsfWebServiceHandler {
         while (resultSet2.next()) {
             String batchCode = resultSet2.getString("fidata_batch_code");
 
-            ItemDataDTO dto = dtoMap.get(batchCode);
+            ItemData dto = dtoMap.get(batchCode);
             if (dto != null) {
                 Data data = dto.getData();
                 if (data.getKsfGoods() == null) {
@@ -266,7 +266,7 @@ public class KsfItemData extends KsfWebServiceHandler {
         }
 
         // 设置 DocCount 属性为 MATDOCTAB 的 size
-        for (ItemDataDTO dto : dtoMap.values()) {
+        for (ItemData dto : dtoMap.values()) {
             Data data = dto.getData();
             if (data != null && data.getKsfGoods() != null) {
                 data.setDocCount(data.getKsfGoods().size());

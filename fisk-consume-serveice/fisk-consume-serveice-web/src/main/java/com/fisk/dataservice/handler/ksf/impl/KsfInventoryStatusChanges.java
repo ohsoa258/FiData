@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.Data;
-import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChangesDTO;
+import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChanges;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.MATDOCTAB;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
 import com.fisk.dataservice.entity.*;
@@ -63,7 +63,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
         }
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        List<InventoryStatusChangesDTO> resultJsonData = null;
+        List<InventoryStatusChanges> resultJsonData = null;
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
@@ -216,15 +216,15 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
     }
 
 
-    public List<InventoryStatusChangesDTO> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
-        Map<String, InventoryStatusChangesDTO> dtoMap = new HashMap<>();
+    public List<InventoryStatusChanges> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
+        Map<String, InventoryStatusChanges> dtoMap = new HashMap<>();
         // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
         while (resultSet1.next()) {
             String batchCode = resultSet1.getString("fidata_batch_code");
 
-            InventoryStatusChangesDTO dto = dtoMap.get(batchCode);
+            InventoryStatusChanges dto = dtoMap.get(batchCode);
             if (dto == null) {
-                dto = new InventoryStatusChangesDTO();
+                dto = new InventoryStatusChanges();
                 dto.setSourceSys(resultSet1.getString("sourcesys"));
                 dto.setTargetSys(resultSet1.getString("targetsys"));
                 dto.setPushSeqNo((int) System.currentTimeMillis());
@@ -238,7 +238,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
         while (resultSet2.next()) {
             String batchCode = resultSet2.getString("fidata_batch_code");
 
-            InventoryStatusChangesDTO dto = dtoMap.get(batchCode);
+            InventoryStatusChanges dto = dtoMap.get(batchCode);
             if (dto != null) {
                 Data data = dto.getData();
                 if (data.getMATDOCTAB() == null) {
@@ -310,7 +310,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
         }
 
         // 设置 DocCount 属性为 MATDOCTAB 的 size
-        for (InventoryStatusChangesDTO dto : dtoMap.values()) {
+        for (InventoryStatusChanges dto : dtoMap.values()) {
             Data data = dto.getData();
             if (data != null && data.getMATDOCTAB() != null) {
                 data.setDocCount(data.getMATDOCTAB().size());
