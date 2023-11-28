@@ -216,8 +216,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      */
     public Connection getConnection(DataSourceDTO dto) {
         AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
-        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
-                dto.conPassword, dto.conType);
+        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
         return connection;
     }
 
@@ -407,20 +406,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //存在应用换ods数据源情况
         appRegistrationImpl.VerifySchema(registrationPo.appAbbreviation, registrationPo.targetDbId);
 
-        List<AppRegistrationPO> idList = appRegistrationImpl.query()
-                .select("id")
-                .ne("id", appId)
-                .eq("whether_schema", true)
-                .eq("app_abbreviation", registrationPo.appAbbreviation)
-                .list();
+        List<AppRegistrationPO> idList = appRegistrationImpl.query().select("id").ne("id", appId).eq("whether_schema", true).eq("app_abbreviation", registrationPo.appAbbreviation).list();
         if (CollectionUtils.isEmpty(idList)) {
             return;
         }
         List<Long> collect1 = idList.stream().map(e -> e.id).collect(Collectors.toList());
         List<TableNameVO> tableNameVoList = this.baseMapper.getAppIdAndTableName();
-        List<TableNameVO> collect = tableNameVoList.stream()
-                .filter(e -> collect1.contains(e.appId) && e.tableName.equals(tableName))
-                .collect(Collectors.toList());
+        List<TableNameVO> collect = tableNameVoList.stream().filter(e -> collect1.contains(e.appId) && e.tableName.equals(tableName)).collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(collect)) {
             throw new FkException(ResultEnum.SCHEMA_TABLE_REPEAT);
         }
@@ -615,8 +607,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldPrecision = metaData.getScale(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
-            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName)
-                    || tableName.equals("ods_" + dto.fieldName)) {
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equals(dto.fieldName) || tableName.equals("ods_" + dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
@@ -700,10 +691,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public List<TablePyhNameDTO> getTableFields(String appName) {
 
         // 1.根据应用名称查询表id
-        AppRegistrationPO modelReg = appRegistrationImpl.query()
-                .eq("app_name", appName)
-                .eq("del_flag", 1)
-                .one();
+        AppRegistrationPO modelReg = appRegistrationImpl.query().eq("app_name", appName).eq("del_flag", 1).one();
 
         // tb_app_registration表id
         long appid = modelReg.getId();
@@ -806,9 +794,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         // 2.删除tb_table_fields数据
-        List<TableFieldsPO> list = tableFieldsImpl.query()
-                .eq("table_access_id", id)
-                .list();
+        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).list();
         try {
             // 判断是否存在表字段
             if (!CollectionUtils.isEmpty(list)) {
@@ -1378,9 +1364,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public List<ChannelDataDTO> getTableId(NifiComponentsDTO nifiComponentsDto) {
 
-        List<AppRegistrationPO> allAppList = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
-                .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName)
-                .orderByDesc(AppRegistrationPO::getCreateTime));
+        List<AppRegistrationPO> allAppList = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery().select(AppRegistrationPO::getId, AppRegistrationPO::getAppName).orderByDesc(AppRegistrationPO::getCreateTime));
 
         List<AppRegistrationPO> list = new ArrayList<>();
 
@@ -1393,10 +1377,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
                     if (!CollectionUtils.isEmpty(dataSourcePo)) {
                         for (AppDataSourcePO item : dataSourcePo) {
-                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) ||
-                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) ||
-                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName()) ||
-                                    item.driveType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName())) {
+                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) || item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) || item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName()) || item.driveType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName())) {
                                 list.add(e);
                             }
                         }
@@ -1441,9 +1422,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     public List<ChannelDataDTO> getTableId() {
 
         // 查询所有app_id和app_name
-        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery()
-                .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName)
-                .orderByDesc(AppRegistrationPO::getCreateTime));
+        List<AppRegistrationPO> list = appRegistrationImpl.list(Wrappers.<AppRegistrationPO>lambdaQuery().select(AppRegistrationPO::getId, AppRegistrationPO::getAppName).orderByDesc(AppRegistrationPO::getCreateTime));
 
         // 封装app_id和appName到新的对象集合中
         List<ChannelDataDTO> channelDataDTOList = AppRegistrationMap.INSTANCES.listPoToChannelDataDto(list);
@@ -1456,14 +1435,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             for (AppDataSourcePO item : appDataSourcePo) {
                 for (ChannelDataDTO f : channelDataDTOList) {
                     if (item.appId == f.id) {
-                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())
-                                || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())) {
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())) {
                             f.type = "数据湖表任务";
                         }
                         if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
@@ -1491,8 +1463,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                         .eq(TableAccessPO::getAppId, dto.id)
                         // publish=3: 正在发布 -> 1:发布成功
 //                        .eq(TableAccessPO::getPublish, 3)
-                        .eq(TableAccessPO::getPublish, 1)
-                        .select(TableAccessPO::getId, TableAccessPO::getTableName));
+                        .eq(TableAccessPO::getPublish, 1).select(TableAccessPO::getId, TableAccessPO::getTableName));
                 List<ChannelDataChildDTO> channelDataChildDTOS = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
                 List<ChannelDataChildDTO> collect = channelDataChildDTOS.stream().map(i -> {
                     i.tableBusinessType = ChannelDataEnum.getValue(dto.type).getValue();
@@ -1505,8 +1476,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                         .eq(ApiConfigPO::getAppId, dto.id)
                         // publish=3: 正在发布 -> 1:发布成功
 //                        .eq(ApiConfigPO::getPublish, 3)
-                        .eq(ApiConfigPO::getPublish, 1)
-                        .select(ApiConfigPO::getId, ApiConfigPO::getApiName));
+                        .eq(ApiConfigPO::getPublish, 1).select(ApiConfigPO::getId, ApiConfigPO::getApiName));
                 // list: po->dto 并赋值给dto.list
                 List<ChannelDataChildDTO> channelDataChildDTOS = TableAccessMap.INSTANCES.listApiConfigPoToChannelDataChildDTO(apiConfigPoList);
                 List<ChannelDataChildDTO> collect = channelDataChildDTOS.stream().map(i -> {
@@ -1535,13 +1505,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 查询当前应用下面的所有表
         channelDataDTOList.forEach(dto -> {
             // select id,table_name from tb_table_access where app_id =#{dto.id} and del_flag = 1
-            List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery()
-                    .eq(TableAccessPO::getAppId, dto.id)
+            List<TableAccessPO> poList = this.list(Wrappers.<TableAccessPO>lambdaQuery().eq(TableAccessPO::getAppId, dto.id)
                     // publish=3: 正在发布 -> 1:发布成功
-                    .or()
-                    .eq(TableAccessPO::getPublish, 3)
-                    .eq(TableAccessPO::getPublish, 1)
-                    .select(TableAccessPO::getId, TableAccessPO::getTableName));
+                    .or().eq(TableAccessPO::getPublish, 3).eq(TableAccessPO::getPublish, 1).select(TableAccessPO::getId, TableAccessPO::getTableName));
             // list: po->dto 并赋值给dto.list
             dto.list = TableAccessMap.INSTANCES.listPoToChannelDataDto(poList);
         });
@@ -1563,13 +1529,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         // 查询当前应用下面的所有API
         channelDataDTOList.forEach(dto -> {
             // select id,api_name from tb_api_config where app_id =#{dto.id} and del_flag = 1
-            List<ApiConfigPO> poList = apiConfigImpl.list(Wrappers.<ApiConfigPO>lambdaQuery()
-                    .eq(ApiConfigPO::getAppId, dto.id)
+            List<ApiConfigPO> poList = apiConfigImpl.list(Wrappers.<ApiConfigPO>lambdaQuery().eq(ApiConfigPO::getAppId, dto.id)
                     // publish=3: 正在发布 -> 1:发布成功
-                    .or()
-                    .eq(ApiConfigPO::getPublish, 3)
-                    .eq(ApiConfigPO::getPublish, 1)
-                    .select(ApiConfigPO::getId, ApiConfigPO::getApiName));
+                    .or().eq(ApiConfigPO::getPublish, 3).eq(ApiConfigPO::getPublish, 1).select(ApiConfigPO::getId, ApiConfigPO::getApiName));
             // list: po->dto 并赋值给dto.list
             dto.list = TableAccessMap.INSTANCES.listApiConfigPoToChannelDataChildDTO(poList);
         });
@@ -1599,23 +1561,16 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         //获取表中所有字段配置数据
         QueryWrapper<TableFieldsPO> tableFieldsQueryWrapper = new QueryWrapper<>();
-        List<TableFieldsPO> tableFieldsList = fieldsMapper.selectList(tableFieldsQueryWrapper
-        );
+        List<TableFieldsPO> tableFieldsList = fieldsMapper.selectList(tableFieldsQueryWrapper);
         for (AppRegistrationDataDTO item : list) {
-            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream()
-                    .filter(e -> e.appId == item.id).collect(Collectors.toList()));
-            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils
-                    .buildOdsTableName(e.tableName, item.appAbbreviation,
-                            item.whetherSchema)).collect(Collectors.toList());
-            if (item.tableDtoList.size() == 0 || tableFieldsList == null
-                    || tableFieldsList.size() == 0) {
+            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream().filter(e -> e.appId == item.id).collect(Collectors.toList()));
+            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils.buildOdsTableName(e.tableName, item.appAbbreviation, item.whetherSchema)).collect(Collectors.toList());
+            if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
             }
             item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
-                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
-                        .poListToDtoList(tableFieldsList.stream()
-                                .filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsList.stream().filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
                 }
@@ -1670,20 +1625,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<TableFieldsPO> tableFieldsList = fieldsMapper.selectList(new QueryWrapper<>());
         // 遍历每个ods数据源
         for (AppRegistrationDataDTO item : appList) {
-            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream()
-                    .filter(e -> e.appId == item.id).collect(Collectors.toList()));
-            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils
-                    .buildOdsTableName(e.tableName, item.appAbbreviation,
-                            item.whetherSchema)).collect(Collectors.toList());
-            if (item.tableDtoList.size() == 0 || tableFieldsList == null
-                    || tableFieldsList.size() == 0) {
+            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream().filter(e -> e.appId == item.id).collect(Collectors.toList()));
+            item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils.buildOdsTableName(e.tableName, item.appAbbreviation, item.whetherSchema)).collect(Collectors.toList());
+            if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
             }
             item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
-                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES
-                        .poListToDtoList(tableFieldsList.stream()
-                                .filter(e -> e.tableAccessId != null && e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
+                tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsList.stream().filter(e -> e.tableAccessId != null && e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
                 }
@@ -1760,20 +1709,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
             wrapper.in(TableAccessPO::getAppId, ids);
             List<TableAccessPO> tableAccessPOS = list(wrapper);
-            List<TableAccessPO> posAlreadyExists = tableAccessPOS.stream()
-                    .filter(tableAccessPO -> tableName.equals(tableAccessPO.getTableName()))
-                    .collect(Collectors.toCollection(ArrayList::new));
+            List<TableAccessPO> posAlreadyExists = tableAccessPOS.stream().filter(tableAccessPO -> tableName.equals(tableAccessPO.getTableName())).collect(Collectors.toCollection(ArrayList::new));
 
             // 如果不为空
             if (!CollectionUtils.isEmpty(posAlreadyExists)) {
-                List<Long> uniqueAppIds = posAlreadyExists.stream()
-                        .map(TableAccessPO::getAppId)
-                        .distinct()
-                        .collect(Collectors.toList());
+                List<Long> uniqueAppIds = posAlreadyExists.stream().map(TableAccessPO::getAppId).distinct().collect(Collectors.toList());
 
-                ArrayList<AppRegistrationPO> collect = appsWithNoSchema.stream()
-                        .filter(appRegistrationPO -> uniqueAppIds.contains(appRegistrationPO.id))
-                        .collect(Collectors.toCollection(ArrayList::new));
+                ArrayList<AppRegistrationPO> collect = appsWithNoSchema.stream().filter(appRegistrationPO -> uniqueAppIds.contains(appRegistrationPO.id)).collect(Collectors.toCollection(ArrayList::new));
 
                 List<String> appNames = collect.stream().map(AppRegistrationPO::getAppName).collect(Collectors.toList());
                 return ResultEntityBuild.build(ResultEnum.TABLE_NAME_EXISTS, "表名存在于以下应用中：" + appNames);
@@ -1963,9 +1905,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(list.get(0).dbList.get(0).qualifiedName + "_" + po.id);
-        table.setName(TableNameGenerateUtils.buildOdsTableName(po.getTableName(),
-                app.appAbbreviation,
-                app.whetherSchema));
+        table.setName(TableNameGenerateUtils.buildOdsTableName(po.getTableName(), app.appAbbreviation, app.whetherSchema));
         table.setComment(String.valueOf(dataSourcePO.appId));
         table.setDisplayName(po.displayName);
         table.setOwner(app.appPrincipal);
@@ -2034,10 +1974,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 String columnName = metaData.getColumnLabel(i);
                 //过滤ods表中pk和code默认字段
                 String tableName = metaData.getTableName(i) + "key";
-                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName)
-                        || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase())
-                        || "fi_createtime".equalsIgnoreCase(columnName)
-                        || "fi_updatetime".equalsIgnoreCase(columnName)) {
+                if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(columnName) || tableName.equalsIgnoreCase("ods_" + columnName.toLowerCase()) || "fi_createtime".equalsIgnoreCase(columnName) || "fi_updatetime".equalsIgnoreCase(columnName)) {
                     continue;
                 }
                 //获取sql查询数据集合
@@ -2055,10 +1992,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.sourceFieldName = metaData.getColumnLabel(i);
             dto.fieldName = metaData.getColumnLabel(i);
             String tableName = metaData.getTableName(i) + "key";
-            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName)
-                    || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase())
-                    || "fi_createtime".equalsIgnoreCase(dto.fieldName)
-                    || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
+            if (NifiConstants.AttrConstants.FIDATA_BATCH_CODE.equalsIgnoreCase(dto.fieldName) || tableName.equalsIgnoreCase("ods_" + dto.fieldName.toLowerCase()) || "fi_createtime".equalsIgnoreCase(dto.fieldName) || "fi_updatetime".equalsIgnoreCase(dto.fieldName)) {
                 continue;
             }
             dto.fieldType = metaData.getColumnTypeName(i).toLowerCase();
@@ -2273,8 +2207,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             // 如果是sapbw
             if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(po.driveType)) {
                 // 获取sapbw的destination和provider
-                ProviderAndDestination providerAndDestination =
-                        DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
+                ProviderAndDestination providerAndDestination = DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
                 JCoDestination destination = providerAndDestination.getDestination();
                 MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
 
@@ -2355,9 +2288,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
      * @param fieldList
      * @param targetDbId
      */
-    public void typeConversion(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum,
-                               List<FieldNameDTO> fieldList,
-                               Integer targetDbId) {
+    public void typeConversion(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum, List<FieldNameDTO> fieldList, Integer targetDbId) {
 
         //目标数据源
         ResultEntity<DataSourceDTO> targetDataSource = userClient.getFiDataDataSourceById(targetDbId);
@@ -2415,12 +2346,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //装载业务时间覆盖需要的条件sql  2023-04-28 李世纪：该属性目前不需要了，业务时间的覆盖语句已经包含条件sql
         dto.whereScript = "";
         // 非实时物理表才有sql
-        if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
-                && !dto.driveType.getName().equals(DbTypeEnum.api.getName())
-                && !dto.driveType.getName().equals(DbTypeEnum.oracle_cdc.getName())
-                && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
-                && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())
-                && !dto.driveType.getName().equals(DbTypeEnum.webservice.getName())) {
+        if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName()) && !dto.driveType.getName().equals(DbTypeEnum.api.getName()) && !dto.driveType.getName().equals(DbTypeEnum.oracle_cdc.getName()) && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName()) && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName()) && !dto.driveType.getName().equals(DbTypeEnum.webservice.getName())) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             DataTranDTO dtDto = new DataTranDTO();
             dtDto.tableName = tableName;
@@ -2696,8 +2622,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
             long id = app.getId();
             LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(TableAccessPO::getAppId, id)
-                    .eq(TableAccessPO::getTableName, tblName);
+            wrapper.eq(TableAccessPO::getAppId, id).eq(TableAccessPO::getTableName, tblName);
             TableAccessPO one = getOne(wrapper);
             if (one == null) {
                 return null;
@@ -2727,11 +2652,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection connection = null;
         Statement statement = null;
         List<TableAccessDTO> tableAccessDTOS = new ArrayList<>();
-        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum =
-                com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(dbType);
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(dbType);
         try {
-            connection = DbConnectionHelper.connection(accessConfigDbURL, username, pwd,
-                    dataSourceTypeEnum);
+            connection = DbConnectionHelper.connection(accessConfigDbURL, username, pwd, dataSourceTypeEnum);
             statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("select * from " + tbName + "where app_id = " + appId);
 
@@ -2909,6 +2832,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             DataSourceDTO data = result.getData();
             connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
             statement = connection.createStatement();
+            //手动刷新指定的doris catalog
+            statement.executeQuery("REFRESH CATALOG " + catalogName + ";");
+            //线程休眠1秒
+            Thread.sleep(1000);
             statement.executeQuery("SWITCH " + catalogName + ";");
             databases = statement.executeQuery("SHOW DATABASES");
 
