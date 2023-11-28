@@ -21,8 +21,6 @@ import java.util.List;
  */
 public interface ITableApiService extends IService<TableApiServicePO> {
 
-    String getToken(long apiId);
-
     /**
      * 获取分页数据分发服务api
      * @param dto

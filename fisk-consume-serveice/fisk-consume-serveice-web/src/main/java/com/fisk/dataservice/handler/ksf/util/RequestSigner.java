@@ -8,6 +8,8 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.security.*;
 
@@ -21,97 +23,45 @@ import org.apache.commons.codec.digest.DigestUtils;
 import javax.net.ssl.HttpsURLConnection;
 
 public class RequestSigner {
-    public static void main(String[] args) throws IOException {
-        String source_sys_id = "KSF";
-        String secret = "b2ec161205631efcdf62318959e9b036";
-        String url = "https://esbapit.wilmar.cn/v1/example-api/example?id=1";
-        String json = "";
-        Map<String, Object> body = (Map<String, Object>) JSON.parse(json);
-        URI uri = URI.create(url);
-        Map<String, String> urlParams = getParamsFromURI(uri);
-        System.out.println("uuid:"+UUID.randomUUID());
-        // 构造请求body
-//        Map<String, Object> requestBody = new HashMap<>();
-//        requestBody.put("nickname", "zhangsan");
-//        requestBody.put("age", 18);
-//        requestBody.put("sex", null);
-//        requestBody.put("firstName", "");
-//        List<String> interests = Arrays.asList("football", "basketball");
-//        requestBody.put("interest", interests);
-//        List<Map<String, String>> cars = new ArrayList<>();
-//        Map<String, String> car1 = new HashMap<>();
-//        car1.put("brand", "Audi");
-//        car1.put("type", "A4");
-//        Map<String, String> car2 = new HashMap<>();
-//        car2.put("brand", "BMW");
-//        car2.put("type", "320I");
-//        cars.add(car1);
-//        cars.add(car2);
-//        requestBody.put("cars", cars);
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("source_sys_id", source_sys_id);
-        String l = String.valueOf(System.currentTimeMillis());
-        System.out.println("时间戳:"+l);
-        params.put("submit_time", l);
-        StringBuilder formattedString = new StringBuilder();
-
-        if (body != null){
-            formattedString.append("body=");
-            params.put("body", body);
-        }
-        for (Map.Entry<String, String> entry : urlParams.entrySet()) {
-            params.put(entry.getKey(),entry.getValue());
-        }
-
-        // 将body转换成json字符串
-        ObjectMapper mapper = new ObjectMapper();
-        String bodyJson = "";
-        try {
-            bodyJson = mapper.writeValueAsString(params);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        String stringA = convertJsonToFormattedString(bodyJson,formattedString);
-        String stringSignTemp = stringA+secret;
-        String sign = DigestUtils.sha256Hex(stringSignTemp).toUpperCase();
-        System.out.println(sign);
-//        URL url = new URL("https://esbapit.wilmar.cn/v1/example-api/users");
-//        HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-//        con.setRequestMethod("POST");
-//        con.setRequestProperty("source_sys_id", "KSF");
-//        String uuid = UUID.randomUUID().toString();
-//        System.out.println("uuid:"+uuid);
-//        con.setRequestProperty("trans_id", uuid);
+//    public static void main(String[] args) throws IOException {
+//        String source_sys_id = "KSF";
+//        String secret = "b2ec161205631efcdf62318959e9b036";
+//        String url = "https://esbapit.wilmar.cn/v1/example-api/example?id=1";
+//        String json = "";
+//        Map<String, Object> body = (Map<String, Object>) JSON.parse(json);
+//        URI uri = URI.create(url);
+//        Map<String, String> urlParams = getParamsFromURI(uri);
+//        System.out.println("uuid:"+UUID.randomUUID());
+//
+//        Map<String, Object> params = new LinkedHashMap<>();
+//        params.put("source_sys_id", source_sys_id);
 //        String l = String.valueOf(System.currentTimeMillis());
 //        System.out.println("时间戳:"+l);
-//        con.setRequestProperty("submit_time", l);
-//        con.setRequestProperty("sign", "3C58154A8657B8EA6915853CA70C3D8B3C168B13F3F5F47E5B5DF9B1C50AE595");
-//        /* Payload support */
-//        con.setDoOutput(true);
-//        DataOutputStream out = new DataOutputStream(con.getOutputStream());
-//        out.writeBytes("{\n");
-//        out.writeBytes("  \"userName\": \"张三\",\n");
-//        out.writeBytes("  \"age\": 18,\n");
-//        out.writeBytes("  \"sex\": 1,\n");
-//        out.writeBytes("  \"telephone\": \"13388888888\",\n");
-//        out.writeBytes("  \"birthday\": \"1980-09-01\"\n");
-//        out.writeBytes("}");
-//        out.flush();
-//        out.close();
+//        params.put("submit_time", l);
+//        StringBuilder formattedString = new StringBuilder();
 //
-//        int status = con.getResponseCode();
-//        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-//        String inputLine;
-//        StringBuffer content = new StringBuffer();
-//        while((inputLine = in.readLine()) != null) {
-//            content.append(inputLine);
+//        if (body != null){
+//            formattedString.append("body=");
+//            params.put("body", body);
 //        }
-//        in.close();
-//        con.disconnect();
-//        System.out.println("Response status: " + status);
-//        System.out.println(content.toString());
-    }
+//        for (Map.Entry<String, String> entry : urlParams.entrySet()) {
+//            params.put(entry.getKey(),entry.getValue());
+//        }
+//
+//        // 将body转换成json字符串
+//        ObjectMapper mapper = new ObjectMapper();
+//        String bodyJson = "";
+//        try {
+//            bodyJson = mapper.writeValueAsString(params);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        String stringA = convertJsonToFormattedString(bodyJson,formattedString);
+//        String stringSignTemp = stringA+secret;
+//        String sign = DigestUtils.sha256Hex(stringSignTemp).toUpperCase();
+//        System.out.println(sign);
+//    }
 
     // 计算SHA-256
     public static String sha256(String input) {
