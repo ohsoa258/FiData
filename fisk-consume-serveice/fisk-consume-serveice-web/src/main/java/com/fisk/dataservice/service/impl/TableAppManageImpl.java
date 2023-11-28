@@ -18,6 +18,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataservice.dto.GetConfigDTO;
 import com.fisk.dataservice.dto.tableapi.TableApiAuthRequestDTO;
+import com.fisk.dataservice.dto.tableapi.TableApiResultDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
@@ -245,8 +246,13 @@ public class TableAppManageImpl
             return i;
         }).collect(Collectors.toList());
         List<TableApiAuthRequestPO> tableApiAuthRequestPOS = TableApiAuthRequestMap.INSTANCES.listDtoToPo(apiAuthRequestDTO);
-        tableApiAuthRequestService.saveBatch(tableApiAuthRequestPOS);
-        tableApiResultService.saveApiResult(dto.getApiResultDTO(), appId);
+        if (CollectionUtils.isNotEmpty(apiAuthRequestDTO)){
+            tableApiAuthRequestService.saveBatch(tableApiAuthRequestPOS);
+        }
+        List<TableApiResultDTO> apiResultDTO = dto.getApiResultDTO();
+        if (CollectionUtils.isNotEmpty(apiResultDTO)){
+            tableApiResultService.saveApiResult(apiResultDTO, appId);
+        }
     }
 
     @Override
