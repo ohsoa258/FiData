@@ -8,7 +8,7 @@ import com.alibaba.fastjson.annotation.JSONField;
  * @Date: 2023-10-24
  * @Description:
  */
-
+//test
 public class InventoryStatusChanges {
     @JSONField(name = "SourceSys")
     private String SourceSys;
