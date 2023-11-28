@@ -80,21 +80,21 @@ public interface ConsumeServeiceClient {
      * 获取API服务&Table服务&View服务的所有应用
      * @return
      */
-    @GetMapping("/apiTableViewService/getApiService")
+    @GetMapping("/appRegister/getApiService")
     ResultEntity<List<AppBusinessInfoDTO>> getApiService();
 
     /**
      * 获取Table服务的所有应用
      * @return
      */
-    @GetMapping("/apiTableViewService/getTableService")
+    @GetMapping("/tableService/getTableService")
     ResultEntity<List<AppBusinessInfoDTO>> getTableService();
 
     /**
      * 获取View服务的所有应用
      * @return
      */
-    @GetMapping("/apiTableViewService/getViewService")
+    @GetMapping("/dataAnalysisView/getViewService")
     ResultEntity<List<AppBusinessInfoDTO>> getViewService();
 
     /**

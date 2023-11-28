@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
@@ -130,6 +131,12 @@ public class AppRegisterController {
     @GetMapping("/getApiMetaData")
     public ResultEntity<List<MetaDataEntityDTO>>   getApiMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiMetaData());
+    }
+
+    @ApiOperation("获取Api服务的所有应用")
+    @GetMapping("/getApiService")
+    public ResultEntity<List<AppBusinessInfoDTO>> getApiService() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiService());
     }
 
 }

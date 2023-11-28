@@ -2,8 +2,8 @@ package com.fisk.datamanagement.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
@@ -87,8 +87,8 @@ public class MetaDataController {
 
 
     @ApiOperation("添加数据消费元数据")
-    @PostMapping("/addConsumptionMetaData")
-    public ResultEntity<Object> addConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList){
+    @PostMapping("/syncDataConsumptionMetaData")
+    public ResultEntity<Object> syncDataConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList){
         return ResultEntityBuild.build(service.syncDataConsumptionMetaData(entityList,""));
     }
 
@@ -98,4 +98,5 @@ public class MetaDataController {
     public ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList){
         return ResultEntityBuild.build(service.deleteDataConsumptionMetaData(entityList));
     }
+
 }

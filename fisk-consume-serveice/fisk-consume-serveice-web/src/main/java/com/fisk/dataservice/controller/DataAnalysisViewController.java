@@ -4,6 +4,7 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
@@ -157,4 +158,11 @@ public class DataAnalysisViewController {
     public ResultEntity<List<MetaDataEntityDTO>> getViewServiceMetaData(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,dataViewThemeService.getViewServiceMetaData());
     }
+
+    @ApiOperation("获取View服务的所有应用")
+    @GetMapping("/getViewService")
+    public ResultEntity<List<AppBusinessInfoDTO>> getViewService() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataViewThemeService.getViewService());
+    }
+
 }

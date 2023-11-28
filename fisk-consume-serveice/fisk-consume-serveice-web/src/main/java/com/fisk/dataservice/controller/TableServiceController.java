@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -260,5 +261,11 @@ public class TableServiceController {
     @ApiOperation(value = "刷新数据分发服务结构")
     public ResultEntity<Object> setDataServiceStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataServiceStructure(dto));
+    }
+
+    @ApiOperation("获取Table服务的所有应用")
+    @GetMapping("/getTableService")
+    public ResultEntity<List<AppBusinessInfoDTO>> getTableService() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAppManageService.getTableService());
     }
 }

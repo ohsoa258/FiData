@@ -2,6 +2,7 @@ package com.fisk.dataservice.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -139,4 +140,10 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      */
     List<MetaDataEntityDTO> getApiMetaDataByIds(List<Long> ids);
 
+
+    /**
+     * 获取Api服务的所有应用
+     * @return
+     */
+    List<AppBusinessInfoDTO> getApiService();
 }

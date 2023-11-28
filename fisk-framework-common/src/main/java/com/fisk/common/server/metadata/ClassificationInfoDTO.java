@@ -1,5 +1,6 @@
 package com.fisk.common.server.metadata;
 
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import lombok.Data;
 
 /**
@@ -13,9 +14,9 @@ public class ClassificationInfoDTO {
     public String description;
 
     /**
-     * 来源类型：1数据接入 2数仓建模 3API网关, 4 视图服务 5 数据库同步服务
+     * 来源类型
      */
-    public int sourceType;
+    public ClassificationTypeEnum sourceType;
 
     /**
      * 应用类型：来源类型数据接入时 (0:实时应用  1:非实时应用) ，

@@ -109,6 +109,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Value("${dataservice.proxyservice.api_address}")
     private String proxyServiceApiAddress;
 
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
+
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
@@ -468,10 +471,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             return tableSyncModeImpl.addApiTableSyncMode(dto.syncModeDTO);
         }
 
-        //同步元数据
-        List<MetaDataEntityDTO> apiMetaData = appRegisterManage.getApiMetaDataById((long) apiId);
-        dataManageClient.syncDataConsumptionMetaData(apiMetaData);
-
         return ResultEnum.SUCCESS;
     }
 
@@ -553,10 +552,6 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             if (!isUpdate)
                 return ResultEnum.SAVE_DATA_ERROR;
         }
-
-        //同步元数据
-        List<MetaDataEntityDTO> apiMetaData = appRegisterManage.getApiMetaDataById((long) apiId);
-        dataManageClient.syncDataConsumptionMetaData(apiMetaData);
         return ResultEnum.SUCCESS;
     }
 
@@ -572,7 +567,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         int i = baseMapper.deleteByIdWithFill(model);
         if (i > 0) {
             //同步元数据
-            dataManageClient.deleteConsumptionMetaData(apiMetaDataList);
+            if (openMetadata){
+                dataManageClient.deleteConsumptionMetaData(apiMetaDataList);
+            }
             return ResultEnum.SUCCESS;
         } else {
             return ResultEnum.SAVE_DATA_ERROR;

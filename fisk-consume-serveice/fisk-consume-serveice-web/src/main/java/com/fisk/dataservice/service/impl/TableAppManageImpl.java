@@ -7,15 +7,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.GetConfigDTO;
 import com.fisk.dataservice.dto.tableapi.TableApiAuthRequestDTO;
 import com.fisk.dataservice.dto.tableservice.*;
@@ -40,6 +44,7 @@ import com.fisk.task.dto.task.BuildDeleteTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -97,6 +102,12 @@ public class TableAppManageImpl
     TableSyncModeImpl tableSyncMode;
     @Resource
     TableFieldImpl tableField;
+
+    @Resource
+    DataManageClient dataManageClient;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
 
     @Override
@@ -451,10 +462,20 @@ public class TableAppManageImpl
                 buildDeleteTableApiServiceDTO.delBusiness = true;
                 publishTaskClient.publishBuildDeleteDataServiceApi(buildDeleteTableApiServiceDTO);
             }
+            //同步元数据业务分类
+            if (openMetadata){
+                ClassificationInfoDTO classificationInfoDTO=new ClassificationInfoDTO();
+                classificationInfoDTO.setName(tableAppPO.getAppName());
+                classificationInfoDTO.setDescription(tableAppPO.getAppDesc());
+                classificationInfoDTO.setSourceType(ClassificationTypeEnum.DATA_DISTRIBUTION);
+                classificationInfoDTO.setDelete(true);
+                dataManageClient.appSynchronousClassification(classificationInfoDTO);
+            }
         } catch (Exception ex) {
             log.error("【deleteRule】ex：" + ex);
             throw new FkException(ResultEnum.ERROR, ex.getMessage());
         }
+
         return ResultEnum.SUCCESS;
     }
 
@@ -630,5 +651,21 @@ public class TableAppManageImpl
             metaDataEntityDTOList.add(metaDataEntityDTO);
         }
         return metaDataEntityDTOList;
+    }
+
+
+    @Override
+    public List<AppBusinessInfoDTO> getTableService() {
+        //封装三个服务的所有应用
+        List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
+        List<TableAppPO> tableAppPOS = this.query().list();
+        //封装Table服务的所有应用
+        tableAppPOS.stream()
+                .forEach(a -> {
+                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getAppName(),a.getAppPrincipal(),a.getAppDesc(),4);
+                    appInfos.add(infoDTO);
+                });
+
+        return appInfos;
     }
 }

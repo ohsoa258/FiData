@@ -1,7 +1,7 @@
 package com.fisk.dataservice.aop;
 
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.datamanage.DataOperationTypeEnum;
-import com.fisk.common.core.enums.datamanage.MetaDataSyncTypeEnum;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 
 import java.lang.annotation.*;
@@ -20,7 +20,7 @@ public @interface MetaDataSync {
      * 元数据同步类型
      * @return
      */
-    MetaDataSyncTypeEnum syncType() default MetaDataSyncTypeEnum.DATA_CONSUME_API;
+    ClassificationTypeEnum syncType() default ClassificationTypeEnum.API_GATEWAY_SERVICE;
 
     /**
      * 弹框:默认1添加,2修改,3删除

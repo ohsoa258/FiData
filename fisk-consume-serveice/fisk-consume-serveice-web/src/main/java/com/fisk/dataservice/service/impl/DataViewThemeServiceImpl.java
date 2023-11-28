@@ -7,17 +7,21 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewAccountDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewThemeDTO;
 import com.fisk.dataservice.entity.*;
@@ -33,6 +37,7 @@ import com.fisk.dataservice.vo.dataanalysisview.DataSourceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
@@ -81,6 +86,12 @@ public class DataViewThemeServiceImpl
 
     @Resource
     DataViewServiceImpl dataViewService;
+
+    @Resource
+    private DataManageClient dataManageClient;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -132,7 +143,6 @@ public class DataViewThemeServiceImpl
             Integer viewThemeId = baseMapper.selectViewThemeId(dto.getThemeName(), DelFlagEnum.NORMAL_FLAG.getValue());
             saveRelationAccount(dto.getRelAccountList(), viewThemeId, dataSourceDTO, null);
         }
-
         return ResultEnum.SUCCESS;
     }
 
@@ -404,7 +414,15 @@ public class DataViewThemeServiceImpl
         if (model.getWhetherSchema()) {
             removeSchema(model.getThemeAbbr(), model.getTargetDbId());
         }
-
+        //同步元数据业务分类
+        if (openMetadata){
+            ClassificationInfoDTO classificationInfoDTO=new ClassificationInfoDTO();
+            classificationInfoDTO.setName(model.getThemeName());
+            classificationInfoDTO.setDescription(model.getThemeDesc());
+            classificationInfoDTO.setSourceType(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
+            classificationInfoDTO.setDelete(true);
+            dataManageClient.appSynchronousClassification(classificationInfoDTO);
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -530,6 +548,7 @@ public class DataViewThemeServiceImpl
         // 更新账号信息
         List<DataViewAccountDTO> relAccountList = dto.getRelAccountList();
         updateRelAccountList(relAccountList, dataSourceDTO, (int) po.getId());
+
         return ResultEnum.SUCCESS;
     }
 
@@ -797,5 +816,33 @@ public class DataViewThemeServiceImpl
         metaDataEntityDTO.setOwner(dataViewThemePO.getThemePrincipal());
         metaDataEntityDTO.setAppName(dataViewThemePO.getThemeName());
         return metaDataEntityDTO;
+    }
+
+
+    @Override
+    public List<AppBusinessInfoDTO> getViewService() {
+        //封装三个服务的所有应用
+        List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
+        List<DataViewThemePO> viewThemeAppPOS = this.query().list();
+        //封装View服务的所有应用
+        viewThemeAppPOS.stream()
+                .forEach(a -> {
+                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),5);
+                    appInfos.add(infoDTO);
+                });
+        return appInfos;
+    }
+
+    public List<AppBusinessInfoDTO> getViewServiceByViewThemeName(String themeName){
+        //封装三个服务的所有应用
+        List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
+        List<DataViewThemePO> viewThemeAppPOS = this.query().eq("themeName",themeName).list();
+        //封装View服务的所有应用
+        viewThemeAppPOS.stream()
+                .forEach(a -> {
+                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),5);
+                    appInfos.add(infoDTO);
+                });
+        return appInfos;
     }
 }

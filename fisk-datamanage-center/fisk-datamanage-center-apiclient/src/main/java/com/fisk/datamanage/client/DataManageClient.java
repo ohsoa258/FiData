@@ -1,6 +1,7 @@
 package com.fisk.datamanage.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
@@ -155,4 +156,5 @@ public interface DataManageClient {
      */
     @PostMapping("/MetaData/deleteConsumptionMetaData")
     ResultEntity<Object> deleteConsumptionMetaData(@RequestBody  List<MetaDataEntityDTO> entityList);
+
 }

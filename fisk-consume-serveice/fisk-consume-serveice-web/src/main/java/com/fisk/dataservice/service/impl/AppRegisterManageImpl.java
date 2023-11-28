@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.EnCryptUtils;
@@ -13,12 +14,15 @@ import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.core.utils.office.pdf.exception.PDFException;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.GetConfigDTO;
 import com.fisk.dataservice.dto.api.doc.*;
 import com.fisk.dataservice.dto.app.*;
@@ -93,6 +97,8 @@ public class AppRegisterManageImpl
     @Resource
     private ApiRegisterManageImpl apiRegisterManage;
 
+    @Resource
+    private DataManageClient dataManageClient;
 
     @Resource
     GetConfigDTO getConfig;
@@ -103,6 +109,9 @@ public class AppRegisterManageImpl
     private String api_address;
     @Value("${dataservice.proxyservice.api_address}")
     private String proxyServiceApiAddress;
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
+
 
     @Override
     public Integer getAppCount() {
@@ -184,7 +193,21 @@ public class AppRegisterManageImpl
             byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.getAppPassword());
             model.setAppPassword(new String(base64Encrypt));
         }
-        return baseMapper.insert(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        int insert = baseMapper.insert(model);
+        if (insert > 0) {
+            //同步元数据业务分类
+            if (openMetadata) {
+                ClassificationInfoDTO apiServiceByAppName = getApiServiceByAppName(dto.getAppName());
+                if (apiServiceByAppName != null) {
+                    apiServiceByAppName.setDelete(false);
+                    dataManageClient.appSynchronousClassification(apiServiceByAppName);
+                }
+            }
+            return ResultEnum.SUCCESS;
+
+        } else {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
     }
 
     @Override
@@ -210,7 +233,22 @@ public class AppRegisterManageImpl
             }
         }
         AppRegisterMap.INSTANCES.editDtoToPo(dto, model);
-        return baseMapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        int i = baseMapper.updateById(model);
+        if (i > 0) {
+            //同步元数据业务分类
+            if (openMetadata) {
+                ClassificationInfoDTO apiServiceByAppName = getApiServiceByAppName(dto.getAppName());
+                if (apiServiceByAppName != null) {
+                    apiServiceByAppName.setDelete(false);
+                    dataManageClient.appSynchronousClassification(apiServiceByAppName);
+                }
+            }
+            return ResultEnum.SUCCESS;
+        } else {
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+
+
     }
 
     @Override
@@ -226,12 +264,27 @@ public class AppRegisterManageImpl
                 .eq(AppServiceConfigPO::getType, AppServiceTypeEnum.API.getValue());
         List<AppServiceConfigPO> appApiPOS = appApiMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(appApiPOS)) {
+
             // 该应用下没有启用的api，可以直接删除
-            return baseMapper.deleteByIdWithFill(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+            if (baseMapper.deleteByIdWithFill(model) > 0) {
+                if (openMetadata){
+                    //同步元数据业务分类
+                    ClassificationInfoDTO classificationInfoDTO = new ClassificationInfoDTO();
+                    classificationInfoDTO.setName(model.getAppName());
+                    classificationInfoDTO.setDescription(model.getAppDesc());
+                    classificationInfoDTO.setSourceType(ClassificationTypeEnum.API_GATEWAY_SERVICE);
+                    classificationInfoDTO.setDelete(true);
+                    dataManageClient.appSynchronousClassification(classificationInfoDTO);
+                }
+                return ResultEnum.SUCCESS;
+            } else {
+                return ResultEnum.SAVE_DATA_ERROR;
+            }
         } else {
             // 应用下有已启用的api,必须先禁用api
             return ResultEnum.DS_APP_API_EXISTS;
         }
+
     }
 
     @Override
@@ -302,6 +355,13 @@ public class AppRegisterManageImpl
             }
         } catch (Exception ex) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+
+        //同步元数据
+        if (openMetadata){
+            List<Long> apiIds = saveDTO.dto.stream().filter(e -> e.apiState == 1).map(e -> e.getApiId().longValue()).collect(Collectors.toList());
+            List<MetaDataEntityDTO> apiMetaData = getApiMetaDataByIds(apiIds);
+            dataManageClient.syncDataConsumptionMetaData(apiMetaData);
         }
         return ResultEnum.SUCCESS;
     }
@@ -684,7 +744,7 @@ public class AppRegisterManageImpl
             List<ApiConfigPO> apiTheAppList = appApiMapper.getApiTheAppList((int) appConfigPO.getId());
             //添加应用下的API
             for (ApiConfigPO apiConfigPO : apiTheAppList) {
-                MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO,apiConfigPO);
+                MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO, apiConfigPO);
                 metaDataEntityDTOList.add(metaDataEntityDTO);
             }
         }
@@ -707,16 +767,16 @@ public class AppRegisterManageImpl
         //添加应用下的API
         for (ApiConfigPO apiConfigPO : apiTheAppList) {
             AppConfigPO appConfigPO = appApiMapper.getAppByApiList((int) apiConfigPO.getId()).stream().findFirst().orElse(null);
-            if(appConfigPO==null){
+            if (appConfigPO == null) {
                 return metaDataEntityDTOList;
             }
-            MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO,apiConfigPO);
+            MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO, apiConfigPO);
             metaDataEntityDTOList.add(metaDataEntityDTO);
         }
         return metaDataEntityDTOList;
     }
 
-    public MetaDataEntityDTO buildApiMetaDataEntity(AppConfigPO appConfigPO,ApiConfigPO apiConfigPO){
+    public MetaDataEntityDTO buildApiMetaDataEntity(AppConfigPO appConfigPO, ApiConfigPO apiConfigPO) {
         MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
         metaDataEntityDTO.setQualifiedName("api_" + appConfigPO.getId() + "_" + apiConfigPO.getId());
         metaDataEntityDTO.setName(apiConfigPO.getApiName());
@@ -747,4 +807,31 @@ public class AppRegisterManageImpl
         return metaDataEntityDTO;
     }
 
+
+    public ClassificationInfoDTO getApiServiceByAppName(String appName) {
+        ClassificationInfoDTO classificationInfoDTO = new ClassificationInfoDTO();
+        AppConfigPO apiAppConfigPOS = this.query().eq("app_name", appName).one();
+        if (apiAppConfigPOS != null) {
+            classificationInfoDTO.setName(apiAppConfigPOS.getAppName());
+            classificationInfoDTO.setDescription(apiAppConfigPOS.getAppDesc());
+            classificationInfoDTO.setSourceType(ClassificationTypeEnum.API_GATEWAY_SERVICE);
+            return classificationInfoDTO;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public List<AppBusinessInfoDTO> getApiService() {
+        //封装三个服务的所有应用
+        List<AppBusinessInfoDTO> appInfos = new ArrayList<>();
+        List<AppConfigPO> apiAppConfigPOS = this.query().list();
+        //封装API服务的所有应用
+        apiAppConfigPOS.stream()
+                .forEach(a -> {
+                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(), a.getAppName(), a.getAppPrincipal(), a.getAppDesc(), 3);
+                    appInfos.add(infoDTO);
+                });
+        return appInfos;
+    }
 }

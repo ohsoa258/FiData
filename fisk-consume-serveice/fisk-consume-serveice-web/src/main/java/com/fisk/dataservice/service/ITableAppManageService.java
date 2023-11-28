@@ -3,6 +3,7 @@ package com.fisk.dataservice.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -79,5 +80,11 @@ public interface ITableAppManageService extends IService<TableAppPO> {
      * @return
      */
     List<MetaDataEntityDTO> getTableSyncMetaDataByIds(List<Long> ids);
+
+    /**
+     * 获取Table服务的所有应用
+     * @return
+     */
+    List<AppBusinessInfoDTO> getTableService();
 
 }

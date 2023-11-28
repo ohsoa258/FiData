@@ -18,6 +18,8 @@ dataservice:
     api_address: http://192.168.11.130:8083
   proxyservice:
     api_address: http://192.168.11.130:8083/dataservice/proxy
+# 是否同步元数据
+open-metadata: false
 spring:
   hikari:
     maximum-pool-size: 60

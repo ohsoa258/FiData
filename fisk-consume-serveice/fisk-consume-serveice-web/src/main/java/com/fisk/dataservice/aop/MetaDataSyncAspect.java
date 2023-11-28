@@ -1,10 +1,6 @@
 package com.fisk.dataservice.aop;
 
-import com.alibaba.fastjson.JSON;
-import com.fisk.common.core.enums.datamanage.DataOperationTypeEnum;
-import com.fisk.common.core.enums.datamanage.MetaDataSyncTypeEnum;
 import com.fisk.common.framework.mdc.MDCHelper;
-import com.fisk.dataservice.dto.api.ApiRegisterDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -14,7 +10,6 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * @author jx
@@ -53,22 +48,22 @@ public class MetaDataSyncAspect {
         Object[] args = joinPoint.getArgs();
         res = joinPoint.proceed();
         try {
-            if (ano.syncType().equals(MetaDataSyncTypeEnum.DATA_CONSUME_API)){
-                if(ano.operationType().equals(DataOperationTypeEnum.ADD)||ano.operationType().equals(DataOperationTypeEnum.UPDATE)){
-                    //修改
-                    ApiRegisterDTO apiRegisterDTO =JSON.parseObject((String) args[0], ApiRegisterDTO.class);
-                    apiRegisterDTO.apiDTO.getApiName();
-
-                }else {
-                    //删除
-                }
-            }else if (ano.syncType().equals(MetaDataSyncTypeEnum.DATA_CONSUME_VIEW)){
-
-            }else if (ano.syncType().equals(MetaDataSyncTypeEnum.DATA_CONSUME_DATABASE_SYNC)){
-
-            }else {
-
-            }
+//            if (ano.syncType().equals(MetaDataClassificationTypeEnum.DATA_CONSUME_API)){
+//                if(ano.operationType().equals(DataOperationTypeEnum.ADD)||ano.operationType().equals(DataOperationTypeEnum.UPDATE)){
+//                    //修改
+//                    ApiRegisterDTO apiRegisterDTO =JSON.parseObject((String) args[0], ApiRegisterDTO.class);
+//                    apiRegisterDTO.apiDTO.getApiName();
+//
+//                }else {
+//                    //删除
+//                }
+//            }else if (ano.syncType().equals(MetaDataClassificationTypeEnum.DATA_CONSUME_VIEW)){
+//
+//            }else if (ano.syncType().equals(MetaDataClassificationTypeEnum.DATA_CONSUME_DATABASE_SYNC)){
+//
+//            }else {
+//
+//            }
         }catch (Exception ex){
 
 

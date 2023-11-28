@@ -56,6 +56,7 @@ import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,6 +120,9 @@ public class TableServiceImpl
 
     @Resource
     DataManageClient dataManageClient;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     public Page<TableServicePageDataDTO> getTableServiceListData(TableServicePageQueryDTO dto) {
@@ -193,8 +197,10 @@ public class TableServiceImpl
         publishTaskClient.publishBuildDataServices(buildTableServiceDTO);
 
         //同步元数据
-        List<MetaDataEntityDTO> tableSyncMetaDataById = tableAppManage.getTableSyncMetaDataById(dto.getTableService().getId());
-        dataManageClient.syncDataConsumptionMetaData(tableSyncMetaDataById);
+        if (openMetadata){
+            List<MetaDataEntityDTO> tableSyncMetaDataById = tableAppManage.getTableSyncMetaDataById(dto.getTableService().getId());
+            dataManageClient.syncDataConsumptionMetaData(tableSyncMetaDataById);
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -250,8 +256,9 @@ public class TableServiceImpl
         publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
 
         //删除元数据
-        dataManageClient.deleteConsumptionMetaData(tableSyncMetaDataById);
-
+        if (openMetadata){
+            dataManageClient.deleteConsumptionMetaData(tableSyncMetaDataById);
+        }
         return ResultEnum.SUCCESS;
     }
 

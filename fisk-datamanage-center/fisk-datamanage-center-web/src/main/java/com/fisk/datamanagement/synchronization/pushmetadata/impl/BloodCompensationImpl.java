@@ -13,7 +13,7 @@ import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
-import com.fisk.datamanagement.enums.ClassificationTypeEnum;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
@@ -120,7 +120,7 @@ public class BloodCompensationImpl
         log.info("*******五.开始同步数据库同步服务相关元数据信息********");
         log.info("********1.开始数据库同步服务的业务分类******************");
         ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
-        synchronousClassification(tableAppList, ClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE);
+        synchronousClassification(tableAppList, ClassificationTypeEnum.DATA_DISTRIBUTION);
         log.info("********2.开始数据库同步服务的元数据******************");
         synchronousDataBaseSyncMetaData(currUserName);
 
@@ -188,7 +188,7 @@ public class BloodCompensationImpl
         InsertRootBusinessClassification(ClassificationTypeEnum.DATA_ACCESS);
         InsertRootBusinessClassification(ClassificationTypeEnum.ANALYZE_DATA);
         InsertRootBusinessClassification(ClassificationTypeEnum.API_GATEWAY_SERVICE);
-        InsertRootBusinessClassification(ClassificationTypeEnum.DATABASE_SYNCHRONIZATION_SERVICE);
+        InsertRootBusinessClassification(ClassificationTypeEnum.DATA_DISTRIBUTION);
         InsertRootBusinessClassification(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
 
         //6.清空业务分类-分类属性表：tb_classification
@@ -224,7 +224,7 @@ public class BloodCompensationImpl
      * @param appList 接入业务系统
      * @param classificationTypeEnum  建模类型
      */
-    private void synchronousClassification(ResultEntity<List<AppBusinessInfoDTO>> appList,ClassificationTypeEnum classificationTypeEnum){
+    private void synchronousClassification(ResultEntity<List<AppBusinessInfoDTO>> appList, ClassificationTypeEnum classificationTypeEnum){
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取"+classificationTypeEnum.getName()+"的业务分类数据失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
@@ -237,7 +237,7 @@ public class BloodCompensationImpl
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
             classificationInfoDto.setName(item.name);
             classificationInfoDto.setDescription(item.appDes);
-            classificationInfoDto.setSourceType(classificationTypeEnum.getValue());
+            classificationInfoDto.setSourceType(classificationTypeEnum);
             classificationInfoDto.setAppType(item.getAppType());
             classificationInfoDto.setDelete(false);
             try {

@@ -20,6 +20,7 @@ import com.fisk.common.core.utils.TableNameGenerateUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -34,16 +35,10 @@ import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.dataanalysisview.*;
-import com.fisk.dataservice.entity.DataViewPO;
-import com.fisk.dataservice.entity.DataViewRolePO;
-import com.fisk.dataservice.entity.DataViewThemePO;
-import com.fisk.dataservice.entity.ViewFieldsPO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.map.DataViewFieldsMap;
 import com.fisk.dataservice.map.DataViewMap;
-import com.fisk.dataservice.mapper.DataViewFieldsMapper;
-import com.fisk.dataservice.mapper.DataViewMapper;
-import com.fisk.dataservice.mapper.DataViewRoleMapper;
-import com.fisk.dataservice.mapper.DataViewThemeMapper;
+import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IDataViewFieldsService;
 import com.fisk.dataservice.service.IDataViewService;
 import com.fisk.dataservice.service.IDataViewThemeService;
@@ -54,6 +49,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -110,6 +106,12 @@ public class DataViewServiceImpl
 
     @Resource
     private IDataViewThemeService dataViewThemeService;
+
+    @Resource
+    private ViewThemeMapper viewThemeMapper;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     public PageDTO<DataViewDTO> getViewList(Integer viewThemeId, Integer pageNum, Integer pageSize) {
@@ -366,8 +368,11 @@ public class DataViewServiceImpl
         relationGrant(model, dsDto);
 
         //同步元数据
-        List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(po.getId());
-        dataManageClient.syncDataConsumptionMetaData(metaDataEntityDTO);
+        if (openMetadata){
+            List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(po.getId());
+            dataManageClient.syncDataConsumptionMetaData(metaDataEntityDTO);
+        }
+
 
         return ResultEnum.SUCCESS;
     }
@@ -431,7 +436,9 @@ public class DataViewServiceImpl
         // 删除数据库视图
         removeView(model, dsDto);
         //同步元数据
-        dataManageClient.deleteConsumptionMetaData(metaDataEntityDTO);
+        if (openMetadata){
+            dataManageClient.deleteConsumptionMetaData(metaDataEntityDTO);
+        }
         return ResultEnum.SUCCESS;
 
     }
@@ -488,8 +495,10 @@ public class DataViewServiceImpl
 
 
         //同步元数据
-        List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(dto.getViewId().longValue());
-        dataManageClient.syncDataConsumptionMetaData(metaDataEntityDTO);
+        if (openMetadata){
+            List<MetaDataEntityDTO> metaDataEntityDTO = dataViewThemeService.getViewServiceMetaDataById(dto.getViewId().longValue());
+            dataManageClient.syncDataConsumptionMetaData(metaDataEntityDTO);
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -879,4 +888,7 @@ public class DataViewServiceImpl
             log.error(viewThemeId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
         }
     }
+
+
+
 }

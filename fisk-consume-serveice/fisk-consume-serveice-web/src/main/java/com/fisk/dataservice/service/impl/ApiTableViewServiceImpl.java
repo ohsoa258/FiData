@@ -71,48 +71,6 @@ public class ApiTableViewServiceImpl implements IApiTableViewService {
         return appInfos;
     }
 
-    @Override
-    public List<AppBusinessInfoDTO> getApiService() {
-        //封装三个服务的所有应用
-        List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
-        List<AppConfigPO> apiAppConfigPOS = appRegisterMapper.selectList(null);
-        //封装API服务的所有应用
-        apiAppConfigPOS.stream()
-                .forEach(a -> {
-                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getAppName(),a.getAppPrincipal(),a.getAppDesc(),3);
-                    appInfos.add(infoDTO);
-                });
-        return appInfos;
-    }
-
-    @Override
-    public List<AppBusinessInfoDTO> getTableService() {
-        //封装三个服务的所有应用
-        List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
-        List<TableAppPO> tableAppPOS = tableAppMapper.selectList(null);
-        //封装Table服务的所有应用
-        tableAppPOS.stream()
-                .forEach(a -> {
-                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getAppName(),a.getAppPrincipal(),a.getAppDesc(),4);
-                    appInfos.add(infoDTO);
-                });
-
-        return appInfos;
-    }
-
-    @Override
-    public List<AppBusinessInfoDTO> getViewService() {
-        //封装三个服务的所有应用
-        List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
-        List<ViewThemePO> viewThemeAppPOS = viewThemeMapper.selectList(null);
-        //封装View服务的所有应用
-        viewThemeAppPOS.stream()
-                .forEach(a -> {
-                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),5);
-                    appInfos.add(infoDTO);
-                });
-        return appInfos;
-    }
 
     @Override
     public List<MetaDataInstanceAttributeDTO> synchronizationAPIAppRegistration() {

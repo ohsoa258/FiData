@@ -37,23 +37,6 @@ public class ApiTableViewServiceController {
     }
 
 
-    @ApiOperation("获取Api服务的所有应用")
-    @GetMapping("/getApiService")
-    public ResultEntity<List<AppBusinessInfoDTO>> getApiService() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiTableViewService.getApiService());
-    }
-
-    @ApiOperation("获取Table服务的所有应用")
-    @GetMapping("/getTableService")
-    public ResultEntity<List<AppBusinessInfoDTO>> getTableService() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiTableViewService.getTableService());
-    }
-
-    @ApiOperation("获取View服务的所有应用")
-    @GetMapping("/getViewService")
-    public ResultEntity<List<AppBusinessInfoDTO>> getViewService() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiTableViewService.getViewService());
-    }
 
     @ApiOperation(value = "元数据同步API服务应用信息")
     @GetMapping("/synchronizationAPIAppRegistration")

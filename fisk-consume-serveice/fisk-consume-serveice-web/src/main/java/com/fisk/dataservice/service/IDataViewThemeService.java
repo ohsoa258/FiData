@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.dataservice.dto.dataanalysisview.DataViewDTO;
@@ -87,4 +88,11 @@ public interface IDataViewThemeService extends IService<DataViewThemePO> {
      * @return
      */
     List<MetaDataEntityDTO> getViewServiceMetaDataById(Long id);
+
+
+    /**
+     * 获取View服务的所有应用
+     * @return
+     */
+    List<AppBusinessInfoDTO> getViewService();
 }

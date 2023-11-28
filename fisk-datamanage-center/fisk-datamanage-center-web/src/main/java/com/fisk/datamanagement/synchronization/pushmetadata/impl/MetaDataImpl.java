@@ -1,19 +1,18 @@
 package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 
-import ch.qos.logback.core.joran.spi.ElementSelector;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.office.excel.ExcelUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
@@ -50,7 +49,6 @@ import com.fisk.datamanagement.map.MetadataEntityExportTemplateAttributeMap;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
 import com.fisk.datamanagement.mapper.ClassificationMapper;
-import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.mapper.MetadataMapAtlasMapper;
 import com.fisk.datamanagement.service.IMetaDataEntityOperationLog;
 import com.fisk.datamanagement.service.impl.*;
@@ -61,15 +59,11 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildMetaDataDTO;
-import io.micrometer.core.instrument.Meter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -83,7 +77,6 @@ import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author JianWenYang
@@ -679,6 +672,7 @@ public class MetaDataImpl implements IMetaData {
         Integer tableType = 0;
         //ods
         if (sourceData.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
+            //获取数据接入所有已发布的表
             ResultEntity<List<DataAccessSourceTableDTO>> result = dataAccessClient.getDataAccessMetaData();
             if (result.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(result.data)) {
                 return;
@@ -1313,6 +1307,7 @@ public class MetaDataImpl implements IMetaData {
         return metadataEntity.delMetadataEntity(metadataIds);
     }
 
+
     /**
      * 同步来源的实例和数据库元数据 （数据消费模块，API网关、数据库同步服务、视图服务）
      *
@@ -1439,7 +1434,7 @@ public class MetaDataImpl implements IMetaData {
             default:
                 break;
         }
-        //因为代理API没有字段所以不需要添加API
+        //因为代理API没有字段所以不需要添加字段
         if (entityDto.createApiType != 3) {
             List<String> qualifiedNames = new ArrayList<>();
             for (MetaDataColumnAttributeDTO field : entityDto.getAttributeDTOList()) {

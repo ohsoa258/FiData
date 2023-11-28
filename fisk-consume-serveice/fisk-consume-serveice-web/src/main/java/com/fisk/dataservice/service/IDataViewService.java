@@ -3,6 +3,7 @@ package com.fisk.dataservice.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataservice.dto.dataanalysisview.*;
@@ -95,4 +96,5 @@ public interface IDataViewService extends IService<DataViewPO> {
     ResultEnum addBatchDataView(SaveBatchDataViewDTO dto);
 
     OdsResultDTO getPreviewData(Integer viewThemeId, String tableName);
+
 }

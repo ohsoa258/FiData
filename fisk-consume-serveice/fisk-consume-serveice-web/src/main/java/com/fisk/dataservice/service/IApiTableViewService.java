@@ -11,21 +11,7 @@ public interface IApiTableViewService {
      * @return
      */
     List<AppBusinessInfoDTO> getApiTableViewService();
-    /**
-     * 获取Api服务的所有应用
-     * @return
-     */
-    List<AppBusinessInfoDTO> getApiService();
-    /**
-     * 获取Table服务的所有应用
-     * @return
-     */
-    List<AppBusinessInfoDTO> getTableService();
-    /**
-     * 获取View服务的所有应用
-     * @return
-     */
-    List<AppBusinessInfoDTO> getViewService();
+
 
     /**
      * 同步接入API服务来源表元数据

@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
@@ -18,7 +19,6 @@ import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
 import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.ClassificationAppTypeEnum;
-import com.fisk.datamanagement.enums.ClassificationTypeEnum;
 import com.fisk.datamanagement.map.ClassificationMap;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.IClassification;
@@ -397,7 +397,7 @@ public class ClassificationImpl
         //获取业务分类的上级
         List<String> analysisModelSuperType = new ArrayList<>();
             for (ClassificationTypeEnum e : ClassificationTypeEnum.values()) {
-                if (e.getValue() == dto.sourceType) {
+                if (e.equals(dto)) {
                     analysisModelSuperType.add( e.getName());
                 }
             }

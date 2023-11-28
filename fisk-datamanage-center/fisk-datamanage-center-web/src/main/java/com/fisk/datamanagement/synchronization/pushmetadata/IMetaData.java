@@ -1,6 +1,5 @@
 package com.fisk.datamanagement.synchronization.pushmetadata;
 
-import com.fisk.common.core.enums.datamanage.MetaDataSyncTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
@@ -79,5 +78,4 @@ public interface IMetaData {
      */
     ResultEnum deleteDataConsumptionMetaData(List<MetaDataEntityDTO> entityList);
 
-//    ResultEnum iSyncMetaData(MetaDataSyncTypeEnum syncTypeEnum,int operationType);
 }
