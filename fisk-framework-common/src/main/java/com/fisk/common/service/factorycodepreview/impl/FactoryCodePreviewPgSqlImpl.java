@@ -187,7 +187,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      * @return
      */
     @Override
-    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type) {
         //字段名转为小写  原因：task建pg表时，字段名都转为了小写
         fieldList.forEach(publishFieldDTO -> {
             publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();
@@ -455,7 +455,7 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
      * @return
      */
     @Override
-    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type) {
         //字段名转为小写  原因：task建pg表时，字段名都转为了小写
         fieldList.forEach(publishFieldDTO -> {
             publishFieldDTO.fieldEnName = publishFieldDTO.fieldEnName.toLowerCase();

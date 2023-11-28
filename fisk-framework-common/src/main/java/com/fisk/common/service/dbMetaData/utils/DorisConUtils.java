@@ -3,17 +3,22 @@ package com.fisk.common.service.dbMetaData.utils;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.DorisCatalogDTO;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 @Slf4j
 public class DorisConUtils {
 
@@ -85,23 +90,60 @@ public class DorisConUtils {
     }
 
     /**
-     * 获取数据库中所有表名称
+     * 获取表及表字段
+     *
+     * @return 查询结果
      */
-    public List<TablePyhNameDTO> getTablesPlusForOps(Connection conn) {
+    public static List<TableNameDTO> getTableName(Connection conn) {
+        // 获取数据库中所有表名称
         // MySql没有架构概念，此处直接查表
-        List<TablePyhNameDTO> tableList = new ArrayList<>();
+        ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
             ResultSet tables = databaseMetaData.getTables(null, null, "%", new String[]{"TABLE"});
+            tablesList = new ArrayList<>();
             while (tables.next()) {
+                tablesList.add(tables.getString("TABLE_NAME"));
+            }
+        } catch (SQLException e) {
+            log.error("【getTablesPlus】获取数据库中所有表名称异常", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
+        }
+
+        List<TableNameDTO> list = new ArrayList<>();
+        for (String tableName : tablesList) {
+            TableNameDTO tablePyhNameDTO = new TableNameDTO();
+            tablePyhNameDTO.setTableName(tableName);
+            list.add(tablePyhNameDTO);
+        }
+        return list;
+
+    }
+
+    /**
+     * 获取数据库中所有表名称
+     */
+    public List<TablePyhNameDTO> getTablesPlusForOps(Connection conn) {
+        // doris直接获取顶级目录列表即可
+        List<TablePyhNameDTO> tableList = new ArrayList<>();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("SHOW CATALOGS");
+            while (resultSet.next()) {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                tablePyhNameDTO.setTableName(tables.getString("TABLE_NAME"));
-                tablePyhNameDTO.setTableFullName(tables.getString("TABLE_NAME"));
+                tablePyhNameDTO.setTableName(resultSet.getString("CatalogName"));
+                tablePyhNameDTO.setTableFullName(resultSet.getString("CatalogName"));
                 tableList.add(tablePyhNameDTO);
             }
         } catch (SQLException e) {
             log.error("【getTablesPlus】获取数据库中所有表名称异常", e);
             throw new FkException(ResultEnum.DATAACCESS_GETTABLE_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(resultSet);
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(conn);
         }
         return tableList;
     }
@@ -136,6 +178,79 @@ public class DorisConUtils {
         }
         return colNameList;
     }
+
+    /**
+     * 获取指定doris外部目录catalog下的所有db
+     */
+    public List<TableStructureDTO> getCatalogNameAndTblName(Statement statement, String catalogName) {
+        // tableName应携带架构名称
+        List<TableStructureDTO> catalogList = new ArrayList<>();;
+        ResultSet databases = null;
+        ResultSet tbls = null;
+        try {
+            statement.executeQuery("SWITCH " + catalogName + ";");
+            databases = statement.executeQuery("SHOW DATABASES");
+
+            while (databases.next()) {
+                String database = databases.getString("Database");
+                TableStructureDTO tableStructureDTO = new TableStructureDTO();
+                tableStructureDTO.fieldName = database;
+                if ("default".equals(database)) continue;
+                catalogList.add(tableStructureDTO);
+            }
+
+            //查询数据库下的所有表
+            for (TableStructureDTO db : catalogList) {
+                List<String> tblNames = new ArrayList<>();
+                statement.executeQuery("USE " + db.fieldName + ";");
+                tbls = statement.executeQuery("SHOW TABLES;");
+                while (tbls.next()) {
+                    String tblName = tbls.getString("Tables_in_" + db.fieldName);
+                    tblNames.add(tblName);
+                }
+                db.setDorisTblNames(tblNames);
+            }
+
+
+        }catch (Exception e){
+            log.error("【getCatalogNameAndTblName】获取doris外部目录异常：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }
+        return catalogList;
+    }
+
+    public static List<TableColumnDTO> getColNames(Connection conn, String tableName) {
+        // tableName应携带架构名称
+        List<TableColumnDTO> colNameList = null;
+        try {
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery("select * from " + tableName + " LIMIT 0,10;");
+            ResultSetMetaData metaData = rs.getMetaData();
+            int count = metaData.getColumnCount();
+            colNameList = new ArrayList<>();
+            for (int i = 1; i <= count; i++) {
+                TableColumnDTO tableColumnDTO = new TableColumnDTO();
+                // 字段名称
+                tableColumnDTO.fieldName = metaData.getColumnName(i);
+                // 字段类型
+                tableColumnDTO.fieldType = metaData.getColumnTypeName(i);
+                // 字段长度
+                tableColumnDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                colNameList.add(tableColumnDTO);
+            }
+            if (rs != null) {
+                AbstractCommonDbHelper.closeConnection(conn);
+                AbstractCommonDbHelper.closeResultSet(rs);
+                AbstractCommonDbHelper.closeStatement(st);
+            }
+        } catch (SQLException e) {
+            log.error("【getColNames】获取表中所有字段名称异常", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        }
+        return colNameList;
+    }
+
+
 
     public List<DorisCatalogDTO> getCataLogNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum) {
         List<DorisCatalogDTO> cataLogList = null;

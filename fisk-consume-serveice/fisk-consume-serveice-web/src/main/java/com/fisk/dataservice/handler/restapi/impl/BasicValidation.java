@@ -55,7 +55,7 @@ public class BasicValidation extends RestApiHandler {
         BasicValidation.tableApiResultService = tableApiResultService;
     }
     @Override
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
+    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body, Boolean flag) {
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         LambdaQueryWrapper<TableApiAuthRequestPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiAuthRequestPO::getAppId, tableAppPO.getId());
@@ -76,7 +76,9 @@ public class BasicValidation extends RestApiHandler {
                 httpGetWithEntity.setHeader("Authorization", authToken.getMsg());
                 httpGetWithEntity.setConfig(config);
                 if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()) {
-                    body = "[" + body + "]";
+                    if (flag){
+                        body = "[" + body + "]";
+                    }
                 }
                 HttpEntity httpEntity = new StringEntity(body, ContentType.APPLICATION_JSON);
                 httpGetWithEntity.setEntity(httpEntity);
@@ -88,7 +90,9 @@ public class BasicValidation extends RestApiHandler {
                 httpPost.setHeader("Authorization", authToken.getMsg());
                 httpPost.setConfig(config);
                 if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()){
-                    body = "["+body+"]";
+                    if (flag){
+                        body = "[" + body + "]";
+                    }
                 }
                 StringEntity entity = new StringEntity(body, "UTF-8");
                 httpPost.setEntity(entity);

@@ -2,6 +2,7 @@ package com.fisk.datamodel.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -1192,6 +1193,46 @@ public class BusinessAreaImpl
     }
 
     /**
+     * 获取数仓建模单个维度/事实表的元数据
+     *
+     * @return
+     */
+    @Override
+    public List<MetaDataInstanceAttributeDTO> getDataModelMetaDataOfOneTbl(Integer areaId, Integer tblId,
+                                                                           DataModelTableTypeEnum modelTableTypeEnum) {
+
+        LambdaQueryWrapper<BusinessAreaPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(BusinessAreaPO::getId, areaId);
+        BusinessAreaPO item = getOne(wrapper);
+
+        if (Objects.isNull(item)) {
+            return new ArrayList<>();
+        }
+
+        //获取dmp_dw的数据源配置信息
+        MetaDataInstanceAttributeDTO instance = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
+        instance.dbList.get(0).tableList = new ArrayList<>();
+
+        switch (modelTableTypeEnum) {
+            case DW_FACT:
+                //事实表
+                instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaDataOfOneTbl(areaId, tblId, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser()));
+                break;
+            case DW_DIMENSION:
+                //维度表
+                instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaDataOfOneTbl(areaId, tblId, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser()));
+                break;
+            default:
+                throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        list.add(instance);
+
+        return list;
+    }
+
+    /**
      * 构建维度key脚本
      *
      * @param dto
@@ -1320,7 +1361,7 @@ public class BusinessAreaImpl
         CodePreviewDTO codePreviewDTO = new CodePreviewDTO();
         codePreviewDTO.setOverLoadCodeDTO(dataModel);
         codePreviewDTO.setOverlayCodePreviewDTO(dto);
-        String finalSql = codePreviewBySyncMode(codePreviewDTO);
+        String finalSql = codePreviewBySyncMode(codePreviewDTO, dto.type);
 
         //检测获取到的sql预览结果
         log.info("预返回的覆盖方式预览sql为" + finalSql);
@@ -1366,7 +1407,7 @@ public class BusinessAreaImpl
      * @return
      * @author lishiji
      */
-    private String codePreviewBySyncMode(CodePreviewDTO dto) {
+    private String codePreviewBySyncMode(CodePreviewDTO dto, Integer type) {
         //分别获取参数dto
         OverLoadCodeDTO overLoadCodeDTO = dto.overLoadCodeDTO;
         OverlayCodePreviewDTO originalDTO = dto.overlayCodePreviewDTO;
@@ -1441,7 +1482,7 @@ public class BusinessAreaImpl
             //业务标识覆盖（业务主键覆盖）---merge覆盖
             case 3:
                 //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                return sqlHelper.merge(tableName, tempTableName, fieldList);
+                return sqlHelper.merge(tableName, tempTableName, fieldList,type);
             //业务时间覆盖
             case 4:
                 //调用封装的业务时间覆盖方式的拼接sql方法并返回
@@ -1449,7 +1490,7 @@ public class BusinessAreaImpl
             //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
             case 5:
                 //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList);
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList,type);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

@@ -53,6 +53,7 @@ public class DimensionAttributeDTO {
     /**
      * 是否业务主键 0:否 1:是
      */
+    //注意 由于历史原因  维度表和事实表的该变量名含义相反  在维度表是  这里就是业务覆盖标识
     @ApiModelProperty(value = "是否业务主键 0:否 1:是")
     public int isPrimaryKey;
     /**
@@ -70,5 +71,33 @@ public class DimensionAttributeDTO {
      */
     @ApiModelProperty(value = "配置详情(维度key的json配置详情)")
     public String configDetails;
+
+    //注意 由于历史原因  维度表和事实表的该变量名含义相反  在维度表是  这里就是业务覆盖标识
+    @ApiModelProperty(value = "是否是主键  1：是  0：不是")
+    public int isBusinessKey;
+
+    /**
+     * 是否是doris分区字段 1：是 0：不是
+     */
+    @ApiModelProperty(value = "是否是doris分区字段 1：是 0：不是")
+    public int isPartitionKey;
+
+    /**
+     * doris分区类型 RANGE 或 LIST
+     */
+    @ApiModelProperty(value = "doris分区类型 RANGE 或 LIST")
+    public String dorisPartitionType;
+
+    /**
+     * doris分区属性值
+     */
+    @ApiModelProperty(value = "doris分区属性值")
+    public String dorisPartitionValues;
+
+    /**
+     * 是否是doris分桶字段 1：是 0：不是
+     */
+    @ApiModelProperty(value = "是否是doris分桶字段 1：是 0：不是")
+    public int isDistributedKey;
 
 }

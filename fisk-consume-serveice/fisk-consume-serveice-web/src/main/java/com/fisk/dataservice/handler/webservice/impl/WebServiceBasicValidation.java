@@ -70,7 +70,7 @@ public class WebServiceBasicValidation extends WebServiceHandler {
         ApiResultDTO authToken = getAuthToken(tableAppPO, list);
         //创建动态客户端
         JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-        //todo：webService的这个动态客户端的地址需要从数据库中查出来
+        //webService的这个动态客户端的地址需要从数据库中查出来
         Client client = dcf.createClient(tableAppPO.getAuthenticationUrl());
         //设置超时时间
         HTTPConduit conduit = (HTTPConduit) client.getConduit();
@@ -134,7 +134,7 @@ public class WebServiceBasicValidation extends WebServiceHandler {
         Collections.reverse(key);
         //创建动态客户端
         JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-        //todo：webService的这个动态客户端的地址需要从数据库中查出来
+        //：webService的这个动态客户端的地址需要从数据库中查出来
         Client client = dcf.createClient(tableAppPO.getAuthenticationUrl());
         //设置超时时间
         HTTPConduit conduit = (HTTPConduit) client.getConduit();

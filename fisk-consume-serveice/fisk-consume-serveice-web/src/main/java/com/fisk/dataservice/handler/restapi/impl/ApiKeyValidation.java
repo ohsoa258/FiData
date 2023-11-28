@@ -27,7 +27,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -45,7 +44,7 @@ public class ApiKeyValidation extends RestApiHandler {
     }
 
     @Override
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO,TableApiServicePO tableApiServicePO,String body){
+    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body, Boolean flag){
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         LambdaQueryWrapper<TableApiAuthRequestPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiAuthRequestPO::getAppId,tableAppPO.getId());
@@ -75,7 +74,9 @@ public class ApiKeyValidation extends RestApiHandler {
                 httpGetWithEntity.setConfig(config);
                 httpGetWithEntity.setConfig(config);
                 if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()) {
-                    body = "[" + body + "]";
+                    if (flag){
+                        body = "[" + body + "]";
+                    }
                 }
                 HttpEntity httpEntity = new StringEntity(body, ContentType.APPLICATION_JSON);
                 httpGetWithEntity.setEntity(httpEntity);
@@ -97,7 +98,9 @@ public class ApiKeyValidation extends RestApiHandler {
                 }
                 httpPost.setConfig(config);
                 if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()){
-                    body = "["+body+"]";
+                    if (flag){
+                        body = "[" + body + "]";
+                    }
                 }
                 StringEntity entity = new StringEntity(body, "UTF-8");
                 httpPost.setEntity(entity);

@@ -3,6 +3,7 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
@@ -93,5 +94,11 @@ public interface AccessDataService extends IService<AccessDataPO> {
      * @return
      */
     List<TableHistoryDTO> getTableHistoryList(Integer tableId);
+
+    List<EntityTableDTO> getEntityTable(long modelId);
+
+    EntityTableDTO getEntityStgTable(long entityId, long modelId);
+
+    Object buildDomainUpdateScript(List<TableSourceRelationsDTO> dto);
 }
 

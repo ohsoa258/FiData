@@ -64,5 +64,5 @@ public class TableAppPO extends BasePO {
     /**
      * 方法名称
      */
-    private String methodName;
+    public String methodName;
 }

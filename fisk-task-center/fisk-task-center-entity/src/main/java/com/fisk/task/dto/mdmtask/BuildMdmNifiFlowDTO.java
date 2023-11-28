@@ -77,6 +77,8 @@ public class BuildMdmNifiFlowDTO extends MQBaseDTO {
     public String customScriptAfter;
     @ApiModelProperty(value = "从stg抽取数据同步到mdm的sql语句")
     public String syncStgToMdmSql;
+    @ApiModelProperty(value = "基于域字段更新脚本")
+    public String domainUpdateSql;
     @ApiModelProperty(value = "发布历史id")
     public Long tableHistoryId;
 

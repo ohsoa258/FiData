@@ -15,6 +15,7 @@ import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -177,6 +178,13 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<MetaDataInstanceAttributeDTO> getDataModelMetaData();
+
+    /**
+     * 获取数仓建模单个维度/事实表的元数据
+     *
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> getDataModelMetaDataOfOneTbl(Integer areaId, Integer tblId, DataModelTableTypeEnum modelTableTypeEnum);
 
     /**
      * 构建维度key脚本

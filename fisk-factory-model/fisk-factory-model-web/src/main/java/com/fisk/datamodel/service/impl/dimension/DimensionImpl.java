@@ -1025,6 +1025,39 @@ public class DimensionImpl
 
     }
 
+    public List<MetaDataTableAttributeDTO> getDimensionMetaDataOfOneTbl(long businessId,
+                                                                long tblId,
+                                                                String dbQualifiedName,
+                                                                Integer dataModelType,
+                                                                String businessAdmin) {
+        List<DimensionPO> list = this.query()
+                .eq("business_id", businessId)
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .eq("id",tblId)
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (DimensionPO item : list) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = item.dimensionDesc;
+            table.name = item.dimensionTabName;
+            table.comment = String.valueOf(item.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
+            table.displayName = item.dimensionCnName;
+            table.owner = businessAdmin;
+            table.columnList = getDimensionAttributeMetaData(item.id, table);
+            tableList.add(table);
+        }
+
+        return tableList;
+
+    }
+
     public List<MetaDataColumnAttributeDTO> getDimensionAttributeMetaData(long dimensionId, MetaDataTableAttributeDTO table) {
         List<MetaDataColumnAttributeDTO> columnList = new ArrayList<>();
         DimensionAttributeListDTO dimensionAttributeList = dimensionAttributeImpl.getDimensionAttributeList((int) dimensionId);

@@ -24,7 +24,7 @@ import java.io.IOException;
 @Slf4j
 public class NoneValidation extends RestApiHandler {
     @Override
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
+    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body, Boolean flag) {
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         CloseableHttpClient httpClient = HttpClients.createDefault();
         CloseableHttpResponse response = null;
@@ -38,7 +38,9 @@ public class NoneValidation extends RestApiHandler {
                     setSocketTimeout(20000).build();
             httpPost.setConfig(config);
             if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()){
-                body = "["+body+"]";
+                if (flag){
+                    body = "[" + body + "]";
+                }
             }
             StringEntity entity = new StringEntity(body, "UTF-8");
             httpPost.setEntity(entity);

@@ -23,7 +23,6 @@ import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
-import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -140,7 +139,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
             PostgresConUtils postgresConUtils = new PostgresConUtils();
             SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-            MysqlConUtils mysqlConUtils = new MysqlConUtils();
+            DorisConUtils dorisConUtils = new DorisConUtils();
             Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
 
             List<TableStructureDTO> columns = null;
@@ -150,8 +149,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
                 columns = sqlServerPlusUtils.getColumns(connection, dto.getTableName(), dto.getTableFramework());
             } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
+                //doris就去查询所选目录下的数据库
                 Statement statement = connection.createStatement();
-                columns = mysqlConUtils.getColNames(statement, dto.getTableName());
+                columns = dorisConUtils.getCatalogNameAndTblName(statement, dto.getTableName());
             }
             if (CollectionUtils.isEmpty(columns)) {
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
@@ -163,6 +163,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
                 dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
                 dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
+                dataOpsTableFieldVO.setDorisTblNames(tableStructureDTO.getDorisTblNames());
                 dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
             });
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
@@ -238,12 +239,15 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", "", dto.current, dto.size);
                 dto.executeSql = buildQuerySchemaSql;
             }
+            log.info("数据库运维执行的sql语句：" + dto.executeSql);
             boolean execute = st.execute(dto.executeSql);
+            log.info("数据库运维执行的结果：" + execute);
             if (execute) {
                 executeResultVO.setExecuteType(1);
                 ResultSet rs = st.getResultSet();
                 ResultSetMetaData metaData = rs.getMetaData();
                 int columnCount = metaData.getColumnCount();
+                log.info("数据库运维查询到的数据行数：" + columnCount);
                 // 获取查询数据
                 JSONArray array = new JSONArray();
                 while (rs.next()) {
@@ -349,6 +353,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 throw new FkException(ResultEnum.DATA_OPS_CREATELOG_ERROR, ex.getMessage());
             }
         }
+        log.info("数据库运维执行查询后组装的待返回的结果集：" + JSON.toJSONString(executeResultVO));
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, executeResultVO);
     }
 
@@ -467,6 +472,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         DorisConUtils dorisConUtils = new DorisConUtils();
+        int ifDoris = 0;
         try {
             List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
             for (String conIp : conIps) {
@@ -488,6 +494,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
                             tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
                         } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
+                            ifDoris += 1;
                             tablesPlus = dorisConUtils.getTablesPlusForOps(connection);
                         }
                         if (CollectionUtils.isNotEmpty(tablesPlus)) {
@@ -513,6 +520,11 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                             connection.close();
                         }
                     }
+                }
+                //doris只展示一个顶级目录即可
+                if (dataOpsDataBaseVOS.size() >= 1 && ifDoris > 0) {
+                    dataOpsDataBaseVOS.remove(1);
+                    dataOpsDataBaseVOS.get(0).setConDbname("doris_catalogs");
                 }
                 dataOpsSourceVO.setChildren(dataOpsDataBaseVOS);
                 dataOpsSourceVOList.add(dataOpsSourceVO);

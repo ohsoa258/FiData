@@ -550,20 +550,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
                 .eq(AttributePO::getStatus, AttributeStatusEnum.SUBMITTED)
                 .eq(AttributePO::getSyncStatus, AttributeSyncStatusEnum.SUCCESS);
         List<AttributePO> list = baseMapper.selectList(queryWrapper);
-        List<Integer> domainIds = list.stream().filter(i -> i.getDomainId() != null).map(AttributePO::getDomainId).collect(Collectors.toList());
         List<AttributeInfoDTO> attributeInfoDTOS = AttributeMap.INSTANCES.poToDtoList(list);
-        if (CollectionUtils.isNotEmpty(domainIds)){
-            LambdaQueryWrapper<AttributePO> queryWrapper1 = new LambdaQueryWrapper<>();
-            queryWrapper1.in(AttributePO::getId,domainIds);
-            List<AttributePO> attributePOS = baseMapper.selectList(queryWrapper1);
-            Map<Integer, AttributePO> attributeMap = attributePOS.stream().collect(Collectors.toMap(i -> (int)i.getId(), i -> i));
-            attributeInfoDTOS = attributeInfoDTOS.stream().map(i->{
-                if (i.getDomainId() != null){
-                    i.setDomainEntityId(attributeMap.get(i.getDomainId()).getEntityId());
-                }
-                return i;
-            }).collect(Collectors.toList());
-        }
+        attributeInfoDTOS = attributeInfoDTOS.stream().map(i->{
+            i.setDomainEntityId(i.getDomainId());
+            return i;
+        }).collect(Collectors.toList());
         return attributeInfoDTOS;
     }
 

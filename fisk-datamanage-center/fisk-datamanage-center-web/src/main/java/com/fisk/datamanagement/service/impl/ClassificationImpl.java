@@ -460,7 +460,6 @@ public class ClassificationImpl
                 throw new FkException(ResultEnum.BAD_REQUEST, msg.getString("errorMessage"));
             }
             JSONObject jsonObject = JSON.parseObject(result.data);
-
             String entities = jsonObject.getString("entities");
             if (entities == null) {
                 deleteClassification(item.name);

@@ -6,8 +6,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -18,10 +16,16 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
-import com.fisk.dataservice.entity.*;
+import com.fisk.dataservice.entity.TableApiLogPO;
+import com.fisk.dataservice.entity.TableApiParameterPO;
+import com.fisk.dataservice.entity.TableApiServicePO;
+import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.enums.AuthenticationTypeEnum;
 import com.fisk.dataservice.enums.InterfaceTypeEnum;
+import com.fisk.dataservice.enums.SpecialTypeEnum;
+import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
+import com.fisk.dataservice.handler.ksf.factory.KsfInterfaceFactory;
 import com.fisk.dataservice.handler.restapi.RestApiHandler;
 import com.fisk.dataservice.handler.restapi.factory.InterfaceRestApiFactory;
 import com.fisk.dataservice.handler.webservice.WebServiceHandler;
@@ -30,7 +34,6 @@ import com.fisk.dataservice.map.TableApiParameterMap;
 import com.fisk.dataservice.map.TableApiServiceMap;
 import com.fisk.dataservice.mapper.TableApiServiceMapper;
 import com.fisk.dataservice.service.*;
-import com.fisk.dataservice.util.TreeBuilder;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
@@ -39,9 +42,6 @@ import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -62,9 +62,6 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     @Resource
     ITableAppManageService tableAppService;
     @Resource
-    private ITableApiAuthRequestService tableApiAuthRequestService;
-
-    @Resource
     private ITableApiParameterService tableApiParameterService;
     @Resource
     private TableSyncModeImpl tableSyncMode;
@@ -79,79 +76,10 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
 
     @Value("${dataservice.scan.api_address}")
     private String dataserviceUrl;
-
-    @Override
-    public String getToken(long apiId) {
-
-        TableApiServicePO tableApiServicePO = this.getById(apiId);
-        LambdaQueryWrapper<TableApiAuthRequestPO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(TableApiAuthRequestPO::getAppId, tableApiServicePO.getAppId());
-        List<TableApiAuthRequestPO> list = tableApiAuthRequestService.list(lambdaQueryWrapper);
-        List<TreeBuilder.Node> nodes = list.stream().map(i -> {
-            TreeBuilder.Node node = new TreeBuilder.Node();
-            node.setId(String.valueOf(i.getId()));
-            node.setPid(String.valueOf(i.getPid()));
-            JSONObject json = new JSONObject();
-            json.put(i.getParameterKey(), i.getParameterValue());
-            node.setParameter(json);
-            return node;
-        }).collect(Collectors.toList());
-        JSONObject json = new TreeBuilder().buildTree(nodes);
-        JsonNode mapper = new ObjectMapper().valueToTree(json);
-        String schemaString = "{\n" +
-                "  \"type\": \"object\",\n" +
-                "  \"properties\": {\n" +
-                "    \"password\": {\n" +
-                "      \"type\": \"object\",\n" +
-                "      \"properties\": {\n" +
-                "        \"test\": {\n" +
-                "          \"type\": \"object\",\n" +
-                "          \"properties\": {\n" +
-                "            \"child\": {\n" +
-                "              \"type\": \"string\"\n" +
-                "            },\n" +
-                "            \"child1\": {\n" +
-                "              \"type\": \"string\"\n" +
-                "            }\n" +
-                "          }\n" +
-                "        }\n" +
-                "      }\n" +
-                "    },\n" +
-                "    \"test\": {\n" +
-                "      \"type\": \"string\"\n" +
-                "    },\n" +
-                "    \"userAccount\": {\n" +
-                "      \"type\": \"object\",\n" +
-                "      \"properties\": {\n" +
-                "        \"user\": {\n" +
-                "          \"type\": \"string\"\n" +
-                "        }\n" +
-                "      }\n" +
-                "    },\n" +
-                "    \"test1\": {\n" +
-                "      \"type\": \"string\"\n" +
-                "    }\n" +
-                "  }\n" +
-                "}";
-        JsonNode schemaNode = null;
-
-        JsonSchema jsonSchema = null;
-        try {
-            schemaNode = new ObjectMapper().readTree(schemaString);
-            jsonSchema = JsonSchemaFactory.byDefault().getJsonSchema(schemaNode);
-        } catch (Exception e) {
-            log.info("getToken异常" + e.getMessage());
-        }
-
-        try {
-            jsonSchema.validate(mapper);
-            log.info("API 响应数据格式正确！");
-        } catch (ProcessingException e) {
-            log.info("API 响应数据格式错误：" + e.getMessage());
-            throw new RuntimeException();
-        }
-        return json.toJSONString();
-    }
+    @Value("${dataservice.retrynum}")
+    private Integer retryNum;
+    @Value("${dataservice.retrytime}")
+    private Integer retryTime;
 
     @Override
     public Page<TableApiPageDataDTO> getTableApiListData(TableApiPageQueryDTO dto) {
@@ -178,12 +106,46 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
 
     @Override
     public ResultEntity<Object> addTableApiService(TableApiServiceDTO dto) {
-        TableApiServicePO po = this.query().eq("api_name", dto.apiName).one();
+        TableApiServicePO po = this.query().eq("display_name", dto.displayName).one();
         if (po != null) {
             throw new FkException(ResultEnum.DATA_EXISTS);
         }
+        if (dto.specialType == null){
+            dto.specialType = 0;
+        }
         TableApiServicePO data = TableApiServiceMap.INSTANCES.dtoToPo(dto);
         data.setPublish(0);
+        if (data.specialType != SpecialTypeEnum.NONE.getValue()){
+            data.setJsonType(2);
+            data.setSyncTime("1970-01-01 00:00:00.000000");
+            // todo: 待修改
+            switch (SpecialTypeEnum.getEnum(data.specialType)){
+                case KSF_NOTICE:
+                    data.setApiName("ksf_notice");
+                    data.setSqlScript("");
+                    break;
+                case KSF_ITEM_DATA:
+                    data.setApiName("ksf_item_data");
+                    data.setSqlScript("select * from ods_sap_itemdata " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
+                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP;" +
+                            " select * from ods_sap_item_sys WHERE fidata_batch_code in " +
+                            "(select fidata_batch_code from ods_sap_ksf_inventory_sys " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
+                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
+                    break;
+                case KSF_INVENTORY_STATUS_CHANGES:
+                    data.setApiName("ksf_inventory_status_changes");
+                    data.setSqlScript("select * from ods_sap_ksf_inventory_sys " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
+                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP;" +
+                            " select * from ods_sap_ksf_inventory WHERE fidata_batch_code in " +
+                            "(select fidata_batch_code from ods_sap_ksf_inventory_sys " +
+                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
+                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
+                    break;
+            }
+        }
         if (!this.save(data)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
@@ -276,20 +238,10 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         HashMap<String, Object> checkByFieldMap = dto.getCheckByFieldMap();
         String pipelTaskTraceId = (String) checkByFieldMap.get("pipelTaskTraceId");
+
         log.info("syncTableApi参数" + JSONObject.toJSONString(dto));
-        //查询app配置信息
-        TableAppPO tableAppPO = tableAppService.getById(dto.appId);
-        ApiResultDTO apiResultDTO = null;
-        //判断api身份验证方式
-        if (tableAppPO.interfaceType == InterfaceTypeEnum.REST_API.getValue()) {
-            RestApiHandler handler = InterfaceRestApiFactory.getRestApiHandlerByType(AuthenticationTypeEnum.getEnum(tableAppPO.authenticationType));
-            apiResultDTO = handler.sendApi(dto.apiId);
-        } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
-            WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
-            apiResultDTO = webServiceHandler.sendApi(dto.apiId);
-        }
-        TableApiServicePO tableApiServicePO = baseMapper.selectById(dto.getApiId());
-        //记日志
+
+
         TableApiTaskDTO tableApiTaskDTO = new TableApiTaskDTO();
         tableApiTaskDTO.setApiId(dto.getApiId());
         tableApiTaskDTO.setTableType(dto.getTableType());
@@ -297,6 +249,64 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         HashMap<Integer, Object> taskMap = new HashMap<>();
         String format = simpleDateFormat.format(new Date());
         TableApiLogPO tableApiLogPO = new TableApiLogPO();
+        //查询app配置信息
+        TableAppPO tableAppPO = tableAppService.getById(dto.appId);
+
+        TableApiServicePO tableApiServicePO = baseMapper.selectById(dto.getApiId());
+
+        ApiResultDTO apiResultDTO = null;
+        //判断api类型
+        if (tableAppPO.interfaceType == InterfaceTypeEnum.REST_API.getValue()) {
+            RestApiHandler handler = InterfaceRestApiFactory.getRestApiHandlerByType(AuthenticationTypeEnum.getEnum(tableAppPO.authenticationType));
+            for (int i = 0; i < retryNum; i++) {
+                apiResultDTO = handler.sendApi(dto.apiId);
+                if (apiResultDTO.getFlag()){
+                    break;
+                }
+                try {
+                    log.info("发送异常:"+apiResultDTO.getMsg()+",等待10秒重新发送。");
+                    Thread.sleep(retryTime);
+                } catch (InterruptedException e) {
+                    String msg =" - api异常:"+apiResultDTO.getMsg()+"重试异常:" + e.getMessage();
+                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
+                    tableApiTaskDTO.setMsg(taskMap);
+                    publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
+                    throw new RuntimeException(e);
+                }
+            }
+        } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
+            for (int i = 0; i < retryNum; i++) {
+                switch (SpecialTypeEnum.getEnum(tableApiServicePO.specialType)){
+                    case NONE:
+                        WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
+                        apiResultDTO = webServiceHandler.sendApi(dto.apiId);
+                        break;
+                    case KSF_ITEM_DATA:
+                    case KSF_NOTICE:
+                    case KSF_INVENTORY_STATUS_CHANGES:
+                        KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
+                        apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO,dto.apiId);
+                        break;
+                    default:
+                        break;
+                }
+                if (apiResultDTO.getFlag()){
+                    break;
+                }
+                try {
+                    log.info("发送异常:"+apiResultDTO.getMsg()+",等待"+retryTime/1000+"秒重新发送。");
+                    Thread.sleep(retryTime);
+                } catch (InterruptedException e) {
+                    String msg =" - api异常:"+apiResultDTO.getMsg()+"重试异常:" + e.getMessage();
+                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
+                    tableApiTaskDTO.setMsg(taskMap);
+                    publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        //记日志
+
         if (apiResultDTO.getFlag()){
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format +" - " + apiResultDTO.getMsg());
             tableApiLogPO.setApiId(dto.apiId.intValue());
@@ -319,6 +329,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             taskMap.put(DispatchLogEnum.taskend.getValue(),msg);
         }
         tableApiTaskDTO.setMsg(taskMap);
+
         publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
         return ResultEnum.SUCCESS;
     }

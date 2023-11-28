@@ -26,49 +26,38 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 
         for (TableSourceRelationsDTO item : dto) {
             str.append("update ")
-                    .append("temp_");
+                    .append("`temp_");
             str.append(item.sourceTable)
-                    .append("");
-            if (!StringUtils.isEmpty(item.joinType)) {
-                str.append(" ").append(item.joinType);
-                str.append(" ")
-                        .append("")
-                        .append(item.targetTable)
-                        .append("");
-            }
-            str.append(" on ")
-                    .append("temp_");
+                    .append("`");
 
-            str.append(item.sourceTable)
-                    .append("")
-                    .append(".")
-                    .append("")
-                    .append(item.sourceColumn)
-                    .append("");
-            str.append(" = ");
             str.append("")
-                    .append(item.targetTable)
-                    .append("")
-                    .append(".")
-                    .append("")
-                    .append(item.targetColumn)
                     .append(" set ")
-                    .append("temp_")
+                    .append("`temp_")
                     .append(item.sourceTable)
-                    .append("")
+                    .append("`")
                     .append(".")
                     .append("")
                     .append(StringBuildUtils.dimensionKeyName(item.targetTable))
                     .append("")
                     .append(" = ")
-                    .append("")
+                    .append("`")
                     .append(item.targetTable)
-                    .append("")
+                    .append("`")
                     .append(".")
-                    .append("")
+                    .append("`")
                     .append(StringBuildUtils.dimensionKeyName(item.targetTable))
-                    .append("")
-                    .append(" WHERE ")
+                    .append("` FROM `")
+                    .append(item.targetTable)
+                    .append("`")
+                    .append(" WHERE `temp_")
+                    .append(item.sourceTable)
+                    .append("`.`")
+                    .append(item.sourceColumn)
+                    .append("` = `")
+                    .append(item.targetTable)
+                    .append("`.`")
+                    .append(item.targetColumn)
+                    .append("` AND ")
                     .append(tName)
                     .append("fidata_batch_code=")
                     .append("'${fidata_batch_code}' AND ")

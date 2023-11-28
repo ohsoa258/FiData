@@ -1,5 +1,5 @@
 package com.fisk.mdm.dto.access;
-import com.fisk.mdm.dto.access.TableHistoryDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,6 +27,16 @@ public class AccessAttributeAddDTO{
      */
     @ApiModelProperty(value = "发布备注")
     public String remark;
+    /**
+     * 基于域字段更新脚本
+     */
+    @ApiModelProperty(value = "基于域字段更新脚本")
+    public String domainUpdateSql;
+    /**
+     * 基于域字段关联映射关系
+     */
+    @ApiModelProperty(value = "基于域字段关联映射关系")
+    public List<TableSourceRelationsDTO> tableSourceRelationsDTO;
     /**
      * 列字段对应关系
      */

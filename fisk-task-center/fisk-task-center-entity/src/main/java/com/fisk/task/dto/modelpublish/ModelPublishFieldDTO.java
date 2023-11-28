@@ -79,4 +79,29 @@ public class ModelPublishFieldDTO {
      */
     @ApiModelProperty(value = "是否是业务覆盖标识 0:否 1:是")
     public int isBusinessKey;
+
+    /**
+     * 是否是doris分区字段 1：是 0：不是
+     */
+    @ApiModelProperty(value = "是否是doris分区字段 1：是 0：不是")
+    public int isPartitionKey;
+
+    /**
+     * doris分区类型 RANGE 或 LIST
+     */
+    @ApiModelProperty(value = "doris分区类型 RANGE 或 LIST")
+    public String dorisPartitionType;
+
+    /**
+     * doris分区属性值
+     */
+    @ApiModelProperty(value = "doris分区属性值")
+    public String dorisPartitionValues;
+
+    /**
+     * 是否是doris分桶字段 1：是 0：不是
+     */
+    @ApiModelProperty(value = "是否是doris分桶字段 1：是 0：不是")
+    public int isDistributedKey;
+
 }
