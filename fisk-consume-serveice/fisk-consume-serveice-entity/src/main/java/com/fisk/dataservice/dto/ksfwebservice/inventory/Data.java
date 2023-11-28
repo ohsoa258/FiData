@@ -1,4 +1,4 @@
-package com.fisk.dataservice.dto.ksfwebservice.item;
+package com.fisk.dataservice.dto.ksfwebservice.Inventory;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
@@ -12,8 +12,8 @@ import java.util.List;
 public class Data {
     @JSONField(name = "DocCount")
     private int DocCount;
-    @JSONField(name = "KsfGoods")
-    private List<KsfGoods> KsfGoods;
+    @JSONField(name = "MATDOCTAB")
+    private List<MATDOCTAB> MATDOCTAB;
 
     public int getDocCount() {
         return DocCount;
@@ -23,11 +23,11 @@ public class Data {
         DocCount = docCount;
     }
 
-    public List<KsfGoods> getKsfGoods() {
-        return KsfGoods;
+    public List<MATDOCTAB> getMATDOCTAB() {
+        return MATDOCTAB;
     }
 
-    public void setKsfGoods(List<KsfGoods> ksfGoods) {
-        KsfGoods = ksfGoods;
+    public void setMATDOCTAB(List<MATDOCTAB> MATDOCTAB) {
+        this.MATDOCTAB = MATDOCTAB;
     }
 }

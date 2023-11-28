@@ -5,9 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.dataservice.dto.ksfwebservice.Inventory.Data;
-import com.fisk.dataservice.dto.ksfwebservice.Inventory.InventoryStatusChangesDTO;
-import com.fisk.dataservice.dto.ksfwebservice.Inventory.MATDOCTAB;
+import com.fisk.dataservice.dto.ksfwebservice.inventory.Data;
+import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChangesDTO;
+import com.fisk.dataservice.dto.ksfwebservice.inventory.MATDOCTAB;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
@@ -36,19 +36,8 @@ import java.util.*;
 @Component
 public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
 
-    private static ITableApiAuthRequestService tableApiAuthRequestService;
-
-    private static ITableApiResultService tableApiResultService;
-
-    private static ITableAppManageService tableAppService;
     private static ITableApiService tableApiService;
-    private static ITableApiParameterService tableApiParameterService;
     private static UserClient userClient;
-
-    @Autowired
-    public void setTableAppService(ITableAppManageService tableAppService) {
-        KsfInventoryStatusChanges.tableAppService = tableAppService;
-    }
 
     @Autowired
     public void setTableApiService(ITableApiService tableApiService) {
@@ -56,24 +45,10 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
     }
 
     @Autowired
-    public void setTableApiParameterService(ITableApiParameterService tableApiParameterService) {
-        KsfInventoryStatusChanges.tableApiParameterService = tableApiParameterService;
-    }
-
-    @Autowired
     public void setUserClient(UserClient userClient) {
         KsfInventoryStatusChanges.userClient = userClient;
     }
 
-    @Autowired
-    public void setTableApiAuthRequestService(ITableApiAuthRequestService tableApiAuthRequestService) {
-        KsfInventoryStatusChanges.tableApiAuthRequestService = tableApiAuthRequestService;
-    }
-
-    @Autowired
-    public void setTableApiResultService(ITableApiResultService tableApiResultService) {
-        KsfInventoryStatusChanges.tableApiResultService = tableApiResultService;
-    }
 
     @Override
     public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId) {
@@ -205,10 +180,10 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             Call call = (Call) service.createCall();
 
             // 设置wsdl地址
-            call.setTargetEndpointAddress(new URL("wsdl地址"));
+            call.setTargetEndpointAddress(new URL(tableApiServicePO.getApiAddress()));
 
             // 设置命名空间和方法名
-            call.setOperationName(new QName("http://tempuri.org/", "SAPPushDataInfMATDOC"));
+            call.setOperationName(new QName("http://tempuri.org/", tableApiServicePO.getMethodName()));
 
             // 设置参数类型和参数名称
             call.addParameter("SAPPushData", org.apache.axis.encoding.XMLType.XSD_STRING, javax.xml.rpc.ParameterMode.IN);
