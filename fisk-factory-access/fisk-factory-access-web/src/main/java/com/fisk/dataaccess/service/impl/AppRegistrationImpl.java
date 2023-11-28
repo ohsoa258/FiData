@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.constants.FilterSqlConstants;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -358,7 +359,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
         classificationInfoDto.setName(appRegistrationDTO.appName);
         classificationInfoDto.setDescription(appRegistrationDTO.appDes);
-        classificationInfoDto.setSourceType(1);
+        classificationInfoDto.setSourceType(ClassificationTypeEnum.DATA_ACCESS);
         classificationInfoDto.setAppType(appRegistrationDTO.appType);
         classificationInfoDto.setDelete(false);
 
@@ -807,7 +808,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
                         classificationInfoDto.setName(vo.classifications);
                         classificationInfoDto.setDescription(model.appDes);
-                        classificationInfoDto.setSourceType(1);
+                        classificationInfoDto.setSourceType(ClassificationTypeEnum.DATA_ACCESS);
                         classificationInfoDto.setDelete(true);
 
                         dataManageClient.appSynchronousClassification(classificationInfoDto);
