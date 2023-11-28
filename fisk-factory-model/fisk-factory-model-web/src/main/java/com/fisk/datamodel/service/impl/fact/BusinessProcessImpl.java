@@ -357,7 +357,7 @@ public class BusinessProcessImpl
                 //同步单表元数据
                 if (openMetadata){
                     List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDataModelMetaData();
-                    consumeMetaData()
+//                    consumeMetaData()
 
                 }
             }
