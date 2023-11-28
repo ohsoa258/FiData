@@ -223,26 +223,22 @@ public class TableAppManageImpl
                 case NONE_VALIDATION:
                     break;
                 case BASIC_VALIDATION:
-                    saveBasicValidation(dto, appId);
-                    break;
                 case JWT_VALIDATION:
-                    break;
                 case BEARER_TOKEN_VALIDATION:
-                    break;
                 case OAUTH_TWO_VALIDATION:
-                    break;
                 case API_KEY_VALIDATION:
+                    saveValidation(dto, appId);
                     break;
                 default:
                     break;
             }
         } else if (dto.getInterfaceType() == InterfaceTypeEnum.WEB_SERVICE) {
-
+            saveValidation(dto, appId);
         }
 
     }
 
-    private void saveBasicValidation(TableAppDTO dto, long appId) {
+    private void saveValidation(TableAppDTO dto, long appId) {
         List<TableApiAuthRequestDTO> apiAuthRequestDTO = dto.getApiAuthRequestDTO();
         apiAuthRequestDTO = apiAuthRequestDTO.stream().map(i -> {
             i.setAppId((int) appId);
@@ -286,7 +282,7 @@ public class TableAppManageImpl
                 }
             } else {
                 if (dto.appType == AppTypeEnum.API_TYPE) {
-                    saveBasicValidation(dto, tableAppPO.getId());
+                    saveValidation(dto, tableAppPO.getId());
                 } else {
                     QueryWrapper<AppServiceConfigPO> appServiceConfigPoQueryWrapper = new QueryWrapper<>();
                     appServiceConfigPoQueryWrapper.lambda().eq(AppServiceConfigPO::getDelFlag, 1)
@@ -336,21 +332,19 @@ public class TableAppManageImpl
                 case NONE_VALIDATION:
                     break;
                 case BASIC_VALIDATION:
-                    deleteBasicValidation(appId);
-                    saveBasicValidation(dto, appId);
-                    break;
                 case JWT_VALIDATION:
-                    break;
                 case BEARER_TOKEN_VALIDATION:
-                    break;
                 case OAUTH_TWO_VALIDATION:
-                    break;
                 case API_KEY_VALIDATION:
+                    deleteValidation(appId);
+                    saveValidation(dto, appId);
                     break;
                 default:
                     break;
             }
         } else if (dto.getInterfaceType() == InterfaceTypeEnum.WEB_SERVICE) {
+            deleteValidation(appId);
+            saveValidation(dto, appId);
         }
     }
 
@@ -403,7 +397,7 @@ public class TableAppManageImpl
                     syncQueryWrapper.in(TableSyncModePO::getTypeTableId, tableServiceIdList);
                     tableSyncMode.remove(syncQueryWrapper);
                     if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
-                        tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
+                        tableServiceIdList = tableServicePos.stream().map(BasePO::getId).collect(Collectors.toList());
                         BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
                         buildDeleteTableService.appId = String.valueOf(id);
                         buildDeleteTableService.ids = tableServiceIdList;
@@ -433,15 +427,17 @@ public class TableAppManageImpl
                 LambdaQueryWrapper<TableApiAuthRequestPO> authQueryWrapper = new LambdaQueryWrapper<>();
                 authQueryWrapper.eq(TableApiAuthRequestPO::getAppId, id);
                 tableApiAuthRequestService.remove(authQueryWrapper);
-                //删除api配置字段数据
-                LambdaQueryWrapper<TableApiParameterPO> apiParameterQueryWrapper = new LambdaQueryWrapper<>();
-                apiParameterQueryWrapper.in(TableApiParameterPO::getApiId, apiIds);
-                tableApiParameterService.remove(apiParameterQueryWrapper);
-                //删除api配置数据
-                LambdaQueryWrapper<TableSyncModePO> syncQueryWrapper = new LambdaQueryWrapper<>();
-                syncQueryWrapper.eq(TableSyncModePO::getType, 4);
-                syncQueryWrapper.in(TableSyncModePO::getTypeTableId, apiIds);
-                tableSyncMode.remove(syncQueryWrapper);
+                if (CollectionUtils.isNotEmpty(apiIds)){
+                    //删除api配置字段数据
+                    LambdaQueryWrapper<TableApiParameterPO> apiParameterQueryWrapper = new LambdaQueryWrapper<>();
+                    apiParameterQueryWrapper.in(TableApiParameterPO::getApiId, apiIds);
+                    tableApiParameterService.remove(apiParameterQueryWrapper);
+                    //删除api配置数据
+                    LambdaQueryWrapper<TableSyncModePO> syncQueryWrapper = new LambdaQueryWrapper<>();
+                    syncQueryWrapper.eq(TableSyncModePO::getType, 4);
+                    syncQueryWrapper.in(TableSyncModePO::getTypeTableId, apiIds);
+                    tableSyncMode.remove(syncQueryWrapper);
+                }
                 List<Long> tableApiIdList = tableApiServicePOS.stream().map(BasePO::getId).collect(Collectors.toList());
                 BuildDeleteTableApiServiceDTO buildDeleteTableApiServiceDTO = new BuildDeleteTableApiServiceDTO();
                 buildDeleteTableApiServiceDTO.ids = tableApiIdList;
@@ -464,26 +460,22 @@ public class TableAppManageImpl
                 case NONE_VALIDATION:
                     break;
                 case BASIC_VALIDATION:
-                    deleteBasicValidation(appId);
-                    break;
                 case JWT_VALIDATION:
-                    break;
                 case BEARER_TOKEN_VALIDATION:
-                    break;
                 case OAUTH_TWO_VALIDATION:
-                    break;
                 case API_KEY_VALIDATION:
+                    deleteValidation(appId);
                     break;
                 default:
                     break;
             }
         } else if (dto.getInterfaceType() == InterfaceTypeEnum.WEB_SERVICE) {
-
+            deleteValidation(appId);
         }
 
     }
 
-    private void deleteBasicValidation(long appId) {
+    private void deleteValidation(long appId) {
         LambdaQueryWrapper<TableApiAuthRequestPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiAuthRequestPO::getAppId, appId);
         tableApiAuthRequestService.remove(queryWrapper);

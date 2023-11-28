@@ -22,7 +22,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.sql.*;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -108,19 +107,20 @@ public abstract class RestApiHandler {
             return apiResultDTO;
         }
         JSONArray finalResultJsonData = resultJsonData;
-        Integer id = null;
-        for (TableApiParameterPO tableApiParameterPO : apiParameterPOList) {
-            if (tableApiParameterPO.getSelected() == 1){
-                id = (int)tableApiParameterPO.getId();
-            }
-        }
-        Integer finalId = id;
-        apiParameterPOList = apiParameterPOList.stream().filter(i->i.getPid() != finalId).collect(Collectors.toList());
         List<TableApiParameterPO> collect = apiParameterPOList.stream().filter(i -> i.getSelected() == 1).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collect)){
-            apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,finalResultJsonData.toJSONString());
+            apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,finalResultJsonData.toJSONString(),false);
             apiResultDTO.setNumber(number);
         }else {
+            Integer id = null;
+            for (TableApiParameterPO tableApiParameterPO : apiParameterPOList) {
+                if (tableApiParameterPO.getSelected() == 1){
+                    id = (int)tableApiParameterPO.getId();
+                }
+            }
+            Integer finalId = id;
+            apiParameterPOList = apiParameterPOList.stream().filter(i->i.getPid() != finalId).collect(Collectors.toList());
+
             List<TreeBuilder.Node> nodes = apiParameterPOList.stream().map(i -> {
                 TreeBuilder.Node node = new TreeBuilder.Node();
                 node.setId(String.valueOf(i.getId()));
@@ -135,13 +135,13 @@ public abstract class RestApiHandler {
                 return node;
             }).collect(Collectors.toList());
             JSONObject json = new TreeBuilder().buildTree(nodes);
-            apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,json.toJSONString());
+            apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,json.toJSONString(),true);
             apiResultDTO.setNumber(number);
         }
         return apiResultDTO;
     }
 
-    public abstract ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body);
+    public abstract ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body,Boolean flag);
     public JSONArray resultSetToJsonArray(ResultSet rs) throws SQLException {
         JSONArray array = new JSONArray();
         ResultSetMetaData metaData = rs.getMetaData();

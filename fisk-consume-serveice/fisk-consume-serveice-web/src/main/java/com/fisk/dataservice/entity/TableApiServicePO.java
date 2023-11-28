@@ -51,4 +51,9 @@ public class TableApiServicePO extends BasePO {
     @ApiModelProperty(value = "是否是重点接口 0否，1是")
     private Integer importantInterface;
 
+    @ApiModelProperty(value = "特殊处理类型 0:无 1:ksf物料主数据 2:ksf通知单 3:ksf库存状态变更")
+    public Integer specialType;
+
+    @ApiModelProperty(value = "起始同步时间")
+    public String syncTime;
 }
