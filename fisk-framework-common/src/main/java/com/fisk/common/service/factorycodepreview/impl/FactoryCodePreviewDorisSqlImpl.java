@@ -178,13 +178,32 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 pkFields1 = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
             }
         }
-
+        //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串  为了替换delete前缀中预留的占位符  <?>
+        StringBuilder pkFieldNames = new StringBuilder();
         //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
         StringBuilder delete = new StringBuilder();
         delete.append("DELETE FROM ")
                 .append(tableName)
-                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' ")
-                .append("<?>");
+                .append(" WHERE fidata_batch_code <> '${fidata_batch_code}' ")
+                .append("lishiji");
+
+        //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
+        for (PublishFieldDTO pkField : pkFields) {
+            pkFieldNames.append(" AND ")
+                    .append(tableName)
+                    .append(".`")
+                    .append(pkField.fieldEnName)
+                    .append("` IN (")
+                    .append("SELECT `")
+                    .append(pkField.fieldEnName)
+                    .append("` FROM ")
+                    .append(sourceTableName)
+                    .append(" WHERE fidata_batch_code = '\\${fidata_batch_code}' AND fidata_flow_batch_code = '\\${fragment.index}' )");
+        }
+        pkFieldNames.append(";   ");
+
+        String pksql = delete.toString();
+        String halfSql = pksql.replaceFirst("lishiji", String.valueOf(pkFieldNames));
 
 
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
@@ -292,7 +311,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         suffix = new StringBuilder(suffix.toString().replaceAll(regex, String.valueOf(pkSql)));
 
         //返回拼接完成的追加覆盖方式拼接的sql
-        return prefix + "   " + suffix;
+        return halfSql + prefix + "   " + suffix;
     }
 
     /**
