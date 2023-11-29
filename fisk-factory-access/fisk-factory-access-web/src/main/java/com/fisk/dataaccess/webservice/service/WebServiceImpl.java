@@ -28,7 +28,7 @@ import java.util.List;
  * 该实现类用于提供webService客户端方式可调用的方法
  */
 @Service
-@WebService
+@WebService(targetNamespace = "http://tempuri.org/")
 @Slf4j
 public class WebServiceImpl implements IWebServiceServer {
 
