@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
 import com.fisk.dataservice.dto.tableapi.TableApiSyncDTO;
 import com.fisk.dataservice.dto.tableapi.TableApiTaskDTO;
@@ -41,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -71,6 +74,8 @@ public class AsyncImpl {
     private Integer retryNum;
     @Value("${dataservice.retrytime}")
     private Integer retryTime;
+    @Resource
+    private RedisUtil redisUtil;
     @Async
     public ResultEnum syncTableApi(TableApiSyncDTO dto) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -115,6 +120,8 @@ public class AsyncImpl {
                 }
             }
         } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
+            Boolean setnx = redisUtil.setnx(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+tableApiServicePO.getId(), 100, TimeUnit.SECONDS);
+            outerLoop:
             for (int i = 0; i < retryNum; i++) {
                 switch (SpecialTypeEnum.getEnum(tableApiServicePO.specialType)){
                     case NONE:
@@ -124,8 +131,15 @@ public class AsyncImpl {
                     case KSF_ITEM_DATA:
                     case KSF_NOTICE:
                     case KSF_INVENTORY_STATUS_CHANGES:
-                        KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
-                        apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO,dto.apiId);
+                        if (setnx){
+                            KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
+                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO,dto.apiId);
+                        }else {
+                            apiResultDTO=new ApiResultDTO();
+                            apiResultDTO.setFlag(false);
+                            apiResultDTO.setMsg("上次同步未完成");
+                            break outerLoop;
+                        }
                         break;
                     default:
                         break;
@@ -145,6 +159,7 @@ public class AsyncImpl {
                     throw new RuntimeException(e);
                 }
             }
+            redisUtil.del(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+tableApiServicePO.getId());
         }
         //记日志
 

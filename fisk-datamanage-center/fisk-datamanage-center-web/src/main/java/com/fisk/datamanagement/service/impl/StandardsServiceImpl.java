@@ -79,11 +79,16 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         queryWrapper.last("LIMIT 1");
         StandardsMenuPO tragetMenu = standardsMenuService.getOne(queryWrapper);
         //添加标签并排序
+
         StandardsMenuPO standardsMenuPO = new StandardsMenuPO();
         standardsMenuPO.setPid(standardsDTO.getMenuId());
         standardsMenuPO.setType(2);
         standardsMenuPO.setName(standardsDTO.getChineseName());
-        standardsMenuPO.setSort(tragetMenu.getSort()+1);
+        if (tragetMenu == null){
+            standardsMenuPO.setSort(1);
+        }else {
+            standardsMenuPO.setSort(tragetMenu.getSort()+1);
+        }
         standardsMenuService.save(standardsMenuPO);
         standardsDTO.setMenuId((int)standardsMenuPO.getId());
 

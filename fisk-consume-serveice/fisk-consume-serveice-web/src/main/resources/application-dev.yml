@@ -45,3 +45,4 @@ spring:
   freemarker:
     settings:
       classic_compatible: true
+fiData-data-ods-source: 2

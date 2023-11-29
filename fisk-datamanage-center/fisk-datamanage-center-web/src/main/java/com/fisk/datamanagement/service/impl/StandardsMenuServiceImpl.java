@@ -36,6 +36,7 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
             standardsTreeDTO.setPid(i.getPid());
             standardsTreeDTO.setName(i.getName());
             standardsTreeDTO.setType(i.getType());
+            standardsTreeDTO.setSort(i.getSort());
             standardsTreeDTO.setCreateTime(i.getCreateTime());
             return standardsTreeDTO;
         }).collect(Collectors.toList());
@@ -73,7 +74,11 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
         queryWrapper.orderByDesc(StandardsMenuPO::getSort);
         queryWrapper.last("LIMIT 1");
         StandardsMenuPO tragetMenu = getOne(queryWrapper);
-        standardsMenuDTO.setSort(tragetMenu.getSort()+1);
+        if (tragetMenu == null){
+            standardsMenuDTO.setSort(1);
+        }else {
+            standardsMenuDTO.setSort(tragetMenu.getSort()+1);
+        }
         if (standardsMenuDTO.getName() == null || standardsMenuDTO.getType() == null){
             return ResultEnum.SAVE_VERIFY_ERROR;
         }

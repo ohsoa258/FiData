@@ -67,6 +67,9 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     @Value("${dataservice.retrytime}")
     private Integer retryTime;
 
+    @Value("${fiData-data-ods-source}")
+    private Integer dbId;
+
     @Override
     public Page<TableApiPageDataDTO> getTableApiListData(TableApiPageQueryDTO dto) {
         return baseMapper.getTableApiListData(dto.page, dto);
@@ -107,17 +110,20 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             // todo: 待修改
             switch (SpecialTypeEnum.getEnum(data.specialType)){
                 case KSF_NOTICE:
+                    data.setSourceDbId(dbId);
                     data.setApiName("ksf_notice");
                     data.setSqlScript("select * from ods_sap_ksf_notice; " +
                             "select * from ods_sap_headers;" +
                             " select * from ods_sap_details;");
                     break;
                 case KSF_ITEM_DATA:
+                    data.setSourceDbId(dbId);
                     data.setApiName("ksf_item_data");
                     data.setSqlScript("select * from ods_sap_ksf_item_sys;" +
                             " select * from ods_sap_itemdata;");
                     break;
                 case KSF_INVENTORY_STATUS_CHANGES:
+                    data.setSourceDbId(dbId);
                     data.setApiName("ksf_inventory_status_changes");
                     data.setSqlScript("select * from ods_sap_ksf_inventory_sys;" +
                             "select * from ods_sap_ksf_inventory;");
