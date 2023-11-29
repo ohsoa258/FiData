@@ -60,7 +60,7 @@ public class API_Message implements Serializable {
     @ApiModelProperty(value = "是否为网站手动消息")
     private String IsManualSend;
 
-    @XmlElement(name = "SourceSys", nillable = false, required = true)
+    @XmlElement(name = "SourceSys", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getSourceSys() {
         return SourceSys;
     }
@@ -69,7 +69,7 @@ public class API_Message implements Serializable {
         SourceSys = sourceSys;
     }
 
-    @XmlElement(name = "TargetSys", nillable = false, required = true)
+    @XmlElement(name = "TargetSys", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getTargetSys() {
         return TargetSys;
     }
@@ -78,7 +78,7 @@ public class API_Message implements Serializable {
         TargetSys = targetSys;
     }
 
-    @XmlElement(name = "UpdateTime", nillable = false, required = true)
+    @XmlElement(name = "UpdateTime", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getUpdateTime() {
         return UpdateTime;
     }
@@ -87,7 +87,7 @@ public class API_Message implements Serializable {
         UpdateTime = updateTime;
     }
 
-    @XmlElement(name = "Guid")
+    @XmlElement(name = "Guid", namespace = "http://tempuri.org/")
     public String getGuid() {
         return Guid;
     }
@@ -96,7 +96,7 @@ public class API_Message implements Serializable {
         Guid = guid;
     }
 
-    @XmlElement(name = "SingleTargetSys")
+    @XmlElement(name = "SingleTargetSys", namespace = "http://tempuri.org/")
     public String getSingleTargetSys() {
         return SingleTargetSys;
     }
@@ -105,7 +105,7 @@ public class API_Message implements Serializable {
         SingleTargetSys = singleTargetSys;
     }
 
-    @XmlElement(name = "AppKey")
+    @XmlElement(name = "AppKey", namespace = "http://tempuri.org/")
     public String getAppKey() {
         return AppKey;
     }
@@ -114,7 +114,7 @@ public class API_Message implements Serializable {
         AppKey = appKey;
     }
 
-    @XmlElement(name = "IsTest")
+    @XmlElement(name = "IsTest", namespace = "http://tempuri.org/")
     public String getIsTest() {
         return IsTest;
     }
@@ -123,7 +123,7 @@ public class API_Message implements Serializable {
         IsTest = isTest;
     }
 
-    @XmlElement(name = "IsManualSend")
+    @XmlElement(name = "IsManualSend", namespace = "http://tempuri.org/")
     public String getIsManualSend() {
         return IsManualSend;
     }

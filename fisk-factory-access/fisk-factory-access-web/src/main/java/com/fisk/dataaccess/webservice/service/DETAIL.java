@@ -118,7 +118,7 @@ public class DETAIL implements Serializable {
     @JSONField(name = "EBELN")
     private String EBELN;
 
-    @XmlElement(name = "EBELN", nillable = false, required = true)
+    @XmlElement(name = "EBELN", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getEBELN() {
         return EBELN;
     }
@@ -127,7 +127,7 @@ public class DETAIL implements Serializable {
         this.EBELN = EBELN;
     }
 
-    @XmlElement(name = "EINDT", nillable = false, required = true)
+    @XmlElement(name = "EINDT", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getEINDT() {
         return EINDT;
     }
@@ -136,7 +136,7 @@ public class DETAIL implements Serializable {
         this.EINDT = EINDT;
     }
 
-    @XmlElement(name = "POSNR", nillable = false, required = true)
+    @XmlElement(name = "POSNR", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getPOSNR() {
         return POSNR;
     }
@@ -145,6 +145,7 @@ public class DETAIL implements Serializable {
         this.POSNR = POSNR;
     }
 
+    @XmlElement(name = "LTEXT", namespace = "http://tempuri.org/")
     public String getLTEXT() {
         return LTEXT;
     }
@@ -153,6 +154,7 @@ public class DETAIL implements Serializable {
         this.LTEXT = LTEXT;
     }
 
+    @XmlElement(name = "PSTYV", namespace = "http://tempuri.org/")
     public String getPSTYV() {
         return PSTYV;
     }
@@ -161,7 +163,7 @@ public class DETAIL implements Serializable {
         this.PSTYV = PSTYV;
     }
 
-    @XmlElement(name = "MATNR", nillable = false, required = true)
+    @XmlElement(name = "MATNR", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getMATNR() {
         return MATNR;
     }
@@ -170,7 +172,7 @@ public class DETAIL implements Serializable {
         this.MATNR = MATNR;
     }
 
-    @XmlElement(name = "MENGE", nillable = false, required = true)
+    @XmlElement(name = "MENGE", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getMENGE() {
         return MENGE;
     }
@@ -179,7 +181,7 @@ public class DETAIL implements Serializable {
         this.MENGE = MENGE;
     }
 
-    @XmlElement(name = "MEINS", nillable = false, required = true)
+    @XmlElement(name = "MEINS", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getMEINS() {
         return MEINS;
     }
@@ -188,6 +190,7 @@ public class DETAIL implements Serializable {
         this.MEINS = MEINS;
     }
 
+    @XmlElement(name = "NETPR", namespace = "http://tempuri.org/")
     public String getNETPR() {
         return NETPR;
     }
@@ -196,7 +199,7 @@ public class DETAIL implements Serializable {
         this.NETPR = NETPR;
     }
 
-    @XmlElement(name = "WERKS", nillable = false, required = true)
+    @XmlElement(name = "WERKS", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getWERKS() {
         return WERKS;
     }
@@ -205,7 +208,7 @@ public class DETAIL implements Serializable {
         this.WERKS = WERKS;
     }
 
-    @XmlElement(name = "NAME1", nillable = false, required = true)
+    @XmlElement(name = "NAME1", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getNAME1() {
         return NAME1;
     }
@@ -214,7 +217,7 @@ public class DETAIL implements Serializable {
         this.NAME1 = NAME1;
     }
 
-    @XmlElement(name = "LGORT", nillable = false, required = true)
+    @XmlElement(name = "LGORT", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getLGORT() {
         return LGORT;
     }
@@ -223,7 +226,7 @@ public class DETAIL implements Serializable {
         this.LGORT = LGORT;
     }
 
-    @XmlElement(name = "LGOBE", nillable = false, required = true)
+    @XmlElement(name = "LGOBE", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getLGOBE() {
         return LGOBE;
     }
@@ -232,7 +235,7 @@ public class DETAIL implements Serializable {
         this.LGOBE = LGOBE;
     }
 
-    @XmlElement(name = "INSMK", nillable = false, required = true)
+    @XmlElement(name = "INSMK", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getINSMK() {
         return INSMK;
     }
@@ -241,6 +244,7 @@ public class DETAIL implements Serializable {
         this.INSMK = INSMK;
     }
 
+    @XmlElement(name = "CHARG", namespace = "http://tempuri.org/")
     public String getCHARG() {
         return CHARG;
     }

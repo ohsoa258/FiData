@@ -1,7 +1,6 @@
 package com.fisk.dataaccess.webservice.service;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -91,7 +90,7 @@ public class HEADER implements Serializable {
     @JSONField(name = "BUDAT")
     private String BUDAT;
 
-    @XmlElement(name = "BSART", nillable = false, required = true)
+    @XmlElement(name = "BSART", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getBSART() {
         return BSART;
     }
@@ -100,7 +99,7 @@ public class HEADER implements Serializable {
         this.BSART = BSART;
     }
 
-    @XmlElement(name = "EBELN", nillable = false, required = true)
+    @XmlElement(name = "EBELN", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getEBELN() {
         return EBELN;
     }
@@ -109,7 +108,7 @@ public class HEADER implements Serializable {
         this.EBELN = EBELN;
     }
 
-    @XmlElement(name = "LGPLA", nillable = false, required = true)
+    @XmlElement(name = "LGPLA", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getLGPLA() {
         return LGPLA;
     }
@@ -118,7 +117,7 @@ public class HEADER implements Serializable {
         this.LGPLA = LGPLA;
     }
 
-    @XmlElement(name = "VTXTK", nillable = false, required = true)
+    @XmlElement(name = "VTXTK", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getVTXTK() {
         return VTXTK;
     }
@@ -127,7 +126,7 @@ public class HEADER implements Serializable {
         this.VTXTK = VTXTK;
     }
 
-    @XmlElement(name = "LIFNR", nillable = false, required = true)
+    @XmlElement(name = "LIFNR", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getLIFNR() {
         return LIFNR;
     }
@@ -136,7 +135,7 @@ public class HEADER implements Serializable {
         this.LIFNR = LIFNR;
     }
 
-    @XmlElement(name = "NAME1", nillable = false, required = true)
+    @XmlElement(name = "NAME1", nillable = false, required = true, namespace = "http://tempuri.org/")
     public String getNAME1() {
         return NAME1;
     }
@@ -145,6 +144,7 @@ public class HEADER implements Serializable {
         this.NAME1 = NAME1;
     }
 
+    @XmlElement(name = "KUNAG", namespace = "http://tempuri.org/")
     public String getKUNAG() {
         return KUNAG;
     }
@@ -153,6 +153,7 @@ public class HEADER implements Serializable {
         this.KUNAG = KUNAG;
     }
 
+    @XmlElement(name = "KUNNR", namespace = "http://tempuri.org/")
     public String getKUNNR() {
         return KUNNR;
     }
@@ -161,6 +162,7 @@ public class HEADER implements Serializable {
         this.KUNNR = KUNNR;
     }
 
+    @XmlElement(name = "NAME2", namespace = "http://tempuri.org/")
     public String getNAME2() {
         return NAME2;
     }
@@ -169,6 +171,7 @@ public class HEADER implements Serializable {
         this.NAME2 = NAME2;
     }
 
+    @XmlElement(name = "HTEXT", namespace = "http://tempuri.org/")
     public String getHTEXT() {
         return HTEXT;
     }
@@ -177,6 +180,7 @@ public class HEADER implements Serializable {
         this.HTEXT = HTEXT;
     }
 
+    @XmlElement(name = "BUDAT", namespace = "http://tempuri.org/")
     public String getBUDAT() {
         return BUDAT;
     }
