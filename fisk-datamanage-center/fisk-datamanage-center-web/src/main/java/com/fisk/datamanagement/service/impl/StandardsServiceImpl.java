@@ -425,8 +425,8 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-                queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
-                queryWrapper.le(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                queryWrapper.ge(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
                 List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
                 for (StandardsMenuPO menuPO : list) {
                     menuPO.setSort(menuPO.getSort()+1);
