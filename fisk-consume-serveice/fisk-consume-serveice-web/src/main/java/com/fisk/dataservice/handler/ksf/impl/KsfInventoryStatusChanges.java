@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.Data;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChanges;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.MATDOCTAB;
@@ -20,6 +22,7 @@ import org.apache.axis.client.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import javax.xml.namespace.QName;
 import java.net.URL;
 import java.sql.*;
@@ -39,6 +42,8 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
     private static ITableApiService tableApiService;
     private static UserClient userClient;
 
+    private static  RedisUtil redisUtil;
+
     @Autowired
     public void setTableApiService(ITableApiService tableApiService) {
         KsfInventoryStatusChanges.tableApiService = tableApiService;
@@ -49,9 +54,15 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
         KsfInventoryStatusChanges.userClient = userClient;
     }
 
+    @Autowired
+    public void setUserClient(RedisUtil redisUtil) {
+        KsfInventoryStatusChanges.redisUtil = redisUtil;
+    }
+
 
     @Override
     public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId) {
+        redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+apiId, 100);
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);
         int number = 0;
@@ -61,6 +72,12 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
+        //获取查询时间区间
+        String startTime = tableApiServicePO.getSyncTime();
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
+        String endTime = now.format(formatter);
+
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
         List<InventoryStatusChanges> resultJsonData = null;
@@ -78,17 +95,12 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                 conn1 = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
                 st1 = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                log.info("开始执行脚本:{}", tableApiServicePO.getSqlScript());
-                //获取查询时间区间
-                String startTime = tableApiServicePO.getSyncTime();
-                LocalDateTime now = LocalDateTime.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS");
-                String endTime = now.format(formatter);
-
                 String[] split = tableApiServicePO.getSqlScript().split(";");
                 String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP;";
-                String statusChangesSql = split[1] + "WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_inventory_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String statusChangesSql = split[1] + " WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_inventory_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st.executeQuery(systemDataSql);
+                log.info("开始执行脚本statusChanges:{}", statusChangesSql);
                 ResultSet statusChanges = st1.executeQuery(statusChangesSql);
                 resultJsonData = assembleInventoryStatusChangesDTO(systemData, statusChanges);
                 number = resultJsonData.size();
@@ -117,8 +129,13 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
-
-        apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, JSON.toJSONString(resultJsonData));
+        String data = JSON.toJSONString(resultJsonData);
+        log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
+        apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, data);
+        if (apiResultDTO.getFlag()){
+            tableApiServicePO.setSyncTime(endTime);
+            tableApiService.updateById(tableApiServicePO);
+        }
         apiResultDTO.setNumber(number);
         return apiResultDTO;
     }
