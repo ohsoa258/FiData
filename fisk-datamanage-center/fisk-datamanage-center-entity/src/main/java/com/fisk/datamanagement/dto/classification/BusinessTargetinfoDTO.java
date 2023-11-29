@@ -34,4 +34,6 @@ public class BusinessTargetinfoDTO {
     public String  indicatorType;
     public String  attributesNumber;
     public String  name;
+    public String  sqlScript;
+
 }

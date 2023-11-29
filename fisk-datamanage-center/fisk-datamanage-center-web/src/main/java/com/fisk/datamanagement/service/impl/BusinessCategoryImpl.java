@@ -6,12 +6,12 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
-import com.fisk.datamanagement.dto.businessclassification.BusinessClassificationTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.service.BusinessCategoryService;
+import lombok.Data;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -66,6 +66,27 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         }
         return ResultEnum.SUCCESS;
     }
+
+    /**
+     * 更改指标数据顺序
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEnum updateCategorySort(List<String> dto) {
+     for (int i=0;i<dto.size();i++){
+         // 查询当前业务分类
+         QueryWrapper<BusinessCategoryPO> qw = new QueryWrapper<>();
+         qw.eq("id",dto.get(i)).eq("del_flag", 1);
+         BusinessCategoryPO model = businessCategoryMapper.selectOne(qw);
+         model.setSort(i);
+         if (businessCategoryMapper.updateById(model) <= 0){
+             throw new FkException(ResultEnum.ERROR, "修改业务分类失败");
+         }
+     }
+        return ResultEnum.SUCCESS;
+    }
+
 
 
     /**
@@ -126,6 +147,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             BusinessCategoryPO model = new BusinessCategoryPO();
             model.setName(item.name);
             model.setDescription(item.description);
+            model.setSort((int) System.currentTimeMillis());
             // 设置父级id
             if (!CollectionUtils.isEmpty(item.superTypes)){
 
@@ -160,6 +182,8 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         return ResultEnum.SUCCESS;
     }
 
+
+
     /**
      * 查询指标分类数据树状展示
      * @return
@@ -185,13 +209,14 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             dto.setName(item.name);
             dto.setDescription(item.description);
             dto.setCreateTime(item.createTime);
+            dto.setSort(item.sort);
             return dto;
         }).collect(Collectors.toList());
 
         // 获取父级
         List<BusinessCategoryTreeDTO> parentList = allData.stream().filter(item -> StringUtils.isEmpty(item.pid)).collect(Collectors.toList());
         if (parentList.size() > 1){
-            parentList.sort(Comparator.comparing(BusinessCategoryTreeDTO::getCreateTime).reversed());
+            parentList.sort(Comparator.comparing(BusinessCategoryTreeDTO::getSort));
         }
         // 递归处理子集
         recursionClassificationTree(allData, parentList);
@@ -214,7 +239,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                 }
                 // 递归处理
                 recursionClassificationTree(allData, children);
-                children.sort(Comparator.comparing(BusinessCategoryTreeDTO::getCreateTime).reversed());
+                children.sort(Comparator.comparing(BusinessCategoryTreeDTO::getSort));
             }
             // 加入父级
             parent.setChild(children);

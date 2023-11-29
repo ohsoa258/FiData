@@ -17,5 +17,7 @@ public class BusinessCategoryPO extends BasePO {
 
     public String name;
 
+    public Integer sort;
+
     public String description;
 }
