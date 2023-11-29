@@ -140,10 +140,13 @@ public class WebServiceImpl implements IWebServiceServer {
         //统一报文返回类型
         if (result.contains("失败")) {
             ksf_noticeResult.setSTATUS("1");
+            result = "前置机数据同步失败";
         } else if (!result.contains("成功")) {
             ksf_noticeResult.setSTATUS("1");
+            result = "前置机数据同步失败";
         } else {
             ksf_noticeResult.setSTATUS("0");
+            result = "前置机数据同步成功";
         }
         ksf_noticeResult.setINFOTEXT(result);
         return ksf_noticeResult;
