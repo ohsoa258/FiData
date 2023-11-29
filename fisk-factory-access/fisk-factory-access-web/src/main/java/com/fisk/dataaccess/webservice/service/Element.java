@@ -26,7 +26,7 @@ public class Element implements Serializable {
     @ApiModelProperty(value = "业务数据行传入")
     private List<DETAIL> DETAIL;
 
-    @XmlElement(name = "HEADER", nillable = false, required = true)
+    @XmlElement(name = "HEADER", nillable = false, required = true, namespace = "http://tempuri.org/")
     public List<com.fisk.dataaccess.webservice.service.HEADER> getHEADER() {
         return HEADER;
     }
@@ -35,7 +35,7 @@ public class Element implements Serializable {
         this.HEADER = HEADER;
     }
 
-    @XmlElement(name = "DETAIL", nillable = false, required = true)
+    @XmlElement(name = "DETAIL", nillable = false, required = true, namespace = "http://tempuri.org/")
     public List<com.fisk.dataaccess.webservice.service.DETAIL> getDETAIL() {
         return DETAIL;
     }

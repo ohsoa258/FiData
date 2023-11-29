@@ -19,7 +19,7 @@ public class Elements implements Serializable {
     @ApiModelProperty(value = "业务数据表头传入 & 业务数据行传入")
     private Element Element;
 
-    @XmlElement(name = "Element", nillable = false, required = true)
+    @XmlElement(name = "Element", nillable = false, required = true,namespace = "http://tempuri.org/")
     public com.fisk.dataaccess.webservice.service.Element getElement() {
         return Element;
     }
