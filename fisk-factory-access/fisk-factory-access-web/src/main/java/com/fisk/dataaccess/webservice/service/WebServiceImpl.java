@@ -107,7 +107,8 @@ public class WebServiceImpl implements IWebServiceServer {
      * @return
      */
     @Override
-    @WebMethod(action = "http://tempuri.org/KSF_Notice")
+//    @WebMethod(action = "http://tempuri.org/KSF_Notice")
+    @WebMethod
     @WebResult(name = "KSF_NoticeResult")
     public KSF_NoticeResult KSF_Notice(@WebParam(name = "API_Message",targetNamespace = "http://tempuri.org/") API_Message api_message, @WebParam(name = "Elements",targetNamespace = "http://tempuri.org/") Elements elements) {
         log.debug("通知单推送的系统数据：" + JSON.toJSONString(api_message));
