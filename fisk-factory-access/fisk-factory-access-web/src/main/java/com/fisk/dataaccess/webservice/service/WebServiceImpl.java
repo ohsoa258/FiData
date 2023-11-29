@@ -109,7 +109,7 @@ public class WebServiceImpl implements IWebServiceServer {
     @Override
     @WebMethod
     @WebResult(name = "KSF_NoticeResult")
-    public KSF_NoticeResult KSF_Notice(@WebParam(name = "API_Message") API_Message api_message, @WebParam(name = "Elements") Elements elements) {
+    public KSF_NoticeResult KSF_Notice(@WebParam(name = "API_Message",targetNamespace = "http://tempuri.org/") API_Message api_message, @WebParam(name = "Elements",targetNamespace = "http://tempuri.org/") Elements elements) {
         log.debug("通知单推送的系统数据：" + JSON.toJSONString(api_message));
         log.debug("通知单推送的明细数据：" + JSON.toJSONString(elements));
         //将webservice接收到的xml格式的数据转换为json格式的数据
