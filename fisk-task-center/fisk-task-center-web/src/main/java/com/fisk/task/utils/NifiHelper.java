@@ -131,14 +131,11 @@ public class NifiHelper implements ApplicationContextAware {
         String nifiToken = "";
         try {
             RedisUtil redisUtil = NifiHelper.getBean(RedisUtil.class);
-            boolean hasKey = redisUtil.hasKey(RedisKeyEnum.NIFI_TOKEN.getName());
-            if (hasKey) {
-                nifiToken = redisUtil.get(RedisKeyEnum.NIFI_TOKEN.getName()).toString();
-            } else {
+            nifiToken = (String) redisUtil.get(RedisKeyEnum.NIFI_TOKEN.getName());
+            if (StringUtils.isEmpty(nifiToken)) {
                 nifiToken = "Bearer "+NifiHelper.getAccessApiForToken().createAccessToken(nifiUsername, nifiPassword);
                 redisUtil.set(RedisKeyEnum.NIFI_TOKEN.getName(), nifiToken, RedisKeyEnum.NIFI_TOKEN.getValue());
             }
-
 
         } catch (ApiException e) {
             e.printStackTrace();

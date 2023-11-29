@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
@@ -67,6 +68,12 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
 
     @Override
     public ResultEnum addorUpdateStandardsMenu(StandardsMenuDTO standardsMenuDTO) {
+        LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuDTO.getPid());
+        queryWrapper.orderByDesc(StandardsMenuPO::getSort);
+        queryWrapper.last("LIMIT 1");
+        StandardsMenuPO tragetMenu = getOne(queryWrapper);
+        standardsMenuDTO.setSort(tragetMenu.getSort()+1);
         if (standardsMenuDTO.getName() == null || standardsMenuDTO.getType() == null){
             return ResultEnum.SAVE_VERIFY_ERROR;
         }

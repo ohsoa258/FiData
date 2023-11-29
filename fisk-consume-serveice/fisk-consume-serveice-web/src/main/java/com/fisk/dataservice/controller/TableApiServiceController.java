@@ -10,6 +10,7 @@ import com.fisk.dataservice.dto.tableservice.TableServiceSyncDTO;
 import com.fisk.dataservice.service.ITableApiLogService;
 import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.dataservice.service.ITableAppManageService;
+import com.fisk.dataservice.service.impl.AsyncImpl;
 import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
 import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
@@ -17,6 +18,7 @@ import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +35,9 @@ public class TableApiServiceController {
 
     @Resource
     ITableApiLogService tableApiLogService;
+
+    @Resource
+    private AsyncImpl async;
 
     @ApiOperation("分页获取数据分发服务Api数据")
     @PostMapping("/getTableApiListData")
@@ -78,8 +83,10 @@ public class TableApiServiceController {
 
     @ApiOperation("NIFI执行api同步（同步中）")
     @PostMapping("/syncTableApi")
+    @Async
     public ResultEntity<Object> syncTableApi(@Validated @RequestBody TableApiSyncDTO dto) {
-        return ResultEntityBuild.build(tableApiService.syncTableApi(dto));
+        async.syncTableApi(dto);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     @ApiOperation("数据库同步服务-新增同步按钮,手动同步表服务")

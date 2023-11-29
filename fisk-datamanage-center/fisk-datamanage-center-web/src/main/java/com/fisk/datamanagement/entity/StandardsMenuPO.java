@@ -25,4 +25,7 @@ public class StandardsMenuPO extends BasePO {
 
     @ApiModelProperty(value = "类型:1:目录 2:数据")
     private Integer type;
+
+    @ApiModelProperty(value = "排序")
+    private Integer sort;
 }

@@ -86,8 +86,8 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                 String endTime = now.format(formatter);
 
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0].replace("${startTime}", startTime).replace("${endTime}", endTime);
-                String statusChangesSql = split[1].replace("${startTime}", startTime).replace("${endTime}", endTime);
+                String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP;";
+                String statusChangesSql = split[1] + "WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_inventory_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 ResultSet systemData = st.executeQuery(systemDataSql);
                 ResultSet statusChanges = st1.executeQuery(statusChangesSql);
                 resultJsonData = assembleInventoryStatusChangesDTO(systemData, statusChanges);

@@ -26,6 +26,9 @@ public class StandardsTreeDTO {
     @ApiModelProperty(value = "类型:1:目录 2:数据")
     private Integer type;
 
+    @ApiModelProperty(value = "排序")
+    private Integer sort;
+
     @ApiModelProperty(value = "创建时间")
     @JsonIgnore
     public LocalDateTime createTime;

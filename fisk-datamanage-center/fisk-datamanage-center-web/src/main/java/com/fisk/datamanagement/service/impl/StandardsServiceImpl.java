@@ -71,18 +71,29 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 
     @Override
     public ResultEnum addStandards(StandardsDTO standardsDTO) {
+
+        //查询排序添加位置
+        LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(StandardsMenuPO::getPid,standardsDTO.getMenuId());
+        queryWrapper.orderByDesc(StandardsMenuPO::getSort);
+        queryWrapper.last("LIMIT 1");
+        StandardsMenuPO tragetMenu = standardsMenuService.getOne(queryWrapper);
+        //添加标签并排序
         StandardsMenuPO standardsMenuPO = new StandardsMenuPO();
         standardsMenuPO.setPid(standardsDTO.getMenuId());
         standardsMenuPO.setType(2);
         standardsMenuPO.setName(standardsDTO.getChineseName());
+        standardsMenuPO.setSort(tragetMenu.getSort()+1);
         standardsMenuService.save(standardsMenuPO);
         standardsDTO.setMenuId((int)standardsMenuPO.getId());
+
         LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
         queryStandards.eq(StandardsPO::getMenuId,standardsDTO.getMenuId());
         StandardsPO standard = this.getOne(queryStandards);
         if (standard != null){
             return ResultEnum.DATA_EXISTS;
         }
+        //添加数据标准
         StandardsPO standardsPO = StandardsMap.INSTANCES.dtoToPo(standardsDTO);
         save(standardsPO);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
@@ -135,10 +146,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             if (!CollectionUtils.isEmpty(updates)){
                 standardsBeCitedService.updateBatchById(updates);
             }
-
-
-
         }
+        Integer menuId = standardsDTO.getMenuId();
+        StandardsMenuPO standardsMenuPO = standardsMenuService.getById(menuId);
+        standardsMenuPO.setName(standardsDTO.getChineseName());
+        standardsMenuService.save(standardsMenuPO);
         return ResultEnum.SUCCESS;
     }
 
@@ -374,6 +386,52 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         dataModel.put("standards",standardsMenuDataDTOS);
         // 执行导出
         FreeMarkerUtils.exportWord(templateName, fileName, dataModel,response);
+    }
+
+    @Override
+    public ResultEnum standardsSort(StandardsSortDTO dto) {
+        Integer tragetId = dto.getTragetId();
+        StandardsMenuPO standardsMenuPO = standardsMenuService.getById(dto.getMenuId());
+        if (tragetId == null || tragetId == 0){
+            LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
+            queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+            List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+            for (StandardsMenuPO menuPO : list) {
+                menuPO.setSort(menuPO.getSort()+1);
+                standardsMenuService.updateById(menuPO);
+            }
+            standardsMenuPO.setSort(1);
+            standardsMenuService.updateById(standardsMenuPO);
+        }else {
+            StandardsMenuPO tragetMenuPO = standardsMenuService.getById(tragetId);
+            if (tragetMenuPO.getSort()>standardsMenuPO.getSort()){
+                LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
+                queryWrapper.gt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                queryWrapper.le(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                for (StandardsMenuPO menuPO : list) {
+                    menuPO.setSort(menuPO.getSort()-1);
+                    standardsMenuService.updateById(menuPO);
+                }
+                standardsMenuPO.setSort(tragetMenuPO.getSort());
+                standardsMenuService.updateById(standardsMenuPO);
+            }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
+                LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
+                queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                queryWrapper.le(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                for (StandardsMenuPO menuPO : list) {
+                    menuPO.setSort(menuPO.getSort()+1);
+                    standardsMenuService.updateById(menuPO);
+                }
+                standardsMenuPO.setSort(tragetMenuPO.getSort());
+                standardsMenuService.updateById(standardsMenuPO);
+            }
+        }
+        return ResultEnum.SUCCESS;
     }
 
     /**
