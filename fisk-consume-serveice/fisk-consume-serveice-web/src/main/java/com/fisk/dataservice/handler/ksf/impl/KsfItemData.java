@@ -92,7 +92,7 @@ public class KsfItemData extends KsfWebServiceHandler {
                 String endTime = now.format(formatter);
 
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0].replace("${startTime}", startTime).replace("${endTime}", endTime);
+                String systemDataSql = split[0]+"where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP;";
                 String statusChangesSql = split[1].replace("${startTime}", startTime).replace("${endTime}", endTime);
                 ResultSet systemData = st.executeQuery(systemDataSql);
                 ResultSet items = st1.executeQuery(statusChangesSql);

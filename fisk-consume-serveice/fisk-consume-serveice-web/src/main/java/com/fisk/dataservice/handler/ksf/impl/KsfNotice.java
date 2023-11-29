@@ -98,9 +98,9 @@ public class KsfNotice extends KsfWebServiceHandler {
                 String endTime = now.format(formatter);
 
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0].replace("${startTime}", startTime).replace("${endTime}", endTime);
-                String noticeDataSql = split[1].replace("${startTime}", startTime).replace("${endTime}", endTime);
-                String noticeDetailSql = split[2].replace("${startTime}", startTime).replace("${endTime}", endTime);
+                String systemDataSql = split[0]+"where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP;";
+                String noticeDataSql = split[1]+"WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_notice  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String noticeDetailSql = split[2]+"WHERE fidata_batch_code in (select fidata_batch_code from ods_sap_ksf_notice where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 ResultSet systemData = st1.executeQuery(systemDataSql);
                 ResultSet noticeData = st2.executeQuery(noticeDataSql);
                 ResultSet noticeDetail = st3.executeQuery(noticeDetailSql);

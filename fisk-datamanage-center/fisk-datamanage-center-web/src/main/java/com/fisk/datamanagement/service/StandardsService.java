@@ -55,5 +55,7 @@ public interface StandardsService extends IService<StandardsPO> {
     List<TableColumnDTO> getColumn(ColumnQueryDTO dto);
 
     void exportStandards(List<Integer> ids, HttpServletResponse response);
+
+    ResultEnum standardsSort(StandardsSortDTO dto);
 }
 

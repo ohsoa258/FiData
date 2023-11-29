@@ -1,7 +1,6 @@
 package com.fisk.dataservice.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,33 +13,20 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.tableapi.*;
-import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
-import com.fisk.dataservice.entity.TableApiLogPO;
 import com.fisk.dataservice.entity.TableApiParameterPO;
 import com.fisk.dataservice.entity.TableApiServicePO;
 import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
-import com.fisk.dataservice.enums.AuthenticationTypeEnum;
-import com.fisk.dataservice.enums.InterfaceTypeEnum;
 import com.fisk.dataservice.enums.SpecialTypeEnum;
-import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
-import com.fisk.dataservice.handler.ksf.factory.KsfInterfaceFactory;
-import com.fisk.dataservice.handler.restapi.RestApiHandler;
-import com.fisk.dataservice.handler.restapi.factory.InterfaceRestApiFactory;
-import com.fisk.dataservice.handler.webservice.WebServiceHandler;
-import com.fisk.dataservice.handler.webservice.factory.InterfaceWebServiceFactory;
 import com.fisk.dataservice.map.TableApiParameterMap;
 import com.fisk.dataservice.map.TableApiServiceMap;
 import com.fisk.dataservice.mapper.TableApiServiceMapper;
 import com.fisk.dataservice.service.*;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
-import com.fisk.task.enums.DispatchLogEnum;
-import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,12 +34,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service("tableApiService")
@@ -122,37 +108,19 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             switch (SpecialTypeEnum.getEnum(data.specialType)){
                 case KSF_NOTICE:
                     data.setApiName("ksf_notice");
-                    data.setSqlScript("select * from ods_sap_ksf_notice " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP " +
-                            "AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP; " +
-                            "select * from ods_sap_headers WHERE fidata_batch_code in " +
-                            "(select fidata_batch_code from ods_sap_ksf_notice " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
-                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);" +
-                            " select * from ods_sap_details WHERE fidata_batch_code in (select fidata_batch_code" +
-                            " from ods_sap_ksf_notice " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
-                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
+                    data.setSqlScript("select * from ods_sap_ksf_notice; " +
+                            "select * from ods_sap_headers;" +
+                            " select * from ods_sap_details;");
                     break;
                 case KSF_ITEM_DATA:
                     data.setApiName("ksf_item_data");
-                    data.setSqlScript("select * from ods_sap_ksf_inventory_sys " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
-                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP;" +
-                            " select * from ods_sap_itemdata WHERE fidata_batch_code in " +
-                            "(select fidata_batch_code from ods_sap_ksf_inventory_sys " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
-                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
+                    data.setSqlScript("select * from ods_sap_ksf_item_sys;" +
+                            " select * from ods_sap_itemdata;");
                     break;
                 case KSF_INVENTORY_STATUS_CHANGES:
                     data.setApiName("ksf_inventory_status_changes");
-                    data.setSqlScript("select * from ods_sap_ksf_inventory_sys " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
-                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP;" +
-                            " select * from ods_sap_ksf_inventory WHERE fidata_batch_code in " +
-                            "(select fidata_batch_code from ods_sap_ksf_inventory_sys " +
-                            "where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '${startTime}'::TIMESTAMP" +
-                            " AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '${endTime}'::TIMESTAMP);");
+                    data.setSqlScript("select * from ods_sap_ksf_inventory_sys;" +
+                            "select * from ods_sap_ksf_inventory;");
                     break;
             }
         }
@@ -226,7 +194,9 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
         buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
         buildDeleteTableService.delBusiness = true;
-        publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+        if (apiService.getPublish() != 0){
+            publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -242,151 +212,6 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             log.error("表服务修改状态失败,原因表:修改异常");
         }
     }
-
-    @Override
-    public ResultEnum syncTableApi(TableApiSyncDTO dto) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        HashMap<String, Object> checkByFieldMap = dto.getCheckByFieldMap();
-        String pipelTaskTraceId = (String) checkByFieldMap.get("pipelTaskTraceId");
-
-        log.info("syncTableApi参数" + JSONObject.toJSONString(dto));
-
-
-        TableApiTaskDTO tableApiTaskDTO = new TableApiTaskDTO();
-        tableApiTaskDTO.setApiId(dto.getApiId());
-        tableApiTaskDTO.setTableType(dto.getTableType());
-        tableApiTaskDTO.setPipelTaskTraceId(pipelTaskTraceId);
-        HashMap<Integer, Object> taskMap = new HashMap<>();
-        String format = simpleDateFormat.format(new Date());
-        TableApiLogPO tableApiLogPO = new TableApiLogPO();
-        //查询app配置信息
-        TableAppPO tableAppPO = tableAppService.getById(dto.appId);
-
-        TableApiServicePO tableApiServicePO = baseMapper.selectById(dto.getApiId());
-
-        ApiResultDTO apiResultDTO = null;
-        //判断api类型
-        if (tableAppPO.interfaceType == InterfaceTypeEnum.REST_API.getValue()) {
-            RestApiHandler handler = InterfaceRestApiFactory.getRestApiHandlerByType(AuthenticationTypeEnum.getEnum(tableAppPO.authenticationType));
-            for (int i = 0; i < retryNum; i++) {
-                apiResultDTO = handler.sendApi(dto.apiId);
-                if (apiResultDTO.getFlag()){
-                    break;
-                }
-                try {
-                    log.info("发送异常:"+apiResultDTO.getMsg()+",等待10秒重新发送。");
-                    Thread.sleep(retryTime);
-                } catch (InterruptedException e) {
-                    String msg =" - api异常:"+apiResultDTO.getMsg()+"重试异常:" + e.getMessage();
-                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
-                    tableApiTaskDTO.setMsg(taskMap);
-                    publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
-                    throw new RuntimeException(e);
-                }
-            }
-        } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
-            for (int i = 0; i < retryNum; i++) {
-                switch (SpecialTypeEnum.getEnum(tableApiServicePO.specialType)){
-                    case NONE:
-                        WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
-                        apiResultDTO = webServiceHandler.sendApi(dto.apiId);
-                        break;
-                    case KSF_ITEM_DATA:
-                    case KSF_NOTICE:
-                    case KSF_INVENTORY_STATUS_CHANGES:
-                        KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
-                        apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO,dto.apiId);
-                        break;
-                    default:
-                        break;
-                }
-                if (apiResultDTO.getFlag()){
-                    break;
-                }
-                try {
-                    log.info("发送异常:"+apiResultDTO.getMsg()+",等待"+retryTime/1000+"秒重新发送。");
-                    Thread.sleep(retryTime);
-                } catch (InterruptedException e) {
-                    String msg =" - api异常:"+apiResultDTO.getMsg()+"重试异常:" + e.getMessage();
-                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
-                    tableApiTaskDTO.setMsg(taskMap);
-                    publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-        //记日志
-
-        if (apiResultDTO.getFlag()){
-            taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format +" - " + apiResultDTO.getMsg());
-            tableApiLogPO.setApiId(dto.apiId.intValue());
-            tableApiLogPO.setNumber(apiResultDTO.getNumber());
-            tableApiLogPO.setImportantInterface(tableApiServicePO.getImportantInterface());
-            tableApiLogPO.setStatus(1);
-        }else{
-            taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + apiResultDTO.getMsg());
-
-            tableApiLogPO.setApiId(dto.apiId.intValue());
-            tableApiLogPO.setNumber(apiResultDTO.getNumber());
-            tableApiLogPO.setStatus(0);
-        }
-        try {
-            tableApiLogService.save(tableApiLogPO);
-            sendEmail(tableAppPO,apiResultDTO,Integer.valueOf(dto.getApiId().toString()),pipelTaskTraceId);
-        }catch (Exception e){
-            String msg = (String)taskMap.get(DispatchLogEnum.taskend.getValue());
-            msg +=" - 邮件发送失败:" + e.getMessage();
-            taskMap.put(DispatchLogEnum.taskend.getValue(),msg);
-        }
-        tableApiTaskDTO.setMsg(taskMap);
-
-        publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
-        return ResultEnum.SUCCESS;
-    }
-    void sendEmail(TableAppPO tableAppPO,ApiResultDTO apiResultDTO,Integer apiId,String taskTraceId) {
-        TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
-        ResultEntity<List<PipelTaskLogVO>> pipelTaskLogVo = publishTaskClient.getPipelTaskLogVo(taskTraceId);
-        List<PipelTaskLogVO> data = pipelTaskLogVo.data;
-        if (pipelTaskLogVo.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(data)){
-            List<PipelTaskLogVO> taskLogVOS = data.stream().filter(i -> i.getType() == DispatchLogEnum.taskend.getValue()).collect(Collectors.toList());
-            PipelTaskLogVO taskLogVO= taskLogVOS.get(0);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    java.util.Date date = new java.util.Date();
-                    Date parse = simpleDateFormat.parse(taskLogVO.msg.substring(7, 26));
-                    Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
-                    Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
-                    tableServiceEmailDTO.duration = minutes + "m " + second + "s";
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-        }else {
-            log.error("远程调用失败，方法名：【data-service:sendEmail】");
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-        }
-        tableServiceEmailDTO.appType = 2;
-        tableServiceEmailDTO.appId = (int)tableAppPO.getId();
-        tableServiceEmailDTO.msg = apiResultDTO.getMsg();
-        tableServiceEmailDTO.result = "【运行成功】";
-        tableServiceEmailDTO.pipelTraceId = taskTraceId;
-        tableServiceEmailDTO.url = "【" + dataserviceUrl + "/#/DataFactory/pipelineSettings?pipelTraceId="
-                + tableServiceEmailDTO.pipelTraceId + "】";
-        try {
-            Map<String, String> hashMap = new HashMap<>();
-            hashMap.put("数据分发api服务名称", "");
-            hashMap.put("表名", String.valueOf(apiId));
-            hashMap.put("运行结果", tableServiceEmailDTO.result);
-            hashMap.put("运行时长", tableServiceEmailDTO.duration);
-            hashMap.put("运行详情", tableServiceEmailDTO.msg);
-            hashMap.put("TraceID", tableServiceEmailDTO.pipelTraceId);
-            hashMap.put("页面地址", tableServiceEmailDTO.url);
-            tableServiceEmailDTO.body = hashMap;
-            tableService.tableServiceSendEmails(tableServiceEmailDTO);
-        } catch (Exception e) {
-            log.error("发邮件出错,但是不影响主流程。异常如下：" + e.getMessage());
-        }
-    }
-
     @Override
     public List<BuildTableApiServiceDTO> getTableApiListByPipelineId(Integer pipelineId) {
             List<Integer> tableListByPipelineId = tableSyncMode.getTableListByPipelineId(pipelineId,4);

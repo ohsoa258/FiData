@@ -97,5 +97,10 @@ public class StandardsController {
         standardsService.exportStandards(ids, response);
     }
 
+    @ApiOperation("数据标准排序更新")
+    @PostMapping("/standardsSort")
+    public ResultEntity<Object> standardsSort(@RequestBody StandardsSortDTO dto) {
+        return ResultEntityBuild.build(standardsService.standardsSort(dto));
+    }
 
 }

@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * @author: Lock
@@ -34,6 +35,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.datamanage.client"
 })
 @EnableHystrix
+@EnableAsync
 public class FiskConsumeServeiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FiskConsumeServeiceApplication.class, args);
