@@ -13,4 +13,14 @@ import java.util.List;
 public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
     @ApiModelProperty(value = "字段集合")
     public List<MetaDataColumnAttributeDTO> columnList;
+
+    /**
+     *  应用名称（数据接入、数据建模、数据消费) 模型名(主数据)
+     */
+    public String AppName;
+
+    /**
+     *  应用ID（数据接入、数据建模、数据消费) 模型ID(主数据)
+     */
+    public Integer AppId;
 }

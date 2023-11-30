@@ -70,6 +70,17 @@ public class EntityImpl implements IEntity {
         return list;
     }
 
+    @Override
+    public void refreshEntityTreeList() {
+        Boolean exist = redisTemplate.hasKey(metaDataEntity);
+        List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
+        String jsonString = JSONObject.toJSONString(metadataEntityTree);
+        if(exist){
+            redisTemplate.delete(metaDataEntity);
+        }
+        redisTemplate.opsForValue().set(metaDataEntity, jsonString);
+    }
+
     /**
      * 获取元数据对象属性结构
      *

@@ -13,6 +13,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
@@ -86,6 +88,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
     AttributeGroupDetailsMapper groupDetailsMapper;
 
     @Resource
+    DataManageClient dataManageClient;
+
+    @Resource
     AttributeLogService attributeLogService;
     @Value("${poi.appkey}")
     private String appKey;
@@ -98,6 +103,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Value("${poi.authUrl}")
     private String authUrl;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -395,6 +403,11 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             return ResultEntityBuild.build(ResultEnum.DATA_SUBMIT_ERROR);
         }
 
+        //同步主数据实体属性元数据信息
+        if(openMetadata){
+            List<MetaDataInstanceAttributeDTO> masterDataMetaData = entityService.getMasterDataMetaData(entityId);
+            dataManageClient.consumeMetaData(masterDataMetaData);
+        }
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
@@ -604,6 +617,13 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             log.error("------------------------获取权限失败:{}", e.getMessage());
             throw new FkException(ResultEnum.ERROR, e.getMessage());
         }
+    }
+
+    @Override
+    public List<AttributePO> getAttributeByEntityId(Integer entityId) {
+        QueryWrapper<AttributePO> queryWrapper=new QueryWrapper<>();
+        queryWrapper.lambda().eq(AttributePO::getEntityId,entityId);
+        return baseMapper.selectList(queryWrapper);
     }
 
 

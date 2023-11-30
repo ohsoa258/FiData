@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
@@ -18,11 +21,13 @@ import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.entity.AccessDataPO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.entity.EntityPO;
+import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
+import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.AttributeGroupService;
 import com.fisk.mdm.service.AttributeService;
 import com.fisk.mdm.service.EntityService;
@@ -31,12 +36,14 @@ import com.fisk.mdm.vo.entity.EntityDropDownVO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +63,8 @@ import java.util.stream.Collectors;
 public class EntityServiceImpl implements EntityService {
 
     @Resource
+    ModelMapper modelMapper;
+    @Resource
     EntityMapper entityMapper;
     @Resource
     AttributeService attributeService;
@@ -73,6 +82,14 @@ public class EntityServiceImpl implements EntityService {
     UserHelper userHelper;
     @Resource
     AccessDataServiceImpl accessDataService;
+
+    @Resource
+    DataManageClient dataManageClient;
+
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
+
     @Override
     public EntityVO getDataById(Integer id) {
         EntityPO entityPo = entityMapper.selectById(id);
@@ -94,9 +111,9 @@ public class EntityServiceImpl implements EntityService {
             query.lambda()
                     .like(EntityPO::getName, name)
                     .or()
-                    .like(EntityPO::getDisplayName,name)
+                    .like(EntityPO::getDisplayName, name)
                     .or()
-                    .like(EntityPO::getDesc,name);
+                    .like(EntityPO::getDesc, name);
             Page<EntityPO> entityPoPage = entityMapper.selectPage(poPage, query);
 
             // 查创建人信息
@@ -113,14 +130,15 @@ public class EntityServiceImpl implements EntityService {
 
     /**
      * 查询创建人信息
+     *
      * @param entityPoPage
      * @return
      */
-    public Page<EntityPO> queryCreateUser(Page<EntityPO> entityPoPage){
+    public Page<EntityPO> queryCreateUser(Page<EntityPO> entityPoPage) {
         List<EntityPO> records = entityPoPage.getRecords();
-        if (CollectionUtils.isNotEmpty(records)){
+        if (CollectionUtils.isNotEmpty(records)) {
             List<Long> userIds = records.stream().filter(e -> StringUtils.isNotBlank(e.getCreateUser())).map(e -> Long.parseLong(e.getCreateUser())).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(userIds)){
+            if (CollectionUtils.isNotEmpty(userIds)) {
                 // 查询用户名
                 List<UserDTO> dtoList = userClient.getUserListByIds(userIds).getData();
 
@@ -143,13 +161,14 @@ public class EntityServiceImpl implements EntityService {
 
     /**
      * 查询更新人信息
+     *
      * @param entityPoPage
      * @return
      */
-    public Page<EntityPO> queryUpdateUser(Page<EntityPO> entityPoPage){
-        if (entityPoPage != null){
+    public Page<EntityPO> queryUpdateUser(Page<EntityPO> entityPoPage) {
+        if (entityPoPage != null) {
             List<EntityPO> records = entityPoPage.getRecords();
-            if (CollectionUtils.isNotEmpty(records)){
+            if (CollectionUtils.isNotEmpty(records)) {
 
                 List<EntityPO> pagePoList = new ArrayList<>();
 
@@ -158,7 +177,7 @@ public class EntityServiceImpl implements EntityService {
                 pagePoList.addAll(notUpdateUserList);
 
                 List<Long> userIds = records.stream().filter(e -> StringUtils.isNotBlank(e.getUpdateUser())).map(e -> Long.parseLong(e.getUpdateUser())).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(userIds)){
+                if (CollectionUtils.isNotEmpty(userIds)) {
                     // 查询用户名
                     List<UserDTO> dtoList = userClient.getUserListByIds(userIds).getData();
 
@@ -186,27 +205,28 @@ public class EntityServiceImpl implements EntityService {
     public ResultEnum updateData(UpdateEntityDTO dto) {
         @NotNull Integer id = dto.getId();
         boolean entity = this.isExistEntity(id);
-        if (entity == false){
+        if (entity == false) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
         int res = entityMapper.updateById(EntityMap.INSTANCES.updateDtoToPo(dto));
-        if (res <= 0){
+        if (res <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         String desc = "修改一个实体,id:" + id;
 
         // 记录日志
-        logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
+        logService.saveEventLog(id, ObjectTypeEnum.ENTITY, EventTypeEnum.DELETE, desc);
 
         return ResultEnum.SUCCESS;
     }
 
     @Override
     public ResultEnum deleteData(Integer id) {
+        MetaDataInstanceAttributeDTO masterDataMetaData = getMasterDataMetaData(id).stream().findFirst().orElse(null);
         EntityPO entityPo = entityMapper.selectById(id);
-        if (entityPo == null){
+        if (entityPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -215,13 +235,13 @@ public class EntityServiceImpl implements EntityService {
         // 删除实体下的属性
         this.deleteAttrByEntityId(id);
         LambdaQueryWrapper<AccessDataPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AccessDataPO::getModelId,entityPo.getModelId());
-        queryWrapper.eq(AccessDataPO::getEntityId,entityPo.getId());
+        queryWrapper.eq(AccessDataPO::getModelId, entityPo.getModelId());
+        queryWrapper.eq(AccessDataPO::getEntityId, entityPo.getId());
         accessDataService.remove(queryWrapper);
         String desc = "删除了一个实体,id:" + id;
 
         // 记录日志
-        logService.saveEventLog(id,ObjectTypeEnum.ENTITY,EventTypeEnum.DELETE,desc);
+        logService.saveEventLog(id, ObjectTypeEnum.ENTITY, EventTypeEnum.DELETE, desc);
 
         BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
         buildDeleteTableService.appId = String.valueOf(entityPo.getModelId());
@@ -230,6 +250,15 @@ public class EntityServiceImpl implements EntityService {
         buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
         buildDeleteTableService.delBusiness = true;
         publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableService);
+
+        //删除元数据实体信息
+        if (openMetadata){
+            MetaDataTableAttributeDTO metaDataTableAttributeDTO = masterDataMetaData.getDbList().get(0).getTableList().get(0);
+            MetaDataDeleteAttributeDTO deleteDto=new MetaDataDeleteAttributeDTO();
+            deleteDto.qualifiedNames.add(metaDataTableAttributeDTO.getQualifiedName());
+            deleteDto.classifications=metaDataTableAttributeDTO.getAppName();
+            dataManageClient.deleteMetaData(deleteDto);
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -238,12 +267,12 @@ public class EntityServiceImpl implements EntityService {
     public ResultEnum saveEntity(EntityDTO dto) {
         QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(EntityPO::getModelId,dto.getModelId())
-                .eq(EntityPO::getName,dto.getName())
+                .eq(EntityPO::getModelId, dto.getModelId())
+                .eq(EntityPO::getName, dto.getName())
                 .last("limit 1");
 
         EntityPO po = entityMapper.selectOne(queryWrapper);
-        if (po != null){
+        if (po != null) {
             return ResultEnum.DATA_EXISTS;
         }
 
@@ -251,12 +280,12 @@ public class EntityServiceImpl implements EntityService {
         EntityPO entityPo = EntityMap.INSTANCES.DtoToPo(dto);
         entityPo.setStatus(MdmStatusTypeEnum.NOT_CREATED);
         int insert = entityMapper.insert(entityPo);
-        if (insert <= 0){
+        if (insert <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         // 保存属性信息
-        int entityId = (int)entityPo.getId();
+        int entityId = (int) entityPo.getId();
         List<AttributePO> attributePoList = new ArrayList<>();
         AttributePO attributeCode = new AttributePO();
         attributeCode.setEntityId(entityId);
@@ -289,23 +318,23 @@ public class EntityServiceImpl implements EntityService {
         attributePoList.add(attributePoName);
 
         boolean saveBatch = attributeService.saveBatch(attributePoList);
-        if (saveBatch == false){
+        if (saveBatch == false) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
 
         String desc = "创建了一个实体,id:" + entityId;
 
         // 记录日志
-        logService.saveEventLog((int)entityPo.getId(),ObjectTypeEnum.ENTITY,
-                EventTypeEnum.SAVE,desc);
+        logService.saveEventLog((int) entityPo.getId(), ObjectTypeEnum.ENTITY,
+                EventTypeEnum.SAVE, desc);
 
         return ResultEnum.SUCCESS;
     }
 
     @Override
-    public EntityInfoVO getAttributeById(Integer id,String name) {
+    public EntityInfoVO getAttributeById(Integer id, String name) {
         EntityPO entityPo = entityMapper.selectById(id);
-        if (entityPo == null){
+        if (entityPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
@@ -314,21 +343,21 @@ public class EntityServiceImpl implements EntityService {
 
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributePO::getEntityId,id)
+                .eq(AttributePO::getEntityId, id)
                 .orderByAsc(AttributePO::getSortWieght);
 
         // 追加模糊搜索条件
-        if (StringUtils.isNotBlank(name)){
+        if (StringUtils.isNotBlank(name)) {
             queryWrapper.lambda().and(wq -> wq
                     .like(AttributePO::getName, name)
                     .or()
-                    .like(AttributePO::getDisplayName,name)
+                    .like(AttributePO::getDisplayName, name)
                     .or()
-                    .like(AttributePO::getDesc,name));
+                    .like(AttributePO::getDesc, name));
         }
 
         List<AttributePO> attributePoList = attributeMapper.selectList(queryWrapper);
-        if (CollectionUtils.isNotEmpty(attributePoList)){
+        if (CollectionUtils.isNotEmpty(attributePoList)) {
             List<AttributeInfoDTO> dtoList = AttributeMap.INSTANCES.poToDtoList(attributePoList).stream().filter(Objects::nonNull)
                     .map(e -> {
                         e.setModelId(entityPo.getModelId());
@@ -345,13 +374,13 @@ public class EntityServiceImpl implements EntityService {
             ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);
 
             //若属性类型为域字段，需返回关联实体名称
-            for (AttributeInfoDTO attributeInfoDTO:dtoList){
+            for (AttributeInfoDTO attributeInfoDTO : dtoList) {
                 //判断类型是否为域字段，并且域字段id是否为空
-                if( DataTypeEnum.DOMAIN.getName().equals(attributeInfoDTO.getDataType()) &&
-                        !Objects.isNull(attributeInfoDTO.getDomainId())){
+                if (DataTypeEnum.DOMAIN.getName().equals(attributeInfoDTO.getDataType()) &&
+                        !Objects.isNull(attributeInfoDTO.getDomainId())) {
                     //查询所关联实体的code属性
                     AttributePO codeAttribute = attributeMapper.selectById(attributeInfoDTO.getDomainId());
-                    if(codeAttribute != null){
+                    if (codeAttribute != null) {
                         //根据code属性的entity_id查询到实体
                         EntityPO domainEntityPo = entityMapper.selectById(codeAttribute.getEntityId());
                         if (domainEntityPo != null) {
@@ -402,14 +431,37 @@ public class EntityServiceImpl implements EntityService {
                 ResultEntityBuild.build(ResultEnum.SUCCESS, EntityMap.INSTANCES.poToVoList(entityPoS));
     }
 
+
+    /**
+     * 获取所有发布成功实体
+     * @return
+     */
+    public List<EntityPO> getAllCreateSuccessEntity(){
+        QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
+        return entityMapper.selectList(wrapper);
+    }
+
+    /**
+     * 通过实体ID获取发布成功实体
+     * @param entityId
+     * @return
+     */
+    public List<EntityPO> getCreateSuccessEntityByEntityId(Integer entityId){
+        QueryWrapper<EntityPO> wrapper = new QueryWrapper<>();
+        wrapper.lambda().eq(EntityPO::getId, entityId);
+        return entityMapper.selectList(wrapper);
+    }
+
     /**
      * 判断实体数据是否存在
+     *
      * @param id
      * @return
      */
-    public boolean isExistEntity(Integer id){
+    public boolean isExistEntity(Integer id) {
         EntityPO entityPo = entityMapper.selectById(id);
-        if (entityPo == null){
+        if (entityPo == null) {
             return false;
         }
 
@@ -418,14 +470,15 @@ public class EntityServiceImpl implements EntityService {
 
     /**
      * 删除实体下的属性
+     *
      * @param entityId
      */
-    public void deleteAttrByEntityId(Integer entityId){
+    public void deleteAttrByEntityId(Integer entityId) {
         QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .eq(AttributePO::getEntityId,entityId);
+                .eq(AttributePO::getEntityId, entityId);
         List<AttributePO> list = attributeService.list(queryWrapper);
-        if(CollectionUtils.isNotEmpty(list)){
+        if (CollectionUtils.isNotEmpty(list)) {
             List<Long> ids = list.stream().filter(Objects::nonNull).map(e -> {
                 return e.getId();
             }).collect(Collectors.toList());
@@ -435,6 +488,7 @@ public class EntityServiceImpl implements EntityService {
 
     /**
      * 获取实体下拉列表
+     *
      * @param modelId
      * @return
      */
@@ -461,5 +515,104 @@ public class EntityServiceImpl implements EntityService {
         }
         return entityPo.getEnableMemberLog() == 0 ? false : true;
     }
+
+    /**
+     * 获取主数据所有元数据信息
+     *
+     * @return
+     */
+    @Override
+    public List<MetaDataInstanceAttributeDTO> getMasterDataMetaData(Integer entityId) {
+        List<MetaDataInstanceAttributeDTO> metaDataInstanceAttributeDTOList = new ArrayList<>();
+        //获取实例、数据库元数据
+        MetaDataInstanceAttributeDTO masterDataMetaDataInstance = getInstanceDataBaseMetaData();
+        //获取实体、属性元数据
+        String dbQualifiedName = masterDataMetaDataInstance.getDbList().stream().findFirst().get().getQualifiedName();
+        List<MetaDataTableAttributeDTO> tableMetaData = getEntityAttributeMetaData(dbQualifiedName,null);
+        masterDataMetaDataInstance.getDbList().get(0).setTableList(tableMetaData);
+        metaDataInstanceAttributeDTOList.add(masterDataMetaDataInstance);
+        return metaDataInstanceAttributeDTOList;
+    }
+
+
+    /**
+     * 获取主数据实例数据元数据
+     *
+     * @return
+     */
+    public MetaDataInstanceAttributeDTO getInstanceDataBaseMetaData() {
+        MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(DataSourceConfigEnum.DMP_MDM.getValue());
+        if (fiDataDataSource.getCode() != ResultEnum.SUCCESS.getCode()) {
+            return instance;
+        }
+        DataSourceDTO dataSourceDTO = fiDataDataSource.getData();
+        instance.name = dataSourceDTO.conIp;
+        instance.hostname = dataSourceDTO.conIp;
+        instance.port = dataSourceDTO.conPort.toString();
+        instance.platform = dataSourceDTO.platform;
+        instance.qualifiedName = dataSourceDTO.conIp;
+        instance.protocol = dataSourceDTO.protocol;
+        instance.rdbms_type = dataSourceDTO.conType.getName();
+        instance.displayName = dataSourceDTO.conIp;
+        //库
+        List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
+        MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();
+        db.name = dataSourceDTO.conDbname;
+        db.displayName = dataSourceDTO.conDbname;
+        db.qualifiedName = dataSourceDTO.conIp + "_" + dataSourceDTO.conDbname;
+        dbList.add(db);
+        instance.dbList = dbList;
+        return instance;
+    }
+
+    /**
+     * 获取主数据表、字段元数据信息 id等于空获取所有
+     *
+     * @param dbQualifiedName
+     * @return
+     */
+    public List<MetaDataTableAttributeDTO> getEntityAttributeMetaData(String dbQualifiedName, Integer entityId) {
+        List<MetaDataTableAttributeDTO> tableAttributeDTOList = new ArrayList<>();
+        List<EntityPO> entityPOList=new ArrayList<>();
+        if(entityId==null){
+            //获取所有已发布成功实体
+            entityPOList =getAllCreateSuccessEntity();
+        }else {
+            //根据实体ID获取实体
+            entityPOList=getCreateSuccessEntityByEntityId(entityId);
+        }
+        //获取主数据模型
+        List<ModelPO> modelPOS = modelMapper.selectList(null);
+
+        for (EntityPO entity : entityPOList) {
+            ModelPO model = modelPOS.stream().filter(e -> e.getId() == entity.getId()).findFirst().orElse(null);
+            MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
+            tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + entity.getId());
+            tableAttributeDTO.setName(entity.getTableName());
+            tableAttributeDTO.setDisplayName(entity.getDisplayName());
+            tableAttributeDTO.setDescription(entity.getDesc());
+            tableAttributeDTO.setComment(String.valueOf(model.getId()));
+            tableAttributeDTO.setAppName(model.getDisplayName());
+            tableAttributeDTO.setAppId((int) model.getId());
+            //获取实体下的属性
+            List<AttributePO> attributePOList = attributeService.getAttributeByEntityId((int) entity.getId());
+            List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
+            for (AttributePO attribute : attributePOList) {
+                MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
+                metaDataColumnAttributeDTO.setQualifiedName(tableAttributeDTO.getQualifiedName() + "_" + attribute.getId());
+                metaDataColumnAttributeDTO.setName(attribute.getColumnName());
+                metaDataColumnAttributeDTO.setDisplayName(attribute.getDisplayName());
+                metaDataColumnAttributeDTO.setDataType(attribute.getDataType().getName());
+                metaDataColumnAttributeDTO.setLength(String.valueOf(attribute.getDataTypeLength()));
+                metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+            }
+            tableAttributeDTO.setColumnList(metaDataColumnAttributeDTOList);
+            tableAttributeDTOList.add(tableAttributeDTO);
+        }
+
+        return tableAttributeDTOList;
+    }
+
 
 }

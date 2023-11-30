@@ -294,7 +294,7 @@ public class MetadataEntityImpl
         //通过对比数据集, 为实例分类, 分类: 数据源、数据工厂。
         List<DataSourceDTO> dataSourceDTOList = allFiDataDataSourceResult.data;
         for (MetadataEntityPO parent : parentList) {
-            //根据ip查找数据源所属类型
+            //根据数据源IP查找数据源所属类型
             Optional<DataSourceDTO> dataSourceDTOResult = dataSourceDTOList.stream().filter(e -> e.getConIp().equals(parent.getName())).findFirst();
             if (dataSourceDTOResult.isPresent()) {
                 //存在，数据源，数据工厂

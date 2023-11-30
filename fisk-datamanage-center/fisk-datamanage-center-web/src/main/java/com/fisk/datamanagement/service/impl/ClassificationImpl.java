@@ -266,7 +266,6 @@ public class ClassificationImpl
             model.setDescription(item.description);
             // 设置父级id
             if (!CollectionUtils.isEmpty(item.superTypes)){
-
                String s= businessClassificationMapper.selectParentId(item.superTypes.get(0));
                s= s == null ?"0":s;
                 model.setPid(Integer.valueOf(s));
@@ -377,10 +376,11 @@ public class ClassificationImpl
         return ResultEnum.SUCCESS;
     }
 
-/**
- * 同步业务分类数据，公共方法，各层都会用到
- * @param dto  将业务分类
-* */
+    /**
+     * 同步业务分类数据，公共方法，各层都会用到
+     *
+     * @param dto 将业务分类
+     */
     @Override
     public ResultEnum appSynchronousClassification(ClassificationInfoDTO dto) {
         log.info("开始同步业务， 参数:{}", JSON.toJSONString(dto));
@@ -390,14 +390,14 @@ public class ClassificationImpl
         }
         ClassificationDefsDTO data = new ClassificationDefsDTO();
         List<ClassificationDefContentDTO> list = new ArrayList<>();
-        //同步主数据业务分类
+        //同步业务分类
         ClassificationDefContentDTO masterData = new ClassificationDefContentDTO();
         masterData.name = dto.name;
         masterData.description = dto.description;
         //获取业务分类的上级
         List<String> analysisModelSuperType = new ArrayList<>();
             for (ClassificationTypeEnum e : ClassificationTypeEnum.values()) {
-                if (e.equals(dto)) {
+                if (e.equals(dto.getSourceType())) {
                     analysisModelSuperType.add( e.getName());
                 }
             }

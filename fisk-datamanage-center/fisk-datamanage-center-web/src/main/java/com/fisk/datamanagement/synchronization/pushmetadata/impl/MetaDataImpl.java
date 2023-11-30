@@ -141,11 +141,13 @@ public class MetaDataImpl implements IMetaData {
     @Value("${spring.excelMetadata}")
     private String excelMetadataRedisKey;
 
-    private static final String stg_prefix = "_stg";
-    private static final String stg_suffix = "stg_";
+    private static final String stg_suffix = "_stg";
+    private static final String stg_prefix = "stg_";
     private static final String stg = "stg";
     private static final String dim_prefix = "dim_";
-    private static final String ods_suffix = "ods_";
+    private static final String fact_prefix = "fact_";
+    private static final String mdm_prefix = "mdm_";
+    private static final String ods_prefix = "ods_";
     private static final String sync_database_prefix = "sync_database_";
 
     //endregion
@@ -282,7 +284,7 @@ public class MetaDataImpl implements IMetaData {
 
         if (!"stg".equals(dto.description)) {
             //同步业务分类和元数据的关联
-            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment);
+            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment,dto.getAppName());
         }
 
         return metadataEntity.toString();
@@ -291,7 +293,7 @@ public class MetaDataImpl implements IMetaData {
 
 
     /**
-     * 实体关联业务分类  数据工厂 建模，主数据建模。
+     * 实体关联业务分类  数据工厂 建模，主数据建模。主数据
      *
      * @param tableGuid
      * @param tableName
@@ -300,7 +302,8 @@ public class MetaDataImpl implements IMetaData {
     private void associatedClassification(String tableGuid,
                                           String tableName,
                                           String dbName,
-                                          String comment) {
+                                          String comment,
+                                          String appName) {
         try {
             //获取数据源列表
             ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
@@ -350,6 +353,8 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 data.typeName = first.get().name;
+            }else  if (DataSourceConfigEnum.DMP_MDM.getValue() == sourceData.get().id){
+                data.typeName=  appName;
             }
             dto.classification = data;
             classification.classificationAddAssociatedEntity(dto);
@@ -386,14 +391,23 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     private String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityId) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
-        //替换前缀
-        if (ods_suffix.equals(dto.name.substring(0, 4))) {
-            dto.name = dto.name.replace(ods_suffix, stg_suffix);
-        } else {
-            dto.name = stg_suffix + dto.name;
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_suffix);
+
+        if (dto.name.indexOf(ods_prefix) >= 0) {
+            //数据接入ODS表
+            dto.name = dto.name.replace(ods_prefix, "stg_");
+        } else if (dto.name.indexOf(fact_prefix) >=  0) {
+            //建模实时表
+            dto.name="stg_"+dto.name;
+        } else if (dto.name.indexOf(dim_prefix) >=  0) {
+            dto.name="stg_"+dto.name;
+            //建模维度表
+        } else if (dto.name.indexOf(mdm_prefix) >=  0) {
+            //主数据表
+            dto.name = dto.name.replace(mdm_prefix, "stg_");
         }
-        dto.qualifiedName = dto.qualifiedName + stg_prefix;
+
+        dto.qualifiedName = dto.qualifiedName + stg_suffix;
         dto.description = stg;
 
         if (metadataEntity == null) {
@@ -438,9 +452,9 @@ public class MetaDataImpl implements IMetaData {
 
 
     private String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_prefix);
-        dto.name = stg_suffix + dto.name;
-        dto.qualifiedName = dto.qualifiedName + stg_prefix;
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_suffix);
+        dto.name = dto.name;
+        dto.qualifiedName = dto.qualifiedName + stg_suffix;
         dto.description = stg;
 
         if (metadataEntity == null) {
@@ -723,6 +737,11 @@ public class MetaDataImpl implements IMetaData {
             dataType = DataTypeEnum.DATA_MODEL.getValue();
             tableType = first.get().type;
         }
+        //MDM
+        else if (sourceData.id == DataSourceConfigEnum.DMP_MDM.getValue()) {
+            tableId = 0;
+            dataType = DataTypeEnum.MDM.getValue();
+        }
         if (StringUtils.isEmpty(metadataId)) {
             String qualifiedName = sourceData.conIp + "_" + sourceData.conDbname + "_" + tableType + "_" + tableId;
             if (sourceData.id == DataSourceConfigEnum.DMP_ODS.getValue()) {
@@ -805,8 +824,6 @@ public class MetaDataImpl implements IMetaData {
                                                     String metadataId) {
         List<TableRuleInfoDTO> dtoList = new ArrayList<>();
 
-        ResultEntity<List<MetaDataQualityRuleVO>> tableRuleResult = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
-        List<MetaDataQualityRuleVO> tableRuleList = tableRuleResult.data;
         TableRuleParameterDTO parameter = new TableRuleParameterDTO();
         parameter.type = tableType;
         parameter.tableId = tableId;
@@ -819,6 +836,9 @@ public class MetaDataImpl implements IMetaData {
         //数据接入
         else if (dataType == DataTypeEnum.DATA_INPUT.getValue()) {
             result = dataAccessClient.buildTableRuleInfo(parameter);
+        } else if (dataType == DataTypeEnum.MDM.getValue()) {
+            //目前主数据没有数据质量
+            return dtoList;
         }
         TableRuleInfoDTO dto = new TableRuleInfoDTO();
         if (result.code == ResultEnum.SUCCESS.getCode()) {
@@ -834,6 +854,8 @@ public class MetaDataImpl implements IMetaData {
             dto.metadataId = metadataId;
 
         }
+        ResultEntity<List<MetaDataQualityRuleVO>> tableRuleResult = dataQualityClient.getTableRuleList(dataSourceId, String.valueOf(tableId), tableType);
+        List<MetaDataQualityRuleVO> tableRuleList = tableRuleResult.data;
         if (!tableRuleList.isEmpty()) {
             //校验规则
             dto.checkRules = getRuleByModuleType(tableRuleList, ModuleTypeEnum.DATA_CHECK_MODULE);
@@ -983,7 +1005,7 @@ public class MetaDataImpl implements IMetaData {
             }
 
             //删除元数据实体
-            List<Integer> metadataIds=new ArrayList<>();
+            List<Integer> metadataIds = new ArrayList<>();
             metadataIds.add((int) po.getId());
             ResultEnum resultEnum = metadataEntity.delMetadataEntity(metadataIds);
             if (resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
@@ -1292,14 +1314,14 @@ public class MetaDataImpl implements IMetaData {
 
     @Override
     public ResultEnum deleteDataConsumptionMetaData(List<MetaDataEntityDTO> entityList) {
-        List<String> metadataEntityQualifiedNameList=new ArrayList<>();
-        entityList.forEach(e->{
+        List<String> metadataEntityQualifiedNameList = new ArrayList<>();
+        entityList.forEach(e -> {
             metadataEntityQualifiedNameList.add(e.getQualifiedName());
-            e.getAttributeDTOList().forEach(a->{
+            e.getAttributeDTOList().forEach(a -> {
                 metadataEntityQualifiedNameList.add(a.getQualifiedName());
             });
         });
-        List<Integer> metadataIds=new ArrayList<>();
+        List<Integer> metadataIds = new ArrayList<>();
         for (String qualifiedName : metadataEntityQualifiedNameList) {
             MetadataEntityPO po = metadataEntity.getEntityByQualifiedNames(qualifiedName);
             metadataIds.add((int) po.getId());
@@ -1909,11 +1931,11 @@ public class MetaDataImpl implements IMetaData {
         //名称
         parentMetadataMap.put("-" + ((number * 100) + 4), parentMetaDataPO.getName());
         //显示名称
-        parentMetadataMap.put("-" +((number * 100)+ 3) , parentMetaDataPO.getDisplayName());
+        parentMetadataMap.put("-" + ((number * 100) + 3), parentMetaDataPO.getDisplayName());
         //类型
-        parentMetadataMap.put("-" +((number * 100)+ 2) , EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
+        parentMetadataMap.put("-" + ((number * 100) + 2), EntityTypeEnum.getValue(parentMetaDataPO.getTypeId()).getName());
         //描述
-        parentMetadataMap.put("-" +((number * 100)+ 1), parentMetaDataPO.getDescription());
+        parentMetadataMap.put("-" + ((number * 100) + 1), parentMetaDataPO.getDescription());
         Map<String, Object> lastResult = setExcelParentMetaDataMap(Long.valueOf(parentMetaDataPO.getParentId()), number);
         parentMetadataMap.putAll(lastResult);
         return parentMetadataMap;
