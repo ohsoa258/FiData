@@ -18,6 +18,14 @@ public interface BusinessCategoryService {
      */
     ResultEnum updateCategory(BusinessCategoryDTO dto);
 
+    /**
+     * 更改指标主题数据顺序
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum updateCategorySort(List<String> dto);
+
 
     /**
      * 删除指标主题数据

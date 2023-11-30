@@ -135,6 +135,7 @@ public abstract class RestApiHandler {
                 return node;
             }).collect(Collectors.toList());
             JSONObject json = new TreeBuilder().buildTree(nodes);
+            log.info("发送参数2:"+json.toJSONString());
             apiResultDTO = sendHttpPost(tableAppPO,tableApiServicePO,json.toJSONString(),true);
             apiResultDTO.setNumber(number);
         }

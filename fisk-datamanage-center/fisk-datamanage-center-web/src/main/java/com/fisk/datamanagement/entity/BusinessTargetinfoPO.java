@@ -34,6 +34,7 @@ public class BusinessTargetinfoPO extends BasePO {
     public String  indicatorType;
     public String  attributesNumber;
     public String  name;
+    public String  sqlScript;
 
 
 

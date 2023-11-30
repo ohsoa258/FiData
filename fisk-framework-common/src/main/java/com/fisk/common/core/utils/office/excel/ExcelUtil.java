@@ -29,6 +29,8 @@ public class ExcelUtil {
     private static final String[] parentMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述"};
     private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类", "应用类型", "名称", "显示名称", "元数据类型", "描述", "校验规则"};
     private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度", "校验规则"};
+    private static final String[] parentTargetinfoHeaders = {"一级分类","二级分类","负责部门","指标编码","指标类型","指标名称","指标描述/口径","指标范围",
+            "计量单位","统计周期","指标公式","指标脚本","指标来源","数据筛选条件","来源系统","来源数据表","指标状态","应用","订单渠道"};
 
     /**
      * 用户信息导出类
@@ -175,7 +177,13 @@ public class ExcelUtil {
             int excelRow = 0;
             XSSFRow headerRow = sheet.createRow(excelRow++);
             int index = 0;
-            for (String headerName : columnType.keySet()) {
+//            for (String headerName : columnType.keySet()) {
+//                XSSFCell cell = headerRow.createCell(index);
+//                cell.setCellValue(headerName);
+//                cell.setCellStyle(style);
+//                index++;
+//            }
+            for (String headerName : parentTargetinfoHeaders) {
                 XSSFCell cell = headerRow.createCell(index);
                 cell.setCellValue(headerName);
                 cell.setCellStyle(style);
@@ -186,7 +194,7 @@ public class ExcelUtil {
             for (Map<String, Object> row : dataList) {
                 Row dataRow = sheet.createRow(excelRow++);
                 //内层for循环创建每行对应的列，并赋值
-                int columnIndex = 0;
+                int columnIndex = 2;
                 for (Map.Entry<String, Object> item : row.entrySet()) {
                     Cell cell = dataRow.createCell(columnIndex);
                     columnIndex++;
@@ -361,7 +369,7 @@ public class ExcelUtil {
      * @param row 行
      * @return 字段信息
      */
-    private static Map<String, Class<?>> getColumnType(Map<String, Object> row) {
+    public static Map<String, Class<?>> getColumnType(Map<String, Object> row) {
         Map<String, Class<?>> map = new HashMap<>();
         for (Map.Entry<String, Object> item : row.entrySet()) {
             map.put(item.getKey(), item.getValue().getClass());
@@ -372,7 +380,7 @@ public class ExcelUtil {
     /**
      * 设置浏览器下载响应头
      */
-    private static void setResponseHeader(HttpServletResponse response, String fileName) {
+    public static void setResponseHeader(HttpServletResponse response, String fileName) {
         try {
             try {
                 fileName = new String(fileName.getBytes(), "ISO8859-1");

@@ -28,6 +28,7 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     List<Map<String,Object>> selectClassification1(@Param("pid") String pid);
 
 
+
     @Select("select * from tb_business_synchronous")
     List<BusinessSynchronousPO> selecttypeClassification();
 

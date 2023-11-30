@@ -26,6 +26,10 @@ public class BusinessCategoryTreeDTO {
     @ApiModelProperty(value = "pid")
     public String pid;
 
+
+    @ApiModelProperty(value = "sort")
+    public Integer sort;
+
     @ApiModelProperty(value = "名称")
     public String name;
 
@@ -38,5 +42,8 @@ public class BusinessCategoryTreeDTO {
 
     @ApiModelProperty(value = "子类")
     public List<BusinessCategoryTreeDTO> child;
+
+
+
 
 }

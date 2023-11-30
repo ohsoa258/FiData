@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @author xgf
@@ -61,6 +62,11 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(businessCategoryService.updateCategory(dto));
     }
 
+    @ApiOperation("修改指标主题展示顺序")
+    @PutMapping("/updateCategorySort")
+    public ResultEntity<Object> updateCategorySort(@Validated @RequestBody List<String> dto) {
+        return ResultEntityBuild.build(businessCategoryService.updateCategorySort(dto));
+    }
 
 
     @ApiOperation("获取业务指标明细数据列表")

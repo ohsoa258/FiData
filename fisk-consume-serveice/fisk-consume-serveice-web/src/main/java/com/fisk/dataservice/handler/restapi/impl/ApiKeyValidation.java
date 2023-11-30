@@ -102,6 +102,7 @@ public class ApiKeyValidation extends RestApiHandler {
                         body = "[" + body + "]";
                     }
                 }
+                log.info("请求参数:"+body);
                 StringEntity entity = new StringEntity(body, "UTF-8");
                 httpPost.setEntity(entity);
                 response = httpClient.execute(httpPost);
