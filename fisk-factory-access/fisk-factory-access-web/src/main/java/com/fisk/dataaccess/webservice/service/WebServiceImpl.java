@@ -107,10 +107,9 @@ public class WebServiceImpl implements IWebServiceServer {
      * @return
      */
     @Override
-//    @WebMethod(action = "http://tempuri.org/KSF_Notice")
-    @WebMethod
+    @WebMethod(action = "http://tempuri.org/KSF_Notice")
     @WebResult(name = "KSF_NoticeResult")
-    public KSF_NoticeResult KSF_Notice(@WebParam(name = "API_Message",targetNamespace = "http://tempuri.org/") API_Message api_message, @WebParam(name = "Elements",targetNamespace = "http://tempuri.org/") Elements elements) {
+    public ResponseMessage KSF_Notice(@WebParam(name = "API_Message", targetNamespace = "http://tempuri.org/") BPI_Message api_message, @WebParam(name = "Elements", targetNamespace = "http://tempuri.org/") Elements elements) {
         log.debug("通知单推送的系统数据：" + JSON.toJSONString(api_message));
         log.debug("通知单推送的明细数据：" + JSON.toJSONString(elements));
         //将webservice接收到的xml格式的数据转换为json格式的数据
@@ -136,20 +135,22 @@ public class WebServiceImpl implements IWebServiceServer {
         receiveDataDTO.setIfWebService(true);
         String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
 
-        KSF_NoticeResult ksf_noticeResult = new KSF_NoticeResult();
+        ResponseMessage responseMessage = new ResponseMessage();
         //统一报文返回类型
         if (result.contains("失败")) {
-            ksf_noticeResult.setSTATUS("1");
+            responseMessage.setSTATUS("1");
             result = "前置机数据同步失败";
         } else if (!result.contains("成功")) {
-            ksf_noticeResult.setSTATUS("1");
+            responseMessage.setSTATUS("1");
             result = "前置机数据同步失败";
         } else {
-            ksf_noticeResult.setSTATUS("0");
+            responseMessage.setSTATUS("0");
             result = "前置机数据同步成功";
         }
-        ksf_noticeResult.setINFOTEXT(result);
-        return ksf_noticeResult;
+        result = "前置机数据同步成功";
+        responseMessage.setINFOTEXT(result);
+        log.info("待返回的通知单执行结果：" + responseMessage);
+        return responseMessage;
     }
 
 //    /**
