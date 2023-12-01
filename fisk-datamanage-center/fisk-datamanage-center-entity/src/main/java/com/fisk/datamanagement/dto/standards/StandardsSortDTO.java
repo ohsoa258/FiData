@@ -12,6 +12,10 @@ public class StandardsSortDTO {
     private Integer menuId;
     @ApiModelProperty(value = "目标菜单id 为空则是放在第一位")
     private Integer tragetId;
+    @ApiModelProperty(value = "是否跨级")
+    private Boolean crossLevel;
+    @ApiModelProperty(value = "pid")
+    private Integer pid;
 
     public Integer getMenuId() {
         return menuId;
@@ -27,5 +31,21 @@ public class StandardsSortDTO {
 
     public void setTragetId(Integer tragetId) {
         this.tragetId = tragetId;
+    }
+
+    public Boolean getCrossLevel() {
+        return crossLevel;
+    }
+
+    public void setCrossLevel(Boolean crossLevel) {
+        this.crossLevel = crossLevel;
+    }
+
+    public Integer getPid() {
+        return pid;
+    }
+
+    public void setPid(Integer pid) {
+        this.pid = pid;
     }
 }
