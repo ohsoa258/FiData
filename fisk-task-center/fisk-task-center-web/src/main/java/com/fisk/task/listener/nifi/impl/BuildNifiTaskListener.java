@@ -83,6 +83,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildNifiTaskListener implements INifiTaskListener {
 
+    @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
+    private String jdbcStr;
+    @Value("${spring.datasource.dynamic.datasource.taskdb.username}")
+    private String user;
+
     @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
     @Value("${datamodeldorisconstr.username}")
@@ -480,7 +485,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             if (cfgConfigPO != null) {
                 cfgControllerServiceId = cfgConfigPO.componentId;
             } else {
-                throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, "未创建配置库连接池");
+                ControllerServiceEntity controllerServiceEntity = buildCfgPool();
+                savaNifiConfig(controllerServiceEntity.getId(), ComponentIdTypeEnum.CFG_DB_POOL_COMPONENT_ID);
+                cfgControllerServiceId = controllerServiceEntity.getId();
             }
             // 依托小组,创建组件
             TableSyncModeDTO syncMode = buildTableApiService.syncModeDTO;
@@ -535,6 +542,25 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return ResultEnum.SUCCESS;
     }
 
+    private ControllerServiceEntity buildCfgPool() {
+        String groupId = NifiConstants.ApiConstants.ROOT_NODE;
+        BuildDbControllerServiceDTO targetDto = new BuildDbControllerServiceDTO();
+        targetDto.user = user;
+        targetDto.pwd = password;
+        targetDto.conUrl = jdbcStr;
+        targetDto.driverName = DriverTypeEnum.MYSQL.getName();
+        targetDto.enabled = true;
+        targetDto.groupId = groupId;
+        targetDto.name = "Config Data DB Connection";
+        targetDto.details = "Config Data DB Connection";
+        targetDto.driverLocation = NifiConstants.DriveConstants.MYSQL_DRIVE_PATH;
+        BusinessResult<ControllerServiceEntity> targetRes = componentsBuild.buildDbControllerService(targetDto);
+        if (targetRes.success) {
+            return targetRes.data;
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, targetRes.msg);
+        }
+    }
     private List<ProcessorEntity> buildProcessorApi(String appGroupId, DataAccessConfigDTO config, String groupId,
                                                     String cfgDbPoolId, BuildNifiFlowDTO dto, BuildTableApiServiceDTO buildTableApiService) {
         List<ProcessorEntity> res = new ArrayList<>();

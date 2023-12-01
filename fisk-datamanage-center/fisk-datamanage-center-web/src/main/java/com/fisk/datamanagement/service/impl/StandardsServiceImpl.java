@@ -397,43 +397,59 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     public ResultEnum standardsSort(StandardsSortDTO dto) {
         Integer tragetId = dto.getTragetId();
         StandardsMenuPO standardsMenuPO = standardsMenuService.getById(dto.getMenuId());
-        if (tragetId == null || tragetId == 0){
-            LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-            queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
-            List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
-            for (StandardsMenuPO menuPO : list) {
-                menuPO.setSort(menuPO.getSort()+1);
-                standardsMenuService.updateById(menuPO);
-            }
-            standardsMenuPO.setSort(1);
-            standardsMenuService.updateById(standardsMenuPO);
-        }else {
-            StandardsMenuPO tragetMenuPO = standardsMenuService.getById(tragetId);
-            if (tragetMenuPO.getSort()>standardsMenuPO.getSort()){
+        StandardsMenuPO tragetMenuPO = standardsMenuService.getById(tragetId);
+        if (dto.getCrossLevel()){
+            if (tragetId == null || tragetId == 0){
+
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-                queryWrapper.gt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
-                queryWrapper.le(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
+                queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
                 List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
-                for (StandardsMenuPO menuPO : list) {
-                    menuPO.setSort(menuPO.getSort()-1);
-                    standardsMenuService.updateById(menuPO);
-                }
-                standardsMenuPO.setSort(tragetMenuPO.getSort());
+
+                standardsMenuPO.setPid(dto.getPid());
+                standardsMenuPO.setSort(1);
                 standardsMenuService.updateById(standardsMenuPO);
-            }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
+            }else {
+
+            }
+        }else {
+            if (tragetId == null || tragetId == 0){
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-                queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
                 queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
                 List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
                 for (StandardsMenuPO menuPO : list) {
                     menuPO.setSort(menuPO.getSort()+1);
                     standardsMenuService.updateById(menuPO);
                 }
-                standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
+                standardsMenuPO.setSort(1);
                 standardsMenuService.updateById(standardsMenuPO);
+            }else {
+                if (tragetMenuPO.getSort()>standardsMenuPO.getSort()){
+                    LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
+                    queryWrapper.gt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                    queryWrapper.le(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                    List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                    for (StandardsMenuPO menuPO : list) {
+                        menuPO.setSort(menuPO.getSort()-1);
+                        standardsMenuService.updateById(menuPO);
+                    }
+                    standardsMenuPO.setSort(tragetMenuPO.getSort());
+                    standardsMenuService.updateById(standardsMenuPO);
+                }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
+                    LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
+                    queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                    queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                    List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                    for (StandardsMenuPO menuPO : list) {
+                        menuPO.setSort(menuPO.getSort()+1);
+                        standardsMenuService.updateById(menuPO);
+                    }
+                    standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
+                    standardsMenuService.updateById(standardsMenuPO);
+                }
             }
         }
         return ResultEnum.SUCCESS;
