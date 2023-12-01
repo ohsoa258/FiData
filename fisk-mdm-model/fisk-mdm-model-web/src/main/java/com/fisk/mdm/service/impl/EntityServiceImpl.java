@@ -494,11 +494,10 @@ public class EntityServiceImpl implements EntityService {
      */
     public List<EntityDropDownVO> getEntityDropDown(int modelId) {
         QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time")
+        queryWrapper.orderByAsc("sort")
                 .lambda()
                 .eq(EntityPO::getModelId, modelId)
-                .eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
-                .orderByAsc(EntityPO::getSort);
+                .eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
         List<EntityPO> list = entityMapper.selectList(queryWrapper);
         return EntityMap.INSTANCES.poListToDropDownVoList(list);
     }
