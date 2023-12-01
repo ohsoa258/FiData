@@ -14,4 +14,5 @@ public class DropDownBaseVO {
 
     public String displayName;
 
+    public Integer sort;
 }

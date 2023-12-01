@@ -31,6 +31,7 @@ import com.fisk.datamanagement.utils.freemarker.FreeMarkerUtils;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -394,23 +395,69 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum standardsSort(StandardsSortDTO dto) {
         Integer tragetId = dto.getTragetId();
         StandardsMenuPO standardsMenuPO = standardsMenuService.getById(dto.getMenuId());
         StandardsMenuPO tragetMenuPO = standardsMenuService.getById(tragetId);
         if (dto.getCrossLevel()){
             if (tragetId == null || tragetId == 0){
+                Integer pid = standardsMenuPO.getPid();
+                Integer sort = standardsMenuPO.getSort();
 
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
-                queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
-                List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
-
+                List<StandardsMenuPO> all = standardsMenuService.list(queryWrapper);
+                standardsMenuPO.setPid(dto.getPid());
+                if (CollectionUtils.isEmpty(all)){
+                    List<StandardsMenuPO> menus = new ArrayList<>();
+                    for (StandardsMenuPO menuPO : all) {
+                        menuPO.setSort(menuPO.getSort()+1);
+                        menus.add(menuPO);
+                    }
+                    standardsMenuService.updateBatchById(menus);
+                }
                 standardsMenuPO.setPid(dto.getPid());
                 standardsMenuPO.setSort(1);
                 standardsMenuService.updateById(standardsMenuPO);
-            }else {
 
+                LambdaQueryWrapper<StandardsMenuPO> selectMenus = new LambdaQueryWrapper<>();
+                selectMenus.eq(StandardsMenuPO::getPid,pid);
+                selectMenus.gt(StandardsMenuPO::getSort,sort);
+                List<StandardsMenuPO> Menus = standardsMenuService.list(selectMenus);
+                List<StandardsMenuPO> menus = new ArrayList<>();
+                for (StandardsMenuPO menuPO : Menus) {
+                    menuPO.setSort(menuPO.getSort()-1);
+                    menus.add(menuPO);
+                }
+                standardsMenuService.updateBatchById(menus);
+            }else {
+                Integer pid = standardsMenuPO.getPid();
+                Integer sort = standardsMenuPO.getSort();
+                LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
+                queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                List<StandardsMenuPO> lastMenus = standardsMenuService.list(queryWrapper);
+                List<StandardsMenuPO> menus = new ArrayList<>();
+                for (StandardsMenuPO menuPO : lastMenus) {
+                    menuPO.setSort(menuPO.getSort()+1);
+                    menus.add(menuPO);
+                }
+                standardsMenuService.updateBatchById(menus);
+                standardsMenuPO.setPid(dto.getPid());
+                standardsMenuPO.setSort(tragetMenuPO.getSort());
+                standardsMenuService.updateById(standardsMenuPO);
+
+                LambdaQueryWrapper<StandardsMenuPO> selectMenus = new LambdaQueryWrapper<>();
+                selectMenus.eq(StandardsMenuPO::getPid,pid);
+                selectMenus.gt(StandardsMenuPO::getSort,sort);
+                List<StandardsMenuPO> Menus = standardsMenuService.list(selectMenus);
+                menus = new ArrayList<>();
+                for (StandardsMenuPO menuPO : Menus) {
+                    menuPO.setSort(menuPO.getSort()+1);
+                    menus.add(menuPO);
+                }
+                standardsMenuService.updateBatchById(menus);
             }
         }else {
             if (tragetId == null || tragetId == 0){
@@ -418,10 +465,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
                 queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
                 List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                List<StandardsMenuPO> menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : list) {
                     menuPO.setSort(menuPO.getSort()+1);
-                    standardsMenuService.updateById(menuPO);
+                    menus.add(menuPO);
                 }
+                standardsMenuService.updateBatchById(menus);
                 standardsMenuPO.setSort(1);
                 standardsMenuService.updateById(standardsMenuPO);
             }else {
@@ -431,10 +480,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                     queryWrapper.gt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
                     queryWrapper.le(StandardsMenuPO::getSort,tragetMenuPO.getSort());
                     List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                    List<StandardsMenuPO> menus = new ArrayList<>();
                     for (StandardsMenuPO menuPO : list) {
                         menuPO.setSort(menuPO.getSort()-1);
-                        standardsMenuService.updateById(menuPO);
+                        menus.add(menuPO);
                     }
+                    standardsMenuService.updateBatchById(menus);
                     standardsMenuPO.setSort(tragetMenuPO.getSort());
                     standardsMenuService.updateById(standardsMenuPO);
                 }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
@@ -443,10 +494,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                     queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
                     queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
                     List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
+                    List<StandardsMenuPO> menus = new ArrayList<>();
                     for (StandardsMenuPO menuPO : list) {
                         menuPO.setSort(menuPO.getSort()+1);
-                        standardsMenuService.updateById(menuPO);
+                        menus.add(menuPO);
                     }
+                    standardsMenuService.updateBatchById(menus);
                     standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
                     standardsMenuService.updateById(standardsMenuPO);
                 }

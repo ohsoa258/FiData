@@ -2,7 +2,6 @@ package com.fisk.datafactory.dto.customworkflow;
 
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.datafactory.dto.UserInfoDTO;
-import com.fisk.datafactory.enums.SendModeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 

@@ -1,7 +1,6 @@
 package com.fisk.dataservice.handler.ksf.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -11,24 +10,24 @@ import com.fisk.dataservice.dto.ksfwebservice.inventory.Data;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChanges;
 import com.fisk.dataservice.dto.ksfwebservice.inventory.MATDOCTAB;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
-import com.fisk.dataservice.entity.*;
+import com.fisk.dataservice.entity.TableApiParameterPO;
+import com.fisk.dataservice.entity.TableApiServicePO;
+import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
-import com.fisk.dataservice.service.*;
+import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.axis.client.Call;
-import org.apache.axis.client.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import javax.xml.namespace.QName;
-import java.net.URL;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: wangjian
@@ -80,7 +79,8 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
 
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        List<InventoryStatusChanges> resultJsonData = null;
+        InventoryStatusChanges result = new InventoryStatusChanges();
+
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
@@ -96,14 +96,26 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                 st1 = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP;";
+                String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
                 String statusChangesSql = split[1] + " WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_inventory_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st.executeQuery(systemDataSql);
                 log.info("开始执行脚本statusChanges:{}", statusChangesSql);
                 ResultSet statusChanges = st1.executeQuery(statusChangesSql);
-                resultJsonData = assembleInventoryStatusChangesDTO(systemData, statusChanges);
-                number = resultJsonData.size();
+                List<InventoryStatusChanges> resultJsonData = assembleInventoryStatusChangesDTO(systemData, statusChanges);
+                List<MATDOCTAB> matdoctabs = new ArrayList<>();
+                for (InventoryStatusChanges resultJsonDatum : resultJsonData) {
+                    result = resultJsonDatum;
+                    Data data = resultJsonDatum.getData();
+                    if (data != null){
+                        matdoctabs.addAll(data.getMATDOCTAB());
+                    }
+                }
+                Data data = new Data();
+                data.setMATDOCTAB(matdoctabs);
+                data.setDocCount(matdoctabs.size());
+                result.setData(data);
+                number = result.getData().getDocCount();
                 apiResultDTO.setNumber(number);
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
@@ -129,7 +141,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
-        String data = JSON.toJSONString(resultJsonData);
+        String data = JSON.toJSONString(result);
         log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
         apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, data);
         if (apiResultDTO.getFlag()){
@@ -137,98 +149,6 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             tableApiService.updateById(tableApiServicePO);
         }
         apiResultDTO.setNumber(number);
-        return apiResultDTO;
-    }
-
-    @Override
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
-        ApiResultDTO apiResultDTO = new ApiResultDTO();
-//        //创建动态客户端
-//        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-//        //webService的这个动态客户端的地址需要从数据库中查出来
-//        Client client = dcf.createClient(tableAppPO.getAuthenticationUrl());
-//        //设置超时时间
-//        HTTPConduit conduit = (HTTPConduit) client.getConduit();
-//        HTTPClientPolicy policy = new HTTPClientPolicy();
-//        policy.setAllowChunking(false);
-//        // 连接服务器超时时间 30秒
-//        policy.setConnectionTimeout(30000);
-//        // 等待服务器响应超时时间 30秒
-//        policy.setReceiveTimeout(30000);
-//        conduit.setClient(policy);
-//        JSONObject result = null;
-//        try {
-//            if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()){
-//                body = "["+body+"]";
-//            }
-//            Map<String,Object> map = new HashMap<>();
-//            map.put("result",JSONObject.parseObject(body));
-//            // invoke("方法名",参数1,参数2,参数3....);
-//            Object[] objects = client.invoke(tableApiServicePO.getMethodName(), JSONObject.toJSONString(map));
-//            JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(objects[0]));
-//            if ((int)jsonObject.get("code") == 1){
-//                apiResultDTO.setFlag(true);
-//                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-//            }else if ((int)jsonObject.get("code") == -1){
-//                apiResultDTO.setFlag(false);
-//                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-//            }else {
-//                apiResultDTO.setFlag(false);
-//                apiResultDTO.setMsg("远程调用异常");
-//            }
-//        } catch (Exception e) {
-//            apiResultDTO.setFlag(false);
-//            apiResultDTO.setMsg(e.toString());
-//            e.printStackTrace();
-//        } finally {
-//            if (client != null) {
-//                try {
-//                    client.close();
-//                } catch (Exception e) {
-//                    apiResultDTO.setFlag(false);
-//                    apiResultDTO.setMsg(e.toString());
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-        String result = null;
-        try {
-            Service service = new Service();
-            Call call = (Call) service.createCall();
-
-            // 设置wsdl地址
-            call.setTargetEndpointAddress(new URL(tableApiServicePO.getApiAddress()));
-
-            // 设置命名空间和方法名
-            call.setOperationName(new QName("http://tempuri.org/", tableApiServicePO.getMethodName()));
-
-            // 设置参数类型和参数名称
-            call.addParameter("SAPPushData", org.apache.axis.encoding.XMLType.XSD_STRING, javax.xml.rpc.ParameterMode.IN);
-
-            // 设置返回值类型
-            call.setReturnType(org.apache.axis.encoding.XMLType.XSD_STRING);
-
-            // 设置参数
-//            String requestData = "{ \"cdSign\":\"1\",\"beginDate\":\"2021-11-21\",\"endDate\":\"2021-11-22\"}";
-            result = (String) call.invoke(new Object[]{body});
-            log.info("库存状态变更返回值:" + result);
-            JSONObject jsonObject = JSON.parseObject(result);
-            if ((int) jsonObject.get("code") == 1) {
-                apiResultDTO.setFlag(true);
-                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-            } else if ((int) jsonObject.get("code") == -1) {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-            } else {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg("远程调用异常");
-            }
-        } catch (Exception e) {
-            apiResultDTO.setFlag(false);
-            apiResultDTO.setMsg(e.toString());
-            e.printStackTrace();
-        }
-
         return apiResultDTO;
     }
 
@@ -331,6 +251,10 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             Data data = dto.getData();
             if (data != null && data.getMATDOCTAB() != null) {
                 data.setDocCount(data.getMATDOCTAB().size());
+            }else {
+                data.setDocCount(0);
+                List<MATDOCTAB> matdoctab = new ArrayList<>();
+                data.setMATDOCTAB(matdoctab);
             }
         }
         resultSet1.close();
