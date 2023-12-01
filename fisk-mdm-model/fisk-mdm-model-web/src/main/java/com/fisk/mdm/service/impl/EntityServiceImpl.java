@@ -497,7 +497,8 @@ public class EntityServiceImpl implements EntityService {
         queryWrapper.orderByDesc("create_time")
                 .lambda()
                 .eq(EntityPO::getModelId, modelId)
-                .eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY);
+                .eq(EntityPO::getStatus, MdmStatusTypeEnum.CREATED_SUCCESSFULLY)
+                .orderByAsc(EntityPO::getSort);
         List<EntityPO> list = entityMapper.selectList(queryWrapper);
         return EntityMap.INSTANCES.poListToDropDownVoList(list);
     }
@@ -528,7 +529,7 @@ public class EntityServiceImpl implements EntityService {
         MetaDataInstanceAttributeDTO masterDataMetaDataInstance = getInstanceDataBaseMetaData();
         //获取实体、属性元数据
         String dbQualifiedName = masterDataMetaDataInstance.getDbList().stream().findFirst().get().getQualifiedName();
-        List<MetaDataTableAttributeDTO> tableMetaData = getEntityAttributeMetaData(dbQualifiedName,null);
+        List<MetaDataTableAttributeDTO> tableMetaData = getEntityAttributeMetaData(dbQualifiedName,entityId);
         masterDataMetaDataInstance.getDbList().get(0).setTableList(tableMetaData);
         metaDataInstanceAttributeDTOList.add(masterDataMetaDataInstance);
         return metaDataInstanceAttributeDTOList;

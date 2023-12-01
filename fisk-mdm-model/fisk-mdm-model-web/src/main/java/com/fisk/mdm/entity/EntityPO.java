@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.mdm.enums.MdmStatusTypeEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -64,4 +65,9 @@ public class EntityPO extends BasePO {
      * 派生层级表id
      */
     private Integer hierarchyId;
+
+    /**
+     * 排序
+     */
+    private Integer sort;
 }
