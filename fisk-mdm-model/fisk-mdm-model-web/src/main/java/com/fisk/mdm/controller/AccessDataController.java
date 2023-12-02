@@ -2,13 +2,10 @@ package com.fisk.mdm.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.config.SwaggerConfig;
-import com.fisk.mdm.dto.access.AccessAttributeAddDTO;
-import com.fisk.mdm.dto.access.AccessSqlDTO;
-import com.fisk.mdm.dto.access.EntityTableDTO;
-import com.fisk.mdm.dto.access.OverlayCodePreviewAccessDTO;
+import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.service.AccessDataService;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
@@ -104,7 +101,7 @@ public class AccessDataController {
 
     @PostMapping("/buildDomainUpdateScript")
     @ApiOperation(value = "构建基于域更新脚本预览")
-    public ResultEntity<Object> buildDomainUpdateScript(@RequestBody List<TableSourceRelationsDTO> dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.buildDomainUpdateScript(dto));
+    public ResultEntity<Object> buildDomainUpdateScript(@RequestBody List<RelationDTO> list) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, accessDataService.buildDomainUpdateScript(list));
     }
 }

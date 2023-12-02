@@ -21,6 +21,7 @@ import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.IBuildDataModelSqlCommand;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.factorymdmdomainscript.IBuildMdmScript;
 import com.fisk.common.service.factorymdmdomainscript.impl.MdmScriptHelper;
@@ -49,6 +50,8 @@ import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import com.fisk.task.dto.accessmdm.AccessMdmPublishFieldDTO;
 import com.fisk.task.dto.accessmdm.AccessMdmPublishTableDTO;
 import com.fisk.task.dto.mdmconfig.*;
+import com.sun.org.apache.bcel.internal.generic.NEW;
+import com.sun.org.apache.regexp.internal.RE;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -159,7 +162,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         LambdaQueryWrapper<TableSourceRelationsPO> queryRelations = new LambdaQueryWrapper<>();
         queryRelations.eq(TableSourceRelationsPO::getAccessId,accessPo.id);
         List<TableSourceRelationsPO> tableSourceRelations = tableSourceRelationsService.list(queryRelations);
-        List<TableSourceRelationsDTO> tableSourceRelationsDTOS = TableSourceRelationsMap.INSTANCES.poListToDtoList(tableSourceRelations);
+        List<RelationDTO> tableSourceRelationsDTOS = TableSourceRelationsMap.INSTANCES.poListToDtoList(tableSourceRelations);
         data.setTableSourceRelationsDTO(tableSourceRelationsDTOS);
         //自定义脚本
         CustomScriptQueryDTO queryDto = new CustomScriptQueryDTO();
@@ -435,6 +438,10 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                     if (attributeInfoDTO != null) {
                         i.setFieldName(attributeInfoDTO.getName());
                         i.setMdmFieldName(attributeInfoDTO.getColumnName());
+                        i.setDataType(attributeInfoDTO.getDataType());
+                        i.setDataTypeEnDisplay(attributeInfoDTO.getDataTypeEnDisplay());
+                        i.setDataTypeDecimalLength(attributeInfoDTO.getDataTypeDecimalLength());
+                        i.setDataTypeLength(attributeInfoDTO.getDataTypeLength());
                     }
                     return i;
                 }).collect(Collectors.toList());
@@ -642,18 +649,105 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         return entityTableDTO;
     }
 
+//    @Override
+//    public Object buildDomainUpdateScript(List<TableSourceRelationsDTO> dto) {
+//        if (org.springframework.util.CollectionUtils.isEmpty(dto)) {
+//            return "";
+//        }
+//        //获取连接类型
+//        DataSourceTypeEnum conType = getTargetDbInfo(targetDbId).conType;
+//
+//        //获取对应连接类型的IBuildMdmScript
+//        IBuildMdmScript iBuildMdmScript = MdmScriptHelper.getDomainScriptHelperByConType(conType);
+//
+//        return iBuildMdmScript.buildMdmScript(dto);
+//    }
+
     @Override
-    public Object buildDomainUpdateScript(List<TableSourceRelationsDTO> dto) {
-        if (org.springframework.util.CollectionUtils.isEmpty(dto)) {
+    public Object buildDomainUpdateScript(List<RelationDTO> list) {
+        if (CollectionUtils.isEmpty(list)) {
             return "";
         }
-        //获取连接类型
-        DataSourceTypeEnum conType = getTargetDbInfo(targetDbId).conType;
+        Map<Integer, List<RelationDTO>> map = list.stream().collect(groupingBy(RelationDTO::getTargetEntityId));
+        StringBuilder updateScriptSql = new StringBuilder();
+        for (Integer targetEntityId : map.keySet()) {
+            // 查询待更新域字段
+            String updateColumn;
+            List<RelationDTO> relationDTOS = map.get(targetEntityId);
+            if(CollectionUtils.isEmpty(relationDTOS)){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+            //通过源实体id获取源实体所有字段并取出待更新域字段
+            Integer sourceEntityId = relationDTOS.get(0).getSourceEntityId();
+            List<AttributePO> sourceAttribute = attributeService.getAttributeByEntityId(sourceEntityId);
+            List<Integer> domainIdList = sourceAttribute.stream().filter(i -> i.getDomainId() != null).map(i -> i.getDomainId()).collect(Collectors.toList());
+            final List<AttributePO> targetAttribute = attributeService.getAttributeByEntityId(targetEntityId);
+            List<AttributePO> collect = targetAttribute.stream().filter(i -> domainIdList.contains((int)i.getId())).collect(Collectors.toList());
+            Integer domainId = 0;
+            if (CollectionUtils.isEmpty(collect)){
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }else {
+                domainId = (int)collect.get(0).getId();
+                Integer finalDomainId = domainId;
+                Optional<AttributePO> first = sourceAttribute.stream().filter(i -> {
+                    if (i.getDomainId() != null && i.getDomainId().equals(finalDomainId)){
+                            return true;
+                    }
+                    return false;
+                }).findFirst();
+                if (first.isPresent()){
+                    AttributePO attributePO = first.get();
+                    updateColumn = attributePO.getName();
+                }else {
+                    throw new FkException(ResultEnum.DATA_NOTEXISTS);
+                }
+            }
 
-        //获取对应连接类型的IBuildMdmScript
-        IBuildMdmScript iBuildMdmScript = MdmScriptHelper.getDomainScriptHelperByConType(conType);
+            //开始拼接sql
+            StringBuilder str = new StringBuilder();
+            String stgTable = "\""+relationDTOS.get(0).sourceTable+"\"";
+            String targetTable = "\""+relationDTOS.get(0).targetTable+"\"";
+            str.append("UPDATE ")
+                .append(stgTable)
+                .append(" SET \"")
+                .append(updateColumn)
+                .append("\" = (select \"fidata_id\" FROM ")
+                .append(targetTable)
+                .append(" WHERE ");
 
-        return iBuildMdmScript.buildMdmScript(dto);
+            //处理关联关系
+            StringBuilder and = new StringBuilder();
+            for (RelationDTO item : map.get(targetEntityId)) {
+                and.append("AND ")
+                        .append(stgTable)
+                        .append(".\"")
+                        .append(item.getSourceColumn())
+                        .append("\" = ")
+                        .append(targetTable)
+                        .append(".\"")
+                        .append(item.getTargetColumn())
+                        .append("\" ");
+            }
+            and.delete(0,3);
+            str.append(and)
+                    .append("AND ")
+                    .append(stgTable)
+                    .append(".\"fidata_version_id\"=")
+                    .append(targetTable)
+                    .append(".\"fidata_version_id\")")
+                    .append(" WHERE ")
+                    .append(stgTable)
+                    .append(".\"fidata_batch_code\"=")
+                    .append("'${fidata_batch_code}' AND ")
+                    .append(stgTable)
+                    .append(".\"fidata_flow_batch_code\"=")
+                    .append("'${fragment.index}' AND ")
+                    .append(stgTable)
+                    .append(".\"fidata_version_id\"=")
+                    .append("'${fidata_version_id}';");
+            updateScriptSql.append(str);
+        }
+        return updateScriptSql;
     }
 
     /**
@@ -734,6 +828,50 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     }
 
     String buildMerge(List<AccessAttributeDTO> attributeList,String souceTableName,String targetTableName,Integer versionId) {
+
+        List<String> sourceNames = new ArrayList<>();
+        //处理类型转换
+        for (AccessAttributeDTO accessAttributeDTO : attributeList) {
+            String sourceName;
+            switch (accessAttributeDTO.getDataType()) {
+                case "文件":
+                case "经纬度坐标":
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "数值":
+                case "域字段":
+                    sourceName =  "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\'\'\') AS int4) AS \"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "时间":
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "日期":
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "日期时间":
+                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'\'YYYY-MM-DD HH24:MI:SS\'\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "浮点型":
+                    sourceName = "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\'\'\') AS DECIMAL("+accessAttributeDTO.getDataTypeLength()+","+accessAttributeDTO.getDataTypeDecimalLength()+")) AS \"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "布尔型":
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "货币":
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "POI":
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+                case "文本":
+                default:
+                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    break;
+            }
+            sourceNames.add(sourceName);
+        }
+
+
         //获取stg表列名
         List<String> sourceColumnNames = attributeList.stream()
                 .map(i->"\""+i.getFieldName() +"\"")
@@ -763,7 +901,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if(flag){
             str.append("    \"code\",\n");
         }
-        str.append("    "+org.apache.commons.lang.StringUtils.join(sourceColumnNames, ",\n    ")+"\n");
+        str.append("    "+org.apache.commons.lang.StringUtils.join(sourceNames, ",\n    ")+"\n");
 
         str.append("  FROM\n");
         str.append("    \""+souceTableName+"\"\n");

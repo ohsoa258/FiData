@@ -1,8 +1,10 @@
 package com.fisk.mdm.dto.access;
-import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+
+import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -36,7 +38,7 @@ public class AccessAttributeAddDTO{
      * 基于域字段关联映射关系
      */
     @ApiModelProperty(value = "基于域字段关联映射关系")
-    public List<TableSourceRelationsDTO> tableSourceRelationsDTO;
+    public List<RelationDTO> tableSourceRelationsDTO;
     /**
      * 列字段对应关系
      */

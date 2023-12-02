@@ -1,5 +1,6 @@
 package com.fisk.task.dto.accessmdm;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -33,6 +34,27 @@ public class AccessAttributeDTO {
      * 字段名字
      */
     public String fieldName;
+    /**
+     * 数据类型
+     */
+    private String dataType;
+
+    public String dataTypeEnDisplay;
+
+    /**
+     * 数据类型长度
+     */
+    private Integer dataTypeLength;
+
+    /**
+     * 数据类型小数点长度
+     */
+    private Integer dataTypeDecimalLength;
+
+    /**
+     * 数据格式id
+     */
+    private Integer dataTypeFormatId;
     /**
      * mdm字段名字
      */
