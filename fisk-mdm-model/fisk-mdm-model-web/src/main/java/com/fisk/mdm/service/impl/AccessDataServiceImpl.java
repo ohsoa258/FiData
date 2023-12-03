@@ -719,7 +719,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                         .append(item.getSourceColumn())
                         .append("\" = ")
                         .append(targetTable)
-                        .append(".\"")
+                        .append(".\"column_")
                         .append(item.getTargetColumn())
                         .append("\" ");
             }
