@@ -414,7 +414,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     return ResultEnum.SUCCESS;
 
                 //todo:hudi(hive)因jar包冲突问题,暂时不做测试连接操作,前端页面没有测试连接选项
-                case HIVE:
+                case DORIS_CATALOG:
                     log.info("注册HIVE驱动程序前...");
                     // 加载Hive驱动
                     Class.forName("org.apache.hive.jdbc.HiveDriver");
@@ -428,6 +428,10 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 case DM8:
                     Class.forName(DataSourceTypeEnum.DM8.getDriverName());
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
+                // todo:强生入仓配置 hudi的测试连接先不做
+                case HUDI:
+
                     return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;

@@ -748,7 +748,7 @@ public class TableFieldsImpl
                 data.fetchSize = syncMode.fetchSize == null ? fetchSize : syncMode.fetchSize;
                 data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
                 data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
-                data.ifHive = DataSourceTypeEnum.HIVE.getName().equals(dataSourcePo.driveType);
+                data.ifHive = DataSourceTypeEnum.DORIS_CATALOG.getName().equals(dataSourcePo.driveType);
                 log.info("是否是sapbw...", data.sapBwFlow);
                 log.info("是否是hive...", data.ifHive);
                 data.tableHistoryId = tableHistoryId;
@@ -900,12 +900,12 @@ public class TableFieldsImpl
             data.whetherSchema = registration.whetherSchema;
             data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
             data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
-            data.ifHive = DataSourceTypeEnum.HIVE.getName().equals(dataSourcePo.driveType);
+            data.ifHive = DataSourceTypeEnum.DORIS_CATALOG.getName().equals(dataSourcePo.driveType);
             data.connectStr = dataSourcePo.connectStr;
             // 是否小铃铛弹窗
 //            data.popout = true;
             log.info("是否是sapbw:[{}]", data.sapBwFlow);
-            log.info("是否是hive:[{}]", data.sapBwFlow);
+            log.info("是否是hive:[{}]", data.ifHive);
             data.tableHistoryId = tableHistoryId;
             List<MetaDataInstanceAttributeDTO> metaDataList = new ArrayList<>();
             publishTaskClient.publishBuildPhysicsTableTask(data);
@@ -1848,6 +1848,10 @@ public class TableFieldsImpl
         po.fieldDes = dto.fieldDes;
         po.displayName = dto.displayName;
         po.fieldPrecision = dto.fieldPrecision;
+        po.isPrimarykey = dto.isPrimarykey;
+        po.isSensitive = dto.isSenstive;
+        po.isPartitionKey = dto.isPartitionKey;
+        po.isEmpty = dto.isEmpty;
 
         int flat = baseMapper.updateById(po);
         if (flat == 0) {

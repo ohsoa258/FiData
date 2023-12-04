@@ -1086,8 +1086,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
         }
 
-        //同步完成后 发送kafka消息到数据分发 告知数据分发服务可以往下游分发数据了
-
         return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());
     }
 

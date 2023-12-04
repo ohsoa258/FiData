@@ -126,7 +126,7 @@ public class BuildDataInputPgTableListener {
                 //hive(hudi)只建doris的外部目录
             } else {
                 //如果是hive 切换成建doris外部目录的实现类
-                dbCommand = BuildFactoryHelper.getDBCommand(DataSourceTypeEnum.HIVE);
+                dbCommand = BuildFactoryHelper.getDBCommand(DataSourceTypeEnum.DORIS_CATALOG);
                 //获取建表语句
                 List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
                 log.info("hive_doris建外部目录语句:" + JSON.toJSONString(sqlList));
@@ -141,7 +141,7 @@ public class BuildDataInputPgTableListener {
                 log.info("oracle_cdc建表完成");
                 modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
                 dc.updateApiPublishStatus(modelPublishStatusDTO);
-            } else if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.hive)) {
+            } else if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.doris_catalog)) {
                 log.info("doris-hive外部目录建立完成");
                 ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
                 modelPublishStatus.publish = PublishTypeEnum.SUCCESS.getValue();

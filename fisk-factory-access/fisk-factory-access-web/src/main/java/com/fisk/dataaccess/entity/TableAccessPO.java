@@ -17,10 +17,6 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @TableName("tb_table_access")
 public class TableAccessPO extends BasePO implements Serializable {
-
-    @TableId(value = "id", type = IdType.AUTO)
-    public long id;
-
     /**
      * 父id
      */

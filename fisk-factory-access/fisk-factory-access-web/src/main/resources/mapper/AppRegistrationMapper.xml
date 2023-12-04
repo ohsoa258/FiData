@@ -12,7 +12,8 @@
         a.app_principal,
         a.create_time,
         a.department_name,
-        a.if_allow_datatransfer
+        a.if_allow_datatransfer,
+        a.if_sync_all_tables
         /*b.drive_type*/
         FROM
         tb_app_registration AS a

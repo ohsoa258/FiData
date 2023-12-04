@@ -536,4 +536,11 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/savePipelTaskLog")
     ResultEntity<Object> savePipelTaskLog(@RequestBody TableApiTaskDTO data);
 
+    /**
+     * 前置机-数据接入发送消息到数据分发
+     * @param apiConfigId
+     */
+    @PostMapping("/ws/wsAccessToConsume")
+    void wsAccessToConsume(Integer apiConfigId);
+
 }

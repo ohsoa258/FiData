@@ -70,4 +70,9 @@ public class AppRegistrationPO extends BasePO {
      */
     public Integer ifAllowDatatransfer;
 
+    /**
+     * hudi:是否同步全部表 0否，1是
+     */
+    public Integer ifSyncAllTables;
+
 }

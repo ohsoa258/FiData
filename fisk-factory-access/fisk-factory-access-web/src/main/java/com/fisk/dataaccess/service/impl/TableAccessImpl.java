@@ -1743,6 +1743,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return ResultEntityBuild.build(ResultEnum.SUCCESS, model.id);
     }
 
+    /**
+     * 此方法专门用于为hudi入参配置   --  将源头表存入平台配置库 tb_table_access表
+     * @param dto
+     * @return
+     */
+    public Integer addTableAccessTblForHudiConfig(TbTableAccessDTO dto) {
+
+        // dto -> po
+        TableAccessPO model = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+        accessMapper.insert(model);
+        return Math.toIntExact(model.getId());
+    }
+
     @Override
     public TbTableAccessDTO getTableAccessData(long id) {
 

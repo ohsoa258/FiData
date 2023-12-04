@@ -51,7 +51,25 @@ public class TableStructureDTO {
     /**
      * 如果是sapbw，这个对象代表cube的所有维度和指标
      */
-    @ApiModelProperty(value = "字段精度")
+    @ApiModelProperty(value = "如果是sapbw，这个对象代表cube的所有维度和指标")
     public CubeDimsAndMeas cubeDimsAndMeas;
+
+    /**
+     * 源库名称
+     */
+    @ApiModelProperty(value = "源库名称", required = true)
+    public String sourceDbName;
+
+    /**
+     * 源表名称
+     */
+    @ApiModelProperty(value = "源表名称", required = true)
+    public String sourceTblName;
+
+    /**
+     * 是否主键  0否   1是
+     */
+    @ApiModelProperty(value = "是否主键")
+    public Integer isPk;
 
 }

@@ -21,7 +21,7 @@ import java.util.List;
 public class MysqlConUtils {
 
     /**
-     * 获取表及表字段
+     * 获取表
      *
      * @return 查询结果
      */
@@ -60,6 +60,40 @@ public class MysqlConUtils {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         } finally {
             AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+
+        return list;
+    }
+
+    /**
+     * 获取表及表字段
+     *
+     * @return 查询结果
+     */
+    public List<TablePyhNameDTO> getTrueTableNameAndColumns(Connection conn) {
+
+        List<TablePyhNameDTO> list = null;
+        try {
+            // 获取数据库中所有表名称
+            List<String> tableNames = getTables(conn);
+
+            list = new ArrayList<>();
+
+            for (String tableName : tableNames) {
+
+                List<TableStructureDTO> colNames = getColNamesV2(conn, tableName);
+
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(tableName);
+                tablePyhNameDTO.setFields(colNames);
+
+                list.add(tablePyhNameDTO);
+            }
+        } catch (Exception e) {
+            log.error("【getTableNameAndColumns】获取表名报错: ", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
             AbstractCommonDbHelper.closeConnection(conn);
         }
 
@@ -174,7 +208,7 @@ public class MysqlConUtils {
      * @return
      */
     public List<TableStructureDTO> getColNames(Connection conn, String tableName) {
-        List<TableStructureDTO> colNameList = null;
+        List<TableStructureDTO> colNameList = new ArrayList<>();
         Statement st = null;
         ResultSet rs = null;
         try {
@@ -200,6 +234,56 @@ public class MysqlConUtils {
         } finally {
             AbstractCommonDbHelper.closeResultSet(rs);
             AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        return colNameList;
+    }
+
+    /**
+     * 获取表中所有字段名称
+     *
+     * @param conn
+     * @param tableName
+     * @return
+     */
+    public List<TableStructureDTO> getColNamesV2(Connection conn, String tableName) {
+        List<TableStructureDTO> colNameList = new ArrayList<>();
+        ResultSet resultSet = null;
+        ResultSet primaryKeys = null;
+        try {
+            colNameList = new ArrayList<>();
+
+            DatabaseMetaData metaData = conn.getMetaData();
+            resultSet = metaData.getColumns(null, "%", tableName, "%");
+            while (resultSet.next()) {
+                TableStructureDTO dto = new TableStructureDTO();
+                // 获取字段名称
+                dto.fieldName = resultSet.getString("COLUMN_NAME");
+                // 获取字段长度
+                dto.fieldLength = resultSet.getInt("COLUMN_SIZE");
+                // 获取字段类型
+                dto.fieldType = resultSet.getString("TYPE_NAME");
+                colNameList.add(dto);
+            }
+
+            //获取表的主键字段
+            List<String> pks = new ArrayList<>();
+            primaryKeys = metaData.getPrimaryKeys(null, "%", tableName);
+            while (primaryKeys.next()) {
+                pks.add(primaryKeys.getString("COLUMN_NAME"));
+            }
+            colNameList.forEach(tableStructureDTO -> {
+                if (pks.contains(tableStructureDTO.fieldName)) {
+                    tableStructureDTO.setIsPk(1);
+                } else {
+                    tableStructureDTO.setIsPk(0);
+                }
+            });
+        } catch (SQLException e) {
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(resultSet);
+            AbstractCommonDbHelper.closeResultSet(primaryKeys);
             AbstractCommonDbHelper.closeConnection(conn);
         }
         return colNameList;

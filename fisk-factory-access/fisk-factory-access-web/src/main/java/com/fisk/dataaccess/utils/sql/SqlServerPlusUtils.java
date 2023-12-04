@@ -49,6 +49,60 @@ public class SqlServerPlusUtils {
     }
 
     /**
+     * 根据tableName获取tableFields
+     *
+     * @param tableName tableName
+     * @return tableName中的表字段
+     */
+    public List<TableStructureDTO> getColumnsNameV2(Connection conn, String tableName, String dbName) {
+        List<TableStructureDTO> colNameList = new ArrayList<>();
+        ResultSet resultSet = null;
+        ResultSet primaryKeys = null;
+        try {
+            colNameList = new ArrayList<>();
+
+            DatabaseMetaData metaData = conn.getMetaData();
+            resultSet = metaData.getColumns(null, "%", tableName, "%");
+            while (resultSet.next()) {
+                TableStructureDTO dto = new TableStructureDTO();
+                // 获取字段名称
+                dto.fieldName = resultSet.getString("COLUMN_NAME");
+                // 获取字段长度
+                dto.fieldLength = resultSet.getInt("COLUMN_SIZE");
+                // 获取字段类型
+                dto.fieldType = resultSet.getString("TYPE_NAME");
+                // 字段描述
+                dto.setFieldDes(resultSet.getString("REMARKS"));
+                dto.sourceTblName = tableName;
+                dto.sourceDbName = dbName;
+                colNameList.add(dto);
+            }
+
+            //获取表的主键字段
+            List<String> pks = new ArrayList<>();
+            primaryKeys = metaData.getPrimaryKeys(null, "%", tableName);
+            while (primaryKeys.next()) {
+                pks.add(primaryKeys.getString("COLUMN_NAME"));
+            }
+            colNameList.forEach(tableStructureDTO -> {
+                if (pks.contains(tableStructureDTO.fieldName)) {
+                    tableStructureDTO.setIsPk(1);
+                    tableStructureDTO.setFieldDes("主键");
+                } else {
+                    tableStructureDTO.setIsPk(0);
+                }
+            });
+        } catch (SQLException e) {
+            log.error("获取表字段失败:" + e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(resultSet);
+            AbstractCommonDbHelper.closeResultSet(primaryKeys);
+        }
+        return colNameList;
+    }
+
+    /**
      * 获取sqlserver架构名+表名
      *
      * @return java.util.Map<java.lang.String, java.lang.String>
@@ -152,6 +206,53 @@ public class SqlServerPlusUtils {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
                 //tablePyhNameDTO.setFields(columnsName);
+                finalList.add(tablePyhNameDTO);
+            }
+        } catch (SQLException e) {
+            log.error("【getTableNameAndColumnsPlus】获取表名及表字段失败, ex", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(stmt);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        return list;
+    }
+
+    /**
+     * 获取sqlserver表详情(表名+字段)
+     *
+     * @return java.util.List<com.fisk.dataaccess.table.TablePyhNameDTO>
+     * @description 获取sqlserver表详情(表名 + 字段)
+     * @author Lock
+     * @date 2022/4/1 14:56
+     * @version v1.0
+     * @params url
+     * @params user
+     * @params password
+     * @params dbName
+     */
+    public List<TablePyhNameDTO> getTrueTableNameAndColumnsPlus(Connection conn, String dbName) {
+
+        List<TablePyhNameDTO> list = null;
+        Statement stmt = null;
+        try {
+            stmt = conn.createStatement();
+            list = new ArrayList<>();
+
+            // 获取指定数据库所有表
+            Map<String, String> mapList = this.getTablesPlus(conn, dbName);
+
+            List<TablePyhNameDTO> finalList = list;
+
+            Iterator<Map.Entry<String, String>> iterator = mapList.entrySet().iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> entry = iterator.next();
+                // 根据表名获取字段
+                List<TableStructureDTO> columnsName = getColumnsNameV2(conn, entry.getKey(), dbName);
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
+                tablePyhNameDTO.setFields(columnsName);
                 finalList.add(tablePyhNameDTO);
             }
         } catch (SQLException e) {

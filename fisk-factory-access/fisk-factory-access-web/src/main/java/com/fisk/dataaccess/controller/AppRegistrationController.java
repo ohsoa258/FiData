@@ -258,7 +258,7 @@ public class AppRegistrationController {
     @ApiOperation(value = "获取指定doris外部目录catalog下的所有db以及所有表")
     @GetMapping("/getDorisCatalogTreeByCatalogName")
     public ResultEntity<Map<String, List<String>>> getDorisCatalogTreeByCatalogName(@RequestParam("dbID") Integer dbID,
-                                                                 @RequestParam("catalogName") String catalogName) {
+                                                                                    @RequestParam("catalogName") String catalogName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.getDorisCatalogTreeByCatalogName(dbID, catalogName));
     }
 
@@ -282,6 +282,7 @@ public class AppRegistrationController {
 
     /**
      * 刷新doris外部目录catalog存储的redis缓存
+     *
      * @param dbID        平台配置数据库id
      * @param catalogName 目录名
      */
@@ -289,7 +290,7 @@ public class AppRegistrationController {
     @GetMapping("/refreshDorisCatalog")
     public ResultEntity<Map<String, List<String>>> refreshDorisCatalog(@RequestParam("dbID") Integer dbID,
                                                                        @RequestParam("catalogName") String catalogName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.refreshDorisCatalog(dbID,catalogName));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableAccessImpl.refreshDorisCatalog(dbID, catalogName));
     }
 
     @ApiOperation(value = "根据sql语句,获取字段列表(数据建模)")

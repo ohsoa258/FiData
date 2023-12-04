@@ -24,8 +24,9 @@ public enum DataSourceTypeEnum implements BaseEnum {
     OPENEDGE(10, "openedge"),
     SAPBW(11, "sapbw"),
     WEBSERVICE(12, "webservice"),
-    HIVE(13, "hive"),
+    DORIS_CATALOG(13, "doris_catalog"),
     DM8(14, "dm8"),
+    HUDI(15, "hudi"),
     ;
 
     DataSourceTypeEnum(int value, String name) {

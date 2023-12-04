@@ -29,7 +29,7 @@ public enum DbTypeEnum implements BaseEnum {
     openedge(10,"openedge"),
     sapbw(11,"sapbw"),
     webservice(12,"webservice"),
-    hive(13,"hive"),
+    doris_catalog(13,"doris_catalog"),
     dm8(14,"dm8"),
     ;
 

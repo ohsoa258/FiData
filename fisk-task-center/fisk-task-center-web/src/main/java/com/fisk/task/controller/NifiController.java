@@ -152,11 +152,14 @@ public class NifiController {
         //RestfulApi无需在nifi创建全局变量，它不走nifi
         //WEBSERVICE和RestfulApi同理  都不走nifi
         //SAPBW同理 源--临时表的流程不走nifi    临时表-目标表的流程才走nifi
-        //HIVE同理
+        //DORIS_CATALOG同理
+        //hudi同理
         if (dto.conType == DataSourceTypeEnum.RESTFULAPI
                 || dto.conType == DataSourceTypeEnum.SAPBW
                 || dto.conType == DataSourceTypeEnum.WEBSERVICE
-                || dto.conType == DataSourceTypeEnum.HIVE) {
+                || dto.conType == DataSourceTypeEnum.DORIS_CATALOG
+                || dto.conType == DataSourceTypeEnum.HUDI
+        ) {
             return resultEntity;
         }
 
@@ -228,7 +231,7 @@ public class NifiController {
         //RestfulApi无需在nifi创建全局变量，它不走nifi
         //SAPBW同理 源--临时表的流程不走nifi
         //HIVE同理
-        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW || dto.conType == DataSourceTypeEnum.WEBSERVICE || dto.conType == DataSourceTypeEnum.HIVE) {
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW || dto.conType == DataSourceTypeEnum.WEBSERVICE || dto.conType == DataSourceTypeEnum.DORIS_CATALOG) {
             return resultEntity;
         }
 

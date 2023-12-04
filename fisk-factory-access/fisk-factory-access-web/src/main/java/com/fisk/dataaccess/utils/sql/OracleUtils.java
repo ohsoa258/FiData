@@ -334,6 +334,46 @@ public class OracleUtils {
     }
 
     /**
+     * 读取Oracle表、字段信息
+     *
+     * @param conn
+     * @param dbName
+     * @return
+     */
+    public List<TablePyhNameDTO> getTrueTableNameList(Connection conn, String dbName) {
+        Statement st = null;
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        try {
+            // 获取数据库中所有表名称
+            List<String> tableList = getTables(conn);
+            if (CollectionUtils.isEmpty(tableList)) {
+                return null;
+            }
+            st = conn.createStatement();
+            list = new ArrayList<>();
+            for (String tableName : tableList) {
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSql(dbName, tableName));
+                List<TableStructureDTO> colNameList = new ArrayList<>();
+                while (rs.next()) {
+                    colNameList.add(conversionType(rs));
+                }
+                tablePyhNameDTO.setFields(colNameList);
+                tablePyhNameDTO.setTableName(tableName);
+                list.add(tablePyhNameDTO);
+                rs.close();
+            }
+        } catch (SQLException e) {
+            log.error("【getTableNameAndColumns】获取表名报错, ex", e);
+            throw new FkException(ResultEnum.SQL_ERROR);
+        } finally {
+            AbstractDbHelper.closeStatement(st);
+            AbstractDbHelper.closeConnection(conn);
+        }
+        return list;
+    }
+
+    /**
      * 获取表字段信息
      *
      * @param conn

@@ -43,10 +43,13 @@ public enum DataSourceTypeEnum implements BaseEnum {
 
     WEBSERVICE(14, "WEBSERVICE", "", ""),
 
-    HIVE(15, "HIVE", "org.apache.hive.jdbc.HiveDriver", ""),
+    DORIS_CATALOG(15, "DORIS_CATALOG", "org.apache.hive.jdbc.HiveDriver", ""),
 
     //todo:记得改nifijar包位置
     DM8(16, "DM8", "dm.jdbc.driver.DmDriver", "opt/nifi/nifi-current/jdbcdriver/DmJdbcDriver18.jar"),
+
+    HUDI(17, "HUDI", "", ""),
+
     ;
 
     DataSourceTypeEnum(int value, String name, String driverName, String driverLocation) {

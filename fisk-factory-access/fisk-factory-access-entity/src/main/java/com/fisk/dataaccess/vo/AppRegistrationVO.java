@@ -66,4 +66,10 @@ public class AppRegistrationVO{
      */
     @ApiModelProperty(value = "应用下的接口是否允许数据传输  0否，1是")
     public Integer ifAllowDatatransfer;
+
+    /**
+     * hudi:是否同步全部表
+     */
+    @ApiModelProperty(value = "hudi:是否同步全部表 0否，1是")
+    public Integer ifSyncAllTables;
 }
