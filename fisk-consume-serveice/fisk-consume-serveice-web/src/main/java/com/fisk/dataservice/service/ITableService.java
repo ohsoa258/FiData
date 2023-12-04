@@ -82,6 +82,13 @@ public interface ITableService {
     List<BuildTableServiceDTO> getTableListByPipelineId(Integer pipelineId);
 
     /**
+     * 根据接入id获取表服务集合
+     * @param inputId
+     * @return
+     */
+    List<BuildTableServiceDTO> getTableListByInputId(Integer inputId);
+
+    /**
      * 修改表服务发布状态
      *
      * @param dto
