@@ -180,6 +180,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     List<ApiColumnInfoDTO> getTableColumnInfoByApi(Integer apiId);
 
     List<TableAccessNonDTO> getSourceTableAndField(long apiId);
+
     ResultEnum addSourceField(List<ApiParameterDTO> dto);
 
     ResultEnum deleteSourceField(long id);
@@ -191,6 +192,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
 
     /**
      * 根据apiId获取指定api
+     *
      * @param apiId
      * @return
      */
@@ -202,5 +204,12 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return
      */
     Integer countTblByAppForApi(Integer appId);
+
+    /**
+     * 前置机定制接口-数据分发获取数据接入webservice接口
+     *
+     * @return
+     */
+    List<ApiConfigDTO> getWebServiceList();
 }
 

@@ -1069,7 +1069,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         try {
             //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
             String fidata_batch_code = UUID.randomUUID().toString();
-            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(fidata_batch_code,tablePrefixName, targetTable, apiTableDtoList, targetDbId);
+            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(fidata_batch_code, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
         } catch (Exception e) {
             log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);
@@ -1085,6 +1085,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 COUNT_SQL += COUNT_SQL;
             }
         }
+
+        //同步完成后 发送kafka消息到数据分发 告知数据分发服务可以往下游分发数据了
 
         return ResultEntityBuild.build(resultEnum, checkResultMsg.toString());
     }
@@ -2680,6 +2682,17 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         LambdaQueryWrapper<ApiConfigPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ApiConfigPO::getAppId, appId);
         return apiConfigMapper.selectCount(wrapper);
+    }
+
+    /**
+     * 前置机定制接口-数据分发获取数据接入webservice接口
+     *
+     * @return
+     */
+    @Override
+    public List<ApiConfigDTO> getWebServiceList() {
+        List<ApiConfigPO> list = list();
+        return ApiConfigMap.INSTANCES.listPoToDto(list);
     }
 
 //    public static void main(String[] args) {
