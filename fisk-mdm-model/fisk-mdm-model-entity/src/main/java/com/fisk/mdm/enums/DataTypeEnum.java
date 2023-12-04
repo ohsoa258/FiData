@@ -2,6 +2,7 @@ package com.fisk.mdm.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
 import com.fisk.common.core.enums.BaseEnum;
+import org.springframework.data.redis.connection.DataType;
 
 /**
  * @author WangYan
@@ -100,5 +101,6 @@ public enum DataTypeEnum implements BaseEnum {
         }
         return DataTypeEnum.TEXT;
     }
+
 
 }

@@ -3,7 +3,7 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.access.*;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
@@ -99,6 +99,8 @@ public interface AccessDataService extends IService<AccessDataPO> {
 
     EntityTableDTO getEntityStgTable(long entityId, long modelId);
 
-    Object buildDomainUpdateScript(List<TableSourceRelationsDTO> dto);
+//    Object buildDomainUpdateScript(List<TableSourceRelationsDTO> dto);
+
+    Object buildDomainUpdateScript(List<RelationDTO> list);
 }
 

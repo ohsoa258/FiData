@@ -821,13 +821,13 @@ public class DataViewThemeServiceImpl
 
     @Override
     public List<AppBusinessInfoDTO> getViewService() {
-        //封装三个服务的所有应用
+        //封
         List<AppBusinessInfoDTO> appInfos=new ArrayList<>();
         List<DataViewThemePO> viewThemeAppPOS = this.query().list();
         //封装View服务的所有应用
         viewThemeAppPOS.stream()
                 .forEach(a -> {
-                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),5);
+                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue());
                     appInfos.add(infoDTO);
                 });
         return appInfos;
@@ -840,7 +840,7 @@ public class DataViewThemeServiceImpl
         //封装View服务的所有应用
         viewThemeAppPOS.stream()
                 .forEach(a -> {
-                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),5);
+                    AppBusinessInfoDTO infoDTO = new AppBusinessInfoDTO(a.getId(),a.getThemeName(),a.getThemeAbbr(),a.getThemeDesc(),ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue());
                     appInfos.add(infoDTO);
                 });
         return appInfos;

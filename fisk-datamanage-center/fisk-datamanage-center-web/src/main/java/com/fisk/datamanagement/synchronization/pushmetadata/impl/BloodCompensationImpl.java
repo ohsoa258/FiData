@@ -18,6 +18,7 @@ import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -44,6 +45,8 @@ public class BloodCompensationImpl
     DataModelClient dataModelClient;
     @Resource
     ConsumeServeiceClient serveiceClient;
+    @Resource
+    MdmClient mdmClient;
     @Resource
     MetaDataImpl metaData;
     @Resource
@@ -85,49 +88,53 @@ public class BloodCompensationImpl
             //清空系统血缘
             TruncateBlood();
         }
-        log.info("******一.开始补偿数据接入相关元数据信息******");
-        log.info("******1.开始同步数据接入系统名称到业务分类******");
-        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-        synchronousClassification(appList,ClassificationTypeEnum.DATA_ACCESS);
-        log.info("******2.开始同步数据接入来源表元数据******");
-        //同步数据接入来源表元数据(解析接入表sql)
-        synchronousAccessSourceMetaData(currUserName);
-        log.info("******3.开始同步数据接入ods表以及stg表元数据******");
-        //同步数据接入ods表以及stg表元数据
-        synchronousAccessTableSourceMetaData(currUserName);
-
-        log.info("*******二.开始同步数据建模相关元数据信息********");
-        log.info("*******1.开始同步数据建模的业务分类********");
-        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-        synchronousClassification(businessAreaList,ClassificationTypeEnum.ANALYZE_DATA);
-        log.info("********2.开始同步建模业务分类元数据********");
-        synchronousDataModelTableSourceMetaData(currUserName);
-
-        log.info("*******三.开始同步API网关服务相关元数据信息********");
-        log.info("********1.开始API网关服务的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> apiAppList = serveiceClient.getApiService();
-        synchronousClassification(apiAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
-        log.info("********2.开始API网关服务的元数据******************");
-        synchronousAPIServiceMetaData(currUserName);
-
-        log.info("*******四.开始同步视图服务相关元数据信息********");
-        log.info("********1.开始视图服务的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> viewAppList = serveiceClient.getViewService();
-        synchronousClassification(viewAppList, ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
-        log.info("********2.开始视图服务的元数据******************");
-        synchronousViewServiceMetaData(currUserName);
-
-        log.info("*******五.开始同步数据库同步服务相关元数据信息********");
-        log.info("********1.开始数据库同步服务的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
-        synchronousClassification(tableAppList, ClassificationTypeEnum.DATA_DISTRIBUTION);
-        log.info("********2.开始数据库同步服务的元数据******************");
-        synchronousDataBaseSyncMetaData(currUserName);
+//        log.info("******一.开始补偿数据接入相关元数据信息******");
+//        log.info("******1.开始同步数据接入系统名称到业务分类******");
+//        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+//        synchronousClassification(appList,ClassificationTypeEnum.DATA_ACCESS);
+//        log.info("******2.开始同步数据接入来源表元数据******");
+//        //同步数据接入来源表元数据(解析接入表sql)
+//        synchronousAccessSourceMetaData(currUserName);
+//        log.info("******3.开始同步数据接入ods表以及stg表元数据******");
+//        //同步数据接入ods表以及stg表元数据
+//        synchronousAccessTableSourceMetaData(currUserName);
+//
+//        log.info("*******二.开始同步数据建模相关元数据信息********");
+//        log.info("*******1.开始同步数据建模的业务分类********");
+//        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+//        log.info("********2.开始同步建模业务分类元数据********");
+//        synchronousClassification(businessAreaList,ClassificationTypeEnum.ANALYZE_DATA);
+//        log.info("********2.开始同步建模ods表以及stg表元数据********");
+//        synchronousDataModelTableSourceMetaData(currUserName);
+//
+//        log.info("*******三.开始同步API网关服务相关元数据信息********");
+//        log.info("********1.开始API网关服务的业务分类******************");
+//        ResultEntity<List<AppBusinessInfoDTO>> apiAppList = serveiceClient.getApiService();
+//        synchronousClassification(apiAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
+//        log.info("********2.开始API网关服务的元数据******************");
+//        synchronousAPIServiceMetaData(currUserName);
+//
+//        log.info("*******四.开始同步视图服务相关元数据信息********");
+//        log.info("********1.开始视图服务的业务分类******************");
+//        ResultEntity<List<AppBusinessInfoDTO>> viewAppList = serveiceClient.getViewService();
+//        synchronousClassification(viewAppList, ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
+//        log.info("********2.开始视图服务的元数据******************");
+//        synchronousViewServiceMetaData(currUserName);
+//
+//        log.info("*******五.开始同步数据库同步服务相关元数据信息********");
+//        log.info("********1.开始数据库同步服务的业务分类******************");
+//        ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
+//        synchronousClassification(tableAppList, ClassificationTypeEnum.DATA_DISTRIBUTION);
+//        log.info("********2.开始数据库同步服务的元数据******************");
+//        synchronousDataBaseSyncMetaData(currUserName);
 
 
         log.info("*******六.开始主数据相关元数据信息********");
-        log.info("********1.开始主数据模型******************");
-
+        log.info("********1.开始同步主数据业务分类******************");
+        ResultEntity<List<AppBusinessInfoDTO>> masterDataModel = mdmClient.getMasterDataModel();
+        synchronousClassification(masterDataModel,ClassificationTypeEnum.MASTER_DATA);
+        log.info("********2.开始主数据的元数据******************");
+        synchronousMasterDataMetaData(currUserName);
         return ResultEnum.SUCCESS;
 
 
@@ -190,6 +197,7 @@ public class BloodCompensationImpl
         InsertRootBusinessClassification(ClassificationTypeEnum.API_GATEWAY_SERVICE);
         InsertRootBusinessClassification(ClassificationTypeEnum.DATA_DISTRIBUTION);
         InsertRootBusinessClassification(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
+        InsertRootBusinessClassification(ClassificationTypeEnum.MASTER_DATA);
 
         //6.清空业务分类-分类属性表：tb_classification
         classificationMapper.truncateTable();
@@ -217,7 +225,7 @@ public class BloodCompensationImpl
         POData.description=item.getDescription();
         businessClassificationMapper.insert(POData);
     }
-//endregion
+    //endregion
 
     /**
      *同步到业务分类的公共方法
@@ -341,6 +349,18 @@ public class BloodCompensationImpl
      */
     public void synchronousDataModelTableSourceMetaData(String currUserName) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = dataModelClient.getDataModelMetaData();
+        if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        }
+        metaData.consumeMetaData(dataModelMetaData.data,currUserName);
+    }
+
+    /**
+     * 同步主数据的元数据
+     * @param currUserName 当前执行账号
+     */
+    public void synchronousMasterDataMetaData(String currUserName) {
+        ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = mdmClient.getMasterDataMetaData(null);
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }

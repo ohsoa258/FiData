@@ -15,7 +15,8 @@ management:
     web:
       exposure:
         include: '*'
-
+# 是否同步元数据
+open-metadata: false
 # spring配置
 spring:
   application:

@@ -1768,8 +1768,9 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
     }
 
     private String buildSchemaArchitecture(List<String> tableFieldsList, String schemaName) {
+        Set<String> collect = new HashSet<>(tableFieldsList);
         String architecture = "{\"namespace\": \"nifi\",\"name\": \"" + schemaName + "\",\"type\": \"record\",\"fields\": [";
-        for (String tableFields : tableFieldsList) {
+        for (String tableFields : collect) {
             if (StringUtils.isNotEmpty(tableFields)) {
                 tableFields = tableFields.replace(")", "_");
                 tableFields = tableFields.replace("(", "_");

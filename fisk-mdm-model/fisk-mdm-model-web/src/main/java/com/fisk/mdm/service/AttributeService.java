@@ -113,4 +113,12 @@ public interface AttributeService extends IService<AttributePO> {
     List<PoiDetailDTO> getPoiDetails(PoiQueryDTO dto);
 
     Map<String, Object> getPoiAuthorization();
+
+
+    /**
+     * 获取实体下的属性
+     * @param entityId
+     * @return
+     */
+    List<AttributePO> getAttributeByEntityId(Integer entityId);
 }

@@ -33,6 +33,9 @@ public class UpdateEntityDTO {
     @ApiModelProperty(value = "表名",required = true)
     private String tableName;
 
+    @ApiModelProperty(value = "排序",required = true)
+    private Integer sort;
+
     @ApiModelProperty(value = "是否开启成员日志",required = true)
     private Boolean enableMemberLog;
 

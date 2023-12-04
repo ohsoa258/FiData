@@ -33,7 +33,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.fisk.datagovernance.client",
         "com.fisk.task.client",
         "com.fisk.system.client",
-        "com.fisk.consumeserveice.client"
+        "com.fisk.consumeserveice.client",
+        "com.fisk.mdm.client"
 })
 @EnableHystrix
 @EnableScheduling //开启定时任务

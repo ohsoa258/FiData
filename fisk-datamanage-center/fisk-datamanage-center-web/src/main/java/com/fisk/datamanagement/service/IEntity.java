@@ -21,6 +21,12 @@ public interface IEntity {
     List<EntityTreeDTO> getEntityTreeList();
 
     /**
+     *刷新元数据对象树形列表
+     */
+
+    void refreshEntityTreeList();
+
+    /**
      * 添加元数据对象：实例、数据库、表、字段
      * @param dto
      * @return

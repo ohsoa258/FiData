@@ -22,7 +22,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
         "com.fisk.task.client",
-        "com.fisk.system.client"
+        "com.fisk.system.client",
+        "com.fisk.datamanage.client"
 })
 /**
  * @author WangYan

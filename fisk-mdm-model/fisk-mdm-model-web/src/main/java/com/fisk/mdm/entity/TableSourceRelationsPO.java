@@ -26,13 +26,15 @@ public class TableSourceRelationsPO extends BasePO {
     @ApiModelProperty(value = "源字段")
     private String sourceColumn;
 
-    @ApiModelProperty(value = "连接类型")
-    private String joinType;
-
     @ApiModelProperty(value = "目标表")
     private String targetTable;
 
     @ApiModelProperty(value = "目标字段")
     private String targetColumn;
 
+    @ApiModelProperty(value = "源表id")
+    public Integer sourceEntityId;
+
+    @ApiModelProperty(value = "目标表id")
+    public Integer targetEntityId;
 }

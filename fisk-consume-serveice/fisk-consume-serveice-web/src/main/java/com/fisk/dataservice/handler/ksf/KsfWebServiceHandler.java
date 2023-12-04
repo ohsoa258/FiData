@@ -1,5 +1,6 @@
 package com.fisk.dataservice.handler.ksf;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -16,6 +17,10 @@ import com.fisk.dataservice.util.TreeBuilder;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cxf.endpoint.Client;
+import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
+import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -56,22 +61,51 @@ public abstract class KsfWebServiceHandler {
 
     public abstract ApiResultDTO sendApi(TableAppPO tableAppPO,long apiId);
 
-    public abstract ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body);
-    public JSONArray resultSetToJsonArray(ResultSet rs) throws SQLException {
-        JSONArray array = new JSONArray();
-        ResultSetMetaData metaData = rs.getMetaData();
-        int columnCount = metaData.getColumnCount();
-        while (rs.next()) {
-            JSONObject jsonObj = new JSONObject();
-            // 遍历每一列
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName = metaData.getColumnLabel(i);
-                //获取sql查询数据集合
-                String value = rs.getString(columnName);
-                jsonObj.put(columnName, value);
+    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
+        ApiResultDTO apiResultDTO = new ApiResultDTO();
+        //创建动态客户端
+        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+        //webService的这个动态客户端的地址需要从数据库中查出来
+        Client client = dcf.createClient(tableApiServicePO.getApiAddress());
+        //设置超时时间
+        HTTPConduit conduit = (HTTPConduit) client.getConduit();
+        HTTPClientPolicy policy = new HTTPClientPolicy();
+        policy.setAllowChunking(false);
+        // 连接服务器超时时间 30秒
+        policy.setConnectionTimeout(30000);
+        // 等待服务器响应超时时间 30秒
+        policy.setReceiveTimeout(30000);
+        conduit.setClient(policy);
+        JSONObject result = null;
+        try {
+            // invoke("方法名",参数1,参数2,参数3....);
+            Object[] objects = client.invoke(tableApiServicePO.getMethodName(), body);
+            JSONObject jsonObject = JSON.parseObject((String)objects[0]);
+            if ((int)jsonObject.get("code") == 1){
+                apiResultDTO.setFlag(true);
+                apiResultDTO.setMsg(jsonObject.get("msg").toString());
+            }else if ((int)jsonObject.get("code") == -1){
+                apiResultDTO.setFlag(false);
+                apiResultDTO.setMsg(jsonObject.get("msg").toString());
+            }else {
+                apiResultDTO.setFlag(false);
+                apiResultDTO.setMsg("远程调用异常");
             }
-            array.add(jsonObj);
+        } catch (Exception e) {
+            apiResultDTO.setFlag(false);
+            apiResultDTO.setMsg(e.toString());
+            e.printStackTrace();
+        } finally {
+            if (client != null) {
+                try {
+                    client.close();
+                } catch (Exception e) {
+                    apiResultDTO.setFlag(false);
+                    apiResultDTO.setMsg(e.toString());
+                    e.printStackTrace();
+                }
+            }
         }
-        return array;
+        return apiResultDTO;
     }
 }

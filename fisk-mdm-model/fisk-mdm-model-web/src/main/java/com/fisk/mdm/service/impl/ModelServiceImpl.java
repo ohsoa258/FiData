@@ -8,6 +8,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -17,25 +19,31 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.dataaccess.dto.v3.TableDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.dto.modelVersion.ModelVersionDTO;
-import com.fisk.mdm.entity.AccessDataPO;
-import com.fisk.mdm.entity.EntityPO;
-import com.fisk.mdm.entity.ModelPO;
-import com.fisk.mdm.entity.ModelVersionPO;
+import com.fisk.mdm.entity.*;
 import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.EntityMap;
 import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.map.ModelVersionMap;
+import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
 import com.fisk.mdm.service.*;
@@ -45,6 +53,7 @@ import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
@@ -53,6 +62,7 @@ import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +83,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Resource
     EntityMapper entityMapper;
+
+    @Resource
+    AttributeService attributeService;
 
     @Resource
     IModelVersionService iModelVersionService;
@@ -98,8 +111,15 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Resource
     RedisUtil redisUtil;
 
+    @Resource
+    DataManageClient dataManageClient;
+
+
     @Autowired
     AccessDataService accessDataService;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     /**
      * 通过id查询
@@ -171,6 +191,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         String desc = "新增一个模型,id:" + modelPO.getId();
         logService.saveEventLog((int) modelPO.getId(), ObjectTypeEnum.MODEL, EventTypeEnum.SAVE, desc);
 
+        //同步数据资产业务分类
+        syncMetadataClassification(modelDTO.getDisplayName(),modelDTO.getDesc(),false);
         //创建成功
         return ResultEnum.SUCCESS;
     }
@@ -211,8 +233,29 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         String desc = "修改一个模型,id:" + modelUpdateDTO.getId();
         logService.saveEventLog((int) modelPO.getId(), ObjectTypeEnum.MODEL, EventTypeEnum.UPDATE, desc);
 
+        //同步数据资产业务分类
+        syncMetadataClassification(modelUpdateDTO.getDisplayName(),modelUpdateDTO.getDesc(),false);
+
         //添加成功
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 同步数据资产业务分类
+     * @param modelDisplayName
+     * @param modelDes
+     * @param delete
+     */
+    public void  syncMetadataClassification(String modelDisplayName,String modelDes,boolean delete){
+        if(openMetadata){
+            ClassificationInfoDTO classificationInfoDTO=new ClassificationInfoDTO();
+            classificationInfoDTO.setName(modelDisplayName);
+            classificationInfoDTO.setDescription(modelDes);
+            classificationInfoDTO.setSourceType(ClassificationTypeEnum.MASTER_DATA);
+            classificationInfoDTO.setDelete(delete);
+            dataManageClient.appSynchronousClassification(classificationInfoDTO);
+
+        }
     }
 
     /**
@@ -224,7 +267,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Override
     public ResultEnum deleteDataById(Integer id) {
         //判断数据是否存在
-        if (baseMapper.selectById(id) == null) {
+        ModelPO modelPO = baseMapper.selectById(id);
+
+        if (modelPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
 
@@ -247,6 +292,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         // 记录日志
         String desc = "删除一个模型,id:" + id;
         logService.saveEventLog(id, ObjectTypeEnum.MODEL, EventTypeEnum.DELETE, desc);
+
+        //同步数据资产业务分类
+        syncMetadataClassification(modelPO.getDisplayName(),modelPO.getDesc(),true);
 
         //删除成功
         return ResultEnum.SUCCESS;
@@ -390,6 +438,24 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, componentIdDTO);
     }
+
+    /**
+     * 获取主数据业务分类
+     * @return
+     */
+    @Override
+    public List<AppBusinessInfoDTO> getMasterDataModel() {
+        List<ModelPO> modelPOS = baseMapper.selectList(null);
+        List<AppBusinessInfoDTO> appBusinessInfoDTOList=  modelPOS.stream().map(e->{
+             AppBusinessInfoDTO appBusinessInfoDTO=new AppBusinessInfoDTO();
+             appBusinessInfoDTO.setName(e.getDisplayName());
+             appBusinessInfoDTO.setAppDes(e.getDesc());
+             appBusinessInfoDTO.setSourceType(ClassificationTypeEnum.MASTER_DATA.getValue());
+             return appBusinessInfoDTO;
+        }).collect(Collectors.toList());
+        return appBusinessInfoDTOList;
+    }
+
 
     /**
      * 获取模型、实体、属性 数据结构Tree

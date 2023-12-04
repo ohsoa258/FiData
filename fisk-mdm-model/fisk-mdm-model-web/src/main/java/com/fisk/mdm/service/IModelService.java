@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
@@ -82,4 +84,11 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     ResultEntity<ComponentIdDTO> getModelNameAndEntityName(DataAccessIdsDTO dto);
+
+    /**
+     * 获取主数据模型(元数据业务分类)
+     * @return
+     */
+    List<AppBusinessInfoDTO>  getMasterDataModel();
+
 }

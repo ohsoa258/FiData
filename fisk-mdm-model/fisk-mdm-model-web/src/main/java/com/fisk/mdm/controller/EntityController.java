@@ -86,4 +86,10 @@ public class EntityController {
     public ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId) {
         return entityService.getCreateSuccessEntity(modelId, entityId);
     }
+
+    @ApiOperation("获取所有主数据元数据")
+    @GetMapping("/getMasterDataMetaData")
+    public ResultEntity<Object> getMasterDataMetaData(Integer entityId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getMasterDataMetaData(entityId));
+    }
 }

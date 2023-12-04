@@ -3,8 +3,10 @@ package com.fisk.mdm.client;
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
@@ -179,4 +181,20 @@ public interface MdmClient {
      */
     @GetMapping("/access/getTableId")
     ResultEntity<List<ChannelDataDTO>> getTableId();
+
+    /**
+     * 获取主数据模型
+     *
+     * @return list
+     */
+    @GetMapping("/model/getMasterDataModel")
+    ResultEntity<List<AppBusinessInfoDTO>> getMasterDataModel();
+
+    /**
+     * 获取主数据所有元数据信息
+     *
+     * @return list
+     */
+    @GetMapping("/entity/getMasterDataMetaData")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> getMasterDataMetaData(@RequestParam("entityId") Integer entityId);
 }

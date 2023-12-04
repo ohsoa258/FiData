@@ -13,6 +13,7 @@ public enum DataTypeEnum implements BaseEnum {
     DATA_INPUT(1,"数据接入"),
     DATA_MODEL(2,"数据建模"),
     DATA_DORIS(3,"doris"),
+    MDM(4,"主数据"),
     UNKNOWN(-1,"未知类型");
 
     DataTypeEnum(int value, String name) {

@@ -1,6 +1,6 @@
 package com.fisk.mdm.map;
 
-import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.mdm.entity.TableSourceRelationsPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -17,11 +17,11 @@ import java.util.List;
 public interface TableSourceRelationsMap {
     TableSourceRelationsMap INSTANCES = Mappers.getMapper(TableSourceRelationsMap.class);
 
-    TableSourceRelationsPO dtoToPo(TableSourceRelationsDTO dto);
+    TableSourceRelationsPO dtoToPo(RelationDTO dto);
 
-    List<TableSourceRelationsPO> dtoListToPoList(List<TableSourceRelationsDTO> dto);
+    List<TableSourceRelationsPO> dtoListToPoList(List<RelationDTO> dto);
 
-    TableSourceRelationsDTO poToDto(TableSourceRelationsPO po);
+    RelationDTO poToDto(TableSourceRelationsPO po);
 
-    List<TableSourceRelationsDTO> poListToDtoList(List<TableSourceRelationsPO> dto);
+    List<RelationDTO> poListToDtoList(List<TableSourceRelationsPO> dto);
 }

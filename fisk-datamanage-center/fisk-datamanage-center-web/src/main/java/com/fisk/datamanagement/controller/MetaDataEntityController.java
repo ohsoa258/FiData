@@ -40,6 +40,13 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityTreeList());
     }
 
+    @ApiOperation("刷新元数据对象树形列表")
+    @GetMapping("/refreshEntityTreeList")
+    public void refreshEntityTreeList() {
+        service.refreshEntityTreeList();
+    }
+
+
     @ApiOperation("添加元数据对象：实例、数据库、表、字段、血缘")
     @PostMapping("/addEntity")
     public ResultEntity<Object> addEntity(@Validated @RequestBody EntityDTO dto) {

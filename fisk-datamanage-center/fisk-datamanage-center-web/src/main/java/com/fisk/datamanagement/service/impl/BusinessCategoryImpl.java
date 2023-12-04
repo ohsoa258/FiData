@@ -215,8 +215,16 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
 
         // 获取父级
         List<BusinessCategoryTreeDTO> parentList = allData.stream().filter(item -> StringUtils.isEmpty(item.pid)).collect(Collectors.toList());
+
         if (parentList.size() > 1){
-            parentList.sort(Comparator.comparing(BusinessCategoryTreeDTO::getSort));
+            for (int i=0;i<parentList.size();i++){
+                if(parentList.get(i).getSort()==null){
+                    parentList.sort(Comparator.comparing(BusinessCategoryTreeDTO::getCreateTime));
+                }else {
+                    parentList.sort(Comparator.comparing(BusinessCategoryTreeDTO::getSort));
+                }
+            }
+
         }
         // 递归处理子集
         recursionClassificationTree(allData, parentList);
@@ -239,7 +247,12 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                 }
                 // 递归处理
                 recursionClassificationTree(allData, children);
-                children.sort(Comparator.comparing(BusinessCategoryTreeDTO::getSort));
+                if(parent.getSort()==null){
+                    children.sort(Comparator.comparing(BusinessCategoryTreeDTO::getCreateTime));
+                }else {
+                    children.sort(Comparator.comparing(BusinessCategoryTreeDTO::getSort));
+                }
+
             }
             // 加入父级
             parent.setChild(children);

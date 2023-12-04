@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
@@ -91,4 +92,10 @@ public class ModelController {
         ResultEntity<ComponentIdDTO> result = service.getModelNameAndEntityName(dto);
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
+    @ApiOperation("获取主数据模型(元数据业务分类)")
+    @GetMapping("/getMasterDataModel")
+    public ResultEntity<Object>   getMasterDataModel(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMasterDataModel());
+    }
+
 }

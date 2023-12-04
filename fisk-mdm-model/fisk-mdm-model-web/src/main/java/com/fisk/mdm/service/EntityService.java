@@ -3,9 +3,11 @@ package com.fisk.mdm.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
+import com.fisk.mdm.entity.EntityPO;
 import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 
@@ -73,4 +75,12 @@ public interface EntityService {
      * @return {@link List}<{@link EntityVO}>
      */
     ResultEntity<List<EntityVO>> getCreateSuccessEntity(Integer modelId, Integer entityId);
+
+
+    /**
+     * 获取主数据模型所有元数据
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> getMasterDataMetaData(Integer entityId);
+
 }

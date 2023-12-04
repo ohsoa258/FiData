@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
 import com.fisk.dataservice.dto.ksfwebservice.notice.Data;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeData;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeDetail;
@@ -85,7 +86,7 @@ public class KsfNotice extends KsfWebServiceHandler {
 
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        List<NoticeData> resultJsonData = null;
+        NoticeData result = new NoticeData();
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
@@ -105,7 +106,7 @@ public class KsfNotice extends KsfWebServiceHandler {
                 st3 = conn3.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0]+" where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP;";
+                String systemDataSql = split[0]+" where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
                 String noticeDataSql = split[1]+" WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_notice  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 String noticeDetailSql = split[2]+" WHERE fidata_batch_code in (select fidata_batch_code from ods_sap_ksf_notice where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 log.info("开始执行脚本systemData:{}", systemDataSql);
@@ -114,8 +115,22 @@ public class KsfNotice extends KsfWebServiceHandler {
                 ResultSet noticeData = st2.executeQuery(noticeDataSql);
                 log.info("开始执行脚本noticeDetail:{}", noticeDetailSql);
                 ResultSet noticeDetail = st3.executeQuery(noticeDetailSql);
-                resultJsonData = assembleInventoryStatusChangesDTO(systemData, noticeData,noticeDetail);
-                number = resultJsonData.size();
+                List<NoticeData> resultJsonData = assembleInventoryStatusChangesDTO(systemData, noticeData,noticeDetail);
+
+                List<com.fisk.dataservice.dto.ksfwebservice.notice.KsfNotice> ksfNotices = new ArrayList<>();
+                for (NoticeData resultJsonDatum : resultJsonData) {
+                    result = resultJsonDatum;
+                    Data data = resultJsonDatum.getData();
+                    if (data != null){
+                        ksfNotices.addAll(data.getKsfNotices());
+                    }
+                }
+                Data data = new Data();
+                data.setKsfNotices(ksfNotices);
+                data.setDocCount(ksfNotices.size());
+                result.setData(data);
+
+                number = result.getData().getDocCount();
                 apiResultDTO.setNumber(number);
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
@@ -144,7 +159,7 @@ public class KsfNotice extends KsfWebServiceHandler {
             apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
-        String data = JSON.toJSONString(resultJsonData);
+        String data = JSON.toJSONString(result);
         log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
         apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, data);
         if (apiResultDTO.getFlag()){
@@ -155,39 +170,87 @@ public class KsfNotice extends KsfWebServiceHandler {
         return apiResultDTO;
     }
 
-    @Override
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
-        ApiResultDTO apiResultDTO = new ApiResultDTO();
-//        //创建动态客户端
-//        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-//        //webService的这个动态客户端的地址需要从数据库中查出来
-//        Client client = dcf.createClient(tableAppPO.getAuthenticationUrl());
-//        //设置超时时间
-//        HTTPConduit conduit = (HTTPConduit) client.getConduit();
-//        HTTPClientPolicy policy = new HTTPClientPolicy();
-//        policy.setAllowChunking(false);
-//        // 连接服务器超时时间 30秒
-//        policy.setConnectionTimeout(30000);
-//        // 等待服务器响应超时时间 30秒
-//        policy.setReceiveTimeout(30000);
-//        conduit.setClient(policy);
-//        JSONObject result = null;
+//    @Override
+//    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
+//        ApiResultDTO apiResultDTO = new ApiResultDTO();
+////        //创建动态客户端
+////        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+////        //webService的这个动态客户端的地址需要从数据库中查出来
+////        Client client = dcf.createClient(tableAppPO.getAuthenticationUrl());
+////        //设置超时时间
+////        HTTPConduit conduit = (HTTPConduit) client.getConduit();
+////        HTTPClientPolicy policy = new HTTPClientPolicy();
+////        policy.setAllowChunking(false);
+////        // 连接服务器超时时间 30秒
+////        policy.setConnectionTimeout(30000);
+////        // 等待服务器响应超时时间 30秒
+////        policy.setReceiveTimeout(30000);
+////        conduit.setClient(policy);
+////        JSONObject result = null;
+////        try {
+////            if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()){
+////                body = "["+body+"]";
+////            }
+////            Map<String,Object> map = new HashMap<>();
+////            map.put("SAPPushData",JSONObject.parseObject(body));
+////            // invoke("方法名",参数1,参数2,参数3....);
+////            Object[] objects = client.invoke(tableApiServicePO.getMethodName(), JSONObject.toJSONString(map));
+////            JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(objects[0]));
+////            if ((int)jsonObject.get("code") == 1){
+////                apiResultDTO.setFlag(true);
+////                apiResultDTO.setMsg(jsonObject.get("msg").toString());
+////            }else if ((int)jsonObject.get("code") == -1){
+////                apiResultDTO.setFlag(false);
+////                apiResultDTO.setMsg(jsonObject.get("msg").toString());
+////            }else {
+////                apiResultDTO.setFlag(false);
+////                apiResultDTO.setMsg("远程调用异常");
+////            }
+////        } catch (Exception e) {
+////            apiResultDTO.setFlag(false);
+////            apiResultDTO.setMsg(e.toString());
+////            e.printStackTrace();
+////        } finally {
+////            if (client != null) {
+////                try {
+////                    client.close();
+////                } catch (Exception e) {
+////                    apiResultDTO.setFlag(false);
+////                    apiResultDTO.setMsg(e.toString());
+////                    e.printStackTrace();
+////                }
+////            }
+////        }
+////        return apiResultDTO;
+//        String result = null;
 //        try {
-//            if (tableApiServicePO.getJsonType() == JsonTypeEnum.ARRAY.getValue()){
-//                body = "["+body+"]";
-//            }
-//            Map<String,Object> map = new HashMap<>();
-//            map.put("SAPPushData",JSONObject.parseObject(body));
-//            // invoke("方法名",参数1,参数2,参数3....);
-//            Object[] objects = client.invoke(tableApiServicePO.getMethodName(), JSONObject.toJSONString(map));
-//            JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(objects[0]));
-//            if ((int)jsonObject.get("code") == 1){
+//            Service service = new Service();
+//            Call call = (Call) service.createCall();
+//
+//            // 设置wsdl地址
+//            call.setTargetEndpointAddress(new URL(tableApiServicePO.getApiAddress()));
+//
+//            // 设置命名空间和方法名
+//            call.setOperationName(new QName("http://tempuri.org/", tableApiServicePO.getMethodName()));
+//
+//            // 设置参数类型和参数名称
+//            call.addParameter("SAPPushData", org.apache.axis.encoding.XMLType.XSD_STRING, javax.xml.rpc.ParameterMode.IN);
+//
+//            // 设置返回值类型
+//            call.setReturnType(org.apache.axis.encoding.XMLType.XSD_STRING);
+//
+//            // 设置参数
+////            String requestData = "{ \"cdSign\":\"1\",\"beginDate\":\"2021-11-21\",\"endDate\":\"2021-11-22\"}";
+//            result = (String) call.invoke(new Object[]{body});
+//            log.info("库存状态变更返回值:" + result);
+//            JSONObject jsonObject = JSON.parseObject(result);
+//            if ((int) jsonObject.get("code") == 1) {
 //                apiResultDTO.setFlag(true);
 //                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-//            }else if ((int)jsonObject.get("code") == -1){
+//            } else if ((int) jsonObject.get("code") == -1) {
 //                apiResultDTO.setFlag(false);
 //                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-//            }else {
+//            } else {
 //                apiResultDTO.setFlag(false);
 //                apiResultDTO.setMsg("远程调用异常");
 //            }
@@ -195,58 +258,10 @@ public class KsfNotice extends KsfWebServiceHandler {
 //            apiResultDTO.setFlag(false);
 //            apiResultDTO.setMsg(e.toString());
 //            e.printStackTrace();
-//        } finally {
-//            if (client != null) {
-//                try {
-//                    client.close();
-//                } catch (Exception e) {
-//                    apiResultDTO.setFlag(false);
-//                    apiResultDTO.setMsg(e.toString());
-//                    e.printStackTrace();
-//                }
-//            }
 //        }
+//
 //        return apiResultDTO;
-        String result = null;
-        try {
-            Service service = new Service();
-            Call call = (Call) service.createCall();
-
-            // 设置wsdl地址
-            call.setTargetEndpointAddress(new URL(tableApiServicePO.getApiAddress()));
-
-            // 设置命名空间和方法名
-            call.setOperationName(new QName("http://tempuri.org/", tableApiServicePO.getMethodName()));
-
-            // 设置参数类型和参数名称
-            call.addParameter("SAPPushData", org.apache.axis.encoding.XMLType.XSD_STRING, javax.xml.rpc.ParameterMode.IN);
-
-            // 设置返回值类型
-            call.setReturnType(org.apache.axis.encoding.XMLType.XSD_STRING);
-
-            // 设置参数
-//            String requestData = "{ \"cdSign\":\"1\",\"beginDate\":\"2021-11-21\",\"endDate\":\"2021-11-22\"}";
-            result = (String) call.invoke(new Object[]{body});
-            log.info("库存状态变更返回值:" + result);
-            JSONObject jsonObject = JSON.parseObject(result);
-            if ((int) jsonObject.get("code") == 1) {
-                apiResultDTO.setFlag(true);
-                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-            } else if ((int) jsonObject.get("code") == -1) {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-            } else {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg("远程调用异常");
-            }
-        } catch (Exception e) {
-            apiResultDTO.setFlag(false);
-            apiResultDTO.setMsg(e.toString());
-            e.printStackTrace();
-        }
-
-        return apiResultDTO;
-    }
+//    }
     public List<NoticeData> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2, ResultSet resultSet3) throws SQLException {
         Map<String, NoticeData> dtoMap = new HashMap<>();
         // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
@@ -342,6 +357,10 @@ public class KsfNotice extends KsfWebServiceHandler {
             Data data = dto.getData();
             if (data != null && data.getKsfNotices() != null) {
                 data.setDocCount(data.getKsfNotices().size());
+            }else {
+                data.setDocCount(0);
+                List<com.fisk.dataservice.dto.ksfwebservice.notice.KsfNotice> ksfNotices = new ArrayList<>();
+                data.setKsfNotices(ksfNotices);
             }
         }
         resultSet1.close();
