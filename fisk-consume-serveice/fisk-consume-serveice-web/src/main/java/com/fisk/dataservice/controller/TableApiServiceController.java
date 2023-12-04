@@ -51,6 +51,12 @@ public class TableApiServiceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiService.getTableApiListByPipelineId(id));
     }
 
+    @ApiOperation("根据接入id获取数据分发api集合")
+    @GetMapping("/getTableListByInputId/{id}")
+    public ResultEntity<List<BuildTableApiServiceDTO>> getTableListByInputId(@PathVariable("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiService.getTableListByInputId(id));
+    }
+
     @ApiOperation("获取api配置详情")
     @GetMapping("/getApiServiceById/{apiId}")
     public ResultEntity<Object> getApiServiceById(@PathVariable("apiId") long apiId) {

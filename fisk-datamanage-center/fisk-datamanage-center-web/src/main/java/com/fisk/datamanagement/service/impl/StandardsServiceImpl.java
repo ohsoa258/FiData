@@ -156,7 +156,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         Integer menuId = standardsDTO.getMenuId();
         StandardsMenuPO standardsMenuPO = standardsMenuService.getById(menuId);
         standardsMenuPO.setName(standardsDTO.getChineseName());
-        standardsMenuService.save(standardsMenuPO);
+        standardsMenuService.updateById(standardsMenuPO);
         return ResultEnum.SUCCESS;
     }
 
@@ -408,8 +408,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
                 List<StandardsMenuPO> all = standardsMenuService.list(queryWrapper);
-                standardsMenuPO.setPid(dto.getPid());
-                if (CollectionUtils.isEmpty(all)){
+                if (!CollectionUtils.isEmpty(all)){
                     List<StandardsMenuPO> menus = new ArrayList<>();
                     for (StandardsMenuPO menuPO : all) {
                         menuPO.setSort(menuPO.getSort()+1);
@@ -424,28 +423,32 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 LambdaQueryWrapper<StandardsMenuPO> selectMenus = new LambdaQueryWrapper<>();
                 selectMenus.eq(StandardsMenuPO::getPid,pid);
                 selectMenus.gt(StandardsMenuPO::getSort,sort);
-                List<StandardsMenuPO> Menus = standardsMenuService.list(selectMenus);
+                List<StandardsMenuPO> lastMenus = standardsMenuService.list(selectMenus);
                 List<StandardsMenuPO> menus = new ArrayList<>();
-                for (StandardsMenuPO menuPO : Menus) {
+                for (StandardsMenuPO menuPO : lastMenus) {
                     menuPO.setSort(menuPO.getSort()-1);
                     menus.add(menuPO);
                 }
-                standardsMenuService.updateBatchById(menus);
+                if (!CollectionUtils.isEmpty(menus)){
+                    standardsMenuService.updateBatchById(menus);
+                }
             }else {
                 Integer pid = standardsMenuPO.getPid();
                 Integer sort = standardsMenuPO.getSort();
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
-                queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                queryWrapper.ge(StandardsMenuPO::getSort,tragetMenuPO.getSort()+1);
                 List<StandardsMenuPO> lastMenus = standardsMenuService.list(queryWrapper);
                 List<StandardsMenuPO> menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : lastMenus) {
                     menuPO.setSort(menuPO.getSort()+1);
                     menus.add(menuPO);
                 }
-                standardsMenuService.updateBatchById(menus);
+                if (!CollectionUtils.isEmpty(menus)){
+                    standardsMenuService.updateBatchById(menus);
+                }
                 standardsMenuPO.setPid(dto.getPid());
-                standardsMenuPO.setSort(tragetMenuPO.getSort());
+                standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
                 standardsMenuService.updateById(standardsMenuPO);
 
                 LambdaQueryWrapper<StandardsMenuPO> selectMenus = new LambdaQueryWrapper<>();
@@ -454,10 +457,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 List<StandardsMenuPO> Menus = standardsMenuService.list(selectMenus);
                 menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : Menus) {
-                    menuPO.setSort(menuPO.getSort()+1);
+                    menuPO.setSort(menuPO.getSort()-1);
                     menus.add(menuPO);
                 }
-                standardsMenuService.updateBatchById(menus);
+                if (!CollectionUtils.isEmpty(menus)){
+                    standardsMenuService.updateBatchById(menus);
+                }
             }
         }else {
             if (tragetId == null || tragetId == 0){
@@ -470,7 +475,9 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                     menuPO.setSort(menuPO.getSort()+1);
                     menus.add(menuPO);
                 }
-                standardsMenuService.updateBatchById(menus);
+                if (!CollectionUtils.isEmpty(menus)){
+                    standardsMenuService.updateBatchById(menus);
+                }
                 standardsMenuPO.setSort(1);
                 standardsMenuService.updateById(standardsMenuPO);
             }else {
@@ -485,7 +492,9 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                         menuPO.setSort(menuPO.getSort()-1);
                         menus.add(menuPO);
                     }
-                    standardsMenuService.updateBatchById(menus);
+                    if (!CollectionUtils.isEmpty(menus)){
+                        standardsMenuService.updateBatchById(menus);
+                    }
                     standardsMenuPO.setSort(tragetMenuPO.getSort());
                     standardsMenuService.updateById(standardsMenuPO);
                 }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
@@ -499,7 +508,9 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                         menuPO.setSort(menuPO.getSort()+1);
                         menus.add(menuPO);
                     }
-                    standardsMenuService.updateBatchById(menus);
+                    if (!CollectionUtils.isEmpty(menus)){
+                        standardsMenuService.updateBatchById(menus);
+                    }
                     standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
                     standardsMenuService.updateById(standardsMenuPO);
                 }

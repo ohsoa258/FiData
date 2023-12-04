@@ -73,6 +73,14 @@ public interface ITableApiService extends IService<TableApiServicePO> {
      * @return
      */
     List<BuildTableApiServiceDTO> getTableApiListByPipelineId(Integer pipelineId);
+
+    /**
+     * 根据管道id获取表服务集合
+     *
+     * @param inputId
+     * @return
+     */
+    List<BuildTableApiServiceDTO> getTableListByInputId(Integer inputId);
     /**
      * 数据分发api同步服务-新增同步按钮,手动同步表服务
      *

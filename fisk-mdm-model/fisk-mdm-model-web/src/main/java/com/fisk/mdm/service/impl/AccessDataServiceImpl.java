@@ -726,6 +726,9 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
             and.delete(0,3);
             str.append(and)
                     .append("AND ")
+                    .append(targetTable)
+                    .append(".\"fidata_del_flag\"= '1'")
+                    .append(" AND ")
                     .append(stgTable)
                     .append(".\"fidata_version_id\"=")
                     .append(targetTable)

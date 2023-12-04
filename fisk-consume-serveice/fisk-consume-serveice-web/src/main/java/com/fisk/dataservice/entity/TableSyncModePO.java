@@ -56,6 +56,12 @@ public class TableSyncModePO extends BasePO {
     public Integer associatePipe;
 
     /**
+     * 关联数据接入
+     */
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
+    public Integer associateInput;
+
+    /**
      * 调度类型:1TIMER DRIVEN 2CRON DRIVEN
      */
     public Integer scheduleType;

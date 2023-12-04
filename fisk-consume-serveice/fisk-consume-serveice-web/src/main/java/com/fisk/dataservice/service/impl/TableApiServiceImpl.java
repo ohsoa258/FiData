@@ -128,6 +128,14 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
                     data.setSqlScript("select * from ods_sap_ksf_inventory_sys;" +
                             "select * from ods_sap_ksf_inventory;");
                     break;
+                case KSF_ACKNOWLEDGEMENT:
+                    data.setSourceDbId(dbId);
+                    data.setApiName("wms_acknowledgement");
+                    data.setSqlScript("select * from wms_acknowledgement_sys;" +
+                            "select * from wms_acknowledgement_headers;" +
+                            "select * from wms_acknowledgement_details;");
+                    break;
+
             }
         }
         if (!this.save(data)) {
@@ -230,6 +238,21 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
                 TableApiServiceSaveDTO tableService = getApiServiceById(id);
                 list.add(buildParameter(tableService));
             }
+        return list;
+    }
+
+    @Override
+    public List<BuildTableApiServiceDTO> getTableListByInputId(Integer inputId) {
+        List<Integer> tableListByPipelineId = tableSyncMode.getTableListByInputId(inputId,4);
+        if (CollectionUtils.isEmpty(tableListByPipelineId)) {
+            return new ArrayList<>();
+        }
+        List<BuildTableApiServiceDTO> list = new ArrayList<>();
+
+        for (Integer id : tableListByPipelineId) {
+            TableApiServiceSaveDTO tableService = getApiServiceById(id);
+            list.add(buildParameter(tableService));
+        }
         return list;
     }
 

@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service("standardsMenuService")
@@ -49,21 +47,19 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
         return parentList;
     }
 
-    private void standardsTree(List<StandardsTreeDTO> allList,List<StandardsTreeDTO> parentList){
-        // 遍历父级
-        for (StandardsTreeDTO parent : parentList){
-            // 子集容器
-            List<StandardsTreeDTO> children = new ArrayList<>();
-            for (StandardsTreeDTO sub : allList){
-                if (parent.getId().equals(sub.getPid())){
-                    children.add(sub);
-                }
-                // 递归处理
-                standardsTree(allList, children);
+    private void standardsTree(List<StandardsTreeDTO> allList, List<StandardsTreeDTO> parentList) {
+        Map<Integer, List<StandardsTreeDTO>> childrenMap = new HashMap<>();
+        for (StandardsTreeDTO dto : allList) {
+            int parentId = dto.getPid() != null ? dto.getPid() : 0;
+            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
+        }
+        for (StandardsTreeDTO parent : parentList) {
+            List<StandardsTreeDTO> children = childrenMap.get(parent.getId());
+            if (children != null) {
                 children.sort(Comparator.comparing(StandardsTreeDTO::getCreateTime).reversed());
+                parent.setChildren(children);
+                standardsTree(allList, children);
             }
-            // 加入父级
-            parent.setChildren(children);
         }
     }
 

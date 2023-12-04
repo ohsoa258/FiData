@@ -41,6 +41,15 @@ public interface ConsumeServeiceClient {
     @GetMapping("/tableApiService/getTableApiListByPipelineId/{id}")
     ResultEntity<List<BuildTableApiServiceDTO>> getTableApiListByPipelineId(@PathVariable("id") Integer id);
 
+
+    /**
+     * 根据接入id获取数据分发api集合
+     * @param id
+     * @return
+     */
+    @ApiOperation("根据接入id获取数据分发api集合")
+    @GetMapping("/getTableListByInputId/{id}")
+    public ResultEntity<List<BuildTableApiServiceDTO>> getTableListByInputId(@PathVariable("id") Integer id);
     /**
      * 修改表服务发布状态
      *
