@@ -53,7 +53,7 @@ public interface BusinessTargetinfoService {
      * @param key redis key
      * @param response http请求响应
      */
-    void downLoad(Integer key, HttpServletResponse response);
+    void downLoad(String key,String indicatorname, HttpServletResponse response);
 
 
 

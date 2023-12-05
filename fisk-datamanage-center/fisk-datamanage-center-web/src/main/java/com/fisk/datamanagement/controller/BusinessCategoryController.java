@@ -1,5 +1,7 @@
 package com.fisk.datamanagement.controller;
 
+import com.alibaba.fastjson.JSONObject;
+import com.azure.core.annotation.Post;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -72,13 +74,13 @@ public class BusinessCategoryController {
     @ApiOperation("获取业务指标明细数据列表")
     @GetMapping("/getBusinessMetaDataDetailList")
     public ResultEntity<Object> getBusinessMetaDataDetailList(String pid) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,businessTargetinfoService.SelectClassification(pid));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassification(pid));
     }
 
     @ApiOperation("获取业务指标明细类型数据列表")
     @GetMapping("/getBusinessMetaDataDetailTypeList")
     public ResultEntity<Object> getBusinessMetaDataDetailTypeList() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,businessTargetinfoService.SelecttypeClassification());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelecttypeClassification());
     }
 
     @ApiOperation("添加指标主题明细数据")
@@ -108,10 +110,19 @@ public class BusinessCategoryController {
 //    }
 
     @ApiOperation("导出指标明细数据")
-    @GetMapping("/downloadTargetinfo")
-    @ControllerAOPConfig(printParams=false)
-    public void downloadApprovalApply(Integer id, HttpServletResponse response) {
-        businessTargetinfoService.downLoad(id, response);
+    @PostMapping("/downloadTargetinfo")
+    @ControllerAOPConfig(printParams = false)
+    public void downloadApprovalApply(@RequestBody JSONObject json, HttpServletResponse response) {
+        String id = null;
+        String indicatorname = null;
+
+        if (!"".equals(json.getString("id"))) {
+            id = json.getString("id");
+        }
+        if (!"".equals(json.getString("indicatorname"))) {
+            indicatorname = json.getString("indicatorname");
+        }
+        businessTargetinfoService.downLoad(id, indicatorname, response);
     }
 
 }
