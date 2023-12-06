@@ -570,11 +570,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         }
 
         boolean isUpdate = false;
-        // 第一步：编辑保存api信息
-        ApiConfigPO apiConfigPO = ApiRegisterMap.INSTANCES.dtoToPo_Edit(dto);
-        if (apiConfigPO == null)
-            return ResultEnum.SAVE_DATA_ERROR;
-        isUpdate = baseMapper.updateById(apiConfigPO) > 0;
+        // 第一步：编辑保存api信息部分信息
+        model.setApiDesc(dto.getApiDesc());
+        isUpdate = baseMapper.updateById(model) > 0;
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;
         return ResultEnum.SUCCESS;
@@ -592,7 +590,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         int i = baseMapper.deleteByIdWithFill(model);
         if (i > 0) {
             //同步元数据
-            if (openMetadata){
+            if (openMetadata) {
                 dataManageClient.deleteConsumptionMetaData(apiMetaDataList);
             }
             return ResultEnum.SUCCESS;
@@ -738,12 +736,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             log.info("数据服务【preview】普通模式SQL参数【countSql】：" + countSql);
         } else if (dto.getApiDTO().getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
             List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listDtoToSqlParmDto(dto.getParmDTO());
-            if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS){
+            if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS) {
                 List<SqlParmDto> pageNo = sqlParamsDto.stream().filter(i -> i.parmName == "@start" || i.parmName == "@end").collect(Collectors.toList());
-                if (CollectionUtils.isEmpty(pageNo)){
+                if (CollectionUtils.isEmpty(pageNo)) {
                     SqlParmDto sqlParmStart = new SqlParmDto();
                     sqlParmStart.parmName = "start";
-                    sqlParmStart.parmValue = String.valueOf((current-1) * size);
+                    sqlParmStart.parmValue = String.valueOf((current - 1) * size);
                     SqlParmDto sqlParmEnd = new SqlParmDto();
                     sqlParmEnd.parmName = "end";
                     sqlParmEnd.parmValue = String.valueOf(current * size);
@@ -789,7 +787,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             assert st != null;
             ResultSet rs = st.executeQuery(sql);
             //获取数据集
-            apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS,dataSourceConVO.getConType());
+            apiPreviewVO = resultSetToJsonArray(conn, dbCommand, rs, dto, fieldConfigPOS, dataSourceConVO.getConType());
             rs.close();
             int totalCount = 0;
             if (StringUtils.isNotEmpty(countSql)) {
@@ -859,9 +857,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         List<FieldInfoVO> tableFieldList = null;
         if (pvDTO.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()
                 && StringUtils.isNotEmpty(pvDTO.apiDTO.getTableRelName())) {
-            if (conType == DataSourceTypeEnum.DORIS){
+            if (conType == DataSourceTypeEnum.DORIS) {
                 tableFieldList = getTableFieldByDorisList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
-            }else {
+            } else {
                 tableFieldList = getTableFieldList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
             }
         }
@@ -958,9 +956,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      * @return statement
      */
     private static List<FieldInfoVO> getTableFieldByDorisList(Connection conn, IBuildDataServiceSqlCommand dbCommand,
-                                                       String tableFramework, String tableRelName) {
+                                                              String tableFramework, String tableRelName) {
         String[] split = tableRelName.split(".");
-        String tableName = split[split.length-1];
+        String tableName = split[split.length - 1];
         List<FieldInfoVO> fieldList = new ArrayList<>();
         if (StringUtils.isEmpty(tableRelName))
             return fieldList;
