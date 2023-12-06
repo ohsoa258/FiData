@@ -156,6 +156,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         wrapper1.select(" DISTINCT version")
                 .lambda()
                 .eq(TaskPgTableStructurePO::getTableId, tblId)
+                .eq(TaskPgTableStructurePO::getValidVersion, 1)
                 .orderByDesc(TaskPgTableStructurePO::getVersion);
         List<TaskPgTableStructurePO> versions = structureMapper.selectList(wrapper1);
         for (TaskPgTableStructurePO structurePO : versions) {
@@ -216,16 +217,16 @@ public class BuildDorisTableImpl implements IbuildTable {
                 }
             } else {
                 //如果存在，但属性有变化则是修改
-                if (!Objects.equals(newPo.fieldName, field.fieldName)
-                        || !Objects.equals(newPo.fieldType, field.fieldType)) {
+                //如果字段类型不同 则修改字段类型
+                if (!Objects.equals(newPo.fieldType, field.fieldType)) {
                     //如果修改的是主键
                     if (newPo.isPrimaryKey()) {
                         //ALTER TABLE example_db.my_table
                         //MODIFY COLUMN col1 BIGINT KEY DEFAULT "1" AFTER col2;
-                        sql.append("ALTER TABLE `")
+                        sql.append(" ALTER TABLE `")
                                 .append(oldTblName)
                                 .append("` MODIFY COLUMN `")
-                                .append(newPo.fieldName)
+                                .append(field.fieldName)
                                 .append("` ")
                                 .append(newPo.fieldType)
                                 .append(" KEY; ");
@@ -233,11 +234,22 @@ public class BuildDorisTableImpl implements IbuildTable {
                         sql.append("ALTER TABLE `")
                                 .append(oldTblName)
                                 .append("` MODIFY COLUMN `")
-                                .append(newPo.fieldName)
+                                .append(field.fieldName)
                                 .append("` ")
                                 .append(newPo.fieldType)
                                 .append("; ");
                     }
+                }
+
+                //如果字段名称不同 则修改字段名称
+                if (!Objects.equals(newPo.fieldName, field.fieldName)) {
+                    sql.append(" ALTER TABLE `")
+                            .append(oldTblName)
+                            .append("` RENAME COLUMN `")
+                            .append(field.fieldName)
+                            .append("` `")
+                            .append(newPo.fieldName)
+                            .append("`; ");
                 }
             }
         }
@@ -251,7 +263,6 @@ public class BuildDorisTableImpl implements IbuildTable {
         boolean addOrDel = oldFieldCount > newFieldCount;
         if (addOrDel) {
             //找出需要删除的字段，生成sql
-            //doris字段名不支持修改
             for (TaskPgTableStructurePO oldPo : oldVersionTbl) {
                 TaskPgTableStructurePO field = null;
                 //将老版本字段和新版本里面相同字段id的字段对比
@@ -465,7 +476,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         if (CollectionUtils.isNotEmpty(fieldList)) {
             if (fieldList.get(0).getDorisPartitionType() != null) {
                 partitionType = new StringBuilder(fieldList.get(0).getDorisPartitionType());
-            }else {
+            } else {
                 partitionType = new StringBuilder("RANGE");
             }
         }

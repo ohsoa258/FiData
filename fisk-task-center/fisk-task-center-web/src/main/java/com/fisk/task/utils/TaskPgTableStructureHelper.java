@@ -236,7 +236,7 @@ public class TaskPgTableStructureHelper
             //判断是否有修改语句
             return updateTableStructureForDoris(sql, version, dto.createType);
         } catch (Exception ex) {
-            log.error("saveTableStructure:" + ex);
+            log.error("saveTableStructureForDoris:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
         }
     }
@@ -501,10 +501,10 @@ public class TaskPgTableStructureHelper
             }
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {
-            log.error("updatePgTableStructure:" + StackTraceHelper.getStackTraceInfo(e));
-            //如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
+            log.error("updateTableStructureForDoris:" + StackTraceHelper.getStackTraceInfo(e));
+////            如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
 //            taskPgTableStructureMapper.updatevalidVersion(version);
-            throw new FkException(ResultEnum.SQL_ERROR, StackTraceHelper.getStackTraceInfo(e));
+            return ResultEnum.SQL_ERROR;
         } finally {
             if (st != null) {
                 st.close();

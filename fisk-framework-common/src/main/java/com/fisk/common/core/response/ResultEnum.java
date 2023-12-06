@@ -272,6 +272,7 @@ public enum ResultEnum {
     QUERY_CONDITION_NOTNULL(8014, "表关联关系不能为空"),
     FACT_NAME_NOTNULL(8015, "操作的事实表名不允许为空"),
     DATA_MODEL_FIELD_NOT_EXISTS(8016, "数仓建模-发布表修改表结构失败，tb_task_pg_table_structure表无字段！"),
+    DATA_MODEL_PUBLISH_ERROR(8017, "数仓建模-发布表失败，请检查：若修改了字段，请检查字段在目标库中字段是否可以修改！"),
 
     /**
      * 数据工厂

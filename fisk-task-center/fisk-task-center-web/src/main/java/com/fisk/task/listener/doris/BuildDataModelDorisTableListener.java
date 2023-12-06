@@ -404,7 +404,7 @@ public class BuildDataModelDorisTableListener
             return result;
         } catch (Exception e) {
             log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
-            result = ResultEnum.ERROR;
+            result = ResultEnum.CREATE_TABLE_ERROR;
             //执行失败后，修改维度表或事实表的发布状态
             if (tableType == 0) {
                 modelPublishStatusDTO.status = 2;
@@ -417,7 +417,8 @@ public class BuildDataModelDorisTableListener
                 modelPublishStatusDTO.type = 0;
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
             }
-            return result;
+//            return result;
+            throw new FkException(ResultEnum.DATA_MODEL_PUBLISH_ERROR, e);
         } finally {
             acke.acknowledge();
         }
