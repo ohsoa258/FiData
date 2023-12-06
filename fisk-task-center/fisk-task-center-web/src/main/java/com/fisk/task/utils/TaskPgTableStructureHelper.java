@@ -173,7 +173,7 @@ public class TaskPgTableStructureHelper
      * @param version        时间戳版本号
      * @param dataSourceType 数据源连接类型
      */
-    public ResultEnum saveTableStructureForDoris(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
+    public String saveTableStructureForDoris(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
@@ -227,7 +227,7 @@ public class TaskPgTableStructureHelper
             boolean saveResult = this.saveBatch(pos);
             log.info("保存表结构到tb_task_pg_table_structure保存结果：{}", saveResult);
             if (!saveResult) {
-                return ResultEnum.SAVE_DATA_ERROR;
+                return "数据保存失败";
             }
 
             //保存成功,调用存储过程,获取修改表结构SQL语句
@@ -426,7 +426,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    public ResultEnum updateTableStructureForDoris(String sql, String version, int createType) throws Exception {
+    public String updateTableStructureForDoris(String sql, String version, int createType) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
@@ -446,7 +446,7 @@ public class TaskPgTableStructureHelper
             pgsqlOdsDriverClass = odsData.conType.getDriverName();
         } else {
             log.error("userclient无法查询到ods库的连接信息");
-            return ResultEnum.ERROR;
+            return "userclient无法查询到ods库的连接信息";
         }
         DataSourceDTO dwData = new DataSourceDTO();
         ResultEntity<DataSourceDTO> fiDataDataDwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
@@ -458,7 +458,7 @@ public class TaskPgTableStructureHelper
             pgsqlDwDriverClass = dwData.conType.getDriverName();
         } else {
             log.error("userclient无法查询到dw库的连接信息");
-            return ResultEnum.ERROR;
+            return "userclient无法查询到ods库的连接信息";
         }
 
         Connection conn;
@@ -478,7 +478,7 @@ public class TaskPgTableStructureHelper
             //检查版本
             ResultEnum resultEnum = checkVersion(version, conn, type);
             if (resultEnum == ResultEnum.TASK_TABLE_NOT_EXIST) {
-                return resultEnum;
+                return "表不存在";
             }
             log.info("执行存储过程返回修改语句:" + sql);
             if (!StringUtils.isEmpty(sql) && sql.contains("DECLARE")) {
@@ -499,12 +499,12 @@ public class TaskPgTableStructureHelper
                 }
 
             }
-            return ResultEnum.SUCCESS;
+            return "成功";
         } catch (SQLException e) {
             log.error("updateTableStructureForDoris:" + StackTraceHelper.getStackTraceInfo(e));
 ////            如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
 //            taskPgTableStructureMapper.updatevalidVersion(version);
-            return ResultEnum.SQL_ERROR;
+            return e.toString();
         } finally {
             if (st != null) {
                 st.close();

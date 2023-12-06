@@ -166,12 +166,14 @@ public class BuildDataModelDorisTableListener
                     }
                     log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
                 } else {
-                    resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
-                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    String msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+//                    resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+//                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    if (!ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg) && !ResultEnum.SUCCESS.getMsg().equals(msg)) {
                         taskPgTableStructureMapper.updatevalidVersion(version);
-                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, msg);
                     }
-                    log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
+                    log.info("数仓执行修改表结构的存储过程返回结果" + msg);
                 }
 
                 //生成建表语句
@@ -418,7 +420,7 @@ public class BuildDataModelDorisTableListener
                 dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
             }
 //            return result;
-            throw new FkException(ResultEnum.DATA_MODEL_PUBLISH_ERROR, e);
+            throw new FkException(ResultEnum.DATA_MODEL_PUBLISH_ERROR, e.toString(), e);
         } finally {
             acke.acknowledge();
         }
