@@ -1,33 +1,16 @@
 package com.fisk.dataservice.handler.ksf;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
-import com.fisk.dataservice.entity.TableApiParameterPO;
 import com.fisk.dataservice.entity.TableApiServicePO;
 import com.fisk.dataservice.entity.TableAppPO;
-import com.fisk.dataservice.service.ITableApiParameterService;
-import com.fisk.dataservice.service.ITableApiService;
-import com.fisk.dataservice.service.ITableAppManageService;
-import com.fisk.dataservice.util.TreeBuilder;
-import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
 import org.apache.cxf.transport.http.HTTPConduit;
 import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.net.MalformedURLException;
-import java.sql.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @Author: wangjian
@@ -38,31 +21,10 @@ import java.util.stream.Collectors;
 @Component
 public abstract class KsfWebServiceHandler {
 
-    private static ITableAppManageService tableAppService;
-    private static ITableApiService tableApiService;
-    private static ITableApiParameterService tableApiParameterService;
-    private static UserClient userClient;
-
-    @Autowired
-    public void setTableAppService(ITableAppManageService tableAppService) {
-        KsfWebServiceHandler.tableAppService = tableAppService;
-    }
-    @Autowired
-    public void setTableApiService(ITableApiService tableApiService) {
-        KsfWebServiceHandler.tableApiService = tableApiService;
-    }
-    @Autowired
-    public void setTableApiParameterService(ITableApiParameterService tableApiParameterService) {
-        KsfWebServiceHandler.tableApiParameterService = tableApiParameterService;
-    }
-    @Autowired
-    public void setUserClient(UserClient userClient) {
-        KsfWebServiceHandler.userClient = userClient;
-    }
 
     public abstract ApiResultDTO sendApi(TableAppPO tableAppPO,long apiId);
 
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body){
+    public ApiResultDTO sendHttpPost(TableApiServicePO tableApiServicePO, String body){
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         //创建动态客户端
         JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();

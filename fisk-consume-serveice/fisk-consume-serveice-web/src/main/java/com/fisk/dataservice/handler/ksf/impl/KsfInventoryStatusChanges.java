@@ -143,7 +143,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
         }
         String data = JSON.toJSONString(result);
         log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
-        apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, data);
+        apiResultDTO = sendHttpPost(tableApiServicePO, data);
         if (apiResultDTO.getFlag()){
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);

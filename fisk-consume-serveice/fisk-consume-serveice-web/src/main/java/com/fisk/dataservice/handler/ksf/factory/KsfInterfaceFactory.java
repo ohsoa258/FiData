@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.enums.SpecialTypeEnum;
 import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
+import com.fisk.dataservice.handler.ksf.impl.KsfAcknowledgement;
 import com.fisk.dataservice.handler.ksf.impl.KsfInventoryStatusChanges;
 import com.fisk.dataservice.handler.ksf.impl.KsfItemData;
 import com.fisk.dataservice.handler.ksf.impl.KsfNotice;
@@ -22,6 +23,8 @@ public class KsfInterfaceFactory {
                 return new KsfNotice();
             case KSF_INVENTORY_STATUS_CHANGES:
                 return new KsfInventoryStatusChanges();
+            case KSF_ACKNOWLEDGEMENT:
+                return new KsfAcknowledgement();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

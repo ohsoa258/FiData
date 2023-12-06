@@ -1,5 +1,5 @@
 
-package com.example.client;
+package cn.com.ksf.ws;
 
 import java.math.BigDecimal;
 import javax.xml.bind.JAXBElement;

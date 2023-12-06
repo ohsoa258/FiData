@@ -1,13 +1,11 @@
 package com.fisk.dataservice.handler.ksf.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
 import com.fisk.dataservice.dto.ksfwebservice.notice.Data;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeData;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeDetail;
@@ -20,14 +18,10 @@ import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.axis.client.Call;
-import org.apache.axis.client.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.xml.namespace.QName;
-import java.net.URL;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -161,7 +155,7 @@ public class KsfNotice extends KsfWebServiceHandler {
         }
         String data = JSON.toJSONString(result);
         log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
-        apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, data);
+        apiResultDTO = sendHttpPost(tableApiServicePO, data);
         if (apiResultDTO.getFlag()){
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);
@@ -284,7 +278,7 @@ public class KsfNotice extends KsfWebServiceHandler {
 
         Map<String,List<NoticeDetail>> noticeMap = new HashMap<>();
         while (resultSet3.next()) {
-            String batchCode = resultSet1.getString("fidata_batch_code");
+            String batchCode = resultSet3.getString("fidata_batch_code");
             List<NoticeDetail> details = noticeMap.get(batchCode);
 
             NoticeDetail noticeDetail = new NoticeDetail();
