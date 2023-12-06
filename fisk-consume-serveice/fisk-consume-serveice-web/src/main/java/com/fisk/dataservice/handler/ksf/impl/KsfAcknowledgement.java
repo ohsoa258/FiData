@@ -1,7 +1,9 @@
 package com.fisk.dataservice.handler.ksf.impl;
 
+import cn.com.ksf.ws.*;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.client.*;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
@@ -15,6 +17,10 @@ import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.cxf.endpoint.Client;
+import org.apache.cxf.jaxws.endpoint.dynamic.JaxWsDynamicClientFactory;
+import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -83,27 +89,31 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
-            Connection conn = null;
-            Statement st = null;
             Connection conn1 = null;
             Statement st1 = null;
+            Connection conn2 = null;
+            Statement st2 = null;
+            Connection conn3 = null;
+            Statement st3 = null;
             try {
                 Class.forName(dataSource.conType.getDriverName());
-                conn = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
-                st = conn.createStatement();
                 conn1 = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
-                st1 = conn.createStatement();
+                st1 = conn1.createStatement();
+                conn2 = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
+                st2 = conn2.createStatement();
+                conn3 = DriverManager.getConnection(dataSource.conStr, dataSource.conAccount, dataSource.conPassword);
+                st3 = conn3.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
                 String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
                 String headSql = split[1] + " WHERE fidata_batch_code in  (select fidata_batch_code from wms_acknowledgement_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 String detailSql = split[2] + " WHERE fidata_batch_code in  (select fidata_batch_code from wms_acknowledgement_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 log.info("开始执行脚本systemData:{}", systemDataSql);
-                ResultSet systemData = st.executeQuery(systemDataSql);
+                ResultSet systemData = st1.executeQuery(systemDataSql);
                 log.info("开始执行脚本head:{}", headSql);
-                ResultSet heads = st1.executeQuery(headSql);
+                ResultSet heads = st2.executeQuery(headSql);
                 log.info("开始执行脚本detail:{}", detailSql);
-                ResultSet details = st1.executeQuery(detailSql);
+                ResultSet details = st3.executeQuery(detailSql);
                 resultJsonData = assembleConfirmationSlipDTO(systemData, heads, details);
                 apiResultDTO.setNumber(resultJsonData.getITMATDOCHEAD().getZALLSAPUPLOADGOODSMOV1().size());
             } catch (Exception e) {
@@ -112,12 +122,15 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
                 apiResultDTO.setNumber(number);
             } finally {
                 try {
-                    assert st != null;
-                    st.close();
-                    conn.close();
                     assert st1 != null;
                     st1.close();
                     conn1.close();
+                    assert st2 != null;
+                    st2.close();
+                    conn2.close();
+                    assert st3 != null;
+                    st3.close();
+                    conn3.close();
                 } catch (SQLException e) {
                     apiResultDTO.setFlag(false);
                     apiResultDTO.setMsg("{\"error\":\"" + e.getMessage() + "\"}");
@@ -130,7 +143,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             apiResultDTO.setNumber(number);
             return apiResultDTO;
         }
-        log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + resultJsonData);
+        log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + JSON.toJSON(resultJsonData));
         apiResultDTO = send(resultJsonData);
         if (apiResultDTO.getFlag()) {
             tableApiServicePO.setSyncTime(endTime);
@@ -142,21 +155,38 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
 
     public ApiResultDTO send(ZALLSAPUPLOADGOODSMOV resultJsonData) {
         ApiResultDTO apiResultDTO = new ApiResultDTO();
+        //创建动态客户端
+//        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+//
+//        //webService的这个动态客户端的地址需要从数据库中查出来
+//        Client client = dcf.createClient("http://tws.ksf.com.cn:8899/ZALLSAP_UPLOAD_GOODSMOV_Proxy/ZALLSAP_UPLOAD_GOODSMOV_Orchestration_1_Port_DingT.asmx?wsdl");
+//        //设置超时时间
+//        HTTPConduit conduit = (HTTPConduit) client.getConduit();
+//        HTTPClientPolicy policy = new HTTPClientPolicy();
+//        policy.setAllowChunking(false);
+//        // 连接服务器超时时间 30秒
+//        policy.setConnectionTimeout(30000);
+//        // 等待服务器响应超时时间 30秒
+//        policy.setReceiveTimeout(30000);
+//        conduit.setClient(policy);
+//        JSONObject result = null;
         try {
+            // invoke("方法名",参数1,参数2,参数3....);
+
+//        try {
             // 创建服务实例
             ZALLSAPUPLOADGOODSMOVOrchestration1PortDingT service = new ZALLSAPUPLOADGOODSMOVOrchestration1PortDingT();
-
 // 获取端口
-            ZALLSAPUPLOADGOODSMOVOrchestration1PortDingTSoap port = service.getZALLSAPUPLOADGOODSMOVOrchestration1PortDingTSoap();
+            ZALLSAPUPLOADGOODSMOVOrchestration1PortDingTSoap port = service.getZALLSAPUPLOADGOODSMOVOrchestration1PortDingTSoap12();
             OperationZALLSAPUPLOADGOODSMOV operationZALLSAPUPLOADGOODSMOV = new OperationZALLSAPUPLOADGOODSMOV();
             operationZALLSAPUPLOADGOODSMOV.setZALLSAPUPLOADGOODSMOV(resultJsonData);
+//            Object[] objects = client.invoke("Operation_ZALLSAP_UPLOAD_GOODSMOV", operationZALLSAPUPLOADGOODSMOV);
             OperationZALLSAPUPLOADGOODSMOVResponse operationZALLSAPUPLOADGOODSMOVResponse = port.operationZALLSAPUPLOADGOODSMOV(operationZALLSAPUPLOADGOODSMOV);
             ZALLSAPUPLOADGOODSMOVResponse zallsapuploadgoodsmovResponse = operationZALLSAPUPLOADGOODSMOVResponse.getZALLSAPUPLOADGOODSMOVResponse();
             ArrayOfZALLSAPUPLOADGOODSMOV3 otmatdoc = zallsapuploadgoodsmovResponse.getOTMATDOC();
             List<ZALLSAPUPLOADGOODSMOV3> zallsapuploadgoodsmov3 = otmatdoc.getZALLSAPUPLOADGOODSMOV3();
             ZALLSAPUPLOADGOODSMOV3 zallsapuploadgoodsmov31 = zallsapuploadgoodsmov3.get(0);
-
-            zallsapuploadgoodsmov31.getMBLNR();
+//            zallsapuploadgoodsmov31.getMBLNR();
             if (Integer.parseInt(zallsapuploadgoodsmov31.getSTATUS()) == 1){
                 apiResultDTO.setFlag(true);
                 apiResultDTO.setMsg(zallsapuploadgoodsmov31.getINFOTEXT());
@@ -184,25 +214,31 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
         }
         while (resultSet2.next()) {
             ZALLSAPUPLOADGOODSMOV1 header = new ZALLSAPUPLOADGOODSMOV1();
-            header.setBSART(resultSet1.getString("bsart"));
-            header.setEBELN(resultSet1.getString("ebeln"));
-            header.setIDATE(resultSet1.getString("i_date"));
-            header.setITIME(resultSet1.getString("i_time"));
-            header.setLGPLA(resultSet1.getString("lgpla"));
-            header.setVTXTK(resultSet1.getString("vtxtk"));
-            header.setHTEXT(resultSet1.getString("htext"));
-            header.setBUDAT(resultSet1.getString("budat"));
+            header.setBSART(resultSet2.getString("bsart"));
+            header.setEBELN(resultSet2.getString("ebeln"));
+            header.setIDATE(resultSet2.getString("i_date"));
+            header.setITIME(resultSet2.getString("i_time"));
+            header.setLGPLA(resultSet2.getString("lgpla"));
+            header.setVTXTK(resultSet2.getString("vtxtk"));
+            header.setHTEXT(resultSet2.getString("htext"));
+            header.setBUDAT(resultSet2.getString("budat"));
+            ArrayOfZALLSAPUPLOADGOODSMOV1 itmatdochead = zallsapuploadgoodsmov.getITMATDOCHEAD();
+            if (itmatdochead == null){
+                itmatdochead = new ArrayOfZALLSAPUPLOADGOODSMOV1();
+                zallsapuploadgoodsmov.setITMATDOCHEAD(itmatdochead);
+            }
             zallsapuploadgoodsmov.getITMATDOCHEAD().getZALLSAPUPLOADGOODSMOV1().add(header);
         }
 
         while (resultSet3.next()) {
             ZALLSAPUPLOADGOODSMOV2 item = new ZALLSAPUPLOADGOODSMOV2();
-            item.setEBELN(resultSet1.getString("ebeln"));
-            item.setPOSNR(resultSet1.getString("posnr"));
-            item.setSGTXT(resultSet1.getString("sgtxt"));
-            item.setMATNR(resultSet1.getString("matnr"));
+            item.setEBELN(resultSet3.getString("ebeln"));
+            item.setPOSNR(resultSet3.getString("posnr"));
+            item.setSGTXT(resultSet3.getString("sgtxt"));
+            item.setMATNR(resultSet3.getString("matnr"));
+            item.setDZUSCH("");
             // 创建一个 BigDecimal 对象
-            BigDecimal value = new BigDecimal(resultSet1.getString("menge"));
+            BigDecimal value = new BigDecimal(resultSet3.getString("menge"));
 
             // 创建一个 JAXBElement 对象
             JAXBContext jaxbContext = JAXBContext.newInstance(BigDecimal.class);
@@ -211,14 +247,19 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
 
             // 调用 setMENGE 方法并传递 JAXBElement 对象
             item.setMENGE(jaxbElement);
-            item.setMEINS(resultSet1.getString("meins"));
-            item.setWERKS(resultSet1.getString("werks"));
-            item.setLGORT(resultSet1.getString("lgort"));
-            item.setINSMK(resultSet1.getString("insmk"));
-            item.setHSDAT(resultSet1.getString("hsdat"));
-            item.setLICHA(resultSet1.getString("licha"));
-            item.setCHARG(resultSet1.getString("charg"));
-            item.setELIKZ(resultSet1.getString("elikz"));
+            item.setMEINS(resultSet3.getString("meins"));
+            item.setWERKS(resultSet3.getString("werks"));
+            item.setLGORT(resultSet3.getString("lgort"));
+            item.setINSMK(resultSet3.getString("insmk"));
+            item.setHSDAT(resultSet3.getString("hsdat"));
+            item.setLICHA(resultSet3.getString("licha"));
+            item.setCHARG(resultSet3.getString("charg"));
+            item.setELIKZ(resultSet3.getString("elikz"));
+            ArrayOfZALLSAPUPLOADGOODSMOV2 itmatdocdetail = zallsapuploadgoodsmov.getITMATDOCDETAILS();
+            if (itmatdocdetail == null){
+                itmatdocdetail = new ArrayOfZALLSAPUPLOADGOODSMOV2();
+                zallsapuploadgoodsmov.setITMATDOCDETAILS(itmatdocdetail);
+            }
             zallsapuploadgoodsmov.getITMATDOCDETAILS().getZALLSAPUPLOADGOODSMOV2().add(item);
         }
         return zallsapuploadgoodsmov;

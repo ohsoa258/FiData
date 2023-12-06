@@ -1,5 +1,5 @@
 
-package com.example.client;
+package cn.com.ksf.ws;
 
 import java.util.ArrayList;
 import java.util.List;

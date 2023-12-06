@@ -1,5 +1,5 @@
 
-package com.example.client;
+package cn.com.ksf.ws;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

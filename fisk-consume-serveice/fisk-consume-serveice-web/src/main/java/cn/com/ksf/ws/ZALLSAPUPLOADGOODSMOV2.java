@@ -1,5 +1,5 @@
 
-package com.example.client;
+package cn.com.ksf.ws;
 
 import java.math.BigDecimal;
 import javax.xml.bind.JAXBElement;
@@ -79,6 +79,8 @@ public class ZALLSAPUPLOADGOODSMOV2 {
     protected String lgort;
     @XmlElement(name = "INSMK", required = true, nillable = true)
     protected String insmk;
+    @XmlElement(name = "INSMK", required = true, nillable = true)
+    protected String dzusch;
     @XmlElement(name = "HSDAT", required = true, nillable = true)
     protected String hsdat;
     @XmlElement(name = "LICHA", required = true, nillable = true)
@@ -302,6 +304,15 @@ public class ZALLSAPUPLOADGOODSMOV2 {
      */
     public void setINSMK(String value) {
         this.insmk = value;
+    }
+
+
+    public String getDZUSCH() {
+        return dzusch;
+    }
+
+    public void setDZUSCH(String dzusch) {
+        this.dzusch = dzusch;
     }
 
     /**

@@ -1,5 +1,5 @@
 
-package com.example.client;
+package cn.com.ksf.ws;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -131,11 +131,11 @@ public class ZALLSAPUPLOADGOODSMOV {
 
     /**
      * 获取itmatdocdetails属性的值。
-     * 
+     *
      * @return
      *     possible object is
      *     {@link ArrayOfZALLSAPUPLOADGOODSMOV2 }
-     *     
+     *
      */
     public ArrayOfZALLSAPUPLOADGOODSMOV2 getITMATDOCDETAILS() {
         return itmatdocdetails;
@@ -143,11 +143,11 @@ public class ZALLSAPUPLOADGOODSMOV {
 
     /**
      * 设置itmatdocdetails属性的值。
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link ArrayOfZALLSAPUPLOADGOODSMOV2 }
-     *     
+     *
      */
     public void setITMATDOCDETAILS(ArrayOfZALLSAPUPLOADGOODSMOV2 value) {
         this.itmatdocdetails = value;
@@ -155,11 +155,11 @@ public class ZALLSAPUPLOADGOODSMOV {
 
     /**
      * 获取itmatdochead属性的值。
-     * 
+     *
      * @return
      *     possible object is
      *     {@link ArrayOfZALLSAPUPLOADGOODSMOV1 }
-     *     
+     *
      */
     public ArrayOfZALLSAPUPLOADGOODSMOV1 getITMATDOCHEAD() {
         return itmatdochead;
@@ -167,11 +167,11 @@ public class ZALLSAPUPLOADGOODSMOV {
 
     /**
      * 设置itmatdochead属性的值。
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link ArrayOfZALLSAPUPLOADGOODSMOV1 }
-     *     
+     *
      */
     public void setITMATDOCHEAD(ArrayOfZALLSAPUPLOADGOODSMOV1 value) {
         this.itmatdochead = value;
@@ -179,11 +179,11 @@ public class ZALLSAPUPLOADGOODSMOV {
 
     /**
      * 获取otmatdoc属性的值。
-     * 
+     *
      * @return
      *     possible object is
      *     {@link ArrayOfZALLSAPUPLOADGOODSMOV3 }
-     *     
+     *
      */
     public ArrayOfZALLSAPUPLOADGOODSMOV3 getOTMATDOC() {
         return otmatdoc;
@@ -191,11 +191,11 @@ public class ZALLSAPUPLOADGOODSMOV {
 
     /**
      * 设置otmatdoc属性的值。
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link ArrayOfZALLSAPUPLOADGOODSMOV3 }
-     *     
+     *
      */
     public void setOTMATDOC(ArrayOfZALLSAPUPLOADGOODSMOV3 value) {
         this.otmatdoc = value;

@@ -1,4 +1,4 @@
-package com.example.client;
+package cn.com.ksf.ws;
 
 import java.net.MalformedURLException;
 import java.net.URL;
