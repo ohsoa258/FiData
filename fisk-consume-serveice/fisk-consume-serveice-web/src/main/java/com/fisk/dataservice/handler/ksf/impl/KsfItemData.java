@@ -96,7 +96,7 @@ public class KsfItemData extends KsfWebServiceHandler {
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
                 String systemDataSql = split[0]+" where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
-                String statusChangesSql = split[1]+" WHERE fidata_batch_code in (select fidata_batch_code from ods_sap_ksf_item_sys where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String statusChangesSql = split[1]+" WHERE fidata_batch_code in (select fidata_batch_code from public.ods_sap_ksf_item_sys where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st.executeQuery(systemDataSql);
                 log.info("开始执行脚本items:{}", statusChangesSql);

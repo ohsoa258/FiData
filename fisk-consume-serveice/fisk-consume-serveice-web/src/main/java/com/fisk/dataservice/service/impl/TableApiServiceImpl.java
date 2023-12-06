@@ -112,28 +112,28 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
                 case KSF_NOTICE:
                     data.setSourceDbId(dbId);
                     data.setApiName("ksf_notice");
-                    data.setSqlScript("select * from ods_sap_ksf_notice; " +
-                            "select * from ods_sap_headers;" +
-                            " select * from ods_sap_details;");
+                    data.setSqlScript("select * from public.ods_sap_ksf_notice; " +
+                            "select * from public.ods_sap_headers;" +
+                            " select * from public.ods_sap_details;");
                     break;
                 case KSF_ITEM_DATA:
                     data.setSourceDbId(dbId);
                     data.setApiName("ksf_item_data");
-                    data.setSqlScript("select * from ods_sap_ksf_item_sys;" +
-                            " select * from ods_sap_itemdata;");
+                    data.setSqlScript("select * from public.ods_sap_ksf_item_sys;" +
+                            " select * from public.ods_sap_itemdata;");
                     break;
                 case KSF_INVENTORY_STATUS_CHANGES:
                     data.setSourceDbId(dbId);
                     data.setApiName("ksf_inventory_status_changes");
-                    data.setSqlScript("select * from ods_sap_ksf_inventory_sys;" +
-                            "select * from ods_sap_ksf_inventory;");
+                    data.setSqlScript("select * from public.ods_sap_ksf_inventory_sys;" +
+                            "select * from public.ods_sap_ksf_inventory;");
                     break;
                 case KSF_ACKNOWLEDGEMENT:
                     data.setSourceDbId(dbId);
                     data.setApiName("wms_acknowledgement");
-                    data.setSqlScript("select * from wms_acknowledgement_sys;" +
-                            "select * from wms_acknowledgement_headers;" +
-                            "select * from wms_acknowledgement_details;");
+                    data.setSqlScript("select * from wms.wms_acknowledgement_sys;" +
+                            "select * from wms.wms_acknowledgement_headers;" +
+                            "select * from wms.wms_acknowledgement_details;");
                     break;
 
             }
