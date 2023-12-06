@@ -267,7 +267,7 @@ public class AppRegisterManageImpl
 
             // 该应用下没有启用的api，可以直接删除
             if (baseMapper.deleteByIdWithFill(model) > 0) {
-                if (openMetadata){
+                if (openMetadata) {
                     //同步元数据业务分类
                     ClassificationInfoDTO classificationInfoDTO = new ClassificationInfoDTO();
                     classificationInfoDTO.setName(model.getAppName());
@@ -358,7 +358,7 @@ public class AppRegisterManageImpl
         }
 
         //同步元数据
-        if (openMetadata){
+        if (openMetadata) {
             List<Long> apiIds = saveDTO.dto.stream().filter(e -> e.apiState == 1).map(e -> e.getApiId().longValue()).collect(Collectors.toList());
             List<MetaDataEntityDTO> apiMetaData = getApiMetaDataByIds(apiIds);
             dataManageClient.syncDataConsumptionMetaData(apiMetaData);
@@ -423,7 +423,7 @@ public class AppRegisterManageImpl
             return ResultEnum.DS_API_FIELD_EXISTS;
 
         // 第六步：API信息转换为文档实体
-        final ApiDocDTO docDTO = createDocDTO(apiList, paramList, builtinParamList, fieldList);
+        final ApiDocDTO docDTO = createDocDTO(appConfigPO, apiList, paramList, builtinParamList, fieldList);
 
         // 第七步：生成pdf，返回文件名称
         PDFHeaderFooter headerFooter = new PDFHeaderFooter();
@@ -547,7 +547,8 @@ public class AppRegisterManageImpl
      * @param fieldList         API字段信息
      * @return
      */
-    private ApiDocDTO createDocDTO(List<ApiConfigPO> apiList,
+    private ApiDocDTO createDocDTO(AppConfigPO appConfig,
+                                   List<ApiConfigPO> apiList,
                                    List<ParmConfigPO> paramsList,
                                    List<BuiltinParmPO> builtinParamsList,
                                    List<FieldConfigPO> fieldList) {
@@ -555,7 +556,9 @@ public class AppRegisterManageImpl
         // API文档基础信息
         String jsonResult = DATASERVICE_APIBASICINFO.replace("{api_prd_address}", api_address)
                 .replace("{apiVersion_StartDate}", DateTimeUtils.getNowToShortDate())
-                .replace("{apiVersion_EndDate}", DateTimeUtils.getNowToShortDate());
+                .replace("{apiVersion_EndDate}", DateTimeUtils.getNowToShortDate())
+                .replace("{apiVersion_Modified}", appConfig.getAppPrincipal())
+                .replace("{release_Date}", DateTimeUtils.getNowToShortDate().replace("-", ""));
 
         // log.info("createDocDTO jsonInfo："+jsonResult);
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);

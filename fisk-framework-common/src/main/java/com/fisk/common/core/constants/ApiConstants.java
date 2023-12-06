@@ -216,15 +216,15 @@ public class ApiConstants {
             "}";
 
     public static final String DATASERVICE_APIBASICINFO = "{\n" +
-            "    \"title\":\"一体化数据赋能平台 API接口文档\",\n" +
+            "    \"title\":\"强生交通智慧中台 API接口文档\",\n" +
             "    \"docVersion\":\"文档版本 V1.0\",\n" +
             "    \"isuCompany\":\"\",\n" +
-            "    \"isuDate\":\"发布日期：20220101\",\n" +
+            "    \"isuDate\":\"发布日期：{release_Date}\",\n" +
             "    \"footerName\":\"接口文档\",\n" +
-            "    \"docPurpose\":\"本文用于第三方平台对接一体化数据赋能平台。\",\n" +
-            "    \"readers\":\"预期读者包括需要从一体化数据赋能平台中获取数据的第三方平台。\",\n" +
+            "    \"docPurpose\":\"向需要从强生交通智慧中台获取数据的下游提供清晰的调用指南，包括认证授权、终端点请求、响应错误处理等。\",\n" +
+            "    \"readers\":\"预期读者包括需要从强生交通智慧中台中获取数据的下游。\",\n" +
             "    \"standard\":\"接口采用HTTP协议，TCP连接方式。数据传输格式采用非加密的JSON格式。API请求方式为POST，文本编码格式为UTF-8；\",\n" +
-            "    \"standard_query\":\"查询接口携带分页功能，current页码从第1页开始，size每页数量建议不超过500条，current和size为null默认查询全部。\",\n" +
+            "    \"standard_query\":\"查询接口携带分页功能，current页码从第1页开始，size每页数量建议不超过500条，current和size为null默认查询1000条。\",\n" +
             "    \"authStandard\":\"第三方系统在访问平台API时需要进行身份验证，通过调用“获取Token”接口，传递账号密码获取Token（60分钟有效期）。\",\n" +
 //            "    \"uatAddress\":\"{api_uat_address}/{apiaddress}\",\n" +
             "    \"prdAddress\":\"{api_prd_address}/{apiaddress}\",\n" +
@@ -369,7 +369,7 @@ public class ApiConstants {
             "            \"version\":\"0.1\",\n" +
             "            \"startDate\":\"{apiVersion_StartDate}\",\n" +
             "            \"endDate\":\"{apiVersion_EndDate}\",\n" +
-            "            \"modifier\":\"lijiawen\",\n" +
+            "            \"modifier\":\"{apiVersion_Modified}\",\n" +
             "            \"explain\":\"文档创建、编写\",\n" +
             "            \"state\":\"初稿\"\n" +
             "        }\n" +
