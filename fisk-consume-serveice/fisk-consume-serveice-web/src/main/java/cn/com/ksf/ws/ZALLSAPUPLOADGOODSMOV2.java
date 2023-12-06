@@ -79,7 +79,7 @@ public class ZALLSAPUPLOADGOODSMOV2 {
     protected String lgort;
     @XmlElement(name = "INSMK", required = true, nillable = true)
     protected String insmk;
-    @XmlElement(name = "INSMK", required = true, nillable = true)
+    @XmlElement(name = "DZUSCH", required = true, nillable = true)
     protected String dzusch;
     @XmlElement(name = "HSDAT", required = true, nillable = true)
     protected String hsdat;

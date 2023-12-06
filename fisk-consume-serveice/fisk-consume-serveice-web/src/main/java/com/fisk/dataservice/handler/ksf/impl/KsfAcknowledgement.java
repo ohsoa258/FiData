@@ -27,7 +27,9 @@ import org.springframework.stereotype.Component;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -181,22 +183,11 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             OperationZALLSAPUPLOADGOODSMOV operationZALLSAPUPLOADGOODSMOV = new OperationZALLSAPUPLOADGOODSMOV();
             operationZALLSAPUPLOADGOODSMOV.setZALLSAPUPLOADGOODSMOV(resultJsonData);
 //            Object[] objects = client.invoke("Operation_ZALLSAP_UPLOAD_GOODSMOV", operationZALLSAPUPLOADGOODSMOV);
+            log.info("发送前");
             OperationZALLSAPUPLOADGOODSMOVResponse operationZALLSAPUPLOADGOODSMOVResponse = port.operationZALLSAPUPLOADGOODSMOV(operationZALLSAPUPLOADGOODSMOV);
-            ZALLSAPUPLOADGOODSMOVResponse zallsapuploadgoodsmovResponse = operationZALLSAPUPLOADGOODSMOVResponse.getZALLSAPUPLOADGOODSMOVResponse();
-            ArrayOfZALLSAPUPLOADGOODSMOV3 otmatdoc = zallsapuploadgoodsmovResponse.getOTMATDOC();
-            List<ZALLSAPUPLOADGOODSMOV3> zallsapuploadgoodsmov3 = otmatdoc.getZALLSAPUPLOADGOODSMOV3();
-            ZALLSAPUPLOADGOODSMOV3 zallsapuploadgoodsmov31 = zallsapuploadgoodsmov3.get(0);
-//            zallsapuploadgoodsmov31.getMBLNR();
-            if (Integer.parseInt(zallsapuploadgoodsmov31.getSTATUS()) == 1){
-                apiResultDTO.setFlag(true);
-                apiResultDTO.setMsg(zallsapuploadgoodsmov31.getINFOTEXT());
-            }else if (Integer.parseInt(zallsapuploadgoodsmov31.getSTATUS()) == -1){
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg(zallsapuploadgoodsmov31.getINFOTEXT());
-            }else {
-                apiResultDTO.setFlag(false);
-                apiResultDTO.setMsg("远程调用异常");
-            }
+            log.info("发送后接收:"+JSON.toJSON(operationZALLSAPUPLOADGOODSMOVResponse));
+            apiResultDTO.setFlag(true);
+            apiResultDTO.setMsg("发送sap确认单成功！");
         } catch (Exception e) {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg(e.toString());
@@ -241,8 +232,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             BigDecimal value = new BigDecimal(resultSet3.getString("menge"));
 
             // 创建一个 JAXBElement 对象
-            JAXBContext jaxbContext = JAXBContext.newInstance(BigDecimal.class);
-            QName qname = new QName("http://example.com/schema", "value");
+            QName qname = new QName("http://Microsoft.LobServices.Sap/2007/03/Types/Rfc/", "MENGE");
             JAXBElement<BigDecimal> jaxbElement = new JAXBElement<>(qname, BigDecimal.class, value);
 
             // 调用 setMENGE 方法并传递 JAXBElement 对象
@@ -262,6 +252,19 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             }
             zallsapuploadgoodsmov.getITMATDOCDETAILS().getZALLSAPUPLOADGOODSMOV2().add(item);
         }
+        String s = convertToXml(zallsapuploadgoodsmov);
+        log.info("请求体:"+s);
         return zallsapuploadgoodsmov;
+    }
+
+    public static String convertToXml(Object object) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(object.getClass());
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+        StringWriter stringWriter = new StringWriter();
+        marshaller.marshal(object, stringWriter);
+
+        return stringWriter.toString();
     }
 }
