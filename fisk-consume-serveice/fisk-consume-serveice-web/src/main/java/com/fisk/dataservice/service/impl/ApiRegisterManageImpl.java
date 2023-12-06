@@ -556,6 +556,31 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum editApiData(ApiConfigEditDTO dto) {
+        ApiConfigPO model = baseMapper.selectById(dto.getId());
+        if (model == null) {
+            return ResultEnum.DS_API_EXISTS;
+        }
+
+        if (model.getCreateApiType() != 3) {
+            DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.getDatasourceId());
+            if (dataSourceConPO == null)
+                return ResultEnum.DS_DATASOURCE_NOTEXISTS;
+        }
+
+        boolean isUpdate = false;
+        // 第一步：编辑保存api信息
+        ApiConfigPO apiConfigPO = ApiRegisterMap.INSTANCES.dtoToPo_Edit(dto);
+        if (apiConfigPO == null)
+            return ResultEnum.SAVE_DATA_ERROR;
+        isUpdate = baseMapper.updateById(apiConfigPO) > 0;
+        if (!isUpdate)
+            return ResultEnum.SAVE_DATA_ERROR;
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
     public ResultEnum deleteData(int apiId) {
         //查询同步元数据
         List<MetaDataEntityDTO> apiMetaDataList = appRegisterManage.getApiMetaDataById((long) apiId);

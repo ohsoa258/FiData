@@ -2,6 +2,8 @@ package com.fisk.dataservice.dto.ksfwebservice.item;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
+import java.math.BigDecimal;
+
 /**
  * @Author: wangjian
  * @Date: 2023-11-28
@@ -20,8 +22,12 @@ public class KsfGoods {
     private String NORMT;
     @JSONField(name = "MEINS")
     private String MEINS;
+
+    @JSONField(name = "EAN11")
+    private String EAN11;
     @JSONField(name = "VBAMG")
-    private String VBAMG;
+    private BigDecimal VBAMG;
+
 
     public String getMTART() {
         return MTART;
@@ -71,11 +77,19 @@ public class KsfGoods {
         this.MEINS = MEINS;
     }
 
-    public String getVBAMG() {
+    public String getEAN11() {
+        return EAN11;
+    }
+
+    public void setEAN11(String EAN11) {
+        this.EAN11 = EAN11;
+    }
+
+    public BigDecimal getVBAMG() {
         return VBAMG;
     }
 
-    public void setVBAMG(String VBAMG) {
+    public void setVBAMG(BigDecimal VBAMG) {
         this.VBAMG = VBAMG;
     }
 }

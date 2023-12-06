@@ -76,6 +76,7 @@ public class AsyncImpl {
     private Integer retryTime;
     @Resource
     private RedisUtil redisUtil;
+
     @Async
     public ResultEnum syncTableApi(TableApiSyncDTO dto) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -104,15 +105,15 @@ public class AsyncImpl {
             for (int i = 0; i < retryNum; i++) {
 
                 apiResultDTO = handler.sendApi(dto.apiId);
-                if (apiResultDTO.getFlag()){
+                if (apiResultDTO.getFlag()) {
                     break;
                 }
-                log.info("第"+(i+1)+"次发送api");
+                log.info("第" + (i + 1) + "次发送api");
                 try {
-                    log.info("发送异常:"+apiResultDTO.getMsg()+",等待"+retryTime/1000+"秒重新发送。");
+                    log.info("发送异常:" + apiResultDTO.getMsg() + ",等待" + retryTime / 1000 + "秒重新发送。");
                     Thread.sleep(retryTime);
                 } catch (InterruptedException e) {
-                    String msg =" - api异常:"+apiResultDTO.getMsg()+"重试异常:" + e.getMessage();
+                    String msg = " - api异常:" + apiResultDTO.getMsg() + "重试异常:" + e.getMessage();
                     taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
                     tableApiTaskDTO.setMsg(taskMap);
                     publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
@@ -120,56 +121,54 @@ public class AsyncImpl {
                 }
             }
         } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
-            Boolean setnx = redisUtil.setnx(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+tableApiServicePO.getId(), 100, TimeUnit.SECONDS);
-            outerLoop:
-            for (int i = 0; i < retryNum; i++) {
-                switch (SpecialTypeEnum.getEnum(tableApiServicePO.specialType)){
-                    case NONE:
-                        WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
-                        apiResultDTO = webServiceHandler.sendApi(dto.apiId);
-                        break;
-                    case KSF_ITEM_DATA:
-                    case KSF_NOTICE:
-                    case KSF_INVENTORY_STATUS_CHANGES:
-                        if (setnx){
+            Boolean setnx = redisUtil.setnx(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + tableApiServicePO.getId(), retryNum*retryTime/1000+100, TimeUnit.SECONDS);
+            if (setnx) {
+                for (int i = 0; i < retryNum; i++) {
+                    switch (SpecialTypeEnum.getEnum(tableApiServicePO.specialType)) {
+                        case NONE:
+                            WebServiceHandler webServiceHandler = InterfaceWebServiceFactory.getWebServiceHandlerByType();
+                            apiResultDTO = webServiceHandler.sendApi(dto.apiId);
+                            break;
+                        case KSF_ITEM_DATA:
+                        case KSF_NOTICE:
+                        case KSF_INVENTORY_STATUS_CHANGES:
+                        case KSF_ACKNOWLEDGEMENT:
                             KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
-                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO,dto.apiId);
-                        }else {
-                            apiResultDTO=new ApiResultDTO();
-                            apiResultDTO.setFlag(false);
-                            apiResultDTO.setMsg("上次同步未完成");
-                            break outerLoop;
-                        }
+                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO, dto.apiId);
+                            break;
+                        default:
+                            break;
+                    }
+                    if (apiResultDTO.getFlag()) {
                         break;
-                    default:
-                        break;
+                    }
+                    log.info("第" + (i + 1) + "次发送api");
+                    try {
+                        log.info("发送异常:" + apiResultDTO.getMsg() + ",等待" + retryTime / 1000 + "秒重新发送。");
+                        Thread.sleep(retryTime);
+                    } catch (InterruptedException e) {
+                        String msg = " - api异常:" + apiResultDTO.getMsg() + "重试异常:" + e.getMessage();
+                        taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
+                        tableApiTaskDTO.setMsg(taskMap);
+                        publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
+                    }
                 }
-                if (apiResultDTO.getFlag()){
-                    break;
-                }
-                log.info("第"+(i+1)+"次发送api");
-                try {
-                    log.info("发送异常:"+apiResultDTO.getMsg()+",等待"+retryTime/1000+"秒重新发送。");
-                    Thread.sleep(retryTime);
-                } catch (InterruptedException e) {
-                    String msg =" - api异常:"+apiResultDTO.getMsg()+"重试异常:" + e.getMessage();
-                    taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + msg);
-                    tableApiTaskDTO.setMsg(taskMap);
-                    publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
-                    throw new RuntimeException(e);
-                }
+                redisUtil.del(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + tableApiServicePO.getId());
+            } else {
+                apiResultDTO = new ApiResultDTO();
+                apiResultDTO.setFlag(false);
+                apiResultDTO.setMsg("上次同步未完成");
             }
-            redisUtil.del(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+tableApiServicePO.getId());
         }
         //记日志
 
-        if (apiResultDTO.getFlag()){
-            taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format +" - " + apiResultDTO.getMsg());
+        if (apiResultDTO.getFlag()) {
+            taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format + " - " + apiResultDTO.getMsg());
             tableApiLogPO.setApiId(dto.apiId.intValue());
             tableApiLogPO.setNumber(apiResultDTO.getNumber());
             tableApiLogPO.setImportantInterface(tableApiServicePO.getImportantInterface());
             tableApiLogPO.setStatus(1);
-        }else{
+        } else {
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + apiResultDTO.getMsg());
 
             tableApiLogPO.setApiId(dto.apiId.intValue());
@@ -178,11 +177,11 @@ public class AsyncImpl {
         }
         try {
             tableApiLogService.save(tableApiLogPO);
-            sendEmail(tableAppPO,apiResultDTO,Integer.valueOf(dto.getApiId().toString()),pipelTaskTraceId);
-        }catch (Exception e){
-            String msg = (String)taskMap.get(DispatchLogEnum.taskend.getValue());
-            msg +=" - 邮件发送失败:" + e.getMessage();
-            taskMap.put(DispatchLogEnum.taskend.getValue(),msg);
+            sendEmail(tableAppPO, apiResultDTO, Integer.valueOf(dto.getApiId().toString()), pipelTaskTraceId);
+        } catch (Exception e) {
+            String msg = (String) taskMap.get(DispatchLogEnum.taskend.getValue());
+            msg += " - 邮件发送失败:" + e.getMessage();
+            taskMap.put(DispatchLogEnum.taskend.getValue(), msg);
         }
         tableApiTaskDTO.setMsg(taskMap);
 
@@ -190,13 +189,13 @@ public class AsyncImpl {
         return ResultEnum.SUCCESS;
     }
 
-    void sendEmail(TableAppPO tableAppPO,ApiResultDTO apiResultDTO,Integer apiId,String taskTraceId) {
+    void sendEmail(TableAppPO tableAppPO, ApiResultDTO apiResultDTO, Integer apiId, String taskTraceId) {
         TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
         ResultEntity<List<PipelTaskLogVO>> pipelTaskLogVo = publishTaskClient.getPipelTaskLogVo(taskTraceId);
         List<PipelTaskLogVO> data = pipelTaskLogVo.data;
-        if (pipelTaskLogVo.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(data)){
+        if (pipelTaskLogVo.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(data)) {
             List<PipelTaskLogVO> taskLogVOS = data.stream().filter(i -> i.getType() == DispatchLogEnum.taskend.getValue()).collect(Collectors.toList());
-            PipelTaskLogVO taskLogVO= taskLogVOS.get(0);
+            PipelTaskLogVO taskLogVO = taskLogVOS.get(0);
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             try {
                 java.util.Date date = new java.util.Date();
@@ -207,12 +206,12 @@ public class AsyncImpl {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-        }else {
+        } else {
             log.error("远程调用失败，方法名：【data-service:sendEmail】");
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         tableServiceEmailDTO.appType = 2;
-        tableServiceEmailDTO.appId = (int)tableAppPO.getId();
+        tableServiceEmailDTO.appId = (int) tableAppPO.getId();
         tableServiceEmailDTO.msg = apiResultDTO.getMsg();
         tableServiceEmailDTO.result = "【运行成功】";
         tableServiceEmailDTO.pipelTraceId = taskTraceId;

@@ -1,13 +1,11 @@
 package com.fisk.dataservice.handler.ksf.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
 import com.fisk.dataservice.dto.ksfwebservice.notice.Data;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeData;
 import com.fisk.dataservice.dto.ksfwebservice.notice.NoticeDetail;
@@ -20,14 +18,10 @@ import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.axis.client.Call;
-import org.apache.axis.client.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import javax.xml.namespace.QName;
-import java.net.URL;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -107,8 +101,8 @@ public class KsfNotice extends KsfWebServiceHandler {
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
                 String systemDataSql = split[0]+" where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
-                String noticeDataSql = split[1]+" WHERE fidata_batch_code in  (select fidata_batch_code from ods_sap_ksf_notice  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
-                String noticeDetailSql = split[2]+" WHERE fidata_batch_code in (select fidata_batch_code from ods_sap_ksf_notice where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String noticeDataSql = split[1]+" WHERE fidata_batch_code in  (select fidata_batch_code from public.ods_sap_ksf_notice  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String noticeDetailSql = split[2]+" WHERE fidata_batch_code in (select fidata_batch_code from public.ods_sap_ksf_notice where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
                 log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st1.executeQuery(systemDataSql);
                 log.info("开始执行脚本noticeData:{}", noticeDataSql);
@@ -161,7 +155,7 @@ public class KsfNotice extends KsfWebServiceHandler {
         }
         String data = JSON.toJSONString(result);
         log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
-        apiResultDTO = sendHttpPost(tableAppPO, tableApiServicePO, data);
+        apiResultDTO = sendHttpPost(tableApiServicePO, data);
         if (apiResultDTO.getFlag()){
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);
@@ -284,7 +278,7 @@ public class KsfNotice extends KsfWebServiceHandler {
 
         Map<String,List<NoticeDetail>> noticeMap = new HashMap<>();
         while (resultSet3.next()) {
-            String batchCode = resultSet1.getString("fidata_batch_code");
+            String batchCode = resultSet3.getString("fidata_batch_code");
             List<NoticeDetail> details = noticeMap.get(batchCode);
 
             NoticeDetail noticeDetail = new NoticeDetail();

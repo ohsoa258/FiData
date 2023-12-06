@@ -54,6 +54,14 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
     ResultEnum editData(ApiRegisterEditDTO dto);
 
     /**
+     * 编辑api
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum editApiData(ApiConfigEditDTO dto);
+
+    /**
      * 删除数据
      *
      * @param apiId apiId

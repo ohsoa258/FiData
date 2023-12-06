@@ -71,6 +71,12 @@ public class ApiRegisterController {
         return ResultEntityBuild.build(service.editData(dto));
     }
 
+    @ApiOperation("编辑api基础信息")
+    @PutMapping("/editApiData")
+    public ResultEntity<Object> editApiData(@RequestBody ApiConfigEditDTO dto) {
+        return ResultEntityBuild.build(service.editApiData(dto));
+    }
+
     @ApiOperation("删除api")
     @DeleteMapping("/delete/{apiId}")
     public ResultEntity<Object> deleteData(@PathVariable("apiId") int apiId) {

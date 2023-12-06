@@ -307,7 +307,7 @@ public class ViwGroupServiceImpl implements ViwGroupService {
         if (viwGroupPO != null){
 
             // 1.删除视图
-            this.deleteView(viwGroupPO.getName());
+            this.deleteView(viwGroupPO.getColumnName());
 
             // 2.创建视图
             viwGroupService.createCustomView((int) viwGroupPO.getId());

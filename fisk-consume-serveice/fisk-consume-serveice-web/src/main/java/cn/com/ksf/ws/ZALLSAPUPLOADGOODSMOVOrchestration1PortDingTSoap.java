@@ -1,4 +1,4 @@
-package com.example.client;
+package cn.com.ksf.ws;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
