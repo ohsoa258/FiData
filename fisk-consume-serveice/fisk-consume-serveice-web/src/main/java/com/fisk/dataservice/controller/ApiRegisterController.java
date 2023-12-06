@@ -72,7 +72,7 @@ public class ApiRegisterController {
     }
 
     @ApiOperation("编辑api基础信息")
-    @PutMapping("/edit")
+    @PutMapping("/editApiData")
     public ResultEntity<Object> editApiData(@RequestBody ApiConfigEditDTO dto) {
         return ResultEntityBuild.build(service.editApiData(dto));
     }
