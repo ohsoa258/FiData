@@ -11,6 +11,7 @@ import com.fisk.dataaccess.entity.AppDataSourcePO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.webservice.IWebServiceServer;
+import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -38,6 +39,8 @@ public class WebServiceImpl implements IWebServiceServer {
     private AuthClient authClient;
     @Resource
     private AppDataSourceImpl appDataSourceImpl;
+    @Resource
+    private PublishTaskClient taskClient;
 
     /**
      * webService推送数据
@@ -147,9 +150,10 @@ public class WebServiceImpl implements IWebServiceServer {
             responseMessage.setSTATUS("0");
             result = "前置机数据同步成功";
         }
-        result = "前置机数据同步成功";
         responseMessage.setINFOTEXT(result);
         log.info("待返回的通知单执行结果：" + responseMessage);
+
+        taskClient.wsAccessToConsume(11);
         return responseMessage;
     }
 

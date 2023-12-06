@@ -565,7 +565,7 @@ public class BuildDorisTableImpl implements IbuildTable {
 
         //创建表
         log.info("pg_dw建表语句" + sql1);
-        String stgTable = "DROP TABLE IF EXISTS " + modelPublishTableDTO.prefixTempName + tableName + "; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` ( " + stgSqlFileds + associatedKey + "`" + tablePk + "` varchar(50)," + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
+        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "` FORCE; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` ( " + stgSqlFileds + associatedKey + "`" + tablePk + "` varchar(50)," + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
                 havePk +
                 //hash分桶
                 " DISTRIBUTED BY HASH(" + pkName + ") BUCKETS 10 " +
@@ -648,7 +648,7 @@ public class BuildDorisTableImpl implements IbuildTable {
 
         //创建表
         log.info("pg_dw建表语句" + sql1);
-        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "`; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` (`" + tablePk + "` BIGINT," + stgSqlFileds + associatedKey + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
+        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "` FORCE; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` (`" + tablePk + "` BIGINT," + stgSqlFileds + associatedKey + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
                 //hash分桶
                 "DISTRIBUTED BY HASH(" + tablePk + ") BUCKETS 10 " +
                 //副本数为1

@@ -500,7 +500,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             buildNifiFlow.appId = Long.valueOf(buildTableApiService.appId);
             ProcessorConfig processorConfig = new ProcessorConfig();
             //dataAccessConfig.processorConfig.targetTableName
-            //关联触发
+            //只有定时才给值，不定时则不启动定时组件
             if (Objects.equals(syncMode.triggerType, 1)) {
                 //timer
                 if (!Objects.equals(syncMode.scheduleType, 1)) {

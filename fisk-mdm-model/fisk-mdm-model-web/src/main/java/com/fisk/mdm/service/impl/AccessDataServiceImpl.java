@@ -708,7 +708,9 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                 .append(updateColumn)
                 .append("\" = (select \"fidata_id\" FROM ")
                 .append(targetTable)
-                .append(" WHERE ");
+                .append(" WHERE ")
+                .append(targetTable)
+                .append(".\"fidata_del_flag\"= '1' ");
 
             //处理关联关系
             StringBuilder and = new StringBuilder();
@@ -723,9 +725,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                         .append(item.getTargetColumn())
                         .append("\" ");
             }
-            and.delete(0,3);
             str.append(and)
-                    .append("AND ")
+                    .append(" AND ")
                     .append(stgTable)
                     .append(".\"fidata_version_id\"=")
                     .append(targetTable)

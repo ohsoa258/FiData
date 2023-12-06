@@ -488,7 +488,14 @@ public class TaskPgTableStructureHelper
             if (sql != null && sql.length() > 0) {
                 st = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                st.execute(sql);
+                String[] sqls = sql.split(";");
+                log.info("执行存储过程返回修改语句:" + sqls);
+                for (String s : sqls) {
+                    st.execute(s);
+                    //doris不允许同时执行多个alter,这里休眠2秒
+                    Thread.sleep(2000);
+                }
+
             }
             return ResultEnum.SUCCESS;
         } catch (SQLException e) {

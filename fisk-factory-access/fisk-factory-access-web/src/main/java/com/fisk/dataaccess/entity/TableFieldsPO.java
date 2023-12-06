@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -90,5 +91,32 @@ public class TableFieldsPO extends BasePO {
      * 字段精度
      */
     public Integer fieldPrecision;
+
+    /**
+     * 是否是敏感字段 0否 1是
+     */
+    public Integer isSensitive;
+
+    /**
+     * 是否是分区字段 0否 1是
+     */
+    public Integer isPartitionKey;
+
+    /**
+     * 是否为空 0否 1是
+     */
+    public Integer isEmpty;
+
+    /**
+     * 源库名称
+     */
+    @ApiModelProperty(value = "源库名称", required = true)
+    public String sourceDbName;
+
+    /**
+     * 源表名称
+     */
+    @ApiModelProperty(value = "源表名称", required = true)
+    public String sourceTblName;
 
 }

@@ -25,7 +25,8 @@ public class BuildDorisHiveCatalogImpl implements IbuildTable {
         List<String> sqlList = new ArrayList<>();
 
         String catalogSql = "CREATE CATALOG " + catalogName + " PROPERTIES (" +
-                "'type'='hms'," + connectStr +
+//                "'type'='hms'," + connectStr +
+                connectStr +
                 ");";
         sqlList.add(catalogSql);
         return sqlList;

@@ -101,4 +101,15 @@ public class TableSyncModeImpl
         return associatePipeline.stream().map(e -> e.typeTableId).collect(Collectors.toList());
     }
 
+    public List<Integer> getTableListByInputId(Integer inputId,Integer type) {
+        LambdaQueryWrapper<TableSyncModePO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableSyncModePO::getAssociateInput,inputId);
+        queryWrapper.eq(TableSyncModePO::getType,type);
+        List<TableSyncModePO> associatePipeline = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(associatePipeline)) {
+            return new ArrayList<>();
+        }
+        return associatePipeline.stream().map(e -> e.typeTableId).collect(Collectors.toList());
+    }
+
 }

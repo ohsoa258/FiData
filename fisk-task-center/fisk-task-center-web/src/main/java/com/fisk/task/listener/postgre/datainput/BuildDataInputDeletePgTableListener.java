@@ -81,7 +81,7 @@ public class BuildDataInputDeletePgTableListener {
             boolean ifHive = false;
             if (appSources != null) {
                 for (AppDataSourceDTO appSource : appSources) {
-                    if (DbTypeEnum.hive.getName().equalsIgnoreCase(appSource.getDriveType())) {
+                    if (DbTypeEnum.doris_catalog.getName().equalsIgnoreCase(appSource.getDriveType())) {
                         ifHive = true;
                         break;
                     }

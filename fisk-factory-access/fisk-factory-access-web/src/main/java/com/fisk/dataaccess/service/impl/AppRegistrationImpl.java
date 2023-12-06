@@ -51,6 +51,9 @@ import com.fisk.dataaccess.dto.sapbw.CubesAndCats;
 import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.AppDriveTypeEnum;
@@ -58,6 +61,7 @@ import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.DriverTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.map.AppRegistrationMap;
+import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.service.IAppRegistration;
@@ -100,6 +104,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -273,7 +278,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         //hive不要在doris建schema
         boolean ifHive = false;
         for (AppDataSourcePO appDataSourcePO : modelDataSource) {
-            if (DbTypeEnum.hive.getName().equalsIgnoreCase(appDataSourcePO.driveType)) {
+            if (DbTypeEnum.doris_catalog.getName().equalsIgnoreCase(appDataSourcePO.driveType)) {
                 ifHive = true;
                 break;
             }
@@ -284,6 +289,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             if (appRegistrationDTO.whetherSchema) {
                 VerifySchema(po.appAbbreviation, po.targetDbId);
             }
+        }
+
+        //hudi入参配置  同步所有表
+        //如果是hudi 入仓配置 开启了同步所有表
+        if (appRegistrationDTO.ifSyncAllTables == 1) {
+//            new Thread(() -> {
+            log.info("hudi 入仓配置 - 开始同步所有表-------------------------------");
+            long appId = po.getId();
+            List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
+            //获取来源数据源id
+            Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
+            //获取来源数据源id
+            //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+            hudiSyncAllTablesToFidataConfig(systemDataSourceId, appId, po.getAppName());
+//            }).start();
         }
 
         if (openMetadata) {
@@ -316,6 +336,114 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
+     * hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+     *
+     * @param dbId
+     */
+    public void hudiSyncAllTablesToFidataConfig(Integer dbId, Long appId, String appName) {
+        log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
+        ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
+        DataSourceDTO dto = datasource.getData();
+        if (dto == null) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        Connection conn = null;
+
+        //获取到所有表名
+        List<TablePyhNameDTO> tableNames = new ArrayList<>();
+
+        log.info("引用的数据源类型" + dto.conType);
+        try {
+            switch (dto.conType) {
+                case MYSQL:
+                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn);
+                    break;
+                case SQLSERVER:
+                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
+                    break;
+                case ORACLE:
+                    OracleUtils oracleUtils = new OracleUtils();
+                    log.info("ORACLE驱动开始加载");
+                    log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    log.info("ORACLE驱动加载完毕");
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                    break;
+                default:
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+            }
+
+            log.info("查询到的库表字段详情：" + tableNames);
+
+            for (TablePyhNameDTO table : tableNames) {
+
+                TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
+                tableAccessDTO.setAppDataSourceId(dbId);
+                tableAccessDTO.setAppId(appId);
+                tableAccessDTO.setAppName(appName);
+                tableAccessDTO.setDisplayName(table.getTableName());
+                tableAccessDTO.setIsRealtime(1);
+                tableAccessDTO.setPublish(0);
+                tableAccessDTO.setSyncSrc("");
+                tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+                String tableName = table.getTableName();
+                if (tableName.contains(".")) {
+                    tableName = tableName.replaceFirst("\\.", "_");
+                }
+                tableAccessDTO.setTableName(tableName);
+
+                //将表插入都tb_table_access表 获取到表的主键id
+                Integer accessId = tableAccessImpl.addTableAccessTblForHudiConfig(tableAccessDTO);
+
+                //获取当前表的字段
+                List<TableStructureDTO> fields = table.getFields();
+
+                List<TableFieldsDTO> list = new ArrayList<>();
+                for (TableStructureDTO field : fields) {
+                    TableFieldsDTO fieldDTO = new TableFieldsDTO();
+                    fieldDTO.setTableAccessId(Long.valueOf(accessId));
+                    fieldDTO.setSourceFieldName(field.fieldName);
+                    fieldDTO.setSourceFieldType(field.fieldType);
+                    fieldDTO.setFieldName(field.fieldName);
+                    fieldDTO.setFieldType(field.fieldType);
+                    fieldDTO.setFieldLength((long) field.fieldLength);
+                    fieldDTO.setFieldDes(field.getFieldDes());
+                    fieldDTO.setIsPrimarykey(field.getIsPk());
+                    //1：是实时物理表的字段，
+                    //0：非实时物理表的字段
+                    fieldDTO.setIsRealtime(1);
+                    fieldDTO.setIsBusinesstime(0);
+                    fieldDTO.setIsTimestamp(0);
+                    fieldDTO.setSourceDbName(field.sourceDbName);
+                    fieldDTO.setSourceTblName(field.sourceTblName);
+                    list.add(fieldDTO);
+                }
+                List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+                tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+            }
+
+        } catch (Exception e) {
+            log.error("hudi-入仓配置add异常：" + e);
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                throw new FkException(ResultEnum.DATASOURCE_CONNECTCLOSEERROR);
+            }
+        }
+
+    }
+
+    /**
      * 校验单一应用下选择的数据源是否合理
      *
      * @param data
@@ -331,7 +459,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             //遍历data时，根据各个外部数据源的驱动类型，存入到我们预先准备的集合中
             data.forEach(e -> {
                 String driveType = e.driveType;
-                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)) {
+                if (AppDriveTypeEnum.MYSQL.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.SQLSERVER.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.ORACLE.getName().equalsIgnoreCase(driveType) || AppDriveTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(driveType)
+                        || AppDriveTypeEnum.OPENEDGE.getName().equalsIgnoreCase(driveType)
+                ) {
                     dbTypeSources.add(e);
                 } else {
                     otherSources.add(e);
@@ -556,7 +686,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // 实时应用
         if (po.appType == 0) {
             for (AppDataSourceDTO item : appDatasourceDTO) {
-                if (!DbTypeEnum.hive.getName().equalsIgnoreCase(item.driveType)) {
+                if (!DbTypeEnum.doris_catalog.getName().equalsIgnoreCase(item.driveType)) {
                     QueryWrapper<AppDataSourcePO> wrapper = new QueryWrapper<>();
                     wrapper.lambda().eq(AppDataSourcePO::getRealtimeAccount, item.realtimeAccount).eq(AppDataSourcePO::getAppId, item.appId);
                     AppDataSourcePO appDataSourcePo = appDataSourceMapper.selectOne(wrapper);
@@ -644,6 +774,35 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 //删除数据源
                 appDataSourceImpl.removeById(e.id);
             });
+        }
+
+        //hudi入参配置  同步所有表
+        //如果是hudi 入仓配置 开启了同步所有表
+        if (po.ifSyncAllTables == 1) {
+            log.info("hudi 入仓配置 - 二次编辑应用时先删除应用下的所有表-------------------------------");
+            //先删除当前应用下的所有表和所有表的字段信息
+            // 删除应用下的物理表
+            List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
+            if (!CollectionUtils.isEmpty(accessList)) {
+                // 删除应用下面的所有表及表结构
+                accessList.forEach(tableAccessPO -> {
+                    tableAccessMapper.deleteByIdWithFill(tableAccessPO);
+                });
+                // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
+                accessList.stream()
+                        .map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list())
+                        .flatMap(Collection::stream)
+                        .forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
+            }
+
+            log.info("hudi 入仓配置 - 二次编辑应用时开始同步所有表-------------------------------");
+            long appId = po.getId();
+            List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
+            //获取来源数据源id
+            Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
+            //获取来源数据源id
+            //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+            hudiSyncAllTablesToFidataConfig(systemDataSourceId, appId, po.getAppName());
         }
         return appDataSourceImpl.saveOrUpdateBatch(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -987,7 +1146,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     item.setDriveType(driveType);
                     //实时和非实时计数方式不同
                     if (item.appType == 0) {
-                        if (DbTypeEnum.hive.getName().equalsIgnoreCase(driveType)) {
+                        if (DbTypeEnum.doris_catalog.getName().equalsIgnoreCase(driveType)) {
                             item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
                             continue;
                         }
@@ -1088,7 +1247,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     List<String> catNames = allCubes.getCatNames();
                     // 只返回cubeNames
                     allDatabases.addAll(cubeNames);
-                case HIVE:
+                case DORIS_CATALOG:
                     log.info("注册HIVE驱动程序前...");
                     // 加载Hive驱动
                     Class.forName("org.apache.hive.jdbc.HiveDriver");
@@ -1106,6 +1265,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     log.info("连接达梦数据库成功...");
                     allDatabases.addAll(dm8Utils.getAllDatabases(conn));
+                    // todo:强生入仓配置 hudi的测试连接先不做
+                case HUDI:
+                    allDatabases.addAll(new ArrayList<>());
                 default:
                     break;
             }
@@ -1525,8 +1687,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (fiDataDataSourceById == null) {
             throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
         }
+        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = fiDataDataSourceById.data.conType;
+        //如果是hudi ods :则是入参配置，就去获取应用引用数据源的id
+        if (DataSourceTypeEnum.HUDI.getName().equalsIgnoreCase(conType.getName())) {
+            List<AppDataSourceDTO> appSourcesByAppId = iAppDataSource.getAppSourcesByAppId(appId);
 
-        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(fiDataDataSourceById.data.conType);
+            String driveType = appSourcesByAppId.get(0).getDriveType();
+            conType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(driveType.toUpperCase());
+        }
+
+        IBuildAccessSqlCommand command = BuildFactoryAccessHelper.getDBCommand(conType);
         return command.dataTypeList();
 
     }

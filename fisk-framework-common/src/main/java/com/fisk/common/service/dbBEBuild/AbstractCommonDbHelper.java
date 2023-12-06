@@ -391,7 +391,7 @@ public class AbstractCommonDbHelper {
             case DORIS:
             case ORACLE:
             case OPENEDGE:
-            case HIVE:
+            case DORIS_CATALOG:
             case DM8:
                 return DriverManager.getConnection(connectionStr, acc, pwd);
             default:

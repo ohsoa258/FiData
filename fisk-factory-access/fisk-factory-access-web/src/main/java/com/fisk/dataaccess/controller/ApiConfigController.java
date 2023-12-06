@@ -197,7 +197,19 @@ public class ApiConfigController {
 
     @PostMapping("/saveMapping")
     @ApiOperation(value = "保存映射")
-    public ResultEntity<Object> saveMapping(@Validated @RequestBody List<ApiFieldDTO>  dto) {
+    public ResultEntity<Object> saveMapping(@Validated @RequestBody List<ApiFieldDTO> dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.saveMapping(dto));
     }
+
+    /**
+     * 前置机定制接口-数据分发获取数据接入webservice接口
+     *
+     * @return 数据接入webservice接口
+     */
+    @GetMapping("/getWebServiceList")
+    @ApiOperation(value = "前置机定制接口-数据分发获取数据接入webservice接口")
+    public ResultEntity<List<ApiConfigDTO>> getWebServiceList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getWebServiceList());
+    }
+
 }

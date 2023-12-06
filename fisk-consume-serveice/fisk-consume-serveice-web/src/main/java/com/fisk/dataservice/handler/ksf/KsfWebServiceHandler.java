@@ -24,6 +24,7 @@ import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.net.MalformedURLException;
 import java.sql.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,7 +62,7 @@ public abstract class KsfWebServiceHandler {
 
     public abstract ApiResultDTO sendApi(TableAppPO tableAppPO,long apiId);
 
-    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
+    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body){
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         //创建动态客户端
         JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();

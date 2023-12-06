@@ -29,6 +29,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.datafactory.enums.SendModeEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
+import com.fisk.dataservice.dto.tableapi.TableApiServiceSaveDTO;
 import com.fisk.dataservice.dto.tablefields.TableFieldDTO;
 import com.fisk.dataservice.dto.tableservice.*;
 import com.fisk.dataservice.entity.*;
@@ -52,6 +53,7 @@ import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
+import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -269,6 +271,21 @@ public class TableServiceImpl
             return new ArrayList<>();
         }
 
+        List<BuildTableServiceDTO> list = new ArrayList<>();
+
+        for (Integer id : tableListByPipelineId) {
+            TableServiceSaveDTO tableService = getTableServiceById(id);
+            list.add(buildParameter(tableService));
+        }
+        return list;
+    }
+
+    @Override
+    public List<BuildTableServiceDTO> getTableListByInputId(Integer inputId) {
+        List<Integer> tableListByPipelineId = tableSyncMode.getTableListByInputId(inputId,2);
+        if (CollectionUtils.isEmpty(tableListByPipelineId)) {
+            return new ArrayList<>();
+        }
         List<BuildTableServiceDTO> list = new ArrayList<>();
 
         for (Integer id : tableListByPipelineId) {

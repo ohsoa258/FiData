@@ -20,6 +20,7 @@ import com.fisk.dataservice.service.IDataSourceConfig;
 import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.service.ITableService;
 import com.fisk.dataservice.vo.tableservice.TableAppVO;
+import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -166,6 +167,12 @@ public class TableServiceController {
     @GetMapping("/getTableListByPipelineId/{id}")
     public ResultEntity<List<BuildTableServiceDTO>> getTableListByPipelineId(@PathVariable("id") Integer id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListByPipelineId(id));
+    }
+
+    @ApiOperation("根据接入id获取表服务集合")
+    @GetMapping("/getTableListByInputId/{id}")
+    public ResultEntity<List<BuildTableServiceDTO>> getTableListByInputId(@PathVariable("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableListByInputId(id));
     }
 
     @ApiOperation("修改表服务发布状态")

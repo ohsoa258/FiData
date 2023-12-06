@@ -120,6 +120,27 @@ public class TableFieldsDTO extends BaseDTO {
     @ApiModelProperty(value = "字段精度")
     public Integer fieldPrecision;
 
+    @ApiModelProperty(value = "是否是敏感字段 0否 1是")
+    public Integer isSenstive;
+
+    @ApiModelProperty(value = "是否是分区字段 0否 1是")
+    public Integer isPartitionKey;
+
+    @ApiModelProperty(value = "是否为空 0否 1是")
+    public Integer isEmpty;
+
+    /**
+     * 源库名称
+     */
+    @ApiModelProperty(value = "源库名称", required = true)
+    public String sourceDbName;
+
+    /**
+     * 源表名称
+     */
+    @ApiModelProperty(value = "源表名称", required = true)
+    public String sourceTblName;
+
     public TableFieldsDTO(BaseEntity entity) {
         super(entity);
     }

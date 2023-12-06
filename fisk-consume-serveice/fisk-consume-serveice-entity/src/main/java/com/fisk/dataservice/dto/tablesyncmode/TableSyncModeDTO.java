@@ -61,6 +61,12 @@ public class TableSyncModeDTO {
     public Integer associatePipe;
 
     /**
+     * 关联数据接入
+     */
+    @ApiModelProperty(value = "关联数据接入")
+    public Integer associateInput;
+
+    /**
      * 调度类型:1TIMER DRIVEN 2CRON DRIVEN
      */
     @ApiModelProperty(value = "调度类型:1TIMER DRIVEN 2CRON DRIVEN")

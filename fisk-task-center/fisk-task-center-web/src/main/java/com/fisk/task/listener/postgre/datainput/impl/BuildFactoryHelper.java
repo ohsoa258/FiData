@@ -21,7 +21,7 @@ public class BuildFactoryHelper {
                 return new BuildMysqlTableImpl();
             case DORIS:
                 return new BuildDorisTableImpl();
-            case HIVE:
+            case DORIS_CATALOG:
                 return new BuildDorisHiveCatalogImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.webservice.IServerItemData;
+import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,9 @@ public class ItemDataImpl implements IServerItemData {
 
     @Resource
     private ApiConfigImpl apiConfig;
+
+    @Resource
+    private PublishTaskClient taskClient;
 
     /**
      * 康师傅前置机定制接口--物料主数据
@@ -69,6 +73,7 @@ public class ItemDataImpl implements IServerItemData {
             ksf_noticeResult.setSTATUS("0");
         }
         ksf_noticeResult.setINFOTEXT(result);
+        taskClient.wsAccessToConsume(3);
         return ksf_noticeResult;
     }
 
