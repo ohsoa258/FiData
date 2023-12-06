@@ -184,8 +184,8 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             operationZALLSAPUPLOADGOODSMOV.setZALLSAPUPLOADGOODSMOV(resultJsonData);
 //            Object[] objects = client.invoke("Operation_ZALLSAP_UPLOAD_GOODSMOV", operationZALLSAPUPLOADGOODSMOV);
             log.info("发送前");
-            port.operationZALLSAPUPLOADGOODSMOV(operationZALLSAPUPLOADGOODSMOV);
-            log.info("发送后");
+            OperationZALLSAPUPLOADGOODSMOVResponse operationZALLSAPUPLOADGOODSMOVResponse = port.operationZALLSAPUPLOADGOODSMOV(operationZALLSAPUPLOADGOODSMOV);
+            log.info("发送后接收:"+JSON.toJSON(operationZALLSAPUPLOADGOODSMOVResponse));
             apiResultDTO.setFlag(true);
             apiResultDTO.setMsg("发送sap确认单成功！");
         } catch (Exception e) {
