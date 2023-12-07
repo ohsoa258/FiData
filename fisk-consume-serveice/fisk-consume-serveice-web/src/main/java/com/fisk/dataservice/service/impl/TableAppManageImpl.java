@@ -294,13 +294,37 @@ public class TableAppManageImpl
             if (tableAppPO.appType == AppTypeEnum.API_TYPE.getValue()) {
                 if (dto.appType == AppTypeEnum.TABLE_TYPE) {
                     deleteApiConfig(dto, tableAppPO.getId());
+                    QueryWrapper<AppServiceConfigPO> appServiceConfigPoQueryWrapper = new QueryWrapper<>();
+                    appServiceConfigPoQueryWrapper.lambda().eq(AppServiceConfigPO::getDelFlag, 1)
+                            .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
+                            .eq(AppServiceConfigPO::getAppId, tableAppPO.getId())
+                            .eq(AppServiceConfigPO::getType, 2);
+                    List<AppServiceConfigPO> appServiceConfigPos = appServiceConfigMapper.selectList(appServiceConfigPoQueryWrapper);
+                    List<Long> tableServiceIdList = null;
+                    if (CollectionUtils.isNotEmpty(appServiceConfigPos)) {
+                        tableServiceIdList = appServiceConfigPos.stream().map(t -> Long.parseLong(String.valueOf(t.getServiceId()))).collect(Collectors.toList());
+                        // 根据表ID查询表配置详情
+                        QueryWrapper<TableServicePO> tableServicePoQueryWrapper = new QueryWrapper<>();
+                        tableServicePoQueryWrapper.lambda().eq(TableServicePO::getDelFlag, 1)
+                                .in(TableServicePO::getId, tableServiceIdList);
+                        List<TableServicePO> tableServicePos = tableServiceMapper.selectList(tableServicePoQueryWrapper);
+                        if (CollectionUtils.isNotEmpty(tableServiceIdList)) {
+                            tableServiceIdList = tableServicePos.stream().map(t -> t.getId()).collect(Collectors.toList());
+                            BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+                            buildDeleteTableService.appId = String.valueOf(tableAppPO.getId());
+                            buildDeleteTableService.ids = tableServiceIdList;
+                            buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
+                            buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+                            buildDeleteTableService.delBusiness = true;
+                            publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+                        }
+                    }
                 } else {
                     editApiConfig(dto, tableAppPO.getId());
                 }
             } else {
                 if (dto.appType == AppTypeEnum.API_TYPE) {
                     saveValidation(dto, tableAppPO.getId());
-                } else {
                     QueryWrapper<AppServiceConfigPO> appServiceConfigPoQueryWrapper = new QueryWrapper<>();
                     appServiceConfigPoQueryWrapper.lambda().eq(AppServiceConfigPO::getDelFlag, 1)
                             .eq(AppServiceConfigPO::getApiState, ApiStateTypeEnum.Enable.getValue())
