@@ -262,7 +262,7 @@ public class SqlServerPlusUtils {
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
                 // 根据表名获取字段
-                List<TableStructureDTO> columnsName = getColumnsNameV2(conn, entry.getKey(), dbName);
+                List<TableStructureDTO> columnsName = getColumnsNameV2(conn, entry.getValue() + "." + entry.getKey(), dbName);
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(entry.getValue() + "." + entry.getKey());
                 tablePyhNameDTO.setFields(columnsName);
