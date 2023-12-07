@@ -57,4 +57,9 @@ public class NifiVO {
      */
     public String appAbbreviation;
 
+    /**
+     * hudi:是否同步全部表 0否，1是
+     */
+    public Integer ifSyncAllTables;
+
 }

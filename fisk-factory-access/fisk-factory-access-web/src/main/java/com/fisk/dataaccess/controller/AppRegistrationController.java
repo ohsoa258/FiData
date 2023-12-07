@@ -123,44 +123,47 @@ public class AppRegistrationController {
         log.info("方法返回值,{}", result.data);
         NifiVO nifiVO = result.data;
 
-        PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
-        pgsqlDelTableDTO.userId = nifiVO.userId;
-        pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
-        pgsqlDelTableDTO.delApp = true;
-        pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
-        List<AppDataSourceDTO> appSourcesByAppId = dataSource.getAppSourcesByAppId(Long.parseLong(nifiVO.appId));
-        pgsqlDelTableDTO.setAppSources(appSourcesByAppId);
-        pgsqlDelTableDTO.appAbbreviation = nifiVO.getAppAbbreviation();
-        if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
-
-            pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
-                TableListDTO dto = new TableListDTO();
-                dto.tableAtlasId = e.tableAtlasId;
-                dto.userId = nifiVO.userId;
-                dto.tableName = e.tableName;
-                return dto;
-            }).collect(Collectors.toList());
-        }
-
-        // 只有存在表时才会删除
-        if (CollectionUtils.isNotEmpty(nifiVO.tableList) && CollectionUtils.isNotEmpty(nifiVO.tableIdList)) {
-            // 删除pg库里对应的表
-            log.info("当前用户id为,{}", nifiVO.userId);
+        //todo:hudi入仓配置暂时不去删底表和nifi 因为目前没有
+        if (nifiVO.ifSyncAllTables == null) {
+            PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
             pgsqlDelTableDTO.userId = nifiVO.userId;
-            log.info("删除pg库的数据为,{}", pgsqlDelTableDTO);
-            ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
-            DataModelVO dataModelVO = new DataModelVO();
-            dataModelVO.delBusiness = true;
-            DataModelTableVO dataModelTableVO = new DataModelTableVO();
-            dataModelTableVO.ids = nifiVO.tableIdList;
-            dataModelTableVO.type = OlapTableEnum.PHYSICS;
-            dataModelVO.physicsIdList = dataModelTableVO;
-            dataModelVO.businessId = nifiVO.appId;
-            dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
-            dataModelVO.userId = nifiVO.userId;
-            // 删除nifi流程
-            publishTaskClient.deleteNifiFlow(dataModelVO);
-            log.info("task删除应用{}", task);
+            pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
+            pgsqlDelTableDTO.delApp = true;
+            pgsqlDelTableDTO.businessTypeEnum = BusinessTypeEnum.DATAINPUT;
+            List<AppDataSourceDTO> appSourcesByAppId = dataSource.getAppSourcesByAppId(Long.parseLong(nifiVO.appId));
+            pgsqlDelTableDTO.setAppSources(appSourcesByAppId);
+            pgsqlDelTableDTO.appAbbreviation = nifiVO.getAppAbbreviation();
+            if (CollectionUtils.isNotEmpty(nifiVO.tableList)) {
+
+                pgsqlDelTableDTO.tableList = nifiVO.tableList.stream().map(e -> {
+                    TableListDTO dto = new TableListDTO();
+                    dto.tableAtlasId = e.tableAtlasId;
+                    dto.userId = nifiVO.userId;
+                    dto.tableName = e.tableName;
+                    return dto;
+                }).collect(Collectors.toList());
+            }
+
+            // 只有存在表时才会删除
+            if (CollectionUtils.isNotEmpty(nifiVO.tableList) && CollectionUtils.isNotEmpty(nifiVO.tableIdList)) {
+                // 删除pg库里对应的表
+                log.info("当前用户id为,{}", nifiVO.userId);
+                pgsqlDelTableDTO.userId = nifiVO.userId;
+                log.info("删除pg库的数据为,{}", pgsqlDelTableDTO);
+                ResultEntity<Object> task = publishTaskClient.publishBuildDeletePgsqlTableTask(pgsqlDelTableDTO);
+                DataModelVO dataModelVO = new DataModelVO();
+                dataModelVO.delBusiness = true;
+                DataModelTableVO dataModelTableVO = new DataModelTableVO();
+                dataModelTableVO.ids = nifiVO.tableIdList;
+                dataModelTableVO.type = OlapTableEnum.PHYSICS;
+                dataModelVO.physicsIdList = dataModelTableVO;
+                dataModelVO.businessId = nifiVO.appId;
+                dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
+                dataModelVO.userId = nifiVO.userId;
+                // 删除nifi流程
+                publishTaskClient.deleteNifiFlow(dataModelVO);
+                log.info("task删除应用{}", task);
+            }
         }
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);

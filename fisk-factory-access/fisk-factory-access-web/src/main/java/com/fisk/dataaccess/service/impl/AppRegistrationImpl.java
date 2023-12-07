@@ -424,7 +424,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     fieldDTO.setIsBusinesstime(0);
                     fieldDTO.setIsTimestamp(0);
                     fieldDTO.setSourceDbName(field.sourceDbName);
-                    fieldDTO.setSourceTblName(field.sourceTblName);
+                    fieldDTO.setSourceTblName(table.getTableName());
                     list.add(fieldDTO);
                 }
                 List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
@@ -495,10 +495,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             tableAccessDTO.setPublish(0);
             tableAccessDTO.setSyncSrc("");
             tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+            String tblName1 = "";
             if (tblName.contains(".")) {
-                tblName = tblName.replaceFirst("\\.", "_");
+                tblName1 = tblName.replaceFirst("\\.", "_");
             }
-            tableAccessDTO.setTableName(tblName);
+            tableAccessDTO.setTableName(tblName1);
 
             //将表插入都tb_table_access表 获取到表的主键id
             Integer accessId = tableAccessImpl.addTableAccessTblForHudiConfig(tableAccessDTO);
@@ -521,7 +522,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 fieldDTO.setIsBusinesstime(0);
                 fieldDTO.setIsTimestamp(0);
                 fieldDTO.setSourceDbName(field.sourceDbName);
-                fieldDTO.setSourceTblName(field.sourceTblName);
+                fieldDTO.setSourceTblName(tblName);
                 list.add(fieldDTO);
             }
             List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
@@ -869,28 +870,30 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         //hudi入参配置  同步所有表
         //如果是hudi 入仓配置 开启了同步所有表
-        if (po.ifSyncAllTables == 1) {
-            log.info("hudi 入仓配置 - 二次编辑应用时先删除应用下的所有表-------------------------------");
-            //先删除当前应用下的所有表和所有表的字段信息
-            // 删除应用下的物理表
-            List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
-            if (!CollectionUtils.isEmpty(accessList)) {
-                // 删除应用下面的所有表及表结构
-                accessList.forEach(tableAccessPO -> {
-                    tableAccessMapper.deleteByIdWithFill(tableAccessPO);
-                });
-                // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
-                accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
-            }
+        if (po.ifSyncAllTables != null) {
+            if (po.ifSyncAllTables == 1) {
+                log.info("hudi 入仓配置 - 二次编辑应用时先删除应用下的所有表-------------------------------");
+                //先删除当前应用下的所有表和所有表的字段信息
+                // 删除应用下的物理表
+                List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
+                if (!CollectionUtils.isEmpty(accessList)) {
+                    // 删除应用下面的所有表及表结构
+                    accessList.forEach(tableAccessPO -> {
+                        tableAccessMapper.deleteByIdWithFill(tableAccessPO);
+                    });
+                    // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
+                    accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
+                }
 
-            log.info("hudi 入仓配置 - 二次编辑应用时开始同步所有表-------------------------------");
-            long appId = po.getId();
-            List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
-            //获取来源数据源id
-            Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
-            //获取来源数据源id
-            //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
-            hudiSyncAllTablesToFidataConfig(systemDataSourceId, appId, po.getAppName());
+                log.info("hudi 入仓配置 - 二次编辑应用时开始同步所有表-------------------------------");
+                long appId = po.getId();
+                List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
+                //获取来源数据源id
+                Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
+                //获取来源数据源id
+                //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+                hudiSyncAllTablesToFidataConfig(systemDataSourceId, appId, po.getAppName());
+            }
         }
         return appDataSourceImpl.saveOrUpdateBatch(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
@@ -982,6 +985,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
         List<Long> tableIdList = new ArrayList<>();
         NifiVO vo = new NifiVO();
+        //hudi入仓配置 是否同步所有表
+        vo.ifSyncAllTables = appById.ifSyncAllTables;
         List<TableListVO> tableList = new ArrayList<>();
         List<String> qualifiedNames = new ArrayList<>();
 
