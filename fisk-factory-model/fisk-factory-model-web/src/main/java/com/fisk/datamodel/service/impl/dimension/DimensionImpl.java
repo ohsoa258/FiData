@@ -526,14 +526,14 @@ public class DimensionImpl
             checkDto.setTblId((long) id);
             checkDto.setChannelDataEnum(ChannelDataEnum.getName(4));
             ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(checkDto);
-            if (booleanResultEntity.getCode()!=ResultEnum.SUCCESS.getCode()){
+            if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                 return ResultEnum.DISPATCH_REMOTE_ERROR;
             }
             List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
-            if (!CollectionUtils.isEmpty(data)){
+            if (!CollectionUtils.isEmpty(data)) {
                 //这里的getWorkflowId 已经被替换为 workflowName
                 List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
-                log.info("当前要删除的表存在于以下管道中："+ collect);
+                log.info("当前要删除的表存在于以下管道中：" + collect);
                 return ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH;
             }
 
@@ -978,7 +978,7 @@ public class DimensionImpl
     @Override
     public Integer getDimCountByBid(Integer businessId) {
         LambdaQueryWrapper<DimensionPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DimensionPO::getBusinessId, businessId);
+        wrapper.eq(DimensionPO::getBusinessId, businessId).ne(DimensionPO::getDimensionFolderId, 1);
         return mapper.selectCount(wrapper);
     }
 
@@ -990,9 +990,23 @@ public class DimensionImpl
     @Override
     public Integer getDimTotalCount() {
         LambdaQueryWrapper<DimensionPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DimensionPO::getDelFlag, 1);
+        wrapper.eq(DimensionPO::getDelFlag, 1).ne(DimensionPO::getDimensionFolderId, 1);
         return mapper.selectCount(wrapper);
     }
+
+    /**
+     * 获取总共的公共维度表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getPublicDimTotalCount() {
+        LambdaQueryWrapper<DimensionPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DimensionPO::getDelFlag, 1).eq(DimensionPO::getDimensionFolderId, 1);
+        return mapper.selectCount(wrapper);
+    }
+
+    ;
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,
                                                                 String dbQualifiedName,
@@ -1025,15 +1039,15 @@ public class DimensionImpl
 
     }
 
-    public List<MetaDataTableAttributeDTO> getDimensionMetaDataOfOneTbl(long businessId,
-                                                                long tblId,
-                                                                String dbQualifiedName,
-                                                                Integer dataModelType,
-                                                                String businessAdmin) {
+    public List<MetaDataTableAttributeDTO> getDimensionMetaDataOfBatchTbl(long businessId,
+                                                                          List<Integer> tblIds,
+                                                                          String dbQualifiedName,
+                                                                          Integer dataModelType,
+                                                                          String businessAdmin) {
         List<DimensionPO> list = this.query()
                 .eq("business_id", businessId)
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
-                .eq("id",tblId)
+                .in("id", tblIds)
                 .list();
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();

@@ -13,10 +13,12 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -373,4 +375,20 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     Object appIfAllowDataTransfer(Long appId);
+
+    /**
+     * hudi入仓配置 -- 新增表时 获取表名
+     *
+     * @param dbId
+     * @return
+     */
+    List<TablePyhNameDTO> getHudiConfigFromDb(Integer dbId);
+
+    /**
+     * hudi入仓配置 -- 配置单张表
+     *
+     * @param dto
+     * @return
+     */
+    Object syncOneTblForHudi(SyncOneTblForHudiDTO dto);
 }

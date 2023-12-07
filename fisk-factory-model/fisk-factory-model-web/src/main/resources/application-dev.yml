@@ -12,6 +12,10 @@ spring:
   freemarker:
     settings:
       classic_compatible: true
+
+# 是否同步元数据
+open-metadata: true
+
 #授权
 fk:
   auth:

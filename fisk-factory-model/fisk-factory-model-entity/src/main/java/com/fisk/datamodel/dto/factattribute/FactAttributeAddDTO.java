@@ -53,4 +53,10 @@ public class FactAttributeAddDTO {
      */
     @ApiModelProperty(value = "接入的增量时间参数")
     public List<DeltaTimeDTO> deltaTimes;
+
+    /**
+     * doris是否开启严格模式 0否  1是
+     */
+    @ApiModelProperty(value = "接入的增量时间参数")
+    public Integer dorisIfOpenStrictMode;
 }

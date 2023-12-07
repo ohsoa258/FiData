@@ -184,7 +184,7 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      *
      * @return
      */
-    List<MetaDataInstanceAttributeDTO> getDataModelMetaDataOfOneTbl(Integer areaId, Integer tblId, DataModelTableTypeEnum modelTableTypeEnum);
+    List<MetaDataInstanceAttributeDTO> getDimensionMetaDataOfBatchTbl(Integer areaId, List<Integer> factIds, DataModelTableTypeEnum modelTableTypeEnum);
 
     /**
      * 构建维度key脚本

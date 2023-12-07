@@ -69,4 +69,9 @@ public class FactPO extends BasePO {
      * 清空临时表脚本
      */
     public String deleteTempScript;
+
+    /**
+     * doris是否开启严格模式 0否  1是
+     */
+    public Integer dorisIfOpenStrictMode;
 }

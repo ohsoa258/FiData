@@ -10,7 +10,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionListDTO;
@@ -26,6 +28,7 @@ import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionFolderPO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.dimension.DimensionAttributeMap;
@@ -37,6 +40,7 @@ import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionFolderMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionFolder;
+import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
 import com.fisk.system.client.UserClient;
@@ -90,7 +94,17 @@ public class DimensionFolderImpl
     SyncModeMapper syncModeMapper;
     @Resource
     CustomScriptImpl customScript;
+
     private DataSourceTypeEnum dataSourceTypeEnum;
+
+    @Resource
+    private DataManageClient dataManageClient;
+
+    @Resource
+    private BusinessAreaImpl businessAreaImpl;
+
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto) {
@@ -276,9 +290,11 @@ public class DimensionFolderImpl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum batchPublishDimensionFolder(DimensionFolderPublishQueryDTO dto) {
+        BusinessAreaPO businessAreaPo = null;
+        List<Integer> dimensionIds;
         try {
             //获取数据接入--业务域对象
-            BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
+            businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
             if (businessAreaPo == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
@@ -305,7 +321,7 @@ public class DimensionFolderImpl
             }
 
             //获取待发布的维度表的id集合
-            List<Integer> dimensionIds = (List) dimensionMapper.selectObjs(queryWrapper.select("id"));
+            dimensionIds = (List) dimensionMapper.selectObjs(queryWrapper.select("id"));
             //获取待发布的维度表的维度字段数据
             QueryWrapper<DimensionAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
             attributePoQueryWrapper.in("dimension_id", dimensionIds);
@@ -434,11 +450,34 @@ public class DimensionFolderImpl
             //打印参数
             log.info("数仓建模待发布的表参数：" + JSON.toJSONString(data));
             publishTaskClient.publishBuildAtlasDorisTableTask(data);
+
         } catch (Exception ex) {
             log.error("batchPublishDimensionFolder ex:", ex);
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
+
+        try {
+            //同步单表元数据
+            if (openMetadata) {
+                List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDimensionMetaDataOfBatchTbl((int) businessAreaPo.getId(), dimensionIds, DataModelTableTypeEnum.DW_FACT);
+                consumeMetaData(dataModelMetaData);
+            }
+        } catch (Exception e) {
+            //同步元数据的报错不要抛异常，不要影响单表同步
+            log.error("同步元数据失败...");
+        }
+
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 调用元数据
+     *
+     * @param list
+     */
+    private void consumeMetaData(List<MetaDataInstanceAttributeDTO> list) {
+        log.info("数仓建模构建元数据实时同步数据对象开始.........:  参数为: {}", JSON.toJSONString(list));
+        dataManageClient.consumeMetaData(list);
     }
 
     public ModelPublishFieldDTO pushField(DimensionAttributePO attributePo) {

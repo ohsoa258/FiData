@@ -17,7 +17,6 @@ import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
-import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.SyncModeMap;
@@ -144,6 +143,7 @@ public class DimensionAttributeImpl
 
         dimensionPo.dimensionKeyScript = dto.dimensionKeyScript;
         dimensionPo.coverScript = dto.coverScript;
+        dimensionPo.dorisIfOpenStrictMode = dto.dorisIfOpenStrictMode;
         if (mapper.updateById(dimensionPo) == 0) {
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
@@ -238,6 +238,7 @@ public class DimensionAttributeImpl
         data.sqlScript = dimensionPo.sqlScript;
         data.dataSourceId = dimensionPo.dataSourceId;
         data.dimensionKeyScript = dimensionPo.dimensionKeyScript;
+        data.dorisIfOpenStrictMode = dimensionPo.dorisIfOpenStrictMode;
         //获取表字段详情
         QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, dimensionId);

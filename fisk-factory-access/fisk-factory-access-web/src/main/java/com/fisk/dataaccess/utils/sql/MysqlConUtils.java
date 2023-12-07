@@ -71,7 +71,7 @@ public class MysqlConUtils {
      *
      * @return 查询结果
      */
-    public List<TablePyhNameDTO> getTrueTableNameAndColumns(Connection conn) {
+    public List<TablePyhNameDTO> getTrueTableNameAndColumns(Connection conn,String dbName) {
 
         List<TablePyhNameDTO> list = null;
         try {
@@ -82,7 +82,7 @@ public class MysqlConUtils {
 
             for (String tableName : tableNames) {
 
-                List<TableStructureDTO> colNames = getColNamesV2(conn, tableName);
+                List<TableStructureDTO> colNames = getColNamesV2(conn, tableName,dbName);
 
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
@@ -246,7 +246,7 @@ public class MysqlConUtils {
      * @param tableName
      * @return
      */
-    public List<TableStructureDTO> getColNamesV2(Connection conn, String tableName) {
+    public List<TableStructureDTO> getColNamesV2(Connection conn, String tableName,String dbName) {
         List<TableStructureDTO> colNameList = new ArrayList<>();
         ResultSet resultSet = null;
         ResultSet primaryKeys = null;
@@ -263,6 +263,10 @@ public class MysqlConUtils {
                 dto.fieldLength = resultSet.getInt("COLUMN_SIZE");
                 // 获取字段类型
                 dto.fieldType = resultSet.getString("TYPE_NAME");
+                // 字段描述
+                dto.setFieldDes(resultSet.getString("REMARKS"));
+                dto.sourceTblName = tableName;
+                dto.sourceDbName = dbName;
                 colNameList.add(dto);
             }
 
@@ -284,7 +288,6 @@ public class MysqlConUtils {
         } finally {
             AbstractCommonDbHelper.closeResultSet(resultSet);
             AbstractCommonDbHelper.closeResultSet(primaryKeys);
-            AbstractCommonDbHelper.closeConnection(conn);
         }
         return colNameList;
     }

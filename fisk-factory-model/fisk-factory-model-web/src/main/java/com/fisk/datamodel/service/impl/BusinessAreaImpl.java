@@ -1199,8 +1199,8 @@ public class BusinessAreaImpl
      * @return
      */
     @Override
-    public List<MetaDataInstanceAttributeDTO> getDataModelMetaDataOfOneTbl(Integer areaId, Integer tblId,
-                                                                           DataModelTableTypeEnum modelTableTypeEnum) {
+    public List<MetaDataInstanceAttributeDTO> getDimensionMetaDataOfBatchTbl(Integer areaId, List<Integer> ids,
+                                                                             DataModelTableTypeEnum modelTableTypeEnum) {
 
         LambdaQueryWrapper<BusinessAreaPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(BusinessAreaPO::getId, areaId);
@@ -1217,11 +1217,11 @@ public class BusinessAreaImpl
         switch (modelTableTypeEnum) {
             case DW_FACT:
                 //事实表
-                instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaDataOfOneTbl(areaId, tblId, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser()));
+                instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaDataOfBatchTbl(areaId, ids, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser()));
                 break;
             case DW_DIMENSION:
                 //维度表
-                instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaDataOfOneTbl(areaId, tblId, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser()));
+                instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaDataOfBatchTbl(areaId, ids, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser()));
                 break;
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -1364,6 +1364,15 @@ public class BusinessAreaImpl
         codePreviewDTO.setOverlayCodePreviewDTO(dto);
         String finalSql = codePreviewBySyncMode(codePreviewDTO, dto.type);
 
+        //doris是否开启严格模式 0否  1是
+        if (dto.dorisIfOpenStrictMode != null) {
+            if (dto.dorisIfOpenStrictMode == 1) {
+                finalSql += " SET enable_insert_strict = true; ";
+            } else {
+                finalSql += " SET enable_insert_strict = false; ";
+            }
+        }
+
         //检测获取到的sql预览结果
         log.info("预返回的覆盖方式预览sql为" + finalSql);
 
@@ -1393,11 +1402,13 @@ public class BusinessAreaImpl
      */
     @Override
     public DimAndFactCountVO getTotalDimAndFactCount() {
-        Integer factTotalCount = factImpl.getFactTotalCount();
-        Integer dimTotalCount = dimensionImpl.getDimTotalCount();
+        int factTotalCount = factImpl.getFactTotalCount();
+        int dimTotalCount = dimensionImpl.getDimTotalCount();
+        int publicDimTotalCount = dimensionImpl.getPublicDimTotalCount();
         DimAndFactCountVO dimAndFactCountVO = new DimAndFactCountVO();
         dimAndFactCountVO.setDimCount(dimTotalCount);
         dimAndFactCountVO.setFactCount(factTotalCount);
+        dimAndFactCountVO.setPublicDimCount(publicDimTotalCount);
         return dimAndFactCountVO;
     }
 
@@ -1483,7 +1494,7 @@ public class BusinessAreaImpl
             //业务标识覆盖（业务主键覆盖）---merge覆盖
             case 3:
                 //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                return sqlHelper.merge(tableName, tempTableName, fieldList,type);
+                return sqlHelper.merge(tableName, tempTableName, fieldList, type);
             //业务时间覆盖
             case 4:
                 //调用封装的业务时间覆盖方式的拼接sql方法并返回
@@ -1491,7 +1502,7 @@ public class BusinessAreaImpl
             //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
             case 5:
                 //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList,type);
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList, type);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
