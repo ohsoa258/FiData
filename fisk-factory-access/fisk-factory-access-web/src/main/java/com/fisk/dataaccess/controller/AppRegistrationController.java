@@ -13,12 +13,14 @@ import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
@@ -425,4 +427,29 @@ public class AppRegistrationController {
     public ResultEntity<Object> appIfAllowDataTransfer(@RequestParam("appId") Long appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.appIfAllowDataTransfer(appId));
     }
+
+    /**
+     * hudi入仓配置 -- 新增表时 获取表名
+     *
+     * @param dbId
+     * @return
+     */
+    @GetMapping("/getHudiConfigFromDb")
+    @ApiOperation(value = "hudi入仓配置 -- 新增表时 获取表名")
+    public ResultEntity<List<TablePyhNameDTO>> getHudiConfigFromDb(@RequestParam("dbId") Integer dbId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getHudiConfigFromDb(dbId));
+    }
+
+    /**
+     * hudi入仓配置 -- 配置单张表
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/syncOneTblForHudi")
+    @ApiOperation(value = "hudi入仓配置 -- 配置单张表")
+    public ResultEntity<Object> syncOneTblForHudi(@RequestBody SyncOneTblForHudiDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.syncOneTblForHudi(dto));
+    }
+
 }

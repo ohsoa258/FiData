@@ -294,6 +294,29 @@ public class PhysicalTableController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
+    /**
+     * 删除数据 - hudi入仓配置删除物理表
+     *
+     * @param id 请求参数
+     * @return 返回值
+     */
+    @DeleteMapping("/deleteHudiConfig/{id}")
+    @ApiOperation(value = "删除物理表")
+    public ResultEntity<Object> deleteHudiConfig(@PathVariable("id") long id) {
+        ResultEntity<NifiVO> result = service.deleteData(id);
+        log.info("方法返回值,{}", result.data);
+        NifiVO nifiVO = result.data;
+        if (openMetadata) {
+            // 删除元数据
+            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
+            metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
+            metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
+            new Thread(() -> dataManageClient.deleteMetaData(metaDataDeleteAttributeDto)).start();
+        }
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
+    }
+
     @PostMapping("/pageFilter")
     @ApiOperation(value = "筛选器")
     public ResultEntity<Page<TableAccessVO>> listData(@RequestBody TableAccessQueryDTO query) {
