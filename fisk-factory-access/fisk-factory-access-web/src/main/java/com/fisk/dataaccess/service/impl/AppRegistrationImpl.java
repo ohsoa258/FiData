@@ -517,8 +517,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 fieldDTO.setSourceFieldName(field.fieldName);
                 fieldDTO.setSourceFieldType(field.fieldType);
                 fieldDTO.setFieldName(field.fieldName);
-                fieldDTO.setFieldType(field.fieldType);
-                fieldDTO.setFieldLength((long) field.fieldLength);
+                //todo:字段类型暂时设置为STRING
+                fieldDTO.setFieldType("STRING");
+//                fieldDTO.setFieldType(field.fieldType);
+                //todo:字段长度暂时不要
+//                fieldDTO.setFieldLength((long) field.fieldLength);
                 fieldDTO.setFieldDes(field.getFieldDes());
                 fieldDTO.setIsPrimarykey(field.getIsPk());
                 //1：是实时物理表的字段，
