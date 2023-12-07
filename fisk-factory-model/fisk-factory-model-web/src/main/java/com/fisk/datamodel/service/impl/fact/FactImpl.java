@@ -118,14 +118,14 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             checkDto.setTblId((long) id);
             checkDto.setChannelDataEnum(ChannelDataEnum.getName(5));
             ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(checkDto);
-            if (booleanResultEntity.getCode()!=ResultEnum.SUCCESS.getCode()){
+            if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                 return ResultEnum.DISPATCH_REMOTE_ERROR;
             }
             List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
-            if (!CollectionUtils.isEmpty(data)){
+            if (!CollectionUtils.isEmpty(data)) {
                 //这里的getWorkflowId 已经被替换为 workflowName
                 List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
-                log.info("当前要删除的表存在于以下管道中："+ collect);
+                log.info("当前要删除的表存在于以下管道中：" + collect);
                 return ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH;
             }
 
@@ -555,15 +555,15 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         return tableList;
     }
 
-    public List<MetaDataTableAttributeDTO> getFactMetaDataOfOneTbl(long businessId,
-                                                           long tblId,
-                                                           String dbQualifiedName,
-                                                           Integer dataModelType,
-                                                           String businessAdmin) {
+    public List<MetaDataTableAttributeDTO> getFactMetaDataOfBatchTbl(long businessId,
+                                                                     List<Integer> factIds,
+                                                                     String dbQualifiedName,
+                                                                     Integer dataModelType,
+                                                                     String businessAdmin) {
         List<FactPO> factPOList = this.query()
                 .eq("business_id", businessId)
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
-                .eq("id",tblId)
+                .in("id", factIds)
                 .list();
         if (CollectionUtils.isEmpty(factPOList)) {
             return new ArrayList<>();

@@ -44,4 +44,10 @@ public class OverlayCodePreviewDTO {
    @ApiModelProperty(value = "1 维度 2 事实")
    public Integer type;
 
+   /**
+    * doris是否开启严格模式 0否  1是
+    */
+   @ApiModelProperty(value = "接入的增量时间参数")
+   public Integer dorisIfOpenStrictMode;
+
 }

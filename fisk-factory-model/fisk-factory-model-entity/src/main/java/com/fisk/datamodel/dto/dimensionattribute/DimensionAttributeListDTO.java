@@ -45,4 +45,10 @@ public class DimensionAttributeListDTO {
     @ApiModelProperty(value = "预览nifi调用SQL执行语句")
     public String execSql;
 
+    /**
+     * doris是否开启严格模式 0否  1是
+     */
+    @ApiModelProperty(value = "接入的增量时间参数")
+    public Integer dorisIfOpenStrictMode;
+
 }

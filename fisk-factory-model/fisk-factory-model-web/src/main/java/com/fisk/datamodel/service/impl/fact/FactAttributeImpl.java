@@ -69,7 +69,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class FactAttributeImpl
-        extends ServiceImpl<FactAttributeMapper,FactAttributePO>
+        extends ServiceImpl<FactAttributeMapper, FactAttributePO>
         implements IFactAttribute {
 
     @Resource
@@ -167,6 +167,7 @@ public class FactAttributeImpl
         factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
         factPo.dimensionKeyScript = dto.dimensionKeyScript;
         factPo.coverScript = dto.coverScript;
+        factPo.dorisIfOpenStrictMode = dto.dorisIfOpenStrictMode;
 
         //2023-04-26李世纪新增，拼接删除temp表的脚本并存入数据库
         //获取临时表前缀
@@ -192,56 +193,52 @@ public class FactAttributeImpl
             queryDTO.businessAreaId = factPo.businessId;
             queryDTO.remark = dto.remark;
             queryDTO.syncMode = dto.syncModeDTO.syncMode;
-            queryDTO.openTransmission=dto.openTransmission;
+            queryDTO.openTransmission = dto.openTransmission;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;
     }
 
     @Override
-    public ResultEnum deleteFactAttribute(List<Integer> ids)
-    {
-        return mapper.deleteBatchIds(ids)>0?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+    public ResultEnum deleteFactAttribute(List<Integer> ids) {
+        return mapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public FactAttributeUpdateDTO getFactAttributeDetail(int factAttributeId)
-    {
+    public FactAttributeUpdateDTO getFactAttributeDetail(int factAttributeId) {
         return FactAttributeMap.INSTANCES.poDetailToDto(mapper.selectById(factAttributeId));
     }
 
     @Override
-    public ResultEnum updateFactAttribute(FactAttributeUpdateDTO dto)
-    {
-        FactAttributePO po=mapper.selectById(dto.id);
+    public ResultEnum updateFactAttribute(FactAttributeUpdateDTO dto) {
+        FactAttributePO po = mapper.selectById(dto.id);
         if (po == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId,po.factId)
-                .eq(FactAttributePO::getFactFieldEnName,dto.factFieldEnName);
-        FactAttributePO model=mapper.selectOne(queryWrapper);
+        QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId, po.factId)
+                .eq(FactAttributePO::getFactFieldEnName, dto.factFieldEnName);
+        FactAttributePO model = mapper.selectOne(queryWrapper);
         if (model != null && model.id != dto.id) {
             return ResultEnum.DATA_EXISTS;
         }
-        po.factFieldCnName=dto.factFieldCnName;
-        po.factFieldDes=dto.factFieldDes;
-        po.factFieldLength=dto.factFieldLength;
-        po.factFieldEnName=dto.factFieldEnName;
-        po.factFieldType=dto.factFieldType;
+        po.factFieldCnName = dto.factFieldCnName;
+        po.factFieldDes = dto.factFieldDes;
+        po.factFieldLength = dto.factFieldLength;
+        po.factFieldEnName = dto.factFieldEnName;
+        po.factFieldType = dto.factFieldType;
 
         //系统变量
         if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {
             systemVariables.addSystemVariables(dto.id, dto.deltaTimes, CreateTypeEnum.CREATE_FACT.getValue());
         }
-        return mapper.updateById(po)>0? ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
+        return mapper.updateById(po) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
-    public ModelMetaDataDTO getFactMetaData(int id)
-    {
-        ModelMetaDataDTO data=new ModelMetaDataDTO();
-        FactPO po=factMapper.selectById(id);
+    public ModelMetaDataDTO getFactMetaData(int id) {
+        ModelMetaDataDTO data = new ModelMetaDataDTO();
+        FactPO po = factMapper.selectById(id);
         if (po == null) {
             return data;
         }
@@ -249,41 +246,39 @@ public class FactAttributeImpl
         data.id = po.id;
 
         //查找业务域id
-        BusinessProcessPO businessProcessPo=businessProcessMapper.selectById(po.businessProcessId);
+        BusinessProcessPO businessProcessPo = businessProcessMapper.selectById(po.businessProcessId);
         if (businessProcessPo == null) {
             return data;
         }
-        data.appId=businessProcessPo.businessId;
+        data.appId = businessProcessPo.businessId;
         return data;
     }
 
     @Override
-    public List<FactAttributeDropDTO> getFactAttributeData(FactAttributeDropQueryDTO dto)
-    {
-        List<FactAttributeDropDTO> data=new ArrayList<>();
-        FactPO po=factMapper.selectById(dto.id);
+    public List<FactAttributeDropDTO> getFactAttributeData(FactAttributeDropQueryDTO dto) {
+        List<FactAttributeDropDTO> data = new ArrayList<>();
+        FactPO po = factMapper.selectById(dto.id);
         if (po == null) {
             return data;
         }
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.in("attribute_type",dto.type).lambda()
-                .eq(FactAttributePO::getFactId,dto.id);
-        List<FactAttributePO> list=mapper.selectList(queryWrapper);
-        for (FactAttributePO item:list) {
+        QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("attribute_type", dto.type).lambda()
+                .eq(FactAttributePO::getFactId, dto.id);
+        List<FactAttributePO> list = mapper.selectList(queryWrapper);
+        for (FactAttributePO item : list) {
             FactAttributeDropDTO dropDTO = new FactAttributeDropDTO();
             dropDTO.id = item.id;
             dropDTO.factFieldEnName = item.factFieldEnName;
-            dropDTO.factFieldType=item.factFieldType;
-            dropDTO.attributeType=item.attributeType;
+            dropDTO.factFieldType = item.factFieldType;
+            dropDTO.attributeType = item.attributeType;
             data.add(dropDTO);
         }
         return data;
     }
 
     @Override
-    public List<FieldNameDTO> getFactAttributeSourceId(int id)
-    {
-        FactPO factPo=factMapper.selectById(id);
+    public List<FieldNameDTO> getFactAttributeSourceId(int id) {
+        FactPO factPo = factMapper.selectById(id);
         if (factPo == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS, "事实表不存在");
         }
@@ -291,8 +286,7 @@ public class FactAttributeImpl
     }
 
     @Override
-    public FactAttributeDetailDTO getFactAttributeDataList(int factId)
-    {
+    public FactAttributeDetailDTO getFactAttributeDataList(int factId) {
         FactAttributeDetailDTO data = new FactAttributeDetailDTO();
         FactPO po = factMapper.selectById(factId);
         if (po == null) {
@@ -301,6 +295,8 @@ public class FactAttributeImpl
         data.sqlScript = po.sqlScript;
         data.dataSourceId = po.dataSourceId;
         data.dimensionKeyScript = po.dimensionKeyScript;
+        //doris是否开启严格模式
+        data.dorisIfOpenStrictMode = po.dorisIfOpenStrictMode;
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
         List<FactAttributePO> list = mapper.selectList(queryWrapper);
@@ -339,11 +335,11 @@ public class FactAttributeImpl
     }
 
     @Override
-    public ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(Integer factId){
+    public ResultEntity<List<ModelPublishFieldDTO>> selectAttributeList(Integer factId) {
         Map<String, Object> conditionHashMap = new HashMap<>();
-        List<ModelPublishFieldDTO> fieldList=new ArrayList<>();
-        conditionHashMap.put("fact_id",factId);
-        conditionHashMap.put("del_flag",1);
+        List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
+        conditionHashMap.put("fact_id", factId);
+        conditionHashMap.put("del_flag", 1);
         List<FactAttributePO> factAttributePoList = mapper.selectByMap(conditionHashMap);
         for (FactAttributePO attributePo : factAttributePoList) {
             ModelPublishFieldDTO fieldDTO = new ModelPublishFieldDTO();
@@ -358,8 +354,8 @@ public class FactAttributeImpl
                 fieldDTO.sourceFieldName = attributePo.factFieldEnName;
             }
 
-            fieldDTO.associateDimensionId=attributePo.associateDimensionId;
-            fieldDTO.associateDimensionFieldId=attributePo.associateDimensionFieldId;
+            fieldDTO.associateDimensionId = attributePo.associateDimensionId;
+            fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
             //判断是否关联维度
             if (attributePo.associateDimensionId != 0 && attributePo.associateDimensionFieldId != 0) {
                 DimensionPO dimensionPo = dimensionMapper.selectById(attributePo.associateDimensionId);
@@ -374,11 +370,10 @@ public class FactAttributeImpl
     }
 
     @Override
-    public List<FactAttributeUpdateDTO> getFactAttribute(int factId)
-    {
-        QueryWrapper<FactAttributePO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(FactAttributePO::getFactId,factId);
-        List<FactAttributePO> list=mapper.selectList(queryWrapper);
+    public List<FactAttributeUpdateDTO> getFactAttribute(int factId) {
+        QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
+        List<FactAttributePO> list = mapper.selectList(queryWrapper);
         return FactAttributeMap.INSTANCES.poDetailToDtoList(list);
     }
 
@@ -422,7 +417,7 @@ public class FactAttributeImpl
 
         queryWrapper2.lambda()
                 .eq(DimensionPO::getShare, true)
-                .eq(DimensionPO::getIsPublish,1)
+                .eq(DimensionPO::getIsPublish, 1)
                 .select(DimensionPO::getId, DimensionPO::getDimensionTabName, DimensionPO::getShare);
         dimensionPoList.addAll(dimensionMapper.selectList(queryWrapper2));
 
@@ -506,7 +501,7 @@ public class FactAttributeImpl
                         String note;
                         if (CollectionUtils.isEmpty(jsonArray)) {
                             StringBuffer str = new StringBuffer();
-                            note =  str.append(dataArray.getJSONObject(i).toString()).toString();
+                            note = str.append(dataArray.getJSONObject(i).toString()).toString();
                             jsonObject = JSONObject.parseObject(note);
                         } else {
                             StringBuffer str = new StringBuffer();

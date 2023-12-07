@@ -1025,15 +1025,15 @@ public class DimensionImpl
 
     }
 
-    public List<MetaDataTableAttributeDTO> getDimensionMetaDataOfOneTbl(long businessId,
-                                                                long tblId,
+    public List<MetaDataTableAttributeDTO> getDimensionMetaDataOfBatchTbl(long businessId,
+                                                                List<Integer> tblIds,
                                                                 String dbQualifiedName,
                                                                 Integer dataModelType,
                                                                 String businessAdmin) {
         List<DimensionPO> list = this.query()
                 .eq("business_id", businessId)
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
-                .eq("id",tblId)
+                .in("id",tblIds)
                 .list();
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();

@@ -33,6 +33,7 @@ import com.fisk.datamodel.entity.fact.BusinessProcessPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
+import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.enums.PublicStatusEnum;
 import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.AtomicIndicatorsMap;
@@ -111,8 +112,8 @@ public class BusinessProcessImpl
     @Resource
     SyncModeMapper syncModeMapper;
 
-//    @Value("${open-metadata}")
-//    private Boolean openMetadata;
+    @Value("${open-metadata}")
+    private Boolean openMetadata;
 
     @Resource
     private DataManageClient dataManageClient;
@@ -197,8 +198,10 @@ public class BusinessProcessImpl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto) {
+        BusinessAreaPO businessAreaPo = null;
+        List<Integer> factIds;
         try {
-            BusinessAreaPO businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
+            businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
             if (businessAreaPo == null) {
                 throw new FkException(ResultEnum.DATA_NOTEXISTS);
             }
@@ -222,7 +225,7 @@ public class BusinessProcessImpl
             //获取事实字段数据
             QueryWrapper<FactAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
             //获取事实id集合
-            List<Integer> factIds = (List) factMapper.selectObjs(queryWrapper.select("id"));
+            factIds = (List) factMapper.selectObjs(queryWrapper.select("id"));
             List<FactAttributePO> factAttributePoList = factAttributeMapper
                     .selectList(attributePoQueryWrapper.in("fact_id", factIds));
             //遍历取值
@@ -354,17 +357,23 @@ public class BusinessProcessImpl
                 log.info("数据建模发布表任务json: " + JSON.toJSONString(data));
                 publishTaskClient.publishBuildAtlasDorisTableTask(data);
 
-//                //同步单表元数据
-//                if (openMetadata){
-//                    List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDataModelMetaData();
-////                    consumeMetaData()
-//
-//                }
             }
         } catch (FkException ex) {
             log.error(ex.getMessage());
             throw new FkException(ResultEnum.PUBLISH_FAILURE);
         }
+
+        try {
+            //同步单表元数据
+            if (openMetadata) {
+                List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDimensionMetaDataOfBatchTbl((int) businessAreaPo.getId(), factIds, DataModelTableTypeEnum.DW_FACT);
+                consumeMetaData(dataModelMetaData);
+            }
+        }catch (Exception e){
+            //同步元数据的报错不要抛异常，不要影响单表同步
+            log.error("同步元数据失败...");
+        }
+
         return ResultEnum.SUCCESS;
     }
 
