@@ -22,6 +22,7 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
 import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.dataaccess.enums.DeltaTimeParameterTypeEnum;
@@ -299,6 +300,9 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
                 case ORACLE:
                     data = OracleUtils.getTableName(conn);
                     break;
+                case DORIS:
+                    data = DorisConUtils.getTableName(conn);
+                    break;
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
@@ -334,6 +338,9 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
                     break;
                 case ORACLE:
                     data = OracleUtils.getTableColumnInfoList(conn, dataSource.conDbname, tableName);
+                    break;
+                case DORIS:
+                    data = DorisConUtils.getColNames(conn, tableName);
                     break;
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
@@ -392,6 +399,9 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
                 case ORACLE:
                     data = OracleUtils.getTableName(conn);
                     break;
+                case DORIS:
+                    data = DorisConUtils.getTableName(conn);
+                    break;
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
@@ -429,6 +439,9 @@ public class DataSourceConfigImpl implements IDataSourceConfig {
                     break;
                 case ORACLE:
                     data = OracleUtils.getTableColumnInfoList(conn, dto.conDbname, tableName);
+                    break;
+                case DORIS:
+                    data = DorisConUtils.getColNames(conn, tableName);
                     break;
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
