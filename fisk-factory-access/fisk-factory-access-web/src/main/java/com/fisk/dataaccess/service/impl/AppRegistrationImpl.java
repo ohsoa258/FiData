@@ -499,6 +499,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             tableAccessDTO.setPublish(0);
             tableAccessDTO.setSyncSrc("");
             tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+            tableAccessDTO.setIfOpenCdc(1);
             String tblName1 = "";
             if (tblName.contains(".")) {
                 tblName1 = tblName.replaceFirst("\\.", "_");
