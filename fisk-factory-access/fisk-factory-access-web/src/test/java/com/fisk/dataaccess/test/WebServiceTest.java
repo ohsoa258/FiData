@@ -3,11 +3,8 @@ package com.fisk.dataaccess.test;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
-import com.fisk.dataaccess.webservice.service.KSF_Inventory_Status;
-import com.fisk.dataaccess.webservice.service.KSF_NoticeResult;
-import com.fisk.dataaccess.webservice.service.KsfInventoryDTO;
+import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
 import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.cxf.endpoint.Client;
@@ -142,5 +139,13 @@ public class WebServiceTest {
 //        }
 //        ksf_noticeResult.setINFOTEXT(result);
 //    }
+
+    @Resource
+    AppRegistrationImpl appRegistration;
+
+    @Test
+    public void testSyncAllTables() {
+        appRegistration.hudiSyncAllTablesToFidataConfig(6, 30L, "hudi入仓配置new");
+    }
 
 }

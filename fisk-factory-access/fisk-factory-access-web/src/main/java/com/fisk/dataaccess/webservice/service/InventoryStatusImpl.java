@@ -5,6 +5,7 @@ import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.webservice.IServerInventoryStatus;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.WsAccessDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -73,7 +74,12 @@ public class InventoryStatusImpl implements IServerInventoryStatus {
             ksf_noticeResult.setSTATUS("0");
         }
         ksf_noticeResult.setINFOTEXT(result);
-        taskClient.wsAccessToConsume(4);
+        //发送消息给数据分发服务
+        WsAccessDTO wsAccessDTO = new WsAccessDTO();
+        wsAccessDTO.setApiConfigId(4);
+        wsAccessDTO.setBatchCode(null);
+        //发送消息给数据分发服务
+        taskClient.wsAccessToConsume(wsAccessDTO);
         return ksf_noticeResult;
     }
 

@@ -5,6 +5,7 @@ import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.webservice.IServerItemData;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.WsAccessDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -73,7 +74,12 @@ public class ItemDataImpl implements IServerItemData {
             ksf_noticeResult.setSTATUS("0");
         }
         ksf_noticeResult.setINFOTEXT(result);
-        taskClient.wsAccessToConsume(3);
+        //发送消息给数据分发服务
+        WsAccessDTO wsAccessDTO = new WsAccessDTO();
+        wsAccessDTO.setApiConfigId(3);
+        wsAccessDTO.setBatchCode(null);
+        //发送消息给数据分发服务
+        taskClient.wsAccessToConsume(wsAccessDTO);
         return ksf_noticeResult;
     }
 

@@ -929,7 +929,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             // 这一步是将数据同步到stg临时表
-            ResultEntity<Object> result = ksfPushPgSql(jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
+            ResultEntity<Object> result = ksfPushPgSql(jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, dto.getBatchCode());
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -989,7 +989,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @date 2022/2/16 19:17
      */
     private ResultEntity<Object> ksfPushPgSql(String jsonStr, List<ApiTableDTO> apiTableDtoList,
-                                              String tablePrefixName, String jsonKey, Integer targetDbId) {
+                                              String tablePrefixName, String jsonKey, Integer targetDbId, String batchCode) {
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
@@ -1068,8 +1068,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ResultEntity<Object> excuteResult;
         try {
             //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
-            String fidata_batch_code = UUID.randomUUID().toString();
-            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(fidata_batch_code, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
+            if (batchCode == null) {
+                batchCode = UUID.randomUUID().toString();
+            }
+            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(batchCode, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
         } catch (Exception e) {
             log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);

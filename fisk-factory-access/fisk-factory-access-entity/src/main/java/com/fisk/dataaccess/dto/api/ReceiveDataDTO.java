@@ -23,4 +23,6 @@ public class ReceiveDataDTO {
     private boolean ifWebService;
     @ApiModelProperty(value = "webService携带的token")
     private String webServiceToken;
+    @ApiModelProperty(value = "批次号")
+    private String batchCode;
 }

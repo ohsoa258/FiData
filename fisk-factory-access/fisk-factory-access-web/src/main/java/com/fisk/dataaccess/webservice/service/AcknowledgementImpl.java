@@ -5,6 +5,7 @@ import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
 import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.webservice.IServerAcknowledgement;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.WsAccessDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebResult;
 import javax.jws.WebService;
+import java.util.UUID;
 
 /**
  * @author lsj
@@ -41,11 +43,14 @@ public class AcknowledgementImpl implements IServerAcknowledgement {
     @WebResult(name = "KSF_Acknowledgement_Result")
     public KSF_NoticeResult ksf_acknowledgement_data(@WebParam(name = "AcknowledgementData") String data) {
         log.debug("库存状态变更推送的数据：" + JSON.toJSONString(data));
+        //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
+        String fidata_batch_code = UUID.randomUUID().toString();
         ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
         //todo：建完应用-api之后写回来
         receiveDataDTO.setApiCode(15L);
         receiveDataDTO.setPushData(data);
         receiveDataDTO.setIfWebService(true);
+        receiveDataDTO.setBatchCode(fidata_batch_code);
         String msg = apiConfig.KsfWebServicePushData(receiveDataDTO);
         KSF_NoticeResult noticeResult = new KSF_NoticeResult();
         noticeResult.setINFOTEXT(msg);
@@ -54,7 +59,14 @@ public class AcknowledgementImpl implements IServerAcknowledgement {
         } else {
             noticeResult.setSTATUS("1");
         }
-        taskClient.wsAccessToConsume(15);
+
+        //发送消息给数据分发服务
+        WsAccessDTO wsAccessDTO = new WsAccessDTO();
+        wsAccessDTO.setApiConfigId(15);
+        wsAccessDTO.setBatchCode(receiveDataDTO.getBatchCode());
+        //发送消息给数据分发服务
+        taskClient.wsAccessToConsume(wsAccessDTO);
+
         return noticeResult;
     }
 

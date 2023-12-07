@@ -15,6 +15,7 @@ import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
+import com.fisk.task.dto.WsAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
@@ -538,9 +539,9 @@ public interface PublishTaskClient {
 
     /**
      * 前置机-数据接入发送消息到数据分发
-     * @param apiConfigId
+     * @param dto
      */
     @PostMapping("/ws/wsAccessToConsume")
-    void wsAccessToConsume(Integer apiConfigId);
+    void wsAccessToConsume(@RequestBody WsAccessDTO dto);
 
 }

@@ -12,6 +12,7 @@ import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.webservice.IWebServiceServer;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.WsAccessDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -153,7 +154,11 @@ public class WebServiceImpl implements IWebServiceServer {
         responseMessage.setINFOTEXT(result);
         log.info("待返回的通知单执行结果：" + responseMessage);
 
-        taskClient.wsAccessToConsume(11);
+        WsAccessDTO wsAccessDTO = new WsAccessDTO();
+        wsAccessDTO.setApiConfigId(11);
+        wsAccessDTO.setBatchCode(null);
+        //发送消息给数据分发服务
+        taskClient.wsAccessToConsume(wsAccessDTO);
         return responseMessage;
     }
 
