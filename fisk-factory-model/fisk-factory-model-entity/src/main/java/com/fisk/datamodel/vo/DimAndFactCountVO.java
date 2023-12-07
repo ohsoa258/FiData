@@ -13,6 +13,12 @@ public class DimAndFactCountVO {
     private Integer dimCount;
 
     /**
+     * 公共维度表总数
+     */
+    @ApiModelProperty(value = "公共维度表总数")
+    private Integer publicDimCount;
+
+    /**
      * 事实表总数
      */
     @ApiModelProperty(value = "事实表总数")
