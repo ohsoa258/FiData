@@ -1367,9 +1367,9 @@ public class BusinessAreaImpl
         //doris是否开启严格模式 0否  1是
         if (dto.dorisIfOpenStrictMode != null) {
             if (dto.dorisIfOpenStrictMode == 1) {
-                finalSql += " SET enable_insert_strict = true; ";
+                finalSql = " SET enable_insert_strict = true; " + finalSql;
             } else {
-                finalSql += " SET enable_insert_strict = false; ";
+                finalSql = " SET enable_insert_strict = false; " + finalSql;
             }
         }
 

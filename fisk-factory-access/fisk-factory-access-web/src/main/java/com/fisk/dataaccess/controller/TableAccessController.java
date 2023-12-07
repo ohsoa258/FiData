@@ -51,6 +51,17 @@ public class TableAccessController {
         return ResultEntityBuild.build(service.updateTableAccessData(dto));
     }
 
+    /**
+     * hudi入仓配置 修改表的cdc状态
+     * @param dto
+     * @return
+     */
+    @PutMapping("/editHudiConfigCdc")
+    @ApiOperation(value = "修改物理表信息&保存sql_script(ftp信息)")
+    public ResultEntity<Object> editHudiConfigCdc(@RequestBody TbTableAccessDTO dto) {
+        return ResultEntityBuild.build(service.editHudiConfigCdc(dto));
+    }
+
     @PostMapping("/getList")
     @ApiOperation(value = "根据appId获取物理表列表")
     public ResultEntity<Page<TbTableAccessDTO>> getTableAccessListData(@RequestBody TbTableAccessQueryDTO dto) {

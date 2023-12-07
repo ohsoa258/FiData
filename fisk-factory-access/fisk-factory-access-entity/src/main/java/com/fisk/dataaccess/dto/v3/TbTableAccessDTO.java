@@ -145,5 +145,9 @@ public class TbTableAccessDTO {
     @ApiModelProperty(value = "是否是重点接口 0否，1是")
     public Integer isImportantInterface;
 
-
+    /**
+     * hudi入仓配置是否开启cdc 0否 1是
+     */
+    @ApiModelProperty(value = "hudi入仓配置是否开启cdc 0否 1是")
+    public Integer ifOpenCdc;
 }

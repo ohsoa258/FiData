@@ -1855,6 +1855,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return this.saveOrUpdate(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
     }
 
+    @Override
+    public ResultEnum editHudiConfigCdc(TbTableAccessDTO dto) {
+
+        // dto -> po
+        TableAccessPO po = TableAccessMap.INSTANCES.tbDtoToPo(dto);
+
+        return this.updateById(po) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
+    }
+
     /**
      * 同步元数据
      *

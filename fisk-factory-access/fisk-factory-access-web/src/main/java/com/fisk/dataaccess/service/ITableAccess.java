@@ -267,6 +267,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
      */
     ResultEnum updateTableAccessData(TbTableAccessDTO dto);
 
+    /**
+     * hudi入仓配置 修改表的cdc状态
+     * @param dto
+     * @return
+     */
+    ResultEnum editHudiConfigCdc(TbTableAccessDTO dto);
+
 //    /**
 //     * 物理表单表删除
 //     *

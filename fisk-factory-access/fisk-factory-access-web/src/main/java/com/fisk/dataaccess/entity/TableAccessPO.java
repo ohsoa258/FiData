@@ -146,4 +146,9 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public String mdxSqlList;
 
+    /**
+     * hudi入仓配置是否开启cdc
+     */
+    public Integer ifOpenCdc;
+
 }
