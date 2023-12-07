@@ -1402,11 +1402,13 @@ public class BusinessAreaImpl
      */
     @Override
     public DimAndFactCountVO getTotalDimAndFactCount() {
-        Integer factTotalCount = factImpl.getFactTotalCount();
-        Integer dimTotalCount = dimensionImpl.getDimTotalCount();
+        int factTotalCount = factImpl.getFactTotalCount();
+        int dimTotalCount = dimensionImpl.getDimTotalCount();
+        int publicDimTotalCount = dimensionImpl.getPublicDimTotalCount();
         DimAndFactCountVO dimAndFactCountVO = new DimAndFactCountVO();
         dimAndFactCountVO.setDimCount(dimTotalCount);
         dimAndFactCountVO.setFactCount(factTotalCount);
+        dimAndFactCountVO.setPublicDimCount(publicDimTotalCount);
         return dimAndFactCountVO;
     }
 

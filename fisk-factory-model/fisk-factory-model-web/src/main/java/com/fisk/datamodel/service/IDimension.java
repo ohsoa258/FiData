@@ -127,6 +127,13 @@ public interface IDimension extends IService<DimensionPO> {
      */
     Integer getDimTotalCount();
 
+    /**
+     * 获取总共的公共维度表计数
+     *
+     * @return
+     */
+    Integer getPublicDimTotalCount();
+
     //void asyncSynchronousMetadata(DimensionPO model);
 
 }
