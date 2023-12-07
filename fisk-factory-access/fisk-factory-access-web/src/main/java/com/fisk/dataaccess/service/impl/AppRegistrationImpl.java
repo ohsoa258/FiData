@@ -395,6 +395,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 tableAccessDTO.setPublish(0);
                 tableAccessDTO.setSyncSrc("");
                 tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+                tableAccessDTO.setIfOpenCdc(1);
                 String tableName = table.getTableName();
                 if (tableName.contains(".")) {
                     tableName = tableName.replaceFirst("\\.", "_");
@@ -414,8 +415,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     fieldDTO.setSourceFieldName(field.fieldName);
                     fieldDTO.setSourceFieldType(field.fieldType);
                     fieldDTO.setFieldName(field.fieldName);
-                    fieldDTO.setFieldType(field.fieldType);
-                    fieldDTO.setFieldLength((long) field.fieldLength);
+                    //字段类型暂时写死为string
+                    fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                    //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
                     fieldDTO.setFieldDes(field.getFieldDes());
                     fieldDTO.setIsPrimarykey(field.getIsPk());
                     //1：是实时物理表的字段，

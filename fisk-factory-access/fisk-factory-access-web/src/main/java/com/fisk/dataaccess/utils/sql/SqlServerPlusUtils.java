@@ -62,6 +62,14 @@ public class SqlServerPlusUtils {
             colNameList = new ArrayList<>();
 
             DatabaseMetaData metaData = conn.getMetaData();
+            String schemaName = null;
+            if (tableName.contains(".")) {
+                String[] parts = tableName.split("\\.");
+                schemaName = parts[0];
+                tableName = parts[1];
+
+            }
+
             resultSet = metaData.getColumns(null, "%", tableName, "%");
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
@@ -78,12 +86,17 @@ public class SqlServerPlusUtils {
                 colNameList.add(dto);
             }
 
+            log.info("表名：" + tableName);
             //获取表的主键字段
             List<String> pks = new ArrayList<>();
-            primaryKeys = metaData.getPrimaryKeys(null, "%", tableName);
+            log.info("截取后的表名：" + tableName);
+            log.info("截取后的schema名：" + schemaName);
+            primaryKeys = metaData.getPrimaryKeys(null, schemaName, tableName);
+            log.info("主键字段：" + primaryKeys.toString());
             while (primaryKeys.next()) {
                 pks.add(primaryKeys.getString("COLUMN_NAME"));
             }
+            log.info("主键：" + pks);
             colNameList.forEach(tableStructureDTO -> {
                 if (pks.contains(tableStructureDTO.fieldName)) {
                     tableStructureDTO.setIsPk(1);
