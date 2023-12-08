@@ -52,9 +52,9 @@ public class TableApiServiceController {
     }
 
     @ApiOperation("根据接入id获取数据分发api集合")
-    @GetMapping("/getTableListByInputId/{id}")
-    public ResultEntity<List<BuildTableApiServiceDTO>> getTableListByInputId(@PathVariable("id") Integer id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiService.getTableListByInputId(id));
+    @GetMapping("/getTableApiListByInputId/{id}")
+    public ResultEntity<List<BuildTableApiServiceDTO>> getTableApiListByInputId(@PathVariable("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiService.getTableApiListByInputId(id));
     }
 
     @ApiOperation("获取api配置详情")

@@ -45,7 +45,7 @@ public class WebServiceController {
     public void wsAccessToConsume(@RequestBody WsAccessDTO dto) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
         // 通过管道id,查询关联api服务
-        ResultEntity<List<BuildTableApiServiceDTO>> tableListByInputId = consumeServeiceClient.getTableListByInputId(dto.getApiConfigId());
+        ResultEntity<List<BuildTableApiServiceDTO>> tableListByInputId = consumeServeiceClient.getTableApiListByInputId(dto.getApiConfigId());
         if (tableListByInputId != null && tableListByInputId.code == ResultEnum.SUCCESS.getCode() && !CollectionUtils.isEmpty(tableListByInputId.data)) {
             List<BuildTableApiServiceDTO> list = tableListByInputId.data;
             for (BuildTableApiServiceDTO buildTableApiService : list) {

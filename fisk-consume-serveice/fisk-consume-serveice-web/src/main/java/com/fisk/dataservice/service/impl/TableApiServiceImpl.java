@@ -187,7 +187,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         data.appId = (int) tableAppPO.getId();
         data.appDesc = tableAppPO.getAppDesc();
         data.appName = tableAppPO.getAppName();
-
+        data.enable = tableApiServicePO.getEnable();
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
 
@@ -242,7 +242,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     }
 
     @Override
-    public List<BuildTableApiServiceDTO> getTableListByInputId(Integer inputId) {
+    public List<BuildTableApiServiceDTO> getTableApiListByInputId(Integer inputId) {
         List<Integer> tableListByPipelineId = tableSyncMode.getTableListByInputId(inputId,4);
         if (CollectionUtils.isEmpty(tableListByPipelineId)) {
             return new ArrayList<>();

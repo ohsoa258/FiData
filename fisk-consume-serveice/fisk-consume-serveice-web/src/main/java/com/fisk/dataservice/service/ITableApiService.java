@@ -80,7 +80,7 @@ public interface ITableApiService extends IService<TableApiServicePO> {
      * @param inputId
      * @return
      */
-    List<BuildTableApiServiceDTO> getTableListByInputId(Integer inputId);
+    List<BuildTableApiServiceDTO> getTableApiListByInputId(Integer inputId);
     /**
      * 数据分发api同步服务-新增同步按钮,手动同步表服务
      *

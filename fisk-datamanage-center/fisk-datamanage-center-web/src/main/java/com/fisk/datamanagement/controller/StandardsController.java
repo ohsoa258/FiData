@@ -103,4 +103,9 @@ public class StandardsController {
         return ResultEntityBuild.build(standardsService.standardsSort(dto));
     }
 
+    @ApiOperation("数据标准分页查询数据元")
+    @PostMapping("/standardsQuery")
+    public ResultEntity<Object> standardsQuery(@RequestBody StandardsQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.standardsQuery(dto));
+    }
 }

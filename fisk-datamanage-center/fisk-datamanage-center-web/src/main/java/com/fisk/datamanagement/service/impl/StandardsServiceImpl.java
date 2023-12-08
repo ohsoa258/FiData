@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
@@ -517,6 +518,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             }
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public Page<StandardsMenuDTO> standardsQuery(StandardsQueryDTO dto) {
+        return this.baseMapper.standardsQuery(dto.page, dto);
     }
 
     /**

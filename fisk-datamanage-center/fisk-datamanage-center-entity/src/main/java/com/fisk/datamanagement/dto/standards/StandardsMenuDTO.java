@@ -25,4 +25,25 @@ public class StandardsMenuDTO {
 
     @ApiModelProperty(value = "排序")
     private Integer sort;
+
+    @ApiModelProperty(value = "中文名称")
+    private String chineseName;
+
+    @ApiModelProperty(value = "英文名称")
+    private String englishName;
+
+    @ApiModelProperty(value = "描述")
+    private String description;
+
+    @ApiModelProperty(value = "字段类型")
+    private String fieldType;
+
+    @ApiModelProperty(value = "数据元编号")
+    private String datametaCode;
+
+    @ApiModelProperty(value = "质量规则")
+    private String qualityRule;
+
+    @ApiModelProperty(value = "值域范围")
+    private String valueRange;
 }

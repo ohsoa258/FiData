@@ -12,7 +12,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * @author JianWenYang
+ * @author wangjian
  */
 @Data
 public class BuildTableApiServiceDTO extends MQBaseDTO {

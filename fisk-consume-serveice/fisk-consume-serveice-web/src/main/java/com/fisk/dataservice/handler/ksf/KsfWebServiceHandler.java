@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 public abstract class KsfWebServiceHandler {
 
 
-    public abstract ApiResultDTO sendApi(TableAppPO tableAppPO,long apiId);
+    public abstract ApiResultDTO sendApi(TableAppPO tableAppPO,long apiId,String fidata_batch_code);
 
     public ApiResultDTO sendHttpPost(TableApiServicePO tableApiServicePO, String body){
         ApiResultDTO apiResultDTO = new ApiResultDTO();

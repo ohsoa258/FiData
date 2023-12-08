@@ -4,6 +4,7 @@ import cn.com.ksf.ws.*;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
@@ -67,7 +68,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
     }
 
     @Override
-    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId) {
+    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code) {
         redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + apiId, 100);
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);
@@ -107,9 +108,19 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
                 st3 = conn3.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
-                String headSql = split[1] + " WHERE fidata_batch_code in  (select fidata_batch_code from wms.wms_acknowledgement_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
-                String detailSql = split[2] + " WHERE fidata_batch_code in  (select fidata_batch_code from wms.wms_acknowledgement_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String systemDataSql;
+                String headSql;
+                String detailSql;
+                if (StringUtils.isNotBlank(fidata_batch_code)){
+                    systemDataSql = split[0] + " where fidata_batch_code = '" + fidata_batch_code + "'";
+                    headSql = split[1] + " WHERE fidata_batch_code = '" + fidata_batch_code + "'";
+                    detailSql = split[2] + " WHERE fidata_batch_code = '" + fidata_batch_code + "'";
+                }else {
+                    systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
+                    headSql = split[1] + " WHERE fidata_batch_code in  (select fidata_batch_code from wms.wms_acknowledgement_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                    detailSql = split[2] + " WHERE fidata_batch_code in  (select fidata_batch_code from wms.wms_acknowledgement_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+
+                }
                 log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st1.executeQuery(systemDataSql);
                 log.info("开始执行脚本head:{}", headSql);

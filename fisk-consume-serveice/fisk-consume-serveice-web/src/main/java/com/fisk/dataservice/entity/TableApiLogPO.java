@@ -29,4 +29,12 @@ public class TableApiLogPO extends BasePO {
     @ApiModelProperty(value = "是否是重点接口 0否，1是")
     private Integer importantInterface;
 
+    @ApiModelProperty(value = "本次消费的批次号")
+    private String fidataBatchCode;
+
+    @ApiModelProperty(value = "历史状态")
+    private Integer state;
+
+    @ApiModelProperty(value = "重发次数")
+    private int retryNumber;
 }

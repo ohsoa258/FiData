@@ -1,7 +1,9 @@
 package com.fisk.dataservice.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -82,7 +84,7 @@ public class AsyncImpl {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         HashMap<String, Object> checkByFieldMap = dto.getCheckByFieldMap();
         String pipelTaskTraceId = (String) checkByFieldMap.get("pipelTaskTraceId");
-
+        String fidata_batch_code = (String) checkByFieldMap.get("fidata_batch_code");
         log.info("syncTableApi参数" + JSONObject.toJSONString(dto));
 
 
@@ -92,7 +94,6 @@ public class AsyncImpl {
         tableApiTaskDTO.setPipelTaskTraceId(pipelTaskTraceId);
         HashMap<Integer, Object> taskMap = new HashMap<>();
         String format = simpleDateFormat.format(new Date());
-        TableApiLogPO tableApiLogPO = new TableApiLogPO();
         //查询app配置信息
         TableAppPO tableAppPO = tableAppService.getById(dto.appId);
 
@@ -121,7 +122,7 @@ public class AsyncImpl {
                 }
             }
         } else if (tableAppPO.interfaceType == InterfaceTypeEnum.WEB_SERVICE.getValue()) {
-            Boolean setnx = redisUtil.setnx(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + tableApiServicePO.getId(), retryNum*retryTime/1000+100, TimeUnit.SECONDS);
+            Boolean setnx = redisUtil.setnx(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + tableApiServicePO.getId(), retryNum * retryTime / 1000 + 100, TimeUnit.SECONDS);
             if (setnx) {
                 for (int i = 0; i < retryNum; i++) {
                     switch (SpecialTypeEnum.getEnum(tableApiServicePO.specialType)) {
@@ -134,7 +135,7 @@ public class AsyncImpl {
                         case KSF_INVENTORY_STATUS_CHANGES:
                         case KSF_ACKNOWLEDGEMENT:
                             KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
-                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO, dto.apiId);
+                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO, dto.apiId, fidata_batch_code);
                             break;
                         default:
                             break;
@@ -161,22 +162,49 @@ public class AsyncImpl {
             }
         }
         //记日志
-
+        TableApiLogPO tableApiLogPo = null;
+        if (StringUtils.isNotBlank(fidata_batch_code)) {
+            LambdaQueryWrapper<TableApiLogPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(TableApiLogPO::getFidataBatchCode, fidata_batch_code);
+            queryWrapper.eq(TableApiLogPO::getDelFlag, 1);
+            tableApiLogPo = tableApiLogService.getOne(queryWrapper);
+        }
+        if (tableApiLogPo == null) {
+            tableApiLogPo = new TableApiLogPO();
+        }
         if (apiResultDTO.getFlag()) {
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format + " - " + apiResultDTO.getMsg());
-            tableApiLogPO.setApiId(dto.apiId.intValue());
-            tableApiLogPO.setNumber(apiResultDTO.getNumber());
-            tableApiLogPO.setImportantInterface(tableApiServicePO.getImportantInterface());
-            tableApiLogPO.setStatus(1);
+            tableApiLogPo.setApiId(dto.apiId.intValue());
+            tableApiLogPo.setNumber(apiResultDTO.getNumber());
+            tableApiLogPo.setImportantInterface(tableApiServicePO.getImportantInterface());
+            tableApiLogPo.setStatus(1);
+            if (tableApiLogPo.getId() != 0) {
+                tableApiLogPo.setRetryNumber(tableApiLogPo.getNumber() + 1);
+
+            } else {
+                tableApiLogPo.setFidataBatchCode(fidata_batch_code);
+                tableApiLogPo.setState(1);
+            }
         } else {
             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + apiResultDTO.getMsg());
-
-            tableApiLogPO.setApiId(dto.apiId.intValue());
-            tableApiLogPO.setNumber(apiResultDTO.getNumber());
-            tableApiLogPO.setStatus(0);
+            tableApiLogPo.setApiId(dto.apiId.intValue());
+            tableApiLogPo.setNumber(apiResultDTO.getNumber());
+            tableApiLogPo.setStatus(0);
+            if (tableApiLogPo.getId() != 0) {
+                tableApiLogPo.setRetryNumber(tableApiLogPo.getNumber() + 1);
+            } else {
+                tableApiLogPo.setFidataBatchCode(fidata_batch_code);
+                tableApiLogPo.setState(0);
+            }
         }
+
         try {
-            tableApiLogService.save(tableApiLogPO);
+            if (tableApiLogPo.getId() == 0) {
+                tableApiLogService.save(tableApiLogPo);
+            } else {
+                tableApiLogService.updateById(tableApiLogPo);
+            }
+
             sendEmail(tableAppPO, apiResultDTO, Integer.valueOf(dto.getApiId().toString()), pipelTaskTraceId);
         } catch (Exception e) {
             String msg = (String) taskMap.get(DispatchLogEnum.taskend.getValue());
