@@ -363,7 +363,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 return one.getAppComponentId();
             } else {
                 BuildProcessGroupDTO groupDTO = new BuildProcessGroupDTO();
-                groupDTO.name = buildTableApiService.apiName;
+                groupDTO.name = buildTableApiService.appName;
                 groupDTO.details = buildTableApiService.apiDes;
                 groupDTO.groupId = nifiConfigPO.componentId;
                 int count = componentsBuild.getGroupCount(nifiConfigPO.componentId);
