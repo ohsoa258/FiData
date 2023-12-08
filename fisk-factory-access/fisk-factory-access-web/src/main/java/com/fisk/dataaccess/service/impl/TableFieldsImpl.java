@@ -749,8 +749,8 @@ public class TableFieldsImpl
                 data.sftpFlow = DataSourceTypeEnum.SFTP.getName().equals(dataSourcePo.driveType);
                 data.sapBwFlow = DataSourceTypeEnum.SAPBW.getName().equals(dataSourcePo.driveType);
                 data.ifHive = DataSourceTypeEnum.DORIS_CATALOG.getName().equals(dataSourcePo.driveType);
-                log.info("是否是sapbw...", data.sapBwFlow);
-                log.info("是否是hive...", data.ifHive);
+                log.info("是否是sapbw..." + data.sapBwFlow);
+                log.info("是否是hive..." + data.ifHive);
                 data.tableHistoryId = tableHistoryId;
 
                 // 执行发布

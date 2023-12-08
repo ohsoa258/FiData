@@ -37,6 +37,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
@@ -242,7 +243,7 @@ public interface DataAccessClient {
      */
     @PostMapping("/apiConfig/importData")
     @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
-    public ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto);
+    ResultEntity<Object> importData(@RequestBody ApiImportDataDTO dto);
 
     /**
      * 通过appId和apiId查询表名集合
@@ -504,5 +505,15 @@ public interface DataAccessClient {
     @GetMapping("/getDorisCatalogTreeByCatalogName")
     ResultEntity<Map<String, List<String>>> getDorisCatalogTreeByCatalogName(@RequestParam("dbID") Integer dbID,
                                                                                     @RequestParam("catalogName") String catalogName);
+
+    /**
+     * 调度调用第三方api,接收数据,并导入到FiData平台
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    @PostMapping("/apiConfig/importDataV2")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    ResultEntity<Object> importDataV2(@RequestBody ApiImportDataDTO dto);
 
 }

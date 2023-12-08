@@ -229,4 +229,10 @@ public class BuildNifiFlowDTO extends MQBaseDTO {
     @ApiModelProperty(value = "是否是sapbw")
     public boolean sapBwFlow;
 
+    /**
+     * 是否是api
+     */
+    @ApiModelProperty(value = "是否是api")
+    public boolean ifApi;
+
 }

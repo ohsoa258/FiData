@@ -1435,12 +1435,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             for (AppDataSourcePO item : appDataSourcePo) {
                 for (ChannelDataDTO f : channelDataDTOList) {
                     if (item.appId == f.id) {
-                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName()) || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())) {
+                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())
+                        ) {
                             f.type = "数据湖表任务";
                         }
-                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
-                            f.type = "数据湖非实时api任务";
-                        }
+//                        if (item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())) {
+//                            f.type = "数据湖非实时api任务";
+//                        }
                         if (item.driveType.equalsIgnoreCase(DbTypeEnum.ftp.getName())) {
                             f.type = "数据湖ftp任务";
                         }

@@ -33,6 +33,12 @@ import java.util.stream.Collectors;
     @ApiModelProperty(value = "身份验证方式: 0: 空; 1: OAuth 1.0; 2: OAuth 1.0; 3: JWT;  4: Bearer Token  5: 无需身份验证", required = true)
     public Integer authenticationMethod;
 
+    /**
+     * 选择ApiKey验证方式时，使用的验证参数json串
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，使用的验证参数json串", required = true)
+    public String apiKeyParameters;
+
     @ApiModelProperty(value = "服务器地址", required = true)
     public String host;
 

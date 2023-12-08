@@ -26,7 +26,9 @@
         users.user_account AS createUser,
         ds.update_time AS updateTime,
         ds.sys_nr AS sysNr,
-        ds.lang AS lang
+        ds.lang AS lang,
+        ds.api_key_parameters as apiKeyParameters,
+        ds.authentication_method as authenticationMethod
         FROM
         tb_datasource_config ds
         LEFT JOIN tb_user_info users ON ds.create_user = users.id

@@ -52,5 +52,8 @@ public class ApiImportDataDTO {
     @ApiModelProperty(value = "userId")
     public long userId;
 
+    @ApiModelProperty(value = "大批次号", required = true)
+    public String batchCode;
+
 
 }

@@ -394,7 +394,7 @@ public class PgsqlUtils {
      * @author Lock
      * @date 2022/7/18 14:26
      */
-    public ResultEntity<Object> executeBatchPgsql(ApiImportDataDTO importDataDto,
+    public ResultEntity<Object> executeBatchPgsql(String fidata_batch_code,ApiImportDataDTO importDataDto,
                                                   String tablePrefixName,
                                                   List<JsonTableData> res,
                                                   List<ApiTableDTO> apiTableDtoList,
@@ -446,8 +446,9 @@ public class PgsqlUtils {
                         }
                         insertSqlLast = insertSqlLast + "'" + entry.getValue() + "'" + ",";
                     }
-                    insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
-                    insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
+                    //大批次号
+                    insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ",fidata_batch_code) values";
+                    insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ",'" + fidata_batch_code + "')";
                     inserSql = insertSqlIndex + insertSqlLast;
                     log.info("数据推送到stg的sql为: " + inserSql);
                     countSql++;

@@ -146,8 +146,12 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("13");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("WEBSERVICE")) {
                             filterQueryDTO.setColumnValue("14");
-                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("HIVE")) {
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("DORIS_CATALOG")) {
                             filterQueryDTO.setColumnValue("15");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("DM8")) {
+                            filterQueryDTO.setColumnValue("16");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("HUDI")) {
+                            filterQueryDTO.setColumnValue("17");
                         }
                     }
                 });
@@ -607,6 +611,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setAuthenticationMethod(t.getAuthenticationMethod());
         dataSourceDTO.setSysNr(t.getSysNr());
         dataSourceDTO.setLang(t.getLang());
+        dataSourceDTO.setApiKeyParameters(t.getApiKeyParameters());
         if (isShowPwd) {
             dataSourceDTO.setConPassword(t.getConPassword());
         }

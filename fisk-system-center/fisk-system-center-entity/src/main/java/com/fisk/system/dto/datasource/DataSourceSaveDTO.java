@@ -203,9 +203,16 @@ public class DataSourceSaveDTO {
      * 3: JWT
      * 4: Bearer Token
      * 5:无需身份验证
+     * 6:ApiKey
      */
     @ApiModelProperty(value = "api选择的身份验证方式")
     public int authenticationMethod;
+
+    /**
+     * 选择ApiKey验证方式时，使用的验证参数json串
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，使用的验证参数json串", required = true)
+    public String apiKeyParameters;
 
     /**
      * 当平台配置-数据源-外部数据源增加api类型的数据源，并且认证方式选择jwt时，才需要此集合，即页面选择的返回值结果定义
@@ -224,4 +231,5 @@ public class DataSourceSaveDTO {
      */
     @ApiModelProperty(value = "JCO_LANG", required = true)
     public String lang;
+
 }

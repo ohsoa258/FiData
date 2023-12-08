@@ -139,6 +139,12 @@ public class ApiConfigController {
         return ResultEntityBuild.build(service.importData(dto));
     }
 
+    @PostMapping("/importDataV2")
+    @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
+    public ResultEntity<Object> importDataV2(@NotNull @RequestBody ApiImportDataDTO dto) {
+        return ResultEntityBuild.build(service.importDataV2(dto));
+    }
+
     @GetMapping("/getAppListByAppType/{appType}")
     @ApiOperation(value = "api复制功能: 根据应用类型获取下拉的应用列表")
     public ResultEntity<List<ApiSelectDTO>> getAppAndApiList(@PathVariable("appType") int appType) {

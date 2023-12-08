@@ -3,6 +3,7 @@ package com.fisk.system.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -170,6 +171,11 @@ public class DataSourcePO extends BasePO {
      * 5:无需身份验证
      */
     public int authenticationMethod;
+
+    /**
+     * 选择ApiKey验证方式时，使用的验证参数json串
+     */
+    public String apiKeyParameters;
 
     /**
      * JCO_SYSNR

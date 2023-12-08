@@ -150,6 +150,14 @@ public interface IApiConfig extends IService<ApiConfigPO> {
     ResultEnum importData(ApiImportDataDTO dto);
 
     /**
+     * 调度调用第三方api,接收数据,并导入到FiData平台
+     *
+     * @param dto dto
+     * @return 执行结果
+     */
+    ResultEnum importDataV2(ApiImportDataDTO dto);
+
+    /**
      * api复制: 保存功能
      *
      * @param dto dto

@@ -241,6 +241,12 @@ public class DataSourceDTO {
     public int authenticationMethod;
 
     /**
+     * 选择ApiKey验证方式时，使用的验证参数json串
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，使用的验证参数json串", required = true)
+    public String apiKeyParameters;
+
+    /**
      * JCO_SYSNR
      */
     @ApiModelProperty(value = "JCO_SYSNR", required = true)

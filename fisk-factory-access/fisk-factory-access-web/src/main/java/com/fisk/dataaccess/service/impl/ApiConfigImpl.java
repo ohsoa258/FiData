@@ -282,7 +282,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         if (!CollectionUtils.isEmpty(dto.list)) {
             // 发布--task建表
-            dto.list.forEach(e -> tableFieldImpl.updateData(e));
+            for (TableAccessNonDTO tableAccessNonDTO : dto.list) {
+                tableAccessNonDTO.openTransmission = true;
+                tableFieldImpl.updateData(tableAccessNonDTO);
+            }
         }
 
         // 获取应用引用的数据源
@@ -301,7 +304,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiImportDataDTO.apiId = dto.id;
             // 调用api推送数据方法
             importData(apiImportDataDTO);
-
             // 发布之后,按照配置推送一次实时api
         } else if (dto.executeConfigFlag && dataSourcePo.driveType.equalsIgnoreCase(DataSourceTypeEnum.RestfulAPI.getName())) {
             ReceiveDataDTO receiveDataDto = new ReceiveDataDTO();
@@ -695,7 +697,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
+            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, null);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -818,7 +820,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
+            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, null);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -1145,7 +1147,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushDataStgToOds(dto.getApiCode(), 0);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId);
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, null);
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -1154,6 +1156,93 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
                 msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
             }
+
+            // 保存本次的日志信息
+            // 非实时api
+            // 系统内部调用 && 实时推送示例数据
+            if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+                // 实时调用
+                // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+            } else if (dto.isFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+                }
+                savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            } else if (!dto.isExecuteConfigFlag()) {
+                if (StringUtils.isNotBlank(msg)) {
+                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+                }
+                savePushDataLogToTask(importDataDto, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+            }
+
+        } catch (Exception e) {
+            resultEnum = ResultEnum.PUSH_DATA_ERROR;
+            log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.getApiCode(), dto.getPushData()), e);
+        }
+        return ResultEntityBuild.build(resultEnum, msg);
+    }
+
+    /**
+     * task添加日志执行的推送数据方法
+     *
+     * @param importDataDto 管道传递的参数
+     * @param dto           同步api所需的属性
+     * @return com.fisk.common.core.response.ResultEntity<java.lang.Object>
+     * @author Lock
+     * @date 2022/6/17 15:28
+     */
+    private ResultEntity<Object> pushDataByImportDataV2(ApiImportDataDTO importDataDto, ReceiveDataDTO dto) {
+        ResultEnum resultEnum = null;
+        StringBuilder msg = new StringBuilder("");
+        Date startTime = new Date();
+        try {
+            if (dto.getApiCode() == null) {
+                return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
+            }
+
+            ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
+            if (apiConfigPo == null) {
+                return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
+            }
+
+            // flag=false: 第三方调用,需要验证账号是否属于当前api
+            if (!dto.isFlag()) {
+                AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
+                if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
+                    return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
+                }
+            }
+
+            // json解析的根节点
+            String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+            log.info("json解析的根节点参数为: " + jsonKey);
+
+            // 根据api_id查询所有物理表
+            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
+            if (CollectionUtils.isEmpty(accessPoList)) {
+                return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
+            }
+            // 获取当前api下的所有表数据
+            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
+//            apiTableDtoList.forEach(System.out::println);
+
+            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+            if (modelApp == null) {
+                return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
+            }
+            // 防止\未被解析
+            String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
+            log.info("根据配置删除stg和ods表数据");
+            pushDataStgToOds(dto.getApiCode(), 0);
+            // 将数据同步到pgsql
+            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId,dto.getBatchCode());
+            resultEnum = ResultEnum.getEnum(result.code);
+            msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
             // 保存本次的日志信息
             // 非实时api
@@ -1336,6 +1425,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 consumer(dto, pipelApiDispatch);
             }
         }
+        return resultEnum;
+    }
+
+    @Override
+    public ResultEnum importDataV2(ApiImportDataDTO dto) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        // 接入模块调用
+        resultEnum = syncDataV2(dto, null);
         return resultEnum;
     }
 
@@ -1719,6 +1816,55 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             receiveDataDTO.setExecuteConfigFlag(false);
             // 推送数据
             //pushDataByImportData(dto, receiveDataDTO);
+            // apiKey
+        } else if (dataSourcePo.authenticationMethod == 6) {
+            // 身份验证方式对象
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.httpRequestEnum = POST;
+            // 身份验证地址
+            apiHttpRequestDto.uri = dataSourcePo.connectStr;
+            // apiKey 请求body参数
+            apiHttpRequestDto.jsonObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+
+            // apikey登录
+            JSONObject loginResult = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("登录验证结果：" + loginResult.toJSONString());
+
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                // post请求携带的请求参数  Body: raw参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                }
+            }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
+
+            // TODO 第一步: 查询阶段,调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
+
+            receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.setApiCode(dto.apiId);
+            data = String.valueOf(jsonObject);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
+            receiveDataDTO.setPushData(String.valueOf(data));
+            //系统内部调用(非实时推送)
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
+
         }
         log.info("data的值" + JSON.toJSONString(data));
         // json解析的根节点
@@ -1733,6 +1879,263 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("进入下次推送");
             syncData(dto, apiParameters);
         }
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 根据配置执行api功能
+     *
+     * @return void
+     * @description 根据配置执行api功能
+     * @author Lock
+     * @date 2022/5/10 15:31
+     * @version v1.0
+     * @params dto
+     */
+    public ResultEnum syncDataV2(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) {
+        // 根据appId获取应用信息(身份验证方式,验证参数)
+        AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", dto.appId).one();
+        if (modelApp == null) {
+            return ResultEnum.APP_NOT_EXIST;
+        }
+        // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+        // 0 接口禁用  1 接口启用
+        if (modelApp.ifAllowDatatransfer == 0) {
+            return ResultEnum.API_STATE_NOT_ALLOW_ERROR;
+        }
+
+        // 根据apiId获取非实时api信息(uri 请求方式  请求参数  json解析  推送数据  同步方式)
+        String data = "";
+        ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
+        int pageNum = 1;
+        AppDataSourcePO dataSourcePo = appDataSourceImpl.query().eq("app_id", dto.appId).one();
+        if (dataSourcePo == null) {
+            return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
+        }
+        ApiConfigPO apiConfigPo = this.query().eq("id", dto.apiId).one();
+        if (apiConfigPo == null) {
+            return ResultEnum.APICONFIG_ISNULL;
+        }
+        //拿到获取数据的api的参数
+        List<ApiParameterPO> parameterPoList = apiParameterServiceImpl.query()
+                .eq("api_id", dto.apiId)
+                .ne("parameter_type", 0)
+                .list();
+        String formDataString = "form-data";
+        String rawString = "raw";
+        String bodyString = "Body";
+        String headersString = "Headers";
+        // Body: form-data参数
+        List<ApiParameterPO> formDataParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(formDataString) && e.requestType.equalsIgnoreCase(bodyString)).collect(Collectors.toList());
+        // Body: raw参数
+        List<ApiParameterPO> rawParams = parameterPoList.stream().filter(e -> e.requestMethod.equalsIgnoreCase(rawString) && e.requestType.equalsIgnoreCase(bodyString)).collect(Collectors.toList());
+        // Headers的参数
+        List<ApiParameterPO> headersParams = parameterPoList.stream().filter(e -> e.requestType.equalsIgnoreCase(headersString)).collect(Collectors.toList());
+        // 封装请求头Headers的参数
+        Map<String, String> params = new HashMap<>();
+        if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(headersParams)) {
+            params = headersParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+        }
+
+        if (dataSourcePo.authenticationMethod == 3) { // JWT版
+            // jwt身份验证方式对象
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.httpRequestEnum = POST;
+            // 身份验证地址
+            apiHttpRequestDto.uri = dataSourcePo.connectStr;
+            // jwt账号&密码
+            JwtRequestDTO jwtRequestDto = new JwtRequestDTO();
+            jwtRequestDto.userKey = dataSourcePo.accountKey;
+            jwtRequestDto.username = dataSourcePo.connectAccount;
+            jwtRequestDto.pwdKey = dataSourcePo.pwdKey;
+            jwtRequestDto.password = dataSourcePo.connectPwd;
+            apiHttpRequestDto.jwtRequestDTO = jwtRequestDto;
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+
+            //获取token返回json串格式
+            List<ApiResultConfigDTO> apiResultConfig = apiResultConfigImpl.getApiResultConfig(dataSourcePo.id);
+            Optional<ApiResultConfigDTO> first = apiResultConfig.stream().filter(e -> e.checked == true).findFirst();
+            apiHttpRequestDto.jsonDataKey = "token";
+            if (first.isPresent()) {
+                apiHttpRequestDto.jsonDataKey = first.get().name;
+                //throw new FkException(ResultEnum.RETURN_RESULT_DEFINITION);
+            }
+
+            // 获取token
+            String requestToken = iBuildHttpRequest.getRequestToken(apiHttpRequestDto);
+            log.info("token参数:" + JSON.toJSONString(apiHttpRequestDto) + "token值" + requestToken);
+            if (StringUtils.isBlank(requestToken)) {
+                return ResultEnum.GET_JWT_TOKEN_ERROR;
+            }
+
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            apiHttpRequestDto.requestHeader = requestToken;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                // post请求携带的请求参数  Body: raw参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                }
+            }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
+
+            // TODO 第一步: 查询阶段,调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
+
+            receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.setApiCode(dto.apiId);
+            data = String.valueOf(jsonObject);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
+            receiveDataDTO.setPushData(String.valueOf(data));
+            //系统内部调用(非实时推送)
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
+
+
+        } else if (dataSourcePo.authenticationMethod == 5) { // 没有身份验证方式
+
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                }
+            }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+            // 调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
+
+            receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.setApiCode(dto.apiId);
+            data = String.valueOf(jsonObject);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
+            receiveDataDTO.setPushData(String.valueOf(data));
+            // 系统内部调用(非实时推送)
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
+
+            // 推送数据
+            //pushDataByImportData(dto, receiveDataDTO);
+
+            // Bearer Token
+        } else if (dataSourcePo.authenticationMethod == 4) {
+
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            apiHttpRequestDto.requestHeader = dataSourcePo.token;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                }
+            }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+            // 调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
+            receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.setApiCode(dto.apiId);
+            data = String.valueOf(jsonObject);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
+            receiveDataDTO.setPushData(String.valueOf(data));
+            // 系统内部调用(非实时推送)
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
+            // 推送数据
+            //pushDataByImportData(dto, receiveDataDTO);
+            // apiKey
+        } else if (dataSourcePo.authenticationMethod == 6) {
+            // 身份验证方式对象
+            ApiHttpRequestDTO apiHttpRequestDto = new ApiHttpRequestDTO();
+            apiHttpRequestDto.httpRequestEnum = POST;
+            // 身份验证地址
+            apiHttpRequestDto.uri = dataSourcePo.connectStr;
+            // apiKey 请求body参数
+            apiHttpRequestDto.jsonObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
+
+            IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
+
+//             apikey登录
+            JSONObject loginResult = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("登录验证结果：" + loginResult.toJSONString());
+
+            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            if (apiConfigPo.apiRequestType == 1) {
+                apiHttpRequestDto.httpRequestEnum = GET;
+            } else if (apiConfigPo.apiRequestType == 2) {
+                apiHttpRequestDto.httpRequestEnum = POST;
+                // post请求携带的请求参数  Body: raw参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                }
+
+                // post请求携带的请求参数Body: form-data参数
+                if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
+                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                }
+            }
+
+            // 请求头参数
+            apiHttpRequestDto.headersParams = params;
+
+            // TODO 第一步: 查询阶段,调用第三方api返回的数据
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
+
+            log.info("获取数据结果：" + jsonObject.toJSONString());
+            receiveDataDTO = new ReceiveDataDTO();
+            receiveDataDTO.setApiCode(dto.apiId);
+            data = String.valueOf(jsonObject);
+            log.info("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            log.info("data = " + data);
+            receiveDataDTO.setPushData(String.valueOf(data));
+            //系统内部调用(非实时推送)
+            receiveDataDTO.setFlag(true);
+            receiveDataDTO.setExecuteConfigFlag(false);
+
+        }
+        log.info("data的值" + JSON.toJSONString(data));
+        // json解析的根节点
+        String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+        JSONArray jsonArray = JSON.parseObject(data).getJSONArray(jsonKey);
+        log.info("进入推送");
+        pushDataByImportDataV2(dto, receiveDataDTO);
         return ResultEnum.SUCCESS;
     }
 
@@ -1781,7 +2184,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @author Lock
      * @date 2022/2/16 19:17
      */
-    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto, String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey, Integer targetDbId) {
+    private ResultEntity<Object> pushPgSql(ApiImportDataDTO importDataDto, String jsonStr, List<ApiTableDTO> apiTableDtoList, String tablePrefixName, String jsonKey, Integer targetDbId, String batchCode) {
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
@@ -1856,10 +2259,14 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // stg_abbreviationName_tableName
         ResultEntity<Object> excuteResult;
         try {
+            //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
+            if (batchCode == null) {
+                batchCode = UUID.randomUUID().toString();
+            }
             if (importDataDto == null) {
                 excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             } else {
-                excuteResult = pgsqlUtils.executeBatchPgsql(importDataDto, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
+                excuteResult = pgsqlUtils.executeBatchPgsql(batchCode,importDataDto, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             }
         } catch (Exception e) {
             log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);

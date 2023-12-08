@@ -2,6 +2,7 @@ package com.fisk.dataaccess.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -163,5 +164,11 @@ public class AppDataSourcePO extends BasePO implements Serializable {
      * JCO_LANG
      */
     public String lang;
+
+    /**
+     * 选择ApiKey验证方式时，使用的验证参数json串
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，使用的验证参数json串", required = true)
+    public String apiKeyParameters;
 
 }

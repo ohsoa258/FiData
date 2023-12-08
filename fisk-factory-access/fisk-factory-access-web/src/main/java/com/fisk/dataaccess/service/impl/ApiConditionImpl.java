@@ -120,13 +120,13 @@ public class ApiConditionImpl implements IApiCondition {
     @Override
     public List<ApiParameterDTO> apiConditionAppend(Long id) {
 
-        //获取应用id
+        //获取apiConfig
         ApiConfigDTO apiConfigData = apiConfig.getAppIdByApiId(id);
         if (apiConfigData == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
-        //获取应用简称
+        //获取应用
         AppRegistrationDTO appRegistrationData = appRegistration.getData(apiConfigData.appId);
         if (appRegistrationData == null) {
             throw new FkException(ResultEnum.API_APP_ISNULL);

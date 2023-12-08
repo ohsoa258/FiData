@@ -149,7 +149,7 @@ public class BuildDataInputPgTableListener {
                 dc.updateTablePublishStatus(modelPublishStatus);
                 return ResultEnum.SUCCESS;
             } else if ((buildPhysicalTableDTO.apiId != null && buildPhysicalTableDTO.appType == 0)
-                    || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api)
+//                    || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api)
                     || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.RestfulAPI)
                     || Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.webservice)) {
                 int tableCount = 0;
@@ -170,6 +170,28 @@ public class BuildDataInputPgTableListener {
                 if (tableCount == buildPhysicalTableDTO.apiTableNames.size()) {
                     dc.updateApiPublishStatus(modelPublishStatusDTO);
                 }
+            } else if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api)) {
+                int tableCount = 0;
+                modelPublishStatusDTO.apiId = buildPhysicalTableDTO.apiId;
+                String selectTable = dbCommand.queryTableNum(buildPhysicalTableDTO);
+                log.info("查询是否建成表语句:{}", selectTable);
+                BusinessResult businessResult = iJdbcBuild.postgreQuery(selectTable, BusinessTypeEnum.DATAINPUT);
+                if (businessResult.data != null) {
+                    List<Object> countList = JSON.parseArray(businessResult.data.toString(), Object.class);
+                    String countString = countList.get(0).toString();
+                    Map countMap = JSON.parseObject(countString, Map.class);
+                    Object count = countMap.get("count");
+                    if (count == null) {
+                        count = countMap.get("");
+                    }
+                    tableCount = Integer.parseInt(count.toString());
+                }
+                if (tableCount == buildPhysicalTableDTO.apiTableNames.size()) {
+                    dc.updateApiPublishStatus(modelPublishStatusDTO);
+                }
+
+                //建成nifi流程
+                buildAtlasTableAndColumnTaskListener.msg(dataInfo, null);
             } else {
                 buildAtlasTableAndColumnTaskListener.msg(dataInfo, null);
             }

@@ -20,6 +20,7 @@ import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
+import com.fisk.task.listener.nifi.IApiListener;
 import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.ISapBwListener;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
@@ -62,6 +63,8 @@ public class NifiController {
     INifiSchedulingComponentService iNifiSchedulingComponentService;
     @Resource
     private ISapBwListener sapBwListener;
+    @Resource
+    private IApiListener apiListener;
 
     @ApiOperation("修改调度")
     @PostMapping("/modifyScheduling")
@@ -159,6 +162,7 @@ public class NifiController {
                 || dto.conType == DataSourceTypeEnum.WEBSERVICE
                 || dto.conType == DataSourceTypeEnum.DORIS_CATALOG
                 || dto.conType == DataSourceTypeEnum.HUDI
+                || dto.conType == DataSourceTypeEnum.API
         ) {
             return resultEntity;
         }
@@ -231,7 +235,13 @@ public class NifiController {
         //RestfulApi无需在nifi创建全局变量，它不走nifi
         //SAPBW同理 源--临时表的流程不走nifi
         //HIVE同理
-        if (dto.conType == DataSourceTypeEnum.RESTFULAPI || dto.conType == DataSourceTypeEnum.SAPBW || dto.conType == DataSourceTypeEnum.WEBSERVICE || dto.conType == DataSourceTypeEnum.DORIS_CATALOG) {
+        if (dto.conType == DataSourceTypeEnum.RESTFULAPI
+                || dto.conType == DataSourceTypeEnum.SAPBW
+                || dto.conType == DataSourceTypeEnum.WEBSERVICE
+                || dto.conType == DataSourceTypeEnum.DORIS_CATALOG
+                || dto.conType == DataSourceTypeEnum.API
+                || dto.conType == DataSourceTypeEnum.HUDI
+        ) {
             return resultEntity;
         }
 
@@ -296,5 +306,17 @@ public class NifiController {
     @PostMapping("/apiEnableOrDisable")
     public ResultEntity<TableApiServiceDTO> apiEnableOrDisable(@RequestBody TableApiServiceDTO tableServiceDTO) {
         return tableNifiSettingService.apiEnableOrDisable(tableServiceDTO);
+    }
+
+    /**
+     * api-Java代码同步
+     *
+     * @param kafkaReceive
+     * @return
+     */
+    @ApiOperation("api-Java代码同步")
+    @PostMapping("/apiToStg")
+    public ResultEntity<Object> apiToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
+        return apiListener.apiToStg(JSON.toJSONString(kafkaReceive));
     }
 }
