@@ -24,7 +24,9 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
     StandardsService standardsService;
     @Override
     public List<StandardsTreeDTO> getStandardsTree() {
-        List<StandardsMenuPO> standardsMenus = this.list();
+        LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(StandardsMenuPO::getType,1);
+        List<StandardsMenuPO> standardsMenus = this.list(queryWrapper);
         if (CollectionUtils.isEmpty(standardsMenus)){
             return new ArrayList<>();
         }

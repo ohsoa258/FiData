@@ -60,7 +60,7 @@ public class KsfItemData extends KsfWebServiceHandler {
 
 
     @Override
-    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId) {
+    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code) {
         redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+apiId, 100);
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);

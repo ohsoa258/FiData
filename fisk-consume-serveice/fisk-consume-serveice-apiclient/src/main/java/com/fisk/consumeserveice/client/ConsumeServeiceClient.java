@@ -48,8 +48,8 @@ public interface ConsumeServeiceClient {
      * @return
      */
     @ApiOperation("根据接入id获取数据分发api集合")
-    @GetMapping("/getTableListByInputId/{id}")
-    public ResultEntity<List<BuildTableApiServiceDTO>> getTableListByInputId(@PathVariable("id") Integer id);
+    @GetMapping("/tableApiService/getTableApiListByInputId/{id}")
+    ResultEntity<List<BuildTableApiServiceDTO>> getTableApiListByInputId(@PathVariable("id") Integer id);
     /**
      * 修改表服务发布状态
      *

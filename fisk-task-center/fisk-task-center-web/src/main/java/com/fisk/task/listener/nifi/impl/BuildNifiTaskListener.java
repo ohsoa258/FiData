@@ -83,11 +83,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BuildNifiTaskListener implements INifiTaskListener {
 
-    @Value("${spring.datasource.dynamic.datasource.taskdb.url}")
-    private String jdbcStr;
-    @Value("${spring.datasource.dynamic.datasource.taskdb.username}")
-    private String user;
-
     @Value("${datamodeldorisconstr.url}")
     private String dorisUrl;
     @Value("${datamodeldorisconstr.username}")
@@ -368,7 +363,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 return one.getAppComponentId();
             } else {
                 BuildProcessGroupDTO groupDTO = new BuildProcessGroupDTO();
-                groupDTO.name = buildTableApiService.apiName;
+                groupDTO.name = buildTableApiService.appName;
                 groupDTO.details = buildTableApiService.apiDes;
                 groupDTO.groupId = nifiConfigPO.componentId;
                 int count = componentsBuild.getGroupCount(nifiConfigPO.componentId);
@@ -545,9 +540,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
     private ControllerServiceEntity buildCfgPool() {
         String groupId = NifiConstants.ApiConstants.ROOT_NODE;
         BuildDbControllerServiceDTO targetDto = new BuildDbControllerServiceDTO();
-        targetDto.user = user;
-        targetDto.pwd = password;
-        targetDto.conUrl = jdbcStr;
+        targetDto.user = "${CFG_DB_POOL_USERNAME}";
+        targetDto.pwd = "${CFG_DB_POOL_PASSWORD}";
+        targetDto.conUrl = "${CFG_DB_POOL_URL}";
         targetDto.driverName = DriverTypeEnum.MYSQL.getName();
         targetDto.enabled = true;
         targetDto.groupId = groupId;
@@ -584,16 +579,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.addAll(processorEntities);
         //调度组件,在数据接入的时候调一次
         String inputPortId = "";
-        ProcessorEntity dispatchProcessor = queryDispatchProcessor(config, groupId, cfgDbPoolId, dto);
-        tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
-        res.add(dispatchProcessor);
-        //发送消息PublishKafka
-        ProcessorEntity processorEntity2 = convertJsonProcessor(groupId, 0, 2);
-        res.add(processorEntity2);
-        ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 3, true);
-        res.add(publishKafkaProcessor);
-        componentConnector(groupId, dispatchProcessor.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        componentConnector(groupId, processorEntity2.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+
+        if (buildTableApiService.syncModeDTO.triggerType == 1){
+            ProcessorEntity dispatchProcessor = queryDispatchApiProcessor(config, groupId, cfgDbPoolId, dto);
+            tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
+            res.add(dispatchProcessor);
+            //发送消息PublishKafka
+            ProcessorEntity processorEntity2 = convertJsonProcessor(groupId, 0, 2);
+            res.add(processorEntity2);
+            ProcessorEntity publishKafkaProcessor = createPublishKafkaProcessor(config, dto, groupId, 3, true);
+            res.add(publishKafkaProcessor);
+            componentConnector(groupId, dispatchProcessor.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.SUCCESS);
+            componentConnector(groupId, processorEntity2.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        }else {
+            //更新topic
+            TableTopicDTO tableTopicDTO = new TableTopicDTO();
+            tableTopicDTO.tableId = Math.toIntExact(dto.id);
+            tableTopicDTO.tableType = dto.type.getValue();
+            tableTopicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
+            tableTopicDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+            if (Objects.equals(dto.type, OlapTableEnum.KPI)) {
+                tableTopicDTO.topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.KPI.getValue() + "." + dto.appId + "." + dto.id;
+            }
+            tableTopicService.updateTableTopic(tableTopicDTO);
+        }
+
         //原变量字段
         ProcessorEntity incrementProcessor = evaluateJsonPathProcessor(groupId, 6);
         res.add(incrementProcessor);
@@ -653,6 +663,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableApiSyncDTO.tableType = dto.type.getValue();
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("pipelTaskTraceId", "${pipelTaskTraceId}");
+        checkByFieldMap.put("fidata_batch_code", "${fidata_batch_code}");
         tableApiSyncDTO.setCheckByFieldMap(checkByFieldMap);
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -4412,6 +4423,33 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
     }
 
+    /**
+     * 执行sql 查询增量字段组件 api用
+     *
+     * @param config      数据接入配置
+     * @param groupId     组id
+     * @param cfgDbPoolId 增量配置库连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity queryDispatchApiProcessor(DataAccessConfigDTO config, String groupId, String cfgDbPoolId, BuildNifiFlowDTO dto) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "queryDispatchProcessor";
+        querySqlDto.details = "queryDispatchProcessor";
+        querySqlDto.groupId = groupId;
+        querySqlDto.querySql = buildTableApiServiceSql(dto);
+        querySqlDto.dbConnectionId = cfgDbPoolId;
+        querySqlDto.scheduleExpression = config.processorConfig.scheduleExpression;
+        querySqlDto.scheduleType = config.processorConfig.scheduleType;
+/*        querySqlDto.scheduleExpression = "1800";
+        querySqlDto.scheduleType = SchedulingStrategyTypeEnum.TIMER;*/
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(1);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        //验证执行结果
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+
+    }
+
     private ProcessorEntity queryForPipelineSupervision(String groupId, String cfgDbPoolId) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         buildReplaceTextProcessorDTO.name = "queryForPipelineSupervision";
@@ -4511,6 +4549,29 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         str.append(" ifnull(incremental_objectivescore_end,CONCAT(current_timestamp(),'')) ").append(" as ").append(SystemVariableTypeEnum.END_TIME.getName()).append(" ");
         str.append(" from ").append(NifiConstants.AttrConstants.INCREMENT_DB_TABLE_NAME);
         str.append(" where object_name = '").append(targetDbName).append("'");
+        return str.toString();
+    }
+    /**
+     * 创建增量字段查询sql
+     *
+     * @param dto 目标表名称
+     * @return sql
+     */
+    private String buildTableApiServiceSql(BuildNifiFlowDTO dto) {
+        StringBuilder str = new StringBuilder();
+        str.append("select ");
+        KafkaReceiveDTO kafkaRkeceiveDTO = KafkaReceiveDTO.builder().build();
+        kafkaRkeceiveDTO.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        kafkaRkeceiveDTO.start_time = simpleDateFormat.format(new Date());
+        kafkaRkeceiveDTO.pipelTaskTraceId = UUID.randomUUID().toString();
+        kafkaRkeceiveDTO.fidata_batch_code = kafkaRkeceiveDTO.pipelTaskTraceId;
+        kafkaRkeceiveDTO.pipelStageTraceId = UUID.randomUUID().toString();
+        kafkaRkeceiveDTO.ifTaskStart = true;
+        kafkaRkeceiveDTO.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+        str.append("'").append(kafkaRkeceiveDTO.topic).append("' as topic, '").append(kafkaRkeceiveDTO.start_time).append("' as start_time, ").append("md5(UUID())");
+        str.append(" as pipelTaskTraceId, ").append("\"\"").append(" as fidata_batch_code , ").append("md5(UUID())").append(" as pipelStageTraceId, '");
+        str.append("true' as ifTaskStart , '").append(kafkaRkeceiveDTO.topicType).append("' as topicType");
         return str.toString();
     }
 

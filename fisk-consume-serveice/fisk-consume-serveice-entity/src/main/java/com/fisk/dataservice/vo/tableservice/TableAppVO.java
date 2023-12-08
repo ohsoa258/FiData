@@ -6,6 +6,7 @@ import com.fisk.dataservice.enums.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -84,4 +85,7 @@ public class TableAppVO {
 
     @ApiModelProperty(value = "方法名称")
     private String methodName;
+
+    @ApiModelProperty(value = "创建时间")
+    public LocalDateTime createTime;
 }

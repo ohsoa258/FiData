@@ -25,6 +25,7 @@ import com.fisk.dataservice.mapper.TableApiServiceMapper;
 import com.fisk.dataservice.service.*;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
+import com.fisk.task.dto.task.BuildDeleteTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
@@ -187,7 +188,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         data.appId = (int) tableAppPO.getId();
         data.appDesc = tableAppPO.getAppDesc();
         data.appName = tableAppPO.getAppName();
-
+        data.enable = tableApiServicePO.getEnable();
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
 
@@ -202,14 +203,14 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         tableSyncMode.delTableServiceSyncMode(id, AppServiceTypeEnum.TABLE_API.getValue());
         TableApiServicePO apiService = this.getById(id);
         this.removeById(id);
-        BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
-        buildDeleteTableService.appId = String.valueOf(apiService.getAppId());
-        buildDeleteTableService.ids = Arrays.asList(apiService.id);
-        buildDeleteTableService.olapTableEnum = OlapTableEnum.DATASERVICES;
-        buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
-        buildDeleteTableService.delBusiness = true;
+        BuildDeleteTableApiServiceDTO buildDeleteTableApiService = new BuildDeleteTableApiServiceDTO();
+        buildDeleteTableApiService.appId = String.valueOf(apiService.getAppId());
+        buildDeleteTableApiService.ids = Arrays.asList(apiService.id);
+        buildDeleteTableApiService.olapTableEnum = OlapTableEnum.DATA_SERVICE_API;
+        buildDeleteTableApiService.userId = userHelper.getLoginUserInfo().id;
+        buildDeleteTableApiService.delBusiness = true;
         if (apiService.getPublish() != 0){
-            publishTaskClient.publishBuildDeleteDataServices(buildDeleteTableService);
+            publishTaskClient.publishBuildDeleteDataServiceApi(buildDeleteTableApiService);
         }
         return ResultEnum.SUCCESS;
     }
@@ -242,7 +243,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     }
 
     @Override
-    public List<BuildTableApiServiceDTO> getTableListByInputId(Integer inputId) {
+    public List<BuildTableApiServiceDTO> getTableApiListByInputId(Integer inputId) {
         List<Integer> tableListByPipelineId = tableSyncMode.getTableListByInputId(inputId,4);
         if (CollectionUtils.isEmpty(tableListByPipelineId)) {
             return new ArrayList<>();

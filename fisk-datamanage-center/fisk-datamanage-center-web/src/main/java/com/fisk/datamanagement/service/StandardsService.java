@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
@@ -57,5 +58,7 @@ public interface StandardsService extends IService<StandardsPO> {
     void exportStandards(List<Integer> ids, HttpServletResponse response);
 
     ResultEnum standardsSort(StandardsSortDTO dto);
+
+    Page<StandardsMenuDTO> standardsQuery(StandardsQueryDTO dto);
 }
 
