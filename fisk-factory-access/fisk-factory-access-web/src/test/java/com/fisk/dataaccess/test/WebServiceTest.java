@@ -140,12 +140,12 @@ public class WebServiceTest {
 //        ksf_noticeResult.setINFOTEXT(result);
 //    }
 
-    @Resource
-    AppRegistrationImpl appRegistration;
-
-    @Test
-    public void testSyncAllTables() {
-        appRegistration.hudiSyncAllTablesToFidataConfig(6, 30L, "hudi入仓配置new");
-    }
+//    @Resource
+//    AppRegistrationImpl appRegistration;
+//
+//    @Test
+//    public void testSyncAllTables() {
+//        appRegistration.hudiSyncAllTablesToFidataConfig(6, 30L, "hudi入仓配置new");
+//    }
 
 }

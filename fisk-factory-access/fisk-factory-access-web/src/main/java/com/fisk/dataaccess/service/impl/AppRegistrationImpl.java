@@ -300,10 +300,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 long appId = po.getId();
                 List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
                 //获取来源数据源id
-                Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
+                int systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
+                //获取appdatasourceid
+                int appDatasourceId = Math.toIntExact(appSourcesByAppId.get(0).getId());
                 //获取来源数据源id
                 //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
-                hudiSyncAllTablesToFidataConfig(systemDataSourceId, appId, po.getAppName());
+                hudiSyncAllTablesToFidataConfig(systemDataSourceId, appDatasourceId, appId, po.getAppName());
 //            }).start();
             }
         }
@@ -342,7 +344,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      *
      * @param dbId
      */
-    public void hudiSyncAllTablesToFidataConfig(Integer dbId, Long appId, String appName) {
+    public void hudiSyncAllTablesToFidataConfig(Integer dbId, Integer appDatasourceId, Long appId, String appName) {
         log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
         ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
         DataSourceDTO dto = datasource.getData();
@@ -387,7 +389,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             for (TablePyhNameDTO table : tableNames) {
 
                 TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
-                tableAccessDTO.setAppDataSourceId(dbId);
+                tableAccessDTO.setAppDataSourceId(appDatasourceId);
                 tableAccessDTO.setAppId(appId);
                 tableAccessDTO.setAppName(appName);
                 tableAccessDTO.setDisplayName(table.getTableName());
@@ -448,7 +450,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      *
      * @param dbId
      */
-    public void hudiSyncOneTableToFidataConfig(Integer dbId, Long appId, String appName, String tblName) {
+    public void hudiSyncOneTableToFidataConfig(Integer dbId, Integer appDatasourceId, Long appId, String appName, String tblName) {
         log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
         ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
         DataSourceDTO dto = datasource.getData();
@@ -491,7 +493,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.info("查询到的库表字段详情：" + tables);
 
             TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
-            tableAccessDTO.setAppDataSourceId(dbId);
+            tableAccessDTO.setAppDataSourceId(appDatasourceId);
             tableAccessDTO.setAppId(appId);
             tableAccessDTO.setAppName(appName);
             tableAccessDTO.setDisplayName(tblName);
@@ -898,9 +900,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
                 //获取来源数据源id
                 Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
-                //获取来源数据源id
+                //获取appdatasourceid
+                int appDatasourceId = Math.toIntExact(appSourcesByAppId.get(0).getId());
                 //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
-                hudiSyncAllTablesToFidataConfig(systemDataSourceId, appId, po.getAppName());
+                hudiSyncAllTablesToFidataConfig(systemDataSourceId, appDatasourceId, appId, po.getAppName());
             }
         }
         return appDataSourceImpl.saveOrUpdateBatch(modelDataSource) ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
@@ -2518,11 +2521,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
             //获取来源数据源id
             Integer systemDataSourceId = appSourcesByAppId.get(0).getSystemDataSourceId();
+            int appDatasourceId = Math.toIntExact(appSourcesByAppId.get(0).getId());
             //获取来源数据源id
             //hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
             List<String> tblNames = dto.getTblNames();
             for (String tblName : tblNames) {
-                hudiSyncOneTableToFidataConfig(systemDataSourceId, appId, dto.getAppName(), tblName);
+                hudiSyncOneTableToFidataConfig(systemDataSourceId, appDatasourceId, appId, dto.getAppName(), tblName);
             }
         } catch (Exception e) {
             log.error("hudi 入仓配置 - 开始同步所有表失败：" + e);
