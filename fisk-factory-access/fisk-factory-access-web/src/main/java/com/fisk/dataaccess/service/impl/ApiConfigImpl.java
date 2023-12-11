@@ -1240,7 +1240,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             pushDataStgToOds(dto.getApiCode(), 0);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId,dto.getBatchCode());
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, dto.getBatchCode());
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -2197,9 +2197,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         List<JsonTableData> targetTable = jsonUtils.getTargetTable(tableNameList);
         // 获取Json的schema信息
         List<JsonSchema> schemas = jsonUtils.getJsonSchema(apiTableDtoList, jsonKey);
+        log.info("调用api获取数据的Json的schema信息：" + schemas.toString());
         // json根节点处理
         try {
             JSONObject json = JSON.parseObject(jsonStr);
+            log.info("调用api获取的数据详情：" + json);
             jsonUtils.rootNodeHandler(schemas, json, targetTable);
         } catch (Exception e) {
             log.error(String.format("解析Json数据失败，表名称：%s，Json: %s", tablePrefixName, jsonStr), e);
@@ -2222,7 +2224,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 for (int i = 0; i < targetTable.size(); i++) {
                     body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
                 }
-
 
                 dto.body = body;
                 // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
@@ -2254,8 +2255,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.error(String.format("调用数据质量接口报错，表名称：%s", tablePrefixName), e);
             return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
-        System.out.println("开始执行sql");
 
+        log.info("开始执行sql");
         // stg_abbreviationName_tableName
         ResultEntity<Object> excuteResult;
         try {
@@ -2266,7 +2267,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (importDataDto == null) {
                 excuteResult = pgsqlUtils.executeBatchPgsql(tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             } else {
-                excuteResult = pgsqlUtils.executeBatchPgsql(batchCode,importDataDto, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
+                excuteResult = pgsqlUtils.executeBatchPgsql(batchCode, importDataDto, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
             }
         } catch (Exception e) {
             log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);

@@ -100,7 +100,7 @@ public class SqlServerPlusUtils {
             colNameList.forEach(tableStructureDTO -> {
                 if (pks.contains(tableStructureDTO.fieldName)) {
                     tableStructureDTO.setIsPk(1);
-                    tableStructureDTO.setFieldDes("主键");
+//                    tableStructureDTO.setFieldDes("主键");
                 } else {
                     tableStructureDTO.setIsPk(0);
                 }
