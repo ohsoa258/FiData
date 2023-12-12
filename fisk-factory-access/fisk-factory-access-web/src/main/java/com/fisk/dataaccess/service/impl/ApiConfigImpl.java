@@ -3,6 +3,7 @@ package com.fisk.dataaccess.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -2088,12 +2089,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 身份验证地址
             apiHttpRequestDto.uri = dataSourcePo.connectStr;
             // apiKey 请求body参数
-            JSONObject loginObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
+            JSONObject loginObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters, Feature.OrderedField);
             log.info("apiKey 请求body参数:" + loginObject.toJSONString());
             ObjectMapper mapper = new ObjectMapper();
             Map<String, String> map = null;
             try {
                 map = mapper.readValue(loginObject.toString(), Map.class);
+                log.info("map:" + map);
             } catch (IOException e) {
                 log.error("apiKey 请求body参数转map失败:" + e);
                 throw new FkException(ResultEnum.ERROR);
