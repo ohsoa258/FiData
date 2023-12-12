@@ -156,7 +156,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum importDataV2(ApiImportDataDTO dto) throws IOException;
+    ResultEnum importDataV2(ApiImportDataDTO dto);
 
     /**
      * api复制: 保存功能
