@@ -194,9 +194,11 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         data.appDesc = tableAppPO.getAppDesc();
         data.appName = tableAppPO.getAppName();
         data.enable = tableApiServicePO.getEnable();
-        data.lgpla = plantPO.getLgpla();
-        data.name = plantPO.getName();
-        data.sourcesys = plantPO.getSourcesys();
+        if (plantPO != null){
+            data.lgpla = plantPO.getLgpla();
+            data.name = plantPO.getName();
+            data.sourcesys = plantPO.getSourcesys();
+        }
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
 
