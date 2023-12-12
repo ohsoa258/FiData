@@ -1430,7 +1430,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEnum importDataV2(ApiImportDataDTO dto) throws IOException {
+    public ResultEnum importDataV2(ApiImportDataDTO dto) {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         // 接入模块调用
         resultEnum = syncDataV2(dto, null);
@@ -1893,7 +1893,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params dto
      */
-    public ResultEnum syncDataV2(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) throws IOException {
+    public ResultEnum syncDataV2(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) {
         // 根据appId获取应用信息(身份验证方式,验证参数)
         AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", dto.appId).one();
         if (modelApp == null) {
@@ -2091,7 +2091,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject loginObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
             log.info("apiKey 请求body参数:" + loginObject.toJSONString());
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, String> map = mapper.readValue(loginObject.toString(), Map.class);
+            Map<String, String> map = null;
+            try {
+                map = mapper.readValue(loginObject.toString(), Map.class);
+            } catch (IOException e) {
+                log.error("apiKey 请求body参数转map失败:" + e);
+                throw new FkException(ResultEnum.ERROR);
+            }
             apiHttpRequestDto.jsonObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
             apiHttpRequestDto.setFormDataParams(map);
 
