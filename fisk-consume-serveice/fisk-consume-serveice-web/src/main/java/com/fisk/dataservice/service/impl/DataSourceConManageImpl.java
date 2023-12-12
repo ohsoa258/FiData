@@ -263,23 +263,24 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
                 reqDTO.setDataSourceId(String.valueOf(fiDataSourceDTO.id));
                 reqDTO.setDataSourceName(fiDataSourceDTO.getConDbname());
-                switch (fiDataSourceDTO.id) {
-                    case 1:
-                    case 4:
-                        // dw olap
-                        dataModelClient.setDataModelStructure(reqDTO);
-                        break;
-                    case 2:
-                        // ods
-                        dataAccessClient.setDataAccessStructure(reqDTO);
-                        break;
-                    case 3:
-                        // mdm
-                        mdmClient.setMDMDataStructure(reqDTO);
-                        break;
-                }
                 if (dataSourceConPO.conType == DataSourceTypeEnum.DORIS.getValue()){
                     setDataDorisStructure(dataSourceConPO);
+                }else {
+                    switch (fiDataSourceDTO.id) {
+                        case 1:
+                        case 4:
+                            // dw olap
+                            dataModelClient.setDataModelStructure(reqDTO);
+                            break;
+                        case 2:
+                            // ods
+                            dataAccessClient.setDataAccessStructure(reqDTO);
+                            break;
+                        case 3:
+                            // mdm
+                            mdmClient.setMDMDataStructure(reqDTO);
+                            break;
+                    }
                 }
             }
         } else {
