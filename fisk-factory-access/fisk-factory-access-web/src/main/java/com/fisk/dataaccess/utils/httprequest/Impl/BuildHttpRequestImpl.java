@@ -67,7 +67,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
 
             if (dto.httpRequestEnum.getValue() == 2) { // post
                 log.info("执行httpRequest方法的参数为：" + json);
-                result = sendPostRequest(dto, json);
+                result = sendPostRequestForFormData(dto, json);
             } else { // get
                 result = sendGetRequest(dto, json);
             }
@@ -152,6 +152,46 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
                 for (Map.Entry<String, String> entry : dto.formDataParams.entrySet()) {
                     formDataList.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
                 }
+                // form-data请求方式
+                httpPost.setEntity(new UrlEncodedFormEntity(formDataList, StandardCharsets.UTF_8));
+            }
+
+            HttpResponse response = client.execute(httpPost);
+            HttpEntity entity = response.getEntity();
+            //解析返回数据
+            result = EntityUtils.toString(entity, "UTF-8");
+            log.info("执行httpRequest方法成功,【返回信息为：】,{}", result);
+        } catch (IOException | ParseException e) {
+            log.error("AE91: 执行post请求失败,失败原因为: " + e);
+            throw new FkException(ResultEnum.SEND_POST_REQUEST_ERROR);
+        }
+        return result;
+    }
+
+    public String sendPostRequestForFormData(ApiHttpRequestDTO dto, String json) throws IOException {
+        String result = null;
+        try {
+            HttpClient client = new DefaultHttpClient();
+            // post请求
+            HttpPost httpPost = new HttpPost(dto.uri);
+
+            httpPost.setHeader("Content-Type", "application/json; charset=utf-8");
+            if (StringUtils.isNotBlank(dto.requestHeader)) {
+                httpPost.setHeader("Authorization", dto.requestHeader);
+            }
+
+            // 页面自定义的请求头信息
+            if (dto.headersParams != null && !dto.headersParams.isEmpty()) {
+                dto.headersParams.forEach(httpPost::setHeader);
+            }
+
+            // form-data数据
+            if (dto.formDataParams != null && !dto.formDataParams.isEmpty()) {
+                List<BasicNameValuePair> formDataList = new ArrayList<>();
+                for (Map.Entry<String, String> entry : dto.formDataParams.entrySet()) {
+                    formDataList.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+                }
+                log.info("form_data list:" + formDataList);
                 // form-data请求方式
                 httpPost.setEntity(new UrlEncodedFormEntity(formDataList, StandardCharsets.UTF_8));
             }

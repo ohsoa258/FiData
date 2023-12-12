@@ -2104,7 +2104,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
 
 //             apikey登录
-            JSONObject loginResult = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
+            JSONObject loginResult = iBuildHttpRequest.httpRequestForFormData(apiHttpRequestDto);
             log.info("登录验证结果：" + loginResult.toJSONString());
 
 
