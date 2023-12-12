@@ -175,16 +175,6 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
             // post请求
             HttpPost httpPost = new HttpPost(dto.uri);
 
-            httpPost.setHeader("Content-Type", "application/json; charset=utf-8");
-            if (StringUtils.isNotBlank(dto.requestHeader)) {
-                httpPost.setHeader("Authorization", dto.requestHeader);
-            }
-
-            // 页面自定义的请求头信息
-            if (dto.headersParams != null && !dto.headersParams.isEmpty()) {
-                dto.headersParams.forEach(httpPost::setHeader);
-            }
-
             // form-data数据
             if (dto.formDataParams != null && !dto.formDataParams.isEmpty()) {
                 List<BasicNameValuePair> formDataList = new ArrayList<>();
@@ -193,7 +183,9 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
                 }
                 log.info("form_data list:" + formDataList);
                 // form-data请求方式
-                httpPost.setEntity(new UrlEncodedFormEntity(formDataList, StandardCharsets.UTF_8));
+                UrlEncodedFormEntity urlEncodedFormEntity = new UrlEncodedFormEntity(formDataList, StandardCharsets.UTF_8);
+                log.info("urlEncodedFormEntity:" + urlEncodedFormEntity.toString());
+                httpPost.setEntity(urlEncodedFormEntity);
             }
 
             HttpResponse response = client.execute(httpPost);
