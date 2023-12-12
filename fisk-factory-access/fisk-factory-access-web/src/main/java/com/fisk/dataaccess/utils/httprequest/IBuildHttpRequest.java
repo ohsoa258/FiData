@@ -25,6 +25,14 @@ public interface IBuildHttpRequest {
      * @param dto dto
      * @return jsonObject
      */
+    JSONObject httpRequestForFormData(ApiHttpRequestDTO dto);
+
+    /**
+     * 请求第三方平台api返回的参数
+     *
+     * @param dto dto
+     * @return jsonObject
+     */
     String getHttpRequest(ApiHttpRequestDTO dto);
 
     /**

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.MqConstants;
@@ -1429,7 +1430,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     @Override
-    public ResultEnum importDataV2(ApiImportDataDTO dto) {
+    public ResultEnum importDataV2(ApiImportDataDTO dto) throws IOException {
         ResultEnum resultEnum = ResultEnum.SUCCESS;
         // 接入模块调用
         resultEnum = syncDataV2(dto, null);
@@ -1892,7 +1893,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @version v1.0
      * @params dto
      */
-    public ResultEnum syncDataV2(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) {
+    public ResultEnum syncDataV2(ApiImportDataDTO dto, List<ApiParameterPO> apiParameters) throws IOException {
         // 根据appId获取应用信息(身份验证方式,验证参数)
         AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", dto.appId).one();
         if (modelApp == null) {
@@ -2087,13 +2088,19 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 身份验证地址
             apiHttpRequestDto.uri = dataSourcePo.connectStr;
             // apiKey 请求body参数
+            JSONObject loginObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
+            log.info("apiKey 请求body参数:" + loginObject.toJSONString());
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, String> map = mapper.readValue(loginObject.toString(), Map.class);
             apiHttpRequestDto.jsonObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
+            apiHttpRequestDto.setFormDataParams(map);
 
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
 
 //             apikey登录
             JSONObject loginResult = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
             log.info("登录验证结果：" + loginResult.toJSONString());
+
 
             apiHttpRequestDto.uri = apiConfigPo.apiAddress;
             if (apiConfigPo.apiRequestType == 1) {

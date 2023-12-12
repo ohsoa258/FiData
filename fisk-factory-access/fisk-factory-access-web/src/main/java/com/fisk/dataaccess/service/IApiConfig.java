@@ -10,6 +10,7 @@ import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.entity.ApiConfigPO;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -155,7 +156,7 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum importDataV2(ApiImportDataDTO dto);
+    ResultEnum importDataV2(ApiImportDataDTO dto) throws IOException;
 
     /**
      * api复制: 保存功能
