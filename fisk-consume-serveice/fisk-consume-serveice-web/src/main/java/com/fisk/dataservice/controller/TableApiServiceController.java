@@ -10,6 +10,7 @@ import com.fisk.dataservice.dto.tableservice.TableServiceSyncDTO;
 import com.fisk.dataservice.service.ITableApiLogService;
 import com.fisk.dataservice.service.ITableApiService;
 import com.fisk.dataservice.service.ITableAppManageService;
+import com.fisk.dataservice.service.KsfPlantService;
 import com.fisk.dataservice.service.impl.AsyncImpl;
 import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
 import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
@@ -38,6 +39,9 @@ public class TableApiServiceController {
 
     @Resource
     private AsyncImpl async;
+
+    @Resource
+    private KsfPlantService ksfPlantService;
 
     @ApiOperation("分页获取数据分发服务Api数据")
     @PostMapping("/getTableApiListData")
@@ -123,5 +127,11 @@ public class TableApiServiceController {
     @GetMapping("/importantOrUnimportant")
     public ResultEntity<List<String>> importantOrUnimportant(@RequestParam("id") Integer id) {
         return ResultEntityBuild.build(tableApiService.importantOrUnimportant(id));
+    }
+
+    @ApiOperation("获取工厂下拉框")
+    @GetMapping("/getPlant")
+    public ResultEntity<Object> getPlant() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, ksfPlantService.getPlant());
     }
 }

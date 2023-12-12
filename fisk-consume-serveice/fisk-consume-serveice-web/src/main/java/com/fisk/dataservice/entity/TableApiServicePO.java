@@ -56,4 +56,7 @@ public class TableApiServicePO extends BasePO {
 
     @ApiModelProperty(value = "起始同步时间")
     public String syncTime;
+
+    @ApiModelProperty(value = "工厂id")
+    public Integer plantId;
 }

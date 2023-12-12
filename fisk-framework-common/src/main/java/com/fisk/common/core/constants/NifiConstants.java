@@ -70,6 +70,8 @@ public class NifiConstants {
         public static final String TOPIC_TYPE="topicType";
         public static final String TASK_ID="taskId";
 
+        public static final String SOURCESYS="sourcesys";
+
         public static final int POSITION_X_MAX = 5;
         public static final double POSITION_X = 500;
         public static final double POSITION_Y = 300;

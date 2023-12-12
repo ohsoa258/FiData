@@ -14,6 +14,7 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
+import com.fisk.dataservice.entity.KsfPlantPO;
 import com.fisk.dataservice.entity.TableApiParameterPO;
 import com.fisk.dataservice.entity.TableApiServicePO;
 import com.fisk.dataservice.entity.TableAppPO;
@@ -56,6 +57,9 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserHelper userHelper;
+
+    @Resource
+    private KsfPlantService ksfPlantService;
     @Resource
     private ITableService tableService;
     @Resource
@@ -183,12 +187,16 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         appQueryWrapper.eq(TableAppPO::getId, tableApiServicePO.getAppId());
         TableAppPO tableAppPO = tableAppService.getOne(appQueryWrapper);
 
+        KsfPlantPO plantPO = ksfPlantService.getById(tableApiServicePO.getPlantId());
         data.apiDes = tableApiServicePO.getApiDes();
         data.apiName = tableApiServicePO.getApiName();
         data.appId = (int) tableAppPO.getId();
         data.appDesc = tableAppPO.getAppDesc();
         data.appName = tableAppPO.getAppName();
         data.enable = tableApiServicePO.getEnable();
+        data.lgpla = plantPO.getLgpla();
+        data.name = plantPO.getName();
+        data.sourcesys = plantPO.getSourcesys();
         //同步配置
         data.syncModeDTO = dto.tableSyncMode;
 

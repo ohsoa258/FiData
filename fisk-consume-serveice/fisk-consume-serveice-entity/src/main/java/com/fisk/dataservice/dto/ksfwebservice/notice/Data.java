@@ -1,7 +1,6 @@
 package com.fisk.dataservice.dto.ksfwebservice.notice;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
 
 import java.util.List;
 

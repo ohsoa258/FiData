@@ -63,12 +63,12 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
     }
 
     @Autowired
-    public void setUserClient(RedisUtil redisUtil) {
+    public void setRedisUtil(RedisUtil redisUtil) {
         KsfAcknowledgement.redisUtil = redisUtil;
     }
 
     @Override
-    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code) {
+    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code,String sourcesys) {
         redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + apiId, 100);
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);
@@ -168,32 +168,13 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
 
     public ApiResultDTO send(ZALLSAPUPLOADGOODSMOV resultJsonData) {
         ApiResultDTO apiResultDTO = new ApiResultDTO();
-        //创建动态客户端
-//        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-//
-//        //webService的这个动态客户端的地址需要从数据库中查出来
-//        Client client = dcf.createClient("http://tws.ksf.com.cn:8899/ZALLSAP_UPLOAD_GOODSMOV_Proxy/ZALLSAP_UPLOAD_GOODSMOV_Orchestration_1_Port_DingT.asmx?wsdl");
-//        //设置超时时间
-//        HTTPConduit conduit = (HTTPConduit) client.getConduit();
-//        HTTPClientPolicy policy = new HTTPClientPolicy();
-//        policy.setAllowChunking(false);
-//        // 连接服务器超时时间 30秒
-//        policy.setConnectionTimeout(30000);
-//        // 等待服务器响应超时时间 30秒
-//        policy.setReceiveTimeout(30000);
-//        conduit.setClient(policy);
-//        JSONObject result = null;
         try {
-            // invoke("方法名",参数1,参数2,参数3....);
-
-//        try {
             // 创建服务实例
             ZALLSAPUPLOADGOODSMOVOrchestration1PortDingT service = new ZALLSAPUPLOADGOODSMOVOrchestration1PortDingT();
 // 获取端口
             ZALLSAPUPLOADGOODSMOVOrchestration1PortDingTSoap port = service.getZALLSAPUPLOADGOODSMOVOrchestration1PortDingTSoap12();
             OperationZALLSAPUPLOADGOODSMOV operationZALLSAPUPLOADGOODSMOV = new OperationZALLSAPUPLOADGOODSMOV();
             operationZALLSAPUPLOADGOODSMOV.setZALLSAPUPLOADGOODSMOV(resultJsonData);
-//            Object[] objects = client.invoke("Operation_ZALLSAP_UPLOAD_GOODSMOV", operationZALLSAPUPLOADGOODSMOV);
             log.info("发送前");
             OperationZALLSAPUPLOADGOODSMOVResponse operationZALLSAPUPLOADGOODSMOVResponse = port.operationZALLSAPUPLOADGOODSMOV(operationZALLSAPUPLOADGOODSMOV);
             log.info("发送后接收:"+JSON.toJSON(operationZALLSAPUPLOADGOODSMOVResponse));

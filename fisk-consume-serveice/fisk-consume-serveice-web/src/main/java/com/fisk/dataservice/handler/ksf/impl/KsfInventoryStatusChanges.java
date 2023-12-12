@@ -6,20 +6,20 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.dataservice.dto.ksfwebservice.inventory.Data;
-import com.fisk.dataservice.dto.ksfwebservice.inventory.InventoryStatusChanges;
-import com.fisk.dataservice.dto.ksfwebservice.inventory.MATDOCTAB;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
+import com.fisk.dataservice.entity.KsfPlantPO;
 import com.fisk.dataservice.entity.TableApiParameterPO;
 import com.fisk.dataservice.entity.TableApiServicePO;
 import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
 import com.fisk.dataservice.service.ITableApiService;
+import com.fisk.dataservice.service.KsfPlantService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -40,8 +40,8 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
 
     private static ITableApiService tableApiService;
     private static UserClient userClient;
-
-    private static  RedisUtil redisUtil;
+    private static RedisUtil redisUtil;
+    private static KsfPlantService ksfPlantService;
 
     @Autowired
     public void setTableApiService(ITableApiService tableApiService) {
@@ -54,16 +54,24 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
     }
 
     @Autowired
-    public void setUserClient(RedisUtil redisUtil) {
+    public void setRedisUtil(RedisUtil redisUtil) {
         KsfInventoryStatusChanges.redisUtil = redisUtil;
+    }
+
+    @Autowired
+    public void setKsfPlantService(KsfPlantService ksfPlantService) {
+        KsfInventoryStatusChanges.ksfPlantService = ksfPlantService;
     }
 
 
     @Override
-    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code) {
-        redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+apiId, 100);
+    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code, String sourcesys) {
+
+
+        redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + apiId, 100);
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);
+        KsfPlantPO plantPO = ksfPlantService.getById(tableApiServicePO.getPlantId());
         int number = 0;
         if (tableApiServicePO == null) {
             apiResultDTO.setFlag(false);
@@ -79,7 +87,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
 
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        InventoryStatusChanges result = new InventoryStatusChanges();
+        Map<String, Object> result = new HashMap<>();
 
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
@@ -96,26 +104,38 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                 st1 = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
-                String statusChangesSql = split[1] + " WHERE fidata_batch_code in  (select fidata_batch_code from public.ods_sap_ksf_inventory_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String systemDataSql = null;
+                String statusChangesSql = null;
+                if (plantPO == null) {
+                    systemDataSql = split[0] + " WHERE TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP AND sourcesys = '" + sourcesys + "' ORDER BY fi_createtime;";
+                    statusChangesSql = split[1] + " WHERE fidata_batch_code in (select fidata_batch_code from public.ods_sap_ksf_inventory_sys  where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP  AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP AND sourcesys = '" + sourcesys + "');";
+                } else {
+                    systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP AND sourcesys = '" + sourcesys + "' ORDER BY fi_createtime";
+                    systemDataSql = "select q.* FROM (" + systemDataSql + ") as q LEFT JOIN public.ods_sap_ksf_inventory b on q.fidata_batch_code = b.fidata_batch_code where b.lgpla = '" + plantPO.getLgpla() + "'";
+                    String selectSql = "select q.fidata_batch_code FROM (" + systemDataSql + ") as q LEFT JOIN public.ods_sap_ksf_inventory b on q.fidata_batch_code = b.fidata_batch_code where b.lgpla = '" + plantPO.getLgpla() + "'";
+
+                    statusChangesSql = split[1] + " WHERE lgpla = '" + plantPO.getLgpla() + "' AND fidata_batch_code in (" + selectSql + ");";
+                }
                 log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st.executeQuery(systemDataSql);
                 log.info("开始执行脚本statusChanges:{}", statusChangesSql);
                 ResultSet statusChanges = st1.executeQuery(statusChangesSql);
-                List<InventoryStatusChanges> resultJsonData = assembleInventoryStatusChangesDTO(systemData, statusChanges);
-                List<MATDOCTAB> matdoctabs = new ArrayList<>();
-                for (InventoryStatusChanges resultJsonDatum : resultJsonData) {
+                List<Map<String, Object>> resultJsonData = assembleInventoryStatusChanges(systemData, statusChanges, plantPO.getLgpla());
+                List<Map<String, Object>> inventoryData = new ArrayList<>();
+                for (Map<String, Object> resultJsonDatum : resultJsonData) {
                     result = resultJsonDatum;
-                    Data data = resultJsonDatum.getData();
-                    if (data != null){
-                        matdoctabs.addAll(data.getMATDOCTAB());
+                    Map<String, Object> data = (Map<String, Object>) resultJsonDatum.get("Data");
+                    if (data != null) {
+                        List<Map<String, Object>> inventoryStatusChanges = (List<Map<String, Object>>) data.get("InventoryStatusChanges");
+                        inventoryData.addAll(inventoryStatusChanges);
                     }
                 }
-                Data data = new Data();
-                data.setMATDOCTAB(matdoctabs);
-                data.setDocCount(matdoctabs.size());
-                result.setData(data);
-                number = result.getData().getDocCount();
+                Map<String, Object> data = new HashMap<>();
+                data.put("InventoryStatusChanges", inventoryData);
+                data.put("DocCount", inventoryData.size());
+                result.put("Data", data);
+
+                number = inventoryData.size();
                 apiResultDTO.setNumber(number);
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
@@ -142,9 +162,17 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             return apiResultDTO;
         }
         String data = JSON.toJSONString(result);
-        log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
-        apiResultDTO = sendHttpPost(tableApiServicePO, data);
-        if (apiResultDTO.getFlag()){
+        log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + data);
+        Map<String, Object> dataMap = (Map<String, Object>) result.get("Data");
+        int docCount = (int) dataMap.get("DocCount");
+        if (docCount != 0) {
+            apiResultDTO = sendHttpPost(tableApiServicePO, data);
+        } else {
+            apiResultDTO.setFlag(true);
+            apiResultDTO.setNumber(0);
+            apiResultDTO.setMsg("本次同步数量为0，无需同步。");
+        }
+        if (apiResultDTO.getFlag()) {
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);
         }
@@ -153,112 +181,77 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
     }
 
 
-    public List<InventoryStatusChanges> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
-        Map<String, InventoryStatusChanges> dtoMap = new HashMap<>();
-        // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
+    public List<Map<String, Object>> assembleInventoryStatusChanges(ResultSet resultSet1, ResultSet resultSet2, String wmsId) throws SQLException {
+        Map<String, Map<String, Object>> inventoryData = new HashMap<>();
+        // 遍历第一个结果集，将父表数据组装成 Map 对象，并保存到 inventoryData 中
+        int column1Count = resultSet1.getMetaData().getColumnCount();
         while (resultSet1.next()) {
             String batchCode = resultSet1.getString("fidata_batch_code");
 
-            InventoryStatusChanges dto = dtoMap.get(batchCode);
-            if (dto == null) {
-                dto = new InventoryStatusChanges();
-                dto.setSourceSys(resultSet1.getString("sourcesys"));
-                dto.setTargetSys(resultSet1.getString("targetsys"));
-                dto.setPushSeqNo((int) System.currentTimeMillis());
-                dto.setWMSID("ZTJ1");
-                dto.setData(new Data());
-                dtoMap.put(batchCode, dto);
+            Map<String, Object> map = inventoryData.get(batchCode);
+            if (map == null) {
+                map = new HashMap<>();
+                for (int i = 1; i <= column1Count; i++) {
+                    Object value = resultSet1.getObject(i);
+                    String columnName = resultSet1.getMetaData().getColumnName(i);
+                    if (!columnName.equals("fidata_batch_code")) {
+                        map.put(columnName, value);
+                    }
+                }
+                map.put("PushSeqNo", (int) System.currentTimeMillis());
+                map.put("WMSID", wmsId);
+                Map<String, Object> Data = new HashMap<>();
+                map.put("Data", Data);
+                inventoryData.put(batchCode, map);
             }
         }
 
+        int column2Count = resultSet2.getMetaData().getColumnCount();
         // 遍历第二个结果集，将子表数据组装到对应的父表对象中
         while (resultSet2.next()) {
             String batchCode = resultSet2.getString("fidata_batch_code");
 
-            InventoryStatusChanges dto = dtoMap.get(batchCode);
-            if (dto != null) {
-                Data data = dto.getData();
-                if (data.getMATDOCTAB() == null) {
-                    data.setMATDOCTAB(new ArrayList<>());
+            Map<String, Object> map = inventoryData.get(batchCode);
+            if (map != null) {
+                Map<String, Object> data = (Map<String, Object>) map.get("Data");
+                List<Map<String, Object>> inventoryStatusChanges = (List<Map<String, Object>>) data.get("InventoryStatusChanges");
+                if (inventoryStatusChanges == null) {
+                    data.put("InventoryStatusChanges", new ArrayList<Map<String, Object>>());
                 }
 
-                MATDOCTAB matdoctab = new MATDOCTAB();
+                Map<String, Object> inventoryStatusChange = new HashMap<>();
+                for (int i = 1; i <= column2Count; i++) {
+                    Object value = resultSet2.getObject(i);
+                    String columnName = resultSet2.getMetaData().getColumnName(i);
+                    if (!columnName.equals("fidata_batch_code")) {
+                        inventoryStatusChange.put(columnName, value);
+                    }
+                }
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("InventoryStatusChanges");
                 // 设置其他字段的值
-                matdoctab.setMBLNR(resultSet2.getString("mblnr"));
-                matdoctab.setMJAHR(resultSet2.getString("mjahr"));
-                matdoctab.setBLART(resultSet2.getString("blart"));
-                matdoctab.setBLDAT(resultSet2.getString("bldat"));
-                matdoctab.setBUDAT(resultSet2.getString("budat"));
-                matdoctab.setCPUDT(resultSet2.getString("cpudt"));
-                matdoctab.setCPUTM(resultSet2.getString("cputm"));
-                matdoctab.setUSNAM(resultSet2.getString("usnam"));
-                matdoctab.setBKTXT(resultSet2.getString("bktxt"));
-                matdoctab.setLGPLA(resultSet2.getString("lgpla"));
-                matdoctab.setVTXTK(resultSet2.getString("vtxtk"));
-                matdoctab.setMTART(resultSet2.getString("mtart"));
-                matdoctab.setMATKL(resultSet2.getString("matkl"));
-                matdoctab.setXAUTO(resultSet2.getString("xauto"));
-                matdoctab.setKZBEW(resultSet2.getString("kzbew"));
-                matdoctab.setKZZUG(resultSet2.getString("kzzug"));
-                matdoctab.setZEILE(resultSet2.getString("zeile"));
-                matdoctab.setBWART(resultSet2.getString("bwart"));
-                matdoctab.setMATNR(resultSet2.getString("matnr"));
-                matdoctab.setMAKTX(resultSet2.getString("maktx"));
-                matdoctab.setWERKS(resultSet2.getString("werks"));
-                matdoctab.setWNAME1(resultSet2.getString("wname1"));
-                matdoctab.setLGORT(resultSet2.getString("lgort"));
-                matdoctab.setLGOBE(resultSet2.getString("lgobe"));
-                matdoctab.setCHARG(resultSet2.getString("charg"));
-                matdoctab.setINSMK(resultSet2.getString("insmk"));
-                matdoctab.setSOBKZ(resultSet2.getString("sobkz"));
-                matdoctab.setMENGE(resultSet2.getString("menge"));
-                matdoctab.setMEINS(resultSet2.getString("meins"));
-                matdoctab.setERFMG(resultSet2.getString("erfmg"));
-                matdoctab.setERFME(resultSet2.getString("erfme"));
-                matdoctab.setDMBTR(resultSet2.getString("dmbtr"));
-                matdoctab.setWAERS(resultSet2.getString("waers"));
-                matdoctab.setLIFNR(resultSet2.getString("lifnr"));
-                matdoctab.setLNAME1(resultSet2.getString("lname1"));
-                matdoctab.setEBELP(resultSet2.getString("ebelp"));
-                matdoctab.setKUNNR(resultSet2.getString("kunnr"));
-                matdoctab.setKNAME1(resultSet2.getString("kname1"));
-                matdoctab.setWEMPF(resultSet2.getString("wempf"));
-                matdoctab.setKDAUF(resultSet2.getString("kdauf"));
-                matdoctab.setKDPOS(resultSet2.getString("kdpos"));
-                matdoctab.setXBLNR(resultSet2.getString("xblnr"));
-                matdoctab.setBUKRS(resultSet2.getString("bukrs"));
-                matdoctab.setBUTXT(resultSet2.getString("butxt"));
-                matdoctab.setBELNR(resultSet2.getString("belnr"));
-                matdoctab.setSAKTO(resultSet2.getString("sakto"));
-                matdoctab.setKOSTL(resultSet2.getString("kostl"));
-                matdoctab.setAUFNR(resultSet2.getString("aufnr"));
-                matdoctab.setANLN1(resultSet2.getString("anln1"));
-                matdoctab.setVFDAT(resultSet2.getString("vfdat"));
-                matdoctab.setHSDAT(resultSet2.getString("hsdat"));
-                matdoctab.setUMMAT(resultSet2.getString("ummat"));
-                matdoctab.setUMWRK(resultSet2.getString("umwrk"));
-                matdoctab.setUMLGO(resultSet2.getString("umlgo"));
-                matdoctab.setUMCHA(resultSet2.getString("umcha"));
-                matdoctab.setGRUND(resultSet2.getString("grund"));
-                matdoctab.setSGTXT(resultSet2.getString("sgtxt"));
-
-                data.getMATDOCTAB().add(matdoctab);
+                list.add(inventoryStatusChange);
+                data.put("InventoryStatusChanges", list);
             }
         }
 
-        // 设置 DocCount 属性为 MATDOCTAB 的 size
-        for (InventoryStatusChanges dto : dtoMap.values()) {
-            Data data = dto.getData();
-            if (data != null && data.getMATDOCTAB() != null) {
-                data.setDocCount(data.getMATDOCTAB().size());
-            }else {
-                data.setDocCount(0);
-                List<MATDOCTAB> matdoctab = new ArrayList<>();
-                data.setMATDOCTAB(matdoctab);
+        for (Map<String, Object> map : inventoryData.values()) {
+            Object data = map.get("Data");
+            if (data != null) {
+                Map<String, Object> data1 = (Map<String, Object>) map.get("Data");
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data1.get("InventoryStatusChanges");
+                if (!CollectionUtils.isEmpty(list)) {
+                    data1.put("DocCount", list.size());
+                    map.put("Data", data1);
+                } else {
+                    data1.put("DocCount", 0);
+                    List<Map<String, Object>> inventoryStatusChanges = new ArrayList<>();
+                    data1.put("InventoryStatusChanges", inventoryStatusChanges);
+                    map.put("Data", data1);
+                }
             }
         }
         resultSet1.close();
         resultSet2.close();
-        return new ArrayList<>(dtoMap.values());
+        return new ArrayList<>(inventoryData.values());
     }
 }

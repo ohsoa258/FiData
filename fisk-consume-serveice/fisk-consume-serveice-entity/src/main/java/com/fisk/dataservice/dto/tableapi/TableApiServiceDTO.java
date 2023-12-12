@@ -54,4 +54,7 @@ public class TableApiServiceDTO {
 
     @ApiModelProperty(value = "起始同步时间")
     public String syncTime;
+
+    @ApiModelProperty(value = "(康师傅用)工厂id")
+    public Integer plantId;
 }

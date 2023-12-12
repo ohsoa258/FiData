@@ -105,4 +105,9 @@ public class KafkaReceiveDTO extends MQBaseDTO {
     @ApiModelProperty(value = "修改前的源字段")
     public List<String> sourceFieldNames;
 
+    /**
+     * 源系统ID(康师傅前置机用)
+     */
+    @ApiModelProperty(value = "源系统ID(康师傅前置机用)")
+    private String sourcesys;
 }

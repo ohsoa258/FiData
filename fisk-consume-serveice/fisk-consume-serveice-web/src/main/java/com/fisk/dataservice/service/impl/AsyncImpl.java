@@ -134,8 +134,9 @@ public class AsyncImpl {
                         case KSF_NOTICE:
                         case KSF_INVENTORY_STATUS_CHANGES:
                         case KSF_ACKNOWLEDGEMENT:
+                            String sourcesys = (String) checkByFieldMap.get("sourcesys");
                             KsfWebServiceHandler ksfWebServiceHandler = KsfInterfaceFactory.getKsfWebServiceHandlerByType(SpecialTypeEnum.getEnum(tableApiServicePO.specialType));
-                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO, dto.apiId, fidata_batch_code);
+                            apiResultDTO = ksfWebServiceHandler.sendApi(tableAppPO, dto.apiId, fidata_batch_code, sourcesys);
                             break;
                         default:
                             break;

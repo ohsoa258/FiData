@@ -605,7 +605,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
 
         //原变量字段
-        ProcessorEntity incrementProcessor = evaluateJsonPathProcessor(groupId, 6);
+        ProcessorEntity incrementProcessor = evaluateJson(groupId, 6);
         res.add(incrementProcessor);
         tableNifiSettingPO.setIncrementProcessorId = incrementProcessor.getId();
 
@@ -664,6 +664,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("pipelTaskTraceId", "${pipelTaskTraceId}");
         checkByFieldMap.put("fidata_batch_code", "${fidata_batch_code}");
+        checkByFieldMap.put("sourcesys","${sourcesys}");
         tableApiSyncDTO.setCheckByFieldMap(checkByFieldMap);
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -4171,6 +4172,35 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         autoEnd.add("Response");
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, autoEnd);
         return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * 创建变量组件
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity evaluateJson(String groupId, int position) {
+        ArrayList<String> strings = new ArrayList<>();
+        //strings.add(NifiConstants.AttrConstants.INCREMENT_START);
+        strings.add(NifiConstants.AttrConstants.START_TIME);
+        strings.add(NifiConstants.AttrConstants.FIDATA_BATCH_CODE);
+        strings.add(NifiConstants.AttrConstants.PIPEL_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_JOB_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_TASK_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.PIPEL_STAGE_TRACE_ID);
+        strings.add(NifiConstants.AttrConstants.TOPIC_TYPE);
+        strings.add(NifiConstants.AttrConstants.SOURCESYS);
+        //strings.add(NifiConstants.AttrConstants.START_TIME);
+        BuildProcessEvaluateJsonPathDTO dto = new BuildProcessEvaluateJsonPathDTO();
+        dto.name = "Set Increment Field";
+        dto.details = "query_phase";
+        dto.groupId = groupId;
+        dto.positionDTO = NifiPositionHelper.buildYPositionDTO(position);
+        dto.selfDefinedParameter = strings;
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildEvaluateJsonPathProcess(dto);
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
     }
 
     /**

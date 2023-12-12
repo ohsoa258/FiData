@@ -6,22 +6,23 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.dataservice.dto.ksfwebservice.item.Data;
-import com.fisk.dataservice.dto.ksfwebservice.item.ItemData;
-import com.fisk.dataservice.dto.ksfwebservice.item.KsfGoods;
 import com.fisk.dataservice.dto.tableapi.ApiResultDTO;
+import com.fisk.dataservice.entity.KsfPlantPO;
 import com.fisk.dataservice.entity.TableApiParameterPO;
 import com.fisk.dataservice.entity.TableApiServicePO;
 import com.fisk.dataservice.entity.TableAppPO;
 import com.fisk.dataservice.handler.ksf.KsfWebServiceHandler;
 import com.fisk.dataservice.service.ITableApiService;
+import com.fisk.dataservice.service.KsfPlantService;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -43,6 +44,7 @@ public class KsfItemData extends KsfWebServiceHandler {
     private static ITableApiService tableApiService;
     private static UserClient userClient;
     private static RedisUtil redisUtil;
+    private static KsfPlantService ksfPlantService;
 
     @Autowired
     public void setTableApiService(ITableApiService tableApiService) {
@@ -53,15 +55,20 @@ public class KsfItemData extends KsfWebServiceHandler {
     public void setUserClient(UserClient userClient) {
         KsfItemData.userClient = userClient;
     }
+
     @Autowired
-    public void setUserClient(RedisUtil redisUtil) {
+    public void setRedisUtil(RedisUtil redisUtil) {
         KsfItemData.redisUtil = redisUtil;
     }
 
+    @Autowired
+    public void setKsfPlantService(KsfPlantService ksfPlantService) {
+        KsfItemData.ksfPlantService = ksfPlantService;
+    }
 
     @Override
-    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code) {
-        redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName()+apiId, 100);
+    public ApiResultDTO sendApi(TableAppPO tableAppPO, long apiId, String fidata_batch_code, String sourcesys) {
+        redisUtil.expire(RedisKeyEnum.TABLE_KSF_WEB_SERVER_SYNC.getName() + apiId, 100);
         ApiResultDTO apiResultDTO = new ApiResultDTO();
         TableApiServicePO tableApiServicePO = tableApiService.getById(apiId);
         int number = 0;
@@ -79,7 +86,8 @@ public class KsfItemData extends KsfWebServiceHandler {
 
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
-        ItemData result = new ItemData();
+        KsfPlantPO plantPO = ksfPlantService.getById(tableApiServicePO.getPlantId());
+        Map<String, Object> result = new HashMap<>();
         ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(tableApiServicePO.getSourceDbId());
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO dataSource = fiDataDataSource.data;
@@ -95,28 +103,28 @@ public class KsfItemData extends KsfWebServiceHandler {
                 st1 = conn.createStatement();
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 String[] split = tableApiServicePO.getSqlScript().split(";");
-                String systemDataSql = split[0]+" where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP ORDER BY fi_createtime;";
-                String statusChangesSql = split[1]+" WHERE fidata_batch_code in (select fidata_batch_code from public.ods_sap_ksf_item_sys where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP);";
+                String systemDataSql = split[0] + " where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP AND sourcesys = '" + sourcesys + "' ORDER BY fi_createtime;";
+                String statusChangesSql = split[1] + " WHERE fidata_batch_code in (select fidata_batch_code from public.ods_sap_ksf_item_sys where TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') > '" + startTime + "'::TIMESTAMP AND TO_TIMESTAMP(fi_createtime, 'YYYY-MM-DD HH24:MI:SS.US') <= '" + endTime + "'::TIMESTAMP AND sourcesys = '" + sourcesys + "');";
                 log.info("开始执行脚本systemData:{}", systemDataSql);
                 ResultSet systemData = st.executeQuery(systemDataSql);
                 log.info("开始执行脚本items:{}", statusChangesSql);
                 ResultSet items = st1.executeQuery(statusChangesSql);
-                List<ItemData> resultJsonData = assembleInventoryStatusChangesDTO(systemData, items);
-
-                List<KsfGoods> itemData = new ArrayList<>();
-                for (ItemData resultJsonDatum : resultJsonData) {
+                List<Map<String, Object>> resultJsonData = assembleItemData(systemData, items, plantPO.getLgpla());
+                List<Map<String, Object>> itemData = new ArrayList<>();
+                for (Map<String, Object> resultJsonDatum : resultJsonData) {
                     result = resultJsonDatum;
-                    Data data = resultJsonDatum.getData();
-                    if (data != null){
-                        itemData.addAll(data.getKsfGoods());
+                    Map<String, Object> data = (Map<String, Object>) resultJsonDatum.get("Data");
+                    if (data != null) {
+                        List<Map<String, Object>> ksfGoods = (List<Map<String, Object>>) data.get("KsfGoods");
+                        itemData.addAll(ksfGoods);
                     }
                 }
-                Data data = new Data();
-                data.setKsfGoods(itemData);
-                data.setDocCount(itemData.size());
-                result.setData(data);
+                Map<String, Object> data = new HashMap<>();
+                data.put("KsfGoods", itemData);
+                data.put("DocCount", itemData.size());
+                result.put("Data", data);
 
-                number = result.getData().getDocCount();
+                number = itemData.size();
                 apiResultDTO.setNumber(number);
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
@@ -143,9 +151,17 @@ public class KsfItemData extends KsfWebServiceHandler {
             return apiResultDTO;
         }
         String data = JSON.toJSONString(result);
-        log.info("apiId"+tableApiServicePO.getId()+"通知单推送数据:"+ data);
-        apiResultDTO = sendHttpPost(tableApiServicePO, data);
-        if (apiResultDTO.getFlag()){
+        log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + data);
+        Map<String, Object> dataMap = (Map<String, Object>) result.get("Data");
+        int docCount = (int) dataMap.get("DocCount");
+        if (docCount != 0) {
+            apiResultDTO = sendHttpPost(tableApiServicePO, data);
+        } else {
+            apiResultDTO.setFlag(true);
+            apiResultDTO.setNumber(0);
+            apiResultDTO.setMsg("本次同步数量为0，无需同步。");
+        }
+        if (apiResultDTO.getFlag()) {
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);
         }
@@ -153,153 +169,82 @@ public class KsfItemData extends KsfWebServiceHandler {
         return apiResultDTO;
     }
 
-//    @Override
-//    public ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body) {
-//        ApiResultDTO apiResultDTO = new ApiResultDTO();
-//        //创建动态客户端
-//        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-//        //webService的这个动态客户端的地址需要从数据库中查出来
-//        Client client = dcf.createClient(tableApiServicePO.getApiAddress());
-//        //设置超时时间
-//        HTTPConduit conduit = (HTTPConduit) client.getConduit();
-//        HTTPClientPolicy policy = new HTTPClientPolicy();
-//        policy.setAllowChunking(false);
-//        // 连接服务器超时时间 30秒
-//        policy.setConnectionTimeout(30000);
-//        // 等待服务器响应超时时间 30秒
-//        policy.setReceiveTimeout(30000);
-//        conduit.setClient(policy);
-//        JSONObject result = null;
-//        try {
-//            // invoke("方法名",参数1,参数2,参数3....);
-//            Object[] objects = client.invoke(tableApiServicePO.getMethodName(), body);
-//            JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(objects[0]));
-//            if ((int)jsonObject.get("code") == 1){
-//                apiResultDTO.setFlag(true);
-//                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-//            }else if ((int)jsonObject.get("code") == -1){
-//                apiResultDTO.setFlag(false);
-//                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-//            }else {
-//                apiResultDTO.setFlag(false);
-//                apiResultDTO.setMsg("远程调用异常");
-//            }
-//        } catch (Exception e) {
-//            apiResultDTO.setFlag(false);
-//            apiResultDTO.setMsg(e.toString());
-//            e.printStackTrace();
-//        } finally {
-//            if (client != null) {
-//                try {
-//                    client.close();
-//                } catch (Exception e) {
-//                    apiResultDTO.setFlag(false);
-//                    apiResultDTO.setMsg(e.toString());
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//        return apiResultDTO;
-//
-//
-////        String result = null;
-////        try {
-////            Service service = new Service();
-////            Call call = (Call) service.createCall();
-////
-////            // 设置wsdl地址
-////            call.setTargetEndpointAddress(new URL(tableApiServicePO.getApiAddress()));
-////
-////            // 设置命名空间和方法名
-////            call.setOperationName(new QName("http://tempuri.org/", tableApiServicePO.getMethodName()));
-////
-////            // 设置参数类型和参数名称
-////            call.addParameter("SAPPushData", org.apache.axis.encoding.XMLType.XSD_STRING, javax.xml.rpc.ParameterMode.IN);
-////
-////            // 设置返回值类型
-////            call.setReturnType(org.apache.axis.encoding.XMLType.XSD_STRING);
-////
-////            // 设置参数
-//////            String requestData = "{ \"cdSign\":\"1\",\"beginDate\":\"2021-11-21\",\"endDate\":\"2021-11-22\"}";
-////            result = (String) call.invoke(new Object[]{body});
-////            log.info("库存状态变更返回值:" + result);
-////            JSONObject jsonObject = JSON.parseObject(result);
-////            if ((int) jsonObject.get("code") == 1) {
-////                apiResultDTO.setFlag(true);
-////                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-////            } else if ((int) jsonObject.get("code") == -1) {
-////                apiResultDTO.setFlag(false);
-////                apiResultDTO.setMsg(jsonObject.get("msg").toString());
-////            } else {
-////                apiResultDTO.setFlag(false);
-////                apiResultDTO.setMsg("远程调用异常");
-////            }
-////        } catch (Exception e) {
-////            apiResultDTO.setFlag(false);
-////            apiResultDTO.setMsg(e.toString());
-////            e.printStackTrace();
-////        }
-//
-////        return apiResultDTO;
-//    }
 
-
-    public List<ItemData> assembleInventoryStatusChangesDTO(ResultSet resultSet1, ResultSet resultSet2) throws SQLException {
-        Map<String, ItemData> dtoMap = new HashMap<>();
-        // 遍历第一个结果集，将父表数据组装成 InventoryStatusChangesDTO 对象，并保存到 dtoMap 中
+    public List<Map<String, Object>> assembleItemData(ResultSet resultSet1, ResultSet resultSet2, String wmsId) throws SQLException {
+        Map<String, Map<String, Object>> itemData = new HashMap<>();
+        // 遍历第一个结果集，将父表数据组装成 Map 对象，并保存到 itemData 中
+        int column1Count = resultSet1.getMetaData().getColumnCount();
         while (resultSet1.next()) {
             String batchCode = resultSet1.getString("fidata_batch_code");
 
-            ItemData dto = dtoMap.get(batchCode);
-            if (dto == null) {
-                dto = new ItemData();
-                dto.setSourceSys(resultSet1.getString("sourcesys"));
-                dto.setTargetSys(resultSet1.getString("targetsys"));
-                dto.setPushSeqNo((int) System.currentTimeMillis());
-                dto.setWMSID("ZTJ1");
-                dto.setData(new Data());
-                dtoMap.put(batchCode, dto);
+            Map<String, Object> map = itemData.get(batchCode);
+            if (map == null) {
+                map = new HashMap<>();
+                for (int i = 1; i <= column1Count; i++) {
+                    Object value = resultSet1.getObject(i);
+                    String columnName = resultSet1.getMetaData().getColumnName(i);
+                    if (!columnName.equals("fidata_batch_code")) {
+                        map.put(columnName, value);
+                    }
+                }
+                map.put("PushSeqNo", (int) System.currentTimeMillis());
+                map.put("WMSID", wmsId);
+                Map<String, Object> Data = new HashMap<>();
+                map.put("Data", Data);
+                itemData.put(batchCode, map);
             }
         }
 
+        int column2Count = resultSet2.getMetaData().getColumnCount();
         // 遍历第二个结果集，将子表数据组装到对应的父表对象中
         while (resultSet2.next()) {
             String batchCode = resultSet2.getString("fidata_batch_code");
 
-            ItemData dto = dtoMap.get(batchCode);
-            if (dto != null) {
-                Data data = dto.getData();
-                if (data.getKsfGoods() == null) {
-                    data.setKsfGoods(new ArrayList<>());
+            Map<String, Object> map = itemData.get(batchCode);
+            if (map != null) {
+                Map<String, Object> data = (Map<String, Object>) map.get("Data");
+                List<Map<String, Object>> ksfGoods = (List<Map<String, Object>>) data.get("KsfGoods");
+                if (ksfGoods == null) {
+                    data.put("KsfGoods", new ArrayList<Map<String, Object>>());
                 }
-
-                KsfGoods ksfGoods = new KsfGoods();
+                Map<String, Object> ksfGood = new HashMap<>();
+                for (int i = 1; i <= column2Count; i++) {
+                    Object value = resultSet2.getObject(i);
+                    String columnName = resultSet2.getMetaData().getColumnName(i);
+                    if (!columnName.equals("fidata_batch_code")) {
+                        if (columnName.equals("vbamg")) {
+                            BigDecimal vbamg = NumberUtils.createBigDecimal(value.toString().trim());
+                            ksfGood.put(columnName, vbamg);
+                        } else {
+                            ksfGood.put(columnName, value);
+                        }
+                    }
+                }
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("KsfGoods");
                 // 设置其他字段的值
-                ksfGoods.setMTART(resultSet2.getString("mtart"));
-                ksfGoods.setMTBEZ(resultSet2.getString("mtbez"));
-                ksfGoods.setMATNR(resultSet2.getString("matnr"));
-                ksfGoods.setMAKTX(resultSet2.getString("maktx"));
-                ksfGoods.setNORMT(resultSet2.getString("normt"));
-                ksfGoods.setMEINS(resultSet2.getString("meins"));
-                ksfGoods.setEAN11(resultSet2.getString("ean11"));
-                ksfGoods.setVBAMG(NumberUtils.createBigDecimal(resultSet2.getString("vbamg").trim()));
-                data.getKsfGoods().add(ksfGoods);
+                list.add(ksfGood);
+                data.put("KsfGoods", list);
             }
         }
 
-        // 设置 DocCount 属性为 MATDOCTAB 的 size
-        for (ItemData dto : dtoMap.values()) {
-            Data data = dto.getData();
-            if (data != null && data.getKsfGoods() != null) {
-                data.setDocCount(data.getKsfGoods().size());
-            }else {
-                data.setDocCount(0);
-                List<KsfGoods> ksfGoods = new ArrayList<>();
-                data.setKsfGoods(ksfGoods);
+        for (Map<String, Object> map : itemData.values()) {
+            Object data = map.get("Data");
+            if (data != null) {
+                Map<String, Object> data1 = (Map<String, Object>) map.get("Data");
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data1.get("KsfGoods");
+                if (!CollectionUtils.isEmpty(list)) {
+                    data1.put("DocCount", list.size());
+                    map.put("Data", data1);
+                } else {
+                    data1.put("DocCount", 0);
+                    List<Map<String, Object>> ksfGoods = new ArrayList<>();
+                    data1.put("KsfGoods", ksfGoods);
+                    map.put("Data", data1);
+                }
             }
         }
         resultSet1.close();
         resultSet2.close();
-        return new ArrayList<>(dtoMap.values());
+        return new ArrayList<>(itemData.values());
     }
 }

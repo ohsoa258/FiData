@@ -71,4 +71,20 @@ public class BuildTableApiServiceDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "启用或禁用")
     public Integer enable;
+
+    /**
+     * 康师傅用
+     */
+    @ApiModelProperty(value = "仓库代码")
+    public String lgpla;
+    /**
+     * 康师傅用
+     */
+    @ApiModelProperty(value = "仓库名称")
+    public String name;
+    /**
+     * 康师傅用
+     */
+    @ApiModelProperty(value = "源系统id")
+    public String sourcesys;
 }
