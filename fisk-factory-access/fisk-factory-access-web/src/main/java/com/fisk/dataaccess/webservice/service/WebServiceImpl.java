@@ -157,6 +157,7 @@ public class WebServiceImpl implements IWebServiceServer {
         WsAccessDTO wsAccessDTO = new WsAccessDTO();
         wsAccessDTO.setApiConfigId(11);
         wsAccessDTO.setBatchCode(null);
+        wsAccessDTO.setSourceSys(api_message.getSourceSys());
         //发送消息给数据分发服务
         taskClient.wsAccessToConsume(wsAccessDTO);
         return responseMessage;

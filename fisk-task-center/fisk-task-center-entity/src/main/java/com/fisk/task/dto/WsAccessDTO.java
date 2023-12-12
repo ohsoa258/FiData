@@ -17,4 +17,10 @@ public class WsAccessDTO {
      */
     @ApiModelProperty(value = "批次号")
     private String batchCode;
+
+    /**
+     * 源系统id
+     */
+    @ApiModelProperty(value = "源系统id")
+    private String sourceSys;
 }
