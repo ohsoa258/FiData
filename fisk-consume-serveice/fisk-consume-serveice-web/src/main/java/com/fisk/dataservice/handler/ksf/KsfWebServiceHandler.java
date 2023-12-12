@@ -25,24 +25,30 @@ public abstract class KsfWebServiceHandler {
     public abstract ApiResultDTO sendApi(TableAppPO tableAppPO,long apiId,String fidata_batch_code,String sourcesys);
 
     public ApiResultDTO sendHttpPost(TableApiServicePO tableApiServicePO, String body){
+        log.info("开始调用同步webservice");
         ApiResultDTO apiResultDTO = new ApiResultDTO();
-        //创建动态客户端
-        JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-        //webService的这个动态客户端的地址需要从数据库中查出来
-        Client client = dcf.createClient(tableApiServicePO.getApiAddress());
-        //设置超时时间
-        HTTPConduit conduit = (HTTPConduit) client.getConduit();
-        HTTPClientPolicy policy = new HTTPClientPolicy();
-        policy.setAllowChunking(false);
-        // 连接服务器超时时间 30秒
-        policy.setConnectionTimeout(30000);
-        // 等待服务器响应超时时间 30秒
-        policy.setReceiveTimeout(30000);
-        conduit.setClient(policy);
-        JSONObject result = null;
+        Client client = null;
         try {
+            //创建动态客户端
+            JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+            //webService的这个动态客户端的地址需要从数据库中查出来
+            log.info("开始创建client");
+            client = dcf.createClient(tableApiServicePO.getApiAddress());
+            //设置超时时间
+            log.info("设置超时时间");
+            HTTPConduit conduit = (HTTPConduit) client.getConduit();
+            HTTPClientPolicy policy = new HTTPClientPolicy();
+            policy.setAllowChunking(false);
+            // 连接服务器超时时间 30秒
+            policy.setConnectionTimeout(30000);
+            // 等待服务器响应超时时间 30秒
+            policy.setReceiveTimeout(30000);
+            conduit.setClient(policy);
+            JSONObject result = null;
             // invoke("方法名",参数1,参数2,参数3....);
+            log.info("client.invoke");
             Object[] objects = client.invoke(tableApiServicePO.getMethodName(), body);
+            log.info("发送webservice接口");
             JSONObject jsonObject = JSON.parseObject((String)objects[0]);
             if ((int)jsonObject.get("code") == 1){
                 apiResultDTO.setFlag(true);

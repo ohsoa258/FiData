@@ -177,6 +177,7 @@ public class KsfNotice extends KsfWebServiceHandler {
         log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + data);
         Map<String, Object> dataMap = (Map<String, Object>) result.get("Data");
         int docCount = (int) dataMap.get("DocCount");
+        log.info("docCount:"+docCount);
         if (docCount != 0) {
             apiResultDTO = sendHttpPost(tableApiServicePO, data);
         } else {
