@@ -2102,28 +2102,29 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("登录验证结果：" + loginResult.toJSONString());
 
 
-            apiHttpRequestDto.uri = apiConfigPo.apiAddress;
+            ApiHttpRequestDTO apiHttpRequestDto1 = new ApiHttpRequestDTO();
+            apiHttpRequestDto1.uri = apiConfigPo.apiAddress;
             if (apiConfigPo.apiRequestType == 1) {
-                apiHttpRequestDto.httpRequestEnum = GET;
+                apiHttpRequestDto1.httpRequestEnum = GET;
             } else if (apiConfigPo.apiRequestType == 2) {
-                apiHttpRequestDto.httpRequestEnum = POST;
+                apiHttpRequestDto1.httpRequestEnum = POST;
                 // post请求携带的请求参数  Body: raw参数
                 if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
-                    apiHttpRequestDto.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
+                    apiHttpRequestDto1.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
                 }
 
                 // post请求携带的请求参数Body: form-data参数
                 if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(formDataParams)) {
-                    apiHttpRequestDto.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
+                    apiHttpRequestDto1.formDataParams = formDataParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b));
                 }
             }
 
             // 请求头参数
-            apiHttpRequestDto.headersParams = params;
+            apiHttpRequestDto1.headersParams = params;
 
             // TODO 第一步: 查询阶段,调用第三方api返回的数据
-            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto);
-            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
+            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto1);
+            log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto1), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
             log.info("获取数据结果：" + jsonObject.toJSONString());
             receiveDataDTO = new ReceiveDataDTO();
