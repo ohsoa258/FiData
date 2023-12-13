@@ -223,14 +223,12 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
 
     public final List<BusinessCategoryTreeDTO> MallClassTree(List<BusinessCategoryTreeDTO> list, String pid) {
         List<BusinessCategoryTreeDTO> parentList = list.stream().filter(item -> (pid + "").equals(item.pid)).collect(Collectors.toList());
-
         if (!parentList.isEmpty()) {
             List<BusinessCategoryTreeDTO> ResultList = new ArrayList<>();
             for (int i=0;i<parentList.size();i++){
                 List<BusinessCategoryTreeDTO>  children=new ArrayList<>();
                 for (int j=0;j<list.size();j++){
-                    if (list.get(j).pid.equals(list.get(i).id)){
-                        System.out.println(parentList.get(i).id);
+                    if (list.get(j).pid.equals(parentList.get(i).id)){
                        children= MallClassTree(list,parentList.get(i).id);
                     }
                 }
