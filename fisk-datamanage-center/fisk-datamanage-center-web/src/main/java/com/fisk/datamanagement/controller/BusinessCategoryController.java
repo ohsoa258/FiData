@@ -40,7 +40,7 @@ public class BusinessCategoryController {
 
     @ApiOperation("获取业务指标数据列表")
     @GetMapping("/getBusinessMetaDataList")
-    public ResultEntity<Object> getBusinessMetaDataList() {
+    public ResultEntity<Object> getBusinessMetaDataList()  {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getCategoryTree());
     }
 
