@@ -2179,7 +2179,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("登录验证结果：" + loginResult.toJSONString());
 
             //获取金蝶api的cookie，放到拿取数据时的请求中
-            String cookie = String.valueOf(loginResult.get("KDSVCSessionId"));
+            String cookie = null;
+            if (StringUtils.isNotBlank(dataSourcePo.apiKeyCookie)) {
+                cookie = String.valueOf(loginResult.get(dataSourcePo.apiKeyCookie));
+            }
 
             ApiHttpRequestDTO apiHttpRequestDto1 = new ApiHttpRequestDTO();
             apiHttpRequestDto1.uri = apiConfigPo.apiAddress;

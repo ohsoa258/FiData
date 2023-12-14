@@ -247,6 +247,12 @@ public class DataSourceDTO {
     public String apiKeyParameters;
 
     /**
+     * 选择ApiKey验证方式时，登陆后获取到的cookie
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，登陆后获取到的cookie", required = true)
+    public String apiKeyCookie;
+
+    /**
      * JCO_SYSNR
      */
     @ApiModelProperty(value = "JCO_SYSNR", required = true)
