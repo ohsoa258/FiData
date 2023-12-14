@@ -13,6 +13,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @TableName("tb_business_category")
 public class BusinessCategoryPO extends BasePO {
+
     public Integer pid;
 
     public String name;

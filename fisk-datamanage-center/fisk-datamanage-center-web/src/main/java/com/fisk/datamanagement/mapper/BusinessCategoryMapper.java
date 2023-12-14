@@ -18,6 +18,10 @@ public interface BusinessCategoryMapper   extends FKBaseMapper<BusinessCategoryP
     @Select("select id from tb_business_category where name = #{name} and del_flag = 1")
     String selectParentId(@Param("name") String name);
 
+
+    @Select("select * from tb_business_category where pid = #{pid} and del_flag = 1")
+    List<BusinessCategoryPO> selectParentpId(@Param("pid") String pid);
+
     @Update("update tb_business_classification set description = #{model.description} where name = #{model.name} and del_flag = 1")
     int updateByName(@Param("model") BusinessCategoryPO model);
 
