@@ -131,7 +131,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                     }
                 }
                 Map<String, Object> data = new HashMap<>();
-                data.put("InventoryStatusChanges", inventoryData);
+                data.put("MATDOCTAB", inventoryData);
                 data.put("DocCount", inventoryData.size());
                 result.put("Data", data);
 
@@ -195,7 +195,11 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                     Object value = resultSet1.getObject(i);
                     String columnName = resultSet1.getMetaData().getColumnName(i);
                     if (!columnName.equals("fidata_batch_code")) {
-                        map.put(columnName, value);
+                        if ("targetsys".equals(columnName)){
+                            map.put("TargetSys", value);
+                        }else if ("sourcesys".equals(columnName)){
+                            map.put("SourceSys", value);
+                        }
                     }
                 }
                 map.put("PushSeqNo", (int) System.currentTimeMillis());
@@ -214,9 +218,9 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             Map<String, Object> map = inventoryData.get(batchCode);
             if (map != null) {
                 Map<String, Object> data = (Map<String, Object>) map.get("Data");
-                List<Map<String, Object>> inventoryStatusChanges = (List<Map<String, Object>>) data.get("InventoryStatusChanges");
+                List<Map<String, Object>> inventoryStatusChanges = (List<Map<String, Object>>) data.get("MATDOCTAB");
                 if (inventoryStatusChanges == null) {
-                    data.put("InventoryStatusChanges", new ArrayList<Map<String, Object>>());
+                    data.put("MATDOCTAB", new ArrayList<Map<String, Object>>());
                 }
 
                 Map<String, Object> inventoryStatusChange = new HashMap<>();
@@ -224,13 +228,13 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                     Object value = resultSet2.getObject(i);
                     String columnName = resultSet2.getMetaData().getColumnName(i);
                     if (!columnName.equals("fidata_batch_code")) {
-                        inventoryStatusChange.put(columnName, value);
+                        inventoryStatusChange.put(columnName.toUpperCase(), value);
                     }
                 }
-                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("InventoryStatusChanges");
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("MATDOCTAB");
                 // 设置其他字段的值
                 list.add(inventoryStatusChange);
-                data.put("InventoryStatusChanges", list);
+                data.put("MATDOCTAB", list);
             }
         }
 
@@ -238,14 +242,14 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
             Object data = map.get("Data");
             if (data != null) {
                 Map<String, Object> data1 = (Map<String, Object>) map.get("Data");
-                List<Map<String, Object>> list = (List<Map<String, Object>>) data1.get("InventoryStatusChanges");
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data1.get("MATDOCTAB");
                 if (!CollectionUtils.isEmpty(list)) {
                     data1.put("DocCount", list.size());
                     map.put("Data", data1);
                 } else {
                     data1.put("DocCount", 0);
                     List<Map<String, Object>> inventoryStatusChanges = new ArrayList<>();
-                    data1.put("InventoryStatusChanges", inventoryStatusChanges);
+                    data1.put("MATDOCTAB", inventoryStatusChanges);
                     map.put("Data", data1);
                 }
             }

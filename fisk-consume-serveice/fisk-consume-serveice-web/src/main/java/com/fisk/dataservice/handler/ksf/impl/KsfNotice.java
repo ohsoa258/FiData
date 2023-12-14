@@ -140,7 +140,7 @@ public class KsfNotice extends KsfWebServiceHandler {
                     }
                 }
                 Map<String, Object> data = new HashMap<>();
-                data.put("KsfNotices", noticesData);
+                data.put("Ksf_Notice", noticesData);
                 data.put("DocCount", noticesData.size());
                 result.put("Data", data);
 
@@ -207,7 +207,11 @@ public class KsfNotice extends KsfWebServiceHandler {
                     Object value = resultSet1.getObject(i);
                     String columnName = resultSet1.getMetaData().getColumnName(i);
                     if (!columnName.equals("fidata_batch_code")) {
-                        map.put(columnName, value);
+                        if ("targetsys".equals(columnName)){
+                            map.put("TargetSys", value);
+                        }else if ("sourcesys".equals(columnName)){
+                            map.put("SourceSys", value);
+                        }
                     }
                 }
                 map.put("PushSeqNo", (int) System.currentTimeMillis());
@@ -232,7 +236,7 @@ public class KsfNotice extends KsfWebServiceHandler {
                 Object value = resultSet3.getObject(i);
                 String columnName = resultSet3.getMetaData().getColumnName(i);
                 if (!columnName.equals("fidata_batch_code")) {
-                    noticeDetail.put(columnName, value);
+                    noticeDetail.put(columnName.toUpperCase(), value);
                 }
             }
             if (details == null) {
@@ -246,7 +250,7 @@ public class KsfNotice extends KsfWebServiceHandler {
         }
 
         for (Map.Entry<String, List<Map<String, Object>>> stringListEntry : noticeMap.entrySet()) {
-            Map<String, List<Map<String, Object>>> ebelnToDetails = stringListEntry.getValue().stream().collect(groupingBy(i -> (String) i.get("ebeln")));
+            Map<String, List<Map<String, Object>>> ebelnToDetails = stringListEntry.getValue().stream().collect(groupingBy(i -> (String) i.get("EBELN")));
             detailMap.put(stringListEntry.getKey(), ebelnToDetails);
         }
 
@@ -258,9 +262,9 @@ public class KsfNotice extends KsfWebServiceHandler {
             ;
             if (notice != null) {
                 Map<String, Object> data = (Map<String, Object>) notice.get("Data");
-                List<Map<String, Object>> KsfNotices = (List<Map<String, Object>>) data.get("KsfNotices");
+                List<Map<String, Object>> KsfNotices = (List<Map<String, Object>>) data.get("Ksf_Notice");
                 if (KsfNotices == null) {
-                    data.put("KsfNotices", new ArrayList<Map<String, Object>>());
+                    data.put("Ksf_Notice", new ArrayList<Map<String, Object>>());
                 }
                 String ebeln = null;
                 Map<String, Object> ksfNotice = new HashMap<>();
@@ -271,7 +275,7 @@ public class KsfNotice extends KsfWebServiceHandler {
                         ebeln = (String) value;
                     }
                     if (!columnName.equals("fidata_batch_code")) {
-                        ksfNotice.put(columnName, value);
+                        ksfNotice.put(columnName.toUpperCase(), value);
                     }
                 }
                 Map<String, List<Map<String, Object>>> stringListMap = detailMap.get(batchCode);
@@ -279,10 +283,10 @@ public class KsfNotice extends KsfWebServiceHandler {
                     List<Map<String, Object>> noticeDetails = stringListMap.get(ebeln);
                     ksfNotice.put("DETAIL", noticeDetails);
                 }
-                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("KsfNotices");
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("Ksf_Notice");
                 // 设置其他字段的值
                 list.add(ksfNotice);
-                data.put("KsfNotices", list);
+                data.put("Ksf_Notice", list);
             }
         }
 
@@ -291,14 +295,14 @@ public class KsfNotice extends KsfWebServiceHandler {
             Object data = map.get("Data");
             if (data != null) {
                 Map<String, Object> data1 = (Map<String, Object>) map.get("Data");
-                List<Map<String, Object>> list = (List<Map<String, Object>>) data1.get("KsfNotices");
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data1.get("Ksf_Notice");
                 if (!CollectionUtils.isEmpty(list)) {
                     data1.put("DocCount", list.size());
                     map.put("Data", data1);
                 } else {
                     data1.put("DocCount", 0);
                     List<Map<String, Object>> ksfNotices = new ArrayList<>();
-                    data1.put("KsfNotices", ksfNotices);
+                    data1.put("Ksf_Notice", ksfNotices);
                     map.put("Data", data1);
                 }
             }

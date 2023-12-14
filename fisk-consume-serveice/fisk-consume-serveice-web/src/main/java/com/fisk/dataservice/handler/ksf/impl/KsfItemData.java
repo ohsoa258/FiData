@@ -184,7 +184,11 @@ public class KsfItemData extends KsfWebServiceHandler {
                     Object value = resultSet1.getObject(i);
                     String columnName = resultSet1.getMetaData().getColumnName(i);
                     if (!columnName.equals("fidata_batch_code")) {
-                        map.put(columnName, value);
+                        if ("targetsys".equals(columnName)){
+                            map.put("TargetSys", value);
+                        }else if ("sourcesys".equals(columnName)){
+                            map.put("SourceSys", value);
+                        }
                     }
                 }
                 map.put("PushSeqNo", (int) System.currentTimeMillis());
@@ -214,9 +218,9 @@ public class KsfItemData extends KsfWebServiceHandler {
                     if (!columnName.equals("fidata_batch_code")) {
                         if (columnName.equals("vbamg")) {
                             BigDecimal vbamg = NumberUtils.createBigDecimal(value.toString().trim());
-                            ksfGood.put(columnName, vbamg);
+                            ksfGood.put(columnName.toUpperCase(), vbamg);
                         } else {
-                            ksfGood.put(columnName, value);
+                            ksfGood.put(columnName.toUpperCase(), value);
                         }
                     }
                 }
