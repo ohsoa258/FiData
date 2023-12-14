@@ -44,4 +44,9 @@ public class ApiHttpRequestDTO {
      * 返回数据的结构key
      */
     public String jsonDataKey;
+
+    /**
+     * 返回数据的结构key
+     */
+    public String ApiCookie;
 }

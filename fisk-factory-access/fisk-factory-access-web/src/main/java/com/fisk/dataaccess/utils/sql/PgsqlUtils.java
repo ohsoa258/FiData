@@ -394,7 +394,7 @@ public class PgsqlUtils {
      * @author Lock
      * @date 2022/7/18 14:26
      */
-    public ResultEntity<Object> executeBatchPgsql(String fidata_batch_code,ApiImportDataDTO importDataDto,
+    public ResultEntity<Object> executeBatchPgsql(String fidata_batch_code, ApiImportDataDTO importDataDto,
                                                   String tablePrefixName,
                                                   List<JsonTableData> res,
                                                   List<ApiTableDTO> apiTableDtoList,
@@ -438,13 +438,18 @@ public class PgsqlUtils {
                     JSONObject object = (JSONObject) datum;
                     Iterator<Map.Entry<String, Object>> iter = object.entrySet().iterator();
                     while (iter.hasNext()) {
-                        Map.Entry entry = iter.next();
+                        Map.Entry<String, Object> entry = iter.next();
                         insertSqlIndex = insertSqlIndex + entry.getKey() + ",";
                         if (StringUtils.isEmpty(entry.getValue() == null ? "" : entry.getValue().toString())) {
                             insertSqlLast = insertSqlLast + "null" + ",";
                             continue;
                         }
-                        insertSqlLast = insertSqlLast + "'" + entry.getValue() + "'" + ",";
+
+                        String value = String.valueOf(entry.getValue());
+                        if (value.contains("'")) {
+                            value = value.replace("'", "''");
+                        }
+                        insertSqlLast = insertSqlLast + "'" + value + "'" + ",";
                     }
                     //大批次号
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ",fidata_batch_code) values";

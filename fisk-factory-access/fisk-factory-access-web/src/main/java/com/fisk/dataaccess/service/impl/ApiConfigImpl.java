@@ -94,6 +94,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -165,6 +167,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+    @Value("${open-data-check}")
+    private Boolean openDataCheck;
     @Resource
     PgsqlUtils pgsqlUtils;
 
@@ -1238,11 +1242,44 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
             // 防止\未被解析
             String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
+            //errorJsonStr中是有问题的json数据
+            String errorJsonStr = jsonStr;
+            StringBuilder newstr = new StringBuilder();
+            //标记1：   "FMATERIALNAME":" 引号也要留着
+            String flag1 = "\"FMATERIALNAME\":\"";
+            //下一个标签的开头作为标记    ","fbaseqty_2555":
+            String flag2 = "\",\"fbaseqty_2555\":";
+            //起始位置
+            int start = errorJsonStr.indexOf(flag1);
+            //结束位置
+            int end = errorJsonStr.indexOf(flag2);
+            while (start > 0) {
+                //将内容切割出来，第一个参数加上flag1的长度是为了找到开始
+                String conent = errorJsonStr.substring(start + flag1.length(), end);
+                //替换双引号为 ' 也可替换为其他字符
+                conent = conent.replace("\"", "'");
+
+                //将content之前的 + content + content 后边的
+                newstr.append(errorJsonStr, 0, start)
+                        .append(flag1)
+                        .append(conent)
+                        .append(flag2);
+                //将改好的部分从str中分出去
+                errorJsonStr = errorJsonStr.substring(end + flag2.length());
+
+                //重新确定开始和结束
+                start = errorJsonStr.indexOf(flag1);
+                end = errorJsonStr.indexOf(flag2);
+            }
+            //加上最后的结尾,newstr就是正确的数据
+            newstr.append(errorJsonStr);
+            jsonStr = String.valueOf(newstr);
+
             log.info("根据配置删除stg和ods表数据");
             pushDataStgToOds(dto.getApiCode(), 0);
             // 将数据同步到pgsql
             String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, dto.getBatchCode());
+            ResultEntity<Object> result = pushPgSql(importDataDto, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, importDataDto.getBatchCode());
             resultEnum = ResultEnum.getEnum(result.code);
             msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
 
@@ -1885,6 +1922,38 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     /**
+     * 获取所有表数据
+     *
+     * @return java.util.List<com.fisk.dataaccess.dto.json.ApiTableDTO>
+     * @description 获取所有表数据
+     * @author Lock
+     * @date 2022/2/22 17:02
+     * @version v1.0
+     * @params accessPOList 物理表集合
+     */
+    private List<ApiTableDTO> getApiTableDtoList(List<TableAccessPO> accessPoList) {
+        // 根据table_id获取物理表详情
+        List<TableAccessNonDTO> poList = accessPoList.stream().map(e -> tableAccessImpl.getData(e.id)).collect(Collectors.toList());
+
+        List<ApiTableDTO> apiTableDTOList = new ArrayList<>();
+        poList.forEach(e -> {
+            ApiTableDTO apiTableDTO = new ApiTableDTO();
+            apiTableDTO.tableName = e.tableName;
+            apiTableDTO.tblId = e.id;
+            apiTableDTO.pid = e.pid;
+            apiTableDTO.list = e.list;
+            // 查询所有子级表名
+            QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(TableAccessPO::getPid, e.id).select(TableAccessPO::getTableName);
+            List<TableAccessPO> list = tableAccessMapper.selectList(queryWrapper);
+            apiTableDTO.childTableName = list.stream().filter(Objects::nonNull).map(f -> f.tableName).collect(Collectors.toList());
+            apiTableDTOList.add(apiTableDTO);
+        });
+
+        return apiTableDTOList;
+    }
+
+    /**
      * 根据配置执行api功能
      *
      * @return void
@@ -2004,7 +2073,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             //系统内部调用(非实时推送)
             receiveDataDTO.setFlag(true);
             receiveDataDTO.setExecuteConfigFlag(false);
-
+            receiveDataDTO.setBatchCode(dto.getBatchCode());
 
         } else if (dataSourcePo.authenticationMethod == 5) { // 没有身份验证方式
 
@@ -2100,7 +2169,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 log.error("apiKey 请求body参数转map失败:" + e);
                 throw new FkException(ResultEnum.ERROR);
             }
-            apiHttpRequestDto.jsonObject = JSONObject.parseObject(dataSourcePo.apiKeyParameters);
+            apiHttpRequestDto.jsonObject = loginObject;
             apiHttpRequestDto.setFormDataParams(map);
 
             IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDto);
@@ -2109,15 +2178,31 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             JSONObject loginResult = iBuildHttpRequest.httpRequestForFormData(apiHttpRequestDto);
             log.info("登录验证结果：" + loginResult.toJSONString());
 
+            //获取金蝶api的cookie，放到拿取数据时的请求中
+            String cookie = String.valueOf(loginResult.get("KDSVCSessionId"));
 
             ApiHttpRequestDTO apiHttpRequestDto1 = new ApiHttpRequestDTO();
             apiHttpRequestDto1.uri = apiConfigPo.apiAddress;
+            log.info("getdata url:" + apiConfigPo.apiAddress);
             if (apiConfigPo.apiRequestType == 1) {
                 apiHttpRequestDto1.httpRequestEnum = GET;
             } else if (apiConfigPo.apiRequestType == 2) {
                 apiHttpRequestDto1.httpRequestEnum = POST;
                 // post请求携带的请求参数  Body: raw参数
                 if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(rawParams)) {
+                    for (ApiParameterPO rawParam : rawParams) {
+                        //api获取数据时 取数逻辑 @date代表日期参数 针对升达金蝶api是获取前一天数据 后续可以优化为页面配置
+                        if (rawParam.parameterValue.contains("@date")) {
+                            // 获取当前日期
+                            LocalDate now = LocalDate.now();
+                            // 获取当前日期的前一天
+                            LocalDate yesterday = now.minusDays(1);
+                            // 将日期格式化为 2023-12-14 这种形式
+                            String formattedDate = yesterday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                            rawParam.parameterValue = rawParam.parameterValue.replace("@date", formattedDate);
+                        }
+                    }
+
                     apiHttpRequestDto1.jsonObject = rawParams.stream().collect(Collectors.toMap(e -> e.parameterKey, e -> e.parameterValue, (a, b) -> b, JSONObject::new));
                 }
 
@@ -2130,8 +2215,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             // 请求头参数
             apiHttpRequestDto1.headersParams = params;
 
+            log.info("apikey - jindee - cookie: " + cookie);
+            apiHttpRequestDto1.setApiCookie(cookie);
             // TODO 第一步: 查询阶段,调用第三方api返回的数据
-            JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDto1);
+            JSONObject jsonObject = iBuildHttpRequest.httpRequestForApiKeyGetData(apiHttpRequestDto1);
             log.info("iBuildHttpRequest对象值:{},{},{}", JSON.toJSONString(apiHttpRequestDto1), JSON.toJSONString(iBuildHttpRequest), JSON.toJSONString(jsonObject));
 
             log.info("获取数据结果：" + jsonObject.toJSONString());
@@ -2151,40 +2238,11 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
         JSONArray jsonArray = JSON.parseObject(data).getJSONArray(jsonKey);
         log.info("进入推送");
+        log.info("参数dto:" + dto);
+        log.info("receiveDataDTO:" + receiveDataDTO);
+
         pushDataByImportDataV2(dto, receiveDataDTO);
         return ResultEnum.SUCCESS;
-    }
-
-    /**
-     * 获取所有表数据
-     *
-     * @return java.util.List<com.fisk.dataaccess.dto.json.ApiTableDTO>
-     * @description 获取所有表数据
-     * @author Lock
-     * @date 2022/2/22 17:02
-     * @version v1.0
-     * @params accessPOList 物理表集合
-     */
-    private List<ApiTableDTO> getApiTableDtoList(List<TableAccessPO> accessPoList) {
-        // 根据table_id获取物理表详情
-        List<TableAccessNonDTO> poList = accessPoList.stream().map(e -> tableAccessImpl.getData(e.id)).collect(Collectors.toList());
-
-        List<ApiTableDTO> apiTableDTOList = new ArrayList<>();
-        poList.forEach(e -> {
-            ApiTableDTO apiTableDTO = new ApiTableDTO();
-            apiTableDTO.tableName = e.tableName;
-            apiTableDTO.tblId = e.id;
-            apiTableDTO.pid = e.pid;
-            apiTableDTO.list = e.list;
-            // 查询所有子级表名
-            QueryWrapper<TableAccessPO> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(TableAccessPO::getPid, e.id).select(TableAccessPO::getTableName);
-            List<TableAccessPO> list = tableAccessMapper.selectList(queryWrapper);
-            apiTableDTO.childTableName = list.stream().filter(Objects::nonNull).map(f -> f.tableName).collect(Collectors.toList());
-            apiTableDTOList.add(apiTableDTO);
-        });
-
-        return apiTableDTOList;
     }
 
     /**
@@ -2224,52 +2282,55 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             return ResultEntityBuild.build(ResultEnum.JSON_ROOTNODE_HANDLER_ERROR);
         }
         targetTable.forEach(System.out::println);
-        try {
-            // TODO 先去数据质量验证
-            // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
-            if (!CollectionUtils.isEmpty(targetTable)) {
-                DataCheckWebDTO dto = new DataCheckWebDTO();
-                dto.setFiDataDataSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
-                String uuid = UUID.randomUUID().toString().replace("-", "");
-                dto.setBatchNumber(uuid);
-                dto.setSmallBatchNumber(uuid);
-                HashMap<String, JSONArray> body = new HashMap<>();
+        //是否开启数据校验
+        if (openDataCheck) {
+            try {
+                // TODO 先去数据质量验证
+                // 实例(url信息)  库  json解析完的参数(List<JsonTableData>)
+                if (!CollectionUtils.isEmpty(targetTable)) {
+                    DataCheckWebDTO dto = new DataCheckWebDTO();
+                    dto.setFiDataDataSourceId(DataSourceConfigEnum.DMP_ODS.getValue());
+                    String uuid = UUID.randomUUID().toString().replace("-", "");
+                    dto.setBatchNumber(uuid);
+                    dto.setSmallBatchNumber(uuid);
+                    HashMap<String, JSONArray> body = new HashMap<>();
 //                for (JsonTableData jsonTableData : targetTable) {
 //                    body.put(replaceTablePrefixName + jsonTableData.table, jsonTableData.data);
 //                }
-                for (int i = 0; i < targetTable.size(); i++) {
-                    body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
-                }
+                    for (int i = 0; i < targetTable.size(); i++) {
+                        body.put(String.valueOf(tableIdList.get(i)), targetTable.get(i).data);
+                    }
 
-                dto.body = body;
-                // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
-                ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
-                log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
-                // 数据校验结果
-                if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
-                    List<DataCheckResultVO> data = result.data;
-                    if (!CollectionUtils.isEmpty(data)) {
-                        StringBuilder checkResult = new StringBuilder("校验结果详情：");
-                        for (DataCheckResultVO d : data) {
-                            checkResult.append(d.checkResultMsg).append("。 ");
-                        }
-                        for (DataCheckResultVO e : data) {
-                            // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
-                            if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
-                                checkResult.append("本次校验结果中存在未通过的强规则，数据同步失败！");
-                                return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
-                            } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
-                                checkResultMsg.append(e.checkResultMsg).append("；");
-                            } else {
-                                return ResultEntityBuild.build(ResultEnum.getEnum(result.code), result.msg);
+                    dto.body = body;
+                    // 如果检验的feign接口没有调通,当前的校验也不算通过,就不能去执行同步数据的sql
+                    ResultEntity<List<DataCheckResultVO>> result = dataQualityClient.interfaceCheckData(dto);
+                    log.info("数据质量校验结果通知: " + JSON.toJSONString(result));
+                    // 数据校验结果
+                    if (result.code == ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS.getCode()) {
+                        List<DataCheckResultVO> data = result.data;
+                        if (!CollectionUtils.isEmpty(data)) {
+                            StringBuilder checkResult = new StringBuilder("校验结果详情：");
+                            for (DataCheckResultVO d : data) {
+                                checkResult.append(d.checkResultMsg).append("。 ");
+                            }
+                            for (DataCheckResultVO e : data) {
+                                // 强规则校验: 循环结果集,出现一个强规则,代表这一批数据其他规则通过已经不重要,返回失败
+                                if (e.checkType.equals(RuleCheckTypeEnum.STRONG_RULE.getName())) {
+                                    checkResult.append("本次校验结果中存在未通过的强规则，数据同步失败！");
+                                    return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
+                                } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
+                                    checkResultMsg.append(e.checkResultMsg).append("；");
+                                } else {
+                                    return ResultEntityBuild.build(ResultEnum.getEnum(result.code), result.msg);
+                                }
                             }
                         }
                     }
                 }
+            } catch (Exception e) {
+                log.error(String.format("调用数据质量接口报错，表名称：%s", tablePrefixName), e);
+                return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
             }
-        } catch (Exception e) {
-            log.error(String.format("调用数据质量接口报错，表名称：%s", tablePrefixName), e);
-            return ResultEntityBuild.build(ResultEnum.DATA_QUALITY_FEIGN_ERROR);
         }
 
         log.info("开始执行sql");
@@ -2277,6 +2338,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         ResultEntity<Object> excuteResult;
         try {
             //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
+            log.info("pushPgSql 大批次号:" + batchCode);
             if (batchCode == null) {
                 batchCode = UUID.randomUUID().toString();
             }
