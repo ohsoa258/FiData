@@ -178,6 +178,11 @@ public class DataSourcePO extends BasePO {
     public String apiKeyParameters;
 
     /**
+     * 选择ApiKey验证方式时，登陆后获取到的cookie
+     */
+    public String apiKeyCookie;
+
+    /**
      * JCO_SYSNR
      */
     public String sysNr;

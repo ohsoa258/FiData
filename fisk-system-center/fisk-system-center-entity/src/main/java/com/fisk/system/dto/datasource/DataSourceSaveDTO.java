@@ -215,6 +215,12 @@ public class DataSourceSaveDTO {
     public String apiKeyParameters;
 
     /**
+     * 选择ApiKey验证方式时，登陆后获取到的cookie
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，登陆后获取到的cookie", required = true)
+    public String apiKeyCookie;
+
+    /**
      * 当平台配置-数据源-外部数据源增加api类型的数据源，并且认证方式选择jwt时，才需要此集合，即页面选择的返回值结果定义
      */
     @ApiModelProperty(value = "jwt类型下，配置返回的json串类型", required = true)

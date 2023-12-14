@@ -505,6 +505,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSourcePO.authenticationMethod = dto.authenticationMethod;
                 dataSourcePO.sysNr = dto.sysNr;
                 dataSourcePO.lang = dto.lang;
+                dataSourcePO.apiKeyParameters = dto.apiKeyParameters;
+                dataSourcePO.apiKeyCookie = dto.apiKeyCookie;
                 appDataSourcePOS.add(dataSourcePO);
             }
             return updateBatchById(appDataSourcePOS);

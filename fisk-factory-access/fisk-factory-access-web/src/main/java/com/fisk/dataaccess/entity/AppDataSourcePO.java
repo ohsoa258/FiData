@@ -171,4 +171,10 @@ public class AppDataSourcePO extends BasePO implements Serializable {
     @ApiModelProperty(value = "选择ApiKey验证方式时，使用的验证参数json串", required = true)
     public String apiKeyParameters;
 
+    /**
+     * 选择ApiKey验证方式时，登陆后获取到的cookie
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，登陆后获取到的cookie", required = true)
+    public String apiKeyCookie;
+
 }

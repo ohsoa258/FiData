@@ -39,6 +39,12 @@ import java.util.stream.Collectors;
     @ApiModelProperty(value = "选择ApiKey验证方式时，使用的验证参数json串", required = true)
     public String apiKeyParameters;
 
+    /**
+     * 选择ApiKey验证方式时，登陆后获取到的cookie
+     */
+    @ApiModelProperty(value = "选择ApiKey验证方式时，登陆后获取到的cookie", required = true)
+    public String apiKeyCookie;
+
     @ApiModelProperty(value = "服务器地址", required = true)
     public String host;
 

@@ -28,6 +28,7 @@
         ds.sys_nr AS sysNr,
         ds.lang AS lang,
         ds.api_key_parameters as apiKeyParameters,
+        ds.api_key_cookie as apiKeyCookie,
         ds.authentication_method as authenticationMethod
         FROM
         tb_datasource_config ds
