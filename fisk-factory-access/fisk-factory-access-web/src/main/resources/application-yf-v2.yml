@@ -24,6 +24,9 @@ spring:
 
 # 是否同步元数据
 open-metadata: false
+# 是否开启api质量校验
+open-data-check: false
+
 # 智能发布所需配置
 config-url: jdbc:mysql://192.168.11.130:3306/dmp_datainput_db?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
 config-username: root
