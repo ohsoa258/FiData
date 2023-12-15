@@ -116,6 +116,8 @@ public class WebServiceImpl implements IWebServiceServer {
     public ResponseMessage KSF_Notice(@WebParam(name = "API_Message", targetNamespace = "http://tempuri.org/") BPI_Message api_message, @WebParam(name = "Elements", targetNamespace = "http://tempuri.org/") Elements elements) {
         log.debug("通知单推送的系统数据：" + JSON.toJSONString(api_message));
         log.debug("通知单推送的明细数据：" + JSON.toJSONString(elements));
+        List<HEADER> header = elements.getElement().getHEADER();
+        List<DETAIL> detail = elements.getElement().getDETAIL();
         //将webservice接收到的xml格式的数据转换为json格式的数据
         KsfNoticeDTO data = new KsfNoticeDTO();
         data.setSourceSys(api_message.getSourceSys());
@@ -126,8 +128,8 @@ public class WebServiceImpl implements IWebServiceServer {
         data.setAppKey(api_message.getAppKey());
         data.setIsTest(api_message.getIsTest());
         data.setIsManualSend(api_message.getIsManualSend());
-        data.setHeaders(elements.getElement().getHEADER());
-        data.setDetails(elements.getElement().getDETAIL());
+        data.setHeaders(header);
+        data.setDetails(detail);
         String pushData = JSON.toJSONString(data);
         //json解析的根节点 data
         String rebuild = "{\"data\": [" + pushData + "]}";
@@ -139,17 +141,22 @@ public class WebServiceImpl implements IWebServiceServer {
         receiveDataDTO.setIfWebService(true);
         String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
 
+        //表头行数
+        int headerSize = header.size();
+        //业务数据行数
+        int detailSize = detail.size();
+
         ResponseMessage responseMessage = new ResponseMessage();
         //统一报文返回类型
         if (result.contains("失败")) {
             responseMessage.setSTATUS("1");
-            result = "前置机数据同步失败";
+            result = "前置机数据同步失败，请联系系统管理员";
         } else if (!result.contains("成功")) {
             responseMessage.setSTATUS("1");
-            result = "前置机数据同步失败";
+            result = "前置机数据同步失败，请联系系统管理员";
         } else {
             responseMessage.setSTATUS("0");
-            result = "前置机数据同步成功";
+            result = "前置机数据接收-同步成功，本次接收明细：表头条数：" + headerSize + " 业务数据条数：" + detailSize;
         }
         responseMessage.setINFOTEXT(result);
         log.info("待返回的通知单执行结果：" + responseMessage);

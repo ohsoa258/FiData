@@ -42,7 +42,7 @@ public class AcknowledgementImpl implements IServerAcknowledgement {
     @WebMethod()
     @WebResult(name = "KSF_Acknowledgement_Result")
     public KSF_NoticeResult ksf_acknowledgement_data(@WebParam(name = "AcknowledgementData") String data) {
-        log.debug("库存状态变更推送的数据：" + JSON.toJSONString(data));
+        log.debug("wms-确认单推送的数据明细：" + JSON.toJSONString(data));
         //大批次号  本批数据不管是系统表还是父子表  大批次号都保持一致
         String fidata_batch_code = UUID.randomUUID().toString();
         ReceiveDataDTO receiveDataDTO = new ReceiveDataDTO();
