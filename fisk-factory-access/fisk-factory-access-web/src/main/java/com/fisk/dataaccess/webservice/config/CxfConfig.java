@@ -6,7 +6,10 @@ import com.fisk.dataaccess.webservice.IServerItemData;
 import com.fisk.dataaccess.webservice.IWebServiceServer;
 import org.apache.cxf.Bus;
 import org.apache.cxf.bus.spring.SpringBus;
+import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.EndpointImpl;
+import org.apache.cxf.message.Message;
+import org.apache.cxf.phase.Phase;
 import org.apache.cxf.transport.servlet.CXFServlet;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -15,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 import javax.xml.ws.Endpoint;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author lsj
@@ -56,6 +61,7 @@ public class CxfConfig {
     @Qualifier("endpoint")
     public Endpoint endpoint() {
         EndpointImpl endpoint = new EndpointImpl(springBus(), webServiceServer);
+        endpoint.getOutInterceptors().add(new XmlnsInterceptor(Phase.PRE_STREAM));
         endpoint.publish("/KsfNotice");
         return endpoint;
     }
