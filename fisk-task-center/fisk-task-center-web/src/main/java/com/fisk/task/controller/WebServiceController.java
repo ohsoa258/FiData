@@ -74,6 +74,7 @@ public class WebServiceController {
                     //pc.universalPublish(kafkaRkeceiveDTO);
                     log.info("数据分发api关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
                     kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+                    continue;
                 }
 
                 //数据接入和数据分发的源系统id一样时，才需发送消息
