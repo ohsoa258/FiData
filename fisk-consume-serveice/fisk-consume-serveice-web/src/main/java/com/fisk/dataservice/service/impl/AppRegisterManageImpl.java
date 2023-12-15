@@ -353,15 +353,17 @@ public class AppRegisterManageImpl
                     appApiMapper.insert(model);
                 }
             }
+
+            //同步元数据
+            if (openMetadata) {
+                List<Long> apiIds = saveDTO.dto.stream().filter(e -> e.apiState == 1).map(e -> e.getApiId().longValue()).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(apiIds)) {
+                    List<MetaDataEntityDTO> apiMetaData = getApiMetaDataByIds(apiIds);
+                    dataManageClient.syncDataConsumptionMetaData(apiMetaData);
+                }
+            }
         } catch (Exception ex) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }
-
-        //同步元数据
-        if (openMetadata) {
-            List<Long> apiIds = saveDTO.dto.stream().filter(e -> e.apiState == 1).map(e -> e.getApiId().longValue()).collect(Collectors.toList());
-            List<MetaDataEntityDTO> apiMetaData = getApiMetaDataByIds(apiIds);
-            dataManageClient.syncDataConsumptionMetaData(apiMetaData);
         }
         return ResultEnum.SUCCESS;
     }
