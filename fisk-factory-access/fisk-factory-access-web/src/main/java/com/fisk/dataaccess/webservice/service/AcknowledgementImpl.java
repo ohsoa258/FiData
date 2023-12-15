@@ -64,6 +64,7 @@ public class AcknowledgementImpl implements IServerAcknowledgement {
         WsAccessDTO wsAccessDTO = new WsAccessDTO();
         wsAccessDTO.setApiConfigId(15);
         wsAccessDTO.setBatchCode(receiveDataDTO.getBatchCode());
+        wsAccessDTO.setIsAcknowledgement(1);
         log.info("发送消息给数据分发服务");
         //发送消息给数据分发服务
         taskClient.wsAccessToConsume(wsAccessDTO);

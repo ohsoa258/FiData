@@ -1,14 +1,10 @@
 package com.fisk.dataaccess.webservice.config;
-import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
-import org.apache.commons.lang3.StringUtils;
+
 import org.apache.cxf.binding.soap.SoapMessage;
 import org.apache.cxf.helpers.IOUtils;
 import org.apache.cxf.interceptor.Fault;
 import org.apache.cxf.io.CachedOutputStream;
-import org.apache.cxf.jaxb.JAXBDataBinding;
-import org.apache.cxf.message.Message;
 import org.apache.cxf.phase.AbstractPhaseInterceptor;
-import org.apache.cxf.phase.Phase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
+
 /**
  * @Author: wangjian
  * @Date: 2023-12-14
@@ -76,8 +71,8 @@ public class XmlnsInterceptor extends AbstractPhaseInterceptor<SoapMessage> {
             InputStream in = cachedOutputStream.getInputStream();
             String output = IOUtils.toString(in, "UTF-8");
             // 修改内容为集成平台要求的格式
-            output = output.replace("<ns2:KSF_NoticeResponse xmlns:ns2=\"http://tempuri.org/\">","<KSF_NoticeResponse xmlns=\"http://tempuri.org/\">")
-                        .replace("</ns2:KSF_NoticeResponse>","</KSF_NoticeResponse>");
+            output = output.replace("<ns2:KSF_NoticeResponse xmlns:ns2=\"http://tempuri.org/\">", "<KSF_NoticeResponse xmlns=\"http://tempuri.org/\">")
+                    .replace("</ns2:KSF_NoticeResponse>", "</KSF_NoticeResponse>");
             // 处理完后写回流中
             IOUtils.copy(new ByteArrayInputStream(output.getBytes()), os);
             cs.close();
@@ -87,17 +82,21 @@ public class XmlnsInterceptor extends AbstractPhaseInterceptor<SoapMessage> {
             System.out.println(String.format("解析报文异常: %s", e.getMessage()));
         }
     }
+
     private static class CachedStream extends CachedOutputStream {
         public CachedStream() {
             super();
         }
+
         @Override
         protected void doFlush() throws IOException {
             currentStream.flush();
         }
+
         @Override
         protected void doClose() throws IOException {
         }
+
         @Override
         protected void onWrite() throws IOException {
         }

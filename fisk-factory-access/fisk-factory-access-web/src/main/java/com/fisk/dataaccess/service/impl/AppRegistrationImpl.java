@@ -887,12 +887,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 // 删除应用下的物理表
                 List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
                 if (!CollectionUtils.isEmpty(accessList)) {
+                    // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
+                    accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
                     // 删除应用下面的所有表及表结构
                     accessList.forEach(tableAccessPO -> {
                         tableAccessMapper.deleteByIdWithFill(tableAccessPO);
                     });
-                    // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
-                    accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
+
                 }
 
                 log.info("hudi 入仓配置 - 二次编辑应用时开始同步所有表-------------------------------");

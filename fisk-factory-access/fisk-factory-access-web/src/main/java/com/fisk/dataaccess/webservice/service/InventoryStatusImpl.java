@@ -79,6 +79,7 @@ public class InventoryStatusImpl implements IServerInventoryStatus {
         wsAccessDTO.setApiConfigId(4);
         wsAccessDTO.setBatchCode(null);
         wsAccessDTO.setSourceSys(inventory.getAPI_Message().getSourceSys());
+        wsAccessDTO.setIsAcknowledgement(0);
         //发送消息给数据分发服务
         taskClient.wsAccessToConsume(wsAccessDTO);
         return ksf_noticeResult;

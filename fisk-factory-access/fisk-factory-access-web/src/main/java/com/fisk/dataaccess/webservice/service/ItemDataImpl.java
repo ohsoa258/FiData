@@ -79,6 +79,7 @@ public class ItemDataImpl implements IServerItemData {
         wsAccessDTO.setApiConfigId(3);
         wsAccessDTO.setBatchCode(null);
         wsAccessDTO.setSourceSys(item.getAPI_Message().getSourceSys());
+        wsAccessDTO.setIsAcknowledgement(0);
         //发送消息给数据分发服务
         taskClient.wsAccessToConsume(wsAccessDTO);
         return ksf_noticeResult;

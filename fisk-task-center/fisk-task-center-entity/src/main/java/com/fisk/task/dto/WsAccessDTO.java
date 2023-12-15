@@ -23,4 +23,11 @@ public class WsAccessDTO {
      */
     @ApiModelProperty(value = "源系统id")
     private String sourceSys;
+
+    /**
+     * 是否是确认单：0否 1是
+     */
+    @ApiModelProperty(value = "是否是确认单：0否 1是")
+    private Integer isAcknowledgement;
+
 }
