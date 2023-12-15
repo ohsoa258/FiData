@@ -353,15 +353,19 @@ public class AppRegisterManageImpl
                     appApiMapper.insert(model);
                 }
             }
+
+            log.info("数据服务【appSubscribe】开始执行元数据同步");
+            //同步元数据
+            if (openMetadata) {
+                List<Long> apiIds = saveDTO.dto.stream().filter(e -> e.apiState == 1).map(e -> e.getApiId().longValue()).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(apiIds)) {
+                    List<MetaDataEntityDTO> apiMetaData = getApiMetaDataByIds(apiIds);
+                    dataManageClient.syncDataConsumptionMetaData(apiMetaData);
+                }
+            }
+            log.info("数据服务【appSubscribe】执行元数据同步结束");
         } catch (Exception ex) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }
-
-        //同步元数据
-        if (openMetadata) {
-            List<Long> apiIds = saveDTO.dto.stream().filter(e -> e.apiState == 1).map(e -> e.getApiId().longValue()).collect(Collectors.toList());
-            List<MetaDataEntityDTO> apiMetaData = getApiMetaDataByIds(apiIds);
-            dataManageClient.syncDataConsumptionMetaData(apiMetaData);
         }
         return ResultEnum.SUCCESS;
     }

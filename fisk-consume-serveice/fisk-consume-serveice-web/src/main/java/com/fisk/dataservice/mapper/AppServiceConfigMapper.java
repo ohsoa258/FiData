@@ -13,6 +13,7 @@ import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -23,6 +24,16 @@ import java.util.List;
  */
 @Mapper
 public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO> {
+
+    /**
+     * 解除
+     *
+     * @return 操作结果
+     */
+    @Update("UPDATE tb_app_service_config SET api_state=#{apiState},type=#{type},service_id=#{serviceId} WHERE id=#{id} AND del_flag=1;")
+    int updateSubscribeById(@Param("apiState") int apiStat,@Param("type") int type,
+                            @Param("serviceId") int serviceId,@Param("id") long id);
+
     /**
      * 分页查询应用下API的订阅信息
      *

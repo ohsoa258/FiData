@@ -189,6 +189,9 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
     }
 
     public ZALLSAPUPLOADGOODSMOV assembleConfirmationSlipDTO(ResultSet resultSet1, ResultSet resultSet2, ResultSet resultSet3) throws SQLException, JAXBException {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        String nowTime = now.format(formatter);
         ZALLSAPUPLOADGOODSMOV zallsapuploadgoodsmov = new ZALLSAPUPLOADGOODSMOV();
         while (resultSet1.next()) {
             zallsapuploadgoodsmov.setSOURCESYS(resultSet1.getString("sourcesys"));
@@ -204,7 +207,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             header.setLGPLA(resultSet2.getString("lgpla"));
             header.setVTXTK(resultSet2.getString("vtxtk"));
             header.setHTEXT(resultSet2.getString("htext"));
-            header.setBUDAT(resultSet2.getString("budat"));
+            header.setBUDAT(nowTime);
             ArrayOfZALLSAPUPLOADGOODSMOV1 itmatdochead = zallsapuploadgoodsmov.getITMATDOCHEAD();
             if (itmatdochead == null){
                 itmatdochead = new ArrayOfZALLSAPUPLOADGOODSMOV1();
