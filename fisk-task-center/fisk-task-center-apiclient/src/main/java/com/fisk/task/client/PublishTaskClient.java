@@ -544,4 +544,12 @@ public interface PublishTaskClient {
     @PostMapping("/ws/wsAccessToConsume")
     void wsAccessToConsume(@RequestBody WsAccessDTO dto);
 
+    /**
+     * 异步触发kafka消息队列
+     * @param kafkaReceive
+     * @return
+     */
+    @PostMapping("/publishTask/syncKafka")
+    ResultEntity<Object> syncKafka(@RequestBody KafkaReceiveDTO kafkaReceive);
+
 }

@@ -32,6 +32,9 @@ public class TableApiLogPO extends BasePO {
     @ApiModelProperty(value = "本次消费的批次号")
     private String fidataBatchCode;
 
+    @ApiModelProperty(value = "消费信息")
+    private String msg;
+
     @ApiModelProperty(value = "历史状态")
     private Integer state;
 

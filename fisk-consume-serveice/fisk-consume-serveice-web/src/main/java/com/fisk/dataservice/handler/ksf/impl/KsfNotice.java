@@ -77,6 +77,7 @@ public class KsfNotice extends KsfWebServiceHandler {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg("{\"error\":\"数据分发Api不存在apiId:" + apiId + "\"}");
             apiResultDTO.setNumber(number);
+            apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             return apiResultDTO;
         }
         //获取查询时间区间
@@ -146,10 +147,12 @@ public class KsfNotice extends KsfWebServiceHandler {
 
                 number = noticesData.size();
                 apiResultDTO.setNumber(number);
+                apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
                 apiResultDTO.setMsg("{\"error\":\"" + e.getMessage() + "\"}");
                 apiResultDTO.setNumber(number);
+                apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             } finally {
                 try {
                     assert st1 != null;
@@ -165,12 +168,14 @@ public class KsfNotice extends KsfWebServiceHandler {
                     apiResultDTO.setFlag(false);
                     apiResultDTO.setMsg("{\"error\":\"" + e.getMessage() + "\"}");
                     apiResultDTO.setNumber(number);
+                    apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
                 }
             }
         } else {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg("{\"error\":\"userclient无法查询到目标库的连接信息\"}");
             apiResultDTO.setNumber(number);
+            apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             return apiResultDTO;
         }
         String data = JSON.toJSONString(result);
@@ -189,6 +194,7 @@ public class KsfNotice extends KsfWebServiceHandler {
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);
         }
+        apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
         apiResultDTO.setNumber(number);
         return apiResultDTO;
     }

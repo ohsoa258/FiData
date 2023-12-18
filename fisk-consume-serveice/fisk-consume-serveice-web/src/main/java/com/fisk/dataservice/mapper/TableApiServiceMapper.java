@@ -7,6 +7,8 @@ import com.fisk.dataservice.dto.tableapi.TableApiPageQueryDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageDataDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePageQueryDTO;
 import com.fisk.dataservice.entity.TableApiServicePO;
+import com.fisk.dataservice.vo.tableapi.ApiLogPageDTO;
+import com.fisk.dataservice.vo.tableapi.ApiLogVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -26,5 +28,5 @@ public interface TableApiServiceMapper extends BaseMapper<TableApiServicePO> {
      * @return
      */
     Page<TableApiPageDataDTO> getTableApiListData(Page<TableApiPageDataDTO> page, @Param("query") TableApiPageQueryDTO query);
-
+    Page<ApiLogVO> getApiLogs(Page<ApiLogVO> page, @Param("query") ApiLogPageDTO query);
 }

@@ -200,12 +200,6 @@ public class AsyncImpl {
         }
 
         try {
-            if (tableApiLogPo.getId() == 0) {
-                tableApiLogService.save(tableApiLogPo);
-            } else {
-                tableApiLogService.updateById(tableApiLogPo);
-            }
-
             sendEmail(tableAppPO, apiResultDTO, Integer.valueOf(dto.getApiId().toString()), pipelTaskTraceId);
         } catch (Exception e) {
             String msg = (String) taskMap.get(DispatchLogEnum.taskend.getValue());
@@ -213,7 +207,13 @@ public class AsyncImpl {
             taskMap.put(DispatchLogEnum.taskend.getValue(), msg);
         }
         tableApiTaskDTO.setMsg(taskMap);
-
+        String msg = (String) taskMap.get(DispatchLogEnum.taskend.getValue());
+        tableApiLogPo.setMsg(msg);
+        if (tableApiLogPo.getId() == 0) {
+            tableApiLogService.save(tableApiLogPo);
+        } else {
+            tableApiLogService.updateById(tableApiLogPo);
+        }
         publishTaskClient.savePipelTaskLog(tableApiTaskDTO);
         return ResultEnum.SUCCESS;
     }

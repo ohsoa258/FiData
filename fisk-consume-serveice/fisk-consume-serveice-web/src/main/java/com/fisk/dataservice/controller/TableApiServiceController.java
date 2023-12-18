@@ -6,19 +6,16 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
-import com.fisk.dataservice.dto.tableservice.TableServiceSyncDTO;
 import com.fisk.dataservice.service.ITableApiLogService;
 import com.fisk.dataservice.service.ITableApiService;
-import com.fisk.dataservice.service.ITableAppManageService;
 import com.fisk.dataservice.service.KsfPlantService;
 import com.fisk.dataservice.service.impl.AsyncImpl;
+import com.fisk.dataservice.vo.tableapi.ApiLogPageDTO;
 import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
 import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
-import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -133,5 +130,17 @@ public class TableApiServiceController {
     @GetMapping("/getPlant")
     public ResultEntity<Object> getPlant() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, ksfPlantService.getPlant());
+    }
+
+    @ApiOperation("获取api日志")
+    @PostMapping("/getApiLogs")
+    public ResultEntity<Object> getApiLogs(@RequestBody ApiLogPageDTO apiLogPageDTO) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, tableApiService.getApiLogs(apiLogPageDTO));
+    }
+
+    @ApiOperation("重新推送确认单")
+    @GetMapping("/sendAcknowledgement")
+    public ResultEntity<Object> sendAcknowledgement(Integer apiLogId) {
+        return ResultEntityBuild.build(tableApiService.sendAcknowledgement(apiLogId));
     }
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -14,20 +15,18 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
-import com.fisk.dataservice.entity.KsfPlantPO;
-import com.fisk.dataservice.entity.TableApiParameterPO;
-import com.fisk.dataservice.entity.TableApiServicePO;
-import com.fisk.dataservice.entity.TableAppPO;
+import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.enums.SpecialTypeEnum;
 import com.fisk.dataservice.map.TableApiParameterMap;
 import com.fisk.dataservice.map.TableApiServiceMap;
 import com.fisk.dataservice.mapper.TableApiServiceMapper;
 import com.fisk.dataservice.service.*;
+import com.fisk.dataservice.vo.tableapi.ApiLogPageDTO;
+import com.fisk.dataservice.vo.tableapi.ApiLogVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.BuildDeleteTableApiServiceDTO;
-import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -36,12 +35,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("tableApiService")
@@ -343,6 +341,37 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public Page<ApiLogVO> getApiLogs(ApiLogPageDTO apiLogPageDTO) {
+        return baseMapper.getApiLogs(apiLogPageDTO.page, apiLogPageDTO);
+    }
+
+    @Override
+    public ResultEnum sendAcknowledgement(Integer logId) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        LambdaQueryWrapper<TableApiLogPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableApiLogPO::getId, logId);
+        TableApiLogPO tableApiLogPO = tableApiLogService.getOne(queryWrapper);
+
+        TableApiServicePO tableApiServicePO = getById(tableApiLogPO.getApiId());
+        KafkaReceiveDTO kafkaReceiveDTO = new KafkaReceiveDTO();
+        kafkaReceiveDTO.setSourcesys("");
+        kafkaReceiveDTO.setFidata_batch_code(tableApiLogPO.getFidataBatchCode());
+        KafkaReceiveDTO kafkaRkeceive = KafkaReceiveDTO.builder().build();
+        kafkaRkeceive.topic = MqConstants.TopicPrefix.TOPIC_PREFIX + OlapTableEnum.DATA_SERVICE_API.getValue() + "." + tableApiServicePO.getAppId() + "." + tableApiServicePO.id;
+        kafkaRkeceive.start_time = simpleDateFormat.format(new Date());
+        kafkaRkeceive.pipelTaskTraceId = UUID.randomUUID().toString();
+        kafkaRkeceive.fidata_batch_code = tableApiLogPO.getFidataBatchCode();
+        kafkaRkeceive.pipelStageTraceId = UUID.randomUUID().toString();
+        kafkaRkeceive.ifTaskStart = true;
+        kafkaRkeceive.topicType = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
+        kafkaRkeceive.setSourcesys("");
+        //pc.universalPublish(kafkaRkeceiveDTO);
+        log.info("数据分发api关联触发流程参数:{}", JSON.toJSONString(kafkaRkeceive));
+        publishTaskClient.syncKafka(kafkaRkeceive);
+        return null;
     }
 
     private ResultEnum updateTableApiService(TableApiServiceDTO dto) {

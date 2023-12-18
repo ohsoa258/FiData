@@ -7,6 +7,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.dataservice.entity.TableApiServicePO;
+import com.fisk.dataservice.vo.tableapi.ApiLogPageDTO;
+import com.fisk.dataservice.vo.tableapi.ApiLogVO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 
 import java.util.List;
@@ -103,5 +105,9 @@ public interface ITableApiService extends IService<TableApiServicePO> {
      * @return
      */
     ResultEnum importantOrUnimportant(Integer id);
+
+    Page<ApiLogVO> getApiLogs(ApiLogPageDTO apiLogPageDTO);
+
+    ResultEnum sendAcknowledgement(Integer logId);
 }
 

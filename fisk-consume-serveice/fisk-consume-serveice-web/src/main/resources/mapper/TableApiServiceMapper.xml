@@ -26,4 +26,8 @@
             and a.publish = ${query.publish}
         </if>
     </select>
+
+    <select id="getApiLogs" resultType = "com.fisk.dataservice.vo.tableapi.ApiLogVO">
+        select a.* from tb_table_api_log a where del_flag = 1 and a.api_id = ${query.apiId};
+    </select>
 </mapper>

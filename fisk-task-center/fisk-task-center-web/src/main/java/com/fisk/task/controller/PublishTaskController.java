@@ -26,6 +26,7 @@ import com.fisk.task.listener.doris.BuildDataModelDorisTableListener;
 import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.task.IBuildKfkTaskService;
 import com.fisk.task.service.task.IBuildTaskService;
+import com.fisk.task.utils.KafkaTemplateHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,9 @@ public class PublishTaskController {
     public String pipelineTopicName;
     @Resource
     IPipelTaskLog iPipelTaskLog;
+
+    @Resource
+    KafkaTemplateHelper kafkaTemplateHelper;
 
     @PostMapping("/nifiFlow")
     @ApiOperation(value = "创建同步数据nifi流程")
@@ -435,4 +439,9 @@ public class PublishTaskController {
     }
 
 
+    @ApiOperation("异步触发kafka消息队列")
+    @PostMapping("/syncKafka")
+    public void syncKafka(@RequestBody KafkaReceiveDTO kafkaRkeceive) {
+        kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceive));
+    }
 }

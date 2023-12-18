@@ -19,4 +19,7 @@ public class ApiResultDTO {
 
     @ApiModelProperty(value = "本次消费数量")
     private Integer number;
+
+    @ApiModelProperty(value = "本次同步时间")
+    private String syncTime;
 }

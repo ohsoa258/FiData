@@ -77,6 +77,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg("{\"error\":\"数据分发Api不存在apiId:" + apiId + "\"}");
             apiResultDTO.setNumber(number);
+            apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             return apiResultDTO;
         }
         //获取查询时间区间
@@ -129,10 +130,12 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
                 ResultSet details = st3.executeQuery(detailSql);
                 resultJsonData = assembleConfirmationSlipDTO(systemData, heads, details);
                 apiResultDTO.setNumber(resultJsonData.getITMATDOCHEAD().getZALLSAPUPLOADGOODSMOV1().size());
+                apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
                 apiResultDTO.setMsg("{\"error\":\"" + e.getMessage() + "\"}");
                 apiResultDTO.setNumber(number);
+                apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             } finally {
                 try {
                     assert st1 != null;
@@ -148,16 +151,19 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
                     apiResultDTO.setFlag(false);
                     apiResultDTO.setMsg("{\"error\":\"" + e.getMessage() + "\"}");
                     apiResultDTO.setNumber(number);
+                    apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
                 }
             }
         } else {
             apiResultDTO.setFlag(false);
             apiResultDTO.setMsg("{\"error\":\"userclient无法查询到目标库的连接信息\"}");
             apiResultDTO.setNumber(number);
+            apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             return apiResultDTO;
         }
         log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + JSON.toJSON(resultJsonData));
         apiResultDTO = send(resultJsonData);
+        apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
         if (apiResultDTO.getFlag()) {
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);
