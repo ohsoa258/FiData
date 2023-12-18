@@ -127,7 +127,7 @@ public class KsfInventoryStatusChanges extends KsfWebServiceHandler {
                     result = resultJsonDatum;
                     Map<String, Object> data = (Map<String, Object>) resultJsonDatum.get("Data");
                     if (data != null) {
-                        List<Map<String, Object>> inventoryStatusChanges = (List<Map<String, Object>>) data.get("InventoryStatusChanges");
+                        List<Map<String, Object>> inventoryStatusChanges = (List<Map<String, Object>>) data.get("MATDOCTAB");
                         inventoryData.addAll(inventoryStatusChanges);
                     }
                 }

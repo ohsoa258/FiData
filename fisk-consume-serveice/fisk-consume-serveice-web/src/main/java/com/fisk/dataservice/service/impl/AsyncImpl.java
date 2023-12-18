@@ -192,7 +192,7 @@ public class AsyncImpl {
             tableApiLogPo.setNumber(apiResultDTO.getNumber());
             tableApiLogPo.setStatus(0);
             if (tableApiLogPo.getId() != 0) {
-                tableApiLogPo.setRetryNumber(tableApiLogPo.getNumber() + 1);
+                tableApiLogPo.setRetryNumber(tableApiLogPo.getRetryNumber() + 1);
             } else {
                 tableApiLogPo.setFidataBatchCode(fidata_batch_code);
                 tableApiLogPo.setState(0);

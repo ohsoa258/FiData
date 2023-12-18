@@ -129,7 +129,8 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
                 log.info("开始执行脚本detail:{}", detailSql);
                 ResultSet details = st3.executeQuery(detailSql);
                 resultJsonData = assembleConfirmationSlipDTO(systemData, heads, details);
-                apiResultDTO.setNumber(resultJsonData.getITMATDOCHEAD().getZALLSAPUPLOADGOODSMOV1().size());
+                number = resultJsonData.getITMATDOCHEAD().getZALLSAPUPLOADGOODSMOV1().size();
+                apiResultDTO.setNumber(number);
                 apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             } catch (Exception e) {
                 apiResultDTO.setFlag(false);
@@ -164,6 +165,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
         log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + JSON.toJSON(resultJsonData));
         apiResultDTO = send(resultJsonData);
         apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
+        apiResultDTO.setFlag(true);
         if (apiResultDTO.getFlag()) {
             tableApiServicePO.setSyncTime(endTime);
             tableApiService.updateById(tableApiServicePO);

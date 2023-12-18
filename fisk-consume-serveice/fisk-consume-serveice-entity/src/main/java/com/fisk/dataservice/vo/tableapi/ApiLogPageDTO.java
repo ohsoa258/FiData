@@ -13,6 +13,10 @@ import lombok.Data;
 public class ApiLogPageDTO {
     @ApiModelProperty(value = "apiId")
     public Integer apiId;
+
+    @ApiModelProperty(value = "批次号")
+    public String fidataBatchCode;
+
     @ApiModelProperty(value = "页")
     public Page<ApiLogVO> page;
 }

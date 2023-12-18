@@ -136,7 +136,7 @@ public class KsfNotice extends KsfWebServiceHandler {
                     result = resultJsonDatum;
                     Map<String, Object> data = (Map<String, Object>) resultJsonDatum.get("Data");
                     if (data != null) {
-                        List<Map<String, Object>> ksfNotices = (List<Map<String, Object>>) data.get("KsfNotices");
+                        List<Map<String, Object>> ksfNotices = (List<Map<String, Object>>) data.get("Ksf_Notice");
                         noticesData.addAll(ksfNotices);
                     }
                 }
