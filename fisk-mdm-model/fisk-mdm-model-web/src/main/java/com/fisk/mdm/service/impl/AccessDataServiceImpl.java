@@ -903,6 +903,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         str.append("    \""+souceTableName+"\"\n");
         str.append("  WHERE\n");
         str.append("    fidata_batch_code = ''${fidata_batch_code}''\n");
+        str.append("    AND fidata_flow_batch_code = ''${fragment.index}''\n");
         str.append("    AND fidata_version_id = ''"+versionId+"''\n");
         str.append("  LOOP\n");
         str.append("    BEGIN\n");
