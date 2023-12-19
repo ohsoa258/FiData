@@ -138,6 +138,9 @@ public class BuildAccessDorisCommandImpl implements IBuildAccessSqlCommand {
                 break;
             default:
                 data[0] = MySqlTypeEnum.VARCHAR.getName();
+                if ("85".equals(dto.dataLength)){
+                    data[1] = "500";
+                }
         }
         return data;
     }
