@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -12,6 +13,7 @@ import com.fisk.mdm.vo.entity.EntityInfoVO;
 import com.fisk.mdm.vo.entity.EntityVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author WangYan
@@ -83,4 +85,10 @@ public interface EntityService {
      */
     List<MetaDataInstanceAttributeDTO> getMasterDataMetaData(Integer entityId);
 
+    /**
+     * 获取表名称(管道日志用)
+     * @param tableQueryDTO
+     * @return
+     */
+    Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO);
 }

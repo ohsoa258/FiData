@@ -143,7 +143,7 @@ public enum ChannelDataEnum implements BaseEnum {
                 return OlapTableEnum.GOVERNANCE;
             case 13:
                 return OlapTableEnum.CUSTOMIZESCRIPT;
-            case 18:
+            case 16:
                 return OlapTableEnum.MDM_DATA_ACCESS;
             default:
                 return null;

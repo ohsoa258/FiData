@@ -7,6 +7,7 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
@@ -197,4 +198,12 @@ public interface MdmClient {
      */
     @GetMapping("/entity/getMasterDataMetaData")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> getMasterDataMetaData(@RequestParam("entityId") Integer entityId);
+
+    /**
+     * 根据实体ID,获取实体表名
+     * @param tableQueryDTO
+     * @return
+     */
+    @PostMapping("/entity/getTableNames")
+    ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO);
 }

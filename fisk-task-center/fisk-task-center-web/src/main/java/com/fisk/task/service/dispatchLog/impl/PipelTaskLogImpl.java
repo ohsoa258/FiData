@@ -16,6 +16,7 @@ import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.datafactory.dto.tasknifi.TaskHierarchyDTO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.enums.DataFactoryEnum;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogQueryVO;
 import com.fisk.task.dto.dispatchlog.DataServiceTableLogVO;
 import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
@@ -64,6 +65,9 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
     private DataModelClient dataModelClient;
     @Resource
     private DataAccessClient dataAccessClient;
+
+    @Resource
+    private MdmClient mdmClient;
     @Override
     public void savePipelTaskLog(String pipelTraceId, String jobTraceId, String pipelTaskTraceId, Map<Integer, Object> map, String taskId, String tableId, int tableType) {
         log.info("PipelTask参数:jobTraceId:{},pipelTaskTraceId:{},map:{},taskId:{}", jobTraceId, pipelTaskTraceId, JSON.toJSONString(map), taskId);
@@ -313,6 +317,14 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
                         throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
                     }
                     resultMap = (Map<Integer,String>)tables.getData();
+                    break;
+                case MDM_DATA_ACCESS:
+                    ResultEntity<Object> entityNames = mdmClient.getTableNames(tableQueryDTO);
+                    if (entityNames.code != ResultEnum.SUCCESS.getCode()){
+                        log.error("远程调用失败,方法名: 【getPipelTaskLogVos】");
+                        throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                    }
+                    resultMap = (Map<Integer,String>)entityNames.getData();
                     break;
                 case CUSTOMIZESCRIPT:
                     Map<Integer,String> map1 = new HashMap<>();
