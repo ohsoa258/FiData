@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
@@ -91,5 +92,11 @@ public class EntityController {
     @GetMapping("/getMasterDataMetaData")
     public ResultEntity<Object> getMasterDataMetaData(Integer entityId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getMasterDataMetaData(entityId));
+    }
+    @PostMapping("/getTableNames")
+    @ApiOperation(value = "根据实体ID,获取实体表名")
+    public ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getTableNames(tableQueryDTO));
     }
 }

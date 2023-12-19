@@ -12,6 +12,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.*;
+import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
@@ -49,10 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -532,6 +530,19 @@ public class EntityServiceImpl implements EntityService {
         masterDataMetaDataInstance.getDbList().get(0).setTableList(tableMetaData);
         metaDataInstanceAttributeDTOList.add(masterDataMetaDataInstance);
         return metaDataInstanceAttributeDTOList;
+    }
+
+    @Override
+    public Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO) {
+        Map<Integer, String> map = new HashMap<>();
+        //查询实体表名称
+        QueryWrapper<EntityPO> tableEntityPOQueryWrapper = new QueryWrapper<>();
+        tableEntityPOQueryWrapper.lambda().in(EntityPO::getId, tableQueryDTO.getIds());
+        List<EntityPO> tableAccessPOList = entityMapper.selectList(tableEntityPOQueryWrapper);
+        for (EntityPO tableAccessPO : tableAccessPOList) {
+            map.put((int) tableAccessPO.getId(), tableAccessPO.getTableName());
+        }
+        return map;
     }
 
 

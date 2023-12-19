@@ -131,7 +131,7 @@ public class PhysicalTableController {
     }
 
     @PostMapping("/getTableNames")
-    @ApiOperation(value = "根据应用ID,获取物理表名及表对应的字段")
+    @ApiOperation(value = "根据表ID,获取物理表名")
     public ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableNames(tableQueryDTO));
