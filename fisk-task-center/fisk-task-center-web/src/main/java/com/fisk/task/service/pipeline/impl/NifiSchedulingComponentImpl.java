@@ -1,7 +1,9 @@
 package com.fisk.task.service.pipeline.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorEntity;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.ProcessorStatusDTO;
@@ -41,12 +43,12 @@ public class NifiSchedulingComponentImpl extends ServiceImpl<NifiSchedulingCompo
                 NifiSchedulingComponentPO one = this.getOne(queryWrapper);
                 ProcessorEntity processorEntity = NifiHelper.getProcessorsApi().getProcessor(one.getComponentId());
                 ProcessorRunStatusEntity processorRunStatusEntity = new ProcessorRunStatusEntity();
-                processorRunStatusEntity.setRevision(processorEntity.getRevision());
-                processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
                 String schedulingStrategy = processorEntity.getComponent().getConfig().getSchedulingStrategy();
                 ScheduleEnum scheduleEnum = ScheduleEnum.valueOf(schedulingStrategy);
                 switch (scheduleEnum) {
                     case TIMER_DRIVEN:
+                        processorRunStatusEntity.setRevision(processorEntity.getRevision());
+                        processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
                         processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
                         NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
                         ProcessorEntity processor = null;
@@ -56,16 +58,22 @@ public class NifiSchedulingComponentImpl extends ServiceImpl<NifiSchedulingCompo
                             processor = NifiHelper.getProcessorsApi().getProcessor(one.getComponentId());
                             if (processor.getStatus().getRunStatus() == ProcessorStatusDTO.RunStatusEnum.STOPPED) {
                                 flag = true;
-                                log.info("rounce第一步停止组件成功");
+                                log.info("runonce第一步停止组件成功");
                             }
                             i++;
                         } while (processor.getStatus().getRunStatus() != ProcessorStatusDTO.RunStatusEnum.STOPPED || i == 3);
                         if (flag == true) {
+                            Thread.sleep(2000);
+                            processorRunStatusEntity.setRevision(processor.getRevision());
+                            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
                             processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUNNING);
                             NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
+                            log.info("runonce第二步组件启动成功");
                         }
                         break;
                     case CRON_DRIVEN:
+                        processorRunStatusEntity.setRevision(processorEntity.getRevision());
+                        processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
                         processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.STOPPED);
                         NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
                         ProcessorEntity processor1 = null;
@@ -75,15 +83,24 @@ public class NifiSchedulingComponentImpl extends ServiceImpl<NifiSchedulingCompo
                             processor1 = NifiHelper.getProcessorsApi().getProcessor(one.getComponentId());
                             if (processor1.getStatus().getRunStatus() == ProcessorStatusDTO.RunStatusEnum.STOPPED) {
                                 flag = true;
-                                log.info("rounce第一步停止组件成功");
+                                log.info("runonce第一步停止组件成功"+ JSON.toJSON(processor1));
                             }
                             b++;
                         } while (processor1.getStatus().getRunStatus() != ProcessorStatusDTO.RunStatusEnum.STOPPED || b == 3);
-                        processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUN_ONCE);
-                        NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
-                        Thread.sleep(1000);
-                        processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUNNING);
-                        NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
+                        if (flag){
+                            processorRunStatusEntity.setRevision(processor1.getRevision());
+                            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+                            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUN_ONCE);
+                            NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
+                            log.info("runonce第二步组件执行成功"+ JSON.toJSON(processor1));
+                            Thread.sleep(2000);
+                            processor1 = NifiHelper.getProcessorsApi().getProcessor(one.getComponentId());
+                            processorRunStatusEntity.setRevision(processor1.getRevision());
+                            processorRunStatusEntity.setDisconnectedNodeAcknowledged(false);
+                            processorRunStatusEntity.setState(ProcessorRunStatusEntity.StateEnum.RUNNING);
+                            NifiHelper.getProcessorsApi().updateRunStatus(one.getComponentId(), processorRunStatusEntity);
+                            log.info("runonce第三步组件启动成功"+ JSON.toJSON(processor1));
+                        }
                         break;
                     default:
                         break;
@@ -97,9 +114,11 @@ public class NifiSchedulingComponentImpl extends ServiceImpl<NifiSchedulingCompo
                 return ResultEnum.RUN_ONCE_LOCK;
             }
 
-        } catch (Exception e) {
-            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+        } catch (ApiException e) {
+            log.error("系统异常" + e.getResponseBody());
             return ResultEnum.RUN_ONCE_ERROR;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         } finally {
             redisUtil.del(RedisKeyEnum.DISPATCH_RUN_ONCE.getName() + ":" + nifiCustomWorkflowDetailId);
         }

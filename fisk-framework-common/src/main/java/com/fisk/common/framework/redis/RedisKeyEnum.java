@@ -36,7 +36,7 @@ public enum RedisKeyEnum implements BaseEnum {
     PIPEL_JOB_TRACE_ID(3000,"pipel:JobTrace:id"),
     //数据调度管道数据结构--trace_id  (task层)
     PIPEL_TASK_TRACE_ID(3000,"pipel:TaskTrace:id"),
-
+    PIPEL_END_JOB_TRACE_ID(3000,"pipelend:JobTrace:id"),
     PIPEL_END_TASK_TRACE_ID(3000,"pipelend:TaskTrace:id"),
     //管道task
     PIPEL_TASK(3000, "pipel:task:id"),

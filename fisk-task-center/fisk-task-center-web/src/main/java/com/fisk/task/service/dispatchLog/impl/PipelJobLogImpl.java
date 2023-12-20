@@ -28,6 +28,8 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -126,8 +128,25 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
             pipelJobLog.componentId = componentId;
             pipelJobLogs.add(pipelJobLog);
         }
-        if (pipelJobLogs.size() != 0) {
-            this.saveBatch(pipelJobLogs);
+        ZoneId zoneId = ZoneId.systemDefault();
+        Date entryDate = new Date();
+        LocalDateTime localDateTime = entryDate.toInstant().atZone(zoneId).toLocalDateTime();
+        List<PipelJobLogPO> pipelJobLogPOList = pipelJobLogs.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        for (PipelJobLogPO pipelJobLogPO : pipelJobLogPOList) {
+            pipelJobLogPO.setCreateTime(localDateTime);
+            if (Objects.equals(pipelJobLogPO.type, DispatchLogEnum.jobend.getValue())){
+                String json = (String)redisUtil.get(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + jobTraceId);
+                PipelJobLogPO pipelJobLogPO1 = JSON.parseObject(json, PipelJobLogPO.class);
+                if (pipelJobLogPO1 != null){
+                    pipelJobLogPO.setMsg(pipelJobLogPO1.getMsg());
+                    this.updateById(pipelJobLogPO);
+                    redisUtil.set(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + jobTraceId,JSON.toJSONString(pipelJobLogPO),Long.parseLong(maxTime));
+                }else {
+                    this.save(pipelJobLogPO);
+                }
+            }else {
+                this.save(pipelJobLogPO);
+            }
         }
     }
 

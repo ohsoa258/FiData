@@ -34,10 +34,7 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.nifi.NifiStageMessageDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
-import com.fisk.task.entity.NifiStagePO;
-import com.fisk.task.entity.PipelTaskLogPO;
-import com.fisk.task.entity.PipelineTableLogPO;
-import com.fisk.task.entity.TBETLlogPO;
+import com.fisk.task.entity.*;
 import com.fisk.task.enums.DispatchLogEnum;
 import com.fisk.task.enums.NifiStageTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -70,6 +67,8 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Resource;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -346,6 +345,9 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                 PipelTaskLogPO pipelTaskLogPO = JSON.parseObject(json, PipelTaskLogPO.class);
                                 if (pipelTaskLogPO != null) {
                                     pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                                    ZoneId zoneId = ZoneId.systemDefault();
+                                    LocalDateTime localDateTime = new Date().toInstant().atZone(zoneId).toLocalDateTime();
+                                    pipelTaskLogPO.setCreateTime(localDateTime);
                                     iPipelTaskLog.updateById(pipelTaskLogPO);
                                     redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId,JSON.toJSONString(pipelTaskLogPO),Long.parseLong(maxTime));
                                 }else {
@@ -368,6 +370,19 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                     }
                                     redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId,JSON.toJSONString(pipelTaskLogPO),Long.parseLong(maxTime));
                                 }
+                                String pipelJobLogJson = (String)redisUtil.get(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelJobTraceId);
+                                PipelJobLogPO pipelJobLogPO = JSON.parseObject(pipelJobLogJson, PipelJobLogPO.class);
+                                if (pipelJobLogPO != null){
+                                    String failedTime = simpleDateFormat.format(new Date());
+                                    pipelJobLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + failedTime);
+                                    ZoneId zoneId = ZoneId.systemDefault();
+                                    LocalDateTime localDateTime = new Date().toInstant().atZone(zoneId).toLocalDateTime();
+                                    pipelJobLogPO.setCreateTime(localDateTime);
+                                    iPipelJobLog.updateById(pipelJobLogPO);
+                                    redisUtil.set(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelJobTraceId,JSON.toJSONString(pipelJobLogPO),Long.parseLong(maxTime));
+
+                                }
+
                                 sendPublishCenter(nifiStageMessageDTO, itselfPort, MqConstants.QueueConstants.TASK_PUBLIC_CENTER_TOPIC_NAME);
                             }
                         }
