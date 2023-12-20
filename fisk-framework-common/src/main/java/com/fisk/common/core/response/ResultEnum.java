@@ -77,6 +77,10 @@ public enum ResultEnum {
     DISPATCH_REMOTE_ERROR(1047, "删除表时-远程调用管道模块失败"),
     ACCESS_PHYTABLE_EXISTS_IN_DISPATCH(1048, "禁止删除该表-该表存在于以下管道:"),
 
+    RUN_ONCE_ERROR(1049,"RUN_ONCE执行失败请检查组件是否正常"),
+
+    RUN_ONCE_LOCK(1050,"RUN_ONCE执行中，请勿重复执行"),
+
     /**
      * 报表可视化服务，错误码从2000开始
      */
