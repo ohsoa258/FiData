@@ -1,6 +1,7 @@
 package com.fisk.datamodel.dto.businessarea;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -85,5 +86,11 @@ public class BusinessPageResultDTO {
      */
     @ApiModelProperty(value = "当前应用下事实表总数")
     public Integer factCount;
+
+    /**
+     * 数仓连接类型
+     */
+    @ApiModelProperty(value = "数仓连接类型")
+    public DataSourceTypeEnum dwType;
 
 }
