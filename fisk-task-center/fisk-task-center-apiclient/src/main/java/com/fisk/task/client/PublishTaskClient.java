@@ -107,6 +107,15 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/atlasDorisTable")
     ResultEntity<Object> publishBuildAtlasDorisTableTask(@RequestBody ModelPublishDataDTO modelPublishDataDTO);
 
+    /**
+     * 数仓建模-建doris聚合模型表
+     *
+     * @param modelPublishDataDTO
+     * @return
+     */
+    @PostMapping("/publishTask/publishBuildDorisAggregateTbl")
+    ResultEntity<Object> publishBuildDorisAggregateTbl(@RequestBody ModelPublishDataDTO modelPublishDataDTO);
+
 
     /**
      * mdmETL发布

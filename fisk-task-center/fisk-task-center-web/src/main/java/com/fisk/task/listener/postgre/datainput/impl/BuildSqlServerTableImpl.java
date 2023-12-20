@@ -361,6 +361,11 @@ public class BuildSqlServerTableImpl implements IbuildTable {
     }
 
     @Override
+    public List<String> buildDorisaAggregateTables(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
+    }
+
+    @Override
     public List<String> getStgAndTableName(String tableName) {
         return TableNameGenerateUtils.getStgAndTableName(tableName);
     }

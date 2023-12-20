@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.FACT_ATTRIBUTE })
+@Api(tags = {SwaggerConfig.FACT_ATTRIBUTE})
 @RestController
 @RequestMapping("/factAttribute")
 @Slf4j
@@ -47,15 +47,25 @@ public class FactAttributeController {
 
     @ApiOperation("添事实字段")
     @PostMapping("/addFactAttribute")
-    public ResultEntity<Object> addFactAttribute(@Validated @RequestBody FactAttributeAddDTO dto)
-    {
+    public ResultEntity<Object> addFactAttribute(@Validated @RequestBody FactAttributeAddDTO dto) {
         return ResultEntityBuild.build(service.addFactAttribute(dto));
+    }
+
+    /**
+     * 数仓--建doris聚合模型表
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("数仓--建doris聚合模型表")
+    @PostMapping("/buildDorisAggregateTbl")
+    public ResultEntity<Object> buildDorisAggregateTbl(@Validated @RequestBody FactAttributeAddDTO dto) {
+        return ResultEntityBuild.build(service.buildDorisAggregateTbl(dto));
     }
 
     @ApiOperation("删除事实字段")
     @PostMapping("/deleteFactAttribute")
-    public ResultEntity<Object> deleteFactAttribute(@RequestBody List<Integer> ids)
-    {
+    public ResultEntity<Object> deleteFactAttribute(@RequestBody List<Integer> ids) {
         return ResultEntityBuild.build(service.deleteFactAttribute(ids));
     }
 
@@ -127,7 +137,7 @@ public class FactAttributeController {
 
     @ApiOperation("查询事实表关联数据")
     @PostMapping("/executeFactTableSql")
-    public ResultEntity<Object> executeFactTableSql(@Validated @RequestBody WideTableFieldConfigDTO dto){
+    public ResultEntity<Object> executeFactTableSql(@Validated @RequestBody WideTableFieldConfigDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.executeFactTableSql(dto));
     }
 }

@@ -2,8 +2,8 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.businessprocess.*;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 
 import java.util.List;
@@ -88,5 +88,13 @@ public interface IBusinessProcess {
      * @return
      */
     ResultEnum batchPublishBusinessProcess(BusinessProcessPublishQueryDTO dto);
+
+    /**
+     * 批量发布doris聚合模型表
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum batchPublishForDorisAggregateTbl(BusinessProcessPublishQueryDTO dto);
 
 }

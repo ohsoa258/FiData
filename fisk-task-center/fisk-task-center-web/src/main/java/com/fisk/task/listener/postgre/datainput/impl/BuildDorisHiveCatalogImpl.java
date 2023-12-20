@@ -106,4 +106,9 @@ public class BuildDorisHiveCatalogImpl implements IbuildTable {
     public List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO) {
         return null;
     }
+
+    @Override
+    public List<String> buildDorisaAggregateTables(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
+    }
 }

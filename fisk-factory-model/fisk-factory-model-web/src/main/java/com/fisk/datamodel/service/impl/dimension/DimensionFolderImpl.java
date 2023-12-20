@@ -459,8 +459,12 @@ public class DimensionFolderImpl
         try {
             //同步单表元数据
             if (openMetadata) {
-                List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDimensionMetaDataOfBatchTbl((int) businessAreaPo.getId(), dimensionIds, DataModelTableTypeEnum.DW_FACT);
-                consumeMetaData(dataModelMetaData);
+                //同步元数据
+                BusinessAreaPO finalBusinessAreaPo = businessAreaPo;
+                new Thread(() -> {
+                    List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDimensionMetaDataOfBatchTbl((int) finalBusinessAreaPo.getId(), dimensionIds, DataModelTableTypeEnum.DW_FACT);
+                    consumeMetaData(dataModelMetaData);
+                }).start();
             }
         } catch (Exception e) {
             //同步元数据的报错不要抛异常，不要影响单表同步

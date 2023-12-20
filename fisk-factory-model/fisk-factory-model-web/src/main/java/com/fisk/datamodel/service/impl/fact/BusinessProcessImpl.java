@@ -366,10 +366,131 @@ public class BusinessProcessImpl
         try {
             //同步单表元数据
             if (openMetadata) {
+                //同步元数据
+                BusinessAreaPO finalBusinessAreaPo = businessAreaPo;
+                new Thread(() -> {
+                    List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDimensionMetaDataOfBatchTbl((int) finalBusinessAreaPo.getId(), factIds, DataModelTableTypeEnum.DW_FACT);
+                    consumeMetaData(dataModelMetaData);
+                }).start();
+            }
+
+        } catch (Exception e) {
+            //同步元数据的报错不要抛异常，不要影响单表同步
+            log.error("同步元数据失败...");
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 批量发布doris聚合模型表
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum batchPublishForDorisAggregateTbl(BusinessProcessPublishQueryDTO dto) {
+        BusinessAreaPO businessAreaPo = null;
+        List<Integer> factIds;
+        try {
+            businessAreaPo = businessAreaMapper.selectById(dto.businessAreaId);
+            if (businessAreaPo == null) {
+                throw new FkException(ResultEnum.DATA_NOTEXISTS);
+            }
+
+            dimensionFolder.getDwDbType(targetDbId);
+
+            //获取业务过程下所有事实
+            QueryWrapper<FactPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("id", dto.factIds);
+            List<FactPO> factPoList = factMapper.selectList(queryWrapper);
+            if (CollectionUtils.isEmpty(factPoList)) {
+                throw new FkException(ResultEnum.PUBLISH_FAILURE, "事实表为空");
+            }
+            //更改发布状态
+            for (FactPO item : factPoList) {
+                item.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+                if (factMapper.updateById(item) == 0) {
+                    throw new FkException(ResultEnum.PUBLISH_FAILURE);
+                }
+            }
+            //获取事实字段数据
+            QueryWrapper<FactAttributePO> attributePoQueryWrapper = new QueryWrapper<>();
+            //获取事实id集合
+            factIds = (List) factMapper.selectObjs(queryWrapper.select("id"));
+            List<FactAttributePO> factAttributePoList = factAttributeMapper
+                    .selectList(attributePoQueryWrapper.in("fact_id", factIds));
+            //遍历取值
+            ModelPublishDataDTO data = new ModelPublishDataDTO();
+            data.businessAreaId = businessAreaPo.getId();
+            data.businessAreaName = businessAreaPo.getBusinessName();
+            data.userId = userHelper.getLoginUserInfo().id;
+
+            //发布历史添加数据
+            addTableHistory(dto);
+
+            for (FactPO item : factPoList) {
+                //拼接数据 待发布事实表的信息
+                ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
+                //表id
+                pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
+                //表名
+                pushDto.tableName = dimensionFolder.convertName(item.factTabName);
+                //创建类型：事实表  1
+                pushDto.createType = CreateTypeEnum.CREATE_FACT.getValue();
+
+                //DataTranDTO dtDto用于拼接sql数据传输
+                DataTranDTO dtDto = new DataTranDTO();
+                //表名称
+                dtDto.tableName = pushDto.tableName;
+                //维度sql脚本
+                dtDto.querySql = item.sqlScript;
+
+                pushDto.setDataSourceDbId(item.dataSourceId);
+
+                // 设置临时表名称前缀
+                pushDto.setPrefixTempName(item.prefixTempName + "_");
+
+                // 关联目标dw库id
+                pushDto.setTargetDbId(targetDbId);
+
+                //获取该维度下所有维度字段
+                List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
+                List<FactAttributePO> attributePoList = factAttributePoList.stream().filter(e -> e.factId == item.id).collect(Collectors.toList());
+                for (FactAttributePO attributePo : attributePoList) {
+                    fieldList.add(pushField(attributePo));
+                }
+
+                // 维度键没有源字段,暂时将目标字段赋值给源字段
+                fieldList.stream().filter(e -> e.attributeType == 1).forEachOrdered(e -> {
+                    e.sourceFieldName = e.fieldEnName;
+                    e.fieldLength = 200;
+                });
+                pushDto.fieldList = fieldList;
+
+                List<ModelPublishTableDTO> factList = new ArrayList<>();
+                factList.add(pushDto);
+                data.dimensionList = factList;
+                data.openTransmission = dto.openTransmission;
+                data.dimOrFact = DataModelTblTypeEnum.FACT;
+                //发送消息,建表
+                log.info("数据建模发布表任务json: " + JSON.toJSONString(data));
+                publishTaskClient.publishBuildDorisAggregateTbl(data);
+
+            }
+        } catch (FkException ex) {
+            log.error("数据建模发布表任务失败：" + ex.getMessage());
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+
+        try {
+            //同步单表元数据
+            if (openMetadata) {
                 List<MetaDataInstanceAttributeDTO> dataModelMetaData = businessAreaImpl.getDimensionMetaDataOfBatchTbl((int) businessAreaPo.getId(), factIds, DataModelTableTypeEnum.DW_FACT);
                 consumeMetaData(dataModelMetaData);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             //同步元数据的报错不要抛异常，不要影响单表同步
             log.error("同步元数据失败...");
         }
@@ -403,6 +524,8 @@ public class BusinessProcessImpl
         fieldDTO.isDistributedKey = attributePo.isDistributedKey;
         fieldDTO.dorisPartitionType = attributePo.dorisPartitionType;
         fieldDTO.dorisPartitionValues = attributePo.dorisPartitionValues;
+        fieldDTO.isAggregateKey = attributePo.isAggregateKey;
+        fieldDTO.aggregateType = attributePo.aggregateType;
         //判断是否关联维度
         if (attributePo.associateDimensionId != 0 && attributePo.associateDimensionFieldId != 0) {
             DimensionPO dimensionPo = dimensionMapper.selectById(attributePo.associateDimensionId);

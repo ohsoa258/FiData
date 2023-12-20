@@ -287,6 +287,21 @@ public class PublishTaskController {
     }
 
     /**
+     * 数仓建模-建doris聚合模型表
+     *
+     * @param modelPublishDataDTO
+     * @return
+     */
+    @PostMapping("/publishBuildDorisAggregateTbl")
+    @ApiOperation(value = "数仓建模-建doris聚合模型表")
+    public ResultEntity<Object> publishBuildDorisAggregateTbl(@RequestBody ModelPublishDataDTO modelPublishDataDTO) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BUILD_DATAMODEL_DORIS_TABLE.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.DorisTopicConstants.BUILD_DORIS_AGGREGATE_FLOW,
+                modelPublishDataDTO);
+    }
+
+    /**
      * mdmETL发布
      *
      * @param accessPublishDataDTO

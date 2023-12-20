@@ -19,20 +19,31 @@ import java.util.List;
 public interface IFactAttribute {
     /**
      * 获取事实字段表数据
+     *
      * @param factId
      * @return
      */
     List<FactAttributeListDTO> getFactAttributeList(int factId);
 
     /**
-     *事实字段表添加
+     * 事实字段表添加
+     *
      * @param dto
      * @return
      */
     ResultEnum addFactAttribute(FactAttributeAddDTO dto);
 
     /**
+     * 数仓--建doris聚合模型表
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum buildDorisAggregateTbl(FactAttributeAddDTO dto);
+
+    /**
      * 事实字段批量删除
+     *
      * @param ids
      * @return
      */
@@ -40,6 +51,7 @@ public interface IFactAttribute {
 
     /**
      * 根据事实表字段id,获取字段详情
+     *
      * @param factAttributeId
      * @return
      */
@@ -47,6 +59,7 @@ public interface IFactAttribute {
 
     /**
      * 事实字段数据更改
+     *
      * @param dto
      * @return
      */
@@ -54,6 +67,7 @@ public interface IFactAttribute {
 
     /**
      * 根据维度id获取事实字段详情
+     *
      * @param id
      * @return
      */
@@ -61,6 +75,7 @@ public interface IFactAttribute {
 
     /**
      * 根据事实id获取事实下字段
+     *
      * @param dto
      * @return
      */
@@ -68,20 +83,23 @@ public interface IFactAttribute {
 
     /**
      * 根据事实表id获取来源表下未添加字段
+     *
      * @param id
      * @return
      */
     List<FieldNameDTO> getFactAttributeSourceId(int id);
 
     /**
-     *根据事实id,获取事实表字段列表
+     * 根据事实id,获取事实表字段列表
+     *
      * @param factId
      * @return
      */
     FactAttributeDetailDTO getFactAttributeDataList(int factId);
 
     /**
-     *根据事实id,获取事实表字段列表与关联详情
+     * 根据事实id,获取事实表字段列表与关联详情
+     *
      * @param factId
      * @return
      */
@@ -89,6 +107,7 @@ public interface IFactAttribute {
 
     /**
      * 根据事实id,获取事实字段(宽表)
+     *
      * @param factId
      * @return
      */
@@ -104,6 +123,7 @@ public interface IFactAttribute {
 
     /**
      * 添加单个事实字段
+     *
      * @param dto dto
      * @return 执行结果
      */

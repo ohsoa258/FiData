@@ -265,8 +265,9 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         po.factTableDesc = dto.factTableDesc;
         po.factTabName = dto.factTabName;
         po.businessProcessId = dto.businessProcessId;
+        po.batchOrStream = dto.batchOrStream;
 
-        //修改元数据方法
+        //修改表发布状态
         if (po.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue()) {
             ModelPublishStatusDTO publishStatusDTO = new ModelPublishStatusDTO();
             publishStatusDTO.id = dto.id;

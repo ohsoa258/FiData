@@ -424,11 +424,11 @@ public class TableFieldsImpl
         }
 
         if (openMetadata) {
-            //新增元数据信息
-            odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
-
-            //元数据同步单个接入表
-            odsMetaDataInfoOfOneTable(dto.appId);
+            new Thread(() -> {
+                odsMetaDataInfo(model.appDataSourceId, dto.sqlScript);
+                //元数据同步单个接入表
+                odsMetaDataInfoOfOneTable(dto.appId);
+            }).start();
         }
 
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
@@ -805,9 +805,13 @@ public class TableFieldsImpl
                     //构建元数据实时同步数据对象
                     metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2, currUserName);
                 }
-                if (openMetadata) { //
+
+                if (openMetadata) {
                     //同步元数据
-                    consumeMetaData(metaDataList);
+                    List<MetaDataInstanceAttributeDTO> finalMetaDataList = metaDataList;
+                    new Thread(() -> {
+                        consumeMetaData(finalMetaDataList);
+                    }).start();
                 }
 
             }
@@ -1081,9 +1085,13 @@ public class TableFieldsImpl
                     //构建元数据实时同步数据对象
                     metaDataList = buildMetaDataInstanceAttribute(registration, accessId, 2, currUserName);
                 }
-                if (openMetadata) { //
+
+                if (openMetadata) {
                     //同步元数据
-                    consumeMetaData(metaDataList);
+                    List<MetaDataInstanceAttributeDTO> finalMetaDataList = metaDataList;
+                    new Thread(() -> {
+                        consumeMetaData(finalMetaDataList);
+                    }).start();
                 }
 
             } catch (Exception e) {

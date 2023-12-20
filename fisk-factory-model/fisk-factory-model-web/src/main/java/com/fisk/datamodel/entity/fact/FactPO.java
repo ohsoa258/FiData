@@ -74,4 +74,9 @@ public class FactPO extends BasePO {
      * doris是否开启严格模式 0否  1是
      */
     public Integer dorisIfOpenStrictMode;
+
+    /**
+     * 数据表处理方式是批处理或流处理  0批处理 1流处理
+     */
+    public Integer batchOrStream;
 }

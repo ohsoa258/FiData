@@ -45,4 +45,10 @@ public class FactDTO {
     @ApiModelProperty(value = "接入的增量时间参数")
     public List<DeltaTimeDTO> deltaTimes;
 
+    /**
+     * 数据表处理方式是批处理或流处理  0批处理 1流处理
+     */
+    @ApiModelProperty(value = "数据表处理方式是批处理或流处理  0批处理 1流处理")
+    public Integer batchOrStream;
+
 }

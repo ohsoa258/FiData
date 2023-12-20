@@ -497,6 +497,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             tableAccessDTO.setAppId(appId);
             tableAccessDTO.setAppName(appName);
             tableAccessDTO.setDisplayName(tblName);
+            tableAccessDTO.setTableName(tblName);
             tableAccessDTO.setIsRealtime(1);
             tableAccessDTO.setPublish(0);
             tableAccessDTO.setSyncSrc("");
@@ -505,6 +506,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             String tblName1 = "";
             if (tblName.contains(".")) {
                 tblName1 = tblName.replaceFirst("\\.", "_");
+            } else {
+                tblName1 = tblName;
             }
             tableAccessDTO.setTableName(tblName1);
 

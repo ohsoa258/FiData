@@ -668,4 +668,179 @@ public class BuildDorisTableImpl implements IbuildTable {
         sqlList.add(sql1);
         return sqlList;
     }
+
+    @Override
+    public List<String> buildDorisaAggregateTables(ModelPublishTableDTO modelPublishTableDTO) {
+        List<String> sqlList = new ArrayList<>();
+        List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.fieldList;
+        String tableName = modelPublishTableDTO.tableName;
+        String tablePk = "";
+        // 前缀问题
+        tablePk = tableName.substring(tableName.indexOf("_") + 1) + "key";
+        StringBuilder aksql = new StringBuilder("AGGREGATE KEY ( ");
+        //主键字段
+        StringBuilder pkName = new StringBuilder();
+        //doris分区字段
+        StringBuilder partitionName = new StringBuilder();
+        //分区类型 RANGE 或 LIST
+        StringBuilder partitionType = new StringBuilder();
+        //分区具体值（分区个数和分区逻辑）
+        StringBuilder partitionValues = new StringBuilder();
+        //doris分桶字段
+        StringBuilder distributedName = new StringBuilder();
+        StringBuilder sqlFileds = new StringBuilder();
+        StringBuilder stgSqlFileds = new StringBuilder();
+        log.info("pg_dw建表字段信息:" + fieldList);
+        //聚合模型 重新排序
+        //聚合key放在前面
+        fieldList.sort((o1, o2) -> {
+            if (o1.isAggregateKey == 1 && o2.isAggregateKey == 0) {
+                return -1; // o1排在o2前面
+            } else if (o1.isAggregateKey == 0 && o2.isAggregateKey == 1) {
+                return 1; // o2排在o1前面
+            } else {
+                return 0; // 保持原有顺序
+            }
+        });
+        log.info("doris聚合模型重新排序后的字段信息:" + fieldList);
+
+        //获取doris分区类型 RANGE 或 LIST
+        if (CollectionUtils.isNotEmpty(fieldList)) {
+            if (fieldList.get(0).getDorisPartitionType() != null) {
+                partitionType = new StringBuilder(fieldList.get(0).getDorisPartitionType());
+            } else {
+                partitionType = new StringBuilder("RANGE");
+            }
+        }
+
+        fieldList.forEach((l) -> {
+            if (l.aggregateType==null){
+                if (l.fieldType.contains("FLOAT")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                } else if (l.fieldType.contains("INT")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                } else if (l.fieldType.contains("TEXT")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                    stgSqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(",");
+                } else if (l.fieldType.equalsIgnoreCase("DATE")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                } else if (l.fieldType.equalsIgnoreCase("TIME")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
+                } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(" datetime, ");
+                } else {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append("), ");
+                }
+                // 修改stg表,字段类型
+                if (!l.fieldType.contains("TEXT")) {
+                    stgSqlFileds.append("`").append(l.fieldEnName).append("` varchar(4000),");
+                }
+            }else {
+                if (l.fieldType.contains("FLOAT")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(" ").append(l.aggregateType).append(", ");
+                } else if (l.fieldType.contains("INT")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(" ").append(l.aggregateType).append(", ");
+                } else if (l.fieldType.contains("TEXT")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(" ").append(l.aggregateType).append(", ");
+                    stgSqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(",");
+                } else if (l.fieldType.equalsIgnoreCase("DATE")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(" ").append(l.aggregateType).append(", ");
+                } else if (l.fieldType.equalsIgnoreCase("TIME")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(" ").append(l.aggregateType).append(", ");
+                } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(" datetime").append(" ").append(l.aggregateType).append(", ");
+                } else {
+                    sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append(")").append(" ").append(l.aggregateType).append(", ");
+                }
+                // 修改stg表,字段类型
+                if (!l.fieldType.contains("TEXT")) {
+                    stgSqlFileds.append("`").append(l.fieldEnName).append("` varchar(4000),");
+                }
+            }
+
+
+            //聚合key字段
+            if (l.isAggregateKey == 1) {
+                aksql.append("`").append(l.fieldEnName).append("` ,");
+                pkName.append("`").
+                        append(l.fieldEnName)
+                        .append("` ,");
+            }
+            //doris分区字段
+            if (l.isPartitionKey == 1) {
+                //分区字段sql
+                partitionName.append("(`").
+                        append(l.fieldEnName)
+                        .append("`) ,");
+                //分区值sql
+                partitionValues.append(l.dorisPartitionValues);
+
+            }
+            //doris分桶字段
+            if (l.isDistributedKey == 1) {
+                //分桶字段sql
+                distributedName.append("`").
+                        append(l.fieldEnName)
+                        .append("` ,");
+            }
+
+        });
+        //删掉多余逗号
+        pkName.deleteCharAt(pkName.lastIndexOf(","));
+        if (partitionName.length() > 0) partitionName.deleteCharAt(pkName.lastIndexOf(","));
+        if (distributedName.length() > 0) distributedName.deleteCharAt(pkName.lastIndexOf(","));
+
+        String sql1 = "CREATE TABLE IF NOT EXISTS `" + modelPublishTableDTO.tableName + "` ( ";
+        //String associatedKey = associatedConditions(fieldList);
+        String associatedKey = "";
+        String sql2 = sqlFileds + associatedKey;
+        sql2 += ("`" + tablePk + "` varchar(50),fi_createtime DATETIME,fi_updatetime DATETIME");
+        sql2 += ",fidata_batch_code varchar(50)";
+        String sql3 = "";
+        if (Objects.equals("", sql3)) {
+            sql1 += sql2;
+        } else {
+            sql1 += sql2 + sql3;
+        }
+        sql1 += ") ";
+
+        //doris分区列
+        String partition = "";
+        String distributed = "";
+        //todo:如果前端没有选择分区列，则默认一个分区 如果选择了分区列则按分区列分区
+        //doris建表语句中 没有指定分区列的话 默认就是一个分区
+        if (partitionName.length() > 0) {
+            partition = " PARTITION BY " + partitionType + partitionName + " (" + partitionValues + ")";
+        }
+
+        //todo：分桶列同理 如果前端选择了分桶列，则按前端选择的来 如果没有选择则按默认系统key分桶
+        if (distributedName.length() > 0) {
+            distributed = distributedName.toString();
+        } else {
+            distributed = String.valueOf(pkName);
+        }
+
+        // AGGREGATE KEY
+        String haveAk = aksql.toString();
+        if (haveAk.length() != 14) {
+            haveAk = haveAk.substring(0, haveAk.length() - 1) + ")";
+        }
+        sql1 += haveAk;
+
+        sql1 += partition + " DISTRIBUTED BY HASH(" + distributed + ") BUCKETS 10 " +
+                //副本数为1
+                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ");";
+
+        //创建表
+        log.info("pg_dw_doris聚合模型建表语句" + sql1);
+        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "` FORCE; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` ( " + stgSqlFileds + associatedKey + "`" + tablePk + "` varchar(50)," + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
+                haveAk +
+                //hash分桶
+                " DISTRIBUTED BY HASH(" + pkName + ") BUCKETS 10 " +
+                //副本数为1
+                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ");";
+        sqlList.add(stgTable);
+        sqlList.add(sql1);
+        return sqlList;
+    }
 }

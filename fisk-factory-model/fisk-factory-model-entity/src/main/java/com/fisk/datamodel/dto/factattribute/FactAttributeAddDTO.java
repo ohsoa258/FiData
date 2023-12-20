@@ -15,27 +15,34 @@ import java.util.List;
 public class FactAttributeAddDTO {
     @ApiModelProperty(value = "事实id")
     public int factId;
+
     /**
      * 维度key数据同步脚本
      */
     @ApiModelProperty(value = "维度key数据同步脚本")
     public String dimensionKeyScript;
+
     @ApiModelProperty(value = "是否发布")
     public boolean isPublish;
+
     /**
      * 覆盖脚本
      */
     @ApiModelProperty(value = "覆盖脚本")
     public String coverScript;
+
     /**
      * 发布备注
      */
     @ApiModelProperty(value = "发布备注")
     public String remark;
+
     @ApiModelProperty(value = "列表")
     public List<FactAttributeDTO> list;
+
     @ApiModelProperty(value = "DTO同步模式")
     public SyncModeDTO syncModeDTO;
+
     /**
      * 是否同步
      */

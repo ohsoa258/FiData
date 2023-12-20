@@ -40,6 +40,13 @@ public class FactDataDTO {
      */
     @ApiModelProperty(value = "临时表名称前缀")
     public String prefixTempName;
+
+    /**
+     * 数据表处理方式是批处理或流处理  0批处理 1流处理
+     */
+    @ApiModelProperty(value = "数据表处理方式是批处理或流处理  0批处理 1流处理")
+    public Integer batchOrStream;
+
     /**
      * 事实表下字段列表
      */

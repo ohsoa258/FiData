@@ -1,6 +1,7 @@
 package com.fisk.task.listener.doris;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.davis.client.ApiException;
 import com.davis.client.model.*;
@@ -407,6 +408,128 @@ public class BuildDataModelDorisTableListener
         } catch (Exception e) {
             log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
             result = ResultEnum.CREATE_TABLE_ERROR;
+            //执行失败后，修改维度表或事实表的发布状态
+            if (tableType == 0) {
+                modelPublishStatusDTO.status = 2;
+                modelPublishStatusDTO.id = Math.toIntExact(id);
+                modelPublishStatusDTO.type = 0;
+                dataModelClient.updateDimensionPublishStatus(modelPublishStatusDTO);
+            } else {
+                modelPublishStatusDTO.status = 2;
+                modelPublishStatusDTO.id = Math.toIntExact(id);
+                modelPublishStatusDTO.type = 0;
+                dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
+            }
+//            return result;
+            throw new FkException(ResultEnum.DATA_MODEL_PUBLISH_ERROR, e.toString(), e);
+        } finally {
+            acke.acknowledge();
+        }
+    }
+
+    public ResultEnum buildDorisAggregateTableListener(String dataInfo, Acknowledgment acke) {
+        ResultEnum result = ResultEnum.SUCCESS;
+        ModelPublishStatusDTO modelPublishStatusDTO = new ModelPublishStatusDTO();
+        int id = 0;
+        int tableType = 0;
+        log.info("dw创建doris聚合模型表参数:" + dataInfo);
+        //saveTableStructure(list);
+        //1.,查询语句,并存库
+        //2.是否修改表结构
+        //3.生成nifi流程
+        try {
+            //将转为json字符串的数据重新转为对象
+            ModelPublishDataDTO inpData = JSON.parseObject(dataInfo, ModelPublishDataDTO.class);
+            //获取维度列表
+            List<ModelPublishTableDTO> dimensionList = inpData.dimensionList;
+            //远程调用systemCenter的方法，获取id为1的数据源的信息，也就是dw   dmp_system_db库----db_datasource_config表
+            ResultEntity<DataSourceDTO> DataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            DataSourceTypeEnum conType = null;
+            if (DataSource.code == ResultEnum.SUCCESS.getCode()) {
+                //获取数据源信息
+                DataSourceDTO dataSource = DataSource.data;
+                //conType==1  SqlServer
+                conType = dataSource.conType;
+            } else {
+                log.error("userclient无法查询到dw库的连接信息");
+                throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+            }
+
+            //遍历维度列表
+            for (ModelPublishTableDTO modelPublishTableDTO : dimensionList) {
+                //获取表id
+                id = Math.toIntExact(modelPublishTableDTO.tableId);
+                //获取表类型
+                tableType = modelPublishTableDTO.createType;
+                //生成版本号
+                //获取时间戳版本号
+                DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+                Calendar calendar = Calendar.getInstance();
+                String version = df.format(calendar.getTime());
+
+                //调用方法，保存建模相关表结构数据(保存版本号)
+                ResultEnum resultEnum = null;
+                String msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+                if (!ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg) && !ResultEnum.SUCCESS.getMsg().equals(msg)) {
+                    taskPgTableStructureMapper.updatevalidVersion(version);
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, msg);
+                }
+                log.info("数仓-建doris聚合模型执行修改表结构的方法的返回结果：" + msg);
+
+                //生成建表语句
+                List<String> pgdbTable2 = new ArrayList<>();
+                //远程调用systemCenter的方法，获取id为1的数据源的信息，也就是dw   dmp_system_db库----tb_datasource_config表
+                //如果获取成功
+                if (DataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    //获取数据源
+                    DataSourceDTO dataSource = DataSource.data;
+                    //根据数据源连接类型，获取建表实现类   doris
+                    IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+
+                    //todo:针对doris作为数仓  该方法只用于创建doris聚合模型表
+                    if (DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())) {
+                        pgdbTable2 = dbCommand.buildDorisaAggregateTables(modelPublishTableDTO);
+                    }
+
+                    //新建map集合，预装载键值对
+                    HashMap<String, Object> map = new HashMap<>();
+                    //放入表名称
+                    map.put("table_name", modelPublishTableDTO.tableName);
+                    //从dmp_task_db模块 tb_task_dw_dim表删除待发布的表信息
+                    taskDwDimMapper.deleteByMap(map);
+
+                    //新建tb_task_dw_dim表的po
+                    TaskDwDimPO taskDwDimPO = new TaskDwDimPO();
+                    //taskDwDimPO.areaBusinessName=businessAreaName;//业务域名
+                    //获取doris创建聚合模型表的sql
+                    if (CollectionUtils.isNotEmpty(pgdbTable2)) taskDwDimPO.sqlContent = pgdbTable2.get(1);
+                    //表名
+                    taskDwDimPO.tableName = modelPublishTableDTO.tableName;
+                    //要调用的存储过程名称
+                    taskDwDimPO.storedProcedureName = "update" + modelPublishTableDTO.tableName + "()";
+                    //插入到tb_task_dw_dim表中
+                    taskDwDimMapper.insert(taskDwDimPO);
+                    log.info("建模创表语句:" + JSON.toJSONString(pgdbTable2));
+                } else {
+                    log.error("userclient无法查询到dw库的连接信息");
+                    throw new FkException(ResultEnum.ERROR);
+                }
+
+                // 聚合模型直接建目标表  不建临时表
+                BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
+                if (!businessResult1.success) {
+                    throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                }
+
+                //建表完成后，修改事实表的发布状态
+                modelPublishStatusDTO.status = 1;
+                modelPublishStatusDTO.id = Math.toIntExact(modelPublishTableDTO.tableId);
+                modelPublishStatusDTO.type = 0;
+                dataModelClient.updateFactPublishStatus(modelPublishStatusDTO);
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("dw发布失败,表id为" + id + StackTraceHelper.getStackTraceInfo(e));
             //执行失败后，修改维度表或事实表的发布状态
             if (tableType == 0) {
                 modelPublishStatusDTO.status = 2;

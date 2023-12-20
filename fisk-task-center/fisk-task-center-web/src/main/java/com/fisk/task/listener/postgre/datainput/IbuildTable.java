@@ -140,4 +140,12 @@ public interface IbuildTable {
      */
     List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO);
 
+    /**
+     * 创建建模表 - doris聚合模型
+     *
+     * @param modelPublishTableDTO modelPublishTableDTO
+     * @return List<String>  返回两条建表语句
+     */
+    List<String> buildDorisaAggregateTables(ModelPublishTableDTO modelPublishTableDTO);
+
 }

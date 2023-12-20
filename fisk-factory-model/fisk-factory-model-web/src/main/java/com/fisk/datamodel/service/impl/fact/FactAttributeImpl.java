@@ -199,6 +199,45 @@ public class FactAttributeImpl
         return ResultEnum.SUCCESS;
     }
 
+    /**
+     * 数仓--建doris聚合模型表
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEnum buildDorisAggregateTbl(FactAttributeAddDTO dto) {
+        //判断是否存在
+        FactPO factPo = factMapper.selectById(dto.factId);
+        if (factPo == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        List<FactAttributePO> poList = FactAttributeMap.INSTANCES.addDtoToPoList(dto.list);
+        //将 poList 中的每个元素的 factId 属性都设置为 dto.factId
+        poList.stream().map(e -> e.factId = dto.factId).collect(Collectors.toList());
+        boolean b = saveOrUpdateBatch(poList);
+        if (!b) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //修改发布状态
+        factPo.isPublish = PublicStatusEnum.PUBLIC_ING.getValue();
+
+        if (factMapper.updateById(factPo) == 0) {
+            throw new FkException(ResultEnum.PUBLISH_FAILURE);
+        }
+
+        BusinessProcessPublishQueryDTO queryDTO = new BusinessProcessPublishQueryDTO();
+        List<Integer> dimensionIds = new ArrayList<>();
+        dimensionIds.add(dto.factId);
+
+        queryDTO.factIds = dimensionIds;
+        queryDTO.businessAreaId = factPo.businessId;
+        queryDTO.remark = dto.remark;
+        return businessProcess.batchPublishForDorisAggregateTbl(queryDTO);
+
+    }
+
     @Override
     public ResultEnum deleteFactAttribute(List<Integer> ids) {
         return mapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

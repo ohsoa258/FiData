@@ -100,6 +100,8 @@ public class MqConstants {
             public static final String BUILD_DORIS_FLOW = "task.build.doris.flow";
 
             public static final String BUILD_DORIS_INCREMENTAL_FLOW = "task.build.doris.incremental.flow";
+
+            public static final String BUILD_DORIS_AGGREGATE_FLOW = "task.build.doris.aggregate.flow";
         }
 
         public static final class OlapTopicConstants{

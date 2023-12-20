@@ -194,7 +194,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("lishiji")
                 .append(" FROM ")
                 .append(sourceTableName)
-                .append(" WHERE fidata_batch_code = '\\${fidata_batch_code}' AND fidata_flow_batch_code = '\\${fragment.index}' ")
+                .append(" WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}' ")
                 .append("lishiji1");
 
         //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
@@ -221,7 +221,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         String pksql = delete.toString();
         String halfSql = pksql.replaceFirst("lishiji", String.valueOf(pkFieldNames));
         halfSql = halfSql.replaceFirst("lishiji1", String.valueOf(pkFieldNames1));
-        halfSql = halfSql+";   ";
+        halfSql = halfSql+");   ";
 
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
         String tabNameWithoutPre = tableName.substring(tableName.indexOf("_") + 1);
