@@ -714,7 +714,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         }
 
         fieldList.forEach((l) -> {
-            if (l.aggregateType==null){
+            if (l.aggregateType == null) {
                 if (l.fieldType.contains("FLOAT")) {
                     sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(", ");
                 } else if (l.fieldType.contains("INT")) {
@@ -735,7 +735,7 @@ public class BuildDorisTableImpl implements IbuildTable {
                 if (!l.fieldType.contains("TEXT")) {
                     stgSqlFileds.append("`").append(l.fieldEnName).append("` varchar(4000),");
                 }
-            }else {
+            } else {
                 if (l.fieldType.contains("FLOAT")) {
                     sqlFileds.append("`").append(l.fieldEnName).append("` ").append(l.fieldType.toLowerCase()).append(" ").append(l.aggregateType).append(", ");
                 } else if (l.fieldType.contains("INT")) {
@@ -787,15 +787,13 @@ public class BuildDorisTableImpl implements IbuildTable {
         });
         //删掉多余逗号
         pkName.deleteCharAt(pkName.lastIndexOf(","));
+        sqlFileds.deleteCharAt(sqlFileds.lastIndexOf(","));
+
         if (partitionName.length() > 0) partitionName.deleteCharAt(pkName.lastIndexOf(","));
         if (distributedName.length() > 0) distributedName.deleteCharAt(pkName.lastIndexOf(","));
 
         String sql1 = "CREATE TABLE IF NOT EXISTS `" + modelPublishTableDTO.tableName + "` ( ";
-        //String associatedKey = associatedConditions(fieldList);
-        String associatedKey = "";
-        String sql2 = sqlFileds + associatedKey;
-        sql2 += ("`" + tablePk + "` varchar(50),fi_createtime DATETIME,fi_updatetime DATETIME");
-        sql2 += ",fidata_batch_code varchar(50)";
+        String sql2 = String.valueOf(sqlFileds);
         String sql3 = "";
         if (Objects.equals("", sql3)) {
             sql1 += sql2;
@@ -813,7 +811,7 @@ public class BuildDorisTableImpl implements IbuildTable {
             partition = " PARTITION BY " + partitionType + partitionName + " (" + partitionValues + ")";
         }
 
-        //todo：分桶列同理 如果前端选择了分桶列，则按前端选择的来 如果没有选择则按默认系统key分桶
+        //todo：分桶列同理 如果前端选择了分桶列，则按前端选择的来 如果没有选择则默认按选择的聚合key分桶
         if (distributedName.length() > 0) {
             distributed = distributedName.toString();
         } else {
@@ -833,7 +831,7 @@ public class BuildDorisTableImpl implements IbuildTable {
 
         //创建表
         log.info("pg_dw_doris聚合模型建表语句" + sql1);
-        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "` FORCE; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` ( " + stgSqlFileds + associatedKey + "`" + tablePk + "` varchar(50)," + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
+        String stgTable = "DROP TABLE IF EXISTS `" + modelPublishTableDTO.prefixTempName + tableName + "` FORCE; CREATE TABLE `" + modelPublishTableDTO.prefixTempName + tableName + "` ( " + stgSqlFileds + "`" + tablePk + "` varchar(50)," + "fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP,fi_updatetime DATETIME,fi_enableflag varchar(50),fi_error_message text,fidata_batch_code varchar(50),fidata_flow_batch_code varchar(50), fi_sync_type varchar(50) DEFAULT '2',fi_verify_type varchar(50) DEFAULT '3') " +
                 haveAk +
                 //hash分桶
                 " DISTRIBUTED BY HASH(" + pkName + ") BUCKETS 10 " +

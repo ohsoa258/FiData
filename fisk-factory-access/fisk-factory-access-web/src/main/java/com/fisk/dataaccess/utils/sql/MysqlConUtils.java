@@ -71,7 +71,7 @@ public class MysqlConUtils {
      *
      * @return 查询结果
      */
-    public List<TablePyhNameDTO> getTrueTableNameAndColumns(Connection conn,String dbName) {
+    public List<TablePyhNameDTO> getTrueTableNameAndColumns(Connection conn, String dbName) {
 
         List<TablePyhNameDTO> list = null;
         try {
@@ -82,7 +82,13 @@ public class MysqlConUtils {
 
             for (String tableName : tableNames) {
 
-                List<TableStructureDTO> colNames = getColNamesV2(conn, tableName,dbName);
+                List<TableStructureDTO> colNames = null;
+                try {
+                    colNames = getColNamesV2(conn, tableName, dbName);
+                }catch (Exception e){
+                    continue;
+                }
+
 
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
@@ -246,7 +252,7 @@ public class MysqlConUtils {
      * @param tableName
      * @return
      */
-    public List<TableStructureDTO> getColNamesV2(Connection conn, String tableName,String dbName) {
+    public List<TableStructureDTO> getColNamesV2(Connection conn, String tableName, String dbName) {
         List<TableStructureDTO> colNameList = new ArrayList<>();
         ResultSet resultSet = null;
         ResultSet primaryKeys = null;
@@ -284,6 +290,7 @@ public class MysqlConUtils {
                 }
             });
         } catch (SQLException e) {
+            log.error("mysql入参配置获取表名失败：" + e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         } finally {
             AbstractCommonDbHelper.closeResultSet(resultSet);
