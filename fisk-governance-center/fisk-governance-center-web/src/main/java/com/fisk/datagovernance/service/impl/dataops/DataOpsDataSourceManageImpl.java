@@ -232,11 +232,18 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(
                     sql, postgreDTO.dataSourceTypeEnum.getName().toLowerCase());
             if (Token.SELECT.equals(parser.getExprParser().getLexer().token())) {
+                String orderByClause = "";
+                if (sql.contains("order by")) {
+                    int orderByIndex = sql.indexOf("order by");
+                    if (orderByIndex != -1) {
+                        orderByClause = sql.substring(orderByIndex + 9).trim();
+                    }
+                }
                 // SQL 语句是查询操作
                 String tableName = String.format("(%s) AS tb_page", dto.executeSql);
                 IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(postgreDTO.getDataSourceTypeEnum());
                 dto.current = dto.current - 1;
-                String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", "", dto.current, dto.size);
+                String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", orderByClause, dto.current, dto.size);
                 dto.executeSql = buildQuerySchemaSql;
             }
             log.info("数据库运维执行的sql语句：" + dto.executeSql);
