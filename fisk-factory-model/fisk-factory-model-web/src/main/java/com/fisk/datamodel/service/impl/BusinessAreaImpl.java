@@ -515,6 +515,13 @@ public class BusinessAreaImpl
         if (query != null && StringUtils.isNotEmpty(query.key)) {
             str.append(" and business_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
         }
+        //获取数仓类型
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dwSource);
+        if (result.getCode()!=ResultEnum.SUCCESS.getCode()){
+            log.error("获取数仓在系统模块的配置失败！");
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        DataSourceTypeEnum type = result.getData().getConType();
         //筛选器拼接
         str.append(generateCondition.getCondition(query.dto));
         BusinessPageDTO data = new BusinessPageDTO();
@@ -530,6 +537,7 @@ public class BusinessAreaImpl
             businessPageResultDTO.setDimCount(dimCount);
             businessPageResultDTO.setFactCount(factCount);
             businessPageResultDTO.setTblCount(totalCount);
+            businessPageResultDTO.setDwType(type);
         });
         return page;
     }
