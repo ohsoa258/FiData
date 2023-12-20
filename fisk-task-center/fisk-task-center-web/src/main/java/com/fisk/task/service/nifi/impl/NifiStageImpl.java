@@ -12,6 +12,8 @@ import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
@@ -46,6 +48,7 @@ import com.fisk.task.map.NifiStageMap;
 import com.fisk.task.mapper.NifiStageMapper;
 import com.fisk.task.mapper.PipelineTableLogMapper;
 import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.po.TableTopicPO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
 import com.fisk.task.service.dispatchLog.IPipelLog;
 import com.fisk.task.service.dispatchLog.IPipelStageLog;
@@ -53,6 +56,7 @@ import com.fisk.task.service.dispatchLog.IPipelTaskLog;
 import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.pipeline.IEtlLog;
+import com.fisk.task.service.pipeline.ITableTopicService;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.LocalDateUtil;
 import com.fisk.task.utils.NifiHelper;
@@ -114,6 +118,12 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     private IPipelineTableLog iPipelineTableLog;
     @Resource
     private IEtlLog etlLog;
+    @Resource
+    ITableTopicService tableTopicService;
+    @Resource
+    RedisUtil redisUtil;
+    @Value("${nifi.pipeline.maxTime}")
+    public String maxTime;
 
 
     @Override
@@ -320,6 +330,44 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                             if (Objects.equals(Integer.parseInt(topic[4]), OlapTableEnum.CUSTOMIZESCRIPT.getValue())) {
                                 sendPublishCenter(nifiStageMessageDTO, itselfPort, MqConstants.QueueConstants.BUILD_TASK_OVER_FLOW);
                             } else {
+                                LambdaQueryWrapper<TableTopicPO> queryWrapper = new LambdaQueryWrapper<>();
+                                queryWrapper.eq(TableTopicPO::getTopicName, topicName).eq(TableTopicPO::getDelFlag, 1);
+                                TableTopicPO topicPO = tableTopicService.getOne(queryWrapper);
+                                Map<Object, Object> hmget = redisUtil.hmget(RedisKeyEnum.PIPEL_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTraceId);
+                                TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(topicPO.getComponentId().toString()).toString(), TaskHierarchyDTO.class);
+                                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                String format = simpleDateFormat.format(new Date());
+                                //错误日志修复
+//                                LambdaQueryWrapper<PipelTaskLogPO> taskLogWrapper = new LambdaQueryWrapper<>();
+//                                taskLogWrapper.eq(PipelTaskLogPO::getTaskTraceId, nifiStageMessageDTO.pipelTaskTraceId)
+//                                        .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue());
+//                                PipelTaskLogPO pipelTaskLogPO = iPipelTaskLog.getOne(taskLogWrapper);
+                                String json = (String)redisUtil.get(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId);
+                                PipelTaskLogPO pipelTaskLogPO = JSON.parseObject(json, PipelTaskLogPO.class);
+                                if (pipelTaskLogPO != null) {
+                                    pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                                    iPipelTaskLog.updateById(pipelTaskLogPO);
+                                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId,JSON.toJSONString(pipelTaskLogPO),Long.parseLong(maxTime));
+                                }else {
+                                    LambdaQueryWrapper<PipelTaskLogPO> taskLogWrapper = new LambdaQueryWrapper<>();
+                                    taskLogWrapper.eq(PipelTaskLogPO::getTaskTraceId, nifiStageMessageDTO.pipelTaskTraceId)
+                                    .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue());
+                                    pipelTaskLogPO = iPipelTaskLog.getOne(taskLogWrapper);
+                                    if (pipelTaskLogPO == null){
+                                        pipelTaskLogPO = new PipelTaskLogPO();
+                                        pipelTaskLogPO.setTaskId(taskHierarchy.getId().toString());
+                                        pipelTaskLogPO.setJobTraceId(nifiStageMessageDTO.pipelJobTraceId);
+                                        pipelTaskLogPO.setTableId(tableAccessId);
+                                        pipelTaskLogPO.setTableType(type);
+                                        pipelTaskLogPO.setType(DispatchLogEnum.taskend.getValue());
+                                        pipelTaskLogPO.setTaskTraceId(nifiStageMessageDTO.pipelTaskTraceId);
+                                        pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                                        iPipelTaskLog.save(pipelTaskLogPO);
+                                    }else {
+                                        iPipelTaskLog.updateById(pipelTaskLogPO);
+                                    }
+                                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId,JSON.toJSONString(pipelTaskLogPO),Long.parseLong(maxTime));
+                                }
                                 sendPublishCenter(nifiStageMessageDTO, itselfPort, MqConstants.QueueConstants.TASK_PUBLIC_CENTER_TOPIC_NAME);
                             }
                         }

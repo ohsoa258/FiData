@@ -139,14 +139,23 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
         }
         ZoneId zoneId = ZoneId.systemDefault();
         LocalDateTime localDateTime = entryDate.toInstant().atZone(zoneId).toLocalDateTime();
-        pipelTaskLogs.stream().filter(Objects::nonNull)
-                .forEach(e -> {
-                    e.createTime = localDateTime;
-                });
-        if (pipelTaskLogs.size() != 0) {
-            this.saveBatch(pipelTaskLogs);
+        List<PipelTaskLogPO> pipelTaskLogPOList = pipelTaskLogs.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        for (PipelTaskLogPO taskLogPO : pipelTaskLogPOList) {
+            taskLogPO.setCreateTime(localDateTime);
+            if (Objects.equals(taskLogPO.type, DispatchLogEnum.taskend.getValue())){
+                String json = (String)redisUtil.get(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + pipelTaskTraceId);
+                PipelTaskLogPO pipelTaskLogPO = JSON.parseObject(json, PipelTaskLogPO.class);
+                if (pipelTaskLogPO != null){
+                    taskLogPO.setMsg(pipelTaskLogPO.getMsg());
+                    this.updateById(taskLogPO);
+                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + pipelTaskTraceId,JSON.toJSONString(taskLogPO),Long.parseLong(maxTime));
+                }else {
+                    this.save(taskLogPO);
+                }
+            }else {
+                this.save(taskLogPO);
+            }
         }
-
     }
 
     @Override

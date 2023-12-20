@@ -36,6 +36,8 @@ public enum RedisKeyEnum implements BaseEnum {
     PIPEL_JOB_TRACE_ID(3000,"pipel:JobTrace:id"),
     //数据调度管道数据结构--trace_id  (task层)
     PIPEL_TASK_TRACE_ID(3000,"pipel:TaskTrace:id"),
+
+    PIPEL_END_TASK_TRACE_ID(3000,"pipelend:TaskTrace:id"),
     //管道task
     PIPEL_TASK(3000, "pipel:task:id"),
     // FiData数据表结构(ods、dw、olap、mdm)
@@ -44,6 +46,8 @@ public enum RedisKeyEnum implements BaseEnum {
     NIFI_TOKEN(3600,"nifiToken"),
     //delayedTask,检查延时队列失效
     DELAYED_TASK(3000,"delayed:task"),
+
+    DISPATCH_RUN_ONCE(-1,"dispatch:runonce"),
 
     WEEK_MONITOR_ALL(87000,"monitor:week"),
 

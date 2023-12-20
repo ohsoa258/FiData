@@ -1356,7 +1356,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         ResultEntity<Object> objectResultEntity = publishTaskClient.runOnce(nifiCustomWorkflowDetail.getId());
         if (objectResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
             log.error("task模块调用runOnce失败，[{}]", objectResultEntity.getMsg());
-            return ResultEnum.REMOTE_SERVICE_CALLFAILED;
+            return ResultEnum.getEnum(objectResultEntity.getCode());
         } else {
             return ResultEnum.SUCCESS;
         }
