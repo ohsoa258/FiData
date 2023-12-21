@@ -22,6 +22,7 @@ import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
@@ -391,4 +392,9 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     Object syncOneTblForHudi(SyncOneTblForHudiDTO dto);
+
+    /**
+     * 获取cdc类型所有应用及表名
+     */
+    List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId);
 }

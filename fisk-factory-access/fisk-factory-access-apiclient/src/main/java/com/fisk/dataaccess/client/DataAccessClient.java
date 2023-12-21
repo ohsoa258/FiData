@@ -22,6 +22,7 @@ import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -516,4 +517,17 @@ public interface DataAccessClient {
     @ApiOperation(value = "调度调用第三方api,接收数据,并导入到FiData平台")
     ResultEntity<Object> importDataV2(@RequestBody ApiImportDataDTO dto);
 
+
+    /**
+     * 获取cdc类型所有应用及表名
+     * @param appId
+     * @return
+     */
+    @GetMapping("/appRegistration/getCDCAppNameAndTables")
+    @ApiOperation(value = "获取cdc类型所有应用及表名")
+    ResultEntity<List<CDCAppNameAndTableVO>> getCDCAppNameAndTables(@RequestParam("appId") Integer appId);
+
+    @ApiOperation(value = "根据appId获取所有数据源")
+    @GetMapping("/datasource/getAppSourcesByAppId")
+    public ResultEntity<List<AppDataSourceDTO>> getAppSourcesByAppId(@RequestParam("appId") Integer appId);
 }
