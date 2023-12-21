@@ -131,4 +131,10 @@ public class DataSourceController {
         return service.getSystemDataSourceById(id);
     }
 
+    @ApiOperation(value = "根据appId获取所有数据源")
+    @GetMapping("/getAppSourcesByAppId")
+    public ResultEntity<Object> getAppSourcesByAppId(@RequestParam("appId") Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppSourcesByAppId(appId));
+    }
+
 }
