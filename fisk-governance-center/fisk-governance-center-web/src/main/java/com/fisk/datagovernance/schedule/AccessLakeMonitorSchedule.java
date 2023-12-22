@@ -56,7 +56,7 @@ public class AccessLakeMonitorSchedule {
         String start = simpleDateFormat.format(new Date());
         long startTime = System.currentTimeMillis();
         log.info("定时执行监控每个应用入湖kafka数据量:开始--"+start);
-        ResultEntity<List<CDCAppNameAndTableVO>> cdcAppNameAndTables = dataAccessClient.getCDCAppNameAndTables(null);
+        ResultEntity<List<CDCAppNameAndTableVO>> cdcAppNameAndTables = dataAccessClient.getCDCAppNameAndTables(0);
         List<CDCAppNameAndTableVO> data = new ArrayList<>();
         if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(cdcAppNameAndTables.getData())) {
             data = cdcAppNameAndTables.getData();
