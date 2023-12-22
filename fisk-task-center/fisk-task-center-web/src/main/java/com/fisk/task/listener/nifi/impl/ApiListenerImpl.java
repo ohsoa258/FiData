@@ -20,11 +20,14 @@ import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -134,8 +137,10 @@ public class ApiListenerImpl implements IApiListener {
 
             if (pipelineTableLogPO != null) {
                 dwLogResultDTO.setErrorMsg(pipelineTableLogPO.getComment());
-                dwLogResultDTO.setStartTime(pipelineTableLogPO.getStartTime());
-                dwLogResultDTO.setEndTime(pipelineTableLogPO.getEndTime());
+                Date startTime = pipelineTableLogPO.getStartTime();
+                Date endTime = pipelineTableLogPO.getEndTime();
+                dwLogResultDTO.setStartTime(startTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                dwLogResultDTO.setEndTime(endTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
                 dwLogResultDTO.setDataRows(0);
                 //状态；0代表正在同步，1代表同步成功，2代表同步失败
                 dwLogResultDTO.setState(2);
