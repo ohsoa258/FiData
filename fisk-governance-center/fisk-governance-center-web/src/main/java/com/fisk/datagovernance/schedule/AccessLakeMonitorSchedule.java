@@ -132,9 +132,15 @@ public class AccessLakeMonitorSchedule {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         } finally {
             try {
-                statement.close();
-                connection.close();
-                resultSet.close();
+                if (statement != null){
+                    statement.close();
+                }
+                if (connection != null){
+                    statement.close();
+                }
+                if (resultSet != null){
+                    resultSet.close();
+                }
             } catch (SQLException e) {
                 log.error(e.getMessage());
                 throw new FkException(ResultEnum.ERROR);
