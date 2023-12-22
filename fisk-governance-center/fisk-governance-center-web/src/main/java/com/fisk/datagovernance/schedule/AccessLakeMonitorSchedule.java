@@ -18,7 +18,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +52,10 @@ public class AccessLakeMonitorSchedule {
     }
     @Scheduled(cron = "0 0 0/1 * * ? ") // cron表达式：每天凌晨 0点 执行
     public void doTask(){
-        log.info("定时执行监控每个应用入湖kafka数据量:开始");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String start = simpleDateFormat.format(new Date());
+        long startTime = System.currentTimeMillis();
+        log.info("定时执行监控每个应用入湖kafka数据量:开始--"+start);
         ResultEntity<List<CDCAppNameAndTableVO>> cdcAppNameAndTables = dataAccessClient.getCDCAppNameAndTables(null);
         List<CDCAppNameAndTableVO> data = new ArrayList<>();
         if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(cdcAppNameAndTables.getData())) {
@@ -96,7 +101,13 @@ public class AccessLakeMonitorSchedule {
             }
             redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE.getName()+":"+mapEntity.getKey(),rowTotal);
         }
-        log.info("定时执行监控每个应用入湖kafka数据量:结束");
+        String end = simpleDateFormat.format(new Date());
+        // 记录结束时间
+        long endTime = System.currentTimeMillis();
+        // 计算接口耗时，单位为毫秒
+        long elapsedTime = endTime - startTime;
+
+        log.info("定时执行监控每个应用入湖kafka数据量:结束--"+end+"--接口耗时：" + elapsedTime + " 毫秒");
     }
 
     private Integer selectCount( String selectSql){
