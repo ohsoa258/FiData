@@ -21,7 +21,7 @@ import javax.annotation.Resource;
 /**
  * @author JianWenYang
  */
-@Api(tags ={SwaggerConfig.DIMENSION})
+@Api(tags = {SwaggerConfig.DIMENSION})
 @RestController
 @RequestMapping("/dimension")
 @Slf4j
@@ -37,7 +37,7 @@ public class DimensionController {
 
     @ApiOperation("添加维度")
     @PostMapping("/addDimension")
-    public ResultEntity<Object> addDimension(@Validated @RequestBody DimensionDTO dto){
+    public ResultEntity<Object> addDimension(@Validated @RequestBody DimensionDTO dto) {
         return ResultEntityBuild.build(service.addDimension(dto));
     }
 
@@ -55,7 +55,7 @@ public class DimensionController {
 
     @ApiOperation("修改维度")
     @PutMapping("/editDimension")
-    public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto){
+    public ResultEntity<Object> editDimension(@Validated @RequestBody DimensionDTO dto) {
         return ResultEntityBuild.build(service.updateDimension(dto));
     }
 
@@ -99,6 +99,17 @@ public class DimensionController {
     @GetMapping("/getFactOrDimTable")
     public ResultEntity<Long> getFactOrDimTable(@RequestParam("tblName") String tblName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactOrDimTable(tblName));
+    }
+
+    /**
+     * 获取维度tree
+     *
+     * @return
+     */
+    @ApiOperation("获取维度tree")
+    @GetMapping("/getDimensionTree")
+    public ResultEntity<Object> getDimensionTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionTree());
     }
 
 

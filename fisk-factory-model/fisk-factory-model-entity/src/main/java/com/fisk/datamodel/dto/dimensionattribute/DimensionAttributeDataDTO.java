@@ -48,4 +48,13 @@ public class DimensionAttributeDataDTO {
     @ApiModelProperty(value = "关联维度表字段名称")
     public String associateDimensionFieldName;
 
+    /**
+     * 维度表字段类型
+     */
+    public  String dimensionFieldType;
+    /**
+     * 维度表字段长度
+     */
+    public int dimensionFieldLength;
+
 }

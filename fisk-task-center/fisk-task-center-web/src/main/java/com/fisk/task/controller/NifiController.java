@@ -17,6 +17,8 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.config.SwaggerConfig;
+import com.fisk.task.dto.DwLogQueryDTO;
+import com.fisk.task.dto.DwLogResultDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -319,4 +321,18 @@ public class NifiController {
     public ResultEntity<Object> apiToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
         return apiListener.apiToStg(JSON.toJSONString(kafkaReceive));
     }
+
+    /**
+     * dw数仓按时间获取单表nifi日志
+     *
+     * @param dwLogQueryDTO
+     * @return
+     */
+    @ApiOperation("dw数仓按时间获取单表nifi日志")
+    @PostMapping("/getDwTblNifiLog")
+    public DwLogResultDTO getDwTblNifiLog(@RequestBody DwLogQueryDTO dwLogQueryDTO) {
+        return apiListener.getDwTblNifiLog(dwLogQueryDTO);
+    }
+
+
 }

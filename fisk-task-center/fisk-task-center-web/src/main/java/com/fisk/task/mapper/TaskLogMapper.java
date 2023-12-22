@@ -14,7 +14,7 @@ public interface TaskLogMapper extends FKBaseMapper<TaskLogPO> {
     /**
      * 查询用户所有的消息
      *
-     * @param page 分页对象
+     * @param page  分页对象
      * @param query query对象
      * @return
      */

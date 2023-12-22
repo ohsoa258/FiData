@@ -365,4 +365,13 @@ public interface DataModelClient {
     @GetMapping("/dimension/getFactOrDimTable")
     ResultEntity<Long> getFactOrDimTable(@RequestParam("tblName") String tblName);
 
+    /**
+     * 获取维度tree
+     *
+     * @return
+     */
+    @ApiOperation("获取维度tree")
+    @GetMapping("/dimension/getDimensionTree")
+    ResultEntity<Object> getDimensionTree();
+
 }

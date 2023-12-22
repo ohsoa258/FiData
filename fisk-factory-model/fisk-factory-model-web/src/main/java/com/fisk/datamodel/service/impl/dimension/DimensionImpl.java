@@ -26,11 +26,9 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.DimensionIfEndDTO;
-import com.fisk.datamodel.dto.dimension.DimensionDTO;
-import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
-import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
-import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
+import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
@@ -88,6 +86,12 @@ public class DimensionImpl
 
     @Resource
     DimensionMapper mapper;
+    @Resource
+    private IDimension dimension;
+    @Resource
+    private DimensionAttributeImpl dimensionAttribute;
+    @Resource
+    private BusinessAreaImpl businessArea;
     @Resource
     DimensionAttributeMapper dimensionAttributeMapper;
     @Resource
@@ -1006,7 +1010,79 @@ public class DimensionImpl
         return mapper.selectCount(wrapper);
     }
 
-    ;
+    /**
+     * 获取维度tree
+     *
+     * @return
+     */
+    @Override
+    public DimensionTreeDTO getDimensionTree() {
+        List<BusinessAreaPO> businessAreaPOS = businessArea.list();
+
+        List<BusinessAreaDimDTO> areaDimDTOS = new ArrayList<>();
+        List<BusinessAreaDimDTO> publicDimDTOS = new ArrayList<>();
+
+        BusinessAreaDimDTO publicBusinessAreaDimDTO = new BusinessAreaDimDTO();
+        publicBusinessAreaDimDTO.setBusinessName("公共域维度");
+        publicBusinessAreaDimDTO.setId(0);
+        List<DimensionListDTO> publicDimensionListDTOS = new ArrayList<>();
+
+        for (BusinessAreaPO businessAreaPO : businessAreaPOS) {
+            LambdaQueryWrapper<DimensionPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.eq(DimensionPO::getBusinessId, businessAreaPO.getId());
+            List<DimensionPO> dimensionPOS = dimension.list(wrapper1);
+
+            BusinessAreaDimDTO businessAreaDimDTO = new BusinessAreaDimDTO();
+            businessAreaDimDTO.setBusinessName(businessAreaPO.getBusinessName());
+            businessAreaDimDTO.setId(businessAreaPO.getId());
+            List<DimensionListDTO> dimensionListDTOS = new ArrayList<>();
+
+            for (DimensionPO dimensionPO : dimensionPOS) {
+                LambdaQueryWrapper<DimensionAttributePO> wrapper = new LambdaQueryWrapper<>();
+                wrapper.eq(DimensionAttributePO::getDimensionId, dimensionPO.getId());
+                List<DimensionAttributePO> attributePOList = dimensionAttribute.list(wrapper);
+                DimensionListDTO dimensionListDTO = new DimensionListDTO();
+                dimensionListDTO.dimensionTabName = dimensionPO.dimensionTabName;
+                dimensionListDTO.setId(dimensionPO.getId());
+                dimensionListDTO.setDimensionCnName(dimensionPO.getDimensionCnName());
+                dimensionListDTO.setPrefixTempName(dimensionPO.getPrefixTempName());
+                dimensionListDTO.setIsPublish(dimensionPO.getIsPublish());
+                List<DimensionAttributeDataDTO> attributeDataDTOS = new ArrayList<>();
+
+                for (DimensionAttributePO dimensionAttributePO : attributePOList) {
+                    DimensionAttributeDataDTO attributeDataDTO = new DimensionAttributeDataDTO();
+                    attributeDataDTO.setId(dimensionAttributePO.getId());
+                    attributeDataDTO.setDimensionFieldCnName(dimensionAttributePO.getDimensionFieldCnName());
+                    attributeDataDTO.setDimensionFieldEnName(dimensionAttributePO.getDimensionFieldEnName());
+                    attributeDataDTO.setDimensionFieldDes(dimensionAttributePO.getDimensionFieldDes());
+                    attributeDataDTO.setDimensionFieldType(dimensionAttributePO.getDimensionFieldType());
+                    attributeDataDTO.setDimensionFieldLength(dimensionAttributePO.getDimensionFieldLength());
+                    attributeDataDTOS.add(attributeDataDTO);
+                }
+                //维度字段
+                dimensionListDTO.setAttributeList(attributeDataDTOS);
+
+                //公共维度表集合  1是公共维度文件夹id
+                if (dimensionPO.getDimensionFolderId() == 1) {
+                    publicDimensionListDTOS.add(dimensionListDTO);
+                } else {
+                    //其他维度表
+                    dimensionListDTOS.add(dimensionListDTO);
+
+                }
+
+            }
+            businessAreaDimDTO.setDimensionList(dimensionListDTOS);
+            areaDimDTOS.add(businessAreaDimDTO);
+        }
+
+        publicBusinessAreaDimDTO.setDimensionList(publicDimensionListDTOS);
+        publicDimDTOS.add(publicBusinessAreaDimDTO);
+        DimensionTreeDTO dimensionTreeDTO = new DimensionTreeDTO();
+        dimensionTreeDTO.setPublicDim(publicDimDTOS);
+        dimensionTreeDTO.setOtherDimsByArea(areaDimDTOS);
+        return dimensionTreeDTO;
+    }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,
                                                                 String dbQualifiedName,

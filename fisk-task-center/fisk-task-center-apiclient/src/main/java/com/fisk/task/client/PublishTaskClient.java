@@ -15,6 +15,8 @@ import com.fisk.dataservice.dto.tableservice.TableServiceDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
+import com.fisk.task.dto.DwLogQueryDTO;
+import com.fisk.task.dto.DwLogResultDTO;
 import com.fisk.task.dto.WsAccessDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
@@ -457,6 +459,7 @@ public interface PublishTaskClient {
 
     @PostMapping("/publishTask/deleteAccessMdmNifiFlow")
     ResultEntity<Object> publishDeleteAccessMdmNifiFlowTask(@RequestBody BuildDeleteTableServiceDTO data);
+
     /**
      * @param data
      * @return
@@ -548,6 +551,7 @@ public interface PublishTaskClient {
 
     /**
      * 前置机-数据接入发送消息到数据分发
+     *
      * @param dto
      */
     @PostMapping("/ws/wsAccessToConsume")
@@ -555,10 +559,21 @@ public interface PublishTaskClient {
 
     /**
      * 异步触发kafka消息队列
+     *
      * @param kafkaReceive
      * @return
      */
     @PostMapping("/publishTask/syncKafka")
     ResultEntity<Object> syncKafka(@RequestBody KafkaReceiveDTO kafkaReceive);
+
+    /**
+     * dw数仓按时间获取单表nifi日志
+     *
+     * @param dwLogQueryDTO
+     * @return
+     */
+    @ApiOperation("dw数仓按时间获取单表nifi日志")
+    @PostMapping("/nifi/getDwTblNifiLog")
+    DwLogResultDTO getDwTblNifiLog(@RequestBody DwLogQueryDTO dwLogQueryDTO);
 
 }

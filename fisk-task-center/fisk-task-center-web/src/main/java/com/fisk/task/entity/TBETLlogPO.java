@@ -7,6 +7,7 @@ import lombok.Data;
 import org.joda.time.DateTime;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * @author: DennyHui
@@ -18,8 +19,8 @@ import java.time.LocalDateTime;
 public class TBETLlogPO {
     public int id;
     public String tablename;
-    public DateTime startdate;
-    public DateTime enddate;
+    public Date startdate;
+    public Date enddate;
     public int datarows;
     public int status;
     public String code;

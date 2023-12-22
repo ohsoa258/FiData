@@ -3,10 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
-import com.fisk.datamodel.dto.dimension.DimensionDTO;
-import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
-import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
-import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
+import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
@@ -133,6 +130,13 @@ public interface IDimension extends IService<DimensionPO> {
      * @return
      */
     Integer getPublicDimTotalCount();
+
+    /**
+     * 获取维度tree
+     *
+     * @return
+     */
+    DimensionTreeDTO getDimensionTree();
 
     //void asyncSynchronousMetadata(DimensionPO model);
 

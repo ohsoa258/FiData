@@ -183,6 +183,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串  为了替换delete前缀中预留的占位符 lishiji1
         StringBuilder pkFieldNames1 = new StringBuilder();
+        StringBuilder pkFieldNames2 = new StringBuilder();
         //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
         StringBuilder delete = new StringBuilder();
         delete.append("DELETE FROM ")
@@ -193,8 +194,12 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("SELECT ")
                 .append("lishiji")
                 .append(" FROM ")
+                .append("(SELECT ")
+                .append("lishiji2")
+                .append(" FROM ")
                 .append(sourceTableName)
-                .append(" WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}' ")
+                .append(" WHERE fidata_batch_code = '${fidata_batch_code}' AND fidata_flow_batch_code = '${fragment.index}') AS `tempTbl` " +
+                        "WHERE ")
                 .append("lishiji1");
 
         //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
@@ -203,24 +208,30 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                     .append(pkField.fieldEnName)
                     .append("`,");
 
-            pkFieldNames1.append(" AND ")
-                    .append(tableName)
+            pkFieldNames1.append(tableName)
                     .append(".`")
                     .append(pkField.fieldEnName)
                     .append("`")
                     .append(" = ")
-                    .append(sourceTableName)
+                    .append("`tempTbl`")
                     .append(".`")
                     .append(pkField.fieldEnName)
                     .append("`")
-            ;
+                    .append(" AND ");
+
+            pkFieldNames2.append(" DISTINCT `")
+                    .append(pkField.fieldEnName)
+                    .append("`,");
         }
         //删除多余逗号
         pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
+        pkFieldNames1.deleteCharAt(pkFieldNames1.lastIndexOf("AND"));
+        pkFieldNames2.deleteCharAt(pkFieldNames1.lastIndexOf(","));
 
         String pksql = delete.toString();
         String halfSql = pksql.replaceFirst("lishiji", String.valueOf(pkFieldNames));
         halfSql = halfSql.replaceFirst("lishiji1", String.valueOf(pkFieldNames1));
+        halfSql = halfSql.replaceFirst("lishiji2", String.valueOf(pkFieldNames2));
         halfSql = halfSql+");   ";
 
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
