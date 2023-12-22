@@ -71,7 +71,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
         DataSourceDTO dataSourceDTO = null;
         ResultEntity<DataSourceDTO> dataSourceById = userClient.getFiDataDataSourceById(odsId);
-        if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode() && dataSourceById.getData() == null) {
+        if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode() && dataSourceById.getData() != null) {
             dataSourceDTO = dataSourceById.getData();
         } else {
             log.error("dataAccessClient无法查询到目标库的连接信息");
@@ -98,6 +98,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             default:
                 break;
         }
+        log.info("待查询sql:"+selectSourceSql);
         List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
         List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(dataSourceDTO, selectSourceSql);
         int sourceTotal = sourceTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();

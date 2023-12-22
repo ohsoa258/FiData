@@ -32,7 +32,7 @@ public class AccessLikeMonitorController {
 
     @ApiOperation("获取数据湖入湖监控参数")
     @GetMapping("/getAccessLakeMonitor")
-    public ResultEntity<AccessLakeMonitorVO> getAccessLakeMonitor(@RequestParam("ip") Integer appId){
+    public ResultEntity<AccessLakeMonitorVO> getAccessLakeMonitor(@RequestParam("appId") Integer appId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, accessLAkeMonitorService.getAccessLakeMonitor(appId));
     }
 }
