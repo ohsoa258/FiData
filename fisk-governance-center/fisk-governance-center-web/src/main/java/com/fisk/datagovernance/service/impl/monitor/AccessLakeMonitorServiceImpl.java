@@ -79,51 +79,10 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
         AccessLakeMonitorVO accessLakeMonitorVO = new AccessLakeMonitorVO();
         List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
-        String selectSourceSql = null;
-        switch (DataSourceTypeEnum.getValue(app.getDbType())) {
-            case MYSQL:
-                selectSourceSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
-                    return str;
-                }).collect(Collectors.joining(" UNION ALL "));
-                break;
-            case SQLSERVER:
-                selectSourceSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String dbName = i.getDbName().toLowerCase();
-                    String tableName = i.getTableName();
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + tableName + "' as tableName,count(1) as rowCount from " + dbName + "." + tableName;
-                    return str;
-                }).collect(Collectors.joining(" UNION ALL "));
-                break;
-            default:
-                break;
-        }
+        DataSourceTypeEnum type = DataSourceTypeEnum.getValue(app.getDbType());
+        String selectSourceSql = getSelectSourceSql(type, tableDbNameAndNameVO);
         log.info("源待查询sql:"+selectSourceSql);
-        String selectTargetSql = null;
-        switch (dataSourceDTO.conType) {
-            case DORIS_CATALOG:
-                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from qs_dmp_ods." + i.getDbName() + "." + i.getTableName();
-                    return str;
-                }).collect(Collectors.joining(" UNION ALL "));
-                break;
-            case MYSQL:
-                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
-                    return str;
-                }).collect(Collectors.joining(" UNION ALL "));
-                break;
-            case SQLSERVER:
-                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String dbName = i.getDbName().toLowerCase();
-                    String tableName = i.getTableName();
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + tableName + "' as tableName,count(1) as rowCount from " + dbName + "." + tableName;
-                    return str;
-                }).collect(Collectors.joining(" UNION ALL "));
-                break;
-            default:
-                break;
-        }
+        String selectTargetSql = getSelectTargetSql(dataSourceDTO.conType,tableDbNameAndNameVO);
         log.info("目标待查询sql:"+selectTargetSql);
         List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
         List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(dataSourceDTO, selectTargetSql);
@@ -220,5 +179,86 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 throw new FkException(ResultEnum.ERROR);
             }
         }
+    }
+
+
+    private String getSelectSourceSql(DataSourceTypeEnum type,List<TableDbNameAndNameVO> tableDbNameAndNameVO){
+        String selectSourceSql = null;
+        switch (type) {
+            case MYSQL:
+                selectSourceSql = "SELECT table_name, table_rows\n" +
+                        "FROM information_schema.tables\n" +
+                        "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
+                        "AND table_name in(";
+                String mysqlTableName = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "'"+i.getTableName()+"'";
+                    return str;
+                }).collect(Collectors.joining(","));
+                selectSourceSql = selectSourceSql+mysqlTableName+")";
+                break;
+            case SQLSERVER:
+                selectSourceSql = "SELECT \n" +
+                        "    t.name AS TableName,\n" +
+                        "    SUM(p.rows) AS row\n" +
+                        "FROM \n" +
+                        "    dmp_dw.sys.tables t\n" +
+                        "INNER JOIN \n" +
+                        "    dmp_dw.sys.partitions p ON t.object_id = p.object_id\n" +
+                        "WHERE \n" +
+                        "    t.is_ms_shipped = 0\n" +
+                        "\t\tAND t.name in (";
+                String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "'"+i.getTableName()+"'";
+                    return str;
+                }).collect(Collectors.joining(","));
+                selectSourceSql = selectSourceSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
+                break;
+            default:
+                break;
+        }
+        return selectSourceSql;
+    }
+
+    private String getSelectTargetSql(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum type,List<TableDbNameAndNameVO> tableDbNameAndNameVO){
+        String selectTargetSql = null;
+        switch (type) {
+            case DORIS:
+                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from qs_dmp_ods." + i.getDbName() + "." + i.getTableName();
+                    return str;
+                }).collect(Collectors.joining(" UNION ALL "));
+                break;
+            case MYSQL:
+                selectTargetSql = "SELECT table_name, table_rows\n" +
+                        "FROM information_schema.tables\n" +
+                        "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
+                        "AND table_name in(";
+                String mysqlTableName = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "'"+i.getTableName()+"'";
+                    return str;
+                }).collect(Collectors.joining(","));
+                selectTargetSql = selectTargetSql+mysqlTableName+")";
+                break;
+            case SQLSERVER:
+                selectTargetSql = "SELECT \n" +
+                        "    t.name AS TableName,\n" +
+                        "    SUM(p.rows) AS row\n" +
+                        "FROM \n" +
+                        "    dmp_dw.sys.tables t\n" +
+                        "INNER JOIN \n" +
+                        "    dmp_dw.sys.partitions p ON t.object_id = p.object_id\n" +
+                        "WHERE \n" +
+                        "    t.is_ms_shipped = 0\n" +
+                        "\t\tAND t.name in (";
+                String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "'"+i.getTableName()+"'";
+                    return str;
+                }).collect(Collectors.joining(","));
+                selectTargetSql = selectTargetSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
+                break;
+            default:
+                break;
+        }
+        return selectTargetSql;
     }
 }
