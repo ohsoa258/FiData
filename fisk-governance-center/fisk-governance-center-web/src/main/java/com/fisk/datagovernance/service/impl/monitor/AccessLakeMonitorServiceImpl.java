@@ -186,7 +186,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         String selectSourceSql = null;
         switch (type) {
             case MYSQL:
-                selectSourceSql = "SELECT table_name, table_rows\n" +
+                selectSourceSql = "SELECT  '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,table_name as tableName, table_rows as rowCount\n" +
                         "FROM information_schema.tables\n" +
                         "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
                         "AND table_name in(";
@@ -197,9 +197,9 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 selectSourceSql = selectSourceSql+mysqlTableName+")";
                 break;
             case SQLSERVER:
-                selectSourceSql = "SELECT \n" +
-                        "    t.name AS TableName,\n" +
-                        "    SUM(p.rows) AS row\n" +
+                selectSourceSql = "SELECT '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,\n" +
+                        "    t.name AS tableName,\n" +
+                        "    SUM(p.rows) AS rowCount\n" +
                         "FROM \n" +
                         "    dmp_dw.sys.tables t\n" +
                         "INNER JOIN \n" +
@@ -229,7 +229,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 }).collect(Collectors.joining(" UNION ALL "));
                 break;
             case MYSQL:
-                selectTargetSql = "SELECT table_name, table_rows\n" +
+                selectTargetSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,table_name as tableName, table_rows as rowCount\n" +
                         "FROM information_schema.tables\n" +
                         "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
                         "AND table_name in(";
@@ -240,9 +240,9 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 selectTargetSql = selectTargetSql+mysqlTableName+")";
                 break;
             case SQLSERVER:
-                selectTargetSql = "SELECT \n" +
-                        "    t.name AS TableName,\n" +
-                        "    SUM(p.rows) AS row\n" +
+                selectTargetSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,\n" +
+                        "    t.name AS tableName,\n" +
+                        "    SUM(p.rows) AS rowCount\n" +
                         "FROM \n" +
                         "    dmp_dw.sys.tables t\n" +
                         "INNER JOIN \n" +
