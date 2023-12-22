@@ -1,4 +1,4 @@
-package com.fisk.datagovernance.util;
+package com.fisk.datagovernance.schedule;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.framework.redis.RedisKeyEnum;
@@ -7,13 +7,11 @@ import com.fisk.datagovernance.mapper.monitor.ServerMonitorMapper;
 import com.fisk.datagovernance.service.monitor.ServerMonitorConfigService;
 import com.fisk.datagovernance.vo.monitor.DelayPingVO;
 import com.fisk.datagovernance.vo.monitor.ServerMonitorConfigVO;
-import com.fisk.datagovernance.vo.monitor.ServerMonitorVO;
 import com.fisk.datagovernance.vo.monitor.ServerTableVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,22 +25,22 @@ import java.util.stream.Collectors;
  * @Description:
  */
 @Component
-public class TaskUtils {
+public class ServerMonitorSchedule {
 
     private static ServerMonitorMapper mapper;
     private static ServerMonitorConfigService serverMonitorConfigService;
     private static RedisUtil redisUtil;
     @Autowired
     public void setMapper(ServerMonitorMapper mapper) {
-        TaskUtils.mapper = mapper;
+        ServerMonitorSchedule.mapper = mapper;
     }
     @Autowired
     public void setServerMonitorConfigService(ServerMonitorConfigService serverMonitorConfigService) {
-        TaskUtils.serverMonitorConfigService = serverMonitorConfigService;
+        ServerMonitorSchedule.serverMonitorConfigService = serverMonitorConfigService;
     }
     @Autowired
     public void setRedisUtil(RedisUtil redisUtil) {
-        TaskUtils.redisUtil = redisUtil;
+        ServerMonitorSchedule.redisUtil = redisUtil;
     }
 
     @Scheduled(cron = "0 0 0 * * ?") // cron表达式：每天凌晨 0点 执行

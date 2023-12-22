@@ -104,4 +104,35 @@
         </if>
     </select>
 
+    <resultMap id="CDCAppNameAndTables" type="com.fisk.dataaccess.vo.CDCAppNameAndTableVO">
+        <id column="id" property="id" />
+        <result column="app_name" property="appName" />
+        <result column="drive_type" property="dbType" />
+        <collection property="tableDbNameAndNameVO" ofType="com.fisk.dataaccess.vo.TableDbNameAndNameVO">
+            <result column="db_name" property="dbName" />
+            <result column="table_name" property="tableName" />
+        </collection>
+    </resultMap>
+
+    <select id="getCDCAppNameAndTables" resultMap="CDCAppNameAndTables">
+        SELECT DISTINCT
+            a.id,
+            a.app_name,
+            c.db_name,
+            c.drive_type,
+            b.table_name
+        FROM
+            tb_app_registration a
+                LEFT JOIN tb_table_access b ON a.id = b.app_id
+                LEFT JOIN tb_app_datasource c ON a.id = c.app_id
+        WHERE
+            a.del_flag = 1
+        <if test="appId !=null and appId!= 0 ">
+            AND a.id = #{appId}
+        </if>
+          AND a.app_type = 2
+          AND b.del_flag = 1
+          AND b.if_open_cdc = 1
+          AND c.del_flag = 1
+    </select>
 </mapper>

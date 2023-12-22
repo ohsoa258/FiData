@@ -70,6 +70,7 @@ import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
@@ -2537,6 +2538,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.ERROR, e);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 获取cdc类型所有应用及表名
+     * @return
+     */
+    @Override
+    public List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId) {
+        return baseMapper.getCDCAppNameAndTables(appId);
     }
 
     /**

@@ -133,7 +133,7 @@ public class DataSourceController {
 
     @ApiOperation(value = "根据appId获取所有数据源")
     @GetMapping("/getAppSourcesByAppId")
-    public ResultEntity<Object> getAppSourcesByAppId(@RequestParam("appId") Integer appId) {
+    public ResultEntity<List<AppDataSourceDTO>> getAppSourcesByAppId(@RequestParam("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppSourcesByAppId(appId));
     }
 

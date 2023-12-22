@@ -9,6 +9,7 @@ import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.app.RepeatNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -143,4 +144,8 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      */
     int insertAppRegistrationPo(@Param("appRegistrationPO") AppRegistrationPO appRegistrationPo);
 
+    /**
+     *
+     */
+    List<CDCAppNameAndTableVO> getCDCAppNameAndTables(@Param("appId") Integer appId);
 }

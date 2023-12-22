@@ -61,6 +61,8 @@ public class SwaggerConfig {
 
     public static final String SYSTEM_MONITOR = "系统监控";
 
+    public static final String ACCESS_LAKE_MONITOR = "数据湖入湖监控";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataGovernanceApplication.class.getPackage().getName();
@@ -85,6 +87,7 @@ public class SwaggerConfig {
                 .tags(new Tag(COLUMN_User_Assignment, "列用户分配"))
                 .tags(new Tag(Row_User_Assignment, "行用户分配"))
                 .tags(new Tag(SYSTEM_MONITOR, "系统监控"))
+                .tags(new Tag(ACCESS_LAKE_MONITOR,"数据湖入湖监控"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

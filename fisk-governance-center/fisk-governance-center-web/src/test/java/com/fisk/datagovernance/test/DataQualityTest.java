@@ -3,29 +3,24 @@ package com.fisk.datagovernance.test;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.similarity.CosineSimilarity;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.datagovernance.dto.dataquality.businessfilter.apifilter.BusinessFilterApiResultDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.TableRuleCountDTO;
-import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
-import com.fisk.datagovernance.service.impl.dataops.DataOpsDataSourceManageImpl;
-import com.fisk.datagovernance.util.TaskUtils;
+import com.fisk.datagovernance.schedule.ServerMonitorSchedule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.mail.javamail.MimeMailMessage;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.annotation.Resource;
 import javax.mail.Message;
-import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -227,7 +222,36 @@ public class DataQualityTest {
 
     @Test
     public void get(){
-        TaskUtils taskUtils = new TaskUtils();
+        ServerMonitorSchedule taskUtils = new ServerMonitorSchedule();
 //        taskUtils.doTask();
     }
+    @Test
+    public void get1(){
+        String url = "jdbc:presto://192.168.11.130:9002/kafka";
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            connection = DriverManager.getConnection(url, "root", null);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("show schemas");
+            Integer rowTotal =  0;
+            while (resultSet.next()) {
+                // 处理查询结果
+                Integer rowCount = Integer.valueOf(resultSet.getString("rowCount"));
+                rowTotal+= rowCount;
+            }
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+        } finally {
+            try {
+                statement.close();
+                connection.close();
+                resultSet.close();
+            } catch (SQLException e) {
+                throw new FkException(ResultEnum.ERROR);
+            }
+        }
+    }
+
 }

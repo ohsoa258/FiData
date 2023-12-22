@@ -181,6 +181,12 @@
         </dependency>
         <!-- sql语法解析 end -->
 
+        <dependency>
+            <groupId>com.facebook.presto</groupId>
+            <artifactId>presto-jdbc</artifactId>
+            <version>0.275</version>
+        </dependency>
+
     </dependencies>
 
     <build>

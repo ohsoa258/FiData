@@ -29,3 +29,6 @@ file:
   echoPath: D:/Excel/
   logoPath: D:/image/companyLogo.jpg
   excelFilePath: D:/Excel/
+presto:
+  url: a
+  port: 8088
