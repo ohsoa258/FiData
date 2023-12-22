@@ -186,7 +186,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         String selectSourceSql = null;
         switch (type) {
             case MYSQL:
-                selectSourceSql = "SELECT  "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,table_name as tableName, table_rows as rowCount\n" +
+                selectSourceSql = "SELECT  '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,table_name as tableName, table_rows as rowCount\n" +
                         "FROM information_schema.tables\n" +
                         "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
                         "AND table_name in(";
@@ -197,7 +197,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 selectSourceSql = selectSourceSql+mysqlTableName+")";
                 break;
             case SQLSERVER:
-                selectSourceSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,\n" +
+                selectSourceSql = "SELECT '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,\n" +
                         "    t.name AS tableName,\n" +
                         "    SUM(p.rows) AS rowCount\n" +
                         "FROM \n" +
