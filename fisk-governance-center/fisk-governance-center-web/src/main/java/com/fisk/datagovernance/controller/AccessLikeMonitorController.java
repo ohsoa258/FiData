@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
+import com.fisk.datagovernance.schedule.AccessLakeMonitorSchedule;
 import com.fisk.datagovernance.service.monitor.AccessLakeMonitorService;
 import com.fisk.datagovernance.vo.monitor.AccessLakeMonitorVO;
 import io.swagger.annotations.Api;
@@ -34,5 +35,15 @@ public class AccessLikeMonitorController {
     @GetMapping("/getAccessLakeMonitor")
     public ResultEntity<AccessLakeMonitorVO> getAccessLakeMonitor(@RequestParam("appId") Integer appId){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, accessLAkeMonitorService.getAccessLakeMonitor(appId));
+    }
+
+    @ApiOperation("添加入湖缓存数据")
+    @GetMapping("/setLakeRedis")
+    public ResultEntity<AccessLakeMonitorVO> setLakeRedis(@RequestParam("appId") Integer appId){
+        AccessLakeMonitorSchedule accessLakeMonitorSchedule = new AccessLakeMonitorSchedule();
+        log.info("开始添加入湖缓存");
+        accessLakeMonitorSchedule.doTask();
+        log.info("结束添加入湖缓存");
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 }

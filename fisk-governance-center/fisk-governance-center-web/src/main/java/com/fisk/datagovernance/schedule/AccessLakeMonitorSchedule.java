@@ -100,6 +100,7 @@ public class AccessLakeMonitorSchedule {
     }
 
     private Integer selectCount( String selectSql){
+        log.info("查询presto连接Kafka的执行sql:"+selectSql);
         String url = "jdbc:presto://"+prestoUrl+":"+prestoPort+"/kafka";
         Connection connection = null;
         Statement statement = null;
