@@ -1,9 +1,10 @@
 package com.fisk.task.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class DwLogResultDTO {
@@ -25,13 +26,15 @@ public class DwLogResultDTO {
      * 同步开始时间
      */
     @ApiModelProperty(value = "同步开始时间")
-    private Date startTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime startTime;
 
     /**
      * 同步开始时间
      */
     @ApiModelProperty(value = "同步开始时间")
-    private Date endTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime endTime;
 
     /**
      * 数据量

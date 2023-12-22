@@ -3,11 +3,10 @@ package com.fisk.task.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.joda.time.DateTime;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * @author: DennyHui
@@ -19,8 +18,10 @@ import java.util.Date;
 public class TBETLlogPO {
     public int id;
     public String tablename;
-    public Date startdate;
-    public Date enddate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime startdate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime enddate;
     public int datarows;
     public int status;
     public String code;

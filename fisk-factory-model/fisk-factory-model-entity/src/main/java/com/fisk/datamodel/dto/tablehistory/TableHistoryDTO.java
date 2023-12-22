@@ -36,7 +36,7 @@ public class TableHistoryDTO {
      */
     @ApiModelProperty(value = "创建时间")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    public Date createTime;
+    public LocalDateTime createTime;
 
     /**
      * 是否开启同步

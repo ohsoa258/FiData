@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -76,7 +77,7 @@ public class TableHistoryImpl
 
             int tableType = tableHistoryDTO.tableType;
             int tableId = tableHistoryDTO.getTableId();
-            Date createTime = tableHistoryDTO.getCreateTime();
+            LocalDateTime createTime = tableHistoryDTO.getCreateTime();
             TableHistoryQueryDTO tableHistoryQueryDTO = new TableHistoryQueryDTO();
 
             tableHistoryQueryDTO.setTableId(tableId);
@@ -103,7 +104,7 @@ public class TableHistoryImpl
             //表类别：0维度 1事实
             int tableType = dto.getTableType();
             //获取发布时间
-            Date publishTime = dto.getPublishTime();
+            LocalDateTime publishTime = dto.getPublishTime();
             DimensionDTO dimension;
             FactDTO fact;
             //表名

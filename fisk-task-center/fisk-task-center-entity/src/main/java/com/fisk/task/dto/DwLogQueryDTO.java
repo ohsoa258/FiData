@@ -1,9 +1,11 @@
 package com.fisk.task.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.task.enums.OlapTableEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -31,6 +33,7 @@ public class DwLogQueryDTO {
      * 发布时间
      */
     @ApiModelProperty(value = "发布时间")
-    private Date publishTime;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime publishTime;
 
 }
