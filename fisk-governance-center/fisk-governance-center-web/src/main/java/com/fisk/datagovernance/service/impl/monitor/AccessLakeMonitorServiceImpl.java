@@ -83,7 +83,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         switch (DataSourceTypeEnum.getValue(app.getDbType())) {
             case MYSQL:
                 selectSourceSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rows from " + i.getDbName() + "." + i.getTableName();
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
                     return str;
                 }).collect(Collectors.joining(" UNION ALL "));
                 break;
@@ -91,7 +91,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 selectSourceSql = tableDbNameAndNameVO.stream().map(i -> {
                     String dbName = i.getDbName().toLowerCase();
                     String tableName = i.getTableName();
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + tableName + "' as tableName,count(1) as rows from " + dbName + "." + tableName;
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + tableName + "' as tableName,count(1) as rowCount from " + dbName + "." + tableName;
                     return str;
                 }).collect(Collectors.joining(" UNION ALL "));
                 break;
@@ -144,7 +144,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
                 tablesRowsDTO.setDbName(result.getString("dbName"));
                 tablesRowsDTO.setTableName(result.getString("tableName"));
-                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rows")));
+                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
                 tablesRowsDTO.setDriverType(driveType.getDriverName());
                 tablesRowsDTOS.add(tablesRowsDTO);
             }
@@ -177,7 +177,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
                 tablesRowsDTO.setDbName(result.getString("dbName"));
                 tablesRowsDTO.setTableName(result.getString("tableName"));
-                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rows")));
+                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
                 tablesRowsDTO.setDriverType(driveType.getDriverName());
                 tablesRowsDTOS.add(tablesRowsDTO);
             }
