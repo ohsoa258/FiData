@@ -37,10 +37,10 @@ public class AccessLakeMonitorSchedule {
     
     private static DataAccessClient dataAccessClient;
     private static RedisUtil redisUtil;
-    @Value("${presto.url}")
-    private String prestoUrl;
-    @Value("${presto.port}")
-    private String prestoPort;
+
+    private static String prestoUrl;
+
+    private static String prestoPort;
 
     @Autowired
     public void setDataAccessClient(DataAccessClient dataAccessClient) {
@@ -49,6 +49,14 @@ public class AccessLakeMonitorSchedule {
     @Autowired
     public void setRedisUtil(RedisUtil redisUtil) {
         AccessLakeMonitorSchedule.redisUtil = redisUtil;
+    }
+    @Value("${presto.url}")
+    public void setPrestoUrl(String prestoUrl){
+        AccessLakeMonitorSchedule.prestoUrl = prestoUrl;
+    }
+    @Value("${presto.port}")
+    public void setPrestoPort(String prestoPort){
+        AccessLakeMonitorSchedule.prestoPort = prestoPort;
     }
     @Scheduled(cron = "0 0 0/1 * * ? ") // cron表达式：每天凌晨 0点 执行
     public void doTask(){
@@ -132,9 +140,15 @@ public class AccessLakeMonitorSchedule {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         } finally {
             try {
-                statement.close();
-                connection.close();
-                resultSet.close();
+                if (statement != null){
+                    statement.close();
+                }
+                if (connection != null){
+                    statement.close();
+                }
+                if (resultSet != null){
+                    resultSet.close();
+                }
             } catch (SQLException e) {
                 log.error(e.getMessage());
                 throw new FkException(ResultEnum.ERROR);
