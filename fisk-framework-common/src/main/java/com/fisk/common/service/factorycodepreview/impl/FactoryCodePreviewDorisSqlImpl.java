@@ -226,7 +226,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //删除多余逗号
         pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
         pkFieldNames1.deleteCharAt(pkFieldNames1.lastIndexOf("AND"));
-        pkFieldNames2.deleteCharAt(pkFieldNames1.lastIndexOf(","));
+        pkFieldNames2.deleteCharAt(pkFieldNames2.lastIndexOf(","));
 
         String pksql = delete.toString();
         String halfSql = pksql.replaceFirst("lishiji", String.valueOf(pkFieldNames));
