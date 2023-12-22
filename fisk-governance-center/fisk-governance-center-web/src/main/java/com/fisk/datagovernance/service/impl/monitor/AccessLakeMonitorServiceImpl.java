@@ -98,9 +98,35 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             default:
                 break;
         }
-        log.info("待查询sql:"+selectSourceSql);
+        log.info("源待查询sql:"+selectSourceSql);
+        String selectTargetSql = null;
+        switch (dataSourceDTO.conType) {
+            case DORIS_CATALOG:
+                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from qs_dmp_ods." + i.getDbName() + "." + i.getTableName();
+                    return str;
+                }).collect(Collectors.joining(" UNION ALL "));
+                break;
+            case MYSQL:
+                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
+                    return str;
+                }).collect(Collectors.joining(" UNION ALL "));
+                break;
+            case SQLSERVER:
+                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
+                    String dbName = i.getDbName().toLowerCase();
+                    String tableName = i.getTableName();
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + tableName + "' as tableName,count(1) as rowCount from " + dbName + "." + tableName;
+                    return str;
+                }).collect(Collectors.joining(" UNION ALL "));
+                break;
+            default:
+                break;
+        }
+        log.info("目标待查询sql:"+selectTargetSql);
         List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
-        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(dataSourceDTO, selectSourceSql);
+        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(dataSourceDTO, selectTargetSql);
         int sourceTotal = sourceTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         int targetTotal = targetTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         Map<String, TablesRowsDTO> targetTables = targetTablesRows.stream().collect(Collectors.toMap(i -> i.getDbName() + "." + i.getTableName(), i -> i));
