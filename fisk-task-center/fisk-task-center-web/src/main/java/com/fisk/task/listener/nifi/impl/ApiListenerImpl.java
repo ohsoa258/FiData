@@ -138,8 +138,14 @@ public class ApiListenerImpl implements IApiListener {
                 dwLogResultDTO.setErrorMsg(pipelineTableLogPO.getComment());
                 Date startTime = pipelineTableLogPO.getStartTime();
                 Date endTime = pipelineTableLogPO.getEndTime();
-                dwLogResultDTO.setStartTime(startTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-                dwLogResultDTO.setEndTime(endTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+
+                if (startTime != null) {
+                    dwLogResultDTO.setStartTime(startTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                }
+                if (endTime != null) {
+                    dwLogResultDTO.setEndTime(endTime.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                }
+
                 dwLogResultDTO.setDataRows(0);
                 //状态；0代表正在同步，1代表同步成功，2代表同步失败
                 dwLogResultDTO.setState(2);
