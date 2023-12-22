@@ -134,7 +134,7 @@ public class TableHistoryImpl
                 //截取doris严格模式报错时，给出的追踪地址
                 if (errorMsg.contains("tracking_url=")) {
                     //地址
-                    String dorisErrorUrl = errorMsg.substring(errorMsg.lastIndexOf("tracking_url=") + 1, errorMsg.lastIndexOf(";"));
+                    String dorisErrorUrl = errorMsg.substring(errorMsg.lastIndexOf("tracking_url=") + 13, errorMsg.lastIndexOf(";"));
                     log.info("tracking_url = ：" + dorisErrorUrl);
                     //发送请求，获取doris因严格模式报错时，具体的原因（什么字段的什么内容导致的报错）
                     ApiHttpRequestDTO apiHttpRequestDTO = new ApiHttpRequestDTO();
