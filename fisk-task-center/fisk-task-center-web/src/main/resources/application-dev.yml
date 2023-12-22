@@ -1,7 +1,7 @@
 datamodeldorisconstr:
   driver_class_name: com.mysql.jdbc.Driver
   password: Password01!
-  url: jdbc:mysql://192.168.11.134:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false
+  url: jdbc:mysql://192.168.11.134:9030/dmp_olap?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=Asia/Shanghai
   username: root
 
 external-table-link: '"host" = "192.168.1.250","port" = "5432","user" = "postgres","password"

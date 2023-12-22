@@ -17,7 +17,7 @@ public interface IBuildHttpRequest {
      * @param dto dto
      * @return jsonObject
      */
-    JSONObject httpRequest(ApiHttpRequestDTO dto);
+    String httpRequest(ApiHttpRequestDTO dto);
 
     /**
      * 请求第三方平台api返回的参数

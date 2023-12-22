@@ -50,7 +50,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if ("DATE".equalsIgnoreCase(f.fieldType)) {
+            if ("DATE" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -60,7 +60,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIME" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -70,7 +70,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIMESTAMP" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -80,7 +80,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
+            } else if ("DATETIME" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -97,7 +97,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
-                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                if ("NVARCHAR" .equalsIgnoreCase(f.fieldType) || "VARCHAR" .equalsIgnoreCase(f.fieldType)) {
                     suffix.append("(")
                             .append(f.fieldLength)
                             .append("))");
@@ -225,14 +225,15 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         }
         //删除多余逗号
         pkFieldNames.deleteCharAt(pkFieldNames.lastIndexOf(","));
-        pkFieldNames1.deleteCharAt(pkFieldNames1.lastIndexOf("AND"));
+        //删除多余AND
+        pkFieldNames1.delete(pkFieldNames1.lastIndexOf("AND"), pkFieldNames1.lastIndexOf("AND") + 3);
         pkFieldNames2.deleteCharAt(pkFieldNames2.lastIndexOf(","));
 
         String pksql = delete.toString();
         String halfSql = pksql.replaceFirst("lishiji", String.valueOf(pkFieldNames));
         halfSql = halfSql.replaceFirst("lishiji1", String.valueOf(pkFieldNames1));
         halfSql = halfSql.replaceFirst("lishiji2", String.valueOf(pkFieldNames2));
-        halfSql = halfSql+");   ";
+        halfSql = halfSql + ");   ";
 
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
         String tabNameWithoutPre = tableName.substring(tableName.indexOf("_") + 1);
@@ -259,7 +260,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if ("DATE".equalsIgnoreCase(f.fieldType)) {
+            if ("DATE" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -269,7 +270,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIME" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -279,7 +280,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIMESTAMP" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -289,7 +290,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
+            } else if ("DATETIME" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -306,7 +307,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
-                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                if ("NVARCHAR" .equalsIgnoreCase(f.fieldType) || "VARCHAR" .equalsIgnoreCase(f.fieldType)) {
                     suffix.append("(")
                             .append(f.fieldLength)
                             .append("))");
@@ -388,7 +389,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if ("DATE".equalsIgnoreCase(f.fieldType)) {
+            if ("DATE" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -398,7 +399,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIME" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -408,7 +409,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIMESTAMP" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -418,7 +419,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
+            } else if ("DATETIME" .equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -435,7 +436,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
-                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                if ("NVARCHAR" .equalsIgnoreCase(f.fieldType) || "VARCHAR" .equalsIgnoreCase(f.fieldType)) {
                     suffix.append("(")
                             .append(f.fieldLength)
                             .append("))");
@@ -522,7 +523,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         }
 
         if (otherLogic == 1) {
-            if ("TIME".equalsIgnoreCase(field.fieldType)) {
+            if ("TIME" .equalsIgnoreCase(field.fieldType)) {
                 //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
                 startSQL.append("\"")
                         .append(businessTimeField)
@@ -576,9 +577,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             Long businessDate = previewTableBusinessDTO.businessDate;
             //每年 每月 每天
             String businessTimeFlag = previewTableBusinessDTO.businessTimeFlag;
-            if ("每年".equals(businessTimeFlag)) {
+            if ("每年" .equals(businessTimeFlag)) {
                 businessTimeFlag = "MONTH";
-            } else if ("每月".equals(businessTimeFlag)) {
+            } else if ("每月" .equals(businessTimeFlag)) {
                 businessTimeFlag = "DAY";
             } else {
                 businessTimeFlag = "HOUR";
@@ -595,7 +596,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
 
 
-            if ("TIME".equalsIgnoreCase(field.fieldType)) {
+            if ("TIME" .equalsIgnoreCase(field.fieldType)) {
                 startSQL.append("\"")
                         .append(businessTimeField)
                         .append("\"")

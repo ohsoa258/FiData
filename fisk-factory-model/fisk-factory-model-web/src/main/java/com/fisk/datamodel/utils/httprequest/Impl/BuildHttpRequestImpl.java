@@ -41,7 +41,7 @@ import java.util.Map;
 public class BuildHttpRequestImpl implements IBuildHttpRequest {
 
     @Override
-    public JSONObject httpRequest(ApiHttpRequestDTO dto) {
+    public String httpRequest(ApiHttpRequestDTO dto) {
         try {
             // Body: raw-json参数
             String json = JSON.toJSONString(dto.jsonObject);
@@ -53,7 +53,7 @@ public class BuildHttpRequestImpl implements IBuildHttpRequest {
             } else { // get
                 result = sendGetRequest(dto, json);
             }
-            return JSONObject.parseObject(result);
+            return result;
         } catch (Exception e) {
             log.error("AE89: 执行httpRequest方法失败,【失败原因为：】", e);
             throw new FkException(ResultEnum.EXECUTE_HTTP_REQUEST_ERROR);

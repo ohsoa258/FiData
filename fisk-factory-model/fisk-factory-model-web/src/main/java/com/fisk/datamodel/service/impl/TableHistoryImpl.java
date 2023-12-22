@@ -1,6 +1,5 @@
 package com.fisk.datamodel.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
@@ -28,7 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -141,8 +139,7 @@ public class TableHistoryImpl
                     apiHttpRequestDTO.setUri(dorisErrorUrl);
                     apiHttpRequestDTO.setHttpRequestEnum(HttpRequestEnum.GET);
                     IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDTO);
-                    JSONObject jsonObject = iBuildHttpRequest.httpRequest(apiHttpRequestDTO);
-                    String s = jsonObject.toString();
+                    String s = iBuildHttpRequest.httpRequest(apiHttpRequestDTO);
                     dwTblNifiLog.setErrorMsg(errorMsg + "详细原因：" + s);
                 }
             }
