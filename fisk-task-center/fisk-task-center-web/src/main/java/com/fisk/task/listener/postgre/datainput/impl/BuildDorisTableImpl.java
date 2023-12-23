@@ -626,7 +626,7 @@ public class BuildDorisTableImpl implements IbuildTable {
             if (!l.fieldType.contains("TEXT")) {
                 stgSqlFileds.append("`").append(l.fieldEnName).append("` varchar(4000),");
             }
-            if (l.isBusinessKey == 1) {
+            if (l.isPrimaryKey == 1) {
                 pksql.append(l.fieldEnName).append(" ,");
             }
 
@@ -645,13 +645,14 @@ public class BuildDorisTableImpl implements IbuildTable {
             sql1 += sql2 + sql3;
         }
         sql1 += ") ";
-        if (modelPublishTableDTO.synMode == 3
-                || modelPublishTableDTO.synMode == 5) {
-            String havePk = pksql.toString();
-            if (havePk.length() != 14) {
-                sql1 += havePk.substring(0, havePk.length() - 1) + ")";
-            }
-        }
+
+//        if (modelPublishTableDTO.synMode == 3
+//                || modelPublishTableDTO.synMode == 5) {
+//            String havePk = pksql.toString();
+//            if (havePk.length() != 14) {
+//                sql1 += havePk.substring(0, havePk.length() - 1) + ")";
+//            }
+//        }
 
         sql1 = sql1 + "DISTRIBUTED BY HASH(" + tablePk + ") BUCKETS 10 " +
                 //副本数为1
