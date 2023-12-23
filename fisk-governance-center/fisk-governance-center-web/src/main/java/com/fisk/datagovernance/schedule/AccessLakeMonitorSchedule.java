@@ -74,12 +74,12 @@ public class AccessLakeMonitorSchedule {
         }
         Map<String,List<String>> map = new HashMap<>();
         if (CollectionUtils.isNotEmpty(data)){
-            List<String> selectSql = new ArrayList<>();
             for (CDCAppNameAndTableVO app : data) {
+                List<String> selectSql = new ArrayList<>();
                 List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
                 if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
-                    if (tableDbNameAndNameVO.size()>100){
-                        List<List<TableDbNameAndNameVO>> partition = Lists.partition(tableDbNameAndNameVO, 100);
+                    if (tableDbNameAndNameVO.size()>50){
+                        List<List<TableDbNameAndNameVO>> partition = Lists.partition(tableDbNameAndNameVO, 50);
                         for (List<TableDbNameAndNameVO> tableDbNameAndNameVOS : partition) {
                             String sql = tableDbNameAndNameVOS.stream().map(i -> {
                                 String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
@@ -104,7 +104,7 @@ public class AccessLakeMonitorSchedule {
             List<String> selectSql = mapEntity.getValue();
             Integer rowTotal = 0;
             for (String sql : selectSql) {
-                Integer rows = selectCount(sql);
+                Integer rows = 1;
                 rowTotal+=rows;
             }
             redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE.getName()+":"+mapEntity.getKey(),rowTotal);
