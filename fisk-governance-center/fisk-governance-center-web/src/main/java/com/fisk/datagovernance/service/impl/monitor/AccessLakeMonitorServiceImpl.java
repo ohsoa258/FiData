@@ -295,7 +295,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 data = cdcAppNameAndTables.getData();
             } else {
                 log.error("dataAccessClient无法查询到目标库的连接信息");
-                Thread.sleep(1800000);
+                Thread.sleep(600000);
                 new Thread(this::saveCatchTargetTableRows).start();
                 return ResultEnum.ERROR;
             }
@@ -305,7 +305,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 dataSourceDTO = dataSourceById.getData();
             } else {
                 log.error("dataAccessClient无法查询到目标库的连接信息");
-                Thread.sleep(1800000);
+                Thread.sleep(600000);
                 new Thread(this::saveCatchTargetTableRows).start();
                 return ResultEnum.ERROR;
             }
@@ -359,7 +359,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             // 计算接口耗时，单位为毫秒
             long elapsedTime = endTime - startTime;
             log.info("更新每个应用入湖DORIS表数据量:结束--"+end+"--接口耗时：" + elapsedTime + " 毫秒");
-            Thread.sleep(100);
+            Thread.sleep(600000);
             new Thread(this::saveCatchTargetTableRows).start();
 
         } catch (InterruptedException e) {
