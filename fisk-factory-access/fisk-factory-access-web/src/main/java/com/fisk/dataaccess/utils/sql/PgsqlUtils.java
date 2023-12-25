@@ -449,7 +449,7 @@ public class PgsqlUtils {
                         if (value.contains("'")) {
                             value = value.replace("'", "''");
                         }
-                        insertSqlLast = insertSqlLast + "'" + value + "'" + ",";
+                        insertSqlLast = insertSqlLast + "N'" + value + "'" + ",";
                     }
                     //大批次号
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ",fidata_batch_code) values";
