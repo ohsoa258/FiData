@@ -139,7 +139,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 tablesRowsDTO.setDbName(result.getString("dbName"));
                 tablesRowsDTO.setTableName(result.getString("tableName"));
                 tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
-                tablesRowsDTO.setDriverType(driveType.getDriverName());
+                tablesRowsDTO.setDriverType(driveType.getName());
                 tablesRowsDTOS.add(tablesRowsDTO);
             }
             return tablesRowsDTOS;
@@ -332,7 +332,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                     tablesRowsDTO.setDbName(dbNameAndNameVO.getDbName());
                                     tablesRowsDTO.setTableName(dbNameAndNameVO.getTableName());
                                     tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
-                                    tablesRowsDTO.setDriverType(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getDriverName());
+                                    tablesRowsDTO.setDriverType(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName());
                                     LocalDateTime now = LocalDateTime.now();
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                                     String nowTime = now.format(formatter);
