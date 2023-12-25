@@ -4,10 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
-import com.fisk.datamodel.dto.dimension.DimensionDTO;
-import com.fisk.datamodel.dto.dimension.DimensionDateAttributeDTO;
-import com.fisk.datamodel.dto.dimension.DimensionQueryDTO;
-import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
+import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IDimension;
 import io.swagger.annotations.Api;
@@ -108,7 +105,7 @@ public class DimensionController {
      */
     @ApiOperation("获取维度tree")
     @GetMapping("/getDimensionTree")
-    public ResultEntity<Object> getDimensionTree() {
+    public ResultEntity<DimensionTreeDTO> getDimensionTree() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionTree());
     }
 

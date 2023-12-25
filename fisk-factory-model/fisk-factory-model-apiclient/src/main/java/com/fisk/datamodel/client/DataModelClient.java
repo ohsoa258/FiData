@@ -26,6 +26,7 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
+import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
@@ -372,6 +373,6 @@ public interface DataModelClient {
      */
     @ApiOperation("获取维度tree")
     @GetMapping("/dimension/getDimensionTree")
-    ResultEntity<Object> getDimensionTree();
+    ResultEntity<DimensionTreeDTO> getDimensionTree();
 
 }
