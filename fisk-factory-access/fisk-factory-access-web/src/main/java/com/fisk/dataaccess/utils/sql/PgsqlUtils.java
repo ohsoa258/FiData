@@ -449,6 +449,10 @@ public class PgsqlUtils {
                         if (value.contains("'")) {
                             value = value.replace("'", "''");
                         }
+                        //处理科学计数法
+                        if ("0E-10".equals(value)) {
+                            value = value.replace("0E-10", "0");
+                        }
                         insertSqlLast = insertSqlLast + "N'" + value + "'" + ",";
                     }
                     //大批次号
