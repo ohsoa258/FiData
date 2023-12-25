@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.monitor;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -23,7 +24,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,6 +53,9 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
 
     @Value("${database.ods_id}")
     private Integer odsId;
+
+    @Value("${doris.catalogName}")
+    private String catalogName;
 
     @Override
     public AccessLakeMonitorVO getAccessLakeMonitor(Integer appId) {
@@ -85,7 +93,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         String selectTargetSql = getSelectTargetSql(dataSourceDTO.conType,tableDbNameAndNameVO);
         log.info("目标待查询sql:"+selectTargetSql);
         List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
-        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(dataSourceDTO, selectTargetSql);
+        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(tableDbNameAndNameVO);
         int sourceTotal = sourceTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         int targetTotal = targetTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         Map<String, TablesRowsDTO> targetTables = targetTablesRows.stream().collect(Collectors.toMap(i -> i.getDbName() + "." + i.getTableName(), i -> i));
@@ -104,10 +112,11 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 detailVO.setTargetDbName(tablesRowsDTO.getDbName());
                 detailVO.setTargetTableName(tablesRowsDTO.getTableName());
                 detailVO.setTargetRows(tablesRowsDTO.getRows());
+                detailVO.setCatchTime(tablesRowsDTO.getCatchTime());
                 detailVOS.add(detailVO);
             }
         }
-        Object catchTotal = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE.getName() + ":" + appId);
+        Object catchTotal = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_KAFKA.getName() + ":" + appId);
         if (catchTotal != null){
             accessLakeMonitorVO.setCatchTotal((int)catchTotal);
         }
@@ -148,37 +157,46 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
     }
 
-    private List<TablesRowsDTO> getTargetTablesRows(DataSourceDTO dataSourceDTO, String selectSql) {
-        Connection conn = null;
-        Statement st = null;
-        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum driveType = dataSourceDTO.conType;
-        try {
-            Class.forName(driveType.getDriverName());
-            conn = DriverManager.getConnection(dataSourceDTO.conStr, dataSourceDTO.conAccount, dataSourceDTO.conPassword);
-            st = conn.createStatement();
-            ResultSet result = st.executeQuery(selectSql);
-            List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
-            while (result.next()) {
-                TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
-                tablesRowsDTO.setDbName(result.getString("dbName"));
-                tablesRowsDTO.setTableName(result.getString("tableName"));
-                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
-                tablesRowsDTO.setDriverType(driveType.getDriverName());
+    private List<TablesRowsDTO> getTargetTablesRows(List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
+//        Connection conn = null;
+//        Statement st = null;
+//        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum driveType = dataSourceDTO.conType;
+//        try {
+//            Class.forName(driveType.getDriverName());
+//            conn = DriverManager.getConnection(dataSourceDTO.conStr, dataSourceDTO.conAccount, dataSourceDTO.conPassword);
+//            st = conn.createStatement();
+//            ResultSet result = st.executeQuery(selectSql);
+//            List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
+//            while (result.next()) {
+//                TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
+//                tablesRowsDTO.setDbName(result.getString("dbName"));
+//                tablesRowsDTO.setTableName(result.getString("tableName"));
+//                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
+//                tablesRowsDTO.setDriverType(driveType.getDriverName());
+//                tablesRowsDTOS.add(tablesRowsDTO);
+//            }
+//            return tablesRowsDTOS;
+//        } catch (Exception e) {
+//            log.error(e.getMessage());
+//            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+//        } finally {
+//            try {
+//                st.close();
+//                conn.close();
+//            } catch (SQLException e) {
+//                log.error(e.getMessage());
+//                throw new FkException(ResultEnum.ERROR);
+//            }
+//        }
+        List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
+        for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
+            Object json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
+            if (json != null){
+                TablesRowsDTO tablesRowsDTO = JSON.parseObject(json.toString(), TablesRowsDTO.class);
                 tablesRowsDTOS.add(tablesRowsDTO);
             }
-            return tablesRowsDTOS;
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-        } finally {
-            try {
-                st.close();
-                conn.close();
-            } catch (SQLException e) {
-                log.error(e.getMessage());
-                throw new FkException(ResultEnum.ERROR);
-            }
         }
+        return tablesRowsDTOS;
     }
 
 
@@ -224,7 +242,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         switch (type) {
             case DORIS:
                 selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from qs_dmp_ods." + i.getDbName() + "." + i.getTableName();
+                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from "+catalogName+"." + i.getDbName() + ".`" + i.getTableName()+"`";
                     return str;
                 }).collect(Collectors.joining(" UNION ALL "));
                 break;
@@ -260,5 +278,94 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 break;
         }
         return selectTargetSql;
+    }
+
+    @Override
+    public ResultEnum saveCatchTargetTableRows(){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String start = simpleDateFormat.format(new Date());
+        long startTime = System.currentTimeMillis();
+        log.info("开始更新每个应用入湖DORIS表数据量:开始--"+start);
+        try {
+            ResultEntity<List<CDCAppNameAndTableVO>> cdcAppNameAndTables =
+                    dataAccessClient.getCDCAppNameAndTables(0);
+            List<CDCAppNameAndTableVO> data = new ArrayList<>();
+            if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode()
+                    && CollectionUtils.isNotEmpty(cdcAppNameAndTables.getData())) {
+                data = cdcAppNameAndTables.getData();
+            } else {
+                log.error("dataAccessClient无法查询到目标库的连接信息");
+                Thread.sleep(1800000);
+                new Thread(this::saveCatchTargetTableRows).start();
+                return ResultEnum.ERROR;
+            }
+            DataSourceDTO dataSourceDTO = null;
+            ResultEntity<DataSourceDTO> dataSourceById = userClient.getFiDataDataSourceById(odsId);
+            if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode() && dataSourceById.getData() != null) {
+                dataSourceDTO = dataSourceById.getData();
+            } else {
+                log.error("dataAccessClient无法查询到目标库的连接信息");
+                Thread.sleep(1800000);
+                new Thread(this::saveCatchTargetTableRows).start();
+                return ResultEnum.ERROR;
+            }
+            if (CollectionUtils.isNotEmpty(data)){
+                for (CDCAppNameAndTableVO app : data) {
+                    List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
+                    if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
+                        for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
+                            Connection conn = null;
+                            Statement st = null;
+                            String selectSql = null;
+                            try {
+                                switch (dataSourceDTO.getConType()){
+                                    case DORIS:
+                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName()+".`"+dbNameAndNameVO.getTableName()+"`";
+                                        break;
+                                }
+                                Class.forName(dataSourceDTO.getConType().getDriverName());
+                                conn = DriverManager.getConnection(dataSourceDTO.conStr, dataSourceDTO.conAccount, dataSourceDTO.conPassword);
+                                st = conn.createStatement();
+                                ResultSet result = st.executeQuery(selectSql);
+                                while (result.next()) {
+                                    TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
+                                    tablesRowsDTO.setDbName(dbNameAndNameVO.getDbName());
+                                    tablesRowsDTO.setTableName(dbNameAndNameVO.getTableName());
+                                    tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
+                                    tablesRowsDTO.setDriverType(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getDriverName());
+                                    LocalDateTime now = LocalDateTime.now();
+                                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                                    String nowTime = now.format(formatter);
+                                    tablesRowsDTO.setCatchTime(nowTime);
+                                    redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName(), JSON.toJSONString(tablesRowsDTO));
+                                }
+                            } catch (Exception e) {
+                                log.error(e.getMessage());
+                            } finally {
+                                try {
+                                    st.close();
+                                    conn.close();
+                                } catch (SQLException e) {
+                                    log.error(e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            String end = simpleDateFormat.format(new Date());
+            // 记录结束时间
+            long endTime = System.currentTimeMillis();
+            // 计算接口耗时，单位为毫秒
+            long elapsedTime = endTime - startTime;
+            log.info("更新每个应用入湖DORIS表数据量:结束--"+end+"--接口耗时：" + elapsedTime + " 毫秒");
+            Thread.sleep(100);
+            new Thread(this::saveCatchTargetTableRows).start();
+
+        } catch (InterruptedException e) {
+            log.info("---------saveCatchTargetTableRows方法停止---------");
+            e.printStackTrace();
+        }
+        return ResultEnum.SUCCESS;
     }
 }

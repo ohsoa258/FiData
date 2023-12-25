@@ -26,4 +26,6 @@ public class AccessLakeMonitorDetailVO {
     private String targetTableName;
     @ApiModelProperty(value = "目标数据行")
     private Integer targetRows;
+    @ApiModelProperty(value = "缓存时间")
+    private String catchTime;
 }

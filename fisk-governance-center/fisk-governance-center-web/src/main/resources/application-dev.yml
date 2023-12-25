@@ -32,3 +32,5 @@ file:
 presto:
   url: a
   port: 8088
+doris:
+  catalogName: qs_dmp_ods

@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.monitor;
 
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.vo.monitor.AccessLakeMonitorVO;
 
 /**
@@ -9,4 +10,6 @@ import com.fisk.datagovernance.vo.monitor.AccessLakeMonitorVO;
  */
 public interface AccessLakeMonitorService {
     AccessLakeMonitorVO getAccessLakeMonitor(Integer appId);
+
+    ResultEnum saveCatchTargetTableRows();
 }

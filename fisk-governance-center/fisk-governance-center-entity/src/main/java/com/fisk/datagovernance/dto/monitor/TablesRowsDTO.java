@@ -2,7 +2,6 @@ package com.fisk.datagovernance.dto.monitor;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-
 /**
  * @Author: wangjian
  * @Date: 2023-12-21
@@ -18,4 +17,6 @@ public class TablesRowsDTO {
     private String tableName;
     @ApiModelProperty(value = "行数")
     private Integer rows;
+    @ApiModelProperty(value = "缓存时间")
+    private String catchTime;
 }

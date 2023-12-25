@@ -57,7 +57,9 @@ public enum RedisKeyEnum implements BaseEnum {
 
     MONTH_MONITOR_SERVER(87000,"monitor:month:server"),
 
-    MONITOR_ACCESSLAKE(-1,"monitor:accesslake"),
+    MONITOR_ACCESSLAKE_KAFKA(-1,"monitor:accesslake:kafka"),
+
+    MONITOR_ACCESSLAKE_DORIS(-1,"monitor:accesslake:DORIS"),
 
     EMAIL_SEND_STATUS(-1,"monitor:emailSendStatus"),
 

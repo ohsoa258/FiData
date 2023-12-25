@@ -104,10 +104,10 @@ public class AccessLakeMonitorSchedule {
             List<String> selectSql = mapEntity.getValue();
             Integer rowTotal = 0;
             for (String sql : selectSql) {
-                Integer rows = 1;
+                Integer rows = selectCount(sql);
                 rowTotal+=rows;
             }
-            redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE.getName()+":"+mapEntity.getKey(),rowTotal);
+            redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE_KAFKA.getName()+":"+mapEntity.getKey(),rowTotal);
         }
         String end = simpleDateFormat.format(new Date());
         // 记录结束时间
@@ -137,7 +137,7 @@ public class AccessLakeMonitorSchedule {
             return rowTotal;
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            return 0;
         } finally {
             try {
                 if (statement != null){
