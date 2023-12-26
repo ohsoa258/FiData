@@ -180,6 +180,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 selectSourceSql = "SELECT  '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,table_name as tableName, table_rows as rowCount\n" +
                         "FROM information_schema.tables\n" +
                         "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
+                        "AND table_type = 'BASE TABLE'\n" +
                         "AND table_name in(";
                 String mysqlTableName = tableDbNameAndNameVO.stream().map(i -> {
                     String str = "'"+i.getTableName()+"'";
@@ -227,6 +228,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 selectTargetSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,table_name as tableName, table_rows as rowCount\n" +
                         "FROM information_schema.tables\n" +
                         "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
+                        "AND table_type = 'BASE TABLE'\n" +
                         "AND table_name in(";
                 String mysqlTableName = tableDbNameAndNameVO.stream().map(i -> {
                     String str = "'"+i.getTableName()+"'";
