@@ -277,6 +277,14 @@
                             <groupId>com.fisk</groupId>
                             <artifactId>fisk-task-center-entity</artifactId>
                         </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-datamanage-center-apiclient</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-datamanage-center-entity</artifactId>
+                        </include>
                     </includes>
                     <!--配置为执行-->
                     <!--<classifier>exec</classifier>-->
@@ -315,6 +323,8 @@
                                 fisk-mdm-model-entity,
                                 fisk-system-center-apiclient,
                                 fisk-system-center-entity,
+                                fisk-datamanage-center-apiclient,
+                                fisk-datamanage-center-entity,
                                 fisk-task-center-apiclient,
                                 fisk-task-center-entity
                             </excludeArtifactIds>

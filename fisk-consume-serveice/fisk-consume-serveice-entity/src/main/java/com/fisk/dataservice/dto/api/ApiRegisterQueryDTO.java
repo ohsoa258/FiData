@@ -25,6 +25,12 @@ public class ApiRegisterQueryDTO {
     public Integer createApiType;
 
     /**
+     * 参数类型 1:api信息 2:参数信息
+     */
+    @ApiModelProperty(value = "参数类型 1:api信息 2:参数信息")
+    public Integer apiParamType;
+
+    /**
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")
