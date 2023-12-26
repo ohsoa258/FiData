@@ -217,7 +217,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             case SQLSERVER:
                 selectSourceSql = "SELECT '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,\n" +
                         "    t.name AS tableName,\n" +
-                        "    SUM(p.rows) AS rowCount\n" +
+                        "    SUM(p.rows) AS 'rowCount'\n" +
                         "FROM \n" +
                         "    sys.tables t\n" +
                         "INNER JOIN \n" +
@@ -264,7 +264,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             case SQLSERVER:
                 selectTargetSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,\n" +
                         "    t.name AS tableName,\n" +
-                        "    SUM(p.rows) AS rowCount\n" +
+                        "    SUM(p.rows) AS 'rowCount'\n" +
                         "FROM \n" +
                         "    sys.tables t\n" +
                         "INNER JOIN \n" +
