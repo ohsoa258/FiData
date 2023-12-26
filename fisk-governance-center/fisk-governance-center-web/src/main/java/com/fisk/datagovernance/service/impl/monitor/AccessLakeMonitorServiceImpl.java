@@ -113,8 +113,8 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 detailVO.setTargetTableName(tablesRowsDTO.getTableName());
                 detailVO.setTargetRows(tablesRowsDTO.getRows());
                 detailVO.setCatchTime(tablesRowsDTO.getCatchTime());
-                detailVOS.add(detailVO);
             }
+            detailVOS.add(detailVO);
         }
         Object catchTotal = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_KAFKA.getName() + ":" + appId);
         if (catchTotal != null){
@@ -198,9 +198,9 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
                     String str = i.getTableName();
                     if (str.startsWith("dbo_")) {
-                        str = i.getTableName().substring(4);
+                        str = str.substring(4);
                     }
-                    str = "'"+i.getTableName()+"'";
+                    str = "'"+str+"'";
                     return str;
                 }).collect(Collectors.joining(","));
                 selectSourceSql = selectSourceSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
@@ -245,9 +245,9 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
                     String str = i.getTableName();
                     if (str.startsWith("dbo_")) {
-                        str = i.getTableName().substring(4);
+                        str = str.substring(4);
                     }
-                    str = "'"+i.getTableName()+"'";
+                    str = "'"+str+"'";
                     return str;
                 }).collect(Collectors.joining(","));
                 selectTargetSql = selectTargetSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
