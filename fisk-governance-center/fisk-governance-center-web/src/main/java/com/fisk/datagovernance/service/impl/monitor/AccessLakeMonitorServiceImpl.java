@@ -103,11 +103,11 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         for (TablesRowsDTO sourceTablesRow : sourceTablesRows) {
             AccessLakeMonitorDetailVO detailVO = new AccessLakeMonitorDetailVO();
             TablesRowsDTO tablesRowsDTO = targetTables.get(sourceTablesRow.getDbName() + "." + sourceTablesRow.getTableName());
+            detailVO.setSourceDriverName(sourceTablesRow.getDriverType());
+            detailVO.setSourceDbName(sourceTablesRow.getDbName());
+            detailVO.setSourceTableName(sourceTablesRow.getTableName());
+            detailVO.setSourceRows(sourceTablesRow.getRows());
             if (tablesRowsDTO != null) {
-                detailVO.setSourceDriverName(sourceTablesRow.getDriverType());
-                detailVO.setSourceDbName(sourceTablesRow.getDbName());
-                detailVO.setSourceTableName(sourceTablesRow.getTableName());
-                detailVO.setSourceRows(sourceTablesRow.getRows());
                 detailVO.setTargetDriverName(tablesRowsDTO.getDriverType());
                 detailVO.setTargetDbName(tablesRowsDTO.getDbName());
                 detailVO.setTargetTableName(tablesRowsDTO.getTableName());
@@ -158,36 +158,6 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
     }
 
     private List<TablesRowsDTO> getTargetTablesRows(List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
-//        Connection conn = null;
-//        Statement st = null;
-//        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum driveType = dataSourceDTO.conType;
-//        try {
-//            Class.forName(driveType.getDriverName());
-//            conn = DriverManager.getConnection(dataSourceDTO.conStr, dataSourceDTO.conAccount, dataSourceDTO.conPassword);
-//            st = conn.createStatement();
-//            ResultSet result = st.executeQuery(selectSql);
-//            List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
-//            while (result.next()) {
-//                TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
-//                tablesRowsDTO.setDbName(result.getString("dbName"));
-//                tablesRowsDTO.setTableName(result.getString("tableName"));
-//                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
-//                tablesRowsDTO.setDriverType(driveType.getDriverName());
-//                tablesRowsDTOS.add(tablesRowsDTO);
-//            }
-//            return tablesRowsDTOS;
-//        } catch (Exception e) {
-//            log.error(e.getMessage());
-//            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
-//        } finally {
-//            try {
-//                st.close();
-//                conn.close();
-//            } catch (SQLException e) {
-//                log.error(e.getMessage());
-//                throw new FkException(ResultEnum.ERROR);
-//            }
-//        }
         List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
         for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
             Object json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
@@ -226,8 +196,8 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                         "    t.is_ms_shipped = 0\n" +
                         "\t\tAND t.name in (";
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = null;
-                    if (str.startsWith(i.getTableName())) {
+                    String str = i.getTableName();
+                    if (str.startsWith("dbo_")) {
                         str = i.getTableName().substring(4);
                     }
                     str = "'"+i.getTableName()+"'";
@@ -273,8 +243,8 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                         "    t.is_ms_shipped = 0\n" +
                         "\t\tAND t.name in (";
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = null;
-                    if (str.startsWith(i.getTableName())) {
+                    String str = i.getTableName();
+                    if (str.startsWith("dbo_")) {
                         str = i.getTableName().substring(4);
                     }
                     str = "'"+i.getTableName()+"'";
