@@ -219,14 +219,18 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                         "    t.name AS tableName,\n" +
                         "    SUM(p.rows) AS rowCount\n" +
                         "FROM \n" +
-                        "    dmp_dw.sys.tables t\n" +
+                        "    sys.tables t\n" +
                         "INNER JOIN \n" +
-                        "    dmp_dw.sys.partitions p ON t.object_id = p.object_id\n" +
+                        "    sys.partitions p ON t.object_id = p.object_id\n" +
                         "WHERE \n" +
                         "    t.is_ms_shipped = 0\n" +
                         "\t\tAND t.name in (";
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "'"+i.getTableName()+"'";
+                    String str = null;
+                    if (str.startsWith(i.getTableName())) {
+                        str = i.getTableName().substring(4);
+                    }
+                    str = "'"+i.getTableName()+"'";
                     return str;
                 }).collect(Collectors.joining(","));
                 selectSourceSql = selectSourceSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
@@ -262,14 +266,18 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                         "    t.name AS tableName,\n" +
                         "    SUM(p.rows) AS rowCount\n" +
                         "FROM \n" +
-                        "    dmp_dw.sys.tables t\n" +
+                        "    sys.tables t\n" +
                         "INNER JOIN \n" +
-                        "    dmp_dw.sys.partitions p ON t.object_id = p.object_id\n" +
+                        "    sys.partitions p ON t.object_id = p.object_id\n" +
                         "WHERE \n" +
                         "    t.is_ms_shipped = 0\n" +
                         "\t\tAND t.name in (";
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "'"+i.getTableName()+"'";
+                    String str = null;
+                    if (str.startsWith(i.getTableName())) {
+                        str = i.getTableName().substring(4);
+                    }
+                    str = "'"+i.getTableName()+"'";
                     return str;
                 }).collect(Collectors.joining(","));
                 selectTargetSql = selectTargetSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
