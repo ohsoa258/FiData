@@ -1,10 +1,11 @@
 package com.fisk.dataservice.dto.api;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 
 /**
  * @author dick
@@ -119,4 +120,17 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "是否是重点接口 0否，1是")
     private int importantInterface;
+
+
+    /**
+     * 失效时间
+     */
+    @ApiModelProperty(value = "失效时间")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime expirationTime;
+
+    /**
+     * 有效期类型 1:永久有效 2:有效期至（yyyy-MM-dd HH:mm:ss）
+     */
+    private Integer expirationType;
 }

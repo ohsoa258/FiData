@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * @author dick
  * @version v1.0
@@ -93,4 +95,14 @@ public class ApiConfigPO extends BasePO
      * 是否是重点接口 0否，1是
      */
     private Integer importantInterface;
+
+    /**
+     * 失效时间
+     */
+    private LocalDateTime expirationTime;
+
+    /**
+     * 有效期类型 1:永久有效 2:有效期至（yyyy-MM-dd HH:mm:ss）
+     */
+    private Integer expirationType;
 }

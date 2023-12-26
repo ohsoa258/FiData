@@ -1,7 +1,9 @@
 package com.fisk.dataservice.vo.api;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
@@ -138,4 +140,18 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "是否是重点接口 0否，1是")
     private int importantInterface;
+
+    /**
+     * 失效时间
+     */
+    @ApiModelProperty(value = "失效时间")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime expirationTime;
+
+    /**
+     * 有效期类型 1:永久有效 2:有效期至（yyyy-MM-dd HH:mm:ss）
+     */
+    @ApiModelProperty(value = "有效期类型")
+    private Integer expirationType;
 }

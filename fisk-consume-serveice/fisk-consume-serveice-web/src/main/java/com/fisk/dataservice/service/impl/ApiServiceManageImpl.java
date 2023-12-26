@@ -59,6 +59,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -177,6 +178,14 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             } else {
                 logPO.setApiId(Math.toIntExact(apiInfo.getId()));
                 logPO.setCreateUser(appInfo.getAppAccount());
+            }
+            //验证api是否在有效期内
+            if (apiInfo.getExpirationType() == 2){
+                LocalDateTime currentDateTime = LocalDateTime.now();
+                if (currentDateTime.isAfter(apiInfo.getExpirationTime())){
+                    resultEnum = ResultEnum.DS_APISERVICE__EXPIRATION;
+                    return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE__EXPIRATION, responseVO);
+                }
             }
 
             // 第四步：验证API配置完整
@@ -430,6 +439,15 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 doSetResponse(resultEnum, response);
                 return;
             }
+            //验证api是否在有效期内
+            if (apiConfigPO.getExpirationType() == 2){
+                LocalDateTime currentDateTime = LocalDateTime.now();
+                if (currentDateTime.isAfter(apiConfigPO.getExpirationTime())){
+                    resultEnum = ResultEnum.DS_APISERVICE__EXPIRATION;
+                    doSetResponse(resultEnum, response);
+                    return;
+                }
+            }
             logPO.setApiId(Math.toIntExact(apiConfigPO.getId()));
             // 验证是否已订阅该api
             List<AppWhiteListVO> appWhiteList = appApiMapper.getAppWhiteListByServiceId(apiConfigPO.getId());
@@ -453,6 +471,32 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 doSetResponse(resultEnum, response);
                 return;
             }
+
+            UserInfo userInfo = userHelper.getLoginUserInfo();
+            if (userInfo == null) {
+                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+
+            // 验证是否已进行授权认证
+            String appAccount = userInfo.getUsername();
+            if (appAccount == null || appAccount.isEmpty()) {
+                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                doSetResponse(resultEnum, response);
+                return;
+            }
+
+            // 验证当前应用（下游系统）是否有效
+            AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
+            if (appInfo == null) {
+                resultEnum = ResultEnum.DS_APISERVICE_APP_EXISTS;
+                doSetResponse(resultEnum, response);
+                return;
+            } else {
+                logPO.setAppId(Math.toIntExact(appInfo.getId()));
+            }
+            //验证api是否
             List<Integer> appIds = appWhiteList.stream().map(AppWhiteListVO::getAppId).collect(Collectors.toList());
             logPO.setAppIds(Joiner.on(",").join(appIds));
             logPO.setAppId(appIds.get(0));
