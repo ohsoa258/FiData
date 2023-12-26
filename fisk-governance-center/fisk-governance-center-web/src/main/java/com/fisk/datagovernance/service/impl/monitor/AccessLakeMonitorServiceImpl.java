@@ -138,7 +138,10 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
                 tablesRowsDTO.setDbName(result.getString("dbName"));
                 tablesRowsDTO.setTableName(result.getString("tableName"));
-                tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
+                String rowCount = result.getString("rowCount");
+                if (rowCount != null){
+                    tablesRowsDTO.setRows(Integer.valueOf(rowCount));
+                }
                 tablesRowsDTO.setDriverType(driveType.getName());
                 tablesRowsDTOS.add(tablesRowsDTO);
             }
