@@ -7,6 +7,9 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.datagovernance.vo.datasource.ExportResultVO;
+
+import javax.servlet.http.HttpServletResponse;
 
 
 /**
@@ -76,4 +79,10 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @return 查询结果
      */
     ResultEnum reloadDataSource(int id);
+
+
+    /**
+     * 导出查询结果
+     */
+    void exportData(ExportResultVO dto, HttpServletResponse response);
 }

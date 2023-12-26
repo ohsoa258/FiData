@@ -10,6 +10,7 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
@@ -28,6 +29,7 @@ import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.*;
+import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
@@ -35,11 +37,16 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.OutputStream;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -387,6 +394,55 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         return dataSourceList;
     }
+
+    @Override
+    public void exportData(ExportResultVO vo, HttpServletResponse response) {
+        exportExcel(vo, response);
+    }
+
+    /**
+     * 导出Excel
+     *
+     * @param vo
+     * @param response
+     * @return
+     */
+    public ResultEnum exportExcel(ExportResultVO vo, HttpServletResponse response) {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("sheet1");
+        XSSFRow row1 = sheet.createRow(0);
+        if (CollectionUtils.isEmpty(vo.getHeaderList())) {
+            ResultEntityBuild.build(ResultEnum.CODE_NOT_EXIST);
+        }
+        //添加表头
+        for (int i = 0; i < vo.getHeaderList().size(); i++) {
+            row1.createCell(i).setCellValue(vo.getHeaderList().get(i));
+        }
+        if (!CollectionUtils.isEmpty(vo.getDataArray())) {
+            for (int i = 0; i < vo.getDataArray().size(); i++) {
+                XSSFRow row = sheet.createRow(i + 1);
+                Map<String, Object> jsonObject = vo.getDataArray().get(i);
+                for (int j = 0; j < vo.getHeaderList().size(); j++) {
+                    row.createCell(j).setCellValue(jsonObject.get(vo.getHeaderList().get(j)) == null ? "" : jsonObject.get(vo.getHeaderList().get(j)).toString());
+                }
+            }
+        }
+        //将文件存到指定位置
+        try {
+            //输出Excel文件
+            OutputStream output = response.getOutputStream();
+            response.reset();
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.addHeader("Content-Disposition", "attachment;filename=" + vo.getFileName() + ".xlsx");
+            workbook.write(output);
+            output.close();
+        } catch (Exception e) {
+            log.error("export excel error:", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
 
     /**
      * @return int

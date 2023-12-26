@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
@@ -16,12 +17,14 @@ import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -117,6 +120,13 @@ public class DataSourceController {
     @ApiOperation("数据运维，表数据同步")
     public ResultEntity<Object> tableDataSync(@Validated @RequestBody TableDataSyncDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.tableDataSync(dto));
+    }
+
+    @PostMapping("/exportData")
+    @ApiOperation("导出查询结果")
+    @ControllerAOPConfig(printParams = false)
+    public void exportData(@RequestBody ExportResultVO vo, HttpServletResponse response) {
+        service.exportData(vo,response);
     }
 
 }
