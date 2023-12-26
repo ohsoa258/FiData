@@ -145,7 +145,10 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
     int insertAppRegistrationPo(@Param("appRegistrationPO") AppRegistrationPO appRegistrationPo);
 
     /**
-     *
+     *获取cdc类型所有应用及表名
      */
     List<CDCAppNameAndTableVO> getCDCAppNameAndTables(@Param("appId") Integer appId);
+
+    @Select("SELECT a.id, a.app_name FROM tb_app_registration a WHERE a.del_flag = 1 AND a.app_type = 2")
+    List<AppRegistrationPO> getAllCDCAppName();
 }

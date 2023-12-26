@@ -25,6 +25,7 @@ import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
+import com.fisk.dataaccess.vo.table.CDCAppNameVO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -397,4 +398,9 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 获取cdc类型所有应用及表名
      */
     List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId);
+    /**
+     * 获取cdc类型所有应用
+     */
+    List<CDCAppNameVO> getAllCDCAppName();
+
 }

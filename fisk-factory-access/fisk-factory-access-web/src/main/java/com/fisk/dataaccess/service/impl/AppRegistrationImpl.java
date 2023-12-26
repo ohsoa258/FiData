@@ -74,6 +74,7 @@ import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
+import com.fisk.dataaccess.vo.table.CDCAppNameVO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
@@ -2547,6 +2548,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId) {
         return baseMapper.getCDCAppNameAndTables(appId);
+    }
+
+    @Override
+    public List<CDCAppNameVO> getAllCDCAppName() {
+        List<AppRegistrationPO> allCDCAppName = baseMapper.getAllCDCAppName();
+        List<CDCAppNameVO> cdcAppNameVOS = allCDCAppName.stream().map(i -> {
+            CDCAppNameVO cdcAppNameVO = new CDCAppNameVO();
+            cdcAppNameVO.setId((int) i.getId());
+            cdcAppNameVO.setAppName(i.getAppName());
+            return cdcAppNameVO;
+        }).collect(Collectors.toList());
+        return cdcAppNameVOS;
     }
 
     /**

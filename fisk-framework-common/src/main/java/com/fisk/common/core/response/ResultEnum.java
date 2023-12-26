@@ -344,6 +344,7 @@ public enum ResultEnum {
     DS_PROXY_FORWARDING_ERROR(10043, "代理转发错误"),
     DS_THE_MESSAGE_NOTIFICATION_METHOD_DOES_NOT_EXIST(10044, "消息通知方式配置不存在"),
     LOAD_FIDATA_DATA_SERVICE_DATA_ERROR(10045, "加载DataServiceData报错"),
+    DS_APISERVICE__EXPIRATION(10046,"api已过期"),
 
     /**
      * 数据质量

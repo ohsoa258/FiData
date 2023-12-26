@@ -26,14 +26,25 @@
         left join tb_datasource_config as source
         ON api.datasource_id = source.id
         where api.del_flag=1
-        <if test="query.keyword !=null and query.keyword.length()>0 ">
-            and (api_name like concat('%', #{query.keyword}, '%')
-            or api_desc like concat('%', #{query.keyword}, '%')
-            or api_code like concat('%', #{query.keyword}, '%'))
-        </if>
         <if test="query.createApiType !=null and query.createApiType!=0 ">
             and api.create_api_type = #{query.createApiType}
         </if>
+        <choose>
+            <when test="query.apiParamType == 1">
+                <if test="query.keyword !=null and query.keyword.length()>0 ">
+                    and (api_name like concat('%', #{query.keyword}, '%')
+                    or api_desc like concat('%', #{query.keyword}, '%')
+                    or api_code like concat('%', #{query.keyword}, '%'))
+                </if>
+            </when>
+            <when test="query.apiParamType == 2">
+                and EXISTS(select field.* FROM tb_field_config field WHERE field.api_id = api.id AND field.del_flag = 1
+                <if test="query.keyword !=null and query.keyword.length()>0 ">
+                    and (field.field_name like concat('%', #{query.keyword}, '%')
+                    or field.field_desc like concat('%', #{query.keyword}, '%'))
+                </if>)
+            </when>
+        </choose>
     </select>
     <select id="getList" resultType="com.fisk.dataservice.entity.ApiConfigPO">
         SELECT
