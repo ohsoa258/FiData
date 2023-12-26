@@ -10,6 +10,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
@@ -456,6 +457,7 @@ public class AppRegistrationController {
     public ResultEntity<Object> syncOneTblForHudi(@RequestBody SyncOneTblForHudiDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.syncOneTblForHudi(dto));
     }
+
     /**
      * 获取cdc类型所有应用及表名
      *
@@ -466,6 +468,7 @@ public class AppRegistrationController {
     public ResultEntity<List<CDCAppNameAndTableVO>> getCDCAppNameAndTables(@RequestParam("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCDCAppNameAndTables(appId));
     }
+
     /**
      * 获取cdc类型所有应用及表名
      *
@@ -476,4 +479,27 @@ public class AppRegistrationController {
     public ResultEntity<List<CDCAppNameVO>> getAllCDCAppName() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllCDCAppName());
     }
+
+    /**
+     * 获取数据接入所有应用和应用下的所有物理表
+     *
+     * @return
+     */
+    @ApiOperation("获取数据接入所有应用和应用下的所有物理表")
+    @GetMapping("/getAllAppAndTables")
+    public ResultEntity<List<AccessAndModelAppDTO>> getAllAppAndTables() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAppAndTables());
+    }
+
+    /**
+     * 通过物理表id获取应用详情
+     *
+     * @return
+     */
+    @ApiOperation("通过物理表id获取应用详情")
+    @GetMapping("/getAppByTableAccessId")
+    public ResultEntity<AppRegistrationDTO> getAppByTableAccessId(@RequestParam("tblId") Integer tblId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppByTableAccessId(tblId));
+    }
+
 }

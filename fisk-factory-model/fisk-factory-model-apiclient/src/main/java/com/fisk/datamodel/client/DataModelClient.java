@@ -11,6 +11,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
@@ -374,5 +375,14 @@ public interface DataModelClient {
     @ApiOperation("获取维度tree")
     @GetMapping("/dimension/getDimensionTree")
     ResultEntity<DimensionTreeDTO> getDimensionTree();
+
+    /**
+     * 获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）
+     *
+     * @return
+     */
+    @ApiOperation("获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）")
+    @GetMapping("/business/getAllAreaAndTables")
+    ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTables();
 
 }

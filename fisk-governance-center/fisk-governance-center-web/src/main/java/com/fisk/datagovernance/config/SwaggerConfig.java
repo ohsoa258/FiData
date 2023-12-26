@@ -62,6 +62,7 @@ public class SwaggerConfig {
     public static final String SYSTEM_MONITOR = "系统监控";
 
     public static final String ACCESS_LAKE_MONITOR = "数据湖入湖监控";
+    public static final String NIFI_LOGS = "nifi同步日志";
 
     @Bean
     public Docket createRestApi() {
@@ -88,6 +89,7 @@ public class SwaggerConfig {
                 .tags(new Tag(Row_User_Assignment, "行用户分配"))
                 .tags(new Tag(SYSTEM_MONITOR, "系统监控"))
                 .tags(new Tag(ACCESS_LAKE_MONITOR,"数据湖入湖监控"))
+                .tags(new Tag(NIFI_LOGS,"nifi同步日志"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

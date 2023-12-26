@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -216,4 +217,11 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     DimAndFactCountVO getTotalDimAndFactCount();
+
+    /**
+     * 获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）
+     *
+     * @return
+     */
+    List<AccessAndModelAppDTO> getAllAreaAndTables();
 }

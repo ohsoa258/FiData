@@ -31,6 +31,10 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableTypeEnum;
+import com.fisk.common.service.accessAndModel.ServerTypeEnum;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -2543,6 +2547,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 获取cdc类型所有应用及表名
+     *
      * @return
      */
     @Override
@@ -2560,6 +2565,64 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return cdcAppNameVO;
         }).collect(Collectors.toList());
         return cdcAppNameVOS;
+    }
+
+    /**
+     * 获取数据接入所有应用和应用下的所有物理表
+     *
+     * @return
+     */
+    @Override
+    public List<AccessAndModelAppDTO> getAllAppAndTables() {
+        //先查询所有非入仓配置的应用
+        QueryWrapper<AppRegistrationPO> w = new QueryWrapper<>();
+        w.select("id", "app_name")
+                .lambda()
+                .isNull(AppRegistrationPO::getIfSyncAllTables);
+        List<AppRegistrationPO> appPOS = this.list(w);
+        List<AccessAndModelAppDTO> appList = new ArrayList<>();
+
+        for (AppRegistrationPO appRegistrationPO : appPOS) {
+            AccessAndModelAppDTO accessAndModelAppDTO = new AccessAndModelAppDTO();
+            accessAndModelAppDTO.setAppId((int) appRegistrationPO.getId());
+            accessAndModelAppDTO.setAppName(appRegistrationPO.getAppName());
+            accessAndModelAppDTO.setServerType(ServerTypeEnum.ACCESS.getValue());
+
+            List<AccessAndModelTableDTO> accessAndModelTableDTOS = new ArrayList<>();
+
+            //获取获取应用下的所有物理表
+            LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.select(TableAccessPO::getTableName, TableAccessPO::getId)
+                    .eq(TableAccessPO::getAppId, appRegistrationPO.getId());
+            List<TableAccessPO> tableAccessPOS = tableAccessImpl.list(wrapper1);
+            for (TableAccessPO dimensionPO : tableAccessPOS) {
+                AccessAndModelTableDTO dimTable = new AccessAndModelTableDTO();
+                dimTable.setTblId((int) dimensionPO.getId());
+                dimTable.setTableName(dimensionPO.getTableName());
+                dimTable.setTableType(AccessAndModelTableTypeEnum.PHYSICS.getValue());
+                accessAndModelTableDTOS.add(dimTable);
+            }
+
+            accessAndModelAppDTO.setTables(accessAndModelTableDTOS);
+            appList.add(accessAndModelAppDTO);
+        }
+
+        return appList;
+    }
+
+    /**
+     * 通过物理表id获取应用详情
+     *
+     * @param tblId
+     * @return
+     */
+    @Override
+    public AppRegistrationDTO getAppByTableAccessId(Integer tblId) {
+        TableAccessDTO tableAccess = tableAccessImpl.getTableAccess(tblId);
+        LambdaQueryWrapper<AppRegistrationPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AppRegistrationPO::getId,tableAccess.getAppId());
+        AppRegistrationPO one = this.getOne(wrapper);
+        return AppRegistrationMap.INSTANCES.poToDto(one);
     }
 
     /**

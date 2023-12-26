@@ -23,6 +23,10 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableTypeEnum;
+import com.fisk.common.service.accessAndModel.ServerTypeEnum;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
@@ -48,6 +52,7 @@ import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.codepreview.CodePreviewDTO;
+import com.fisk.datamodel.dto.dimension.BusinessAreaDimDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -517,7 +522,7 @@ public class BusinessAreaImpl
         }
         //获取数仓类型
         ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dwSource);
-        if (result.getCode()!=ResultEnum.SUCCESS.getCode()){
+        if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
             log.error("获取数仓在系统模块的配置失败！");
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -1418,6 +1423,63 @@ public class BusinessAreaImpl
         dimAndFactCountVO.setFactCount(factTotalCount);
         dimAndFactCountVO.setPublicDimCount(publicDimTotalCount);
         return dimAndFactCountVO;
+    }
+
+    /**
+     * 获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）
+     *
+     * @return
+     */
+    @Override
+    public List<AccessAndModelAppDTO> getAllAreaAndTables() {
+
+        //先查询所有业务域
+        QueryWrapper<BusinessAreaPO> w = new QueryWrapper<>();
+        w.select("id", "business_name");
+        List<BusinessAreaPO> businessAreaPOS = this.list(w);
+        List<AccessAndModelAppDTO> areaList = new ArrayList<>();
+
+        for (BusinessAreaPO businessAreaPO : businessAreaPOS) {
+            AccessAndModelAppDTO accessAndModelAppDTO = new AccessAndModelAppDTO();
+            accessAndModelAppDTO.setAppId((int) businessAreaPO.getId());
+            accessAndModelAppDTO.setAppName(businessAreaPO.getBusinessName());
+            accessAndModelAppDTO.setServerType(ServerTypeEnum.MODEL.getValue());
+
+            List<AccessAndModelTableDTO> accessAndModelTableDTOS = new ArrayList<>();
+
+            //获取获取业务域下的所有维度表
+            LambdaQueryWrapper<DimensionPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.select(DimensionPO::getDimensionTabName, DimensionPO::getId)
+                    .eq(DimensionPO::getBusinessId, businessAreaPO.getId());
+            List<DimensionPO> dimensionPOS = dimensionImpl.list(wrapper1);
+            for (DimensionPO dimensionPO : dimensionPOS) {
+                AccessAndModelTableDTO dimTable = new AccessAndModelTableDTO();
+                dimTable.setTblId((int) dimensionPO.getId());
+                dimTable.setTableName(dimensionPO.getDimensionTabName());
+                dimTable.setTableType(AccessAndModelTableTypeEnum.DIMENSION.getValue());
+                accessAndModelTableDTOS.add(dimTable);
+            }
+
+            //获取业务域下的所有事实表
+            LambdaQueryWrapper<FactPO> wrapper2 = new LambdaQueryWrapper<>();
+            wrapper2.select(FactPO::getFactTabName, FactPO::getId)
+                    .eq(FactPO::getBusinessId, businessAreaPO.getId())
+                    //数据表处理方式是批处理或流处理  0批处理 1流处理
+                    .eq(FactPO::getBatchOrStream, 0);
+            List<FactPO> factPOS = factImpl.list(wrapper2);
+            for (FactPO factPO : factPOS) {
+                AccessAndModelTableDTO factTable = new AccessAndModelTableDTO();
+                factTable.setTblId((int) factPO.getId());
+                factTable.setTableName(factPO.getFactTabName());
+                factTable.setTableType(AccessAndModelTableTypeEnum.FACT.getValue());
+                accessAndModelTableDTOS.add(factTable);
+            }
+
+            accessAndModelAppDTO.setTables(accessAndModelTableDTOS);
+            areaList.add(accessAndModelAppDTO);
+        }
+
+        return areaList;
     }
 
     /**

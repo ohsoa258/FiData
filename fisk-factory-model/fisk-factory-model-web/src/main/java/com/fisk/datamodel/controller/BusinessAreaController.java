@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -179,6 +180,17 @@ public class BusinessAreaController {
     @ApiOperation(value = "数仓建模首页--获取总共的维度表和事实表--不包含公共域维度")
     public ResultEntity<DimAndFactCountVO> getTotalDimAndFactCount() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTotalDimAndFactCount());
+    }
+
+    /**
+     * 获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）
+     *
+     * @return
+     */
+    @ApiOperation("获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）")
+    @GetMapping("/getAllAreaAndTables")
+    public ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTables() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndTables());
     }
 
 }

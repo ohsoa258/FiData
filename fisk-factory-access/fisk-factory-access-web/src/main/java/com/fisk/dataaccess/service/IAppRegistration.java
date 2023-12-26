@@ -10,6 +10,7 @@ import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
@@ -398,9 +399,25 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 获取cdc类型所有应用及表名
      */
     List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId);
+
     /**
      * 获取cdc类型所有应用
      */
     List<CDCAppNameVO> getAllCDCAppName();
 
+
+    /**
+     * 获取数据接入所有应用和应用下的所有物理表
+     *
+     * @return
+     */
+    List<AccessAndModelAppDTO> getAllAppAndTables();
+
+    /**
+     * 通过物理表id获取应用详情
+     *
+     * @param tblId
+     * @return
+     */
+    AppRegistrationDTO getAppByTableAccessId(Integer tblId);
 }

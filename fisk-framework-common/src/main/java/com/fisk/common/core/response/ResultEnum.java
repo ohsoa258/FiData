@@ -232,6 +232,7 @@ public enum ResultEnum {
     REFRESH_REDIS_DORIS_CATALOG_ERROR(5103, "刷新dorsi外部目录的redis失败"),
     DATAACCESS_GETCATALOG_ERROR(5103, "获取数据库catalog名称失败"),
     API_NIFI_SYNC_ERROR(5104, "API-NIFI同步报错"),
+    GET_ACCESS_TREE_FAILURE(5105, "获取数据接入应用-表树结构失败"),
 
     /**
      * 后台任务模块
@@ -279,6 +280,9 @@ public enum ResultEnum {
     DATA_MODEL_FIELD_NOT_EXISTS(8016, "数仓建模-发布表修改表结构失败，tb_task_pg_table_structure表无字段！"),
     DATA_MODEL_PUBLISH_ERROR(8017, "数仓建模-发布表失败，请检查：若修改了字段，请检查字段在目标库中字段是否可以修改！"),
     DATA_MODEL_GET_NIFI_LOG_ERROR(8018, "数仓建模获取nifi同步日志失败"),
+    GET_MODEL_TREE_FAILURE(8019, "获取数仓建模业务域-表树结构失败"),
+    GET_NIFI_LOG_ERROR(8020, "获取nifi同步日志失败"),
+    GET_ACCESS_APP_ERROR(8021, "获取nifi同步日志-获取数据接入应用失败"),
 
     /**
      * 数据工厂

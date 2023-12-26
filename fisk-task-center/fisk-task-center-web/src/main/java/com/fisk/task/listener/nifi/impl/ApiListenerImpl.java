@@ -2,10 +2,13 @@ package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.accessAndModel.LogPageQueryDTO;
+import com.fisk.common.service.accessAndModel.NifiLogResultDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
@@ -20,13 +23,18 @@ import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.utils.StackTraceHelper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -164,6 +172,177 @@ public class ApiListenerImpl implements IApiListener {
         }
 
         return dwLogResultDTO;
+    }
+
+    /**
+     * 同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public Page<NifiLogResultDTO> getDwAndAccessTblNifiLog(LogPageQueryDTO dto) {
+        List<NifiLogResultDTO> nifiLogResultDTOS = new ArrayList<>();
+        //当前页
+        Integer current = dto.getCurrent();
+        //分页size
+        Integer size = dto.getSize();
+
+        Page<TBETLlogPO> page = new Page<>(current, size);
+        try {
+            LambdaQueryWrapper<TBETLlogPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TBETLlogPO::getTablename, dto.getTableName())
+                    .orderByDesc(TBETLlogPO::getCreatetime);
+            page = iEtlLog.page(page, wrapper);
+            for (TBETLlogPO etlLogPO : page.getRecords()) {
+                NifiLogResultDTO nifiLogResultDTO = new NifiLogResultDTO();
+
+                String topicName = etlLogPO.getTopicName();
+                //如果topic和结束时间都不为空，则去tb_pipeline_table_log表判断该此同步有没有报错
+                if (StringUtils.isNotEmpty(topicName) && etlLogPO.getEnddate() != null) {
+                    String[] split = topicName.split("\\.");
+                    int dispatchType;
+                    //长度为6说明不是管道调度
+                    if (split.length == 6) {
+                        //手动调度 0   管道调度 1
+                        dispatchType = 0;
+                    } else {
+                        //手动调度 0   管道调度 1
+                        dispatchType = 1;
+                    }
+                    LocalDateTime start = etlLogPO.getStartdate();
+                    LocalDateTime end = start.plusHours(3);
+                    LambdaQueryWrapper<PipelineTableLogPO> w = new LambdaQueryWrapper<>();
+                    w.eq(PipelineTableLogPO::getTableId, dto.getTblId())
+                            .eq(PipelineTableLogPO::getTableType, dto.getTableType())
+                            .eq(PipelineTableLogPO::getDispatchType, dispatchType)
+                            .between(PipelineTableLogPO::getCreateTime, start, end)
+                            .orderByAsc(PipelineTableLogPO::getCreateTime)
+                            .last("limit 1");
+                    PipelineTableLogPO pipelineTableLogPO = iPipelineTableLog.getOne(w);
+                    //如果没有报错，则认为此次同步已完成并且成功（nifi未报错）
+                    if (pipelineTableLogPO == null) {
+                        nifiLogResultDTO.setTableName(dto.getTableName());
+                        nifiLogResultDTO.setTriggerTime(etlLogPO.getStartdate());
+                        nifiLogResultDTO.setTriggerType(dispatchType);
+                        //已完成
+                        nifiLogResultDTO.setState(1);
+                        nifiLogResultDTO.setResult(etlLogPO.getStatus());
+                        nifiLogResultDTO.setStartTime(etlLogPO.getStartdate());
+                        nifiLogResultDTO.setEndTime(etlLogPO.getEnddate());
+
+                        //计算持续时间
+                        Duration between = Duration.between(etlLogPO.getStartdate(), etlLogPO.getEnddate());
+                        String pt = between.toString().replaceFirst("PT", "");
+                        nifiLogResultDTO.setDuration(pt);
+                        nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
+                        nifiLogResultDTO.setErrorMsg("同步成功!同步数据量：" + etlLogPO.getDatarows());
+                        //如果报错，则认为此次同步已完成并且失败（nifi有报错）
+                    } else {
+                        nifiLogResultDTO.setTableName(dto.getTableName());
+                        nifiLogResultDTO.setTriggerTime(etlLogPO.getStartdate());
+                        nifiLogResultDTO.setTriggerType(dispatchType);
+                        //已完成
+                        nifiLogResultDTO.setState(1);
+                        //失败
+                        nifiLogResultDTO.setResult(2);
+                        nifiLogResultDTO.setStartTime(etlLogPO.getStartdate());
+                        nifiLogResultDTO.setEndTime(etlLogPO.getEnddate());
+
+                        //计算持续时间
+                        Duration between = Duration.between(etlLogPO.getStartdate(), etlLogPO.getEnddate());
+                        String pt = between.toString().replaceFirst("PT", "");
+                        nifiLogResultDTO.setDuration(pt);
+                        nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
+                        nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + pipelineTableLogPO.getComment());
+                    }
+
+                    nifiLogResultDTOS.add(nifiLogResultDTO);
+                    //如果topic和结束时间都为空(或有一者为空)，则去tb_pipeline_table_log表判断该此同步现在有没有报错，如果没有则认为正在同步
+                } else {
+                    LocalDateTime start = etlLogPO.getStartdate();
+                    LocalDateTime end = start.plusHours(3);
+                    LambdaQueryWrapper<PipelineTableLogPO> w = new LambdaQueryWrapper<>();
+                    w.eq(PipelineTableLogPO::getTableId, dto.getTblId())
+                            .eq(PipelineTableLogPO::getTableType, dto.getTableType())
+                            .between(PipelineTableLogPO::getCreateTime, start, end)
+                            .orderByAsc(PipelineTableLogPO::getCreateTime)
+                            .last("limit 1");
+                    PipelineTableLogPO pipelineTableLogPO = iPipelineTableLog.getOne(w);
+                    //如果没有报错，则认为此次同步未完成（nifi未报错）
+                    if (pipelineTableLogPO == null) {
+                        nifiLogResultDTO.setTableName(dto.getTableName());
+                        nifiLogResultDTO.setTriggerTime(etlLogPO.getStartdate());
+                        //-1正在同步  未结束时表内无法判断是手动还是管道调度
+                        nifiLogResultDTO.setTriggerType(-1);
+                        //0 进行中
+                        nifiLogResultDTO.setState(0);
+                        //0 正在同步
+                        nifiLogResultDTO.setResult(0);
+                        LocalDateTime startDate = etlLogPO.getStartdate();
+                        LocalDateTime now = LocalDateTime.now();
+
+                        Duration duration = Duration.between(startDate, now);
+
+                        //处理错误日志  大于一天的认为失败
+                        if (duration.toDays() > 1) {
+                            //1 已完成
+                            nifiLogResultDTO.setState(1);
+                            //2 同步失败
+                            nifiLogResultDTO.setResult(2);
+                            // 距离当前时间大于一天
+                            nifiLogResultDTO.setStartTime(startDate);
+                            nifiLogResultDTO.setEndTime(etlLogPO.getEnddate());
+
+                            //计算持续时间
+                            nifiLogResultDTO.setDuration("同步失败");
+                            nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
+                            nifiLogResultDTO.setErrorMsg("本次同步失败:同步超时...");
+                        } else {
+                            // 距离当前时间不大于一天
+                            nifiLogResultDTO.setStartTime(startDate);
+                            nifiLogResultDTO.setEndTime(etlLogPO.getEnddate());
+
+                            //计算持续时间
+                            nifiLogResultDTO.setDuration("同步中");
+                            nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
+                            nifiLogResultDTO.setErrorMsg("NIFI正在同步中...");
+                        }
+
+
+                        //如果报错，则认为此次同步已完成并且失败（nifi有报错）
+                    } else {
+                        nifiLogResultDTO.setTableName(dto.getTableName());
+                        nifiLogResultDTO.setTriggerTime(etlLogPO.getStartdate());
+                        nifiLogResultDTO.setTriggerType(pipelineTableLogPO.getDispatchType());
+                        //已完成
+                        nifiLogResultDTO.setState(1);
+                        //失败
+                        nifiLogResultDTO.setResult(2);
+                        nifiLogResultDTO.setStartTime(etlLogPO.getStartdate());
+                        nifiLogResultDTO.setEndTime(pipelineTableLogPO.getCreateTime());
+
+                        //计算持续时间
+                        Duration between = Duration.between(etlLogPO.getStartdate(), pipelineTableLogPO.getCreateTime());
+                        String pt = between.toString().replaceFirst("PT", "");
+                        nifiLogResultDTO.setDuration(pt);
+                        nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
+                        nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + pipelineTableLogPO.getComment());
+                    }
+                    nifiLogResultDTOS.add(nifiLogResultDTO);
+                }
+            }
+        } catch (Exception e) {
+            log.error("同步日志页面获取数接/数仓的指定表的nifi同步日志报错：" + e);
+            throw new FkException(ResultEnum.GET_NIFI_LOG_ERROR);
+        }
+        Page<NifiLogResultDTO> resultDTOPage = new Page<>();
+        resultDTOPage.setTotal(page.getTotal());
+        resultDTOPage.setRecords(nifiLogResultDTOS);
+        resultDTOPage.setCurrent(current);
+        resultDTOPage.setSize(size);
+        resultDTOPage.setOrders(page.getOrders());
+        return resultDTOPage;
     }
 
 }

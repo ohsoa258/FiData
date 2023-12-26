@@ -1,6 +1,10 @@
 package com.fisk.task.client;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
+import com.fisk.common.service.accessAndModel.LogPageQueryDTO;
+import com.fisk.common.service.accessAndModel.NifiLogResultDTO;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DataAccessIdDTO;
@@ -575,5 +579,15 @@ public interface PublishTaskClient {
     @ApiOperation("dw数仓按时间获取单表nifi日志")
     @PostMapping("/nifi/getDwTblNifiLog")
     DwLogResultDTO getDwTblNifiLog(@RequestBody DwLogQueryDTO dwLogQueryDTO);
+
+    /**
+     * 同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型")
+    @PostMapping("/nifi/getDwAndAccessTblNifiLog")
+    Page<NifiLogResultDTO> getDwAndAccessTblNifiLog(@RequestBody LogPageQueryDTO dto);
 
 }

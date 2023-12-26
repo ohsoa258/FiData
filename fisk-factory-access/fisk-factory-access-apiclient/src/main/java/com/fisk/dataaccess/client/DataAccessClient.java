@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
@@ -529,5 +530,23 @@ public interface DataAccessClient {
 
     @ApiOperation(value = "根据appId获取所有数据源")
     @GetMapping("/datasource/getAppSourcesByAppId")
-    public ResultEntity<List<AppDataSourceDTO>> getAppSourcesByAppId(@RequestParam("appId") Integer appId);
+    ResultEntity<List<AppDataSourceDTO>> getAppSourcesByAppId(@RequestParam("appId") Integer appId);
+
+    /**
+     * 获取数据接入所有应用和应用下的所有物理表
+     *
+     * @return
+     */
+    @ApiOperation("获取数据接入所有应用和应用下的所有物理表")
+    @GetMapping("/appRegistration/getAllAppAndTables")
+    ResultEntity<List<AccessAndModelAppDTO>> getAllAppAndTables();
+
+    /**
+     * 通过物理表id获取应用详情
+     *
+     * @return
+     */
+    @ApiOperation("通过物理表id获取应用详情")
+    @GetMapping("/appRegistration/getAppByTableAccessId")
+    ResultEntity<AppRegistrationDTO> getAppByTableAccessId(@RequestParam("tblId") Integer tblId);
 }
