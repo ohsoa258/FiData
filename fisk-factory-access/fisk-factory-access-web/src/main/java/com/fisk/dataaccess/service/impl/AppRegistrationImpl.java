@@ -2592,13 +2592,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             //获取获取应用下的所有物理表
             LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.select(TableAccessPO::getTableName, TableAccessPO::getId)
+            wrapper1.select(TableAccessPO::getTableName, TableAccessPO::getId,TableAccessPO::getDisplayName)
                     .eq(TableAccessPO::getAppId, appRegistrationPO.getId());
             List<TableAccessPO> tableAccessPOS = tableAccessImpl.list(wrapper1);
             for (TableAccessPO dimensionPO : tableAccessPOS) {
                 AccessAndModelTableDTO dimTable = new AccessAndModelTableDTO();
                 dimTable.setTblId((int) dimensionPO.getId());
                 dimTable.setTableName(dimensionPO.getTableName());
+                dimTable.setDisplayTableName(dimensionPO.getDisplayName());
                 dimTable.setTableType(AccessAndModelTableTypeEnum.PHYSICS.getValue());
                 accessAndModelTableDTOS.add(dimTable);
             }

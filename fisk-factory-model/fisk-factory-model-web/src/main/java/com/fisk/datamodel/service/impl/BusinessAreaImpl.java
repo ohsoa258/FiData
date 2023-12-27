@@ -52,7 +52,6 @@ import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.codepreview.CodePreviewDTO;
-import com.fisk.datamodel.dto.dimension.BusinessAreaDimDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -1449,20 +1448,21 @@ public class BusinessAreaImpl
 
             //获取获取业务域下的所有维度表
             LambdaQueryWrapper<DimensionPO> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.select(DimensionPO::getDimensionTabName, DimensionPO::getId)
+            wrapper1.select(DimensionPO::getDimensionTabName, DimensionPO::getId, DimensionPO::getDimensionCnName)
                     .eq(DimensionPO::getBusinessId, businessAreaPO.getId());
             List<DimensionPO> dimensionPOS = dimensionImpl.list(wrapper1);
             for (DimensionPO dimensionPO : dimensionPOS) {
                 AccessAndModelTableDTO dimTable = new AccessAndModelTableDTO();
                 dimTable.setTblId((int) dimensionPO.getId());
                 dimTable.setTableName(dimensionPO.getDimensionTabName());
+                dimTable.setDisplayTableName(dimensionPO.getDimensionCnName());
                 dimTable.setTableType(AccessAndModelTableTypeEnum.DIMENSION.getValue());
                 accessAndModelTableDTOS.add(dimTable);
             }
 
             //获取业务域下的所有事实表
             LambdaQueryWrapper<FactPO> wrapper2 = new LambdaQueryWrapper<>();
-            wrapper2.select(FactPO::getFactTabName, FactPO::getId)
+            wrapper2.select(FactPO::getFactTabName, FactPO::getId, FactPO::getFactTableCnName)
                     .eq(FactPO::getBusinessId, businessAreaPO.getId())
                     //数据表处理方式是批处理或流处理  0批处理 1流处理
                     .eq(FactPO::getBatchOrStream, 0);
@@ -1471,6 +1471,7 @@ public class BusinessAreaImpl
                 AccessAndModelTableDTO factTable = new AccessAndModelTableDTO();
                 factTable.setTblId((int) factPO.getId());
                 factTable.setTableName(factPO.getFactTabName());
+                factTable.setDisplayTableName(factPO.getFactTableCnName());
                 factTable.setTableType(AccessAndModelTableTypeEnum.FACT.getValue());
                 accessAndModelTableDTOS.add(factTable);
             }
