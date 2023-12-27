@@ -1,7 +1,11 @@
 package com.fisk.datamanagement.dto.classification;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.joda.time.DateTime;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,5 +39,16 @@ public class BusinessTargetinfoDTO {
     public String  attributesNumber;
     public String  name;
     public String  sqlScript;
+    public String  dimdomaintype;
+    public String  dimdomainid;
+    public String  dimdomain;
+    public String  dimtableid;
+    public String  dimtable;
+    public String  attributeid;
+    public String  attribute;
+    public  String indexid;
+    public List<BusinessExtendedfieldsDTO> dimensionData;
+    public DateTime createdTime;
+    public String createdUser;
 
 }

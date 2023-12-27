@@ -8,11 +8,10 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataDTO;
-import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
-import com.fisk.datamanagement.dto.classification.BusinessCategoryDefsDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
-import com.fisk.datamanagement.dto.classification.ClassificationDefsDTO;
+import com.fisk.datamanagement.dto.classification.*;
+import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.service.BusinessCategoryService;
+import com.fisk.datamanagement.service.BusinessExtendedfieldsService;
 import com.fisk.datamanagement.service.BusinessTargetinfoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -36,14 +35,45 @@ public class BusinessCategoryController {
     BusinessCategoryService businessCategoryService;
 
     @Resource
+    BusinessExtendedfieldsService businessExtendedfieldsService;
+
+    @Resource
     BusinessTargetinfoService businessTargetinfoService;
 
-    @ApiOperation("获取业务指标数据列表")
+    @ApiOperation("获取业务指标数据树状列表")
     @GetMapping("/getBusinessMetaDataList")
     public ResultEntity<Object> getBusinessMetaDataList()  {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getCategoryTree());
     }
 
+
+    /**
+     * 获取维度tree
+     *
+     * @return
+     */
+    @ApiOperation("获取业务指标数据列表")
+    @GetMapping("/dimension/getDimension/{name}")
+    public ResultEntity<Object> getDimensionList(@PathVariable("name") String  name)  {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getDimensionList(name));
+    }
+
+    /**
+     * 获取维度tree
+     *
+     * @return
+     */
+    @ApiOperation("获取维度tree")
+    @GetMapping("/dimension/getDimensionTree")
+    public ResultEntity<Object> getDimensionTreeList()  {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getDimensionTreeList());
+    }
+
+    @ApiOperation("根据指标id展示新增维度数据")
+    @GetMapping("/dimension/getDimensionTreeShow/{indexid}")
+    public  List<BusinessExtendedfieldsPO> addBusinessExtendedfields(@PathVariable("indexid") String  indexid) {
+        return  businessExtendedfieldsService.addBusinessExtendedfields(indexid);
+    }
 
     @ApiOperation("添加指标主题数据")
     @PostMapping("/addBusinessMetaData")

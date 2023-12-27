@@ -5,17 +5,23 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.office.excel.ExcelUtil;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
+import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
+import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.BusinessSynchronousPO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
+import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.service.BusinessTargetinfoService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
@@ -38,6 +44,7 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,6 +58,12 @@ import java.util.stream.Collectors;
 public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     @Resource
     BusinessTargetinfoMapper businessTargetinfoMapper;
+    @Resource
+    UserHelper userHelper;
+
+    @Resource
+    BusinessExtendedfieldsMapper businessExtendedfieldsMapper;
+
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
             "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道","数据粒度"};
 
@@ -142,9 +155,33 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             if (flag < 0) {
                 throw new FkException(ResultEnum.ERROR, "保存失败");
             }
+            QueryWrapper<BusinessTargetinfoPO> qwnew = new QueryWrapper<>();
+            qw.eq("indicator_name", item.indicatorName).eq("del_flag", 1).eq("pid", item.pid);
+            BusinessTargetinfoPO bcPOnew = businessTargetinfoMapper.selectOne(qw);
+           for (int j=0;j<item.getDimensionData().size();j++){
+               BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
+               BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
+               model1.setAttribute(model2.attribute);
+               model1.setAttributeid(model2.attributeid);
+               model1.setDimdomain(model2.dimdomain);
+               model1.setDimdomainid(model2.dimdomainid);
+               model1.setDimdomaintype(model2.dimdomaintype);
+               model1.setDimtable(model2.dimtable);
+               model1.setDimtableid(model2.dimtableid);
+               model1.setIndexid(bcPOnew.id+"");
+               model1.setCreatedUser(userHelper.getLoginUserInfo().username);
+               DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+               model1.setCreatedTime(format.format(new Date()));
+               model1.setDelFlag(1);
+               int flag1 = businessExtendedfieldsMapper.insert(model1);
+               if (flag1 < 0) {
+                   throw new FkException(ResultEnum.ERROR, "保存失败");
+               }
+           }
         }
         return ResultEnum.SUCCESS;
     }
+
 
     /**
      * 根据指标id删除指标数据
@@ -167,6 +204,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         qw.eq("id", po.getId());
         idList.add(po.getId());
         if (businessTargetinfoMapper.deleteBatchIds(idList) > 0) {
+            int flag1 = businessExtendedfieldsMapper.updateByName(po.getId()+"");
             return ResultEnum.SUCCESS;
         } else {
             throw new FkException(ResultEnum.ERROR, "删除指标数据失败");
@@ -224,6 +262,30 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         model.setSqlScript(item.sqlScript);
         if (businessTargetinfoMapper.updateById(model) <= 0) {
             throw new FkException(ResultEnum.ERROR, "修改指标明细数据失败");
+        }
+        QueryWrapper<BusinessTargetinfoPO> qwnew = new QueryWrapper<>();
+        qw.eq("indicator_name", item.indicatorName).eq("del_flag", 1).eq("pid", item.pid);
+        BusinessTargetinfoPO bcPOnew = businessTargetinfoMapper.selectOne(qw);
+        int flag1 = businessExtendedfieldsMapper.updateByName(bcPOnew.id+"");
+        for (int j=0;j<item.getDimensionData().size();j++){
+            BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
+            BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
+            model1.setAttribute(model2.attribute);
+            model1.setAttributeid(model2.attributeid);
+            model1.setDimdomain(model2.dimdomain);
+            model1.setDimdomainid(model2.dimdomainid);
+            model1.setDimdomaintype(model2.dimdomaintype);
+            model1.setDimtable(model2.dimtable);
+            model1.setDimtableid(model2.dimtableid);
+            model1.setIndexid(bcPOnew.id+"");
+            model1.setCreatedUser(userHelper.getLoginUserInfo().username);
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            model1.setCreatedTime(format.format(new Date()));
+            model1.setDelFlag(1);
+            int flag2 = businessExtendedfieldsMapper.insert(model1);
+            if (flag2 < 0) {
+                throw new FkException(ResultEnum.ERROR, "保存失败");
+            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -508,5 +570,13 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         } catch (Exception ex) {
             log.error("设置响应对象失败，ex", ex);
         }
+    }
+
+
+    @Override
+    public List<BusinessTargetinfoPO> getDimensionList(String  name) {
+        String sql ="select * from tb_business_targetinfo where indicator_name like '%"+name+"%' and del_flag = 1 ";
+        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification1(sql);
+        return list;
     }
 }

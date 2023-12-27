@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
@@ -55,7 +56,12 @@ public interface BusinessTargetinfoService {
      */
     void downLoad(String key,String indicatorname, HttpServletResponse response);
 
-
+    /**
+     *  获取树状指标数据列表
+     *
+     * @return
+     */
+    List<BusinessTargetinfoPO> getDimensionList(String name);
 
 
 }
