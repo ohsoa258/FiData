@@ -234,7 +234,7 @@ public class ApiListenerImpl implements IApiListener {
                         //计算持续时间
                         Duration between = Duration.between(etlLogPO.getStartdate(), etlLogPO.getEnddate());
                         String pt = between.toString().replaceFirst("PT", "");
-                        nifiLogResultDTO.setDuration(pt);
+                        nifiLogResultDTO.setDuration(pt.toLowerCase());
                         nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
                         nifiLogResultDTO.setErrorMsg("同步成功!同步数据量：" + etlLogPO.getDatarows());
                         //如果报错，则认为此次同步已完成并且失败（nifi有报错）
@@ -252,7 +252,7 @@ public class ApiListenerImpl implements IApiListener {
                         //计算持续时间
                         Duration between = Duration.between(etlLogPO.getStartdate(), etlLogPO.getEnddate());
                         String pt = between.toString().replaceFirst("PT", "");
-                        nifiLogResultDTO.setDuration(pt);
+                        nifiLogResultDTO.setDuration(pt.toLowerCase());
                         nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
                         nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + pipelineTableLogPO.getComment());
                     }
@@ -286,6 +286,7 @@ public class ApiListenerImpl implements IApiListener {
 
                         //处理错误日志  大于一天的认为失败
                         if (duration.toDays() > 1) {
+                            nifiLogResultDTO.setTriggerType(0);
                             //1 已完成
                             nifiLogResultDTO.setState(1);
                             //2 同步失败
@@ -309,7 +310,6 @@ public class ApiListenerImpl implements IApiListener {
                             nifiLogResultDTO.setErrorMsg("NIFI正在同步中...");
                         }
 
-
                         //如果报错，则认为此次同步已完成并且失败（nifi有报错）
                     } else {
                         nifiLogResultDTO.setTableName(dto.getTableName());
@@ -325,7 +325,7 @@ public class ApiListenerImpl implements IApiListener {
                         //计算持续时间
                         Duration between = Duration.between(etlLogPO.getStartdate(), pipelineTableLogPO.getCreateTime());
                         String pt = between.toString().replaceFirst("PT", "");
-                        nifiLogResultDTO.setDuration(pt);
+                        nifiLogResultDTO.setDuration(pt.toLowerCase());
                         nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
                         nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + pipelineTableLogPO.getComment());
                     }
