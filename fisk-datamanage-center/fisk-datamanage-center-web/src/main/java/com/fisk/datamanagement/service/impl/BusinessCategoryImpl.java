@@ -1,10 +1,15 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
@@ -12,6 +17,8 @@ import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.service.BusinessCategoryService;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,11 +36,13 @@ import java.util.stream.Collectors;
  */
 @Service
 public class BusinessCategoryImpl implements BusinessCategoryService {
+
+
     @Resource
     BusinessCategoryMapper businessCategoryMapper;
+    @Resource
+    private DataModelClient dataModelClient;
 
-    @Autowired
-    private RedisUtil redisUtil;
 
     /**
      * 更改指标名称属性_
@@ -169,14 +178,6 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             // 设置创建者信息
             //model.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             int flag = businessCategoryMapper.insert(model);
-//            //添加业务分类下的属性
-//            for (ClassificationAttributeDefsDTO a : item.getAttributeDefs()) {
-//                BusinessCategoryPidDefsDTO attributeDTO=new BusinessCategoryPidDefsDTO();
-//                attributeDTO.p=String.valueOf(model.getId());
-//                attributeDTO.name=attributeDef.getName();
-//                attributeDTO.value=attributeDef.getValue();
-//                this.addClassification(attributeDTO);
-//            }
 
             if (flag < 0) {
                 throw new FkException(ResultEnum.ERROR, "保存失败");
@@ -186,10 +187,6 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
     }
 
 
-
-
-
-
     @Override
     public List<BusinessCategoryTreeDTO> getCategoryTree() {
         // 查询所有数据
@@ -197,7 +194,6 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         if (CollectionUtils.isEmpty(data)) {
             return new ArrayList<>();
         }
-
         // 数据转换
         List<BusinessCategoryTreeDTO> allData = data.stream().map(item -> {
             BusinessCategoryTreeDTO dto = new BusinessCategoryTreeDTO();
@@ -225,11 +221,11 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         List<BusinessCategoryTreeDTO> parentList = list.stream().filter(item -> (pid + "").equals(item.pid)).collect(Collectors.toList());
         if (!parentList.isEmpty()) {
             List<BusinessCategoryTreeDTO> ResultList = new ArrayList<>();
-            for (int i=0;i<parentList.size();i++){
-                List<BusinessCategoryTreeDTO>  children=new ArrayList<>();
-                for (int j=0;j<list.size();j++){
-                    if (list.get(j).pid.equals(parentList.get(i).id)){
-                       children= MallClassTree(list,parentList.get(i).id);
+            for (int i = 0; i < parentList.size(); i++) {
+                List<BusinessCategoryTreeDTO> children = new ArrayList<>();
+                for (int j = 0; j < list.size(); j++) {
+                    if (list.get(j).pid.equals(parentList.get(i).id)) {
+                        children = MallClassTree(list, parentList.get(i).id);
                     }
                 }
                 // 递归处理
@@ -242,6 +238,70 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         }
         return null;
     }
+
+
+    @Override
+    public JSONArray getDimensionTreeList() {
+        List<DimensionTreeDTO> aa = dataModelClient.getDimensionTree();
+        JSONArray array = new JSONArray();
+        array.add(aa.get(0).getPublicDim());
+        array.add(aa.get(0).getOtherDimsByArea());
+        for (int i = 0; i < array.size(); i++) {
+            JSONArray arrays = array.getJSONArray(i);
+            for (int o = 0; o < arrays.size(); o++) {
+                JSONObject array1 = arrays.getJSONObject(o);
+                array1.put("name", array1.getString("businessName"));
+                JSONArray array2 = array1.getJSONArray("dimensionList");
+                if (array2.size() > 0) {
+                    for (int j = 0; j < array2.size(); j++) {
+                        JSONObject array3 = array2.getJSONObject(j);
+                        array3.put("name", array3.getString("dimensionCnName"));
+                        array3.put("dimensionList", array3.getJSONArray("attributeList"));
+                        array3.remove("attributeList");
+                        JSONArray array6 = array3.getJSONArray("dimensionList");
+                        if (array3.getJSONArray("dimensionList") == null) {
+                            array6 = array3.getJSONArray("attributeList");
+                        }
+                        if (array6.size() > 0) {
+                            for (int k = 0; k < array6.size(); k++) {
+                                JSONObject array7 = array6.getJSONObject(k);
+                                array7.put("name", array7.getString("dimensionFieldCnName"));
+                                //JSONArray extendedfields = new JSONArray();
+                                JSONObject json = new JSONObject();
+                                if (i == 0) {
+                                    json.put("dimdomaintype", "公共域维度");
+                                }
+                                if (i == 1) {
+                                    json.put("dimdomaintype", "其他域维度");
+                                }
+                                if(array1.size() > 0){
+                                    json.put("dimdomainid",array1.getString("id"));
+                                    json.put("dimdomain",array1.getString("businessName"));
+                                }
+                                if(array3.size() > 0){
+                                    json.put("dimtableid",array3.getString("id"));
+                                    json.put("dimtable",array3.getString("dimensionCnName"));
+                                }
+                                if(array6.size() > 0){
+                                    json.put("attributeid",array7.getString("id"));
+                                    json.put("attribute",array7.getString("dimensionFieldCnName"));
+                                }
+                                array7.put("extendedfields",json);
+                                array6.set(k,array7);
+                            }
+                        }
+                        array2.set(j,array3);
+                    }
+                }
+                arrays.set(o,array1);
+            }
+            array.set(i,arrays);
+        }
+        return array;
+    }
+
+
+
 
 
 }

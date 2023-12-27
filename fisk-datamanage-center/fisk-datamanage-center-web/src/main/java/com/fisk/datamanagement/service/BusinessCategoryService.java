@@ -1,8 +1,10 @@
 package com.fisk.datamanagement.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
 import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -48,6 +50,16 @@ public interface BusinessCategoryService {
      * @return
      */
     List<BusinessCategoryTreeDTO> getCategoryTree();
+
+    /**
+     * 获取纬度数据
+     *
+     * @return
+     */
+    JSONArray getDimensionTreeList();
+
+
+
 
 
 

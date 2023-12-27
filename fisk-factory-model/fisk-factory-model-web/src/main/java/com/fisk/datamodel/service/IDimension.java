@@ -136,7 +136,7 @@ public interface IDimension extends IService<DimensionPO> {
      *
      * @return
      */
-    DimensionTreeDTO getDimensionTree();
+    List<DimensionTreeDTO> getDimensionTree();
 
     //void asyncSynchronousMetadata(DimensionPO model);
 

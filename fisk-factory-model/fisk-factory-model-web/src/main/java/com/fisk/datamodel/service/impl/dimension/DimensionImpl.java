@@ -1016,7 +1016,7 @@ public class DimensionImpl
      * @return
      */
     @Override
-    public DimensionTreeDTO getDimensionTree() {
+    public List<DimensionTreeDTO> getDimensionTree() {
         List<BusinessAreaPO> businessAreaPOS = businessArea.list();
 
         List<BusinessAreaDimDTO> areaDimDTOS = new ArrayList<>();
@@ -1081,7 +1081,9 @@ public class DimensionImpl
         DimensionTreeDTO dimensionTreeDTO = new DimensionTreeDTO();
         dimensionTreeDTO.setPublicDim(publicDimDTOS);
         dimensionTreeDTO.setOtherDimsByArea(areaDimDTOS);
-        return dimensionTreeDTO;
+        List<DimensionTreeDTO> list = new ArrayList();
+        list.add(dimensionTreeDTO);
+        return list;
     }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,

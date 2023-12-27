@@ -14,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -105,8 +106,8 @@ public class DimensionController {
      */
     @ApiOperation("获取维度tree")
     @GetMapping("/getDimensionTree")
-    public ResultEntity<DimensionTreeDTO> getDimensionTree() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionTree());
+    public List<DimensionTreeDTO> getDimensionTree() {
+        return service.getDimensionTree();
     }
 
 

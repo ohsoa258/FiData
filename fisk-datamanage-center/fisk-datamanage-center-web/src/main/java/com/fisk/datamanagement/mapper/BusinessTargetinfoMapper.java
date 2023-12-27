@@ -31,9 +31,6 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid = #{pid} and del_flag = 1 ")
     List<Map<String,Object>> selectClassification3(@Param("pid") String pid );
 
-
-
-
     @Select("select * from tb_business_synchronous")
     List<BusinessSynchronousPO> selecttypeClassification();
 
@@ -42,6 +39,12 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
 
     @Delete("truncate TABLE tb_business_targetinfo")
     int truncateTable();
+
+
+//    @Select("select * from tb_business_targetinfo where name like '%#{name}%' and del_flag = 1 ")
+//    List<BusinessTargetinfoPO> selectClassification1(@Param("name") String name);
+    @Select({"<script> " + "${sql}" + "</script>"})
+    List<BusinessTargetinfoPO> selectClassification1(@Param("sql") String sql);
 
 
 }

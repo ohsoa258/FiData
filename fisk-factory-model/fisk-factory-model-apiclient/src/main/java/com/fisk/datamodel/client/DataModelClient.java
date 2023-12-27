@@ -374,7 +374,7 @@ public interface DataModelClient {
      */
     @ApiOperation("获取维度tree")
     @GetMapping("/dimension/getDimensionTree")
-    ResultEntity<DimensionTreeDTO> getDimensionTree();
+    List<DimensionTreeDTO> getDimensionTree();
 
     /**
      * 获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）
