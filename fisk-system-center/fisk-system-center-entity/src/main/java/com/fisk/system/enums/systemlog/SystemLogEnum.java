@@ -23,7 +23,7 @@ public enum SystemLogEnum implements BaseEnum {
     FISK_FRAMEWORK_REGISTRY(9, "fisk-framework-registry", "./logs/registry/registry.log", "./logs/registry/"),
     FISK_GOVERNANCE_CENTER(10, "fisk-governance-center", "./logs/governance/governance.log", "./logs/governance/"),
     FISK_LICENSE_REGISTRY(11, "fisk-license-registry", "./logs/fisk-license-registry/fisk-license-registry", "./logs/fisk-license-registry/"),
-    FISK_MDM_MODEL(12, "fisk-mdm-model", "./logs/mdm/mdmModel.log", "./logs/mdm"),
+    FISK_MDM_MODEL(12, "fisk-mdm-model", "./logs/mdm/mdmModel.log", "./logs/mdm/"),
     FISK_SYSTEM_CENTER(13, "fisk-system-center", "./logs/systemCenter/system.log", "./logs/systemCenter/"),
     FISK_TASK_CENTER(14, "fisk-task-center", "./logs/task/task.log", "./logs/task/");
 
