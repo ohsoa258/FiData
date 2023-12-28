@@ -1,6 +1,7 @@
 package com.fisk.task.service.dispatchLog.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
@@ -65,47 +66,53 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
             pipelLog.msg = next.getValue().toString();
 
             if (Objects.equals(DispatchLogEnum.pipelend.getValue(), next.getKey())) {
-                //先更新掉
+                LambdaQueryWrapper<PipelLogPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(PipelLogPO::getPipelTraceId,pipelTraceId);
+                queryWrapper.eq(PipelLogPO::getType,next.getKey());
+                queryWrapper.eq(PipelLogPO::getDelFlag,1);
+                PipelLogPO pipelLogPO = pipelLogMapper.selectOne(queryWrapper);
+                //如果存在则先逻辑删除
                 pipelLogMapper.updateByPipelTraceId(pipelTraceId, next.getKey());
-                DispatchEmailDTO dispatchEmail = new DispatchEmailDTO();
-                dispatchEmail.nifiCustomWorkflowId = Integer.parseInt(pipelId);
-                dispatchEmail.msg = pipelLog.msg;
-                dispatchEmail.result = pipelLog.msg.contains("运行成功") ? "【运行成功】" : "【运行失败】";
-                //dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
-                dispatchEmail.pipelTraceId = pipelTraceId;
-                //    /**
-                //     * 运行时长
-                //     */
-                //    public String duration;
-                List<PipelLogPO> pos = this.query().eq("pipel_trace_id", pipelTraceId).list();
-                if (CollectionUtils.isNotEmpty(pos)) {
-                    PipelLogPO pipelLogPo = pos.get(0);
+                if (pipelLogPO == null){
+                    DispatchEmailDTO dispatchEmail = new DispatchEmailDTO();
+                    dispatchEmail.nifiCustomWorkflowId = Integer.parseInt(pipelId);
+                    dispatchEmail.msg = pipelLog.msg;
+                    dispatchEmail.result = pipelLog.msg.contains("运行成功") ? "【运行成功】" : "【运行失败】";
+                    //dispatchEmail.pipelTraceId = pipelLog.pipelTraceId;
+                    dispatchEmail.pipelTraceId = pipelTraceId;
+                    //    /**
+                    //     * 运行时长
+                    //     */
+                    //    public String duration;
+                    List<PipelLogPO> pos = this.query().eq("pipel_trace_id", pipelTraceId).list();
+                    if (CollectionUtils.isNotEmpty(pos)) {
+                        PipelLogPO pipelLogPo = pos.get(0);
+                        try {
+                            Date date = new Date();
+                            Date parse = format.parse(pipelLogPo.msg.substring(7, 26));
+                            Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                            Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                            dispatchEmail.duration = minutes + "m " + second + "s";
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    dispatchEmail.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
+                            + dispatchEmail.pipelTraceId + "】";
                     try {
-                        Date date = new Date();
-                        Date parse = format.parse(pipelLogPo.msg.substring(7, 26));
-                        Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
-                        Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
-                        dispatchEmail.duration = minutes + "m " + second + "s";
-                    } catch (ParseException e) {
-                        e.printStackTrace();
+                        Map<String, String> hashMap = new HashMap<>();
+                        hashMap.put("运行结果", dispatchEmail.result);
+                        hashMap.put("运行时长", dispatchEmail.duration);
+                        hashMap.put("运行详情", dispatchEmail.msg);
+                        hashMap.put("TraceID", dispatchEmail.pipelTraceId);
+                        hashMap.put("页面地址", dispatchEmail.url);
+                        dispatchEmail.body = hashMap;
+                        dataFactoryClient.pipelineSendEmails(dispatchEmail);
+                    } catch (Exception e) {
+                        log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
                     }
                 }
-
-                dispatchEmail.url = "【" + dispatchEmailUrlPrefix + "/#/DataFactory/pipelineSettings?pipelTraceId="
-                        + dispatchEmail.pipelTraceId + "】";
-                try {
-                    Map<String, String> hashMap = new HashMap<>();
-                    hashMap.put("运行结果", dispatchEmail.result);
-                    hashMap.put("运行时长", dispatchEmail.duration);
-                    hashMap.put("运行详情", dispatchEmail.msg);
-                    hashMap.put("TraceID", dispatchEmail.pipelTraceId);
-                    hashMap.put("页面地址", dispatchEmail.url);
-                    dispatchEmail.body = hashMap;
-                    dataFactoryClient.pipelineSendEmails(dispatchEmail);
-                } catch (Exception e) {
-                    log.error("发邮件出错,但是不影响主流程。异常如下：" + e);
-                }
-
             }
 
 
