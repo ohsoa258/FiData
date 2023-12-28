@@ -44,7 +44,7 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
 //    @Select("select * from tb_business_targetinfo where name like '%#{name}%' and del_flag = 1 ")
 //    List<BusinessTargetinfoPO> selectClassification1(@Param("name") String name);
     @Select({"<script> " + "${sql}" + "</script>"})
-    List<BusinessTargetinfoPO> selectClassification1(@Param("sql") String sql);
+    List<BusinessTargetinfoPO> selectDimensionList(@Param("sql") String sql);
 
 
 }

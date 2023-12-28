@@ -576,7 +576,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     @Override
     public List<BusinessTargetinfoPO> getDimensionList(String  name) {
         String sql ="select * from tb_business_targetinfo where indicator_name like '%"+name+"%' and del_flag = 1 ";
-        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification1(sql);
+        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectDimensionList(sql);
         return list;
     }
 }
