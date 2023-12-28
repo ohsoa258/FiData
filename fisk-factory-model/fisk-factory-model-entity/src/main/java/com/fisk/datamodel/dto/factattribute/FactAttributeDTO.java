@@ -72,7 +72,7 @@ public class FactAttributeDTO {
     @ApiModelProperty(value = "是否是主键  1：是  0：不是")
     public int isBusinessKey;
 
-    //该变量名虽为isPrimaryKey，但由于历史原因，其实是作为业务覆盖标识，影响 是作为建表主键字段  前端名改为业务主键标识
+    //该变量名虽为isPrimaryKey，但由于历史原因，其实是作为业务覆盖标识
     @ApiModelProperty(value = "是否是业务覆盖标识  1：是  0：不是")
     public int isPrimaryKey;
 

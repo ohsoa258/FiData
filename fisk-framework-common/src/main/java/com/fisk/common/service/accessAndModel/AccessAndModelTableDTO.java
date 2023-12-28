@@ -16,6 +16,11 @@ public class AccessAndModelTableDTO {
     private String tableName;
 
     /**
+     * 物理表/事实表/维度表名称
+     */
+    private String displayTableName;
+
+    /**
      * 表类型
      * AccessAndModelTableTypeEnum
      */

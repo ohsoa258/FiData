@@ -53,7 +53,7 @@ public class DimensionAttributeDTO {
     /**
      * 是否业务主键 0:否 1:是
      */
-    //注意 由于历史原因  维度表和事实表的该变量名含义相反  在维度表是  这里就是业务覆盖标识
+    //注意 由于历史原因  维度表和事实表的该变量名含义相反  在维度表是  这里就是业务主键
     @ApiModelProperty(value = "是否业务主键 0:否 1:是")
     public int isPrimaryKey;
     /**
@@ -73,7 +73,7 @@ public class DimensionAttributeDTO {
     public String configDetails;
 
     //注意 由于历史原因  维度表和事实表的该变量名含义相反  在维度表是  这里就是业务覆盖标识
-    @ApiModelProperty(value = "是否是主键  1：是  0：不是")
+    @ApiModelProperty(value = "是否是业务覆盖标识  1：是  0：不是")
     public int isBusinessKey;
 
     /**

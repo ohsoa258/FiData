@@ -22,6 +22,7 @@ import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
+import com.fisk.datamodel.dto.versionsql.VersionSqlDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.SyncModePO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
@@ -34,12 +35,14 @@ import com.fisk.datamodel.enums.TableHistoryTypeEnum;
 import com.fisk.datamodel.map.dimension.DimensionAttributeMap;
 import com.fisk.datamodel.map.dimension.DimensionFolderMap;
 import com.fisk.datamodel.map.dimension.DimensionMap;
+import com.fisk.datamodel.map.versionsql.VersionSqlMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.SyncModeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionFolderMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.service.IDimensionFolder;
+import com.fisk.datamodel.service.ITableVersionSqlService;
 import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
@@ -56,6 +59,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -105,6 +109,9 @@ public class DimensionFolderImpl
 
     @Value("${open-metadata}")
     private Boolean openMetadata;
+
+    @Resource
+    private ITableVersionSqlService versionSql;
 
     @Override
     public ResultEnum addDimensionFolder(DimensionFolderDTO dto) {
@@ -360,6 +367,12 @@ public class DimensionFolderImpl
              */
 
             for (DimensionPO item : dimensionPoList) {
+                //版本sql添加数据
+                VersionSqlDTO versionSqlDTO = new VersionSqlDTO();
+                versionSqlDTO.setTableId((int) item.getId());
+                versionSqlDTO.setVersionDes(dto.remark);
+                versionSqlDTO.setHistoricalSql(item.sqlScript);
+                addVersionSql(versionSqlDTO);
                 //拼接数据
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
                 //表id
@@ -495,6 +508,7 @@ public class DimensionFolderImpl
         fieldDTO.sourceFieldName = attributePo.sourceFieldName;
         fieldDTO.associateDimensionId = attributePo.associateDimensionId;
         fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
+        //doris的话就是建表主键
         fieldDTO.isBusinessKey = attributePo.isPrimaryKey;
         fieldDTO.isPrimaryKey = attributePo.isBusinessKey;
         fieldDTO.isPartitionKey = attributePo.isPartitionKey;
@@ -543,6 +557,20 @@ public class DimensionFolderImpl
             list.add(data);
         }
         tableHistory.addTableHistory(list);
+    }
+
+    /**
+     * 添加表的版本sql
+     * @param dto
+     */
+    private void addVersionSql(VersionSqlDTO dto) {
+        VersionSqlDTO data = new VersionSqlDTO();
+        data.setVersionNumber(String.valueOf(Instant.now().toEpochMilli()));
+        data.setHistoricalSql(dto.getHistoricalSql());
+        data.setVersionDes(dto.getVersionDes());
+        data.setTableId(dto.getTableId());
+        data.setTableType(CreateTypeEnum.CREATE_DIMENSION.getValue());
+        versionSql.save(VersionSqlMap.INSTANCES.dtoToPo(data));
     }
 
     /**

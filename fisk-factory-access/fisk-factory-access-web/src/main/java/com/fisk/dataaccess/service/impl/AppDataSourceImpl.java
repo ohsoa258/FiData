@@ -474,6 +474,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 //2、再给 dataSourcePO 装载页面修改的数值（也就是task那边传来的参数）
                 dataSourcePO.connectStr = dto.conStr;
                 dataSourcePO.host = dto.conIp;
+                dataSourcePO.name = dto.name;
                 dataSourcePO.port = String.valueOf(dto.conPort);
                 dataSourcePO.dbName = dto.conDbname;
 

@@ -24,6 +24,7 @@ import com.fisk.datamodel.dto.fact.FactDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
+import com.fisk.datamodel.dto.versionsql.VersionSqlDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.IndicatorsPO;
 import com.fisk.datamodel.entity.SyncModePO;
@@ -40,6 +41,7 @@ import com.fisk.datamodel.map.AtomicIndicatorsMap;
 import com.fisk.datamodel.map.fact.BusinessProcessMap;
 import com.fisk.datamodel.map.fact.FactAttributeMap;
 import com.fisk.datamodel.map.fact.FactMap;
+import com.fisk.datamodel.map.versionsql.VersionSqlMap;
 import com.fisk.datamodel.mapper.BusinessAreaMapper;
 import com.fisk.datamodel.mapper.IndicatorsMapper;
 import com.fisk.datamodel.mapper.SyncModeMapper;
@@ -49,6 +51,7 @@ import com.fisk.datamodel.mapper.fact.BusinessProcessMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
 import com.fisk.datamodel.mapper.fact.FactMapper;
 import com.fisk.datamodel.service.IBusinessProcess;
+import com.fisk.datamodel.service.ITableVersionSqlService;
 import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
@@ -64,6 +67,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -111,6 +115,8 @@ public class BusinessProcessImpl
     CustomScriptImpl customScript;
     @Resource
     SyncModeMapper syncModeMapper;
+    @Resource
+    private ITableVersionSqlService versionSql;
 
     @Value("${open-metadata}")
     private Boolean openMetadata;
@@ -254,6 +260,13 @@ public class BusinessProcessImpl
              */
 
             for (FactPO item : factPoList) {
+                //版本sql添加数据
+                VersionSqlDTO versionSqlDTO = new VersionSqlDTO();
+                versionSqlDTO.setTableId((int) item.getId());
+                versionSqlDTO.setVersionDes(dto.remark);
+                versionSqlDTO.setHistoricalSql(item.sqlScript);
+                addVersionSql(versionSqlDTO);
+
                 //拼接数据 待发布事实表的信息
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
                 //表id
@@ -518,6 +531,7 @@ public class BusinessProcessImpl
         fieldDTO.sourceFieldName = attributePo.sourceFieldName;
         fieldDTO.associateDimensionId = attributePo.associateDimensionId;
         fieldDTO.associateDimensionFieldId = attributePo.associateDimensionFieldId;
+        //doris的话就是建表主键
         fieldDTO.isBusinessKey = attributePo.isBusinessKey;
         fieldDTO.isPrimaryKey = attributePo.isPrimaryKey;
         fieldDTO.isPartitionKey = attributePo.isPartitionKey;
@@ -548,6 +562,21 @@ public class BusinessProcessImpl
             list.add(data);
         }
         tableHistory.addTableHistory(list);
+    }
+
+    /**
+     * 添加表的版本sql
+     *
+     * @param dto
+     */
+    private void addVersionSql(VersionSqlDTO dto) {
+        VersionSqlDTO data = new VersionSqlDTO();
+        data.setVersionNumber(String.valueOf(Instant.now().toEpochMilli()));
+        data.setHistoricalSql(dto.getHistoricalSql());
+        data.setVersionDes(dto.getVersionDes());
+        data.setTableId(dto.getTableId());
+        data.setTableType(CreateTypeEnum.CREATE_FACT.getValue());
+        versionSql.save(VersionSqlMap.INSTANCES.dtoToPo(data));
     }
 
 
