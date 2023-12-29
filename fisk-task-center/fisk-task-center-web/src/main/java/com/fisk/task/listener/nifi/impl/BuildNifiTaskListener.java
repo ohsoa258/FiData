@@ -580,7 +580,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //调度组件,在数据接入的时候调一次
         String inputPortId = "";
 
-        if (buildTableApiService.syncModeDTO.triggerType == 1){
+        if (buildTableApiService.syncModeDTO.triggerType == 1) {
             ProcessorEntity dispatchProcessor = queryDispatchApiProcessor(config, groupId, cfgDbPoolId, dto);
             tableNifiSettingPO.dispatchComponentId = dispatchProcessor.getId();
             res.add(dispatchProcessor);
@@ -591,7 +591,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             res.add(publishKafkaProcessor);
             componentConnector(groupId, dispatchProcessor.getId(), processorEntity2.getId(), AutoEndBranchTypeEnum.SUCCESS);
             componentConnector(groupId, processorEntity2.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
-        }else {
+        } else {
             //更新topic
             TableTopicDTO tableTopicDTO = new TableTopicDTO();
             tableTopicDTO.tableId = Math.toIntExact(dto.id);
@@ -664,7 +664,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         HashMap<String, Object> checkByFieldMap = new HashMap<>();
         checkByFieldMap.put("pipelTaskTraceId", "${pipelTaskTraceId}");
         checkByFieldMap.put("fidata_batch_code", "${fidata_batch_code}");
-        checkByFieldMap.put("sourcesys","${sourcesys}");
+        checkByFieldMap.put("sourcesys", "${sourcesys}");
         tableApiSyncDTO.setCheckByFieldMap(checkByFieldMap);
         buildReplaceTextProcessorDTO.name = "GenerateFlowFileProcessor";
         buildReplaceTextProcessorDTO.details = "query_phase";
@@ -1274,7 +1274,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             if (tableNifiSettingPO != null) {
                 targetDbPoolConfig.targetTableName = tableNifiSettingPO.tableName;
                 processorConfig.targetTableName = tableNifiSettingPO.tableName;
-                if (tableNifiSettingPO.selectSql == null){
+                if (tableNifiSettingPO.selectSql == null) {
                     tableNifiSettingPO.selectSql = "select 1 as a;";
                 }
                 processorConfig.sourceExecSqlQuery = tableNifiSettingPO.selectSql;
@@ -4581,6 +4581,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         str.append(" where object_name = '").append(targetDbName).append("'");
         return str.toString();
     }
+
     /**
      * 创建增量字段查询sql
      *
@@ -4644,9 +4645,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         // filedValues += dto.queryStartTime == null ? ",'0000-01-01 00:00:00'" : (",'" + dto.queryStartTime + "'");
         //filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
         filedValues += ",'${incremental_objectivescore_start}','${incremental_objectivescore_end}'";
+        //先不存储查询sql
+        dto.selectSql = "";
         if (dto.selectSql != null && dto.selectSql != "") {
             filedValues += ",\"" + dto.selectSql.replaceAll("\"", "\\\\\"") + "\"";
-        }else {
+        } else {
             filedValues += ",\"" + selectSql.replaceAll("\"", "\\\\\"") + "\"";
         }
 
