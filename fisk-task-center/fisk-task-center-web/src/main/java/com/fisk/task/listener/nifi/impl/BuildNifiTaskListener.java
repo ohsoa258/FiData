@@ -4646,14 +4646,14 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         //filedValues += dto.queryEndTime == null ? ",now()" : (",'" + dto.queryEndTime + "'");
         filedValues += ",'${incremental_objectivescore_start}','${incremental_objectivescore_end}'";
         //先不存储查询sql
-        dto.selectSql = "";
-        if (dto.selectSql != null && dto.selectSql != "") {
-            filedValues += ",\"" + dto.selectSql.replaceAll("\"", "\\\\\"") + "\"";
-        } else {
-            filedValues += ",\"" + selectSql.replaceAll("\"", "\\\\\"") + "\"";
-        }
+//        dto.selectSql = "";
+//        if (dto.selectSql != null && dto.selectSql != "") {
+//            filedValues += ",\"" + dto.selectSql.replaceAll("\"", "\\\\\"") + "\"";
+//        } else {
+//            filedValues += ",\"" + selectSql.replaceAll("\"", "\\\\\"") + "\"";
+//        }
 
-        return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,query_sql,code) " +
+        return "INSERT INTO tb_etl_log ( tablename, startdate, `status`,query_start_time,query_end_time,code) " +
                 "VALUES ('" + dto.tableName + "', '${" + NifiConstants.AttrConstants.START_TIME + "}', 1" + filedValues + ",'${pipelTraceId:isEmpty():ifElse(${pipelTaskTraceId},${pipelTraceId})}')";
     }
 
