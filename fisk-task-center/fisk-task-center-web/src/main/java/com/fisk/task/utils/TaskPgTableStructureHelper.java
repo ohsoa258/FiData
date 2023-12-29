@@ -198,7 +198,7 @@ public class TaskPgTableStructureHelper
                 //字段类型
                 po.fieldType = item.fieldType;
                 //是否为主键
-                po.primaryKey = item.isPrimaryKey != 0;
+                po.primaryKey = item.isBusinessKey != 0;
                 //默认为1
                 po.validVersion = 1;
                 if (item.fieldType.contains("VARCHAR")) {
@@ -476,7 +476,7 @@ public class TaskPgTableStructureHelper
         }
         try {
             //检查版本
-            ResultEnum resultEnum = checkVersion(version, conn, type);
+            ResultEnum resultEnum = checkVersionForDoris(version, conn, type);
             if (resultEnum == ResultEnum.TASK_TABLE_NOT_EXIST) {
                 return "表不存在";
             }
@@ -554,6 +554,44 @@ public class TaskPgTableStructureHelper
                     DatabaseMetaData metaData = conn.getMetaData();
                     List<String> schemaAndTableName = TableNameGenerateUtils.getSchemaAndTableName(taskPgTableStructurePOList1.get(0).tableName, type);
                     ResultSet set = metaData.getTables(null, schemaAndTableName.get(0), schemaAndTableName.get(1), null);
+                    log.info(String.valueOf(set.getRow()));
+                    if (set.next()) {
+                        return ResultEnum.SUCCESS;
+                    }
+                }
+                return ResultEnum.TASK_TABLE_NOT_EXIST;
+            }
+        } catch (Exception e) {
+            log.error("checkVersion:" + e);
+        }
+        return ResultEnum.PARAMTER_ERROR;
+    }
+
+    /**
+     * 根据版本号找出更新前表是否存在
+     *
+     * @param version
+     * @param conn
+     * @return
+     * @throws Exception
+     */
+    public ResultEnum checkVersionForDoris(String version, Connection conn, DataSourceTypeEnum type) throws Exception {
+        try {
+            QueryWrapper<TaskPgTableStructurePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().eq(TaskPgTableStructurePO::getVersion, version);
+            List<TaskPgTableStructurePO> taskPgTableStructurePOList = taskPgTableStructureMapper.selectList(queryWrapper);
+            if (!CollectionUtils.isEmpty(taskPgTableStructurePOList)) {
+                QueryWrapper<TaskPgTableStructurePO> taskPgTableStructurePOQueryWrapper = new QueryWrapper<>();
+                taskPgTableStructurePOQueryWrapper.orderByDesc("create_time").lambda()
+                        .eq(TaskPgTableStructurePO::getTableType, taskPgTableStructurePOList.get(0).tableType)
+                        .ne(TaskPgTableStructurePO::getVersion, version)
+                        .eq(TaskPgTableStructurePO::getTableId, taskPgTableStructurePOList.get(0).tableId);
+                List<TaskPgTableStructurePO> taskPgTableStructurePOList1 = taskPgTableStructureMapper
+                        .selectList(taskPgTableStructurePOQueryWrapper);
+                if (!CollectionUtils.isEmpty(taskPgTableStructurePOList1)) {
+                    //判断表是否存在
+                    DatabaseMetaData metaData = conn.getMetaData();
+                    ResultSet set = metaData.getTables(null, null, taskPgTableStructurePOList1.get(0).tableName, null);
                     log.info(String.valueOf(set.getRow()));
                     if (set.next()) {
                         return ResultEnum.SUCCESS;

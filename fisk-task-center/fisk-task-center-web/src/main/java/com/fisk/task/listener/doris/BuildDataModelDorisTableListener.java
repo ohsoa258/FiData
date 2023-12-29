@@ -159,6 +159,7 @@ public class BuildDataModelDorisTableListener
                 //todo：doris数据库不支持存储过程，因此这里先将doris数仓排除在外
                 //调用方法，保存建模相关表结构数据(保存版本号)
                 ResultEnum resultEnum = null;
+                String msg = null;
                 if (!DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())) {
                     resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                     if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
@@ -167,7 +168,7 @@ public class BuildDataModelDorisTableListener
                     }
                     log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
                 } else {
-                    String msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+                    msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
 //                    resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
 //                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     if (!ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg) && !ResultEnum.SUCCESS.getMsg().equals(msg)) {
@@ -263,10 +264,12 @@ public class BuildDataModelDorisTableListener
                         }
                     }
                 } else {
-                    //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
-                    BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
-                    if (!businessResult1.success) {
-                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    if (ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg)){
+                        //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
+                        BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
+                        if (!businessResult1.success) {
+                            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                        }
                     }
                 }
 

@@ -290,13 +290,23 @@ public class BuildDorisTableImpl implements IbuildTable {
         //如果表名不相同，则修改表名
         if (!Objects.equals(oldTblName, newTblName)) {
             //ALTER TABLE table1 RENAME table2;
+            String oldTableKeyName = oldTblName.substring(oldTblName.indexOf("_") + 1) + "key";
+            String newTableKeyName = newTblName.substring(newTblName.indexOf("_") + 1) + "key";
+
+            //改表名的同时，修改系统key字段名
+            sql.append(" ALTER TABLE `")
+                    .append(oldTblName)
+                    .append("` RENAME COLUMN `")
+                    .append(oldTableKeyName)
+                    .append("` `")
+                    .append(newTableKeyName)
+                    .append("`; ");
             sql.append("ALTER TABLE `")
                     .append(oldTblName)
                     .append("` RENAME `")
                     .append(newTblName)
                     .append("`; ");
         }
-
         return sql.toString();
     }
 
