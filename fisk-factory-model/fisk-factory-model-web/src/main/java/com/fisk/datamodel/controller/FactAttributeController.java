@@ -52,12 +52,12 @@ public class FactAttributeController {
     }
 
     /**
-     * 数仓--建doris聚合模型表
+     * 数仓--建doris三种模型表  聚合  主键  冗余
      *
      * @param dto
      * @return
      */
-    @ApiOperation("数仓--建doris聚合模型表")
+    @ApiOperation("数仓--建doris三种模型表")
     @PostMapping("/buildDorisAggregateTbl")
     public ResultEntity<Object> buildDorisAggregateTbl(@Validated @RequestBody FactAttributeAddDTO dto) {
         return ResultEntityBuild.build(service.buildDorisAggregateTbl(dto));

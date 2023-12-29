@@ -98,7 +98,17 @@ public class BuildMysqlTableImpl implements IbuildTable {
     }
 
     @Override
+    public List<String> buildDorisDimTablesWithoutSystemFields(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
+    }
+
+    @Override
     public List<String> buildDorisFactTables(ModelPublishTableDTO modelPublishTableDTO) {
+        return null;
+    }
+
+    @Override
+    public List<String> buildDorisFactTablesWithoutSystemFields(ModelPublishTableDTO modelPublishTableDTO) {
         return null;
     }
 

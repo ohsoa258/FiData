@@ -264,7 +264,7 @@ public class BuildDataModelDorisTableListener
                         }
                     }
                 } else {
-                    if (ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg)){
+                    if (ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg)) {
                         //执行最终表创建表的sql,也就是pgdbTable2集合中的第二条sql CREATE TABLE....
                         BusinessResult businessResult1 = iPostgreBuild.postgreBuildTable(pgdbTable2.get(1), BusinessTypeEnum.DATAMODEL);
                         if (!businessResult1.success) {
@@ -489,9 +489,36 @@ public class BuildDataModelDorisTableListener
                     //根据数据源连接类型，获取建表实现类   doris
                     IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
 
-                    //todo:针对doris作为数仓  该方法只用于创建doris聚合模型表
+                    //获取字段  根据字段的属性 判断建什么模型
+                    List<ModelPublishFieldDTO> fieldList = modelPublishTableDTO.getFieldList();
+                    //是否主键模型
+                    boolean ifUniqueModel = false;
+                    //是否聚合模型
+                    boolean ifAggregate = false;
+                    for (ModelPublishFieldDTO dto : fieldList) {
+                        if (dto.isBusinessKey == 1) {
+                            ifUniqueModel = true;
+                            break;
+                        } else if (dto.isAggregateKey == 1) {
+                            ifAggregate = true;
+                            break;
+                        }
+                    }
+
                     if (DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())) {
-                        pgdbTable2 = dbCommand.buildDorisaAggregateTables(modelPublishTableDTO);
+
+                        //聚合模型
+                        if (ifAggregate) {
+                            //todo:针对doris作为数仓  该方法只用于创建doris聚合模型表
+                            pgdbTable2 = dbCommand.buildDorisaAggregateTables(modelPublishTableDTO);
+                        } else if (ifUniqueModel) {
+                            //主键模型  不包含系统字段
+                            pgdbTable2 = dbCommand.buildDorisDimTablesWithoutSystemFields(modelPublishTableDTO);
+                        } else {
+                            //冗余模型  不包含系统字段
+                            pgdbTable2 = dbCommand.buildDorisFactTablesWithoutSystemFields(modelPublishTableDTO);
+                        }
+
                     }
 
                     //新建map集合，预装载键值对

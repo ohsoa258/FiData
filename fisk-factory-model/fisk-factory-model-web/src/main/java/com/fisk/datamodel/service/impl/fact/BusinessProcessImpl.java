@@ -468,7 +468,7 @@ public class BusinessProcessImpl
                 // 关联目标dw库id
                 pushDto.setTargetDbId(targetDbId);
 
-                //获取该维度下所有维度字段
+                //获取该事实表下所有事实字段
                 List<ModelPublishFieldDTO> fieldList = new ArrayList<>();
                 List<FactAttributePO> attributePoList = factAttributePoList.stream().filter(e -> e.factId == item.id).collect(Collectors.toList());
                 for (FactAttributePO attributePo : attributePoList) {

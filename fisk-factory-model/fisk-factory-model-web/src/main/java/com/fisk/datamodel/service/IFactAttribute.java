@@ -34,7 +34,7 @@ public interface IFactAttribute {
     ResultEnum addFactAttribute(FactAttributeAddDTO dto);
 
     /**
-     * 数仓--建doris聚合模型表
+     * 数仓--建doris三种模型表
      *
      * @param dto
      * @return
