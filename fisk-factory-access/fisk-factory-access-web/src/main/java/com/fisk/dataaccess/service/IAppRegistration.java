@@ -17,6 +17,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
@@ -420,4 +421,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     AppRegistrationDTO getAppByTableAccessId(Integer tblId);
+
+    /**
+     * hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+     * 同步方式 1全量  2增量
+     *
+     * @param syncDto
+     */
+    Object hudiSyncAllTables(HudiSyncDTO syncDto);
 }

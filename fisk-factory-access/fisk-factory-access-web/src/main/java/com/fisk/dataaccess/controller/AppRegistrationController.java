@@ -18,6 +18,7 @@ import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
+import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
@@ -500,6 +501,18 @@ public class AppRegistrationController {
     @GetMapping("/getAppByTableAccessId")
     public ResultEntity<AppRegistrationDTO> getAppByTableAccessId(@RequestParam("tblId") Integer tblId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppByTableAccessId(tblId));
+    }
+
+    /**
+     * hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+     * 同步方式 1全量  2增量
+     *
+     * @param syncDto
+     */
+    @ApiOperation("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库 同步方式 1全量  2增量")
+    @PostMapping("/hudiSyncAllTables")
+    public ResultEntity<Object> hudiSyncAllTables(@RequestBody HudiSyncDTO syncDto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.hudiSyncAllTables(syncDto));
     }
 
 }

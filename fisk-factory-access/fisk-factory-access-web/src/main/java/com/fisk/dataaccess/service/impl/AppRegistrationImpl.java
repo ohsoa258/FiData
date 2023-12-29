@@ -50,6 +50,7 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.sapbw.CubesAndCats;
@@ -557,6 +558,295 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
+     * hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
+     * 同步方式 1全量  2增量
+     *
+     * @param syncDto
+     */
+    @Override
+    public Object hudiSyncAllTables(HudiSyncDTO syncDto) {
+
+        try {
+            //获取应用id
+            Long appId = syncDto.getAppId();
+
+            LambdaQueryWrapper<AppRegistrationPO> w = new LambdaQueryWrapper<>();
+            w.eq(AppRegistrationPO::getId, appId);
+            //获取应用基本信息
+            AppRegistrationPO one = getOne(w);
+
+            //获取应用引用的appDatasource
+            List<AppDataSourceDTO> appSource = appDataSourceImpl.getAppSourcesByAppId(appId);
+            if (CollectionUtils.isEmpty(appSource)) {
+                return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
+            }
+
+            //应用引用的系统模块平台配置数据源id
+            int systemDataSourceId = appSource.get(0).getSystemDataSourceId();
+            //获取应用引用的appDatasource id
+            int appDatasourceId = Math.toIntExact(appSource.get(0).getId());
+
+            //同步方式 1全量  2增量
+            int syncType = syncDto.getSyncType();
+            switch (syncType) {
+                case 1:
+                    hudiSyncAllTablesByFull(systemDataSourceId, appDatasourceId, appId, one.getAppName());
+                case 2:
+                    hudiSyncAllTablesByMerge(systemDataSourceId, appDatasourceId, appId, one.getAppName());
+            }
+
+            return ResultEnum.SUCCESS;
+        } catch (Exception e) {
+            log.error("hudi入仓配置同步表失败：" + e);
+            throw new FkException(ResultEnum.ACCESS_HUDI_SYNC_ERROR);
+        }
+
+    }
+
+
+    /**
+     * hudi入仓配置 全量同步所有来源数据库对应库下的表信息到fidata平台配置库
+     *
+     * @param dbId
+     */
+    public void hudiSyncAllTablesByFull(Integer dbId, Integer appDatasourceId, Long appId, String appName) {
+        log.info("hudi 入仓配置 - 全量同步应用时先删除应用下的所有表-------------------------------");
+        //先删除当前应用下的所有表和所有表的字段信息
+        // 删除应用下的物理表
+        List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", appId).eq("del_flag", 1).list();
+        if (!CollectionUtils.isEmpty(accessList)) {
+            // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
+            accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", tableAccessPO.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
+            // 删除应用下面的所有表及表结构
+            accessList.forEach(tableAccessPO -> {
+                tableAccessMapper.deleteByIdWithFill(tableAccessPO);
+            });
+
+        }
+
+        log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
+        ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
+        DataSourceDTO dto = datasource.getData();
+        if (dto == null) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        Connection conn = null;
+
+        //获取到所有表名
+        List<TablePyhNameDTO> tableNames = new ArrayList<>();
+
+        log.info("引用的数据源类型" + dto.conType);
+        try {
+            switch (dto.conType) {
+                case MYSQL:
+                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn, dto.conDbname);
+                    break;
+                case SQLSERVER:
+                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
+                    break;
+                case ORACLE:
+                    OracleUtils oracleUtils = new OracleUtils();
+                    log.info("ORACLE驱动开始加载");
+                    log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    log.info("ORACLE驱动加载完毕");
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                    break;
+                default:
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+            }
+
+            log.info("查询到的库表字段详情：" + tableNames);
+
+            for (TablePyhNameDTO table : tableNames) {
+
+                TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
+                tableAccessDTO.setAppDataSourceId(appDatasourceId);
+                tableAccessDTO.setAppId(appId);
+                tableAccessDTO.setAppName(appName);
+                tableAccessDTO.setDisplayName(table.getTableName());
+                tableAccessDTO.setIsRealtime(1);
+                tableAccessDTO.setPublish(0);
+                tableAccessDTO.setSyncSrc("");
+                tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+                tableAccessDTO.setIfOpenCdc(1);
+                String tableName = table.getTableName();
+                if (tableName.contains(".")) {
+                    tableName = tableName.replaceFirst("\\.", "_");
+                }
+                tableAccessDTO.setTableName(tableName);
+
+                //将表插入都tb_table_access表 获取到表的主键id
+                Integer accessId = tableAccessImpl.addTableAccessTblForHudiConfig(tableAccessDTO);
+
+                //获取当前表的字段
+                List<TableStructureDTO> fields = table.getFields();
+
+                List<TableFieldsDTO> list = new ArrayList<>();
+                for (TableStructureDTO field : fields) {
+                    TableFieldsDTO fieldDTO = new TableFieldsDTO();
+                    fieldDTO.setTableAccessId(Long.valueOf(accessId));
+                    fieldDTO.setSourceFieldName(field.fieldName);
+                    fieldDTO.setSourceFieldType(field.fieldType);
+                    fieldDTO.setFieldName(field.fieldName);
+                    //字段类型暂时写死为string
+                    fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                    //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
+                    fieldDTO.setFieldDes(field.getFieldDes());
+                    fieldDTO.setIsPrimarykey(field.getIsPk());
+                    //1：是实时物理表的字段，
+                    //0：非实时物理表的字段
+                    fieldDTO.setIsRealtime(1);
+                    fieldDTO.setIsBusinesstime(0);
+                    fieldDTO.setIsTimestamp(0);
+                    fieldDTO.setSourceDbName(field.sourceDbName);
+                    fieldDTO.setSourceTblName(table.getTableName());
+                    list.add(fieldDTO);
+                }
+                List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+                tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+            }
+
+        } catch (Exception e) {
+            log.error("hudi-入仓配置add异常：" + e);
+        } finally {
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+
+    }
+
+    /**
+     * hudi入仓配置 增量同步所有来源数据库对应库下的表信息到fidata平台配置库
+     *
+     * @param dbId
+     */
+    public void hudiSyncAllTablesByMerge(Integer dbId, Integer appDatasourceId, Long appId, String appName) {
+        log.info("hudi入仓配置 增量同步时，先获取已同步到当前应用下的所有表名");
+        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(TableAccessPO::getTableName)
+                .eq(TableAccessPO::getAppId, appId);
+        //获取到已经同步过的表名
+        List<TableAccessPO> posAlreadyHave = tableAccessImpl.list(wrapper);
+
+        log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
+        ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
+        DataSourceDTO dto = datasource.getData();
+        if (dto == null) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        Connection conn = null;
+
+        //获取到所有表名
+        List<TablePyhNameDTO> tableNames = new ArrayList<>();
+
+        log.info("引用的数据源类型" + dto.conType);
+        try {
+            switch (dto.conType) {
+                case MYSQL:
+                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn, dto.conDbname);
+                    break;
+                case SQLSERVER:
+                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
+                    break;
+                case ORACLE:
+                    OracleUtils oracleUtils = new OracleUtils();
+                    log.info("ORACLE驱动开始加载");
+                    log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    log.info("ORACLE驱动加载完毕");
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                    break;
+                default:
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+            }
+
+            log.info("查询到的库表字段详情：" + tableNames);
+
+            boolean ifSync = true;
+            for (TablePyhNameDTO table : tableNames) {
+
+                TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
+                tableAccessDTO.setAppDataSourceId(appDatasourceId);
+                tableAccessDTO.setAppId(appId);
+                tableAccessDTO.setAppName(appName);
+                tableAccessDTO.setDisplayName(table.getTableName());
+                tableAccessDTO.setIsRealtime(1);
+                tableAccessDTO.setPublish(0);
+                tableAccessDTO.setSyncSrc("");
+                tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+                tableAccessDTO.setIfOpenCdc(1);
+                String tableName = table.getTableName();
+                if (tableName.contains(".")) {
+                    tableName = tableName.replaceFirst("\\.", "_");
+                }
+                tableAccessDTO.setTableName(tableName);
+
+                for (TableAccessPO tableAccessPO : posAlreadyHave) {
+                    if (tableAccessPO.getTableName().equals(tableAccessDTO.getTableName())) {
+                        ifSync = false;
+                        break;
+                    }
+                }
+
+                if (ifSync) {
+                    //将表插入都tb_table_access表 获取到表的主键id
+                    int accessId = tableAccessImpl.addTableAccessTblForHudiConfig(tableAccessDTO);
+                    //获取当前表的字段
+                    List<TableStructureDTO> fields = table.getFields();
+
+                    List<TableFieldsDTO> list = new ArrayList<>();
+                    for (TableStructureDTO field : fields) {
+                        TableFieldsDTO fieldDTO = new TableFieldsDTO();
+                        fieldDTO.setTableAccessId((long) accessId);
+                        fieldDTO.setSourceFieldName(field.fieldName);
+                        fieldDTO.setSourceFieldType(field.fieldType);
+                        fieldDTO.setFieldName(field.fieldName);
+                        //字段类型暂时写死为string
+                        fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                        //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
+                        fieldDTO.setFieldDes(field.getFieldDes());
+                        fieldDTO.setIsPrimarykey(field.getIsPk());
+                        //1：是实时物理表的字段，
+                        //0：非实时物理表的字段
+                        fieldDTO.setIsRealtime(1);
+                        fieldDTO.setIsBusinesstime(0);
+                        fieldDTO.setIsTimestamp(0);
+                        fieldDTO.setSourceDbName(field.sourceDbName);
+                        fieldDTO.setSourceTblName(table.getTableName());
+                        list.add(fieldDTO);
+                    }
+                    List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+                    tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("hudi-入仓配置add异常：" + e);
+        } finally {
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+
+    }
+
+    /**
      * 校验单一应用下选择的数据源是否合理
      *
      * @param data
@@ -897,7 +1187,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 List<TableAccessPO> accessList = tableAccessImpl.query().eq("app_id", model.id).eq("del_flag", 1).list();
                 if (!CollectionUtils.isEmpty(accessList)) {
                     // 先遍历accessList,取出每个对象中的id,再去tb_table_fields表中查询相应数据,将查询到的对象删除
-                    accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", po.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
+                    accessList.stream().map(tableAccessPO -> tableFieldsImpl.query().eq("table_access_id", tableAccessPO.id).eq("del_flag", 1).list()).flatMap(Collection::stream).forEachOrdered(tableFieldsPO -> tableFieldsMapper.deleteByIdWithFill(tableFieldsPO));
                     // 删除应用下面的所有表及表结构
                     accessList.forEach(tableAccessPO -> {
                         tableAccessMapper.deleteByIdWithFill(tableAccessPO);
@@ -2592,7 +2882,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             //获取获取应用下的所有物理表
             LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.select(TableAccessPO::getTableName, TableAccessPO::getId,TableAccessPO::getDisplayName)
+            wrapper1.select(TableAccessPO::getTableName, TableAccessPO::getId, TableAccessPO::getDisplayName)
                     .eq(TableAccessPO::getAppId, appRegistrationPO.getId());
             List<TableAccessPO> tableAccessPOS = tableAccessImpl.list(wrapper1);
             for (TableAccessPO dimensionPO : tableAccessPOS) {
@@ -2621,7 +2911,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public AppRegistrationDTO getAppByTableAccessId(Integer tblId) {
         TableAccessDTO tableAccess = tableAccessImpl.getTableAccess(tblId);
         LambdaQueryWrapper<AppRegistrationPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(AppRegistrationPO::getId,tableAccess.getAppId());
+        wrapper.eq(AppRegistrationPO::getId, tableAccess.getAppId());
         AppRegistrationPO one = this.getOne(wrapper);
         return AppRegistrationMap.INSTANCES.poToDto(one);
     }

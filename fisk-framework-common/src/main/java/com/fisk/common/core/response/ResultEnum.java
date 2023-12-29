@@ -233,6 +233,7 @@ public enum ResultEnum {
     DATAACCESS_GETCATALOG_ERROR(5103, "获取数据库catalog名称失败"),
     API_NIFI_SYNC_ERROR(5104, "API-NIFI同步报错"),
     GET_ACCESS_TREE_FAILURE(5105, "获取数据接入应用-表树结构失败"),
+    ACCESS_HUDI_SYNC_ERROR(5106, "获取数据-入仓配置同步表失败"),
 
     /**
      * 后台任务模块
