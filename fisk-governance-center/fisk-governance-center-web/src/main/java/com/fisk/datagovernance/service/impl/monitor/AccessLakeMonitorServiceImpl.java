@@ -326,9 +326,13 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                 log.error(e.getMessage());
                             } finally {
                                 try {
-                                    st.close();
-                                    conn.close();
-                                } catch (SQLException e) {
+                                    if (st != null) {
+                                        st.close();
+                                    }
+                                    if (conn != null) {
+                                        conn.close();
+                                    }
+                                } catch (Exception e) {
                                     log.error(e.getMessage());
                                 }
                             }
