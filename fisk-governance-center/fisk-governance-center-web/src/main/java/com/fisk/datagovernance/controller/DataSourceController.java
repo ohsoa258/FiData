@@ -7,10 +7,14 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
+import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.*;
+import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
+import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
@@ -129,4 +133,15 @@ public class DataSourceController {
         service.exportData(vo,response);
     }
 
+    @GetMapping("/getObsSqlByUser")
+    @ApiOperation("查询当前用户执行sql")
+    public ResultEntity<Object> getObsSqlByUser() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getObsSqlByUser());
+    }
+
+    @PostMapping("/saveOrUpdateObsSql")
+    @ApiOperation("更新当前用户执行sql")
+    public ResultEntity<Object> saveOrUpdateObsSql(@RequestBody List<DataObsSqlDTO> list) {
+        return ResultEntityBuild.build(service.saveOrUpdateObsSql(list));
+    }
 }

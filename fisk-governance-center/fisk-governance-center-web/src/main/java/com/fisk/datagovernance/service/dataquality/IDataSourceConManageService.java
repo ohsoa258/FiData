@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 
 /**
@@ -85,4 +87,8 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * 导出查询结果
      */
     void exportData(ExportResultVO dto, HttpServletResponse response);
+
+    List<DataObsSqlDTO> getObsSqlByUser();
+
+    ResultEnum saveOrUpdateObsSql(List<DataObsSqlDTO> list);
 }

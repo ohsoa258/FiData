@@ -60,5 +60,7 @@ public interface StandardsService extends IService<StandardsPO> {
     ResultEnum standardsSort(StandardsSortDTO dto);
 
     Page<StandardsMenuDTO> standardsQuery(StandardsQueryDTO dto);
+
+    List<StandardsDTO> getStandardsBySource(StandardsSourceQueryDTO dto);
 }
 

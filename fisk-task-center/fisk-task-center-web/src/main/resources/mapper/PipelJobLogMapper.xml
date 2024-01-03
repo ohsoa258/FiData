@@ -31,7 +31,7 @@
                    WHEN t2.msg LIKE '%跳过%' THEN
                        '跳过'
                    WHEN t2.msg LIKE '%禁止%' THEN
-                       '禁止'
+                       '禁用'
                    END AS result
         FROM
             (SELECT * FROM

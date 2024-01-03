@@ -20,4 +20,29 @@
                 )
         </if>
     </select>
+    <select id="getStandardsBySource" resultType="com.fisk.datamanagement.dto.standards.StandardsDTO">
+        SELECT
+            *
+        FROM
+            tb_standards
+        WHERE
+            del_flag = 1
+          AND id IN (
+            SELECT DISTINCT
+                standards_id
+            FROM
+                `tb_standards_be_cited`
+            WHERE
+                del_flag = 1
+        <if test="dto.databaseName !=null and dto.databaseName.length()>0 ">
+            AND database_name LIKE concat( '%',#{dto.databaseName}, '%' )
+        </if>
+        <if test="dto.tableName !=null and dto.tableName.length()>0 ">
+            AND table_name LIKE concat( '%', #{dto.tableName}, '%' )
+        </if>
+        <if test="dto.fieldName !=null and dto.fieldName.length()>0 ">
+            AND field_name LIKE concat( '%', #{dto.fieldName}, '%' )
+        </if>
+        )
+    </select>
 </mapper>

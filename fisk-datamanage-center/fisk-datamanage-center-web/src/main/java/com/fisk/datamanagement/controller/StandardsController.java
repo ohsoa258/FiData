@@ -108,4 +108,10 @@ public class StandardsController {
     public ResultEntity<Object> standardsQuery(@RequestBody StandardsQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.standardsQuery(dto));
     }
+    @ApiOperation("根据数据源信息查询数据标准基本属性")
+    @PostMapping("/getStandardsBySource")
+    public ResultEntity<List<StandardsDTO>> getStandardsBySource(@RequestBody StandardsSourceQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardsBySource(dto));
+    }
+
 }

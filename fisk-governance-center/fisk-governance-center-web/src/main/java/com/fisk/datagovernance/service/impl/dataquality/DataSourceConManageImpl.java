@@ -2,10 +2,13 @@ package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
@@ -13,6 +16,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
@@ -21,14 +25,17 @@ import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
+import com.fisk.datagovernance.entity.dataops.DataObsSqlPO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
+import com.fisk.datagovernance.map.dataops.DataObsSqlMap;
 import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
+import com.fisk.datagovernance.service.dataops.DataObsSqlService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
-import com.fisk.datagovernance.vo.dataquality.datasource.*;
+import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
@@ -47,7 +54,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -88,6 +97,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private RedisTemplate redisTemplate;
+
+    @Resource
+    private DataObsSqlService dataObsSqlService;
 
     @Override
     public Page<DataSourceConVO> page(DataSourceConQuery query) {
@@ -398,6 +410,47 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     @Override
     public void exportData(ExportResultVO vo, HttpServletResponse response) {
         exportExcel(vo, response);
+    }
+
+    @Override
+    public List<DataObsSqlDTO> getObsSqlByUser() {
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+        Long userId = loginUserInfo.getId();
+        LambdaQueryWrapper<DataObsSqlPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DataObsSqlPO::getDelFlag,1);
+        queryWrapper.eq(DataObsSqlPO::getCreateUser,userId);
+        List<DataObsSqlPO> list = dataObsSqlService.list(queryWrapper);
+        List<DataObsSqlDTO> dataObsSqlDTOS = DataObsSqlMap.INSTANCES.poListToDtoList(list);
+        return dataObsSqlDTOS;
+    }
+
+    @Override
+    public ResultEnum saveOrUpdateObsSql(List<DataObsSqlDTO> list) {
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+        Long userId = loginUserInfo.getId();
+        LambdaQueryWrapper<DataObsSqlPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DataObsSqlPO::getCreateUser,userId);
+        List<DataObsSqlPO> poList = dataObsSqlService.list(queryWrapper);
+        List<Long> ObsSqlPoId = poList.stream().map(BasePO::getId).collect(Collectors.toList());
+        List<DataObsSqlPO> dataObsSqlPOS = DataObsSqlMap.INSTANCES.dtoListToPoList(list);
+
+        //找出待删除数据id
+        List<Long> Ids = dataObsSqlPOS.stream().map(DataObsSqlPO::getId).collect(Collectors.toList());
+        List<Long> dels = ObsSqlPoId.stream().filter(i -> !Ids.contains(i)).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(dels)){
+            dataObsSqlService.removeByIds(dels);
+        }
+        //找出待添加数据
+        List<DataObsSqlPO> adds = dataObsSqlPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
+        //找出待修改数据
+        List<DataObsSqlPO> updates = dataObsSqlPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(adds)){
+            dataObsSqlService.saveBatch(adds);
+        }
+        if (CollectionUtils.isNotEmpty(updates)){
+            dataObsSqlService.updateBatchById(updates);
+        }
+        return ResultEnum.SUCCESS;
     }
 
     /**

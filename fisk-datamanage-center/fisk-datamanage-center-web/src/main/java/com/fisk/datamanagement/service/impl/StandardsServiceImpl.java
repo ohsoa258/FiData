@@ -525,6 +525,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         return this.baseMapper.standardsQuery(dto.page, dto);
     }
 
+    @Override
+    public List<StandardsDTO> getStandardsBySource(StandardsSourceQueryDTO dto) {
+        return this.baseMapper.getStandardsBySource(dto);
+    }
+
     /**
      * 根据表名获取字段
      *
