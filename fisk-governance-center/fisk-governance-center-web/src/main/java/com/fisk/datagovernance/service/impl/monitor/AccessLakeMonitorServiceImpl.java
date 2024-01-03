@@ -323,14 +323,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                     redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName(), JSON.toJSONString(tablesRowsDTO));
                                 }
                             } catch (Exception e) {
-                                log.info("---------saveCatchTargetTableRows方法停止---------");
                                 log.error(e.getMessage());
-                                try {
-                                    Thread.sleep(600000);
-                                    new Thread(this::saveCatchTargetTableRows).start();
-                                } catch (InterruptedException ex) {
-                                    throw new RuntimeException(ex);
-                                }
                             } finally {
                                 try {
                                     st.close();
