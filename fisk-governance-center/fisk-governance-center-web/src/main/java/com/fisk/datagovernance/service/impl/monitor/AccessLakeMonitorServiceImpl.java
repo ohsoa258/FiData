@@ -329,14 +329,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                     st.close();
                                     conn.close();
                                 } catch (SQLException e) {
-                                    log.info("---------saveCatchTargetTableRows方法停止---------");
                                     log.error(e.getMessage());
-                                    try {
-                                        Thread.sleep(600000);
-                                        new Thread(this::saveCatchTargetTableRows).start();
-                                    } catch (InterruptedException ex) {
-                                        throw new RuntimeException(ex);
-                                    }
                                 }
                             }
                         }
