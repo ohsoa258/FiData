@@ -284,6 +284,7 @@ public enum ResultEnum {
     GET_MODEL_TREE_FAILURE(8019, "获取数仓建模业务域-表树结构失败"),
     GET_NIFI_LOG_ERROR(8020, "获取nifi同步日志失败"),
     GET_ACCESS_APP_ERROR(8021, "获取nifi同步日志-获取数据接入应用失败"),
+    PUBLIC_DIM_PUBLISH_ERROR(8022, "公共域维度表发布失败，请回该表的初始创建业务域发布"),
 
     /**
      * 数据工厂
