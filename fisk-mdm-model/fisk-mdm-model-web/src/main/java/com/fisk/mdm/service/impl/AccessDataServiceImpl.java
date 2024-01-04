@@ -257,6 +257,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         accessDataPO.setLoadingSql(dto.coverScript);
         accessDataPO.setVersionId(dto.versionId);
         accessDataPO.setDomainUpdateSql(dto.domainUpdateSql);
+        accessDataPO.setAccessType(syncModePo.syncMode);
         UserInfo userInfo = userHelper.getLoginUserInfo();
         dto.setUserId(userInfo.id);
         if (mapper.updateById(accessDataPO) == 0) {
@@ -514,12 +515,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if (entityPO == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
-        // 新增同步方式
-        if (accessDataPO.getAccessType() == null) {
-            targetDsConfig.syncMode = 3;
-        } else {
-            targetDsConfig.syncMode = accessDataPO.getAccessType();
-        }
+        targetDsConfig.syncMode = accessDataPO.getAccessType();
         // 2.任务组配置
         taskGroupConfig.setAppName(entityPO.getTableName());
         taskGroupConfig.setAppDetails(entityPO.getDesc());

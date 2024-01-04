@@ -326,9 +326,13 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                 log.error(e.getMessage());
                             } finally {
                                 try {
-                                    st.close();
-                                    conn.close();
-                                } catch (SQLException e) {
+                                    if (st != null) {
+                                        st.close();
+                                    }
+                                    if (conn != null) {
+                                        conn.close();
+                                    }
+                                } catch (Exception e) {
                                     log.error(e.getMessage());
                                 }
                             }
@@ -348,6 +352,12 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         } catch (InterruptedException e) {
             log.info("---------saveCatchTargetTableRows方法停止---------");
             e.printStackTrace();
+            try {
+                Thread.sleep(600000);
+                new Thread(this::saveCatchTargetTableRows).start();
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
         }
         return ResultEnum.SUCCESS;
     }
