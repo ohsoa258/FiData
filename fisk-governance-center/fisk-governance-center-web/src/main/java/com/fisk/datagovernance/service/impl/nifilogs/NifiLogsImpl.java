@@ -57,6 +57,7 @@ public class NifiLogsImpl implements INifiLogs {
             if (allAreaAndTables.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.GET_MODEL_TREE_FAILURE);
             }
+            accessAndModelTreeDTO.setModelTree(allAreaAndTables.getData());
 
             //获取主数据 模型实体-表树结构
             ResultEntity<List<AccessAndModelAppDTO>> allModelAndEntitys = mdmClient.getAllModelAndEntitys();
