@@ -21,6 +21,10 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableTypeEnum;
+import com.fisk.common.service.accessAndModel.ServerTypeEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -454,6 +458,33 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
              return appBusinessInfoDTO;
         }).collect(Collectors.toList());
         return appBusinessInfoDTOList;
+    }
+
+    @Override
+    public List<AccessAndModelAppDTO> getAllModelAndEntitys() {
+        List<ModelPO> modelPOList = modelService.list();
+        List<AccessAndModelAppDTO> list = new ArrayList<>();
+        //查询组装数据
+        for (ModelPO modelPO : modelPOList) {
+            AccessAndModelAppDTO accessAndModelAppDTO = new AccessAndModelAppDTO();
+            accessAndModelAppDTO.setAppId((int)modelPO.id);
+            accessAndModelAppDTO.setAppName(modelPO.name);
+            accessAndModelAppDTO.setServerType(ServerTypeEnum.MDM.getValue());
+            LambdaQueryWrapper<EntityPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(EntityPO::getModelId,modelPO.getId());
+            List<EntityPO> entityPOS = entityMapper.selectList(queryWrapper);
+            List<AccessAndModelTableDTO> accessAndModelTableDTOS = entityPOS.stream().map(i -> {
+                AccessAndModelTableDTO accessAndModelTableDTO = new AccessAndModelTableDTO();
+                accessAndModelTableDTO.setTblId((int) i.getId());
+                accessAndModelTableDTO.setTableName(i.getTableName());
+                accessAndModelTableDTO.setDisplayTableName(i.getDisplayName());
+                accessAndModelTableDTO.setTableType(OlapTableEnum.MDM_DATA_ACCESS.getValue());
+                return accessAndModelTableDTO;
+            }).collect(Collectors.toList());
+            accessAndModelAppDTO.setTables(accessAndModelTableDTOS);
+            list.add(accessAndModelAppDTO);
+        }
+        return list;
     }
 
 

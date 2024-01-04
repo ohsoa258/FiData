@@ -6,17 +6,17 @@ import lombok.Data;
 public class AccessAndModelTableDTO {
 
     /**
-     * 物理表/事实表/维度表id
+     * 实体/物理表/事实表/维度表id
      */
     private Integer tblId;
 
     /**
-     * 物理表/事实表/维度表名称
+     * 实体/物理表/事实表/维度表名称
      */
     private String tableName;
 
     /**
-     * 物理表/事实表/维度表名称
+     * 实体/物理表/事实表/维度表名称
      */
     private String displayTableName;
 

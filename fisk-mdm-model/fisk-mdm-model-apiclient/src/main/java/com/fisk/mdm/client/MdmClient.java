@@ -4,6 +4,7 @@ import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -206,4 +207,11 @@ public interface MdmClient {
      */
     @PostMapping("/entity/getTableNames")
     ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO);
+
+    /**
+     * 获取主数据所有模型下的所有实体表
+     * @return
+     */
+    @GetMapping("/getAllModelAndEntitys")
+    ResultEntity<List<AccessAndModelAppDTO>> getAllModelAndEntitys();
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -91,4 +92,10 @@ public interface IModelService extends IService<ModelPO> {
      */
     List<AppBusinessInfoDTO>  getMasterDataModel();
 
+
+    /**
+     * 获取所有模型和实体
+     * @return
+     */
+    List<AccessAndModelAppDTO> getAllModelAndEntitys();
 }

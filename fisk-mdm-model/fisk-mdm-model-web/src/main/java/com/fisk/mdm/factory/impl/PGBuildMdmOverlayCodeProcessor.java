@@ -236,14 +236,16 @@ public class PGBuildMdmOverlayCodeProcessor  implements BuildMdmOverlayCodeProce
         str.append("WHERE\n");
         str.append("  fidata_version_id = '"+versionId+"';\n");
         str.append("INSERT INTO \""+targetTableName+"\" (");
-        str.append("fidata_version_id, fidata_create_time, fidata_create_user, fidata_del_flag, fidata_batch_code,");
+        str.append("fidata_version_id, fidata_create_time, fidata_create_user, fidata_update_time, fidata_update_user, fidata_del_flag, fidata_batch_code,");
         if(flag){
             str.append("\"column_code\",");
         }
         str.append(org.apache.commons.lang.StringUtils.join(targetColumnNames, ","));
         str.append(" ) SELECT\n");
         str.append("fidata_version_id,\n");
-        str.append("DATE_TRUNC('second', CURRENT_TIMESTAMP) as fidata_create_time,\n");
+        str.append("fidata_create_time,\n");
+        str.append("fidata_create_user,\n");
+        str.append("DATE_TRUNC('second', CURRENT_TIMESTAMP) as fidata_update_time,\n");
         str.append("fidata_create_user,\n");
         str.append("fidata_del_flag,\n");
         str.append("fidata_batch_code,\n");

@@ -8,17 +8,17 @@ import java.util.List;
 public class AccessAndModelAppDTO {
 
     /**
-     * 应用/业务域id
+     * 模型/应用/业务域id
      */
     private Integer appId;
 
     /**
-     * 应用/业务域名称
+     * 模型/应用/业务域名称
      */
     private String appName;
 
     /**
-     * 应用/业务域下的表
+     * 模型/应用/业务域下的表
      */
     private List<AccessAndModelTableDTO> tables;
 

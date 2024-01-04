@@ -5,7 +5,8 @@ import com.fisk.common.core.enums.BaseEnum;
 public enum ServerTypeEnum implements BaseEnum {
     ACCESS(1, "数据接入"),
     MODEL(2, "数仓建模"),
-    DISPATCH(3, "数据管道");
+    DISPATCH(3, "数据管道"),
+    MDM(4, "主数据");
 
     ServerTypeEnum(int value, String name) {
         this.value = value;
@@ -22,6 +23,8 @@ public enum ServerTypeEnum implements BaseEnum {
             case 2:
                 return MODEL;
             case 3:
+                return MDM;
+            case 4:
                 return DISPATCH;
             default:
                 return null;

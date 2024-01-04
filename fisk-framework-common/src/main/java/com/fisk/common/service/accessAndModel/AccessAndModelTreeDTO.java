@@ -17,4 +17,8 @@ public class AccessAndModelTreeDTO {
      */
     private List<AccessAndModelAppDTO> modelTree;
 
+    /**
+     * 主数据树
+     */
+    private List<AccessAndModelAppDTO> mdmTree;
 }

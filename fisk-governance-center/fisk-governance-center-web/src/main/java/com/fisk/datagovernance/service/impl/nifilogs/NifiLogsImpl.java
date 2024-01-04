@@ -12,6 +12,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.datagovernance.service.nifilogs.INifiLogs;
 import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.task.client.PublishTaskClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class NifiLogsImpl implements INifiLogs {
 
     @Resource
     private DataModelClient modelClient;
+
+    @Resource
+    private MdmClient mdmClient;
 
     @Resource
     private PublishTaskClient taskClient;
@@ -53,9 +57,15 @@ public class NifiLogsImpl implements INifiLogs {
             if (allAreaAndTables.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.GET_MODEL_TREE_FAILURE);
             }
-            accessAndModelTreeDTO.setModelTree(allAreaAndTables.getData());
+
+            //获取主数据 模型实体-表树结构
+            ResultEntity<List<AccessAndModelAppDTO>> allModelAndEntitys = mdmClient.getAllModelAndEntitys();
+            if (allModelAndEntitys.getCode() != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.GET_MODEL_TREE_FAILURE);
+            }
+            accessAndModelTreeDTO.setMdmTree(allModelAndEntitys.getData());
         } catch (Exception e) {
-            log.error("同步日志页面获取数接数仓树形结构失败：" + e);
+            log.error("同步日志页面获取数接数仓主数据树形结构失败：" + e);
             throw new FkException(ResultEnum.ERROR);
         }
         return accessAndModelTreeDTO;
