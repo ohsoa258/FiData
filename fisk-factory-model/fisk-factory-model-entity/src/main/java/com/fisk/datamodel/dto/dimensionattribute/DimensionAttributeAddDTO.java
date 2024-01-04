@@ -28,6 +28,7 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "业务域名称")
     public String businessAreaName;
+
     @ApiModelProperty(value = "创建类型")
     public int createType;
     /**

@@ -1917,6 +1917,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         String lastId = "";
         Boolean isLastId = true;
+        List<ProcessorEntity> entities = new ArrayList<>();
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
@@ -1948,7 +1949,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                 tableNifiSettingPO.saveTargetDbProcessorId = null;
                 /**
-                 * CallDbProcedure
+                 * CallDbProcedure 执行sql预览的sql
                  */
                 ProcessorEntity processorEntity2 = CallDbProcedurev1(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
                 if (IHP.getId() != null) {
@@ -1988,8 +1989,56 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 componentsConnector(groupId, updateField1.getId(), supervisionId, autoEndBranchTypeEnums);
                 res.add(updateField);
                 res.add(updateField1);
+
+                //todo:当数仓数据库类型是doris的时候,并且数仓的关联外键语句是多个update,则使用多个nifi执行sql组件去执行拆分后的关联外键sql
+                String updateSql = dto.getUpdateSql();
+                log.info("数仓建模关联外键语句！！：" + updateSql);
+                if (StringUtils.isNotEmpty(updateSql)) {
+                    //获取数仓类型
+                    ResultEntity<DataSourceDTO> dwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+                    DataSourceTypeEnum conType1 = dwSource.getData().getConType();
+                    //如果是doris
+                    if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
+                        String[] split = updateSql.split(";");
+                        //如果关联了多个外键  则使用多个nifi执行sql组件去执行拆分后的关联外键sql
+                        if (split.length > 1) {
+                            for (int i = 0; i < split.length; i++) {
+                                ProcessorEntity updateDorisKeySqlEntity = new ProcessorEntity();
+
+                                //替换要执行的关联外键语句
+                                dto.updateSql = split[i] += ";";
+                                /**
+                                 * UpdateDorisKeySql 专门用于执行doris关联外键时的多个update语句
+                                 */
+                                updateDorisKeySqlEntity = CallDbProcedureForDorisKeySql(config, groupId, targetDbPoolId, synchronousTypeEnum, dto, i);
+                                //连接报错处理组件
+                                componentConnector(groupId, updateDorisKeySqlEntity.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
+
+
+                                entities.add(updateDorisKeySqlEntity);
+
+                            }
+                            //doris关联外键组件群内部自己连接
+                            for (int i = 0; i < entities.size(); i++) {
+                                if (i < entities.size() - 1) {
+                                    componentConnector(groupId, entities.get(i).getId(), entities.get(i + 1).getId(), AutoEndBranchTypeEnum.SUCCESS);
+                                }
+                            }
+
+                        }
+
+                    }
+                }
+
+                //doris关联外键更新组件群的第一个要跟前面的执行插入数据到临时表的组件进行连接
+                if (!CollectionUtils.isEmpty(entities)) {
+                    String id = entities.get(0).getId();
+                    //连接器
+                    componentConnector(groupId, putDatabaseRecord.getId(), id, AutoEndBranchTypeEnum.SUCCESS);
+                }
+
                 /**
-                 * CallDbProcedure sql预览的sql
+                 * CallDbProcedure 该组件执行sql预览的sql
                  */
                 processorEntity1 = CallDbProcedure(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
             }
@@ -2038,7 +2087,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 componentConnector(groupId, invokeHTTP.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
                 componentConnector(groupId, invokeHTTP.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RESPONSE);
             } else {
-                if (putDatabaseRecord != null && putDatabaseRecord.getId() != null) {
+                //如果doris关联外键的语句执行组件有多个  则将最后一个组件连线到执行sql预览sql的组件上
+                if (!CollectionUtils.isEmpty(entities)) {
+                    String id = entities.get(entities.size() - 1).getId();
+                    //连接器
+                    componentConnector(groupId, id, processorEntity1.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                } else if (putDatabaseRecord != null && putDatabaseRecord.getId() != null) {
                     componentConnector(groupId, putDatabaseRecord.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 }
             }
@@ -2085,6 +2139,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(evaluateJsons);
         res.add(processorEntity);
         res.add(publishKafkaForPipelineProcessor);
+        res.addAll(entities);
 
 
         ProcessorEntity processor = null;
@@ -3276,6 +3331,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
 
         log.info("SQL预览语句：{}", JSON.toJSONString(buildNifiFlow.syncStgToOdsSql));
+
         log.info("数仓外键语句：{}", JSON.toJSONString(buildNifiFlow.updateSql));
         callDbProcedureProcessorDTO.executsql = StringUtils.isNotEmpty(buildNifiFlow.syncStgToOdsSql) ? buildNifiFlow.syncStgToOdsSql : executsql;
         callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(11);
@@ -3351,6 +3407,30 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
         callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
 
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
+        verifyProcessorResult(processorEntityBusinessResult);
+        return processorEntityBusinessResult.data;
+    }
+
+    private ProcessorEntity CallDbProcedureForDorisKeySql(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow, Integer x) {
+        BuildCallDbProcedureProcessorDTO callDbProcedureProcessorDTO = new BuildCallDbProcedureProcessorDTO();
+        callDbProcedureProcessorDTO.name = "UpdateDorisKeySql";
+        callDbProcedureProcessorDTO.details = "insert_phase";
+        callDbProcedureProcessorDTO.groupId = groupId;
+        String executsql = "";
+        //config.processorConfig.targetTableName = "stg_" + config.processorConfig.targetTableName;
+        String syncMode = syncModeTypeEnum.getNameByValue(config.targetDsConfig.syncMode);
+        log.info("同步类型为:" + syncMode + config.targetDsConfig.syncMode);
+        executsql = buildNifiFlow.updateSql;
+        //callDbProcedureProcessorDTO.dbConnectionId=config.targetDsConfig.componentId;
+        callDbProcedureProcessorDTO.dbConnectionId = targetDbPoolId;
+
+        log.info("数仓外键语句：{}", JSON.toJSONString(executsql));
+        callDbProcedureProcessorDTO.executsql = executsql;
+        callDbProcedureProcessorDTO.positionDTO = NifiPositionHelper.buildXYPositionDTO(-x - 3, 13);
+        callDbProcedureProcessorDTO.haveNextOne = true;
+        // 组件并发数量
+        callDbProcedureProcessorDTO.concurrencyNums = buildNifiFlow.concurrencyNums;
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
         return processorEntityBusinessResult.data;

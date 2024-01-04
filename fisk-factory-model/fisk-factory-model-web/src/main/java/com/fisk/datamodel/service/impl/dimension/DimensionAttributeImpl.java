@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl.dimension;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,9 +12,11 @@ import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
+import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.SyncModePO;
 import com.fisk.datamodel.entity.TableBusinessPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
+import com.fisk.datamodel.entity.dimension.DimensionFolderPO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.enums.CreateTypeEnum;
@@ -25,6 +28,7 @@ import com.fisk.datamodel.map.dimension.DimensionAttributeMap;
 import com.fisk.datamodel.mapper.dimension.DimensionAttributeMapper;
 import com.fisk.datamodel.mapper.dimension.DimensionMapper;
 import com.fisk.datamodel.mapper.fact.FactAttributeMapper;
+import com.fisk.datamodel.service.IBusinessArea;
 import com.fisk.datamodel.service.IDimensionAttribute;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.SyncModeImpl;
@@ -65,6 +69,8 @@ public class DimensionAttributeImpl
     CustomScriptImpl customScript;
     @Resource
     SystemVariablesImpl systemVariables;
+    @Resource
+    private IBusinessArea businessArea;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -73,6 +79,31 @@ public class DimensionAttributeImpl
         DimensionPO dimensionPo = mapper.selectById(dto.dimensionId);
         if (dimensionPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
+        }
+
+        //获取公共域维度的文件夹id
+        LambdaQueryWrapper<DimensionFolderPO> folderWrapper = new LambdaQueryWrapper<>();
+        folderWrapper.eq(DimensionFolderPO::getDimensionFolderEnName, "Commondomaindimension");
+        DimensionFolderPO folderPO = dimensionFolder.getOne(folderWrapper);
+        long id = folderPO.getId();
+
+        //如果发布的是公共域维度表  则校验是否是第一次发布所在的业务域
+        if (dimensionPo.getDimensionFolderId() == id) {
+            //获取此次发布所在的业务域
+            String businessAreaName = dto.getBusinessAreaName();
+            LambdaQueryWrapper<BusinessAreaPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(BusinessAreaPO::getBusinessName, businessAreaName);
+            BusinessAreaPO one = businessArea.getOne(wrapper);
+
+            //如果不同则不允许此次发布
+            if (dimensionPo.getBusinessId() != one.getId()) {
+//                //获取初始业务域
+//                LambdaQueryWrapper<BusinessAreaPO> wrapper1 = new LambdaQueryWrapper<>();
+//                wrapper1.eq(BusinessAreaPO::getId, dimensionPo.getBusinessId());
+//                BusinessAreaPO businessAreaPO = businessArea.getOne(wrapper1);
+//                return ResultEnum.PUBLIC_DIM_PUBLISH_ERROR.getMsg() + " 初始业务域名称：" + businessAreaPO.getBusinessName();
+                return ResultEnum.PUBLIC_DIM_PUBLISH_ERROR;
+            }
         }
 
         //系统变量

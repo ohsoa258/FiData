@@ -31,15 +31,13 @@ public class DimensionAttributeController {
 
     @ApiOperation("添加维度字段")
     @PostMapping("/addAttribute")
-    public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto)
-    {
+    public ResultEntity<Object> addAttribute(@Validated @RequestBody DimensionAttributeAddDTO dto) {
         return ResultEntityBuild.build(service.addOrUpdateDimensionAttribute(dto));
     }
 
     @ApiOperation("删除维度字段")
     @PostMapping("/deleteAttribute")
-    public ResultEntity<Object> deleteAttribute(@RequestBody List<Integer> ids)
-    {
+    public ResultEntity<Object> deleteAttribute(@RequestBody List<Integer> ids) {
         return ResultEntityBuild.build(service.deleteDimensionAttribute(ids));
     }
 
