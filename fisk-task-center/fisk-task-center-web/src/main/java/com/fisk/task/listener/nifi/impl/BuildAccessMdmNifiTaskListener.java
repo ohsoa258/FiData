@@ -1199,6 +1199,9 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
             log.error("userclient无法查询到mdm库的连接信息");
             throw new FkException(ResultEnum.ERROR);
         }
+        if (dto.synMode == 1){
+            querySqlDto.preSql = "DELETE FROM \""+dto.tableName+"\" where fidata_version_id = '"+dto.versionId+"';";
+        }
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(7);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
