@@ -2037,6 +2037,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     componentConnector(groupId, putDatabaseRecord.getId(), id, AutoEndBranchTypeEnum.SUCCESS);
                 }
 
+
+                if (!CollectionUtils.isEmpty(entities)){
+                    dto.updateSql="";
+                }
                 /**
                  * CallDbProcedure 该组件执行sql预览的sql
                  */
