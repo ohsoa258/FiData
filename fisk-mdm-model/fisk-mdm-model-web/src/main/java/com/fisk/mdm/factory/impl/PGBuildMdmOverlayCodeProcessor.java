@@ -31,10 +31,10 @@ public class PGBuildMdmOverlayCodeProcessor  implements BuildMdmOverlayCodeProce
                     sourceName =  "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\'\'\') AS int4) AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "时间":
-                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'\'HH24:MI:SS\'\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "日期":
-                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'\'YYYY-MM-DD\'\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "日期时间":
                     sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'\'YYYY-MM-DD HH24:MI:SS\'\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
@@ -181,19 +181,19 @@ public class PGBuildMdmOverlayCodeProcessor  implements BuildMdmOverlayCodeProce
                     break;
                 case "数值":
                 case "域字段":
-                    sourceName =  "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\'\'\') AS int4) AS \"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName =  "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\') AS int4) AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "时间":
-                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'HH24:MI:SS\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "日期":
-                    sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'YYYY-MM-DD\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "日期时间":
-                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'\'YYYY-MM-DD HH24:MI:SS\'\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName = "TO_TIMESTAMP(\""+accessAttributeDTO.getFieldName()+"\",\'YYYY-MM-DD HH24:MI:SS\') AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "浮点型":
-                    sourceName = "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\'\'\') AS DECIMAL("+accessAttributeDTO.getDataTypeLength()+","+accessAttributeDTO.getDataTypeDecimalLength()+")) AS \"" + accessAttributeDTO.getFieldName() + "\"";
+                    sourceName = "CAST(NULLIF(\""+accessAttributeDTO.getFieldName()+"\",\'\') AS DECIMAL("+accessAttributeDTO.getDataTypeLength()+","+accessAttributeDTO.getDataTypeDecimalLength()+")) AS \"" + accessAttributeDTO.getFieldName() + "\"";
                     break;
                 case "布尔型":
                     sourceName = "\"" + accessAttributeDTO.getFieldName() + "\"";
@@ -230,11 +230,11 @@ public class PGBuildMdmOverlayCodeProcessor  implements BuildMdmOverlayCodeProce
             flag = true;
         }
         StringBuilder str = new StringBuilder();
-        str.append("DELETE\n");
-        str.append("  FROM\n");
-        str.append("\""+targetTableName+"\"\n");
-        str.append("WHERE\n");
-        str.append("  fidata_version_id = '"+versionId+"';\n");
+//        str.append("DELETE\n");
+//        str.append("  FROM\n");
+//        str.append("\""+targetTableName+"\"\n");
+//        str.append("WHERE\n");
+//        str.append("  fidata_version_id = '"+versionId+"';\n");
         str.append("INSERT INTO \""+targetTableName+"\" (");
         str.append("fidata_version_id, fidata_create_time, fidata_create_user, fidata_update_time, fidata_update_user, fidata_del_flag, fidata_batch_code,");
         if(flag){

@@ -212,6 +212,6 @@ public interface MdmClient {
      * 获取主数据所有模型下的所有实体表
      * @return
      */
-    @GetMapping("/getAllModelAndEntitys")
+    @GetMapping("/model/getAllModelAndEntitys")
     ResultEntity<List<AccessAndModelAppDTO>> getAllModelAndEntitys();
 }
