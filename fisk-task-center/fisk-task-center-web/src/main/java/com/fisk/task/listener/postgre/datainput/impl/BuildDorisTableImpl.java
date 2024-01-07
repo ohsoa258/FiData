@@ -591,7 +591,8 @@ public class BuildDorisTableImpl implements IbuildTable {
                 //hash分桶
                 " DISTRIBUTED BY HASH(" + pkName + ") BUCKETS 10 " +
                 //副本数为1
-                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ",\"store_row_column\" = \"true\",\"enable_unique_key_merge_on_write\" = \"true\");";
+                "PROPERTIES (" + "    \"replication_num\" = \"1\");";
+//                "PROPERTIES (" + "    \"replication_num\" = \"1\"" + ",\"store_row_column\" = \"true\",\"enable_unique_key_merge_on_write\" = \"true\");";
         sqlList.add(stgTable);
         sqlList.add(sql1);
         return sqlList;

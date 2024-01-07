@@ -2006,7 +2006,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                     //如果是doris
                     if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
-                        String[] split = updateSql.split("}';");
+                        String[] split = updateSql.split(";");
                         //如果关联了多个外键  则使用多个nifi执行sql组件去执行拆分后的关联外键sql
                         if (split.length > 1) {
                             for (int i = 0; i < split.length; i++) {
@@ -2016,7 +2016,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                                 ProcessorEntity updateDorisKeySqlEntity = new ProcessorEntity();
                                 //替换要执行的关联外键语句
-                                dto.updateSql = split[i] + "}';";
+                                dto.updateSql = split[i] + ";";
                                 /**
                                  * UpdateDorisKeySql 专门用于执行doris关联外键时的多个update语句
                                  */
