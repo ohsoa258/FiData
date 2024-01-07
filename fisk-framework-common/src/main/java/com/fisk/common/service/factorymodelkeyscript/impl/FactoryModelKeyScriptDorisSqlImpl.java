@@ -109,15 +109,14 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
         String tName = "temp_" + dto.get(0).sourceTable + ".";
         str.append("SELECT ");
         //获取此次发布的字段
-        List<String> fieldNameList = dto.get(0).getFieldNameList();
+        List<String> fieldNameList = dto.get(0).getKeyNameList();
         for (String fieldName : fieldNameList) {
-            for (String fn : fns) {
-                if (fn.equals(fieldName)) {
-                    String targetTBlName = fnMap.get(fn);
-                    fieldName = "`" + targetTBlName + "`" + ".`" + fieldName + "`,";
-                } else {
-                    fieldName = tName + "`" + fieldName + "`,";
-                }
+
+            if (fns.contains(fieldName)) {
+                String targetTBlName = fnMap.get(fieldName);
+                fieldName = "`" + targetTBlName + "`" + ".`" + fieldName + "`,";
+            }else {
+                fieldName = tName + "`" + fieldName + "`,";
             }
             str.append(fieldName);
         }
@@ -155,7 +154,9 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 
         str.append(" WHERE ")
                 .append(tName).append("fidata_batch_code = '${fidata_batch_code}' AND ")
-                .append(tName).append("fidata_flow_batch_code = '${fragment.index}'");
+                .append(tName).append("fidata_flow_batch_code = '${fragment.index}' AND")
+                .append(tName).append("fi_verify_type <> '2'")
+        ;
 
         return String.valueOf(str);
     }

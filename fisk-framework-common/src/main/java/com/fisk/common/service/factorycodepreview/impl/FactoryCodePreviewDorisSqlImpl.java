@@ -122,7 +122,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append(tabNameWithoutPre)
                 .append("key` FROM ")
                 .append(sourceTableName)
-                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+//                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'")
+        ;
         //拼接select完毕
 
         //返回拼接完成的追加覆盖方式拼接的sql
@@ -334,7 +335,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("md5(concat(\"\"lishiji))")
                 .append(" FROM ")
                 .append(sourceTableName)
-                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+//                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'")
+        ;
         //替换lishiji为主键字段
         String regex = "lishiji";
         StringBuilder pkSql = new StringBuilder();
@@ -465,7 +467,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("md5(concat(\"\"lishiji))")
                 .append(" FROM ")
                 .append(sourceTableName)
-                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+//                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'")
+        ;
         //替换lishiji为主键字段
         String regex = "lishiji";
         StringBuilder pkSql = new StringBuilder();

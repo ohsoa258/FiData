@@ -27,6 +27,6 @@ public class TableSourceRelationsDTO {
     public String targetColumn;
 
     @ApiModelProperty(value = "源表主键名称集合")
-    public List<String> fieldNameList;
+    public List<String> keyNameList;
 
 }
