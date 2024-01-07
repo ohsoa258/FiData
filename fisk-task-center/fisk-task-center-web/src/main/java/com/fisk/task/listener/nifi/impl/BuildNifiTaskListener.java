@@ -1678,6 +1678,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @return
      */
     private List<ProcessorEntity> buildProcessorVersion2(String appGroupId, DataAccessConfigDTO config, String groupId, String sourceDbPoolId, String targetDbPoolId, String cfgDbPoolId, AppNifiSettingPO appNifiSettingPO, BuildNifiFlowDTO dto, DataSourceTypeEnum conType) {
+        //获取数仓类型
+        ResultEntity<DataSourceDTO> dwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+        DataSourceTypeEnum conType1 = dwSource.getData().getConType();
         List<ProcessorEntity> res = new ArrayList<>();
         SynchronousTypeEnum synchronousTypeEnum = dto.synchronousTypeEnum;
         TableNifiSettingPO tableNifiSettingPO = new TableNifiSettingPO();
@@ -1788,7 +1791,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         /**
          * Exec Target Delete
          */
-        ProcessorEntity delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
+        ProcessorEntity delSqlRes;
+        if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
+            delSqlRes = execDeleteSqlProcessorForDoris(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
+        } else {
+            delSqlRes = execDeleteSqlProcessor(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
+        }
+
         tableNifiSettingPO.executeTargetDeleteProcessorId = delSqlRes.getId();
         //------------------------------------------
 
@@ -1994,19 +2003,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 String updateSql = dto.getUpdateSql();
                 log.info("数仓建模关联外键语句！！：" + updateSql);
                 if (StringUtils.isNotEmpty(updateSql)) {
-                    //获取数仓类型
-                    ResultEntity<DataSourceDTO> dwSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
-                    DataSourceTypeEnum conType1 = dwSource.getData().getConType();
+
                     //如果是doris
                     if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
-                        String[] split = updateSql.split(";");
+                        String[] split = updateSql.split("set enable_unique_key_partial_update=true;");
                         //如果关联了多个外键  则使用多个nifi执行sql组件去执行拆分后的关联外键sql
                         if (split.length > 1) {
                             for (int i = 0; i < split.length; i++) {
                                 ProcessorEntity updateDorisKeySqlEntity = new ProcessorEntity();
 
                                 //替换要执行的关联外键语句
-                                dto.updateSql = split[i] += ";";
+                                dto.updateSql = "set enable_unique_key_partial_update=true;" + split[i];
                                 /**
                                  * UpdateDorisKeySql 专门用于执行doris关联外键时的多个update语句
                                  */
@@ -2038,8 +2045,8 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 }
 
 
-                if (!CollectionUtils.isEmpty(entities)){
-                    dto.updateSql="";
+                if (!CollectionUtils.isEmpty(entities)) {
+                    dto.updateSql = "";
                 }
                 /**
                  * CallDbProcedure 该组件执行sql预览的sql
@@ -2143,8 +2150,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(evaluateJsons);
         res.add(processorEntity);
         res.add(publishKafkaForPipelineProcessor);
-        res.addAll(entities);
-
+        if (CollectionUtils.isEmpty(entities)) {
+            res.addAll(entities);
+        }
 
         ProcessorEntity processor = null;
         Double processorX = 0d;
@@ -3670,6 +3678,43 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }
+
+    /**
+     * 执行sql delete组件
+     *
+     * @param config         数据接入配置
+     * @param groupId        组id
+     * @param targetDbPoolId ods连接池id
+     * @return 组件对象
+     */
+    private ProcessorEntity execDeleteSqlProcessorForDoris(DataAccessConfigDTO config, String groupId, String targetDbPoolId, SynchronousTypeEnum synchronousTypeEnum, BuildNifiFlowDTO buildNifiFlow) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Exec Target Delete";
+        querySqlDto.details = "query_phase";
+        //2023-05-05 李世纪注释掉，目前该功能由sql预览模块施行
+//        querySqlDto.postSql = buildNifiFlow.whereScript;
+        //todo:数仓临时表建表语句暂时不放在nifi执行
+//        querySqlDto.preSql = buildNifiFlow.buildTableSql;
+        querySqlDto.groupId = groupId;
+
+        //2023-04-28:李世纪注释，
+//        querySqlDto.querySql = componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow);
+        //2023-04-28李世纪修改：目前数据接入页面配置的stg过期时间需要起作用，因此这里改为从传递过来的参数获取执行删除的sql
+        //2023-05-18李世纪修正：如果buildNifiFlow.deleteScript为空，仍然调用存储过程，防止nifi流程报错
+        querySqlDto.querySql = StringUtils.isEmpty(buildNifiFlow.deleteScript) ?
+                componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow)
+                : buildNifiFlow.deleteScript;
+
+        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
+            querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
+        }
+        querySqlDto.dbConnectionId = targetDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
 
     /**
      * 执行sql delete组件
