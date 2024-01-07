@@ -92,9 +92,9 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
             String pkSql = "";
             String insertColumn = "";
             for (String keyName : keyNameList) {
+                insertColumn = "`" + keyName + "`,";
                 keyName = tName + "`" + keyName + "`,";
                 pkSql = pkSql + keyName;
-                insertColumn = "`" + keyName + "`,";
             }
 
             str.append("set enable_unique_key_partial_update=true;");
