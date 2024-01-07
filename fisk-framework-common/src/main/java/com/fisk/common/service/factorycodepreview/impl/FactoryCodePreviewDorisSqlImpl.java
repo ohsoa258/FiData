@@ -187,9 +187,6 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串  为了替换delete前缀中预留的占位符 lishiji1
         StringBuilder pkFieldNames1 = new StringBuilder();
         StringBuilder pkFieldNames2 = new StringBuilder();
-        if (!StringUtils.isEmpty(updateSql)){
-            sourceTableName = "("+updateSql+") as FNK";
-        }
         //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
         StringBuilder delete = new StringBuilder();
         delete.append("DELETE FROM ")
@@ -328,6 +325,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
         }
 
+        if (!StringUtils.isEmpty(updateSql)){
+            sourceTableName = "("+updateSql+") as FNK";
+        }
         suffix.append("now(),")
                 .append("now(),")
                 .append("fidata_batch_code,")
