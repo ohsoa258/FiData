@@ -2151,7 +2151,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         res.add(evaluateJsons);
         res.add(processorEntity);
         res.add(publishKafkaForPipelineProcessor);
-        if (CollectionUtils.isEmpty(entities)) {
+        if (!CollectionUtils.isEmpty(entities)) {
             res.addAll(entities);
         }
 

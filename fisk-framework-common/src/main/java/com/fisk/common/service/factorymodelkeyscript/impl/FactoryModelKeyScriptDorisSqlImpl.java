@@ -90,16 +90,24 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
                 throw new FkException(ResultEnum.PARAMTER_ERROR);
             }
             String pkSql = "";
+            String insertColumn = "";
             for (String keyName : keyNameList) {
-                keyName = tName + "`"+keyName + "`,";
+                keyName = tName + "`" + keyName + "`,";
                 pkSql = pkSql + keyName;
+                insertColumn = "`" + keyName + "`,";
             }
 
             str.append("set enable_unique_key_partial_update=true;");
             str.append("INSERT INTO ")
                     .append("`temp_");
             str.append(item.sourceTable)
-                    .append("` ");
+                    .append("` ")
+                    .append("(")
+                    .append(insertColumn)
+                    .append("`")
+                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append("`")
+                    .append(") ");
 
             str.append("SELECT ")
                     .append(pkSql)
