@@ -1993,7 +1993,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                  */
                 putDatabaseRecord = createPutDatabaseRecord(appGroupId, config, groupId, dto, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
                 tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
-                //连接器
+                //连接器c
                 componentConnector(groupId, updateField1.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 componentsConnector(groupId, updateField1.getId(), supervisionId, autoEndBranchTypeEnums);
                 res.add(updateField);
@@ -2006,25 +2006,23 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                     //如果是doris
                     if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
-                        String[] split = updateSql.split("set enable_unique_key_partial_update=true;");
+                        String[] split = updateSql.split("}';");
                         //如果关联了多个外键  则使用多个nifi执行sql组件去执行拆分后的关联外键sql
                         if (split.length > 1) {
                             for (int i = 0; i < split.length; i++) {
-                                if ("".equals(split[i])){
+                                if ("".equals(split[i])) {
                                     continue;
                                 }
 
                                 ProcessorEntity updateDorisKeySqlEntity = new ProcessorEntity();
                                 //替换要执行的关联外键语句
-                                dto.updateSql = "set enable_unique_key_partial_update=true;" + split[i];
+                                dto.updateSql = split[i] + "}';";
                                 /**
                                  * UpdateDorisKeySql 专门用于执行doris关联外键时的多个update语句
                                  */
                                 updateDorisKeySqlEntity = CallDbProcedureForDorisKeySql(config, groupId, targetDbPoolId, synchronousTypeEnum, dto, i);
                                 //连接报错处理组件
                                 componentConnector(groupId, updateDorisKeySqlEntity.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE);
-
-
                                 entities.add(updateDorisKeySqlEntity);
 
                             }
