@@ -3,6 +3,8 @@ package com.fisk.common.service.dbBEBuild.datamodel.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -23,5 +25,8 @@ public class TableSourceRelationsDTO {
 
     @ApiModelProperty(value = "目标字段")
     public String targetColumn;
+
+    @ApiModelProperty(value = "源表主键名称集合")
+    public List<String> keyNameList;
 
 }
