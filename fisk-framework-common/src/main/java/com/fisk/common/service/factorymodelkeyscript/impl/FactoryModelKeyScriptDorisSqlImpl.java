@@ -135,7 +135,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 
         //开始拼接left join
         for (TableSourceRelationsDTO item : dto) {
-            str.append("` LEFT JOIN `")
+            str.append(" LEFT JOIN `")
                     .append(item.targetTable)
                     .append("` ON ")
                     .append("`temp_")
