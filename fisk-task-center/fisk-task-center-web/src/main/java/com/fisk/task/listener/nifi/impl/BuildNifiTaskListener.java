@@ -2010,8 +2010,11 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                         //如果关联了多个外键  则使用多个nifi执行sql组件去执行拆分后的关联外键sql
                         if (split.length > 1) {
                             for (int i = 0; i < split.length; i++) {
-                                ProcessorEntity updateDorisKeySqlEntity = new ProcessorEntity();
+                                if ("".equals(split[i])){
+                                    continue;
+                                }
 
+                                ProcessorEntity updateDorisKeySqlEntity = new ProcessorEntity();
                                 //替换要执行的关联外键语句
                                 dto.updateSql = "set enable_unique_key_partial_update=true;" + split[i];
                                 /**
