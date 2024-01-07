@@ -82,7 +82,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 
         StringBuilder str = new StringBuilder();
 
-        String tName = "temp_" + dto.get(0).sourceTable + ".";
+        String tName = "`temp_" + dto.get(0).sourceTable + "`.";
 
         for (TableSourceRelationsDTO item : dto) {
             List<String> keyNameList = item.getKeyNameList();
@@ -91,7 +91,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
             }
             String pkSql = "";
             for (String keyName : keyNameList) {
-                keyName = tName + keyName + ",";
+                keyName = tName + "`"+keyName + "`,";
                 pkSql = pkSql + keyName;
             }
 
@@ -103,7 +103,8 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 
             str.append("SELECT ")
                     .append(pkSql)
-                    .append(item.sourceTable)
+                    .append("`")
+                    .append(item.targetTable)
                     .append("`")
                     .append(".`")
                     .append(StringBuildUtils.dimensionKeyName(item.targetTable))
@@ -113,7 +114,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
                     .append(item.sourceTable)
                     .append("` LEFT JOIN `")
                     .append(item.targetTable)
-                    .append(" ON ")
+                    .append("` ON ")
                     .append("`temp_")
                     .append(item.sourceTable)
                     .append("`")
@@ -126,7 +127,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
                     .append("`")
                     .append(".`")
                     .append(StringBuildUtils.dimensionKeyName(item.targetTable))
-                    .append("` WHERE")
+                    .append("` WHERE ")
                     .append(tName)
                     .append("fidata_batch_code=")
                     .append("'${fidata_batch_code}' AND ")
