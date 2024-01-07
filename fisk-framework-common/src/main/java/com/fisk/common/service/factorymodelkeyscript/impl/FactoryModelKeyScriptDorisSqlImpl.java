@@ -141,14 +141,14 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
                     .append(item.sourceTable)
                     .append("`")
                     .append(".`")
-                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append(item.sourceColumn)
                     .append("`")
                     .append(" = ")
                     .append("`")
                     .append(item.targetTable)
                     .append("`")
                     .append(".`")
-                    .append(StringBuildUtils.dimensionKeyName(item.targetTable))
+                    .append(item.sourceColumn)
                     .append("` ");
         }
 
