@@ -154,7 +154,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 
         str.append(" WHERE ")
                 .append(tName).append("fidata_batch_code = '${fidata_batch_code}' AND ")
-                .append(tName).append("fidata_flow_batch_code = '${fragment.index}' AND")
+                .append(tName).append("fidata_flow_batch_code = '${fragment.index}' AND ")
                 .append(tName).append("fi_verify_type <> '2'")
         ;
 
