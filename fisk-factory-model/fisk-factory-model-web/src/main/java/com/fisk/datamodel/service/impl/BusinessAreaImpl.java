@@ -1374,7 +1374,7 @@ public class BusinessAreaImpl
         CodePreviewDTO codePreviewDTO = new CodePreviewDTO();
         codePreviewDTO.setOverLoadCodeDTO(dataModel);
         codePreviewDTO.setOverlayCodePreviewDTO(dto);
-        String finalSql = codePreviewBySyncMode(codePreviewDTO, dto.type);
+        String finalSql = codePreviewBySyncMode(codePreviewDTO, dto.type, dto.updateSql);
 
         //doris是否开启严格模式 0否  1是
         if (dto.dorisIfOpenStrictMode != null) {
@@ -1490,7 +1490,7 @@ public class BusinessAreaImpl
      * @return
      * @author lishiji
      */
-    private String codePreviewBySyncMode(CodePreviewDTO dto, Integer type) {
+    private String codePreviewBySyncMode(CodePreviewDTO dto, Integer type, String updateSql) {
         //分别获取参数dto
         OverLoadCodeDTO overLoadCodeDTO = dto.overLoadCodeDTO;
         OverlayCodePreviewDTO originalDTO = dto.overlayCodePreviewDTO;
@@ -1557,23 +1557,23 @@ public class BusinessAreaImpl
             //全量
             case 1:
                 //调用封装的全量覆盖方式拼接sql方法并返回
-                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList);
+                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList, updateSql);
             //追加
             case 2:
                 //调用封装的追加覆盖方式拼接sql方法并返回
-                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList);
+                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList, updateSql);
             //业务标识覆盖（业务主键覆盖）---merge覆盖
             case 3:
                 //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                return sqlHelper.merge(tableName, tempTableName, fieldList, type);
+                return sqlHelper.merge(tableName, tempTableName, fieldList, type, updateSql);
             //业务时间覆盖
             case 4:
                 //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO);
+                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO, updateSql);
             //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
             case 5:
                 //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList, type);
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList, type, updateSql);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

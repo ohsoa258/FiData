@@ -19,7 +19,7 @@ public interface IBuildFactoryCodePreview {
      * @param fieldList       前端传递的源表字段属性集合
      * @return
      */
-    String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList);
+    String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, String updateSql);
 
     /**
      * 全量覆盖方式拼接的sql代码
@@ -29,7 +29,7 @@ public interface IBuildFactoryCodePreview {
      * @param fieldList       前端传递的源表字段属性集合
      * @return
      */
-    String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList);
+    String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, String updateSql);
 
     /**
      * 业务标识覆盖方式--删除插入--拼接的sql代码
@@ -39,7 +39,7 @@ public interface IBuildFactoryCodePreview {
      * @param fieldList       前端传递的源表字段属性集合
      * @return
      */
-    String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type);
+    String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type, String updateSql);
 
     /**
      * 业务标识覆盖方式--merge覆盖（业务标识可以作为业务主键）--拼接的sql代码
@@ -49,7 +49,7 @@ public interface IBuildFactoryCodePreview {
      * @param fieldList       前端传递的源表字段属性集合
      * @return
      */
-    String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type);
+    String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList,Integer type, String updateSql);
 
     /**
      * 业务时间覆盖方式拼接的sql代码
@@ -61,6 +61,6 @@ public interface IBuildFactoryCodePreview {
      * @return
      */
     String businessTimeOverLay(String tableName, String sourceTableName,
-                                             List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO);
+                                             List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO, String updateSql);
 
 }

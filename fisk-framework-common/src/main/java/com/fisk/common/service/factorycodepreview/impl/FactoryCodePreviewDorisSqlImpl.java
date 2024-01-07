@@ -24,7 +24,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param fieldList       前端传递的源表字段属性集合
      */
     @Override
-    public String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String insertAndSelectSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, String updateSql) {
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
         String tabNameWithoutPre = tableName.substring(tableName.indexOf("_") + 1);
         tabNameWithoutPre = tabNameWithoutPre.replace("`", "");
@@ -112,6 +112,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
         }
 
+        if (!StringUtils.isEmpty(updateSql)){
+            sourceTableName = "("+updateSql+") as FNK";
+        }
         suffix.append("now(),")
                 .append("now(),")
                 .append("fidata_batch_code,")
@@ -134,11 +137,11 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param fieldList       前端传递的源表字段属性集合
      */
     @Override
-    public String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList) {
+    public String fullVolumeSql(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, String updateSql) {
         //全量和追加的区别在于：多了一段DELETE FROM tableName...
         //调用封装的追加方式拼接sql方法
         StringBuilder suffixSql =
-                new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList));
+                new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList, updateSql));
 
         //返回的sql前加上需要的前缀truncate table tableName,并隔开两段sql
         StringBuilder fullVolumeSql = suffixSql.insert(0, "DELETE FROM " + tableName + " WHERE fidata_batch_code<>'${fidata_batch_code}';   ");
@@ -154,7 +157,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param fieldList       前端传递的源表字段属性集合
      */
     @Override
-    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type) {
+    public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql) {
         //获取业务标识覆盖方式标识的字段
         List<PublishFieldDTO> pkFields = new ArrayList<>();
         if (type != null) {
@@ -184,6 +187,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串  为了替换delete前缀中预留的占位符 lishiji1
         StringBuilder pkFieldNames1 = new StringBuilder();
         StringBuilder pkFieldNames2 = new StringBuilder();
+        if (!StringUtils.isEmpty(updateSql)){
+            sourceTableName = "("+updateSql+") as FNK";
+        }
         //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
         StringBuilder delete = new StringBuilder();
         delete.append("DELETE FROM ")
@@ -351,7 +357,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      * @param fieldList       前端传递的源表字段属性集合
      */
     @Override
-    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type) {
+    public String merge(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql) {
         //获取业务主键字段
         List<PublishFieldDTO> pkFields = new ArrayList<>();
         if (type != null) {
@@ -450,7 +456,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(",");
             }
         }
-
+        if (!StringUtils.isEmpty(updateSql)){
+            sourceTableName = "("+updateSql+") as FNK";
+        }
         suffix.append("now(),")
                 .append("now(),")
                 .append("fidata_batch_code,")
@@ -483,7 +491,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
      */
     @Override
     public String businessTimeOverLay(String tableName, String sourceTableName,
-                                      List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO) {
+                                      List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO, String updateSql) {
 //        //主键字段剔除
 //        List<PublishFieldDTO> fieldListWithoutPk = fieldList.stream().filter(f -> f.isPrimaryKey != 1).collect(Collectors.toList());
         //获取页面选择的逻辑类型：1普通模式    2高级模式
@@ -696,7 +704,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
         }
         //调用追加的sql方法，用于拼接
-        String sql = insertAndSelectSql(tableName, sourceTableName, fieldList);
+        String sql = insertAndSelectSql(tableName, sourceTableName, fieldList, updateSql);
         //拼接最终sql
         StringBuilder endSql = startSQL.append(sql)
                 .append(tailSql);
