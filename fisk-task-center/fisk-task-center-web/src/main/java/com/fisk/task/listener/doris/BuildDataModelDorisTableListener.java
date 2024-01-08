@@ -341,6 +341,7 @@ public class BuildDataModelDorisTableListener
                 bfd.deleteScript = modelPublishTableDTO.deleteTempScript;
                 //临时表(建模temp_tablename)建表语句
                 bfd.buildTableSql = pgdbTable2.get(0);
+                bfd.concurrencyNums = 1;
 
                 //获取表名 为了拼接临时表主键名称
                 String tableName = modelPublishTableDTO.tableName;

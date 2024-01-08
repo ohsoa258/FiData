@@ -1897,6 +1897,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                  * 如果是普通表（数接的物理表、数仓的事实表和维度表）的nifi流程，则创建这个执行查询的组件：ExecuteSQLRecord
                  */
             } else {
+                //doris 查数据并发设置为1
+                if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
+                    dto.setConcurrencyNums(1);
+                }
                 executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
                 componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
             }
