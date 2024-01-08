@@ -25,6 +25,7 @@ public class BuildFactoryAccessHelper {
             case SAPBW:
                 return new BuildAccessSapBwCommandImpl();
             case DORIS:
+            case MONGODB:
                 return new BuildAccessDorisCommandImpl();
             case DM8:
                 return new BuildAccessDM8CommandImpl();

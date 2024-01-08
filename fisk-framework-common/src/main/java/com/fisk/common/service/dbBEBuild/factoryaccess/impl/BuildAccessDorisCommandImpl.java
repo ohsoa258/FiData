@@ -85,6 +85,7 @@ public class BuildAccessDorisCommandImpl implements IBuildAccessSqlCommand {
         jsonObject.put("浮点型", "FLOAT");
         jsonObject.put("文本型", "TEXT");
         jsonObject.put("大文本型", "MEDIUMTEXT");
+        jsonObject.put("STRING", "STRING");
         return jsonObject;
     }
 
