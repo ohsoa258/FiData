@@ -58,7 +58,7 @@ public class FactoryModelKeyScriptDorisSqlImpl implements IBuildFactoryModelKeyS
 //                    .append("` = `")
 //                    .append(item.targetTable)
 //                    .append("`.`")
-//                    .append(item.targetColumn)cccc
+//                    .append(item.targetColumn)
 //                    .append("` AND ")
 //                    .append(tName)
 //                    .append("fidata_batch_code=")
