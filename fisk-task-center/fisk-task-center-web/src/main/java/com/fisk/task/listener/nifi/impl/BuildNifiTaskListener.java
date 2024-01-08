@@ -2122,7 +2122,13 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         }
         //查询条数
-        ProcessorEntity queryNumbers = queryNumbersProcessor(dto, config, groupId, targetDbPoolId);
+        ProcessorEntity queryNumbers;
+        if (conType1.getName().equals(DataSourceTypeEnum.DORIS.getName())){
+            queryNumbers = queryNumbersProcessorForDoris(dto, config, groupId, cfgDbPoolId);
+        }else {
+            queryNumbers = queryNumbersProcessor(dto, config, groupId, targetDbPoolId);
+        }
+
         tableNifiSettingPO.queryNumbersProcessorId = queryNumbers.getId();
         //连接器
         componentConnector(groupId, processorEntity1.getId(), queryNumbers.getId(), AutoEndBranchTypeEnum.SUCCESS);
@@ -3534,6 +3540,30 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = fiDataDataSource.data;
             IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(data.conType);
+            String sql = dbCommand.queryNumbersField(dto, config, groupId);
+            querySqlDto.querySql = sql;
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+            throw new FkException(ResultEnum.ERROR);
+        }
+        querySqlDto.dbConnectionId = targetDbPoolId;
+        querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(14);
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<>());
+        verifyProcessorResult(querySqlRes);
+        return querySqlRes.data;
+    }
+
+    private ProcessorEntity queryNumbersProcessorForDoris(BuildNifiFlowDTO dto, DataAccessConfigDTO config, String groupId, String targetDbPoolId) {
+        BuildExecuteSqlProcessorDTO querySqlDto = new BuildExecuteSqlProcessorDTO();
+        querySqlDto.name = "Query numbers Field For Doris";
+        querySqlDto.details = "insert_phase";
+        querySqlDto.groupId = groupId;
+        //接入需要数据校验,查的是ods表,其他的不变
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = fiDataDataSource.data;
+            //doris暂时用配置库的连接信息去查  mpp分布式查不到会导致流程报错
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(DataSourceTypeEnum.MYSQL);
             String sql = dbCommand.queryNumbersField(dto, config, groupId);
             querySqlDto.querySql = sql;
         } else {
