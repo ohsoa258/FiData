@@ -27,6 +27,7 @@ public enum DataSourceTypeEnum implements BaseEnum {
     DORIS_CATALOG(13, "doris_catalog"),
     DM8(14, "dm8"),
     HUDI(15, "hudi"),
+    MONGODB(15, "mongodb"),
     ;
 
     DataSourceTypeEnum(int value, String name) {

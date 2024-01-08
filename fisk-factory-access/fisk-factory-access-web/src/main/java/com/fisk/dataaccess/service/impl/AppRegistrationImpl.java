@@ -98,6 +98,9 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.ext.Environment;
 import lombok.SneakyThrows;
@@ -465,6 +468,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         Connection conn = null;
+        MongoClient mongoClient = null;
 
         //获取到所有表名
         List<TableStructureDTO> tables = new ArrayList<>();
@@ -493,6 +497,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     tables = oracleUtils.getTableColumnInfoList(conn, tblName, dto.conDbname);
                     break;
+                case MONGODB:
+                    MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+                    List<ServerAddress> serverAddresses = new ArrayList<>();
+                    serverAddresses.add(serverAddress);
+
+                    //账号 验证数据库名 密码
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr,dto.conPassword.toCharArray());
+                    List<MongoCredential> mongoCredentials = new ArrayList<>();
+                    mongoCredentials.add(scramSha1Credential);
+
+                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+
+                    tables = mongoDbUtils.getTrueTableNameListForOneTbl(mongoClient,dto.conDbname,tblName);
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
             }
@@ -553,6 +571,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.ERROR, e);
         } finally {
             AbstractCommonDbHelper.closeConnection(conn);
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
 
     }
@@ -631,6 +652,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         Connection conn = null;
+        MongoClient mongoClient = null;
 
         //获取到所有表名
         List<TablePyhNameDTO> tableNames = new ArrayList<>();
@@ -659,6 +681,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
                     break;
+                case MONGODB:
+                    MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+                    List<ServerAddress> serverAddresses = new ArrayList<>();
+                    serverAddresses.add(serverAddress);
+
+                    //账号 验证数据库名 密码
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
+                    List<MongoCredential> mongoCredentials = new ArrayList<>();
+                    mongoCredentials.add(scramSha1Credential);
+
+                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+
+                    tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
             }
@@ -720,6 +756,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.error("hudi-入仓配置add异常：" + e);
         } finally {
             AbstractCommonDbHelper.closeConnection(conn);
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
 
     }
@@ -744,6 +783,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
         Connection conn = null;
+        MongoClient mongoClient = null;
 
         //获取到所有表名
         List<TablePyhNameDTO> tableNames = new ArrayList<>();
@@ -772,6 +812,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
                     break;
+                case MONGODB:
+                    MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+                    List<ServerAddress> serverAddresses = new ArrayList<>();
+                    serverAddresses.add(serverAddress);
+
+                    //账号 验证数据库名 密码
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
+                    List<MongoCredential> mongoCredentials = new ArrayList<>();
+                    mongoCredentials.add(scramSha1Credential);
+
+                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+
+                    tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
             }
@@ -842,6 +896,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.error("hudi-入仓配置add异常：" + e);
         } finally {
             AbstractCommonDbHelper.closeConnection(conn);
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
 
     }
@@ -1593,6 +1650,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         // jdbc连接信息
         String url = null;
         MyDestinationDataProvider myProvider = null;
+        MongoClient mongoClient = null;
         List<String> allDatabases = new ArrayList<>();
 
         DataSourceTypeEnum driveType = DataSourceTypeEnum.getValue(dto.driveType);
@@ -1671,6 +1729,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     // todo:强生入仓配置 hudi的测试连接先不做
                 case HUDI:
                     allDatabases.addAll(new ArrayList<>());
+                case MONGODB:
+                    ServerAddress serverAddress = new ServerAddress(dto.host, Integer.parseInt(dto.port));
+                    List<ServerAddress> serverAddresses = new ArrayList<>();
+                    serverAddresses.add(serverAddress);
+
+                    //账号 验证数据库名 密码
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.connectAccount, dto.sysNr, dto.connectPwd.toCharArray());
+                    List<MongoCredential> mongoCredentials = new ArrayList<>();
+                    mongoCredentials.add(scramSha1Credential);
+
+                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+                    allDatabases.addAll(new ArrayList<>());
                 default:
                     break;
             }
@@ -1686,6 +1756,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         } finally {
             if (myProvider != null) {
                 Environment.unregisterDestinationDataProvider(myProvider);
+            }
+            if (mongoClient != null) {
+                mongoClient.close();
             }
         }
 

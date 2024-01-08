@@ -49,6 +49,7 @@ public enum DataSourceTypeEnum implements BaseEnum {
     DM8(16, "DM8", "dm.jdbc.driver.DmDriver", "opt/nifi/nifi-current/jdbcdriver/DmJdbcDriver18.jar"),
 
     HUDI(17, "HUDI", "", ""),
+    MONGODB(18, "MONGODB", "mongodb.jdbc.MongoDriver", ""),
 
     ;
 

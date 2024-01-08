@@ -406,6 +406,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.MONGODB.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 18) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
         }
         return dataSourceDTOS;
     }

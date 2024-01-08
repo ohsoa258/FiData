@@ -103,6 +103,14 @@
             <version>8.1.1.193</version>
         </dependency>
 
+        <!-- MongoDB数据库驱动 -->
+        <!-- https://mvnrepository.com/artifact/org.mongodb/mongo-java-driver -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.12.14</version>
+        </dependency>
+
         <!-- feign接口调用 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>

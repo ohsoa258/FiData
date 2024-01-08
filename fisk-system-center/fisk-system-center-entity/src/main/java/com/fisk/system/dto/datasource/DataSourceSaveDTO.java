@@ -228,6 +228,7 @@ public class DataSourceSaveDTO {
 
     /**
      * JCO_SYSNR
+     * 如果是mongodb  这个值就是验证数据库的数据库名称
      */
     @ApiModelProperty(value = "JCO_SYSNR", required = true)
     public String sysNr;

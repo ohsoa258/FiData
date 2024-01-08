@@ -20,21 +20,7 @@ public class TestUser {
     public static void main(String[] args) {
 
 
-        String garbledString = "鏉ㄤ繚鍗?";
 
-        Charset gbkCharset = Charset.forName("GBK");
-        CharsetDecoder gbkDecoder = gbkCharset.newDecoder();
-
-        Charset utf8Charset = StandardCharsets.UTF_8;
-        CharsetEncoder utf8Encoder = utf8Charset.newEncoder();
-
-        try {
-            byte[] utf8Bytes = garbledString.getBytes(utf8Charset);
-            String decodedString = gbkDecoder.decode(ByteBuffer.wrap(utf8Bytes)).toString();
-            System.out.println(decodedString);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 

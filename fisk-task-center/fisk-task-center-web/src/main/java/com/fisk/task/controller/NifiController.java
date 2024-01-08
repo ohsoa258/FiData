@@ -169,6 +169,7 @@ public class NifiController {
                 || dto.conType == DataSourceTypeEnum.DORIS_CATALOG
                 || dto.conType == DataSourceTypeEnum.HUDI
                 || dto.conType == DataSourceTypeEnum.API
+                || dto.conType == DataSourceTypeEnum.MONGODB
         ) {
             return resultEntity;
         }
@@ -235,6 +236,7 @@ public class NifiController {
                 || dto.conType == DataSourceTypeEnum.DORIS_CATALOG
                 || dto.conType == DataSourceTypeEnum.API
                 || dto.conType == DataSourceTypeEnum.HUDI
+                || dto.conType == DataSourceTypeEnum.MONGODB
         ) {
             return resultEntity;
         }

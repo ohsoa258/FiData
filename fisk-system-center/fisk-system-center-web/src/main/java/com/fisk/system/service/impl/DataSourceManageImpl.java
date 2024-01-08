@@ -30,6 +30,9 @@ import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
 import com.fisk.system.service.IDataSourceManageService;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.ext.DestinationDataProvider;
@@ -152,6 +155,8 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("16");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("HUDI")) {
                             filterQueryDTO.setColumnValue("17");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("MONGODB")) {
+                            filterQueryDTO.setColumnValue("18");
                         }
                     }
                 });
@@ -336,6 +341,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
     public ResultEnum testConnection(DataSourceSaveDTO dto) {
         Connection conn = null;
         MyDestinationDataProvider myProvider = null;
+        MongoClient mongoClient = null;
         try {
             switch (dto.conType) {
                 case MYSQL:
@@ -437,6 +443,18 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 case HUDI:
 
                     return ResultEnum.SUCCESS;
+                case MONGODB:
+                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+                    List<ServerAddress> serverAddresses = new ArrayList<>();
+                    serverAddresses.add(serverAddress);
+
+                    //账号 验证数据库名 密码
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr,dto.conPassword.toCharArray());
+                    List<MongoCredential> mongoCredentials = new ArrayList<>();
+                    mongoCredentials.add(scramSha1Credential);
+
+                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
@@ -456,6 +474,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 }
                 if (myProvider != null) {
                     Environment.unregisterDestinationDataProvider(myProvider);
+                }
+                if (mongoClient != null) {
+                    mongoClient.close();
                 }
             } catch (SQLException e) {
                 throw new FkException(ResultEnum.DATASOURCE_CONNECTCLOSEERROR);
