@@ -16,6 +16,7 @@ import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
+import com.fisk.mdm.dto.dataops.TableInfoDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -427,6 +428,24 @@ public class EntityServiceImpl implements EntityService {
         List<EntityPO> entityPoS = entityMapper.selectList(wrapper);
         return entityPoS.size() == 0 ? ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS) :
                 ResultEntityBuild.build(ResultEnum.SUCCESS, EntityMap.INSTANCES.poToVoList(entityPoS));
+    }
+
+    @Override
+    public TableInfoDTO getTableInfo(String tableName) {
+        if (tableName.startsWith("public.")){
+            tableName = tableName.substring(7);
+        }
+
+        com.fisk.mdm.dto.dataops.TableQueryDTO tableInfo = entityMapper.getTableInfo(tableName);
+        if (tableInfo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        TableInfoDTO dto = new TableInfoDTO();
+        dto.appId = tableInfo.modelId;
+        dto.olapTable = OlapTableEnum.MDM_DATA_ACCESS.getValue();
+        dto.tableAccessId = tableInfo.id;
+        dto.tableName = tableInfo.mdmTableName;
+        return dto;
     }
 
 

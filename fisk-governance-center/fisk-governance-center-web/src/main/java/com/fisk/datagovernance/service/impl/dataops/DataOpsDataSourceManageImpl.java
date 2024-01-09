@@ -39,6 +39,7 @@ import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
 import com.fisk.datagovernance.vo.dataops.*;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -71,6 +72,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     private int dwId;
     @Value("${database.ods_id}")
     private int odsId;
+
+    @Value("${database.mdm_id}")
+    private int mdmId;
     @Value("${dataops.metadataentity_key}")
     private String metaDataEntityKey;
     //@Value("${file.excelFilePath}")
@@ -93,6 +97,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Resource
     private DataAccessClient dataAccessClient;
+    @Resource
+    private MdmClient mdmClient;
 
     @Resource
     private PublishTaskClient publishTaskClient;
@@ -391,6 +397,18 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         && tableInfo.getData() != null) {
                     tableInfoDTO = tableInfo.getData();
                 }
+            }else if (dto.getDatasourceId() == 3) {
+                // 调用数据接入接口获取表信息
+                ResultEntity<com.fisk.mdm.dto.dataops.TableInfoDTO> tableInfo = mdmClient.getTableInfo(dto.getTableFullName());
+                if (tableInfo != null
+                        && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                        && tableInfo.getData() != null) {
+                    com.fisk.mdm.dto.dataops.TableInfoDTO data = tableInfo.getData();
+                    tableInfoDTO.tableAccessId = data.tableAccessId;
+                    tableInfoDTO.appId = data.appId;
+                    tableInfoDTO.tableName = data.tableName;
+                    tableInfoDTO.olapTable = data.olapTable;
+                }
             }
             if (tableInfoDTO == null || StringUtils.isEmpty(tableInfoDTO.getTableName())) {
                 return ResultEnum.DATAACCESS_GETTABLE_ERROR;
@@ -570,6 +588,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         List<Integer> datasourceId = new ArrayList<>();
         datasourceId.add(dwId);
         datasourceId.add(odsId);
+        datasourceId.add(mdmId);
 
         datasourceId.forEach(t -> {
             DataSourceDTO dataSourceDTO = fiDataDataSources.stream().filter(item -> item.getId() == t).findFirst().orElse(null);
