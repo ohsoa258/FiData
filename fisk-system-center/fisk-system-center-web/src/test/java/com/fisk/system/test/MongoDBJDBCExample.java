@@ -8,10 +8,7 @@ import com.mongodb.ServerAddress;
 import com.mongodb.client.*;
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MongoDBJDBCExample {
 
@@ -20,7 +17,7 @@ public class MongoDBJDBCExample {
         List<ServerAddress> serverAddresses = new ArrayList<>();
         serverAddresses.add(serverAddress);
 
-        MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential("fisk", "admin", "password01!".toCharArray());
+        MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential("fisk", "admin", "password01!" .toCharArray());
         List<MongoCredential> mongoCredentials = new ArrayList<>();
         mongoCredentials.add(scramSha1Credential);
 
@@ -59,33 +56,34 @@ public class MongoDBJDBCExample {
             String tableName = table.next().toString();
             //根据collection名获取collection
             MongoCollection<Document> collection = fisk_test_mongodb.getCollection(tableName);
+
+            Document fields = collection.find().projection(new Document(" $$ fields", new Document("$meta", "textScore"))).first();
+            for (String s : fields.keySet()) {
+                System.out.println(s);
+            }
+
+            // 查询集合中的文档
+            Document query = new Document(); // 可以设置查询条件，这里不设置查询条件，获取所有文档
+            Document result = collection.find(query).first(); // 获取第一个文档
+
+            // 输出结果
+            System.out.println(result.toJson());
+
+            Set<String> keys = new HashSet<>();
+            List<String> tb_columns1 = new ArrayList<>();
             //查找collection中的所有数据
-            FindIterable findIterable = collection.find();
-            MongoCursor cursor = findIterable.iterator();
-            List<String> tb_columns = new ArrayList<>();
-            while (cursor.hasNext()) {
-                String str = cursor.next().toString();
-                str = str.substring(9, str.length() - 1);
-                str = str.replaceAll("[{]", "{\"");
-                str = str.replaceAll("[}]", "\"}");
-                str = str.replaceAll("=", "\":\"");
-                str = str.replaceAll(",", "\",\"");
-                str = str.replaceAll(" ", "");
-                JSONObject jsonObject = JSONObject.parseObject(str);
-                for (String k : jsonObject.keySet()) {
-                    int mark = 0;
-                    for (String tc : tb_columns) {
-                        //避免字段重复
-                        if (tc.equals(k))
-                            mark = 1;
-                    }
-                    if (mark == 0) {
-                        tb_columns.add(k);
+            for (Document document : collection.find()) {
+                for (String k : document.keySet()) {
+                    if (!keys.contains(k)) {
+                        tb_columns1.add(k);
+                        keys.add(k);
                     }
                 }
-
             }
-            System.out.println(tb_columns);
+            System.out.println("================================");
+            System.out.println(tb_columns1);
+            System.out.println("================================");
+
         }
 
 
