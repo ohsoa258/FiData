@@ -1070,10 +1070,18 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
                 //5. 创建组件
 
+                DataSourceTypeEnum conType;
+                if (sourceType != null) {
+                    conType = sourceType.conType;
+                } else {
+                    conType = null;
+                }
+
                 /**
                  * 创建组件！！！！！
                  */
-                List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto, sourceType.conType);
+                log.info("创建组件！！！！！");
+                List<ProcessorEntity> processors = buildProcessorVersion2(groupEntity.getId(), configDTO, taskGroupEntity.getId(), sourceId, dbPool.get(1).getId(), cfgDbPool.getId(), appNifiSettingPO, dto, conType);
 
                 /**
                  * 启动组件
@@ -1792,6 +1800,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
          * Exec Target Delete
          */
         ProcessorEntity delSqlRes;
+        //doris数仓的nifi删除数据组件和别的不同
         if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
             delSqlRes = execDeleteSqlProcessorForDoris(config, groupId, targetDbPoolId, synchronousTypeEnum, dto);
         } else {
@@ -1947,8 +1956,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     IHP = invokeHTTPProcessorv1(groupId);
 
                     componentConnector(groupId, IHP.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
+                    //2024-01-09李世纪新增
+                    //新增自己连自己 为了解决管道调度该组件时，偶发性的失败问题，失败就retry
+                    componentConnector(groupId, IHP.getId(), IHP.getId(), AutoEndBranchTypeEnum.RETRY2);
                     componentConnector(groupId, generateFlowFile.getId(), IHP.getId(), AutoEndBranchTypeEnum.SUCCESS);
-
                     tableNifiSettingPO.invokeHttpProcessorId = IHP.getId();
                     res.add(generateFlowFile);
                     res.add(IHP);
@@ -2123,9 +2134,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
         //查询条数
         ProcessorEntity queryNumbers;
-        if (conType1.getName().equals(DataSourceTypeEnum.DORIS.getName())){
+        if (conType1.getName().equals(DataSourceTypeEnum.DORIS.getName())) {
             queryNumbers = queryNumbersProcessorForDoris(dto, config, groupId, cfgDbPoolId);
-        }else {
+        } else {
             queryNumbers = queryNumbersProcessor(dto, config, groupId, targetDbPoolId);
         }
 
@@ -3778,9 +3789,20 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 componentsBuild.assemblySql(config, synchronousTypeEnum, FuncNameEnum.PG_DATA_STG_TO_ODS_DELETE.getName(), buildNifiFlow)
                 : buildNifiFlow.deleteScript;
 
+        //如果是doris - 数仓的全量同步 则此组件也要清空目标表
+        log.info("本次同步方式：" + buildNifiFlow.synMode);
+        if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
+            if (buildNifiFlow.synMode == 1) {
+                String truncateTargetTblSql = buildNifiFlow.deleteScript;
+                truncateTargetTblSql = truncateTargetTblSql.replaceFirst("temp_", "");
+                querySqlDto.postSql = truncateTargetTblSql;
+            }
+        }
+
         if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             querySqlDto.querySql = "TRUNCATE table " + config.processorConfig.targetTableName;
         }
+
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
         BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());

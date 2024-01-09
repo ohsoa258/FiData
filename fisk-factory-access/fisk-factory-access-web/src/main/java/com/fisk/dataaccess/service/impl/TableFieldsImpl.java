@@ -1860,6 +1860,9 @@ public class TableFieldsImpl
         po.isSensitive = dto.isSenstive;
         po.isPartitionKey = dto.isPartitionKey;
         po.isEmpty = dto.isEmpty;
+        po.sourceDbName = dto.sourceDbName;
+        po.sourceFieldName = dto.sourceFieldName;
+        po.sourceTblName = dto.sourceTblName;
 
         int flat = baseMapper.updateById(po);
         if (flat == 0) {

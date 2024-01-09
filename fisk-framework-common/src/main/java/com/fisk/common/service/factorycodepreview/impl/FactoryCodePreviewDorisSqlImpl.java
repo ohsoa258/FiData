@@ -145,9 +145,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList, updateSql));
 
         //返回的sql前加上需要的前缀truncate table tableName,并隔开两段sql
-        StringBuilder fullVolumeSql = suffixSql.insert(0, "DELETE FROM " + tableName + " WHERE fidata_batch_code<>'${fidata_batch_code}';   ");
+//        StringBuilder fullVolumeSql = suffixSql.insert(0, "DELETE FROM " + tableName + " WHERE fidata_batch_code<>'${fidata_batch_code}';   ");
         //返回拼接完成的全量覆盖方式拼接的sql
-        return String.valueOf(fullVolumeSql);
+        return String.valueOf(suffixSql);
     }
 
     /**
