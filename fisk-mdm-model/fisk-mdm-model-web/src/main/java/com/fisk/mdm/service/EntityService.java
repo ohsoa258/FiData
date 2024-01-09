@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
+import com.fisk.mdm.dto.dataops.TableInfoDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -91,4 +92,5 @@ public interface EntityService {
      * @return
      */
     Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO);
+    TableInfoDTO getTableInfo(String tableName);
 }

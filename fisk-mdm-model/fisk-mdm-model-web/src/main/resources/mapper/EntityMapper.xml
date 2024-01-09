@@ -1,0 +1,16 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.mdm.mapper.EntityMapper">
+    <select id="getTableInfo" resultType="com.fisk.mdm.dto.dataops.TableQueryDTO">
+        SELECT
+            id,
+            model_id AS modelId,
+            table_name AS mdmTableName
+        FROM
+            tb_entity
+        WHERE
+            del_flag = 1
+            and table_name = #{tableName}
+    </select>
+</mapper>

@@ -15,6 +15,7 @@ import com.fisk.mdm.dto.accessmodel.AccessPublishStatusDTO;
 import com.fisk.mdm.dto.attribute.AttributeDomainDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attribute.AttributeStatusDTO;
+import com.fisk.mdm.dto.dataops.TableInfoDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
 import com.fisk.mdm.dto.process.ApprovalDTO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -25,6 +26,7 @@ import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import com.fisk.task.dto.mdmconfig.AccessMdmConfigDTO;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -214,4 +216,14 @@ public interface MdmClient {
      */
     @GetMapping("/model/getAllModelAndEntitys")
     ResultEntity<List<AccessAndModelAppDTO>> getAllModelAndEntitys();
+
+    /**
+     * 根据表名获取接入表信息
+     *
+     * @param tableName
+     * @return
+     */
+    @ApiOperation("根据表名获取mdm表信息")
+    @PostMapping("/entity/getTableInfo")
+    ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
 }

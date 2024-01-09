@@ -311,7 +311,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                         sqlParmStart.parmValue = String.valueOf((current-1) * size);
                         SqlParmDto sqlParmEnd = new SqlParmDto();
                         sqlParmEnd.parmName = "end";
-                        sqlParmEnd.parmValue = String.valueOf(current * size);
+                        sqlParmEnd.parmValue = String.valueOf(size);
                         sqlParamsDto.add(sqlParmStart);
                         sqlParamsDto.add(sqlParmEnd);
                     }

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.dataops.TableInfoDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
 import com.fisk.mdm.dto.entity.EntityPageDTO;
 import com.fisk.mdm.dto.entity.UpdateEntityDTO;
@@ -98,5 +99,10 @@ public class EntityController {
     public ResultEntity<Object> getTableNames(@RequestBody TableQueryDTO tableQueryDTO) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getTableNames(tableQueryDTO));
+    }
+    @ApiOperation("根据表名获取mdm表信息")
+    @PostMapping("/getTableInfo")
+    public ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getTableInfo(tableName));
     }
 }
