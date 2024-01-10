@@ -19,7 +19,7 @@ import java.util.Set;
 @Slf4j
 public class MongoDbUtils {
 
-    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname) throws JSONException {
+    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname){
         List<TablePyhNameDTO> list = new ArrayList<>();
         try {
             //库名
