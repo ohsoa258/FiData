@@ -53,9 +53,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -497,61 +495,63 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         DorisConUtils dorisConUtils = new DorisConUtils();
-        int ifDoris = 0;
         try {
-            List<String> conIps = postgreDTOList.stream().map(PostgreDTO::getIp).distinct().collect(Collectors.toList());
-            for (String conIp : conIps) {
-                DataOpsSourceVO dataOpsSourceVO = null;
-                List<DataOpsDataBaseVO> dataOpsDataBaseVOS = new ArrayList<>();
-                for (PostgreDTO postgreDTO : postgreDTOList) {
-                    if (postgreDTO.getIp().equals(conIp)) {
-                        if (dataOpsSourceVO == null) {
-                            dataOpsSourceVO = new DataOpsSourceVO();
-                            dataOpsSourceVO.setConIp(postgreDTO.getIp());
-                            dataOpsSourceVO.setConType(postgreDTO.getDataSourceTypeEnum());
-                            dataOpsSourceVO.setConPort(postgreDTO.getPort());
-                        }
-                        List<DataOpsDataTableVO> tableVOList = new ArrayList<>();
-                        Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
-                        List<TablePyhNameDTO> tablesPlus = null;
-                        if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
-                            tablesPlus = postgresConUtils.getTablesPlus(connection);
-                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
-                            tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
-                        } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
-                            ifDoris += 1;
-                            tablesPlus = dorisConUtils.getTablesPlusForOps(connection);
-                        }
-                        if (CollectionUtils.isNotEmpty(tablesPlus)) {
-                            tablesPlus.forEach(t -> {
-                                DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
-                                dataOpsDataTableVO.setTableFramework(t.getTableFramework());
-                                dataOpsDataTableVO.setTableName(t.getTableName());
-                                dataOpsDataTableVO.setTableFullName(t.getTableFullName());
-                                tableVOList.add(dataOpsDataTableVO);
-                            });
-                        }
+            Map<String,List<DataOpsDataBaseVO>> conIpToDataBaseMap = new HashMap<>();
+            //根据ip和端口去重
+            postgreDTOList = removeDuplicates(postgreDTOList);
+
+            for (PostgreDTO postgreDTO : postgreDTOList) {
+                int ifDoris = 0;
+                List<DataOpsDataTableVO> tableVOList = new ArrayList<>();
+                Connection connection = DataSourceConManageImpl.getStatement(postgreDTO.getDataSourceTypeEnum(), postgreDTO.getSqlUrl(), postgreDTO.getSqlUsername(), postgreDTO.getSqlPassword());
+                List<TablePyhNameDTO> tablesPlus = null;
+                if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.POSTGRESQL) {
+                    tablesPlus = postgresConUtils.getTablesPlus(connection);
+                } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.SQLSERVER) {
+                    tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
+                } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
+                    ifDoris += 1;
+                    tablesPlus = dorisConUtils.getTablesPlusForOps(connection);
+                }
+                if (CollectionUtils.isNotEmpty(tablesPlus)) {
+                    tablesPlus.forEach(t -> {
+                        DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
+                        dataOpsDataTableVO.setTableFramework(t.getTableFramework());
+                        dataOpsDataTableVO.setTableName(t.getTableName());
+                        dataOpsDataTableVO.setTableFullName(t.getTableFullName());
+                        tableVOList.add(dataOpsDataTableVO);
+                    });
+                }
 //                        if (CollectionUtils.isNotEmpty(tableVOList)) {
 //                            // 增加排序
 //                            tableVOList.sort(Comparator.comparing(DataOpsDataTableVO::getTableName));
 //                        }
-                        DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
-                        dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
-                        dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
-                        dataOpsDataBaseVO.setChildren(tableVOList);
-                        dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
 
-                        if (connection != null) {
-                            connection.close();
-                        }
-                    }
+                List<DataOpsDataBaseVO> dataOpsDataBaseVOS = conIpToDataBaseMap.get(postgreDTO.ip);
+                if (CollectionUtils.isEmpty(dataOpsDataBaseVOS)){
+                    dataOpsDataBaseVOS = new ArrayList<>();
                 }
-                //doris只展示一个顶级目录即可
-                if (dataOpsDataBaseVOS.size() >= 1 && ifDoris > 0) {
-                    dataOpsDataBaseVOS.remove(1);
-                    dataOpsDataBaseVOS.get(0).setConDbname("doris_catalogs");
+                DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
+                dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
+                if (ifDoris > 0){
+                    dataOpsDataBaseVO.setConDbname("doris_catalogs");
+                }else {
+                    dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
                 }
-                dataOpsSourceVO.setChildren(dataOpsDataBaseVOS);
+                dataOpsDataBaseVO.setConType(postgreDTO.dataSourceTypeEnum);
+                dataOpsDataBaseVO.setConPort(postgreDTO.port);
+                dataOpsDataBaseVO.setChildren(tableVOList);
+                dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
+                conIpToDataBaseMap.put(postgreDTO.ip,dataOpsDataBaseVOS);
+                if (connection != null) {
+                    connection.close();
+                }
+
+            }
+            for (String conIp : conIpToDataBaseMap.keySet()) {
+                DataOpsSourceVO dataOpsSourceVO = new DataOpsSourceVO();
+                dataOpsSourceVO.setConIp(conIp);
+                dataOpsSourceVO.setChildren(conIpToDataBaseMap.get(conIp));
                 dataOpsSourceVOList.add(dataOpsSourceVO);
             }
             if (CollectionUtils.isNotEmpty(dataOpsSourceVOList)) {
@@ -566,6 +566,26 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             log.info("setMetaDataToRedis-ops 结束");
         }
     }
+
+    public List<PostgreDTO> removeDuplicates(List<PostgreDTO> list) {
+        List<PostgreDTO> uniqueList = new ArrayList<>();
+
+        for (PostgreDTO postgreDTO : list) {
+            boolean exists = false;
+            for (PostgreDTO uniquePostgreDTO : uniqueList) {
+                if (postgreDTO.getIp().equals(uniquePostgreDTO.getIp()) && postgreDTO.getPort() == uniquePostgreDTO.getPort()) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                uniqueList.add(postgreDTO);
+            }
+        }
+
+        return uniqueList;
+    }
+
 
     /**
      * @return java.util.List<com.fisk.datagovernance.dto.dataops.PostgreDTO>
