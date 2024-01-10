@@ -1,68 +1,77 @@
 package com.fisk.dataaccess.utils.sql;
 
-import com.alibaba.fastjson.JSONObject;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.mongodb.MongoClient;
-import com.mongodb.client.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MongoDbUtils {
-
 
     public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname) {
         List<TablePyhNameDTO> list = new ArrayList<>();
         //库名
         MongoDatabase database = mongoClient.getDatabase(conDbname);
-        //获取库下的所有集合
-        MongoIterable mongoIterable = database.listCollectionNames();
-        MongoCursor table = mongoIterable.iterator();
-        while (table.hasNext()) {
-            //获取集合名（表名）
-            String tableName = table.next().toString();
-            //根据collection名获取collection
-            MongoCollection<Document> collection = database.getCollection(tableName);
-            //查找collection中的所有数据
-            FindIterable findIterable = collection.find();
-            MongoCursor cursor = findIterable.iterator();
-            List<TableStructureDTO> tb_columns = new ArrayList<>();
-            while (cursor.hasNext()) {
-                String str = cursor.next().toString();
-                str = str.substring(9, str.length() - 1);
-                str = str.replaceAll("[{]", "{\"");
-                str = str.replaceAll("[}]", "\"}");
-                str = str.replaceAll("=", "\":\"");
-                str = str.replaceAll(",", "\",\"");
-                str = str.replaceAll(" ", "");
-                JSONObject jsonObject = JSONObject.parseObject(str);
-                for (String fieldName : jsonObject.keySet()) {
-                    int mark = 0;
-                    for (TableStructureDTO tc : tb_columns) {
-                        //避免字段重复
-                        if (fieldName.equals(tc.fieldName))
-                            mark = 1;
-                    }
-                    if (mark == 0) {
-                        TableStructureDTO dto = new TableStructureDTO();
-                        // 获取字段名称
-                        dto.fieldName = fieldName;
-                        // 获取字段类型
-                        dto.fieldType = "STRING";
-                        dto.sourceTblName = tableName;
-                        dto.sourceDbName = conDbname;
-                        tb_columns.add(dto);
-                    }
-                }
-                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                tablePyhNameDTO.setTableName(conDbname + "." + tableName);
-                tablePyhNameDTO.setFields(tb_columns);
-                list.add(tablePyhNameDTO);
-            }
+        //获取集合名（表名）
+        String tableName = "_schema";
+        //根据collection名获取collection
+        MongoCollection<Document> collection = database.getCollection(tableName);
+        Set<String> keys = new HashSet<>();
+        List<TableStructureDTO> tb_columns = new ArrayList<>();
 
+        //查找collection中的所有数据
+        for (Document document : collection.find()) {
+            List<String> tb_columns1 = new ArrayList<>();
+            String tblName = (String) document.get("table");
+            Object fields = document.get("fields");
+            JSONArray jsonArray = new JSONArray(fields.toString());
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String fieldName = jsonObject.getString("name");
+                String fieldType = jsonObject.getString("type");
+                TableStructureDTO dto = new TableStructureDTO();
+                // 获取字段名称
+                dto.fieldName = fieldName;
+                // 获取字段类型
+                dto.fieldType = "STRING";
+                dto.sourceTblName = tableName;
+                dto.sourceDbName = conDbname;
+                tb_columns.add(dto);
+            }
+            TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+            tablePyhNameDTO.setTableName(conDbname + "." + tableName);
+            tablePyhNameDTO.setFields(tb_columns);
+            list.add(tablePyhNameDTO);
         }
+
+        //        //查找collection中的所有数据
+//        for (Document document : collection.find()) {
+//            for (String k : document.keySet()) {
+//                if (!keys.contains(k)) {
+//                    TableStructureDTO dto = new TableStructureDTO();
+//                    // 获取字段名称
+//                    dto.fieldName = k;
+//                    // 获取字段类型
+//                    dto.fieldType = "STRING";
+//                    dto.sourceTblName = tableName;
+//                    dto.sourceDbName = conDbname;
+//                    tb_columns.add(dto);
+//                    keys.add(k);
+//                }
+//            }
+//            TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+//            tablePyhNameDTO.setTableName(conDbname + "." + tableName);
+//            tablePyhNameDTO.setFields(tb_columns);
+//            list.add(tablePyhNameDTO);
+//        }
 
         return list;
     }
@@ -73,39 +82,23 @@ public class MongoDbUtils {
         //根据集合名（表名) 获取collection
         MongoCollection<Document> collection = database.getCollection(tblName);
         //查找collection中的所有数据
-        FindIterable findIterable = collection.find();
-        MongoCursor cursor = findIterable.iterator();
+        Set<String> keys = new HashSet<>();
         List<TableStructureDTO> tb_columns = new ArrayList<>();
-        while (cursor.hasNext()) {
-            String str = cursor.next().toString();
-            str = str.substring(9, str.length() - 1);
-            str = str.replaceAll("[{]", "{\"");
-            str = str.replaceAll("[}]", "\"}");
-            str = str.replaceAll("=", "\":\"");
-            str = str.replaceAll(",", "\",\"");
-            str = str.replaceAll(" ", "");
-            JSONObject jsonObject = JSONObject.parseObject(str);
-            for (String fieldName : jsonObject.keySet()) {
-                int mark = 0;
-                for (TableStructureDTO tc : tb_columns) {
-                    //避免字段重复
-                    if (fieldName.equals(tc.fieldName))
-                        mark = 1;
-                }
-                if (mark == 0) {
+        //查找collection中的所有数据
+        for (Document document : collection.find()) {
+            for (String k : document.keySet()) {
+                if (!keys.contains(k)) {
                     TableStructureDTO dto = new TableStructureDTO();
                     // 获取字段名称
-                    dto.fieldName = fieldName;
+                    dto.fieldName = k;
                     // 获取字段类型
                     dto.fieldType = "STRING";
                     dto.sourceTblName = tblName;
                     dto.sourceDbName = conDbname;
                     tb_columns.add(dto);
+                    keys.add(k);
                 }
             }
-            TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-            tablePyhNameDTO.setTableName(conDbname + "." + tblName);
-            tablePyhNameDTO.setFields(tb_columns);
         }
         return tb_columns;
     }

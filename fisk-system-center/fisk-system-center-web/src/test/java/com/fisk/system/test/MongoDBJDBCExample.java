@@ -1,12 +1,13 @@
 package com.fisk.system.test;
 
-import com.alibaba.fastjson.JSONObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.*;
 import org.bson.Document;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.*;
 
@@ -17,7 +18,7 @@ public class MongoDBJDBCExample {
         List<ServerAddress> serverAddresses = new ArrayList<>();
         serverAddresses.add(serverAddress);
 
-        MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential("fisk", "admin", "password01!" .toCharArray());
+        MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential("fisk", "admin", "password01!".toCharArray());
         List<MongoCredential> mongoCredentials = new ArrayList<>();
         mongoCredentials.add(scramSha1Credential);
 
@@ -55,33 +56,43 @@ public class MongoDBJDBCExample {
             //获取表名
             String tableName = table.next().toString();
             //根据collection名获取collection
-            MongoCollection<Document> collection = fisk_test_mongodb.getCollection(tableName);
+            MongoCollection<Document> collection = fisk_test_mongodb.getCollection("_schema");
 
-            Document fields = collection.find().projection(new Document(" $$ fields", new Document("$meta", "textScore"))).first();
-            for (String s : fields.keySet()) {
-                System.out.println(s);
-            }
-
-            // 查询集合中的文档
-            Document query = new Document(); // 可以设置查询条件，这里不设置查询条件，获取所有文档
-            Document result = collection.find(query).first(); // 获取第一个文档
-
-            // 输出结果
-            System.out.println(result.toJson());
-
-            Set<String> keys = new HashSet<>();
-            List<String> tb_columns1 = new ArrayList<>();
+            Map<String, List<String>> stringListHashMap = new HashMap<>();
             //查找collection中的所有数据
             for (Document document : collection.find()) {
-                for (String k : document.keySet()) {
-                    if (!keys.contains(k)) {
-                        tb_columns1.add(k);
-                        keys.add(k);
-                    }
+                List<String> tb_columns1 = new ArrayList<>();
+                String tblName = (String)document.get("table");
+                Object fields = document.get("fields");
+                JSONArray jsonArray = new JSONArray(fields.toString());
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    String fieldName = jsonObject.getString("name");
+                    String fieldType = jsonObject.getString("type");
+                    tb_columns1.add(fieldName);
+                }
+                stringListHashMap.put(tblName,tb_columns1);
+            }
+            System.out.println("================================");
+            System.out.println(stringListHashMap);
+            System.out.println("================================");
+
+
+
+
+
+            Set<String> keys1 = new HashSet<>();
+            List<String> tb_columns2 = new ArrayList<>();
+            //查找collection中第一行的所以列名
+            Document first = collection.find().first();
+            for (String k : first.keySet()) {
+                if (!keys1.contains(k)) {
+                    tb_columns2.add(k);
+                    keys1.add(k);
                 }
             }
             System.out.println("================================");
-            System.out.println(tb_columns1);
+            System.out.println(tb_columns2);
             System.out.println("================================");
 
         }
