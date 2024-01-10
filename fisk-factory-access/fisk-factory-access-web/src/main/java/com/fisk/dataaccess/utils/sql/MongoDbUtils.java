@@ -1,7 +1,5 @@
 package com.fisk.dataaccess.utils.sql;
 
-import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.mongodb.MongoClient;
@@ -9,7 +7,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,7 +16,7 @@ import java.util.Set;
 @Slf4j
 public class MongoDbUtils {
 
-    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname){
+    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname) {
         List<TablePyhNameDTO> list = new ArrayList<>();
         try {
             //库名
@@ -53,32 +50,13 @@ public class MongoDbUtils {
                 tablePyhNameDTO.setFields(tb_columns);
                 list.add(tablePyhNameDTO);
             }
-            //        //查找collection中的所有数据
-//        for (Document document : collection.find()) {
-//            for (String k : document.keySet()) {
-//                if (!keys.contains(k)) {
-//                    TableStructureDTO dto = new TableStructureDTO();
-//                    // 获取字段名称
-//                    dto.fieldName = k;
-//                    // 获取字段类型
-//                    dto.fieldType = "STRING";
-//                    dto.sourceTblName = tableName;
-//                    dto.sourceDbName = conDbname;
-//                    tb_columns.add(dto);
-//                    keys.add(k);
-//                }
-//            }
-//            TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-//            tablePyhNameDTO.setTableName(conDbname + "." + tableName);
-//            tablePyhNameDTO.setFields(tb_columns);
-//            list.add(tablePyhNameDTO);
-//        }
+            return list;
 
         } catch (Exception e) {
             log.error("获取数据-入仓配置同步表失败:" + e);
+            log.info("mongodb元数据信息" + list);
             return list;
         }
-        return list;
     }
 
     public List<TableStructureDTO> getTrueTableNameListForOneTbl(MongoClient mongoClient, String conDbname, String tblName) {

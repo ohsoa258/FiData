@@ -504,13 +504,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     serverAddresses.add(serverAddress);
 
                     //账号 验证数据库名 密码
-                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr,dto.conPassword.toCharArray());
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
                     List<MongoCredential> mongoCredentials = new ArrayList<>();
                     mongoCredentials.add(scramSha1Credential);
 
                     mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
-                    tables = mongoDbUtils.getTrueTableNameListForOneTbl(mongoClient,dto.conDbname,tblName);
+                    tables = mongoDbUtils.getTrueTableNameListForOneTbl(mongoClient, dto.conDbname, tblName);
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
             }
@@ -658,49 +658,23 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<TablePyhNameDTO> tableNames = new ArrayList<>();
 
         log.info("引用的数据源类型" + dto.conType);
-        try {
-            switch (dto.conType) {
-                case MYSQL:
-                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn, dto.conDbname);
-                    break;
-                case SQLSERVER:
-                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
-                    break;
-                case ORACLE:
-                    OracleUtils oracleUtils = new OracleUtils();
-                    log.info("ORACLE驱动开始加载");
-                    log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
-                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
-                    log.info("ORACLE驱动加载完毕");
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
-                    break;
-                case MONGODB:
-                    MongoDbUtils mongoDbUtils = new MongoDbUtils();
-                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
-                    List<ServerAddress> serverAddresses = new ArrayList<>();
-                    serverAddresses.add(serverAddress);
 
-                    //账号 验证数据库名 密码
-                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
-                    List<MongoCredential> mongoCredentials = new ArrayList<>();
-                    mongoCredentials.add(scramSha1Credential);
+        if (dto.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.MONGODB.getName())) {
+            MongoDbUtils mongoDbUtils = new MongoDbUtils();
+            ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+            List<ServerAddress> serverAddresses = new ArrayList<>();
+            serverAddresses.add(serverAddress);
 
-                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+            //账号 验证数据库名 密码
+            MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
+            List<MongoCredential> mongoCredentials = new ArrayList<>();
+            mongoCredentials.add(scramSha1Credential);
 
-                    tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
-                default:
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-            }
+            mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
+            tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
+            mongoClient.close();
             log.info("查询到的库表字段详情：" + tableNames);
-
             for (TablePyhNameDTO table : tableNames) {
 
                 TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
@@ -752,14 +726,98 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
             }
 
-        } catch (Exception e) {
-            log.error("hudi-入仓配置add异常：" + e);
-        } finally {
-            AbstractCommonDbHelper.closeConnection(conn);
-            if (mongoClient != null) {
-                mongoClient.close();
+        }else {
+            try {
+                switch (dto.conType) {
+                    case MYSQL:
+                        MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn, dto.conDbname);
+                        break;
+                    case SQLSERVER:
+                        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
+                        break;
+                    case ORACLE:
+                        OracleUtils oracleUtils = new OracleUtils();
+                        log.info("ORACLE驱动开始加载");
+                        log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        log.info("ORACLE驱动加载完毕");
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                        break;
+                    default:
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                }
+
+                log.info("查询到的库表字段详情：" + tableNames);
+
+                for (TablePyhNameDTO table : tableNames) {
+
+                    TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
+                    tableAccessDTO.setAppDataSourceId(appDatasourceId);
+                    tableAccessDTO.setAppId(appId);
+                    tableAccessDTO.setAppName(appName);
+                    tableAccessDTO.setDisplayName(table.getTableName());
+                    tableAccessDTO.setIsRealtime(1);
+                    tableAccessDTO.setPublish(0);
+                    tableAccessDTO.setSyncSrc("");
+                    tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+                    tableAccessDTO.setIfOpenCdc(1);
+                    String tableName = table.getTableName();
+                    if (tableName.contains(".")) {
+                        tableName = tableName.replaceFirst("\\.", "_");
+                    }
+                    tableAccessDTO.setTableName(tableName);
+
+                    //将表插入都tb_table_access表 获取到表的主键id
+                    Integer accessId = tableAccessImpl.addTableAccessTblForHudiConfig(tableAccessDTO);
+
+                    //获取当前表的字段
+                    List<TableStructureDTO> fields = table.getFields();
+
+                    List<TableFieldsDTO> list = new ArrayList<>();
+                    for (TableStructureDTO field : fields) {
+                        TableFieldsDTO fieldDTO = new TableFieldsDTO();
+                        fieldDTO.setTableAccessId(Long.valueOf(accessId));
+                        fieldDTO.setSourceFieldName(field.fieldName);
+                        fieldDTO.setSourceFieldType(field.fieldType);
+                        fieldDTO.setFieldName(field.fieldName);
+                        //字段类型暂时写死为string
+                        fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                        //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
+                        fieldDTO.setFieldDes(field.getFieldDes());
+                        fieldDTO.setIsPrimarykey(field.getIsPk());
+                        //1：是实时物理表的字段，
+                        //0：非实时物理表的字段
+                        fieldDTO.setIsRealtime(1);
+                        fieldDTO.setIsBusinesstime(0);
+                        fieldDTO.setIsTimestamp(0);
+                        fieldDTO.setSourceDbName(field.sourceDbName);
+                        fieldDTO.setSourceTblName(table.getTableName());
+                        list.add(fieldDTO);
+                    }
+                    List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+                    tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                }
+
+            } catch (Exception e) {
+                log.error("hudi-入仓配置add异常：" + e);
+            } finally {
+                AbstractCommonDbHelper.closeConnection(conn);
+                if (mongoClient != null) {
+                    mongoClient.close();
+                }
             }
         }
+
+
 
     }
 
@@ -789,52 +847,24 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<TablePyhNameDTO> tableNames = new ArrayList<>();
 
         log.info("引用的数据源类型" + dto.conType);
-        try {
-            switch (dto.conType) {
-                case MYSQL:
-                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
-                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn, dto.conDbname);
-                    break;
-                case SQLSERVER:
-                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
-                    break;
-                case ORACLE:
-                    OracleUtils oracleUtils = new OracleUtils();
-                    log.info("ORACLE驱动开始加载");
-                    log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
-                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
-                    log.info("ORACLE驱动加载完毕");
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
-                    break;
-                case MONGODB:
-                    MongoDbUtils mongoDbUtils = new MongoDbUtils();
-                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
-                    List<ServerAddress> serverAddresses = new ArrayList<>();
-                    serverAddresses.add(serverAddress);
+        if (dto.conType.getName().equalsIgnoreCase(DataSourceTypeEnum.MONGODB.getName())) {
+            MongoDbUtils mongoDbUtils = new MongoDbUtils();
+            ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+            List<ServerAddress> serverAddresses = new ArrayList<>();
+            serverAddresses.add(serverAddress);
 
-                    //账号 验证数据库名 密码
-                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
-                    List<MongoCredential> mongoCredentials = new ArrayList<>();
-                    mongoCredentials.add(scramSha1Credential);
+            //账号 验证数据库名 密码
+            MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
+            List<MongoCredential> mongoCredentials = new ArrayList<>();
+            mongoCredentials.add(scramSha1Credential);
 
-                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+            mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
-                    tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
-                default:
-                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-            }
-
-            log.info("查询到的库表字段详情：" + tableNames);
-
+            tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
+            log.info("获取到的mongodb库表信息：" + JSON.toJSONString(tableNames));
+            mongoClient.close();
             boolean ifSync = true;
             for (TablePyhNameDTO table : tableNames) {
-
                 TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
                 tableAccessDTO.setAppDataSourceId(appDatasourceId);
                 tableAccessDTO.setAppId(appId);
@@ -892,14 +922,103 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 }
             }
 
-        } catch (Exception e) {
-            log.error("hudi-入仓配置add异常：" + e);
-        } finally {
-            AbstractCommonDbHelper.closeConnection(conn);
-            if (mongoClient != null) {
-                mongoClient.close();
+        } else {
+            try {
+                switch (dto.conType) {
+                    case MYSQL:
+                        MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        tableNames = mysqlConUtils.getTrueTableNameAndColumns(conn, dto.conDbname);
+                        break;
+                    case SQLSERVER:
+                        SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        tableNames = sqlServerPlusUtils.getTrueTableNameAndColumnsPlus(conn, dto.conDbname);
+                        break;
+                    case ORACLE:
+                        OracleUtils oracleUtils = new OracleUtils();
+                        log.info("ORACLE驱动开始加载");
+                        log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        log.info("ORACLE驱动加载完毕");
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                        break;
+                    default:
+                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                }
+
+                log.info("查询到的库表字段详情：" + tableNames);
+
+                boolean ifSync = true;
+                for (TablePyhNameDTO table : tableNames) {
+
+                    TbTableAccessDTO tableAccessDTO = new TbTableAccessDTO();
+                    tableAccessDTO.setAppDataSourceId(appDatasourceId);
+                    tableAccessDTO.setAppId(appId);
+                    tableAccessDTO.setAppName(appName);
+                    tableAccessDTO.setDisplayName(table.getTableName());
+                    tableAccessDTO.setIsRealtime(1);
+                    tableAccessDTO.setPublish(0);
+                    tableAccessDTO.setSyncSrc("");
+                    tableAccessDTO.setTableDes("fidata - hudi入仓配置表");
+                    tableAccessDTO.setIfOpenCdc(1);
+                    String tableName = table.getTableName();
+                    if (tableName.contains(".")) {
+                        tableName = tableName.replaceFirst("\\.", "_");
+                    }
+                    tableAccessDTO.setTableName(tableName);
+
+                    for (TableAccessPO tableAccessPO : posAlreadyHave) {
+                        if (tableAccessPO.getTableName().equals(tableAccessDTO.getTableName())) {
+                            ifSync = false;
+                            break;
+                        }
+                    }
+
+                    if (ifSync) {
+                        //将表插入都tb_table_access表 获取到表的主键id
+                        int accessId = tableAccessImpl.addTableAccessTblForHudiConfig(tableAccessDTO);
+                        //获取当前表的字段
+                        List<TableStructureDTO> fields = table.getFields();
+
+                        List<TableFieldsDTO> list = new ArrayList<>();
+                        for (TableStructureDTO field : fields) {
+                            TableFieldsDTO fieldDTO = new TableFieldsDTO();
+                            fieldDTO.setTableAccessId((long) accessId);
+                            fieldDTO.setSourceFieldName(field.fieldName);
+                            fieldDTO.setSourceFieldType(field.fieldType);
+                            fieldDTO.setFieldName(field.fieldName);
+                            //字段类型暂时写死为string
+                            fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                            //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
+                            fieldDTO.setFieldDes(field.getFieldDes());
+                            fieldDTO.setIsPrimarykey(field.getIsPk());
+                            //1：是实时物理表的字段，
+                            //0：非实时物理表的字段
+                            fieldDTO.setIsRealtime(1);
+                            fieldDTO.setIsBusinesstime(0);
+                            fieldDTO.setIsTimestamp(0);
+                            fieldDTO.setSourceDbName(field.sourceDbName);
+                            fieldDTO.setSourceTblName(table.getTableName());
+                            list.add(fieldDTO);
+                        }
+                        List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+                        tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("hudi-入仓配置add异常：" + e);
+            } finally {
+                AbstractCommonDbHelper.closeConnection(conn);
             }
         }
+
 
     }
 
