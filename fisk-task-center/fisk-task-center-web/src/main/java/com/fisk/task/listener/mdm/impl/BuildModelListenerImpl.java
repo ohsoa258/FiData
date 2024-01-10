@@ -247,8 +247,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 stateInsert.execute();
             }
         }catch (Exception ex){
-            // 回滚事务
-            rollbackConnection(connection);
 
             // 记录日志
             log.error(ResultEnum.FACT_ATTRIBUTE_FAILD.getMsg() + "【SQL:】" + sql + "【原因:】" + ex.getMessage());
@@ -298,8 +296,6 @@ public class BuildModelListenerImpl implements BuildModelListener {
             // 4.回写columnName
             this.writableColumnName(entityInfoVo.getAttributeList());
         }catch (SQLException ex){
-            // a.回滚事务
-            rollbackConnection(connection);
 
             // 回写失败属性信息
             this.exceptionAttributeProcess(noSubmitAttributeList, ResultEnum.CREATE_STG_TABLE.getMsg()

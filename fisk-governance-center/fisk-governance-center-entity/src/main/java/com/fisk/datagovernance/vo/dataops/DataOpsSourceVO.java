@@ -14,11 +14,11 @@ import java.util.List;
  */
 @Data
 public class DataOpsSourceVO {
-    /**
-     * 数据源类型
-     */
-    @ApiModelProperty(value = "数据源类型")
-    public DataSourceTypeEnum conType;
+//    /**
+//     * 数据源类型
+//     */
+//    @ApiModelProperty(value = "数据源类型")
+//    public DataSourceTypeEnum conType;
 
     /**
      * IP
@@ -26,11 +26,11 @@ public class DataOpsSourceVO {
     @ApiModelProperty(value = "IP")
     public String conIp;
 
-    /**
-     * 端口
-     */
-    @ApiModelProperty(value = "端口")
-    public int conPort;
+//    /**
+//     * 端口
+//     */
+//    @ApiModelProperty(value = "端口")
+//    public int conPort;
 
     /**
      * 实例下数据库
