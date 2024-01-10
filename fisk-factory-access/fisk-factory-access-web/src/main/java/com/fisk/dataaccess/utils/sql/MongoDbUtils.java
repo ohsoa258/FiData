@@ -25,12 +25,13 @@ public class MongoDbUtils {
         String tableName = "_schema";
         //根据collection名获取collection
         MongoCollection<Document> collection = database.getCollection(tableName);
-        List<TableStructureDTO> tb_columns = new ArrayList<>();
+
         //查找collection中的所有数据
         for (Document document : collection.find()) {
             String tblName = (String) document.get("table");
             Object fields = document.get("fields");
             JSONArray jsonArray = new JSONArray(fields.toString());
+            List<TableStructureDTO> tb_columns = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 String fieldName = jsonObject.getString("name");
