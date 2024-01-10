@@ -19,12 +19,6 @@ public class DataObsSqlDTO {
     @ApiModelProperty(value = "querySql")
     private String querySql;
 
-    @ApiModelProperty(value = "数据库名称")
-    private String dbName;
-
-    @ApiModelProperty(value = "数据库ip")
-    private String dbIp;
-
-    @ApiModelProperty(value = "数据库类型")
-    private String dbType;
+    @ApiModelProperty(value = "数据库id")
+    private String dbId;
 }
