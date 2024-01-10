@@ -76,7 +76,7 @@ public class MongoDbUtils {
 
         } catch (Exception e) {
             log.error("获取数据-入仓配置同步表失败:" + e);
-            throw new FkException(ResultEnum.ACCESS_HUDI_SYNC_ERROR, e.getMessage());
+            return list;
         }
         return list;
     }
