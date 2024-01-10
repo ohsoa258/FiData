@@ -42,6 +42,8 @@ public class MongoDbUtils {
                     dto.sourceDbName = conDbname;
                     if ("_id".equals(fieldName)) {
                         dto.isPk = 1;
+                    } else {
+                        dto.isPk = 0;
                     }
                     tb_columns.add(dto);
                 }
