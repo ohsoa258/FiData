@@ -700,6 +700,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 List<TableStructureDTO> fields = table.getFields();
 
                 List<TableFieldsDTO> list = new ArrayList<>();
+
                 for (TableStructureDTO field : fields) {
                     TableFieldsDTO fieldDTO = new TableFieldsDTO();
                     fieldDTO.setTableAccessId(Long.valueOf(accessId));
@@ -723,7 +724,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     list.add(fieldDTO);
                 }
                 List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-                tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                if (!CollectionUtils.isEmpty(tableFieldsPOS)){
+                    tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                }
             }
 
         }else {
