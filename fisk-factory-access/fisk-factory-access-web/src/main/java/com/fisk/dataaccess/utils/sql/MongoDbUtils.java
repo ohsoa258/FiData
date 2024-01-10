@@ -32,10 +32,10 @@ public class MongoDbUtils {
             //查找collection中的所有数据
             for (Document document : collection.find()) {
                 String tblName = (String) document.get("table");
-                log.info("mongo表名：" + tblName); // 移到循环外部的日志输出
+                log.info("mongo表名：" + tblName);
                 List<Document> fields = (List<Document>) document.get("fields");
                 List<TableStructureDTO> tb_columns = new ArrayList<>();
-                for (Document field : fields) { // 使用流式处理来减少对象创建
+                for (Document field : fields) {
                     String fieldName = field.getString("name");
                     String fieldType = field.getString("type");
                     TableStructureDTO dto = new TableStructureDTO();
