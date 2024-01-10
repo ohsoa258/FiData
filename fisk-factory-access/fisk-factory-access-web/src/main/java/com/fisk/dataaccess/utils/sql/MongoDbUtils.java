@@ -16,44 +16,48 @@ import java.util.Set;
 @Slf4j
 public class MongoDbUtils {
 
-    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname) {
+    /**
+     * 强生--获取库下指定集合里面的表结构信息
+     */
+    private static final String COLLECTION_NAME = "_schema";
+
+    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient) {
         List<TablePyhNameDTO> list = new ArrayList<>();
         try {
-            //库名
-            MongoDatabase database = mongoClient.getDatabase(conDbname);
-            //获取集合名（表名）
-            String tableName = "_schema";
-            //根据collection名获取collection
-            MongoCollection<Document> collection = database.getCollection(tableName);
-
-            //查找collection中的所有数据
-            for (Document document : collection.find()) {
-                String tblName = (String) document.get("table");
-                log.info("mongo表名：" + tblName);
-                List<Document> fields = (List<Document>) document.get("fields");
-                List<TableStructureDTO> tb_columns = new ArrayList<>();
-                for (Document field : fields) {
-                    String fieldName = field.getString("name");
-                    String fieldType = field.getString("type");
-                    TableStructureDTO dto = new TableStructureDTO();
-                    dto.fieldName = fieldName;
-                    dto.fieldType = "STRING";
-                    dto.sourceTblName = tblName;
-                    dto.sourceDbName = conDbname;
-                    if ("_id".equals(fieldName)) {
-                        dto.isPk = 1;
-                    } else {
-                        dto.isPk = 0;
+            //获取所有数据库名称
+            for (String dbName : mongoClient.listDatabaseNames()) {
+                //获取库
+                MongoDatabase database = mongoClient.getDatabase(dbName);
+                //根据collection名获取collection
+                MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+                //查找collection中的所有数据
+                for (Document document : collection.find()) {
+                    String tblName = (String) document.get("table");
+                    log.info("mongo表名：" + tblName);
+                    List<Document> fields = (List<Document>) document.get("fields");
+                    List<TableStructureDTO> tb_columns = new ArrayList<>();
+                    for (Document field : fields) {
+                        String fieldName = field.getString("name");
+                        String fieldType = field.getString("type");
+                        TableStructureDTO dto = new TableStructureDTO();
+                        dto.fieldName = fieldName;
+                        dto.fieldType = "STRING";
+                        dto.sourceTblName = tblName;
+                        dto.sourceDbName = dbName;
+                        if ("_id".equals(fieldName)) {
+                            dto.isPk = 1;
+                        } else {
+                            dto.isPk = 0;
+                        }
+                        tb_columns.add(dto);
                     }
-                    tb_columns.add(dto);
+                    TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                    tablePyhNameDTO.setTableName(dbName + "." + tblName);
+                    tablePyhNameDTO.setFields(tb_columns);
+                    list.add(tablePyhNameDTO);
                 }
-                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                tablePyhNameDTO.setTableName(conDbname + "." + tblName);
-                tablePyhNameDTO.setFields(tb_columns);
-                list.add(tablePyhNameDTO);
             }
             return list;
-
         } catch (Exception e) {
             log.error("获取数据-入仓配置同步表失败:" + e);
             log.info("mongodb元数据信息" + list);

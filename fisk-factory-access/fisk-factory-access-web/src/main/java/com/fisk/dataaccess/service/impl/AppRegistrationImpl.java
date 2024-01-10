@@ -672,7 +672,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
-            tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
+            tableNames = mongoDbUtils.getTrueTableNameList(mongoClient);
             mongoClient.close();
             log.info("查询到的库表字段详情：" + tableNames);
             for (TablePyhNameDTO table : tableNames) {
@@ -863,7 +863,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
-            tableNames = mongoDbUtils.getTrueTableNameList(mongoClient, dto.conDbname);
+            tableNames = mongoDbUtils.getTrueTableNameList(mongoClient);
             log.info("获取到的mongodb库表信息：" + JSON.toJSONString(tableNames));
             mongoClient.close();
             boolean ifSync = true;

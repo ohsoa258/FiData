@@ -5,6 +5,7 @@ import com.fisk.dataaccess.utils.sql.MongoDbUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoIterable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +24,15 @@ public class MongoDBJDBCExample {
 
         MongoClient mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
+        MongoIterable<String> strings = mongoClient.listDatabaseNames();
+        for (String string : strings) {
+            System.out.println(string);
+        }
+
+
 
         MongoDbUtils mongoDbUtils = new MongoDbUtils();
-        List<TablePyhNameDTO> fisk_test_mongodb1 = mongoDbUtils.getTrueTableNameList(mongoClient, "Fisk_Test_Mongodb");
+        List<TablePyhNameDTO> fisk_test_mongodb1 = mongoDbUtils.getTrueTableNameList(mongoClient);
         System.out.println(fisk_test_mongodb1);
 
     }
