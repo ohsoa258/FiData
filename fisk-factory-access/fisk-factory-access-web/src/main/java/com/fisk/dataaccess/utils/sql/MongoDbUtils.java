@@ -44,6 +44,10 @@ public class MongoDbUtils {
                 dto.fieldType = "STRING";
                 dto.sourceTblName = tableName;
                 dto.sourceDbName = conDbname;
+                //mongodb _id是默认索引
+                if ("_id".equals(fieldName)){
+                    dto.isPk= 1;
+                }
                 tb_columns.add(dto);
             }
             TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
