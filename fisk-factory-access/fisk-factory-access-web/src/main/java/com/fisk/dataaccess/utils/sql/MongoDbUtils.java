@@ -9,9 +9,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,23 +32,17 @@ public class MongoDbUtils {
             //查找collection中的所有数据
             for (Document document : collection.find()) {
                 String tblName = (String) document.get("table");
-                log.info("mongo表名：" + tableName);
-                String fields = document.get("fields").toString();
-                log.info("mongo字段对象：" + fields);
-                JSONArray jsonArray = new JSONArray(fields);
+                log.info("mongo表名：" + tblName); // 移到循环外部的日志输出
+                List<Document> fields = (List<Document>) document.get("fields");
                 List<TableStructureDTO> tb_columns = new ArrayList<>();
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                    String fieldName = jsonObject.getString("name");
-                    String fieldType = jsonObject.getString("type");
+                for (Document field : fields) { // 使用流式处理来减少对象创建
+                    String fieldName = field.getString("name");
+                    String fieldType = field.getString("type");
                     TableStructureDTO dto = new TableStructureDTO();
-                    // 获取字段名称
                     dto.fieldName = fieldName;
-                    // 获取字段类型
                     dto.fieldType = "STRING";
-                    dto.sourceTblName = tableName;
+                    dto.sourceTblName = tblName;
                     dto.sourceDbName = conDbname;
-                    //mongodb _id是默认索引
                     if ("_id".equals(fieldName)) {
                         dto.isPk = 1;
                     }
@@ -61,7 +53,6 @@ public class MongoDbUtils {
                 tablePyhNameDTO.setFields(tb_columns);
                 list.add(tablePyhNameDTO);
             }
-
             //        //查找collection中的所有数据
 //        for (Document document : collection.find()) {
 //            for (String k : document.keySet()) {
