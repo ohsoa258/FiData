@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.Set;
 
 public class MongoDbUtils {
 
-    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname) {
+    public List<TablePyhNameDTO> getTrueTableNameList(MongoClient mongoClient, String conDbname) throws JSONException {
         List<TablePyhNameDTO> list = new ArrayList<>();
         //库名
         MongoDatabase database = mongoClient.getDatabase(conDbname);
@@ -24,12 +25,9 @@ public class MongoDbUtils {
         String tableName = "_schema";
         //根据collection名获取collection
         MongoCollection<Document> collection = database.getCollection(tableName);
-        Set<String> keys = new HashSet<>();
         List<TableStructureDTO> tb_columns = new ArrayList<>();
-
         //查找collection中的所有数据
         for (Document document : collection.find()) {
-            List<String> tb_columns1 = new ArrayList<>();
             String tblName = (String) document.get("table");
             Object fields = document.get("fields");
             JSONArray jsonArray = new JSONArray(fields.toString());
@@ -51,7 +49,7 @@ public class MongoDbUtils {
                 tb_columns.add(dto);
             }
             TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-            tablePyhNameDTO.setTableName(conDbname + "." + tableName);
+            tablePyhNameDTO.setTableName(conDbname + "." + tblName);
             tablePyhNameDTO.setFields(tb_columns);
             list.add(tablePyhNameDTO);
         }

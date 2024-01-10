@@ -1,5 +1,6 @@
 package com.fisk.system.test;
 
+import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.MongoNamespace;
@@ -78,7 +79,9 @@ public class MongoDBJDBCExample {
             System.out.println("================================");
 
 
-
+            MongoDbUtils mongoDbUtils = new MongoDbUtils();
+            List<TablePyhNameDTO> fisk_test_mongodb1 = mongoDbUtils.getTrueTableNameList(mongoClient, "Fisk_Test_Mongodb");
+            System.out.println(fisk_test_mongodb1);
 
 
             Set<String> keys1 = new HashSet<>();
