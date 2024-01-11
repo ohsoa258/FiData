@@ -453,7 +453,12 @@ public class MetaDataImpl implements IMetaData {
 
     private String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_suffix);
-        dto.name = dto.name;
+        if (dto.name.indexOf(mdm_prefix) >=  0) {
+            dto.name=dto.name.replace(mdm_prefix,"");
+        }else{
+            dto.name = dto.name;
+        }
+
         dto.qualifiedName = dto.qualifiedName + stg_suffix;
         dto.description = stg;
 

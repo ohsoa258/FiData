@@ -61,6 +61,6 @@ public interface StandardsService extends IService<StandardsPO> {
 
     Page<StandardsMenuDTO> standardsQuery(StandardsQueryDTO dto);
 
-    List<StandardsDTO> getStandardsBySource(StandardsSourceQueryDTO dto);
+    List<StandardsDTO> getStandardsBySource(Integer fieldMetadataId);
 }
 

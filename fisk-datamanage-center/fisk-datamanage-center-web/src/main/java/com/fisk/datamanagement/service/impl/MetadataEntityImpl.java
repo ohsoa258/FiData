@@ -25,11 +25,13 @@ import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
+import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.dto.search.SearchParametersDto;
+import com.fisk.datamanagement.dto.standards.StandardsSourceQueryDTO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.LineageMapRelationPO;
@@ -1403,5 +1405,24 @@ public class MetadataEntityImpl
      */
     public List<MetadataEntityPO> getChildMetaData(String parentMetaDataId) {
         return this.query().eq("parent_id", Integer.valueOf(parentMetaDataId)).list();
+    }
+
+    /**
+     * 获取字段名称获取父级数据库和表名
+     * @return
+     */
+    @Override
+    public DBTableFiledNameDto getParentNameByFieldId(Integer fieldMetadataId){
+        MetadataEntityPO field = this.query().eq("id", fieldMetadataId).eq("type_id",EntityTypeEnum.RDBMS_COLUMN.getValue()).one();
+        if (field==null){
+            return null;
+        }
+        MetadataEntityPO table = this.query().eq("id", field.getParentId()).one();
+        MetadataEntityPO db = this.query().eq("id", table.getParentId()).one();
+        DBTableFiledNameDto nameDto=new DBTableFiledNameDto();
+        nameDto.setFieldName(field.getName());
+        nameDto.setTableName(table.getName());
+        nameDto.setDatabaseName(db.getName());
+        return nameDto;
     }
 }

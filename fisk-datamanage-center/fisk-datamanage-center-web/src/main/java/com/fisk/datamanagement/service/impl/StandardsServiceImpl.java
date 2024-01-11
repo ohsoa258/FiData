@@ -18,6 +18,7 @@ import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
+import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.entity.StandardsBeCitedPO;
 import com.fisk.datamanagement.entity.StandardsMenuPO;
@@ -50,6 +51,9 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     StandardsMenuService standardsMenuService;
     @Resource
     StandardsBeCitedService standardsBeCitedService;
+
+    @Resource
+    MetadataEntityImpl metadataEntity;
 
     @Resource
     UserClient userClient;
@@ -526,7 +530,16 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
-    public List<StandardsDTO> getStandardsBySource(StandardsSourceQueryDTO dto) {
+    public List<StandardsDTO> getStandardsBySource(Integer fieldMetadataId) {
+
+        DBTableFiledNameDto dbTableFiledNameDto = metadataEntity.getParentNameByFieldId(fieldMetadataId);
+        if (dbTableFiledNameDto==null){
+            return new ArrayList<>();
+        }
+        StandardsSourceQueryDTO dto=new StandardsSourceQueryDTO();
+        dto.setFieldName(dbTableFiledNameDto.getFieldName());
+        dto.setTableName(dbTableFiledNameDto.getTableName());
+        dto.setDatabaseName(dbTableFiledNameDto.getDatabaseName());
         return this.baseMapper.getStandardsBySource(dto);
     }
 
