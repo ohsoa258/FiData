@@ -720,16 +720,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     fieldDTO.setIsBusinesstime(0);
                     fieldDTO.setIsTimestamp(0);
                     fieldDTO.setSourceDbName(field.sourceDbName);
-                    fieldDTO.setSourceTblName(table.getTableName());
+                    fieldDTO.setSourceTblName(field.sourceTblName);
                     list.add(fieldDTO);
                 }
                 List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-                if (!CollectionUtils.isEmpty(tableFieldsPOS)){
+                if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
                     tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
                 }
             }
 
-        }else {
+        } else {
             try {
                 switch (dto.conType) {
                     case MYSQL:
@@ -819,7 +819,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 }
             }
         }
-
 
 
     }
