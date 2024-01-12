@@ -812,7 +812,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         list.add(fieldDTO);
                     }
                     List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-                    tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
+                        tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    }
                 }
 
             } catch (Exception e) {
@@ -1009,7 +1011,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         list.add(fieldDTO);
                     }
                     List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-                    tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
+                        tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    }
                 }
 
             } catch (Exception e) {
@@ -1120,7 +1124,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         list.add(fieldDTO);
                     }
                     List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-                    tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
+                        tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                    }
                 }
             }
 
@@ -1210,7 +1216,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                             list.add(fieldDTO);
                         }
                         List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-                        tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                        if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
+                            tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+                        }
                     }
                 }
 
