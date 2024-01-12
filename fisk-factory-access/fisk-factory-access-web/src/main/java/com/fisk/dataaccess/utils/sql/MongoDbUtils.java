@@ -65,6 +65,49 @@ public class MongoDbUtils {
         }
     }
 
+    public List<TablePyhNameDTO> getTrueTableNameListByTarget(MongoClient mongoClient, String dbName) {
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        try {
+            //获取所有数据库名称
+            //获取库
+            MongoDatabase database = mongoClient.getDatabase(dbName);
+            //根据collection名获取collection
+            MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+            //查找collection中的所有数据
+            for (Document document : collection.find()) {
+                String tblName = (String) document.get("table");
+                log.info("mongo表名：" + tblName);
+                List<Document> fields = (List<Document>) document.get("fields");
+                List<TableStructureDTO> tb_columns = new ArrayList<>();
+                for (Document field : fields) {
+                    String fieldName = field.getString("name");
+                    String fieldType = field.getString("type");
+                    TableStructureDTO dto = new TableStructureDTO();
+                    dto.fieldName = fieldName;
+                    dto.fieldType = "STRING";
+                    dto.sourceTblName = tblName;
+                    dto.sourceDbName = dbName;
+                    if ("_id".equals(fieldName)) {
+                        dto.isPk = 1;
+                    } else {
+                        dto.isPk = 0;
+                    }
+                    tb_columns.add(dto);
+                }
+                TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                tablePyhNameDTO.setTableName(dbName + "." + tblName);
+                tablePyhNameDTO.setFields(tb_columns);
+                list.add(tablePyhNameDTO);
+            }
+
+            return list;
+        } catch (Exception e) {
+            log.error("获取数据-入仓配置同步表失败:" + e);
+            log.info("mongodb元数据信息" + list);
+            return list;
+        }
+    }
+
     public List<TableStructureDTO> getTrueTableNameListForOneTbl(MongoClient mongoClient, String conDbname, String tblName) {
         //库名
         MongoDatabase database = mongoClient.getDatabase(conDbname);
