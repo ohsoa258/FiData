@@ -223,7 +223,11 @@ public class EntityServiceImpl implements EntityService {
 
     @Override
     public ResultEnum deleteData(Integer id) {
-        MetaDataInstanceAttributeDTO masterDataMetaData = getMasterDataMetaData(id).stream().findFirst().orElse(null);
+        //删除元数据实体信息
+        MetaDataInstanceAttributeDTO masterDataMetaData =null;
+        if (openMetadata){
+            masterDataMetaData = getMasterDataMetaData(id).stream().findFirst().orElse(null);
+        }
         EntityPO entityPo = entityMapper.selectById(id);
         if (entityPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
