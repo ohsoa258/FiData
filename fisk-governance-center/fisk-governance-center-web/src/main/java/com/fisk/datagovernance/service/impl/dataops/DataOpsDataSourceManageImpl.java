@@ -18,6 +18,7 @@ import com.fisk.common.core.utils.Dto.Excel.RowDto;
 import com.fisk.common.core.utils.Dto.Excel.SheetDto;
 import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.governance.BuildGovernanceHelper;
 import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
@@ -52,9 +53,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author dick
@@ -323,25 +326,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             log.error("executeDataOpsSql执行异常：", ex);
             throw new FkException(ResultEnum.DATA_OPS_SQL_EXECUTE_ERROR, ex.getMessage());
         } finally {
-            try {
-                if (st != null) {
-                    conn.close();
-                }
-            } catch (SQLException ex) {
-                // do nothing
-                executeResult = ResultEnum.ERROR;
-                executeMsg = ex.getMessage();
-            }
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException ex) {
-                executeResult = ResultEnum.ERROR;
-                executeMsg = ex.getMessage();
-                log.error("executeDataOpsSql数据库连接关闭异常：", ex);
-                throw new FkException(ResultEnum.DATA_OPS_CLOSESTATEMENT_ERROR, ex.getMessage());
-            }
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
             // 保存日志
             try {
                 DataOpsLogPO dataOpsLogPO = new DataOpsLogPO();
@@ -361,10 +347,8 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 dataOpsLogManageImpl.saveLog(dataOpsLogPO);
             } catch (Exception ex) {
                 log.error("executeDataOpsSql日志保存失败：", ex);
-                throw new FkException(ResultEnum.DATA_OPS_CREATELOG_ERROR, ex.getMessage());
             }
         }
-        log.info("数据库运维执行查询后组装的待返回的结果集：" + JSON.toJSONString(executeResultVO));
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, executeResultVO);
     }
 
@@ -395,7 +379,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         && tableInfo.getData() != null) {
                     tableInfoDTO = tableInfo.getData();
                 }
-            }else if (dto.getDatasourceId() == 3) {
+            } else if (dto.getDatasourceId() == 3) {
                 // 调用数据接入接口获取表信息
                 ResultEntity<com.fisk.mdm.dto.dataops.TableInfoDTO> tableInfo = mdmClient.getTableInfo(dto.getTableFullName());
                 if (tableInfo != null
@@ -496,7 +480,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         DorisConUtils dorisConUtils = new DorisConUtils();
         try {
-            Map<String,List<DataOpsDataBaseVO>> conIpToDataBaseMap = new HashMap<>();
+            Map<String, List<DataOpsDataBaseVO>> conIpToDataBaseMap = new HashMap<>();
             //根据ip和端口去重
             postgreDTOList = removeDuplicates(postgreDTOList);
 
@@ -528,21 +512,21 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 //                        }
 
                 List<DataOpsDataBaseVO> dataOpsDataBaseVOS = conIpToDataBaseMap.get(postgreDTO.ip);
-                if (CollectionUtils.isEmpty(dataOpsDataBaseVOS)){
+                if (CollectionUtils.isEmpty(dataOpsDataBaseVOS)) {
                     dataOpsDataBaseVOS = new ArrayList<>();
                 }
                 DataOpsDataBaseVO dataOpsDataBaseVO = new DataOpsDataBaseVO();
                 dataOpsDataBaseVO.setDatasourceId(postgreDTO.getId());
-                if (ifDoris > 0){
+                if (ifDoris > 0) {
                     dataOpsDataBaseVO.setConDbname("doris_catalogs");
-                }else {
+                } else {
                     dataOpsDataBaseVO.setConDbname(postgreDTO.getDbName());
                 }
                 dataOpsDataBaseVO.setConType(postgreDTO.dataSourceTypeEnum);
                 dataOpsDataBaseVO.setConPort(postgreDTO.port);
                 dataOpsDataBaseVO.setChildren(tableVOList);
                 dataOpsDataBaseVOS.add(dataOpsDataBaseVO);
-                conIpToDataBaseMap.put(postgreDTO.ip,dataOpsDataBaseVOS);
+                conIpToDataBaseMap.put(postgreDTO.ip, dataOpsDataBaseVOS);
                 if (connection != null) {
                     connection.close();
                 }
