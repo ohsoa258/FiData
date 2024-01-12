@@ -612,10 +612,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             switch (syncType) {
                 case 1:
                     hudiSyncAllTablesByFull(systemDataSourceId, appDatasourceId, appId, one.getAppName());
+                    break;
                 case 3:
                     hudiSyncAllTablesByTarget(systemDataSourceId, appDatasourceId, appId, one.getAppName());
+                    break;
                 case 2:
                     hudiSyncAllTablesByMerge(systemDataSourceId, appDatasourceId, appId, one.getAppName());
+                    break;
             }
 
             return ResultEnum.SUCCESS;
