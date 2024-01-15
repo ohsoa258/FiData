@@ -578,8 +578,11 @@ public class BuildModelListenerImpl implements BuildModelListener {
 
             // 4.1 提交最新属性表
             sql = this.buildAttributeSql(sqlBuilder, entityInfoVo.getAttributeList());
-            PreparedStatement stemAttribute = connection.prepareStatement(sql);
-            stemAttribute.execute();
+            if (sql != null){
+                PreparedStatement stemAttribute = connection.prepareStatement(sql);
+                stemAttribute.execute();
+            }
+
             
             // e.提交事务
             connection.commit();
@@ -632,6 +635,9 @@ public class BuildModelListenerImpl implements BuildModelListener {
                 }).collect(Collectors.toList());
 
         // 2.创建Sql
+        if(CollectionUtils.isEmpty(dtoList)){
+            return null;
+        }
         String sql = sqlBuilder.insertAttributeFact(dtoList);
         return sql;
     }
