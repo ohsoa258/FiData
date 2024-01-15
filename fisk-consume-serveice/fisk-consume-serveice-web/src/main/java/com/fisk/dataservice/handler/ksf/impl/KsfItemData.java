@@ -156,7 +156,7 @@ public class KsfItemData extends KsfWebServiceHandler {
             return apiResultDTO;
         }
         String data = JSON.toJSONString(result);
-        log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + data);
+        log.info("apiId" + tableApiServicePO.getId() + "物料主数据推送数据:" + data);
         Map<String, Object> dataMap = (Map<String, Object>) result.get("Data");
         int docCount = (int) dataMap.get("DocCount");
         if (docCount != 0) {
