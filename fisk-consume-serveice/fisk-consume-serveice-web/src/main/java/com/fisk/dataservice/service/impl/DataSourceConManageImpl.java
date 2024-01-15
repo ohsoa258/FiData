@@ -379,9 +379,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         fiDataMetaDataTreeDateBase.setLabelAlias(dataSourceConPO.conDbname);
         fiDataMetaDataTreeDateBase.setLevelType(LevelTypeEnum.DATABASE);
         List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeTableView = new ArrayList<>();
-        DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[dataSourceConPO.conType];
+        DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.getEnum(dataSourceConPO.conType);
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS){
-
             FiDataMetaDataTreeDTO fiDataMetaDataTreeView = new FiDataMetaDataTreeDTO();
             String uuid_CataLogFOLDERId = UUID.randomUUID().toString().replace("-", "");
             fiDataMetaDataTreeView.setId(uuid_CataLogFOLDERId);
