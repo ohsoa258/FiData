@@ -117,7 +117,7 @@ public class TestController {
             @RequestParam("uname") String uname,
             @RequestParam("pwd") String pwd,
             @RequestParam("sql") String sql,
-            @RequestParam("sql") Long dataSize
+            @RequestParam("dataSize") Long dataSize
 
     ) {
         Connection connection = null;
