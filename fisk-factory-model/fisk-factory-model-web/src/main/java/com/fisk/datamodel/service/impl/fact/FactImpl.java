@@ -465,6 +465,55 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         return mapper.selectCount(wrapper);
     }
 
+    @Override
+    public List<FactTreeDTO> getFactTree() {
+        List<BusinessAreaPO> businessAreaPOS = businessAreaImpl.list();
+
+        List<BusinessAreaFactDTO> areaFactDTOS = new ArrayList<>();
+
+        for (BusinessAreaPO businessAreaPO : businessAreaPOS) {
+            LambdaQueryWrapper<FactPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.eq(FactPO::getBusinessId, businessAreaPO.getId());
+            List<FactPO> factPOS = list(wrapper1);
+
+            BusinessAreaFactDTO businessAreaFactDTO = new BusinessAreaFactDTO();
+            businessAreaFactDTO.setBusinessName(businessAreaPO.getBusinessName());
+            businessAreaFactDTO.setId(businessAreaPO.getId());
+            List<FactListDTO> factListDTOS = new ArrayList<>();
+
+            for (FactPO factPO : factPOS) {
+                LambdaQueryWrapper<FactAttributePO> wrapper = new LambdaQueryWrapper<>();
+                wrapper.eq(FactAttributePO::getFactId, factPO.getId());
+                List<FactAttributePO> attributePOList = factAttributeImpl.list(wrapper);
+                FactListDTO factListDTO = new FactListDTO();
+                factListDTO.factTabName = factPO.factTabName;
+                factListDTO.setId((int) factPO.getId());
+                factListDTO.factTableCnName = factPO.factTableCnName;
+                List<FactAttributeDTO> attributeDataDTOS = new ArrayList<>();
+                for (FactAttributePO factAttributePO : attributePOList) {
+                    FactAttributeDTO attributeDTO = new FactAttributeDTO();
+                    attributeDTO.setId(factAttributePO.getId());
+                    attributeDTO.setFactFieldCnName(factAttributePO.getFactFieldCnName());
+                    attributeDTO.setFactFieldEnName(factAttributePO.getFactFieldEnName());
+                    attributeDTO.setFactFieldDes(factAttributePO.getFactFieldDes());
+                    attributeDTO.setFactFieldType(factAttributePO.getFactFieldType());
+                    attributeDTO.setFactFieldLength(factAttributePO.getFactFieldLength());
+                    attributeDataDTOS.add(attributeDTO);
+                }
+                //维度字段
+                factListDTO.setAttributeList(attributeDataDTOS);
+                factListDTOS.add(factListDTO);
+            }
+            businessAreaFactDTO.setFactList(factListDTOS);
+            areaFactDTOS.add(businessAreaFactDTO);
+        }
+        FactTreeDTO factTreeDTO = new FactTreeDTO();
+        factTreeDTO.setFactByArea(areaFactDTOS);
+        List<FactTreeDTO> factTreeDTOS = new ArrayList<>();
+        factTreeDTOS.add(factTreeDTO);
+        return factTreeDTOS;
+    }
+
     /**
      * 事实/指标表获取字段
      *

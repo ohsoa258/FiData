@@ -6,10 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
-import com.fisk.datamodel.dto.fact.FactDTO;
-import com.fisk.datamodel.dto.fact.FactDropDTO;
-import com.fisk.datamodel.dto.fact.FactListDTO;
-import com.fisk.datamodel.dto.fact.FactScreenDropDTO;
+import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.fact.FactPO;
 
@@ -22,6 +19,7 @@ public interface IFact extends IService<FactPO> {
 
     /**
      * 添加事实表
+     *
      * @param dto
      * @return
      */
@@ -29,6 +27,7 @@ public interface IFact extends IService<FactPO> {
 
     /**
      * 删除事实表
+     *
      * @param id
      * @return
      */
@@ -36,6 +35,7 @@ public interface IFact extends IService<FactPO> {
 
     /**
      * 根据id获取事实表详情
+     *
      * @param id
      * @return
      */
@@ -43,6 +43,7 @@ public interface IFact extends IService<FactPO> {
 
     /**
      * 编辑事实表
+     *
      * @param dto
      * @return
      */
@@ -50,6 +51,7 @@ public interface IFact extends IService<FactPO> {
 
     /**
      * 获取事实表列表
+     *
      * @param dto
      * @return
      */
@@ -57,18 +59,21 @@ public interface IFact extends IService<FactPO> {
 
     /**
      * 获取事实表下拉列表
+     *
      * @return
      */
     List<FactDropDTO> getFactDropList();
 
     /**
      * 获取事实筛选列表
+     *
      * @return
      */
     List<FactScreenDropDTO> getFactScreenDropList();
 
     /**
      * 更新事实脚本数据
+     *
      * @param dto
      * @return
      */
@@ -102,4 +107,11 @@ public interface IFact extends IService<FactPO> {
      * @return
      */
     Integer getFactTotalCount();
+
+    /**
+     * 获取事实tree
+     *
+     * @return
+     */
+    List<FactTreeDTO> getFactTree();
 }

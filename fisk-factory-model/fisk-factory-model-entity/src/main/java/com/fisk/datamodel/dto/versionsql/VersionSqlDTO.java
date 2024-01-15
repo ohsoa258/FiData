@@ -3,6 +3,8 @@ package com.fisk.datamodel.dto.versionsql;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class VersionSqlDTO {
 
@@ -35,5 +37,11 @@ public class VersionSqlDTO {
      */
     @ApiModelProperty(value = "表类型：0维度  1事实")
     private Integer tableType;
+
+    /**
+     *
+     */
+    @ApiModelProperty(value = "创建时间")
+    public LocalDateTime createTime;
 
 }

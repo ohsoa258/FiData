@@ -7,6 +7,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactTreeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IFact;
 import io.swagger.annotations.Api;
@@ -16,11 +17,12 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
  */
-@Api(tags = { SwaggerConfig.FACT })
+@Api(tags = {SwaggerConfig.FACT})
 @RestController
 @RequestMapping("/fact")
 @Slf4j
@@ -86,6 +88,17 @@ public class FactController {
     @GetMapping("/getPublishSuccessFactTable/{businessId}")
     public ResultEntity<Object> getPublishSuccessFactTable(@PathVariable("businessId") int businessId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPublishSuccessFactTable(businessId));
+    }
+
+    /**
+     * 获取事实tree
+     *
+     * @return
+     */
+    @ApiOperation("获取事实tree")
+    @GetMapping("/getFactTree")
+    public List<FactTreeDTO> getFactTree() {
+        return service.getFactTree();
     }
 
 }
