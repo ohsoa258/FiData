@@ -263,7 +263,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
                 reqDTO.setDataSourceId(String.valueOf(fiDataSourceDTO.id));
                 reqDTO.setDataSourceName(fiDataSourceDTO.getConDbname());
-                if (dataSourceConPO.conType == DataSourceTypeEnum.DORIS.getValue()){
+                if (fiDataSourceDTO.conType == DataSourceTypeEnum.DORIS){
                     setDataDorisStructure(dataSourceConPO);
                 }else {
                     switch (fiDataSourceDTO.id) {
