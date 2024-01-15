@@ -1,10 +1,13 @@
 package com.fisk.dataaccess.controller;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -63,14 +68,14 @@ public class TestController {
             String database = olapconn.getDatabase();
             String catalog = olapconn.getCatalog();
             String roleName = olapconn.getRoleName();
-            log.info("database:[{}]",database);
-            log.info("catalog:[{}]",catalog);
-            log.info("roleName:[{}]",roleName);
+            log.info("database:[{}]", database);
+            log.info("catalog:[{}]", catalog);
+            log.info("roleName:[{}]", roleName);
 
             log.info("连接成功...");
             //自定义MDX查询语句
 //            mdx = "EVALUATE SUMMARIZECOLUMNS('FBM_DIM_BW_Customer'[Customer_ID],[SUM_PracticalShipQTY])";
-            log.info("自定义MDX查询语句：[{}]",mdx);
+            log.info("自定义MDX查询语句：[{}]", mdx);
             stmt = olapconn.createStatement();
             log.info("开始执行查询...");
             CellSet cellset = stmt.executeOlapQuery(mdx);
@@ -103,5 +108,37 @@ public class TestController {
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
+
+
+    @ApiOperation("批量初始化数据")
+    @GetMapping("/initData")
+    public void initData(
+            @RequestParam("conStr") String conStr,
+            @RequestParam("uname") String uname,
+            @RequestParam("pwd") String pwd,
+            @RequestParam("sql") String sql,
+            @RequestParam("sql") Long dataSize
+
+    ) {
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            connection = DbConnectionHelper.connection(conStr, uname, pwd, DataSourceTypeEnum.MYSQL);
+            statement = connection.createStatement();
+            for (long i = 0; i < dataSize / 10000; i++) {
+                long count = i * 10000;
+                String trueSql = sql + " limit " + count + "," + 10000;
+                log.info("本次执行sql:" + trueSql + " 本次执行次数:" + (i + 1));
+                statement.executeUpdate(trueSql);
+            }
+
+        } catch (Exception e) {
+            log.error("报错：" + e);
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(connection);
+        }
+    }
+
 
 }
