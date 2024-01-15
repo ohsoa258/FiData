@@ -125,9 +125,10 @@ public class TestController {
         try {
             connection = DbConnectionHelper.connection(conStr, uname, pwd, DataSourceTypeEnum.MYSQL);
             statement = connection.createStatement();
-            for (long i = 0; i < dataSize / 10000; i++) {
-                long count = i * 10000;
-                String trueSql = sql + " limit " + count + "," + 10000;
+            long l = dataSize / 100000;
+            for (long i = 0; i <= l; i++) {
+                long count = i * 100000;
+                String trueSql = sql + " limit " + count + "," + 100000;
                 log.info("本次执行sql:" + trueSql + " 本次执行次数:" + (i + 1));
                 statement.executeUpdate(trueSql);
             }
