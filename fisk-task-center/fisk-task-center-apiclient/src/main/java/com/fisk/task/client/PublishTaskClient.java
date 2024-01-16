@@ -30,6 +30,7 @@ import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
+import com.fisk.task.dto.model.TableDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pipeline.NifiStageDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogDTO;
@@ -464,6 +465,8 @@ public interface PublishTaskClient {
     @PostMapping("/publishTask/deleteAccessMdmNifiFlow")
     ResultEntity<Object> publishDeleteAccessMdmNifiFlowTask(@RequestBody BuildDeleteTableServiceDTO data);
 
+    @PostMapping("/publishTask/deleteBackendTable")
+    ResultEntity<Object> deleteBackendTable(@RequestBody TableDTO data);
     /**
      * @param data
      * @return

@@ -26,6 +26,7 @@ import com.fisk.mdm.vo.entity.EntityVO;
 import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
+import com.fisk.task.dto.model.TableDTO;
 import com.fisk.task.dto.task.BuildBatchApprovalDTO;
 import com.fisk.task.listener.mdm.BuildModelListener;
 import com.fisk.mdm.utils.mdmBEBuild.BuildFactoryHelper;
@@ -137,6 +138,48 @@ public class BuildModelListenerImpl implements BuildModelListener {
             ex.printStackTrace();
             return ResultEnum.ERROR;
         } finally {
+            closeConnection(connection);
+            acke.acknowledge();
+        }
+    }
+
+    @Override
+    public ResultEnum deleteEntityListener(String dataInfo, Acknowledgment acke) {
+        Connection connection = null;
+        try {
+            TableDTO dto = JSON.parseObject(dataInfo, TableDTO.class);
+            IBuildSqlCommand sqlBuilder = BuildFactoryHelper.getDBCommand(type);
+            AbstractDbHelper abstractDbHelper = new AbstractDbHelper();
+            // 获取连接信息
+            connection = abstractDbHelper.connection(connectionStr, acc, pwd, type);
+
+            String delViwSql = sqlBuilder.dropViw(dto.viwTableName);
+            if (StringUtils.isNotBlank(delViwSql)){
+                PreparedStatement statement = connection.prepareStatement(delViwSql);
+                statement.execute();
+            }
+            String delStgSql = sqlBuilder.dropTable(dto.stgTableName);
+            if (StringUtils.isNotBlank(delStgSql)){
+                PreparedStatement statement = connection.prepareStatement(delStgSql);
+                statement.execute();
+            }
+
+            String delLogSql =  sqlBuilder.dropTable(dto.logTableName);
+            if (StringUtils.isNotBlank(delLogSql)){
+                PreparedStatement statement = connection.prepareStatement(delLogSql);
+                statement.execute();
+            }
+            String delMdmSql = sqlBuilder.dropTable(dto.mdmTableName);
+            if (StringUtils.isNotBlank(delMdmSql)){
+                PreparedStatement statement = connection.prepareStatement(delMdmSql);
+                statement.execute();
+            }
+            return ResultEnum.SUCCESS;
+        }catch (Exception ex){
+            log.error("删除后台任务表失败,异常信息:" + ex);
+            ex.printStackTrace();
+            return ResultEnum.ERROR;
+        }finally {
             closeConnection(connection);
             acke.acknowledge();
         }

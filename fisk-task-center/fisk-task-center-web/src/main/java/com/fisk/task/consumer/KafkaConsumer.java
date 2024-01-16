@@ -574,6 +574,20 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.mdm.delete.entity
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    @MQConsumerLog
+    @KafkaListener(topics = MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DELETE_DATA, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    public ResultEntity<Object> deleteEntityListener(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildModelListener.deleteEntityListener(dataInfo, acke));
+    }
+
+    /**
      * build.access.api.flow
      *
      * @param dataInfo

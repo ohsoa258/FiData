@@ -24,6 +24,13 @@ public interface BuildModelListener {
     ResultEnum backgroundCreateTasks(String dataInfo, Acknowledgment acke);
 
     /**
+     * 删除后台任务表
+     * @param dataInfo
+     * @param acke
+     */
+    ResultEnum deleteEntityListener(String dataInfo, Acknowledgment acke);
+
+    /**
      * 创建后台批量审核
      * @param dataInfo
      * @param acke

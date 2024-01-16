@@ -34,7 +34,6 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
-import com.fisk.dataaccess.dto.v3.TableDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
@@ -61,6 +60,7 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.model.TableDTO;
 import com.fisk.task.dto.task.BuildDeleteTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
@@ -75,6 +75,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.generateViwTableName;
 
 /**
  * @author ChenYa
@@ -292,6 +295,22 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         buildDeleteTableApiServiceDTO.userId = userHelper.getLoginUserInfo().id;
         buildDeleteTableApiServiceDTO.delBusiness = true;
         publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableApiServiceDTO);
+        LambdaQueryWrapper<EntityPO> entityQueryWrapper = new LambdaQueryWrapper<>();
+        entityQueryWrapper.eq(EntityPO::getModelId,modelPO.getId());
+        List<EntityPO> entityPOS = entityMapper.selectList(entityQueryWrapper);
+        List<Integer> ids = entityPOS.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+        // 删除实体下的属性
+        if (CollectionUtils.isNotEmpty(ids)){
+            this.deleteAttrByEntityIds(ids);
+        }
+        for (EntityPO entityPO : entityPOS) {
+            TableDTO tableDTO = new TableDTO();
+            tableDTO.setLogTableName(generateLogTableName(modelPO.getName(),entityPO.getName()));
+            tableDTO.setStgTableName(generateStgTableName(modelPO.getName(),entityPO.getName()));
+            tableDTO.setMdmTableName(generateMdmTableName(modelPO.getName(),entityPO.getName()));
+            tableDTO.setViwTableName(generateViwTableName(modelPO.getName(),entityPO.getName()));
+            publishTaskClient.deleteBackendTable(tableDTO);
+        }
 
         // 记录日志
         String desc = "删除一个模型,id:" + id;
@@ -302,6 +321,24 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
         //删除成功
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 删除实体下的属性
+     *
+     * @param entityIds
+     */
+    public void deleteAttrByEntityIds(List<Integer> entityIds) {
+        QueryWrapper<AttributePO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .in(AttributePO::getEntityId, entityIds);
+        List<AttributePO> list = attributeService.list(queryWrapper);
+        if (CollectionUtils.isNotEmpty(list)) {
+            List<Long> ids = list.stream().filter(Objects::nonNull).map(e -> {
+                return e.getId();
+            }).collect(Collectors.toList());
+            attributeService.removeByIds(ids);
+        }
     }
 
     /**
