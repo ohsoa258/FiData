@@ -84,10 +84,15 @@ public class SqlParmUtils {
                             .map(s -> finalFlag + "'" + s.trim() + "'")
                             .collect(Collectors.joining(", "));
                 } else {
-                    if (dataSourceType == DataSourceTypeEnum.DORIS){
+                    if (dataSourceType == DataSourceTypeEnum.DORIS) {
                         paramValue_In = flag + item.parmValue;
-                    }else {
-                        paramValue_In = flag + "'" + item.parmValue + "'";
+                    } else {
+                        if (dataSourceType == DataSourceTypeEnum.MYSQL
+                                && (item.parmName.equals("start") || item.parmName.equals("end"))) {
+                            paramValue_In = item.parmValue;
+                        } else {
+                            paramValue_In = flag + "'" + item.parmValue + "'";
+                        }
                     }
                 }
             }
