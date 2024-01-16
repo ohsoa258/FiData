@@ -132,4 +132,13 @@ public interface IBuildSqlCommand {
      * @return
      */
     String deleteDataByAttributeId(String tableName,String deleteFiled,List<Integer> attributeIds);
+
+    /**
+     * 修改字段名
+     * @param tableName
+     * @param filedName
+     * @param oldFiledName
+     * @return
+     */
+    String updateColumnName(String tableName,String filedName,String oldFiledName);
 }

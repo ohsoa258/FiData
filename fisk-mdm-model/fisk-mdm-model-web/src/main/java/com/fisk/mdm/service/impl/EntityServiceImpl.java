@@ -245,14 +245,20 @@ public class EntityServiceImpl implements EntityService {
 
         // 记录日志
         logService.saveEventLog(id, ObjectTypeEnum.ENTITY, EventTypeEnum.DELETE, desc);
-
-        BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
-        buildDeleteTableService.appId = String.valueOf(entityPo.getModelId());
-        buildDeleteTableService.ids = Arrays.asList(entityPo.id);
-        buildDeleteTableService.olapTableEnum = OlapTableEnum.MDM_DATA_ACCESS;
-        buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
-        buildDeleteTableService.delBusiness = true;
-        publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableService);
+        LambdaQueryWrapper<AccessDataPO> queryWrapper1 = new LambdaQueryWrapper<>();
+        queryWrapper1.eq(AccessDataPO::getEntityId,entityPo.getId());
+        queryWrapper1.eq(AccessDataPO::getModelId,entityPo.getModelId());
+        queryWrapper1.ne(AccessDataPO::getPublish,0);
+        AccessDataPO accessDataPO = accessDataService.getOne(queryWrapper1);
+        if (accessDataPO != null){
+            BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+            buildDeleteTableService.appId = String.valueOf(entityPo.getModelId());
+            buildDeleteTableService.ids = Arrays.asList(entityPo.id);
+            buildDeleteTableService.olapTableEnum = OlapTableEnum.MDM_DATA_ACCESS;
+            buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+            buildDeleteTableService.delBusiness = true;
+            publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableService);
+        }
 
         //删除元数据实体信息
         if (openMetadata){

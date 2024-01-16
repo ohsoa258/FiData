@@ -100,4 +100,9 @@ public class BuildSqlServerCommandImpl implements IBuildSqlCommand {
     public String deleteDataByAttributeId(String tableName, String deleteFiled, List<Integer> attributeIds) {
         return null;
     }
+
+    @Override
+    public String updateColumnName(String tableName, String filedName, String oldFiledName) {
+        return null;
+    }
 }

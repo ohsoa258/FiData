@@ -23,6 +23,10 @@ public class AttributeUpdateDTO {
     @Length(min = 0, max = 50, message = "长度最多50")
     private String name;
 
+    @ApiModelProperty(value = "旧名称")
+    @Length(min = 0, max = 50, message = "长度最多50")
+    private String oldName;
+
     /**
      * 展示名称
      */
