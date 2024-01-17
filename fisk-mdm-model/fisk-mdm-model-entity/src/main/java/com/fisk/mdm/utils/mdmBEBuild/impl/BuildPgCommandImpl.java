@@ -366,6 +366,15 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         return str.toString();
     }
 
+    @Override
+    public String updateColumnName(String tableName, String filedName, String oldFiledName) {
+        StringBuilder str = new StringBuilder();
+        str.append("ALTER TABLE ");
+        str.append(PUBLIC + ".\"" + tableName+"\"");
+        str.append(" RENAME COLUMN ").append("\""+oldFiledName+"\" TO \""+filedName+"\"");
+        return str.toString();
+    }
+
     /**
      * stg表基础字段拼接
      * @return

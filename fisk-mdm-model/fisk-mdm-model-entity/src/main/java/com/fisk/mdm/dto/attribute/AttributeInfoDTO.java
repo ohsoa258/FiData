@@ -43,6 +43,11 @@ public class AttributeInfoDTO extends BaseUserInfoVO {
     private String name;
 
     /**
+     * 属性名称(旧)
+     */
+    private String oldName;
+
+    /**
      * 展示名称
      */
     @ApiModelProperty(value = "展示名称")

@@ -43,6 +43,7 @@ import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.model.TableDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,6 +54,8 @@ import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
 
 /**
  * @author WangYan
@@ -232,7 +235,10 @@ public class EntityServiceImpl implements EntityService {
         if (entityPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-
+        ModelPO modelPO = modelMapper.selectById(entityPo.getModelId());
+        if (modelPO == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
         entityMapper.deleteById(id);
 
         // 删除实体下的属性
@@ -245,15 +251,27 @@ public class EntityServiceImpl implements EntityService {
 
         // 记录日志
         logService.saveEventLog(id, ObjectTypeEnum.ENTITY, EventTypeEnum.DELETE, desc);
+        LambdaQueryWrapper<AccessDataPO> queryWrapper1 = new LambdaQueryWrapper<>();
+        queryWrapper1.eq(AccessDataPO::getEntityId,entityPo.getId());
+        queryWrapper1.eq(AccessDataPO::getModelId,entityPo.getModelId());
+        queryWrapper1.ne(AccessDataPO::getPublish,0);
+        AccessDataPO accessDataPO = accessDataService.getOne(queryWrapper1);
+        if (accessDataPO != null){
+            BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
+            buildDeleteTableService.appId = String.valueOf(entityPo.getModelId());
+            buildDeleteTableService.ids = Arrays.asList(entityPo.id);
+            buildDeleteTableService.olapTableEnum = OlapTableEnum.MDM_DATA_ACCESS;
+            buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
+            buildDeleteTableService.delBusiness = true;
+            publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableService);
+        }
 
-        BuildDeleteTableServiceDTO buildDeleteTableService = new BuildDeleteTableServiceDTO();
-        buildDeleteTableService.appId = String.valueOf(entityPo.getModelId());
-        buildDeleteTableService.ids = Arrays.asList(entityPo.id);
-        buildDeleteTableService.olapTableEnum = OlapTableEnum.MDM_DATA_ACCESS;
-        buildDeleteTableService.userId = userHelper.getLoginUserInfo().id;
-        buildDeleteTableService.delBusiness = true;
-        publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableService);
-
+        TableDTO tableDTO = new TableDTO();
+        tableDTO.setLogTableName(generateLogTableName(modelPO.getName(),entityPo.getName()));
+        tableDTO.setStgTableName(generateStgTableName(modelPO.getName(),entityPo.getName()));
+        tableDTO.setMdmTableName(generateMdmTableName(modelPO.getName(),entityPo.getName()));
+        tableDTO.setViwTableName(generateViwTableName(modelPO.getName(),entityPo.getName()));
+        publishTaskClient.deleteBackendTable(tableDTO);
         //删除元数据实体信息
         if (openMetadata){
             MetaDataTableAttributeDTO metaDataTableAttributeDTO = masterDataMetaData.getDbList().get(0).getTableList().get(0);

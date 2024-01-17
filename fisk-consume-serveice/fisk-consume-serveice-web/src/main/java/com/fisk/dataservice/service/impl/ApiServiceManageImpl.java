@@ -303,7 +303,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 log.info("数据服务【getData】普通模式SQL参数【countSql】：" + countSql);
             } else if (apiInfo.getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
                 List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listPoToSqlParmDto(paramList);
-                if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS){
+                if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS
+                        || dataSourceConVO.getConType() ==DataSourceTypeEnum.MYSQL){
                     List<SqlParmDto> pageNo = sqlParamsDto.stream().filter(i -> i.parmName == "@start" || i.parmName == "@end").collect(Collectors.toList());
                     if (CollectionUtils.isEmpty(pageNo)){
                         SqlParmDto sqlParmStart = new SqlParmDto();

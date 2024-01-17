@@ -162,7 +162,7 @@ public class KsfAcknowledgement extends KsfWebServiceHandler {
             apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
             return apiResultDTO;
         }
-        log.info("apiId" + tableApiServicePO.getId() + "通知单推送数据:" + JSON.toJSON(resultJsonData));
+        log.info("apiId" + tableApiServicePO.getId() + "确认单推送数据:" + JSON.toJSON(resultJsonData));
         apiResultDTO = send(resultJsonData);
         apiResultDTO.setSyncTime(tableApiServicePO.getSyncTime());
         apiResultDTO.setFlag(true);

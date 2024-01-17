@@ -19,6 +19,7 @@ import com.fisk.task.dto.mdmtask.BuildMdmNifiFlowDTO;
 import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.model.EntityDTO;
 import com.fisk.task.dto.model.ModelDTO;
+import com.fisk.task.dto.model.TableDTO;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.task.*;
 import com.fisk.task.listener.atlas.BuildAtlasTableAndColumnTaskListener;
@@ -362,6 +363,15 @@ public class PublishTaskController {
         return iBuildKfkTaskService.publishTask(TaskTypeEnum.BACKGROUND_TABLE_TASK_CREATION.getName(),
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DATA,
+                dto);
+    }
+
+    @PostMapping("/deleteBackendTable")
+    @ApiOperation(value = "删除任务后台表")
+    public ResultEntity<Object> deleteBackendTable(@RequestBody TableDTO dto) {
+        return iBuildKfkTaskService.publishTask(TaskTypeEnum.BACKGROUND_DELETE_TABLE_TASK_CREATION.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.MdmTopicConstants.BUILD_MDM_ENTITY_DELETE_DATA,
                 dto);
     }
 

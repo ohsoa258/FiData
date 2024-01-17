@@ -36,4 +36,6 @@ public class AttributeStatusDTO {
     @ApiModelProperty(value = "发布失败描述")
     //@Length(min = 0, max = 200, message = "长度最多200")
     private String errorMsg;
+    @ApiModelProperty(value = "oldName")
+    private String oldName;
 }

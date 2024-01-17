@@ -26,6 +26,11 @@ public class AttributePO extends BasePO {
     private String name;
 
     /**
+     * 属性名称(旧)
+     */
+    private String oldName;
+
+    /**
      * 展示名称
      */
     private String displayName;
