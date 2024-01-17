@@ -684,6 +684,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.DM8.getName();
         } else if (DataSourceTypeEnum.HUDI.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.HUDI.getName();
+        } else if (DataSourceTypeEnum.MONGODB.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.MONGODB.getName();
         }
         return driverName;
     }
