@@ -178,6 +178,20 @@ public class BuildDataModelDorisTableListener
                     log.info("数仓执行修改表结构的存储过程返回结果" + msg);
                 }
 
+                //如果前端选择删除目标表 则这里删除目标表
+                if (inpData.ifDropTargetTbl) {
+                    log.info("开始删除目标表");
+                    String dropSql = "DROP TABLE IF EXISTS " + modelPublishTableDTO.tableName;
+                    BusinessResult businessResult = iPostgreBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
+                    if (!businessResult.success) {
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    } else {
+                        msg = "表不存在";
+                        resultEnum = ResultEnum.TASK_TABLE_NOT_EXIST;
+                    }
+                }
+
+
                 //生成建表语句
                 List<String> pgdbTable2 = new ArrayList<>();
                 //远程调用systemCenter的方法，获取id为1的数据源的信息，也就是dw   dmp_system_db库----tb_datasource_config表

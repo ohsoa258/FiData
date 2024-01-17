@@ -18,6 +18,13 @@ public class ModelPublishDataDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "开放传播")
     public boolean openTransmission;
+
+    /**
+     * 是否删除目标表
+     */
+    @ApiModelProperty(value = "是否删除目标表")
+    public boolean ifDropTargetTbl;
+
     @ApiModelProperty(value = "业务域Id")
     public long businessAreaId;
     @ApiModelProperty(value = "业务域名称")

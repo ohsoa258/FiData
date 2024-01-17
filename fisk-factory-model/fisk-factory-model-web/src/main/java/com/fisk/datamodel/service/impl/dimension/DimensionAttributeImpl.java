@@ -190,6 +190,7 @@ public class DimensionAttributeImpl
             queryDTO.remark = dto.remark;
             queryDTO.syncMode = dto.syncModeDTO.syncMode;
             queryDTO.openTransmission = dto.openTransmission;
+            queryDTO.ifDropTargetTbl = dto.ifDropTargetTbl;
             return dimensionFolder.batchPublishDimensionFolder(queryDTO);
         }
         return result ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

@@ -345,6 +345,8 @@ public class DimensionFolderImpl
             data.userId = userHelper.getLoginUserInfo().id;
             //是否同步
             data.openTransmission = dto.openTransmission;
+            //是否删除目标表
+            data.ifDropTargetTbl = dto.ifDropTargetTbl;
 
             List<ModelPublishTableDTO> dimensionList = new ArrayList<>();
             //获取表增量配置信息
@@ -561,6 +563,7 @@ public class DimensionFolderImpl
 
     /**
      * 添加表的版本sql
+     *
      * @param dto
      */
     private void addVersionSql(VersionSqlDTO dto) {

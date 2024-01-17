@@ -365,6 +365,8 @@ public class BusinessProcessImpl
                 factList.add(pushDto);
                 data.dimensionList = factList;
                 data.openTransmission = dto.openTransmission;
+                //是否删除目标表
+                data.ifDropTargetTbl = dto.ifDropTargetTbl;
                 data.dimOrFact = DataModelTblTypeEnum.FACT;
                 //发送消息,建表
                 log.info("数据建模发布表任务json: " + JSON.toJSONString(data));

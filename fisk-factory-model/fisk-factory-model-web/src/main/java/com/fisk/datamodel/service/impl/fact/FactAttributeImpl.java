@@ -194,6 +194,7 @@ public class FactAttributeImpl
             queryDTO.remark = dto.remark;
             queryDTO.syncMode = dto.syncModeDTO.syncMode;
             queryDTO.openTransmission = dto.openTransmission;
+            queryDTO.ifDropTargetTbl = dto.ifDropTargetTbl;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;

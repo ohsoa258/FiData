@@ -57,6 +57,13 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "是否同步")
     public boolean openTransmission;
+
+    /**
+     * 是否删除目标表
+     */
+    @ApiModelProperty(value = "是否删除目标表")
+    public boolean ifDropTargetTbl;
+
     /**
      * 自定义脚本集合
      */
