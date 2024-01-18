@@ -1091,6 +1091,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     if (tableAccessPO.getTableName().equals(tableAccessDTO.getTableName())) {
                         ifSync = false;
                         break;
+                    }else {
+                        ifSync = true;
                     }
                 }
 
@@ -1183,6 +1185,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         if (tableAccessPO.getTableName().equals(tableAccessDTO.getTableName())) {
                             ifSync = false;
                             break;
+                        }else {
+                            ifSync = true;
                         }
                     }
 
