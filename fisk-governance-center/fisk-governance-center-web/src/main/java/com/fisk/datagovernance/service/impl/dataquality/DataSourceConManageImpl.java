@@ -823,14 +823,27 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         FiDataMetaDataTreeDTO tree = new FiDataMetaDataTreeDTO();
         tree.children = new ArrayList<>();
         if (sourceType == SourceTypeEnum.FiData) {
-            tree.children.add(getFiDataConfigMetaData(false));
+            FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
+            if (fiDataConfigMetaData != null){
+                tree.children.add(getFiDataConfigMetaData(false));
+            }
         } else if (sourceType == SourceTypeEnum.custom) {
-            tree.children.add(getCustomizeMetaData(false));
+            FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
+            if (customizeMetaData != null){
+                tree.children.add(customizeMetaData);
+            }
         } else {
-            tree.children.add(getFiDataConfigMetaData(false));
-            tree.children.add(getCustomizeMetaData(false));
+            FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
+
+            if (fiDataConfigMetaData != null){
+                tree.children.add(getFiDataConfigMetaData(false));
+            }
+            FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
+            if (customizeMetaData != null){
+                tree.children.add(customizeMetaData);
+            }
         }
-        if (tree != null) {
+        if (CollectionUtils.isNotEmpty(tree.children)) {
             // 递归获取选择的节点
             List<FiDataMetaDataTreeDTO> treeFolderNodes = getTreeFolderNode(tree);
             FiDataMetaDataTreeDTO treeFolderNode = null;
