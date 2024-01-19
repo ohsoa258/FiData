@@ -91,8 +91,6 @@ import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
 import com.fisk.datamodel.utils.sql.DbConnectionHelper;
 import com.fisk.datamodel.utils.sql.ModelMySqlConUtils;
-import com.fisk.datamodel.utils.sql.ModelPgSqlUtils;
-import com.fisk.datamodel.utils.sql.ModelSqlServerUtils;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.datamodel.vo.DimAndFactCountVO;
@@ -1612,8 +1610,18 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             dataModelCountVO.setConfigCount(configCount);
             dataModelCountVO.setDwdCount(dwdCount);
             dataModelCountVO.setDwsCount(dwsCount);
-            dataModelCountVO.setDataCountVO(countVO.getDataCountVO());
-            dataModelCountVO.setTop5DataCount(countVO.getTop5DataCount());
+            if (countVO.getDataCountVO() != null) {
+                dataModelCountVO.setDataCountVO(countVO.getDataCountVO());
+            } else {
+                dataModelCountVO.setDataCountVO(new DataCountVO());
+            }
+
+            if (countVO.getTop5DataCount() != null) {
+                dataModelCountVO.setTop5DataCount(countVO.getTop5DataCount());
+            } else {
+                dataModelCountVO.setTop5DataCount(new Top5DataCount());
+            }
+
 
             return dataModelCountVO;
         } catch (Exception e) {
@@ -1649,19 +1657,65 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
             switch (conType) {
                 case SQLSERVER:
-                    dimSql = ModelSqlServerUtils.buildDataModelDimCountSql(dimList);
-                    factSql = ModelSqlServerUtils.buildDataModelCountSql(factList);
-                    finalSql = dimSql + " UNION " + factSql + ";";
+                    if (!CollectionUtils.isEmpty(dimList)) {
+                        dimSql = ModelMySqlConUtils.buildDataModelDimCountSql(dimList);
+                    }
+                    if (!CollectionUtils.isEmpty(factList)) {
+                        factSql = ModelMySqlConUtils.buildDataModelCountSql(factList);
+                    }
+
+                    if (StringUtils.isNotEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
+                        finalSql = dimSql + " UNION " + factSql + ";";
+                    } else if (StringUtils.isEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
+                        finalSql = factSql + ";";
+                    } else if (StringUtils.isNotEmpty(dimSql) && StringUtils.isEmpty(factSql)) {
+                        finalSql = dimSql + ";";
+                    } else if (StringUtils.isEmpty(dimSql) && StringUtils.isEmpty(factSql)) {
+                        return countVO;
+                    } else {
+                        return countVO;
+                    }
                     break;
                 case POSTGRESQL:
-                    dimSql = ModelPgSqlUtils.buildDataModelDimCountSql(dimList);
-                    factSql = ModelPgSqlUtils.buildDataModelCountSql(factList);
-                    finalSql = dimSql + " UNION " + factSql + ";";
+                    if (!CollectionUtils.isEmpty(dimList)) {
+                        dimSql = ModelMySqlConUtils.buildDataModelDimCountSql(dimList);
+                    }
+                    if (!CollectionUtils.isEmpty(factList)) {
+                        factSql = ModelMySqlConUtils.buildDataModelCountSql(factList);
+                    }
+
+                    if (StringUtils.isNotEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
+                        finalSql = dimSql + " UNION " + factSql + ";";
+                    } else if (StringUtils.isEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
+                        finalSql = factSql + ";";
+                    } else if (StringUtils.isNotEmpty(dimSql) && StringUtils.isEmpty(factSql)) {
+                        finalSql = dimSql + ";";
+                    } else if (StringUtils.isEmpty(dimSql) && StringUtils.isEmpty(factSql)) {
+                        return countVO;
+                    } else {
+                        return countVO;
+                    }
                     break;
                 case DORIS:
-                    dimSql = ModelMySqlConUtils.buildDataModelDimCountSql(dimList);
-                    factSql = ModelMySqlConUtils.buildDataModelCountSql(factList);
-                    finalSql = dimSql + " UNION " + factSql + ";";
+                    if (!CollectionUtils.isEmpty(dimList)) {
+                        dimSql = ModelMySqlConUtils.buildDataModelDimCountSql(dimList);
+                    }
+                    if (!CollectionUtils.isEmpty(factList)) {
+                        factSql = ModelMySqlConUtils.buildDataModelCountSql(factList);
+                    }
+
+                    if (StringUtils.isNotEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
+                        finalSql = dimSql + " UNION " + factSql + ";";
+                    } else if (StringUtils.isEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
+                        finalSql = factSql + ";";
+                    } else if (StringUtils.isNotEmpty(dimSql) && StringUtils.isEmpty(factSql)) {
+                        finalSql = dimSql + ";";
+                    } else if (StringUtils.isEmpty(dimSql) && StringUtils.isEmpty(factSql)) {
+                        return countVO;
+                    } else {
+                        return countVO;
+                    }
+
                     break;
                 default:
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
