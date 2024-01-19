@@ -54,6 +54,9 @@ hystrix:
         isolation:
           # 线程隔离 THREAD， SEMAPHORE
           strategy: THREAD
+          # 降级线程并行数限制
+          semaphore:
+            maxConcurrentRequests: 1000
           thread:
             # 超时时间15500
             # TODO 日健环境连接sftp超时，所以修改此参数
@@ -68,7 +71,14 @@ hystrix:
         sleepWindowInMilliseconds: 5000
         # 当请求错误比例到达n%时，开启熔断（默认50%）
         errorThresholdPercentage: 50
-
+  threadpool:
+    default:
+      coreSize: 100
+      maxQueueSize: 1500
+      queueSizeRejectionThreshold: 1000
+#zuul:
+#  semaphore:
+#    max-semaphores: 5000
 spring:
   application:
     name: fk-gateway
@@ -113,7 +123,7 @@ spring:
             # 每一个IP地址，每秒钟最多发起2次请求
             # 每秒钟超过2次请求，则返回429的异常状态码
             redis-rate-limiter.replenishRate: 500 # 生成令牌的速率
-            redis-rate-limiter.burstCapacity: 10 # 桶的容量
+            redis-rate-limiter.burstCapacity: 500 # 桶的容量
 
       # 添加网关路由
       routes:
