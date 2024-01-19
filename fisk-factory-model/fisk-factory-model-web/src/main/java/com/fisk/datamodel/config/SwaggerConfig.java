@@ -69,6 +69,7 @@ public class SwaggerConfig {
 
     public static final String TableName = "表名";
     public static final String VersionSql = "数仓建模版本sql";
+    public static final String MainPage = "数仓建模首页";
 
     @Bean
     public Docket createRestApi() {
@@ -104,6 +105,7 @@ public class SwaggerConfig {
                 .tags(new Tag(SystemWebIndex, "系统页索引"))
                 .tags(new Tag(TableName, "表名"))
                 .tags(new Tag(VersionSql, "数仓建模版本sql"))
+                .tags(new Tag(MainPage, "数仓建模首页"))
                 .securityContexts(securityContexts());
     }
 

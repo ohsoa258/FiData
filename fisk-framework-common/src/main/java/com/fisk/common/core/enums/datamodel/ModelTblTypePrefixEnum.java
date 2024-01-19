@@ -7,17 +7,17 @@ import com.fisk.common.core.enums.BaseEnum;
  * 1、dim维度表建表时是主键模型
  * 2、fact表建表时是冗余模型
  */
-public enum DataModelTblTypeEnum implements BaseEnum {
+public enum ModelTblTypePrefixEnum implements BaseEnum {
 
-    DIM("DIM", 0),
-    FACT("FACT", 1),
-    HELP("HELP", 2),
-    CONFIG("CONFIG", 3),
-    DWD("DWD", 4),
-    DWS("DWS", 5),
+    DIM("dim_", 0),
+    FACT("fact_", 1),
+    HELP("help_", 2),
+    CONFIG("config_", 3),
+    DWD("dwd_", 4),
+    DWS("dws_", 5),
     ;
 
-    DataModelTblTypeEnum(String name, int value) {
+    ModelTblTypePrefixEnum(String name, int value) {
         this.name = name;
         this.value = value;
     }
@@ -35,8 +35,8 @@ public enum DataModelTblTypeEnum implements BaseEnum {
         return name;
     }
 
-    public static DataModelTblTypeEnum getEnum(String name) {
-        for (DataModelTblTypeEnum e : DataModelTblTypeEnum.values()) {
+    public static ModelTblTypePrefixEnum getEnum(String name) {
+        for (ModelTblTypePrefixEnum e : ModelTblTypePrefixEnum.values()) {
             if (e.getName().equals(name))
                 return e;
         }

@@ -1,10 +1,12 @@
-package com.fisk.common.core.utils.dbutils.utils;
+package com.fisk.datamodel.utils.sql;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.datamodel.entity.dimension.DimensionPO;
+import com.fisk.datamodel.entity.fact.FactPO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -14,7 +16,7 @@ import java.util.*;
  * @author JianWenYang
  */
 @Slf4j
-public class SqlServerUtils {
+public class ModelSqlServerUtils {
 
 
     public static List<TableNameDTO> getTableName(Connection conn) {
@@ -151,6 +153,60 @@ public class SqlServerUtils {
         str.append("as tabl");
         str.append(";");
 
+        return str.toString();
+    }
+
+    /**
+     * 获取数仓建模首页 dw表数据量的sql
+     *
+     * @return
+     */
+    public static String buildDataModelDimCountSql(List<DimensionPO> dimList) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT   \n" +
+                "    t.name AS TABLE_NAME,   \n" +
+                "    p.rows AS TABLE_ROWS  \n" +
+                "FROM   \n" +
+                "    sys.tables t  \n" +
+                "INNER JOIN   \n" +
+                "    sys.partitions p ON t.object_id = p.object_id  \n" +
+                "WHERE   \n" +
+                "    p.index_id IN (0,1) AND t.type_desc = 'USER_TABLE'");
+        str.append(" AND t.name IN (");
+        for (DimensionPO dimensionPO : dimList) {
+            str.append("\"")
+                    .append(dimensionPO.getDimensionTabName())
+                    .append("\",");
+        }
+        str.deleteCharAt(str.lastIndexOf(","));
+        str.append(")");
+        return str.toString();
+    }
+
+    /**
+     * 获取数仓建模首页 dw表数据量的sql
+     *
+     * @return
+     */
+    public static String buildDataModelCountSql(List<FactPO> factList) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT   \n" +
+                "    t.name AS TABLE_NAME,   \n" +
+                "    p.rows AS TABLE_ROWS  \n" +
+                "FROM   \n" +
+                "    sys.tables t  \n" +
+                "INNER JOIN   \n" +
+                "    sys.partitions p ON t.object_id = p.object_id  \n" +
+                "WHERE   \n" +
+                "    p.index_id IN (0,1) AND t.type_desc = 'USER_TABLE'");
+        str.append(" AND t.name IN (");
+        for (FactPO factPO : factList) {
+            str.append("\"")
+                    .append(factPO.getFactTabName())
+                    .append("\",");
+        }
+        str.deleteCharAt(str.lastIndexOf(","));
+        str.append(")");
         return str.toString();
     }
 

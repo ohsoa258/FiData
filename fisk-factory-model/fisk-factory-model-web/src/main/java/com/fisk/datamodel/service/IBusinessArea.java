@@ -16,6 +16,7 @@ import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.entity.mainpage.DataModelCountVO;
 import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -224,4 +225,13 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<AccessAndModelAppDTO> getAllAreaAndTables();
+
+
+    /**
+     * 获取当前业务域的首页计数信息
+     *
+     * @param areaId
+     * @return
+     */
+    DataModelCountVO mainPageCount(Integer areaId);
 }

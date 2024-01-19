@@ -285,6 +285,7 @@ public enum ResultEnum {
     GET_NIFI_LOG_ERROR(8020, "获取nifi同步日志失败"),
     GET_ACCESS_APP_ERROR(8021, "获取nifi同步日志-获取数据接入应用失败"),
     PUBLIC_DIM_PUBLISH_ERROR(8022, "公共域维度表发布失败，请回该表的初始创建业务域发布"),
+    MODEL_MAIN_PAGE_COUNT_ERROR(8023, "获取dw主页数据量失败"),
 
     /**
      * 数据工厂

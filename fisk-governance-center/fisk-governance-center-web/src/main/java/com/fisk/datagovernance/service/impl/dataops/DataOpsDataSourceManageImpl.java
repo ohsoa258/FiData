@@ -467,6 +467,44 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
     }
 
     public void setMetaDataToRedis() {
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dwId);
+        if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        DataSourceDTO data = result.getData();
+        //如果是dw是Doris类型,则刷新所拥有的外部目录
+        if (data.conType.getName().equals(DataSourceTypeEnum.DORIS.getName())) {
+            Connection conn = null;
+            Statement statement = null;
+            ResultSet resultSet = null;
+            ArrayList<String> cataLogNames = new ArrayList<>();
+            try {
+                conn = DataSourceConManageImpl.getStatement(data.conType, data.conStr, data.conAccount, data.conPassword);
+                statement = conn.createStatement();
+                resultSet = statement.executeQuery("SHOW CATALOGS");
+                while (resultSet.next()) {
+                    if (!"internal".equals(resultSet.getString("CatalogName"))) {
+                        cataLogNames.add(resultSet.getString("CatalogName"));
+                    }
+                }
+
+                log.info("开始刷新doris外部目录------------------------------");
+                for (String cataLogName : cataLogNames) {
+                    log.info("REFRESH CATALOG " + cataLogName);
+                    statement.executeQuery("REFRESH CATALOG " + cataLogName);
+                    Thread.sleep(1500);
+                }
+                log.info("doris外部目录刷新完毕------------------------------");
+            } catch (Exception e) {
+                log.error("刷新doris外部目录失败！");
+            } finally {
+                AbstractCommonDbHelper.closeResultSet(resultSet);
+                AbstractCommonDbHelper.closeStatement(statement);
+                AbstractCommonDbHelper.closeConnection(conn);
+            }
+        }
+
+
         log.info("setMetaDataToRedis-ops 开始");
         List<DataOpsSourceVO> dataOpsSourceVOList = new ArrayList<>();
         // 第一步：读取配置的数据源信息
