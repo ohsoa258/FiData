@@ -1043,7 +1043,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
 
             // 将数据同步到pgsql
-            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+            String stgName = TableNameGenerateUtils.buildMyOdsTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
             // todo:2024 01 22通知单数据直接推进目标表
             ResultEntity<Object> result = ksfPushPgSqlForNotice(jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, dto.getBatchCode());
 
@@ -1245,7 +1245,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             if (batchCode == null) {
                 batchCode = UUID.randomUUID().toString();
             }
-            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(batchCode, replaceTablePrefixName, targetTable, apiTableDtoList, targetDbId);
+            excuteResult = pgsqlUtils.ksfExecuteBatchPgsql(batchCode, tablePrefixName, targetTable, apiTableDtoList, targetDbId);
         } catch (Exception e) {
             log.error(String.format("推送数据报错，表名称：%s，", tablePrefixName), e);
             return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR);

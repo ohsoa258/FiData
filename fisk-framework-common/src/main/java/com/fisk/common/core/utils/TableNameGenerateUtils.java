@@ -62,6 +62,29 @@ public class TableNameGenerateUtils {
     }
 
     /**
+     * 生成stg表名
+     *
+     * @param tableName
+     * @param appAbbreviation
+     * @param whetherSchema
+     * @return
+     */
+    public static String buildMyOdsTableName(String tableName, String appAbbreviation, Boolean whetherSchema) {
+        StringBuilder str = new StringBuilder();
+        if (whetherSchema) {
+            str.append(appAbbreviation);
+            str.append(".");
+        } else {
+            str.append(ods);
+            str.append("_");
+            str.append(appAbbreviation);
+            str.append("_");
+        }
+        str.append(tableName);
+        return str.toString();
+    }
+
+    /**
      * 生成ods架构名
      *
      * @param appAbbreviation 应用简称
