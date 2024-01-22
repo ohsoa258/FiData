@@ -109,8 +109,6 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      */
     String KsfWebServicePushData(ReceiveDataDTO dto);
 
-    String KsfWebServicePushDataForNotice(ReceiveDataDTO dto);
-
     /**
      * 获取实时api的临时token
      *
