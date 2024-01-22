@@ -139,7 +139,7 @@ public class WebServiceImpl implements IWebServiceServer {
         receiveDataDTO.setApiCode(11L);
         receiveDataDTO.setPushData(rebuild);
         receiveDataDTO.setIfWebService(true);
-        String result = apiConfig.KsfWebServicePushData(receiveDataDTO);
+        String result = apiConfig.KsfWebServicePushDataForNotice(receiveDataDTO);
 
         //表头行数
         int headerSize = header.size();
