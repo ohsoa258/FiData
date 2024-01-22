@@ -1754,6 +1754,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
     /**
      * 此方法专门用于为hudi入参配置   --  将源头表存入平台配置库 tb_table_access表
+     *
      * @param dto
      * @return
      */
@@ -2845,6 +2846,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Statement statement = null;
         ResultSet databases = null;
         ResultSet tbls = null;
+        //如果要获取内部目录
+        boolean ifInternal = false;
+        if (catalogName.equals("_internal") || catalogName.equals("internal")) {
+            catalogName = "internal";
+            ifInternal = true;
+        }
 
         //新建map集合 预装载  数据库名:数据库下所有的表
         Map<String, List<String>> dbAndTbls = new HashMap<>();
@@ -2856,43 +2863,79 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 return (Map<String, List<String>>) redisUtil.get(catalogName);
             }
 
-            ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbID);
-            if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
-                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-            }
-            DataSourceDTO data = result.getData();
-            connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
-            statement = connection.createStatement();
-            //手动刷新指定的doris catalog
-            statement.executeQuery("REFRESH CATALOG " + catalogName + ";");
-            //线程休眠1秒
-            Thread.sleep(1000);
-            statement.executeQuery("SWITCH " + catalogName + ";");
-            databases = statement.executeQuery("SHOW DATABASES");
-
-            //新建集合预装载查询出来的doris的 catalog下的数据库名称
-            ArrayList<String> dbs = new ArrayList<>();
-            while (databases.next()) {
-                String database = databases.getString("Database");
-                if ("default".equals(database)) continue;
-                dbs.add(database);
-            }
-
-            //查询数据库下的所有表
-            for (String db : dbs) {
-                List<String> tblNames = new ArrayList<>();
-                statement.executeQuery("USE " + db + ";");
-                tbls = statement.executeQuery("SHOW TABLES;");
-                while (tbls.next()) {
-                    String tblName = tbls.getString("Tables_in_" + db);
-                    tblNames.add(tblName);
+            if (!ifInternal) {
+                ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbID);
+                if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
                 }
-                dbAndTbls.put(db, tblNames);
+                DataSourceDTO data = result.getData();
+                connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                statement = connection.createStatement();
+                //手动刷新指定的doris catalog
+                statement.executeQuery("REFRESH CATALOG " + catalogName + ";");
+                //线程休眠1秒
+                Thread.sleep(1000);
+                statement.executeQuery("SWITCH " + catalogName + ";");
+                databases = statement.executeQuery("SHOW DATABASES");
+
+                //新建集合预装载查询出来的doris的 catalog下的数据库名称
+                ArrayList<String> dbs = new ArrayList<>();
+                while (databases.next()) {
+                    String database = databases.getString("Database");
+                    if ("default".equals(database)) continue;
+                    dbs.add(database);
+                }
+
+                //查询数据库下的所有表
+                for (String db : dbs) {
+                    List<String> tblNames = new ArrayList<>();
+                    statement.executeQuery("USE " + db + ";");
+                    tbls = statement.executeQuery("SHOW TABLES;");
+                    while (tbls.next()) {
+                        String tblName = tbls.getString("Tables_in_" + db);
+                        tblNames.add(tblName);
+                    }
+                    dbAndTbls.put(db, tblNames);
+                }
+
+                //结构存入redis
+                //不设置过期时间，但提供手动刷新redis的接口
+                redisUtil.set(catalogName, dbAndTbls);
+            } else {
+                ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(dbID);
+                if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                }
+                DataSourceDTO data = result.getData();
+                connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                statement = connection.createStatement();
+                databases = statement.executeQuery("SHOW DATABASES");
+
+                //新建集合预装载查询出来的doris的 catalog下的数据库名称
+                ArrayList<String> dbs = new ArrayList<>();
+                while (databases.next()) {
+                    String database = databases.getString("Database");
+                    if ("default".equals(database)) continue;
+                    dbs.add(database);
+                }
+
+                //查询数据库下的所有表
+                for (String db : dbs) {
+                    List<String> tblNames = new ArrayList<>();
+                    statement.executeQuery("USE " + db + ";");
+                    tbls = statement.executeQuery("SHOW TABLES;");
+                    while (tbls.next()) {
+                        String tblName = tbls.getString("Tables_in_" + db);
+                        tblNames.add(tblName);
+                    }
+                    dbAndTbls.put(db, tblNames);
+                }
+
+                //结构存入redis
+                //不设置过期时间，但提供手动刷新redis的接口
+                redisUtil.set(catalogName, dbAndTbls);
             }
 
-            //结构存入redis
-            //不设置过期时间，但提供手动刷新redis的接口
-            redisUtil.set(catalogName, dbAndTbls);
         } catch (Exception e) {
             log.error("获取doris外部类目录失败：" + e);
             throw new FkException(ResultEnum.DORIS_GET_CATALOG_ERROR, e);
@@ -2960,6 +3003,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public Map<String, List<String>> refreshDorisCatalog(Integer dbID, String catalogName) {
         Map<String, List<String>> map = null;
+        if (catalogName.equals("_internal")) {
+            catalogName = "internal";
+        }
         try {
             // 查询redis缓存里有没有doris外部目录的库表结构数据
             boolean flag = redisUtil.hasKey(catalogName);
