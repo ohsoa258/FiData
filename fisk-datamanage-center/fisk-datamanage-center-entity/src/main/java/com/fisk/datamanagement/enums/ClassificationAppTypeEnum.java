@@ -8,7 +8,8 @@ import com.fisk.common.core.enums.BaseEnum;
 
 public enum ClassificationAppTypeEnum implements BaseEnum {
     REAL_TIME(0,"实时应用","实时应用"),
-    NON_REAL_TIME(1,"非实时应用","非实时应用");
+    NON_REAL_TIME(1,"非实时应用","非实时应用"),
+    CDC(2,"CDC","CDC");
 
     private final int value;
     private final String name;

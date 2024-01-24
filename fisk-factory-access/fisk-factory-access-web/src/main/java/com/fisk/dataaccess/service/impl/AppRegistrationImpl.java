@@ -3423,7 +3423,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
-        table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
+        //cdc类型应用， 表名称为原名称
+        if (app.appType==2){
+            table.setName(tableAccess.getTableName());
+        }else {
+            table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
+        }
+        table.setAppType(app.appType);
         table.setContact_info(app.getAppPrincipal());
         table.setDescription(tableAccess.getTableDes());
         table.setComment(String.valueOf(app.getId()));

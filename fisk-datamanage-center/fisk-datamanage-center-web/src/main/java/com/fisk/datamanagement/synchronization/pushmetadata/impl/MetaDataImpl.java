@@ -211,18 +211,21 @@ public class MetaDataImpl implements IMetaData {
 //                            associatedBusinessMetaData(tableGuid, db.name, table.name);
 //                        }
                         /*************************ODS和DW时需要同步STG表***********************************/
-                        //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
-                        String stgTableGuid = null;
-                        if (!stg.equals(table.getComment())) {
-                            stgTableGuid = metaDataStgTable(table, dbGuid);
-                            for (MetaDataColumnAttributeDTO field : table.columnList) {
-                                //新增stg表字段
-                                metaDataStgField(field, stgTableGuid);
+                        //如果数据接入 应用为CDC类型时不需要同步STG表
+                        if (table.getAppType()!=2){
+                            //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
+                            String stgTableGuid = null;
+                            if (!stg.equals(table.getComment())) {
+                                stgTableGuid = metaDataStgTable(table, dbGuid);
+                                for (MetaDataColumnAttributeDTO field : table.columnList) {
+                                    //新增stg表字段
+                                    metaDataStgField(field, stgTableGuid);
 
+                                }
                             }
+                            //同步血缘
+                            synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
                         }
-                        //同步血缘
-                        synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
                     }
 
                 }

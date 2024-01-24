@@ -23,4 +23,10 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
      *  应用ID（数据接入、数据建模、数据消费) 模型ID(主数据)
      */
     public Integer AppId;
+
+    /**
+     *  应用类型(数据接入)
+     */
+
+    public Integer AppType;
 }
