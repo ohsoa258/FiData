@@ -10,10 +10,6 @@ import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import java.util.List;
 
 public interface BusinessExtendedfieldsService {
-
-
-
-
     /**
      * 展示维度数据
      * @param

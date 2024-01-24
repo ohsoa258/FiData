@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
@@ -17,7 +18,7 @@ public interface BusinessTargetinfoService {
      * @param
      * @return
      */
-    List<BusinessTargetinfoPO> SelectClassification(String pid);
+    JSONArray SelectClassification(String pid);
 
 
     /**

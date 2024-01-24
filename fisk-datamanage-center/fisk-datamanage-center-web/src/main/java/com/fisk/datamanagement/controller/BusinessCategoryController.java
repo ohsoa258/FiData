@@ -10,9 +10,11 @@ import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
+import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamanagement.service.BusinessExtendedfieldsService;
 import com.fisk.datamanagement.service.BusinessTargetinfoService;
+import com.fisk.datamanagement.service.FactTreeListExtendedfieldsService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -36,6 +38,9 @@ public class BusinessCategoryController {
 
     @Resource
     BusinessExtendedfieldsService businessExtendedfieldsService;
+
+    @Resource
+    FactTreeListExtendedfieldsService factTreeListExtendedfieldsService;
 
     @Resource
     BusinessTargetinfoService businessTargetinfoService;
@@ -69,10 +74,24 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getDimensionTreeList());
     }
 
+    @ApiOperation("获取事实tree")
+    @GetMapping("/dimension/getFactTrees")
+    public ResultEntity<Object> getFactTreeList()  {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getFactTreeList());
+    }
+
+
     @ApiOperation("根据指标id展示新增维度数据")
     @GetMapping("/dimension/getDimensionTreeShow/{indexid}")
     public  List<BusinessExtendedfieldsPO> addBusinessExtendedfields(@PathVariable("indexid") String  indexid) {
         return  businessExtendedfieldsService.addBusinessExtendedfields(indexid);
+    }
+
+
+    @ApiOperation("根据底层表id展示新增事实数据")
+    @GetMapping("/dimension/getFactTreeListShow/{id}")
+    public  List<FactTreePOs> addFactTreeListExtendedfields(@PathVariable("pid") String pid) {
+        return  factTreeListExtendedfieldsService.addFactTreeListExtendedfields(pid);
     }
 
     @ApiOperation("添加指标主题数据")

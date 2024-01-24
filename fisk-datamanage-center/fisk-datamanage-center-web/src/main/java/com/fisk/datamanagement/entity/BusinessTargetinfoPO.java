@@ -2,8 +2,11 @@ package com.fisk.datamanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 /**
  * @author xgf
@@ -35,7 +38,8 @@ public class BusinessTargetinfoPO extends BasePO {
     public String  attributesNumber;
     public String  name;
     public String  sqlScript;
-
+    /*public List<BusinessExtendedfieldsPO> businessExtendedfieldsPOdata;
+    public List<FactTreePOs> factTreePOsdata;*/
 
 
 }

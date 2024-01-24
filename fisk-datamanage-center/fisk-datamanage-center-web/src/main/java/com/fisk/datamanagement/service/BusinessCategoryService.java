@@ -59,9 +59,7 @@ public interface BusinessCategoryService {
     JSONArray getDimensionTreeList();
 
 
-
-
-
+    JSONArray getFactTreeList();
 
 
 }
