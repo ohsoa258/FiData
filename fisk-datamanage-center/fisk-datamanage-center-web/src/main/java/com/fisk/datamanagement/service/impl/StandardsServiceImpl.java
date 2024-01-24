@@ -308,22 +308,26 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         Connection conn = null;
         try {
             AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
-            conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
             List<TableNameDTO> data = new ArrayList<>();
             switch (dto.conType) {
                 case MYSQL:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = MySqlConUtils.getTableName(conn);
                     break;
                 case SQLSERVER:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = SqlServerUtils.getTableName(conn);
                     break;
                 case POSTGRESQL:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = PgSqlUtils.getTableName(conn);
                     break;
                 case ORACLE:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = OracleUtils.getTableName(conn);
                     break;
                 case DORIS:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = DorisConUtils.getTableName(conn);
                     break;
                 default:
@@ -554,22 +558,26 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         Connection conn = null;
         try {
             AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
-            conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
             List<TableColumnDTO> data = new ArrayList<>();
             switch (dto.conType) {
                 case MYSQL:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = MySqlConUtils.getColNames(conn, tableName);
                     break;
                 case SQLSERVER:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = SqlServerUtils.getColumnsName(conn, tableName);
                     break;
                 case POSTGRESQL:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = PgSqlUtils.getTableColumnName(conn, tableName);
                     break;
                 case ORACLE:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = OracleUtils.getTableColumnInfoList(conn, dto.conDbname, tableName);
                     break;
                 case DORIS:
+                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
                     data = DorisConUtils.getColNames(conn, tableName);
                     break;
                 default:
