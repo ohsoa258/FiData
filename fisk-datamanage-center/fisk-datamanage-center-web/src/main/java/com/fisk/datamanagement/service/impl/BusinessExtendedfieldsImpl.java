@@ -15,12 +15,15 @@ import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
+import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
+import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamanagement.service.BusinessExtendedfieldsService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -41,8 +44,6 @@ public class BusinessExtendedfieldsImpl implements BusinessExtendedfieldsService
 
     @Resource
     BusinessExtendedfieldsMapper businessExtendedfieldsMapper;
-
-
     /**
      * 展示维度数据
      *
@@ -55,6 +56,5 @@ public class BusinessExtendedfieldsImpl implements BusinessExtendedfieldsService
         System.out.println(po);
         return po;
     }
-
 
 }

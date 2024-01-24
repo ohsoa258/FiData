@@ -29,6 +29,7 @@ import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
+import com.fisk.datamodel.dto.fact.FactTreeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -376,6 +377,9 @@ public interface DataModelClient {
     @GetMapping("/dimension/getDimensionTree")
     List<DimensionTreeDTO> getDimensionTree();
 
+    @ApiOperation("获取事实tree")
+    @GetMapping("/fact/getFactTree")
+    List<FactTreeDTO> getFactTree();
     /**
      * 获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）
      *

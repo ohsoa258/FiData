@@ -1,7 +1,9 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.annotation.JSONPOJOBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEnum;
@@ -15,13 +17,17 @@ import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
+import com.fisk.datamanagement.dto.classification.FacttreeListDTOs;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.BusinessSynchronousPO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
+import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
+import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.BusinessTargetinfoService;
 import lombok.Data;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
@@ -46,6 +52,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,7 +67,8 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     BusinessTargetinfoMapper businessTargetinfoMapper;
     @Resource
     UserHelper userHelper;
-
+    @Resource
+    FactTreeListMapper factTreeListMapper;
     @Resource
     BusinessExtendedfieldsMapper businessExtendedfieldsMapper;
 
@@ -75,10 +83,49 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
      * @return
      */
     @Override
-    public List<BusinessTargetinfoPO> SelectClassification(String pid) {
+        public JSONArray SelectClassification(String pid) {
+
+        JSONArray array1 =new JSONArray();
         List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
-        return list;
+        String indexid= pid;
+        //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
+        for(int i=0;i<list.size();i++){
+            List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
+            List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(list.get(i).getId()+"");
+            JSONObject jsonObject1 =  new JSONObject();
+            jsonObject1.put("id",list.get(i).getId());
+            jsonObject1.put("createTime",list.get(i).getCreateTime());
+            jsonObject1.put("createUser",list.get(i).getCreateUser());
+            jsonObject1.put("updateTime",list.get(i).getUpdateTime());
+            jsonObject1.put("updateUser",list.get(i).getUpdateUser());
+            jsonObject1.put("delFlag",list.get(i).getDelFlag());
+            jsonObject1.put("pid",list.get(i).getPid());
+            jsonObject1.put("responsibleDept",list.get(i).getResponsibleDept());
+            jsonObject1.put("indicatorCode",list.get(i).getIndicatorCode());
+            jsonObject1.put("indicatorName",list.get(i).getIndicatorName());
+            jsonObject1.put("indicatorDescription",list.get(i).getIndicatorDescription());
+            jsonObject1.put("indicatorLevel",list.get(i).getIndicatorLevel());
+            jsonObject1.put("unitMeasurement",list.get(i).getUnitMeasurement());
+            jsonObject1.put("statisticalCycle",list.get(i).getStatisticalCycle());
+            jsonObject1.put("indicatorformula",list.get(i).getIndicatorformula());
+            jsonObject1.put("indicatorStatus",list.get(i).getIndicatorStatus());
+            jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
+            jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
+            jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
+            jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
+            jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
+            jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
+            jsonObject1.put("indicatorType",list.get(i).getIndicatorType());
+            jsonObject1.put("name",list.get(i).getName());
+            jsonObject1.put("sqlScript",list.get(i).getSqlScript());
+            jsonObject1.put("dimensionData",list1);
+            jsonObject1.put("facttreeListData",list2);
+            array1.set(i,jsonObject1);
+        }
+
+        return array1;
     }
+
 
     /**
      * 查询数据类型范围的数据
@@ -158,7 +205,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             QueryWrapper<BusinessTargetinfoPO> qwnew = new QueryWrapper<>();
             qw.eq("indicator_name", item.indicatorName).eq("del_flag", 1).eq("pid", item.pid);
             BusinessTargetinfoPO bcPOnew = businessTargetinfoMapper.selectOne(qw);
-           for (int j=0;j<item.getDimensionData().size();j++){
+            for (int j=0;j<item.getDimensionData().size();j++){
                BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
                BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
                model1.setAttribute(model2.attribute);
@@ -178,6 +225,25 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                    throw new FkException(ResultEnum.ERROR, "保存失败");
                }
            }
+            for (int m=0;m<item.getFacttreeListData().size();m++){
+                FacttreeListDTOs model4= item.getFacttreeListData().get(m);
+                FactTreePOs model3 = new FactTreePOs();
+                model3.setPid(bcPOnew.id+"");
+                model3.setBusinessNameId(model4.businessNameId);
+                model3.setBusinessName(model4.businessName);
+                model3.setFactTabNameId(model4.factTabNameId);
+                model3.setFactTabName(model4.factTabName);
+                model3.setFactFieldEnNameId(model4.factFieldEnNameId);
+                model3.setFactFieldEnName(model4.factFieldEnName);
+                model3.setCreateUser(userHelper.getLoginUserInfo().username);
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                model3.setCreateTime(LocalDateTime.now());
+                model3.setDelFlag(1);
+                int flag2= factTreeListMapper.insert(model3);
+                if (flag2 < 0) {
+                    throw new FkException(ResultEnum.ERROR, "保存失败");
+                }
+            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -287,9 +353,27 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 throw new FkException(ResultEnum.ERROR, "保存失败");
             }
         }
+        int flag3= factTreeListMapper.updateByName(bcPOnew.id+"");
+        for (int n=0; n<item.getFacttreeListData().size();n++){
+            FacttreeListDTOs model4= item.getFacttreeListData().get(n);
+            FactTreePOs model3 = new FactTreePOs();
+            model3.setPid(bcPOnew.id+"");
+            model3.setBusinessNameId(model4.businessNameId);
+            model3.setBusinessName(model4.businessName);
+            model3.setFactTabNameId(model4.businessNameId);
+            model3.setFactTabName(model4.factTabName);
+            model3.setFactFieldEnNameId(model4.factFieldEnNameId);
+            model3.setFactFieldEnName(model4.factFieldEnName);
+            model3.setCreateUser(userHelper.getLoginUserInfo().username);
+            model3.setCreateTime(LocalDateTime.now());
+            model3.setDelFlag(1);
+            int flag2= factTreeListMapper.insert(model3);
+            if (flag2 < 0) {
+                throw new FkException(ResultEnum.ERROR, "保存失败");
+            }
+        }
         return ResultEnum.SUCCESS;
     }
-
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
     public void downLoad(String id,String indicatorname, HttpServletResponse response) {
