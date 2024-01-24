@@ -207,9 +207,9 @@ public class MetaDataImpl implements IMetaData {
                             deleteMetaData(qualifiedNames, tableGuid);
                         }
                         //同步业务元数据
-                        if (!"stg".equals(table.description)) {
-                            associatedBusinessMetaData(tableGuid, db.name, table.name);
-                        }
+//                        if (!"stg".equals(table.description)) {
+//                            associatedBusinessMetaData(tableGuid, db.name, table.name);
+//                        }
                         /*************************ODS和DW时需要同步STG表***********************************/
                         //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
                         String stgTableGuid = null;
@@ -975,9 +975,9 @@ public class MetaDataImpl implements IMetaData {
                         }
                     }
                     //同步业务元数据
-                    if (!"stg".equals(table.description)) {
-                        associatedBusinessMetaData(metadataEntity.toString(), db.name, table.name);
-                    }
+//                    if (!"stg".equals(table.description)) {
+//                        associatedBusinessMetaData(metadataEntity.toString(), db.name, table.name);
+//                    }
                 }
             }
         }
