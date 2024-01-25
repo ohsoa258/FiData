@@ -174,11 +174,8 @@ public class TableAppManageImpl
                     }
                 }
             }
-            if (CollectionUtils.isNotEmpty(tableAppServiceCount)) {
-                totalCount = tableAppServiceCount.stream().collect(Collectors.summingInt(AppServiceCountVO::getCount));
-                totalCount += tableApiService.count();
-                filter.getRecords().get(0).setTotalCount(totalCount);
-            }
+            totalCount += tableApiService.count();
+            filter.getRecords().get(0).setTotalCount(totalCount);
         }
         return filter;
     }
