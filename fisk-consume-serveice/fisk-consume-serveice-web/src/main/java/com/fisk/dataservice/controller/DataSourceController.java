@@ -13,6 +13,7 @@ import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.service.IDataSourceConManageService;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -82,4 +83,12 @@ public class DataSourceController {
     public ResultEntity<DataSourceVO> getFiDataConfigMetaData(@PathVariable("id")int id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaDataById(id));
     }
+
+    @GetMapping("/getApiCustomDataSource")
+    @ApiOperation("获取API自定义数据集")
+    public ResultEntity<List<DataSourceDTO>> getApiCustomDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiCustomDataSource());
+    }
+
+
 }

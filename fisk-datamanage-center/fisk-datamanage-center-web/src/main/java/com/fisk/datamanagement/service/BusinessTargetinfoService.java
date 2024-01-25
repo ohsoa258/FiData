@@ -21,7 +21,7 @@ public interface BusinessTargetinfoService {
     JSONArray SelectClassification(String pid);
 
 
-    JSONArray SelectClassifications(String factTabName,String factFieldEnName);
+    JSONArray SelectClassifications(Integer fieldMetadataId);
 
 
     /**

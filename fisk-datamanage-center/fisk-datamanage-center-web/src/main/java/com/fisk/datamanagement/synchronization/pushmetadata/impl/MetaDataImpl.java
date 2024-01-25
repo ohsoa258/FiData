@@ -24,6 +24,7 @@ import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.FieldMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
@@ -110,6 +111,9 @@ public class MetaDataImpl implements IMetaData {
     PublishTaskClient client;
     @Resource
     UserClient userClient;
+
+    @Resource
+    ConsumeServeiceClient consumeServeiceClient;
 
     @Resource
     UserHelper userHelper;
@@ -211,8 +215,8 @@ public class MetaDataImpl implements IMetaData {
 //                            associatedBusinessMetaData(tableGuid, db.name, table.name);
 //                        }
                         /*************************ODS和DW时需要同步STG表***********************************/
-                        //如果数据接入 应用为CDC类型时不需要同步STG表
-                        if (table.getAppType()!=2){
+                        //如果数据接入应用为CDC类型时不需要同步STG表,等于空则为数仓建模表
+                        if (table.getAppType()==null||table.getAppType()!=2){
                             //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
                             String stgTableGuid = null;
                             if (!stg.equals(table.getComment())) {
@@ -1291,11 +1295,14 @@ public class MetaDataImpl implements IMetaData {
 
         //获取所有数据源
         ResultEntity<List<DataSourceDTO>> allDataSourceResult = userClient.getAll();
+        ResultEntity<List<DataSourceDTO>> apiCustomDataSourceResult = consumeServeiceClient.getApiCustomDataSource();
         if (allDataSourceResult.code != 0) {
             log.error("【获取系统所有数据源异常】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         List<DataSourceDTO> allDataSourceList = allDataSourceResult.data;
+
+//        List<DataSourceDTO> apiCustomDataSource = apiCustomDataSourceResult.data;
 
         //同步实体的外部数据源的实例和数据库元数据
         syncExternalDataSourceDbInstance(entityList, allDataSourceList);
@@ -1308,8 +1315,10 @@ public class MetaDataImpl implements IMetaData {
                 if (entityDto.createApiType != 3) {
                     //同步实体数据源的元数据
                     List<String> fromEntityId = syncEntitySourceMetaData(entityDto, allDataSourceList);
-                    //同步源到目标的血缘
-                    metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
+                    if (fromEntityId!=null&&fromEntityId.stream().count()>0){
+                        //同步源到目标的血缘
+                        metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
+                    }
                 }
             } catch (Exception e) {
                 log.error("数据消费实体同步失败，堆栈信息: ", e);
@@ -1344,7 +1353,7 @@ public class MetaDataImpl implements IMetaData {
      * @param entityList
      */
     private void syncExternalDataSourceDbInstance(List<MetaDataEntityDTO> entityList, List<DataSourceDTO> allDataSource) {
-        Set<Integer> datasourceIdList = entityList.stream().collect(Collectors.groupingBy(e -> e.datasourceDbId)).keySet();
+        Set<Integer> datasourceIdList = entityList.stream().filter(e->e.getDatasourceDbId()!=null).collect(Collectors.groupingBy(e -> e.datasourceDbId)).keySet();
         List<DataSourceDTO> dataSourceDTOList = allDataSource.stream()
                 .filter(e -> datasourceIdList.contains(e.getId()))
                 .filter(e -> e.getSourceType() == 2)
@@ -1494,7 +1503,8 @@ public class MetaDataImpl implements IMetaData {
         if (!dataSourceDTOResult.isPresent()) {
 
             log.error("没有找到数据源，数据源ID: " + metaDataEntityDTO.getDatasourceDbId());
-            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
+            return null;
+//            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         dataSourceDTO = dataSourceDTOResult.get();
         //解析sql脚本，获取数据源表以及字段。

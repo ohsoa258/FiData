@@ -245,6 +245,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return dataSourceVO;
     }
 
+
+
     @Override
     public ResultEntity<Object> reloadMetaData(int id) {
         QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
@@ -829,5 +831,26 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 setMetaDataToRedis(dataSourceConPO, 2);
             }
         }
+    }
+
+    @Override
+    public List<DataSourceDTO> getApiCustomDataSource() {
+        QueryWrapper<DataSourceConPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(DataSourceConPO::getDatasourceType, SourceTypeEnum.custom.getValue());
+        List<DataSourceConPO> dataSourceConPOList = mapper.selectList(queryWrapper);
+        List<DataSourceDTO> dtoList=new ArrayList<>();
+        dataSourceConPOList.forEach(e->{
+            DataSourceDTO dto=new DataSourceDTO();
+
+            dto.name=e.name;
+            dto.conStr=e.conStr;
+            dto.conPort=e.conPort;
+            dto.conDbname=e.conDbname;
+            dto.conIp=e.conIp;
+            dto.conType=DataSourceTypeEnum.getEnum(e.conType);
+            dtoList.add(dto);
+        });
+        return dtoList;
     }
 }

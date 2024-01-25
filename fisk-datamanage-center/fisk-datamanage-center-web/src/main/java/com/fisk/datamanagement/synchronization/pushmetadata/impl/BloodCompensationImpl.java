@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -26,6 +27,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -54,7 +56,7 @@ public class BloodCompensationImpl
     @Resource
     BusinessClassificationMapper businessClassificationMapper;
     @Resource
-    MetadataEntityMapper  metadataEntityMapper;
+    MetadataEntityMapper metadataEntityMapper;
     @Resource
     MetadataAttributeMapper metadataAttributeMapper;
     @Resource
@@ -66,117 +68,141 @@ public class BloodCompensationImpl
     @Resource
     MetaDataClassificationMapMapper metaDataClassificationMapMapper;
     @Resource
-    MetadataEntityClassificationAttributeMapper  metadataEntityClassificationAttributeMapper;
+    MetadataEntityClassificationAttributeMapper metadataEntityClassificationAttributeMapper;
     @Resource
-    MetadataLabelMapper  metadataLabelMapper;
+    MetadataLabelMapper metadataLabelMapper;
     @Resource
-    MetaDataGlossaryMapMapper  metaDataGlossaryMapMapper;
+    MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
     @Resource
     MetaDataEntityOperationLogMapper metaDataEntityOperationLogMapper;
 
 //endregion
+
     /**
      * 血缘补偿
-     * @param currUserName  执行账号
-     * @param initialization   是否是初始化
+     *
+     * @param currUserName   执行账号
+     * @param initialization 是否是初始化
      * @return ResultEnum
      */
     @Override
-    public ResultEnum systemSynchronousBlood(String currUserName,boolean initialization) {
-        if(initialization)
-        {
+    public ResultEnum systemSynchronousBlood(String currUserName, boolean initialization, List<Integer> moduleIds) {
+        if (initialization) {
             //清空系统血缘
             TruncateBlood();
         }
-        log.info("******一.开始补偿数据接入相关元数据信息******");
-        log.info("******1.开始同步数据接入系统名称到业务分类******");
-        ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-        synchronousClassification(appList,ClassificationTypeEnum.DATA_ACCESS);
-        log.info("******2.开始同步数据接入来源表元数据******");
-        //同步数据接入来源表元数据(解析接入表sql)
-        synchronousAccessSourceMetaData(currUserName);
-        log.info("******3.开始同步数据接入ods表以及stg表元数据******");
-        //同步数据接入ods表以及stg表元数据
-        synchronousAccessTableSourceMetaData(currUserName);
+//        List<Integer> moduleIds =new ArrayList<>();
+//        if (moduleIdStr!=null){
+//            moduleIds =  Arrays.stream(moduleIdStr.split(",")).map(Integer::valueOf).collect(Collectors.toList());
+//        }
+        //为空则同步所有模块
+        if ( moduleIds.stream().count() == 0) {
+            moduleIds = Arrays.stream(ClassificationTypeEnum.values()).map(e -> e.getValue()).collect(Collectors.toList());
+        }
+        if (moduleIds.contains(ClassificationTypeEnum.DATA_ACCESS.getValue())) {
+            log.info("******一.开始补偿数据接入相关元数据信息******");
+            log.info("******1.开始同步数据接入系统名称到业务分类******");
+            ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+            synchronousClassification(appList, ClassificationTypeEnum.DATA_ACCESS);
+            log.info("******2.开始同步数据接入来源表元数据******");
+            //同步数据接入来源表元数据(解析接入表sql)
+            synchronousAccessSourceMetaData(currUserName);
+            log.info("******3.开始同步数据接入ods表以及stg表元数据******");
+            //同步数据接入ods表以及stg表元数据
+            synchronousAccessTableSourceMetaData(currUserName);
+        }
 
-        log.info("*******二.开始同步数据建模相关元数据信息********");
-        log.info("*******1.开始同步数据建模的业务分类********");
-        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-        log.info("********2.开始同步建模业务分类元数据********");
-        synchronousClassification(businessAreaList,ClassificationTypeEnum.ANALYZE_DATA);
-        log.info("********2.开始同步建模ods表以及stg表元数据********");
-        synchronousDataModelTableSourceMetaData(currUserName);
+        if (moduleIds.contains(ClassificationTypeEnum.ANALYZE_DATA.getValue())) {
+            log.info("*******二.开始同步数据建模相关元数据信息********");
+            log.info("*******1.开始同步数据建模的业务分类********");
+            ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+            log.info("********2.开始同步建模业务分类元数据********");
+            synchronousClassification(businessAreaList, ClassificationTypeEnum.ANALYZE_DATA);
+            log.info("********2.开始同步建模ods表以及stg表元数据********");
+            synchronousDataModelTableSourceMetaData(currUserName);
+        }
 
-        log.info("*******三.开始同步API网关服务相关元数据信息********");
-        log.info("********1.开始API网关服务的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> apiAppList = serveiceClient.getApiService();
-        synchronousClassification(apiAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
-        log.info("********2.开始API网关服务的元数据******************");
-        synchronousAPIServiceMetaData(currUserName);
+        if (moduleIds.contains(ClassificationTypeEnum.API_GATEWAY_SERVICE.getValue())) {
+            log.info("*******三.开始同步API网关服务相关元数据信息********");
+            log.info("********1.开始API网关服务的业务分类******************");
+            ResultEntity<List<AppBusinessInfoDTO>> apiAppList = serveiceClient.getApiService();
+            synchronousClassification(apiAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
+            log.info("********2.开始API网关服务的元数据******************");
+            synchronousAPIServiceMetaData(currUserName);
+        }
 
-        log.info("*******四.开始同步视图服务相关元数据信息********");
-        log.info("********1.开始视图服务的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> viewAppList = serveiceClient.getViewService();
-        synchronousClassification(viewAppList, ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
-        log.info("********2.开始视图服务的元数据******************");
-        synchronousViewServiceMetaData(currUserName);
+        if (moduleIds.contains(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue())) {
+            log.info("*******四.开始同步视图服务相关元数据信息********");
+            log.info("********1.开始视图服务的业务分类******************");
+            ResultEntity<List<AppBusinessInfoDTO>> viewAppList = serveiceClient.getViewService();
+            synchronousClassification(viewAppList, ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
+            log.info("********2.开始视图服务的元数据******************");
+            synchronousViewServiceMetaData(currUserName);
+        }
 
-        log.info("*******五.开始同步数据库同步服务相关元数据信息********");
-        log.info("********1.开始数据库同步服务的业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
-        synchronousClassification(tableAppList, ClassificationTypeEnum.DATA_DISTRIBUTION);
-        log.info("********2.开始数据库同步服务的元数据******************");
-        synchronousDataBaseSyncMetaData(currUserName);
+        if (moduleIds.contains(ClassificationTypeEnum.DATA_DISTRIBUTION.getValue())) {
+            log.info("*******五.开始同步数据库同步服务相关元数据信息********");
+            log.info("********1.开始数据库同步服务的业务分类******************");
+            ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
+            synchronousClassification(tableAppList, ClassificationTypeEnum.DATA_DISTRIBUTION);
+            log.info("********2.开始数据库同步服务的元数据******************");
+            synchronousDataBaseSyncMetaData(currUserName);
+        }
 
+        if (moduleIds.contains(ClassificationTypeEnum.MASTER_DATA.getValue())) {
+            log.info("*******六.开始主数据相关元数据信息********");
+            log.info("********1.开始同步主数据业务分类******************");
+            ResultEntity<List<AppBusinessInfoDTO>> masterDataModel = mdmClient.getMasterDataModel();
+            synchronousClassification(masterDataModel, ClassificationTypeEnum.MASTER_DATA);
+            log.info("********2.开始主数据的元数据******************");
+            synchronousMasterDataMetaData(currUserName);
 
-        log.info("*******六.开始主数据相关元数据信息********");
-        log.info("********1.开始同步主数据业务分类******************");
-        ResultEntity<List<AppBusinessInfoDTO>> masterDataModel = mdmClient.getMasterDataModel();
-        synchronousClassification(masterDataModel,ClassificationTypeEnum.MASTER_DATA);
-        log.info("********2.开始主数据的元数据******************");
-        synchronousMasterDataMetaData(currUserName);
+        }
         return ResultEnum.SUCCESS;
-
-
     }
     //region 内置实现方法
+
     /**
      * 同步API网关服务的元数据信息
+     *
      * @param currUserName 当前执行账号
      */
     private void synchronousAPIServiceMetaData(String currUserName) {
         //待补充
         ResultEntity<List<MetaDataEntityDTO>> apiMetaDataResult = serveiceClient.getApiMetaData();
         List<MetaDataEntityDTO> metaDataList = apiMetaDataResult.data;
-        metaData.syncDataConsumptionMetaData(metaDataList,currUserName);
+        metaData.syncDataConsumptionMetaData(metaDataList, currUserName);
 
     }
 
     /**
      * 同步视图服务的元数据信息
+     *
      * @param currUserName 当前执行账号
      */
     private void synchronousViewServiceMetaData(String currUserName) {
         //待补充
         ResultEntity<List<MetaDataEntityDTO>> apiMetaDataResult = serveiceClient.getViewServiceMetaData();
         List<MetaDataEntityDTO> metaDataList = apiMetaDataResult.data;
-        metaData.syncDataConsumptionMetaData(metaDataList,currUserName);
+        metaData.syncDataConsumptionMetaData(metaDataList, currUserName);
 
     }
 
 
     /**
      * 同步数据库同步服务的元数据信息
+     *
      * @param currUserName 当前执行账号
      */
     private void synchronousDataBaseSyncMetaData(String currUserName) {
         //待补充
         ResultEntity<List<MetaDataEntityDTO>> apiMetaDataResult = serveiceClient.getTableSyncMetaData();
         List<MetaDataEntityDTO> metaDataList = apiMetaDataResult.data;
-        metaData.syncDataConsumptionMetaData(metaDataList,currUserName);
+        metaData.syncDataConsumptionMetaData(metaDataList, currUserName);
 
     }
     //region 初始化血缘方法
+
     /**
      * 清空系统血缘
      */
@@ -214,32 +240,33 @@ public class BloodCompensationImpl
     }
 
     /**
-     *初始化插入根节点
+     * 初始化插入根节点
      *
      * @param item 枚举根节点
      */
     private void InsertRootBusinessClassification(ClassificationTypeEnum item) {
-        BusinessClassificationPO POData=new BusinessClassificationPO();
-        POData.name=item.getName();
-        POData.id=item.getValue();
-        POData.description=item.getDescription();
+        BusinessClassificationPO POData = new BusinessClassificationPO();
+        POData.name = item.getName();
+        POData.id = item.getValue();
+        POData.description = item.getDescription();
         businessClassificationMapper.insert(POData);
     }
     //endregion
 
     /**
-     *同步到业务分类的公共方法
-     * @param appList 接入业务系统
-     * @param classificationTypeEnum  建模类型
+     * 同步到业务分类的公共方法
+     *
+     * @param appList                接入业务系统
+     * @param classificationTypeEnum 建模类型
      */
-    private void synchronousClassification(ResultEntity<List<AppBusinessInfoDTO>> appList, ClassificationTypeEnum classificationTypeEnum){
+    private void synchronousClassification(ResultEntity<List<AppBusinessInfoDTO>> appList, ClassificationTypeEnum classificationTypeEnum) {
         if (appList.code != ResultEnum.SUCCESS.getCode()) {
-            log.error("【获取"+classificationTypeEnum.getName()+"的业务分类数据失败】");
+            log.error("【获取" + classificationTypeEnum.getName() + "的业务分类数据失败】");
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        log.info("********开始同步"+classificationTypeEnum.getName()+"的业务分类********");
+        log.info("********开始同步" + classificationTypeEnum.getName() + "的业务分类********");
         if (CollectionUtils.isEmpty(appList.data)) {
-            log.error("【未获取到"+classificationTypeEnum.getName()+"数据】");
+            log.error("【未获取到" + classificationTypeEnum.getName() + "数据】");
         }
         for (AppBusinessInfoDTO item : appList.data) {
             ClassificationInfoDTO classificationInfoDto = new ClassificationInfoDTO();
@@ -251,20 +278,22 @@ public class BloodCompensationImpl
             try {
                 classification.appSynchronousClassification(classificationInfoDto);
             } catch (Exception e) {
-                log.error("【同步业务分类失败】,分类名称:{}"+item.name,e.getMessage() );
+                log.error("【同步业务分类失败】,分类名称:{}" + item.name, e.getMessage());
             }
         }
     }
+
     /**
      * 同步数据接入来源表元数据和数据血缘
+     *
      * @param currUserName 当前执行账号
      */
     private void synchronousAccessSourceMetaData(String currUserName) {
         //获取所有接入表
         ResultEntity<List<DataAccessSourceTableDTO>> dataAccessMetaData = dataAccessClient.getDataAccessMetaData();
         List<DataAccessSourceTableDTO> collect = dataAccessMetaData.data.stream()
-                .filter(d->!("sftp").equals(d.driveType))
-                .filter(d->!("ftp").equals(d.driveType))
+                .filter(d -> !("sftp").equals(d.driveType))
+                .filter(d -> !("ftp").equals(d.driveType))
                 .collect(Collectors.toList());
         if (dataAccessMetaData.code != ResultEnum.SUCCESS.getCode()) {
             log.error("【获取接入所有表失败】");
@@ -293,12 +322,12 @@ public class BloodCompensationImpl
             //解析sql
             List<TableMetaDataObject> res;
             //解析SQL过滤掉SFTP，FTP，
-            if(("sftp").equals(accessTable.driveType)||("ftp").equals(accessTable.driveType)){
+            if (("sftp").equals(accessTable.driveType) || ("ftp").equals(accessTable.driveType)) {
                 continue;
-            }else{
-                log.debug("accessTable日志"+accessTable);
-                log.debug("accessTable信息:表名称："+accessTable.tableName+",表ID"+accessTable.id+",表脚本"+accessTable.sqlScript);
-                res = SqlParserUtils.sqlDriveConversionName(accessTable.appId,accessTable.driveType,accessTable.sqlScript);
+            } else {
+                log.debug("accessTable日志" + accessTable);
+                log.debug("accessTable信息:表名称：" + accessTable.tableName + ",表ID" + accessTable.id + ",表脚本" + accessTable.sqlScript);
+                res = SqlParserUtils.sqlDriveConversionName(accessTable.appId, accessTable.driveType, accessTable.sqlScript);
             }
             if (CollectionUtils.isEmpty(res)) {
                 continue;
@@ -313,11 +342,11 @@ public class BloodCompensationImpl
                 table.setDisplayName(item.name);
                 table.setComment("stg");
                 table.setDescription("stg");
-                List<MetaDataColumnAttributeDTO> fieldList=new ArrayList<>();
-                for (FieldMetaDataObject fieldItem:item.getFields()){
-                    MetaDataColumnAttributeDTO field=new MetaDataColumnAttributeDTO();
+                List<MetaDataColumnAttributeDTO> fieldList = new ArrayList<>();
+                for (FieldMetaDataObject fieldItem : item.getFields()) {
+                    MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
                     field.setName(fieldItem.name);
-                    field.setQualifiedName(table.getQualifiedName()+"_"+fieldItem.name);
+                    field.setQualifiedName(table.getQualifiedName() + "_" + fieldItem.name);
                     field.setDisplayName(fieldItem.name);
                     field.setDataType("");
                     field.setOwner("");
@@ -329,22 +358,26 @@ public class BloodCompensationImpl
             first.get().dbList.get(0).tableList.addAll(tableList);
         }
 
-        metaData.consumeMetaData(synchronizationAppRegistration.data,currUserName);
+        metaData.consumeMetaData(synchronizationAppRegistration.data, currUserName);
 
     }
+
     /**
      * 同步数据接入STG到ODS的元数据
-     * @param currUserName  当前执行账号
+     *
+     * @param currUserName 当前执行账号
      */
     private void synchronousAccessTableSourceMetaData(String currUserName) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> accessTable = dataAccessClient.synchronizationAccessTable();
         if (accessTable.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        metaData.consumeMetaData(accessTable.data,currUserName);
+        metaData.consumeMetaData(accessTable.data, currUserName);
     }
+
     /**
      * 同步数仓建模的元数据
+     *
      * @param currUserName 当前执行账号
      */
     public void synchronousDataModelTableSourceMetaData(String currUserName) {
@@ -352,11 +385,12 @@ public class BloodCompensationImpl
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        metaData.consumeMetaData(dataModelMetaData.data,currUserName);
+        metaData.consumeMetaData(dataModelMetaData.data, currUserName);
     }
 
     /**
      * 同步主数据的元数据
+     *
      * @param currUserName 当前执行账号
      */
     public void synchronousMasterDataMetaData(String currUserName) {
@@ -364,7 +398,8 @@ public class BloodCompensationImpl
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
-        metaData.consumeMetaData(dataModelMetaData.data,currUserName);
+        metaData.consumeMetaData(dataModelMetaData.data, currUserName);
     }
     //endregion
+
 }

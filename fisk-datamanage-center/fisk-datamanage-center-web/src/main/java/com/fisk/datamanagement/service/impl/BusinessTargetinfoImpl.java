@@ -18,6 +18,8 @@ import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
 import com.fisk.datamanagement.dto.classification.FacttreeListDTOs;
+import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
+import com.fisk.datamanagement.dto.standards.StandardsSourceQueryDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.BusinessSynchronousPO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
@@ -65,6 +67,8 @@ import java.util.stream.Collectors;
 public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     @Resource
     BusinessTargetinfoMapper businessTargetinfoMapper;
+    @Resource
+    MetadataEntityImpl metadataEntity;
     @Resource
     UserHelper userHelper;
     @Resource
@@ -128,15 +132,21 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
 
 
     @Override
-    public JSONArray SelectClassifications(String factTabName, String factFieldEnName) {
+    public JSONArray SelectClassifications(Integer fieldMetadataId) {
+
         JSONArray array1 =new JSONArray();
-        List<String> list2 = factTreeListMapper.selectsParentpIds(factTabName,factFieldEnName);
+        DBTableFiledNameDto dbTableFiledNameDto = metadataEntity.getParentNameByFieldId(fieldMetadataId);
+        if (dbTableFiledNameDto==null){
+           return array1;
+        }
+        List<String> list2 = factTreeListMapper.selectsParentpIds(dbTableFiledNameDto.getTableName(),dbTableFiledNameDto.getFieldName());
         for (int n = 0; n<list2.size(); n++){
             String id= list2.get(n);
             List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassificationss(id);
             //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
             for(int i=0;i<list.size();i++){
                 List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
+                List<FactTreePOs> list3 = factTreeListMapper.selectParentpIds(list.get(i).getId()+"");
                 JSONObject jsonObject1 =  new JSONObject();
                 jsonObject1.put("id",list.get(i).getId());
                 jsonObject1.put("createTime",list.get(i).getCreateTime());
@@ -164,6 +174,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 jsonObject1.put("name",list.get(i).getName());
                 jsonObject1.put("sqlScript",list.get(i).getSqlScript());
                 jsonObject1.put("dimensionData",list1);
+                jsonObject1.put("facttreeListData",list3);
                 if (jsonObject1 != null){array1.set(n,jsonObject1);}
 
             }

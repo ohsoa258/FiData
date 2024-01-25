@@ -29,6 +29,9 @@ public class MetaDataEntityDTO extends MetaDataBaseAttributeDTO {
     @ApiModelProperty(value = "数据源ID")
     public Integer datasourceDbId;
 
+    @ApiModelProperty(value = "数据源类型 数据源类型：1Fidata(系统数据源,外部数据源) 2自定义(目前API模块存在此类型数据源，自定义数据源不存在于System模块DataSource表中)")
+    public Integer datasourceType;
+
     @ApiModelProperty(value = "目标库Id")
     public Integer targetDbId;
 

@@ -128,8 +128,8 @@ public class BusinessCategoryController {
 
     @ApiOperation("根据属性表明和字段获取业务指标粒度明细数据列表")
     @GetMapping("/getBusinessMetaDataDetailLists")
-    public ResultEntity<Object> getBusinessMetaDataDetailLists(String factTabName,String factFieldEnName) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassifications(factTabName,factFieldEnName));
+    public ResultEntity<Object> getBusinessMetaDataDetailLists(Integer fieldMetadataId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassifications(fieldMetadataId));
     }
 
 

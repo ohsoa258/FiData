@@ -25,7 +25,7 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
     public Integer AppId;
 
     /**
-     *  应用类型(数据接入)
+     *  应用类型(数据接入)  0 1 2 实时
      */
 
     public Integer AppType;

@@ -86,6 +86,9 @@ public class AppRegisterManageImpl
     private ApiParmMapper apiParmMapper;
 
     @Resource
+    private  DataSourceConMapper dataSourceConMapper;
+
+    @Resource
     private ApiBuiltinParmMapper apiBuiltinParmMapper;
 
     @Resource
@@ -746,12 +749,13 @@ public class AppRegisterManageImpl
         //获取所有应用
         List<AppConfigPO> allApiConfigPOList = this.query().list();
         List<MetaDataEntityDTO> metaDataEntityDTOList = new ArrayList<>();
+        List<DataSourceConPO> tableAppDatasourcePOList = dataSourceConMapper.selectList(null);
         for (AppConfigPO appConfigPO : allApiConfigPOList) {
             //获取应用下的API
             List<ApiConfigPO> apiTheAppList = appApiMapper.getApiTheAppList((int) appConfigPO.getId());
             //添加应用下的API
             for (ApiConfigPO apiConfigPO : apiTheAppList) {
-                MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO, apiConfigPO);
+                MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO, apiConfigPO,tableAppDatasourcePOList);
                 metaDataEntityDTOList.add(metaDataEntityDTO);
             }
         }
@@ -771,19 +775,20 @@ public class AppRegisterManageImpl
         List<MetaDataEntityDTO> metaDataEntityDTOList = new ArrayList<>();
         //获取API
         List<ApiConfigPO> apiTheAppList = apiRegisterMapper.selectBatchIds(ids);
+        List<DataSourceConPO> tableAppDatasourcePOList = dataSourceConMapper.selectList(null);
         //添加应用下的API
         for (ApiConfigPO apiConfigPO : apiTheAppList) {
             AppConfigPO appConfigPO = appApiMapper.getAppByApiList((int) apiConfigPO.getId()).stream().findFirst().orElse(null);
             if (appConfigPO == null) {
                 return metaDataEntityDTOList;
             }
-            MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO, apiConfigPO);
+            MetaDataEntityDTO metaDataEntityDTO = buildApiMetaDataEntity(appConfigPO, apiConfigPO,tableAppDatasourcePOList);
             metaDataEntityDTOList.add(metaDataEntityDTO);
         }
         return metaDataEntityDTOList;
     }
 
-    public MetaDataEntityDTO buildApiMetaDataEntity(AppConfigPO appConfigPO, ApiConfigPO apiConfigPO) {
+    public MetaDataEntityDTO buildApiMetaDataEntity(AppConfigPO appConfigPO, ApiConfigPO apiConfigPO,List<DataSourceConPO> dataSourceConPOList) {
         MetaDataEntityDTO metaDataEntityDTO = new MetaDataEntityDTO();
         metaDataEntityDTO.setQualifiedName("api_" + appConfigPO.getId() + "_" + apiConfigPO.getId());
         metaDataEntityDTO.setName(apiConfigPO.getApiName());
@@ -792,7 +797,12 @@ public class AppRegisterManageImpl
         metaDataEntityDTO.setCreateSql(apiConfigPO.getCreateSql());
         metaDataEntityDTO.setApiType(apiConfigPO.getApiType());
         metaDataEntityDTO.setTableName(apiConfigPO.getTableName());
-        metaDataEntityDTO.setDatasourceDbId(apiConfigPO.getDatasourceId());
+        if(apiConfigPO.getCreateApiType()!=3){
+            //代理API没有数据集
+            DataSourceConPO dataSourceConPO = dataSourceConPOList.stream().filter(e -> e.getId() == apiConfigPO.getDatasourceId()).findFirst().orElse(null);
+            metaDataEntityDTO.setDatasourceDbId(dataSourceConPO.getDatasourceId());
+            metaDataEntityDTO.setDatasourceType(dataSourceConPO.getDatasourceType());
+        }
         metaDataEntityDTO.setEntityType(5);
         metaDataEntityDTO.setCreateApiType(apiConfigPO.getCreateApiType());
         metaDataEntityDTO.setOwner(appConfigPO.getAppAccount());

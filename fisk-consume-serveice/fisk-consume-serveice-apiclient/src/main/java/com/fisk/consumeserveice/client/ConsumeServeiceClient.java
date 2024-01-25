@@ -2,7 +2,6 @@ package com.fisk.consumeserveice.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
@@ -142,4 +141,8 @@ public interface ConsumeServeiceClient {
      */
     @GetMapping("/tableService/getTableSyncMetaData")
     ResultEntity<List<MetaDataEntityDTO>> getTableSyncMetaData();
+
+
+    @GetMapping("/datasource/getApiCustomDataSource")
+    ResultEntity<List<com.fisk.system.dto.datasource.DataSourceDTO>> getApiCustomDataSource();
 }

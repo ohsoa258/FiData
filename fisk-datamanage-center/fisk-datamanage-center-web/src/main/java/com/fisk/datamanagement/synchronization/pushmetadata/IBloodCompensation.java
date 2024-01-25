@@ -2,6 +2,8 @@ package com.fisk.datamanagement.synchronization.pushmetadata;
 
 import com.fisk.common.core.response.ResultEnum;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -12,7 +14,7 @@ public interface IBloodCompensation {
      *
      * @return
      */
-    ResultEnum systemSynchronousBlood(String currUserName,boolean initialization);
+    ResultEnum systemSynchronousBlood(String currUserName,boolean initialization, List<Integer> moduleId);
 
 
 

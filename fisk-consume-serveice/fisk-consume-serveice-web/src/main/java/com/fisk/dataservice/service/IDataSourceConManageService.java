@@ -12,6 +12,7 @@ import com.fisk.dataservice.dto.datasource.TestConnectionDTO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.vo.datasource.DataSourceVO;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
@@ -84,4 +85,9 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      * @return 查询结果
      */
     DataSourceVO getMetaDataById(int id);
+
+    /**
+     *
+     */
+    List<DataSourceDTO> getApiCustomDataSource();
 }

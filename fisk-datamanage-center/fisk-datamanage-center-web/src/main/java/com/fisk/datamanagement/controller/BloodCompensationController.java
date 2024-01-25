@@ -34,10 +34,15 @@ public class BloodCompensationController {
     @ApiOperation("初始化元数据")
     @GetMapping("/systemSynchronousBlood")
     public ResultEntity<Object> systemSynchronousBlood(
-            @ApiParam(value = "执行账号", required = true) @RequestParam("currUserName") String currUserName,
-            @ApiParam(value = "是否要初始化，1代表需要初始化，0代表不需要初始化", required = true) @RequestParam("initialization")  int initialization)   {
-        boolean  initia= initialization >= 1;
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName, initia));
+            @ApiParam(value = "执行账号", required = true)
+                @RequestParam("currUserName") String currUserName,
+            @ApiParam(value = "是否要初始化，1代表需要初始化，0代表不需要初始化", required = true)
+                @RequestParam("initialization")int initialization,
+            @ApiParam(value = "在不初始化时，可同步单个模块，空则同步所有模块。 1, 数据接入 2,数仓建模 3,API网关 4, 数据库分发服务 5, 数据分析试图服务 6, 主数据")
+                @RequestParam("moduleIds") List<Integer> moduleIds)
+    {
+        boolean initia = initialization >= 1;
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBlood(currUserName, initia, moduleIds));
     }
 
 }

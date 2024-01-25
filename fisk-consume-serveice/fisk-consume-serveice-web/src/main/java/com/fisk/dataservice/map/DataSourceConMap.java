@@ -1,9 +1,11 @@
 package com.fisk.dataservice.map;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConEditDTO;
 import com.fisk.dataservice.dto.datasource.DataSourceConfigInfoDTO;
 import com.fisk.dataservice.entity.DataSourceConPO;
+import com.fisk.dataservice.util.TypeConversionUtils;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -13,7 +15,7 @@ import java.util.List;
 /**
  * @author dick
  */
-@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(uses = { TypeConversionUtils.class } ,nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DataSourceConMap {
 
     DataSourceConMap INSTANCES = Mappers.getMapper(DataSourceConMap.class);
@@ -52,4 +54,8 @@ public interface DataSourceConMap {
      */
     List<DataSourceConfigInfoDTO> voListToDtoInfo(List<DataSourceDTO> voList);
 
+//    @Mappings({
+//            @Mapping(source = "conType", target = "conType"),
+//    })
+//    DataSourceDTO poToDto(DataSourceConPO po);
 }
