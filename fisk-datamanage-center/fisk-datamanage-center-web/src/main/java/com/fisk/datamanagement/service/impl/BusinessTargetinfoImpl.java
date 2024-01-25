@@ -127,6 +127,56 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     }
 
 
+    @Override
+    public JSONArray SelectClassifications(String factTabName, String factFieldEnName) {
+        JSONArray array1 =new JSONArray();
+        List<String> list2 = factTreeListMapper.selectsParentpIds(factTabName,factFieldEnName);
+        for (int n = 0; n<list2.size(); n++){
+            String id= list2.get(n);
+            List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassificationss(id);
+            //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
+            for(int i=0;i<list.size();i++){
+                List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
+                JSONObject jsonObject1 =  new JSONObject();
+                jsonObject1.put("id",list.get(i).getId());
+                jsonObject1.put("createTime",list.get(i).getCreateTime());
+                jsonObject1.put("createUser",list.get(i).getCreateUser());
+                jsonObject1.put("updateTime",list.get(i).getUpdateTime());
+                jsonObject1.put("updateUser",list.get(i).getUpdateUser());
+                jsonObject1.put("delFlag",list.get(i).getDelFlag());
+                jsonObject1.put("pid",list.get(i).getPid());
+                jsonObject1.put("responsibleDept",list.get(i).getResponsibleDept());
+                jsonObject1.put("indicatorCode",list.get(i).getIndicatorCode());
+                jsonObject1.put("indicatorName",list.get(i).getIndicatorName());
+                jsonObject1.put("indicatorDescription",list.get(i).getIndicatorDescription());
+                jsonObject1.put("indicatorLevel",list.get(i).getIndicatorLevel());
+                jsonObject1.put("unitMeasurement",list.get(i).getUnitMeasurement());
+                jsonObject1.put("statisticalCycle",list.get(i).getStatisticalCycle());
+                jsonObject1.put("indicatorformula",list.get(i).getIndicatorformula());
+                jsonObject1.put("indicatorStatus",list.get(i).getIndicatorStatus());
+                jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
+                jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
+                jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
+                jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
+                jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
+                jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
+                jsonObject1.put("indicatorType",list.get(i).getIndicatorType());
+                jsonObject1.put("name",list.get(i).getName());
+                jsonObject1.put("sqlScript",list.get(i).getSqlScript());
+                jsonObject1.put("dimensionData",list1);
+                if (jsonObject1 != null){array1.set(n,jsonObject1);}
+
+            }
+
+        }
+
+        return array1;
+    }
+
+
+
+
+
     /**
      * 查询数据类型范围的数据
      *

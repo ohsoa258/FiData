@@ -126,11 +126,21 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassification(pid));
     }
 
+    @ApiOperation("根据属性表明和字段获取业务指标粒度明细数据列表")
+    @GetMapping("/getBusinessMetaDataDetailLists")
+    public ResultEntity<Object> getBusinessMetaDataDetailLists(String factTabName,String factFieldEnName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassifications(factTabName,factFieldEnName));
+    }
+
+
+
     @ApiOperation("获取业务指标明细类型数据列表")
     @GetMapping("/getBusinessMetaDataDetailTypeList")
     public ResultEntity<Object> getBusinessMetaDataDetailTypeList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelecttypeClassification());
     }
+
+
 
     @ApiOperation("添加指标主题明细数据")
     @PostMapping("/addBusinessMetaDataDetail")

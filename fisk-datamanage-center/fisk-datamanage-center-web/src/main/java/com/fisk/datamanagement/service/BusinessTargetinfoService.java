@@ -21,6 +21,9 @@ public interface BusinessTargetinfoService {
     JSONArray SelectClassification(String pid);
 
 
+    JSONArray SelectClassifications(String factTabName,String factFieldEnName);
+
+
     /**
      * 查询类型分类
      * @param
