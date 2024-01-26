@@ -805,7 +805,7 @@ public class AppRegisterManageImpl
         }
         metaDataEntityDTO.setEntityType(5);
         metaDataEntityDTO.setCreateApiType(apiConfigPO.getCreateApiType());
-        metaDataEntityDTO.setOwner(appConfigPO.getAppAccount());
+        metaDataEntityDTO.setOwner(appConfigPO.createUser);
         metaDataEntityDTO.setAppName(appConfigPO.getAppName());
         //获取API下的字段
         List<FieldConfigVO> fieldConfigVOList = apiRegisterManage.getFieldAll((int) apiConfigPO.getId());
@@ -817,7 +817,7 @@ public class AppRegisterManageImpl
             metaDataColumnAttributeDTO.setName(fieldConfigVO.getFieldName());
             metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
             metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
-            metaDataColumnAttributeDTO.setOwner(appConfigPO.getAppAccount());
+            metaDataColumnAttributeDTO.setOwner(appConfigPO.createUser);
             metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
         }
         metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);

@@ -237,6 +237,7 @@ public class MetaDataImpl implements IMetaData {
         } catch (Exception e) {
             log.error("实体同步失败，堆栈信息: ", e);
         }
+        log.info("结束同步元数据***********");
         //更新Redis
         //entityImpl.updateRedis();
         return ResultEnum.SUCCESS;
@@ -1645,7 +1646,7 @@ public class MetaDataImpl implements IMetaData {
      * 刷新缓存导出Excel元数据的所有数据 间隔2小时刷新一次  0 0 0/2 ? * *
      */
     @Override
-    @Scheduled(cron = "0 0 0/2 ? * *")
+    @Scheduled(cron = "0 0 0/12 ? * *")
     public void refreshRedisExcelMetadata() {
         log.info("***********************开始刷新Redis导出Excel的所有元数据********************************");
         List<Map<String, Object>> allExcelMetadata = getAllExcelMetadata();

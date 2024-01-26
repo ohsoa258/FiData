@@ -91,10 +91,6 @@ public class BloodCompensationImpl
             //清空系统血缘
             TruncateBlood();
         }
-//        List<Integer> moduleIds =new ArrayList<>();
-//        if (moduleIdStr!=null){
-//            moduleIds =  Arrays.stream(moduleIdStr.split(",")).map(Integer::valueOf).collect(Collectors.toList());
-//        }
         //为空则同步所有模块
         if ( moduleIds.stream().count() == 0) {
             moduleIds = Arrays.stream(ClassificationTypeEnum.values()).map(e -> e.getValue()).collect(Collectors.toList());
