@@ -640,7 +640,7 @@ public class EntityServiceImpl implements EntityService {
         List<ModelPO> modelPOS = modelMapper.selectList(null);
 
         for (EntityPO entity : entityPOList) {
-            ModelPO model = modelPOS.stream().filter(e -> e.getId() == entity.getId()).findFirst().orElse(null);
+            ModelPO model = modelPOS.stream().filter(e -> e.getId() == entity.getModelId()).findFirst().orElse(null);
             if (model != null) {
                 MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
                 tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + entity.getId());
