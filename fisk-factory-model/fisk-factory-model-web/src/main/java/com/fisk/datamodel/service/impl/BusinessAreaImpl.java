@@ -24,10 +24,7 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
-import com.fisk.common.service.accessAndModel.AccessAndModelTableTypeEnum;
-import com.fisk.common.service.accessAndModel.ServerTypeEnum;
+import com.fisk.common.service.accessAndModel.*;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -1628,6 +1625,60 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             log.error("获取dw主页数据量失败：" + e);
             throw new FkException(ResultEnum.MODEL_MAIN_PAGE_COUNT_ERROR);
         }
+    }
+
+    /**
+     * 获取数仓建模所有业务域和业务域下文件夹
+     *
+     * @return
+     */
+    @Override
+    public List<ModelAreaAndFolderDTO> getAllAreaAndFolder() {
+        LambdaQueryWrapper<BusinessAreaPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
+        //获取除当前业务域外的其他所有业务域
+        List<BusinessAreaPO> list = list(wrapper);
+
+        List<ModelAreaAndFolderDTO> dtos = new ArrayList<>();
+
+        //分别获取业务域下的维度和事实文件夹信息
+        for (BusinessAreaPO businessAreaPO : list) {
+            ModelAreaAndFolderDTO dto = new ModelAreaAndFolderDTO();
+            dto.setId(Math.toIntExact(businessAreaPO.getId()));
+            dto.setName(businessAreaPO.getBusinessName());
+
+            List<FolderDTO> folderDTOList = new ArrayList<>();
+
+            //获取当前业务域下的所有维度文件夹
+            LambdaQueryWrapper<DimensionFolderPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.select(DimensionFolderPO::getId, DimensionFolderPO::getDimensionFolderCnName)
+                    .eq(DimensionFolderPO::getBusinessId, businessAreaPO.getId());
+            List<DimensionFolderPO> folderPOS = dimensionFolderImpl.list(wrapper1);
+            for (DimensionFolderPO folderPO : folderPOS) {
+                FolderDTO folderDTO = new FolderDTO();
+                folderDTO.setId((int) folderPO.getId());
+                folderDTO.setName(folderPO.getDimensionFolderCnName());
+                folderDTO.setType(0);
+                folderDTOList.add(folderDTO);
+            }
+
+            //获取当前业务域下的所有事实文件夹
+            LambdaQueryWrapper<BusinessProcessPO> wrapper2 = new LambdaQueryWrapper<>();
+            wrapper2.select(BusinessProcessPO::getId, BusinessProcessPO::getBusinessProcessCnName)
+                    .eq(BusinessProcessPO::getBusinessId, businessAreaPO.getId());
+            List<BusinessProcessPO> processPOS = businessProcessImpl.list(wrapper2);
+            for (BusinessProcessPO processPO : processPOS) {
+                FolderDTO folderDTO = new FolderDTO();
+                folderDTO.setId((int) processPO.getId());
+                folderDTO.setName(processPO.getBusinessProcessCnName());
+                folderDTO.setType(1);
+                folderDTOList.add(folderDTO);
+            }
+            dto.setChildren(folderDTOList);
+            dtos.add(dto);
+        }
+
+        return dtos;
     }
 
     /**

@@ -350,6 +350,21 @@ public class KafkaConsumer {
     }
 
     /**
+     * task.build.nifi.delete
+     * 发消息删除nifi流程
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    @KafkaListener(topics = MqConstants.QueueConstants.DorisTopicConstants.BUILD_MODEL_NIFI_DELETE_FLOW, containerFactory = "batchFactory",
+            groupId = MqConstants.TopicGroupId.TASK_GROUP_ID)
+    @MQConsumerLog(type = TraceTypeEnum.DATAMODEL_DORIS_TABLE_MQ_BUILD, notificationType = 2)
+    public ResultEntity<Object> deleteNifiFlowByKafka(String dataInfo, Acknowledgment acke) {
+        return ResultEntityBuild.build(buildDataModelDorisTableListener.deleteNifiFlowByKafka(dataInfo, acke));
+    }
+
+    /**
      * task.build.mdm.flow
      *
      * @param dataInfo

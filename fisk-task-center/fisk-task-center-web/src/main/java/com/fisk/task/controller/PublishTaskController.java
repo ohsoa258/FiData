@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.dataservice.dto.tableapi.TableApiTaskDTO;
 import com.fisk.mdm.dto.accessmodel.AccessPublishDataDTO;
 import com.fisk.task.config.SwaggerConfig;
@@ -69,6 +70,7 @@ public class PublishTaskController {
                 MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW,
                 data);
     }
+
     @PostMapping("/accessMdmNifiFlow")
     @ApiOperation(value = "创建接入mdm同步数据nifi流程")
     public ResultEntity<Object> publishAccessMdmNifiFlowTask(@RequestBody BuildMdmNifiFlowDTO data) {
@@ -89,6 +91,7 @@ public class PublishTaskController {
 
     /**
      * 发布表服务
+     *
      * @param data
      * @return
      */
@@ -112,18 +115,20 @@ public class PublishTaskController {
 
     /**
      * 保存task日志
+     *
      * @param data
      * @return
      */
     @ApiOperation(value = "保存task日志")
     @PostMapping("/savePipelTaskLog")
     public ResultEntity<Object> savePipelTaskLog(@RequestBody TableApiTaskDTO data) {
-        iPipelTaskLog.savePipelTaskLog(null,null,data.getPipelTaskTraceId(),data.getMsg(),null,String.valueOf(data.getApiId()),data.getTableType());
+        iPipelTaskLog.savePipelTaskLog(null, null, data.getPipelTaskTraceId(), data.getMsg(), null, String.valueOf(data.getApiId()), data.getTableType());
         return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     /**
      * 发布表服务
+     *
      * @param data
      * @return
      */
@@ -300,6 +305,21 @@ public class PublishTaskController {
                 MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
                 MqConstants.QueueConstants.DorisTopicConstants.BUILD_DORIS_AGGREGATE_FLOW,
                 modelPublishDataDTO);
+    }
+
+    /**
+     * 发消息删除nifi流程
+     *
+     * @param dataModelVO
+     * @return
+     */
+    @PostMapping("/deleteNifiFlowByKafka")
+    @ApiOperation(value = "发消息删除nifi流程")
+    public ResultEntity<Object> deleteNifiFlowByKafka(@RequestBody DataModelVO dataModelVO) {
+        return iBuildKfkTaskService.publishTaskForDel(TaskTypeEnum.BUILD_DELETE_MODEL_TABLE_SERVER_TASK.getName(),
+                MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME,
+                MqConstants.QueueConstants.DorisTopicConstants.BUILD_MODEL_NIFI_DELETE_FLOW,
+                dataModelVO);
     }
 
     /**

@@ -105,6 +105,9 @@ public class BuildDataModelDorisTableListener
     private TBETLIncrementalMapper incrementalMapper;
     @Resource
     public UserClient userClient;
+    @Resource
+    INiFiHelper iNiFiHelper;
+
     @Value("${fiData-data-dw-source}")
     public String dataSourceDwId;
     public String appParentGroupId;
@@ -592,6 +595,19 @@ public class BuildDataModelDorisTableListener
         } finally {
             acke.acknowledge();
         }
+    }
+
+    /**
+     * 发消息删除nifi流程
+     *
+     * @param dataInfo
+     * @param acke
+     * @return
+     */
+    public ResultEnum deleteNifiFlowByKafka(String dataInfo, Acknowledgment acke) {
+        log.info("dw发消息删除nifi流程:" + dataInfo);
+        DataModelVO dataModelVO = JSON.parseObject(dataInfo, DataModelVO.class);
+        return iNiFiHelper.deleteNifiFlow(dataModelVO);
     }
 
     public String createStoredProcedure3(ModelPublishTableDTO modelPublishTableDTO) {

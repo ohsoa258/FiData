@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.*;
+import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IDimension;
 import io.swagger.annotations.Api;
@@ -108,6 +109,18 @@ public class DimensionController {
     @GetMapping("/getDimensionTree")
     public List<DimensionTreeDTO> getDimensionTree() {
         return service.getDimensionTree();
+    }
+
+    /**
+     * 维度表跨业务域移动
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("维度表跨业务域移动")
+    @PutMapping("/transDimToBArea")
+    public ResultEntity<Object> transDimToBArea(@RequestBody DimTransDTO dto) {
+        return service.transDimToBArea(dto);
     }
 
 

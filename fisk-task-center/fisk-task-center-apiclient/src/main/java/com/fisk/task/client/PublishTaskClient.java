@@ -177,6 +177,15 @@ public interface PublishTaskClient {
     @PostMapping("/nifi/deleteNifiFlow")
     public ResultEntity<Object> deleteNifiFlow(@RequestBody DataModelVO dataModelVO);
 
+    /**
+     * 删除nifi流程
+     *
+     * @param dataModelVO
+     * @return
+     */
+    @PostMapping("/publishTask/deleteNifiFlowByKafka")
+    ResultEntity<Object> deleteNifiFlowByKafka(@RequestBody DataModelVO dataModelVO);
+
 
     /**
      * getTableNifiSetting

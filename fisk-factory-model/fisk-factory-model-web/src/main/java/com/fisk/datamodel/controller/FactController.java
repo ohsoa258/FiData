@@ -7,6 +7,7 @@ import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IFact;
@@ -99,6 +100,18 @@ public class FactController {
     @GetMapping("/getFactTree")
     public List<FactTreeDTO> getFactTree() {
         return service.getFactTree();
+    }
+
+    /**
+     * 事实表跨业务域移动
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("事实表跨业务域移动")
+    @PutMapping("/transFactToBArea")
+    public ResultEntity<Object> transFactToBArea(@RequestBody FactTransDTO dto) {
+        return service.transFactToBArea(dto);
     }
 
 }
