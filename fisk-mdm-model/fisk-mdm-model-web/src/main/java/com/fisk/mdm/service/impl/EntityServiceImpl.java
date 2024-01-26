@@ -640,7 +640,7 @@ public class EntityServiceImpl implements EntityService {
         List<ModelPO> modelPOS = modelMapper.selectList(null);
 
         for (EntityPO entity : entityPOList) {
-            ModelPO model = modelPOS.stream().filter(e -> e.getId() == entity.getId()).findFirst().orElse(null);
+            ModelPO model = modelPOS.stream().filter(e -> e.getId() == entity.getModelId()).findFirst().orElse(null);
             if (model != null) {
                 MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
                 tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + entity.getId());
@@ -650,6 +650,7 @@ public class EntityServiceImpl implements EntityService {
                 tableAttributeDTO.setComment(String.valueOf(model.getId()));
                 tableAttributeDTO.setAppName(model.getDisplayName());
                 tableAttributeDTO.setAppId((int) model.getId());
+                tableAttributeDTO.setOwner(entity.createUser);
                 //获取实体下的属性
                 List<AttributePO> attributePOList = attributeService.getAttributeByEntityId((int) entity.getId());
                 List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();
@@ -660,7 +661,9 @@ public class EntityServiceImpl implements EntityService {
                     metaDataColumnAttributeDTO.setDisplayName(attribute.getDisplayName());
                     metaDataColumnAttributeDTO.setDataType(attribute.getDataType().getName());
                     metaDataColumnAttributeDTO.setLength(String.valueOf(attribute.getDataTypeLength()));
+                    metaDataColumnAttributeDTO.setOwner(entity.createUser);
                     metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
+
                 }
                 tableAttributeDTO.setColumnList(metaDataColumnAttributeDTOList);
                 tableAttributeDTOList.add(tableAttributeDTO);
