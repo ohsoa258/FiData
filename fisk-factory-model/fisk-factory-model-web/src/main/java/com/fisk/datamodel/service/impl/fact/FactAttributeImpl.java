@@ -19,6 +19,7 @@ import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
@@ -98,6 +99,8 @@ public class FactAttributeImpl
     CustomScriptImpl customScript;
     @Resource
     SystemVariablesImpl systemVariables;
+    @Resource
+    private FactImpl fact;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId) {
@@ -112,6 +115,10 @@ public class FactAttributeImpl
         if (factPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //查询sql保存改为最后一步才保存
+        factPo.setSqlScript(dto.sqlScript);
+        factPo.setDataSourceId(dto.dataSourceId);
 
         //系统变量
         if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {

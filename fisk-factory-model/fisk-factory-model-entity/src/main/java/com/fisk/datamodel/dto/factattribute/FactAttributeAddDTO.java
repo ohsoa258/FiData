@@ -72,4 +72,10 @@ public class FactAttributeAddDTO {
      */
     @ApiModelProperty(value = "接入的增量时间参数")
     public Integer dorisIfOpenStrictMode;
+
+    @ApiModelProperty(value = "数据源Id")
+    public Integer dataSourceId;
+
+    @ApiModelProperty(value = "sql脚本")
+    public String sqlScript;
 }

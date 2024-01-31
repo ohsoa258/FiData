@@ -81,4 +81,10 @@ public class DimensionAttributeAddDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "接入的增量时间参数")
     public Integer dorisIfOpenStrictMode;
+
+    @ApiModelProperty(value = "数据源Id")
+    public Integer dataSourceId;
+
+    @ApiModelProperty(value = "查询sql脚本")
+    public String sqlScript;
 }
