@@ -15,5 +15,5 @@ public class StandardsMenuDataDTO {
     @ApiModelProperty(value = "标签名称")
     private String MenuName;
     @ApiModelProperty(value = "详情名称")
-    private StandardsDTO standard;
+    private StandardsExportDTO standard;
 }

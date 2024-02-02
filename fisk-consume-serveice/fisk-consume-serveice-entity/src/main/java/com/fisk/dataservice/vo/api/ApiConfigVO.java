@@ -154,4 +154,16 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "有效期类型")
     private Integer expirationType;
+
+    /**
+     * menuId
+     */
+    @ApiModelProperty(value = "menuId")
+    private Integer menuId;
+
+    /**
+     * menuId
+     */
+    @ApiModelProperty(value = "apiMenuId")
+    private Integer apiMenuId;
 }

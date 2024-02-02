@@ -132,5 +132,18 @@ public class ApiConfigDTO
     /**
      * 有效期类型 1:永久有效 2:有效期至（yyyy-MM-dd HH:mm:ss）
      */
+    @ApiModelProperty(value = "有效期类型 1:永久有效 2:有效期至（yyyy-MM-dd HH:mm:ss）")
     private Integer expirationType;
+
+    /**
+     * api父级菜单id
+     */
+    @ApiModelProperty(value = "api父级菜单id")
+    private Integer menuId;
+
+    /**
+     * api菜单id
+     */
+    @ApiModelProperty(value = "api菜单id")
+    private Integer apiMenuId;
 }

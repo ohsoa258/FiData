@@ -354,6 +354,8 @@ public enum ResultEnum {
     LOAD_FIDATA_DATA_SERVICE_DATA_ERROR(10045, "加载DataServiceData报错"),
     DS_APISERVICE__EXPIRATION(10046,"api已过期"),
 
+    DS_APISERVICE_MENUID_NOT_EXIST(10047,"数据menuId未填写"),
+
     /**
      * 数据质量
      */

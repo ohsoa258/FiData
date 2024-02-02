@@ -5,9 +5,13 @@ import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
+import com.fisk.datamanagement.dto.standards.StandardsSortDTO;
+import com.fisk.datamanagement.dto.standards.StandardsTreeDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
+import com.fisk.dataservice.service.IApiMenuConfigService;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
@@ -34,6 +38,9 @@ import java.util.List;
 public class ApiRegisterController {
     @Resource
     private IApiRegisterManageService service;
+
+    @Resource
+    private IApiMenuConfigService apiMenuConfigService;
 
     @ApiOperation("分页查询所有api")
     @PostMapping("/page")
@@ -129,5 +136,29 @@ public class ApiRegisterController {
     @GetMapping("/getTopFrequency")
     public ResultEntity<List<TopFrequencyVO>> getTopFrequency() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getTopFrequency());
+    }
+
+    @ApiOperation("查看api树形标签")
+    @GetMapping("/getApiTree")
+    public ResultEntity<List<ApiTreeDTO>> getApiTree(@RequestParam("serverType") Integer serverType) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiMenuConfigService.getApiTree(serverType));
+    }
+
+    @ApiOperation("添加或修改Api标签")
+    @PostMapping("/addorUpdateApiMenu")
+    public ResultEntity<Object> addorUpdateApiMenu(@RequestBody ApiMenuDTO dto) {
+        return ResultEntityBuild.build(apiMenuConfigService.addorUpdateApiMenu(dto));
+    }
+
+    @ApiOperation("删除api标签")
+    @PostMapping("/delApiMenu")
+    public ResultEntity<Object> delApiMenu(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(apiMenuConfigService.delApiMenu(ids));
+    }
+
+    @ApiOperation("api排序更新")
+    @PostMapping("/apiSort")
+    public ResultEntity<Object> apiSort(@RequestBody ApiSortDTO dto) {
+        return ResultEntityBuild.build(apiMenuConfigService.apiSort(dto));
     }
 }

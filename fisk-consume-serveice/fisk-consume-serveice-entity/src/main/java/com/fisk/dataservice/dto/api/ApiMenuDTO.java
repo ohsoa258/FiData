@@ -1,16 +1,15 @@
-package com.fisk.datamanagement.dto.standards;
+package com.fisk.dataservice.dto.api;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
  * @Author: wangjian
- * @Date: 2023-11-20
+ * @Date: 2024-01-26
  * @Description:
  */
 @Data
-public class StandardsMenuDTO {
-
+public class ApiMenuDTO {
     @ApiModelProperty(value = "")
     private Integer id;
 
@@ -22,6 +21,9 @@ public class StandardsMenuDTO {
 
     @ApiModelProperty(value = "类型:1:目录 2:数据")
     private Integer type;
+
+    @ApiModelProperty(value = "服务类型：1.本地服务 2.代理服务")
+    private Integer serverType;
 
     @ApiModelProperty(value = "排序")
     private Integer sort;

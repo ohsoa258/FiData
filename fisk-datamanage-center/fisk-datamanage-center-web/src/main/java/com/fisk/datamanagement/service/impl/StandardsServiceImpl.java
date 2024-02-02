@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.NifiConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -18,14 +19,19 @@ import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
+import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.standards.*;
+import com.fisk.datamanagement.entity.CodeSetPO;
 import com.fisk.datamanagement.entity.StandardsBeCitedPO;
 import com.fisk.datamanagement.entity.StandardsMenuPO;
 import com.fisk.datamanagement.entity.StandardsPO;
+import com.fisk.datamanagement.enums.ValueRangeTypeEnum;
+import com.fisk.datamanagement.map.CodeSetMap;
 import com.fisk.datamanagement.map.StandardsBeCitedMap;
 import com.fisk.datamanagement.map.StandardsMap;
 import com.fisk.datamanagement.mapper.StandardsMapper;
+import com.fisk.datamanagement.service.ICodeSetService;
 import com.fisk.datamanagement.service.StandardsBeCitedService;
 import com.fisk.datamanagement.service.StandardsMenuService;
 import com.fisk.datamanagement.service.StandardsService;
@@ -41,6 +47,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -58,19 +65,48 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Resource
     UserClient userClient;
 
+    @Resource
+    ICodeSetService dataSetService;
+
     @Override
     public StandardsDTO getStandards(int id) {
         LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
         queryStandards.eq(StandardsPO::getMenuId,id);
         StandardsPO standardsPO = this.getOne(queryStandards);
         if (standardsPO == null){
-            return null;
+            throw new FkException(ResultEnum.DATA_EXISTS);
         }
         LambdaQueryWrapper<StandardsBeCitedPO> queryBeCited = new LambdaQueryWrapper<>();
         queryBeCited.eq(StandardsBeCitedPO::getStandardsId,standardsPO.getId());
         List<StandardsBeCitedPO> standardsBeCitedPOList = standardsBeCitedService.list(queryBeCited);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsBeCitedPOList.stream().map(StandardsBeCitedMap.INSTANCES::poToDTO).collect(Collectors.toList());
         StandardsDTO standardsDTO = StandardsMap.INSTANCES.poToDTO(standardsPO);
+
+        //处理值域范围回显
+        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+            String DataSetIds = standardsPO.getValueRange();
+            List<Long> ids = Stream.of(DataSetIds.split(","))
+                    .map(Long::valueOf)
+                    .collect(Collectors.toList());
+            //根据数据标准中存入的代码集id查询代码集内容
+            List<CodeSetPO> codeSetPOList = dataSetService.listByIds(ids);
+            if (!CollectionUtils.isEmpty(codeSetPOList)){
+                List<CodeSetDTO> codeSetDTOS = CodeSetMap.INSTANCES.poListToDTOList(codeSetPOList);
+                standardsDTO.setCodeSetDTOList(codeSetDTOS);
+                //拼接code和name
+                List<String> codeSet = new ArrayList<>();
+                for (CodeSetDTO codeSetDTO : codeSetDTOS) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(codeSetDTO.getCode()).append(".").append(codeSetDTO.getName());
+                    codeSet.add(stringBuilder.toString());
+                }
+                //每个值用空格隔开
+                String valueRange = codeSet.stream()
+                        .map(Object::toString)
+                        .collect(Collectors.joining(" "));
+                standardsDTO.setValueRange(valueRange);
+            }
+        }
         standardsDTO.setStandardsBeCitedDTOList(standardsBeCitedDTOList);
         return standardsDTO;
     }
@@ -106,6 +142,10 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         }
         //添加数据标准
         StandardsPO standardsPO = StandardsMap.INSTANCES.dtoToPo(standardsDTO);
+        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+            String ids = standardsDTO.getCodeSetDTOList().stream().map(i -> i.getId().toString()).collect(Collectors.joining(","));
+            standardsPO.setValueRange(ids);
+        }
         save(standardsPO);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
         if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)){
@@ -123,6 +163,10 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public ResultEnum updateStandards(StandardsDTO standardsDTO) {
         StandardsPO standardsPO = StandardsMap.INSTANCES.dtoToPo(standardsDTO);
+        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+            String ids = standardsDTO.getCodeSetDTOList().stream().map(i -> i.getId().toString()).collect(Collectors.joining(","));
+            standardsPO.setValueRange(ids);
+        }
         updateById(standardsPO);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
 
@@ -370,16 +414,68 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         LambdaQueryWrapper<StandardsPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(StandardsPO::getMenuId,ids);
         List<StandardsPO> standardsPOS = this.list(queryWrapper);
-        List<StandardsDTO> standardsDTOS = StandardsMap.INSTANCES.poListToDTOList(standardsPOS);
+
+        //获取本次导出需要用到的数据集内容
+        Map<Long, CodeSetPO> codeSetMap = new HashMap<>();
+        List<StandardsPO> dataSetList = standardsPOS.stream().filter(i -> i.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(dataSetList)){
+            String DataSetId = dataSetList.stream()
+                    .map(StandardsPO::getValueRange)
+                    .collect(Collectors.joining(","));
+            Set<Long> DataSetIds = Stream.of(DataSetId.split(","))
+                    .map(Long::valueOf)
+                    .collect(Collectors.toSet());
+            List<CodeSetPO> codeSetPOS = dataSetService.listByIds(DataSetIds);
+            codeSetMap = codeSetPOS.stream().collect(Collectors.toMap(BasePO::getId, i -> i));
+        }
+        Map<Long, CodeSetPO> finalCodeSetMap = codeSetMap;
+        //处理值域范围字段内容
+        standardsPOS = standardsPOS.stream().map(i->{
+            StringBuilder stringBuilder;
+            if (i.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+                if (i.getValueRange() != null){
+                    String codeSetId = i.getValueRange();
+                    List<Long> codeSetIds = Stream.of(codeSetId.split(","))
+                            .map(Long::valueOf)
+                            .collect(Collectors.toList());
+                    List<String> codeSet = new ArrayList<>();
+                    for (Long id : codeSetIds) {
+                        CodeSetPO codeSetPO = finalCodeSetMap.get(id);
+                        if (codeSetPO != null){
+                            stringBuilder = new StringBuilder();
+                            stringBuilder.append(codeSetPO.getCode()).append("-").append(codeSetPO.getName());
+                            codeSet.add(stringBuilder.toString());
+                        }
+                    }
+                    String valueRange = codeSet.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining(" "));
+                    i.setValueRange(valueRange);
+                }
+            }else if (i.getValueRangeType() == ValueRangeTypeEnum.VALUE.getValue()){
+                stringBuilder = new StringBuilder();
+                stringBuilder.append(i.getSymbols())
+                        .append(i.getValueRange());
+                i.setValueRange(stringBuilder.toString());
+            }else if (i.getValueRangeType() == ValueRangeTypeEnum.VALUE_RANGE.getValue()){
+                stringBuilder = new StringBuilder();
+                stringBuilder.append(i.getValueRange())
+                        .append("~")
+                        .append(i.getValueRangeMax());
+                i.setValueRange(stringBuilder.toString());
+            }
+            return i;
+        }).collect(Collectors.toList());
+        List<StandardsExportDTO> standardsExportDTOS = StandardsMap.INSTANCES.poListToExportDTOList(standardsPOS);
         //查询关联数据元表数据
-        List<Integer> standardsIds = standardsDTOS.stream().map(StandardsDTO::getId).collect(Collectors.toList());
+        List<Integer> standardsIds = standardsExportDTOS.stream().map(StandardsExportDTO::getId).collect(Collectors.toList());
         LambdaQueryWrapper<StandardsBeCitedPO> queryBeCited = new LambdaQueryWrapper<>();
         queryBeCited.in(StandardsBeCitedPO::getStandardsId,standardsIds);
         List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedService.list(queryBeCited);
         List<StandardsBeCitedDTO> standardsBeCitedDTOS = StandardsBeCitedMap.INSTANCES.poListToDTOList(standardsBeCitedPOS);
         Map<Integer, List<StandardsBeCitedDTO>> standardsBeCitedMap = standardsBeCitedDTOS.stream().collect(groupingBy(StandardsBeCitedDTO::getStandardsId));
         //组装数据标准
-        standardsDTOS = standardsDTOS.stream().map(i->{
+        standardsExportDTOS = standardsExportDTOS.stream().map(i->{
             List<StandardsBeCitedDTO> list = standardsBeCitedMap.get(i.getId());
             if (!CollectionUtils.isEmpty(list)){
                 i.setStandardsBeCitedDTOList(list);
@@ -387,9 +483,9 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             }
             return i;
         }).collect(Collectors.toList());
-        Map<Integer, List<StandardsDTO>> standardsMap = standardsDTOS.stream().collect(groupingBy(StandardsDTO::getMenuId));
+        Map<Integer, List<StandardsExportDTO>> standardsMap = standardsExportDTOS.stream().collect(groupingBy(StandardsExportDTO::getMenuId));
         standardsMenuDataDTOS = standardsMenuDataDTOS.stream().map(i -> {
-            List<StandardsDTO> standardsDTOS1 = standardsMap.get(i.getId());
+            List<StandardsExportDTO> standardsDTOS1 = standardsMap.get(i.getId());
             if (!CollectionUtils.isEmpty(standardsDTOS1)) {
                 i.setStandard(standardsDTOS1.get(0));
             }
