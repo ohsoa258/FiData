@@ -116,6 +116,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
             jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
             jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
+            jsonObject1.put("sourceSystem",list.get(i).getSourceSystem());
             jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
             jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
             jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
@@ -167,6 +168,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
                 jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
                 jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
+                jsonObject1.put("sourceSystem",list.get(i).getSourceSystem());
                 jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
                 jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
                 jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
