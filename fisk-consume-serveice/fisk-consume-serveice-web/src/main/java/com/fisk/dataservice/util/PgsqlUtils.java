@@ -331,7 +331,7 @@ public class PgsqlUtils {
             apiSqlResultDto.setMsg("失败");
             apiSqlResultDto.setCount(0);
             list.add(apiSqlResultDto);
-            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, JSON.toJSONString(list));
         } finally {
             AbstractCommonDbHelper.closeStatement(statement);
             AbstractCommonDbHelper.closeConnection(con);
@@ -444,7 +444,7 @@ public class PgsqlUtils {
             apiSqlResultDto.setMsg("失败");
             apiSqlResultDto.setCount(0);
             list.add(apiSqlResultDto);
-            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, list);
+            return ResultEntityBuild.build(ResultEnum.PUSH_DATA_SQL_ERROR, JSON.toJSONString(list));
         } finally {
             AbstractCommonDbHelper.closeStatement(statement);
             AbstractCommonDbHelper.closeConnection(con);
