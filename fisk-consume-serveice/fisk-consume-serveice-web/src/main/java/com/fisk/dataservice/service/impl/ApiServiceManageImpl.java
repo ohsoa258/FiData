@@ -215,9 +215,12 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             // 第七步：获取请求参数中的分页信息
             Integer current = dto.getCurrent();
             Integer size = dto.getSize();
-            if (current == null && size == null) {
-                // 未设置分页参数，默认查询第一页，查询数字的最大值
+
+            // 未设置分页参数，默认查询第一页，查询数字的最大值
+            if (current == null) {
                 current = 1;
+            }
+            if (size == null || size > 1000) {
                 size = 1000;
             }
 
