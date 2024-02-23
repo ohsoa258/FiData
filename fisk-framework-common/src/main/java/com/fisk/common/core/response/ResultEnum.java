@@ -498,7 +498,10 @@ public enum ResultEnum {
     LICENCE_EXPIRED(160002, "licence已过期"),
     CUSTOMER_ALREADY_EXISTS(160003, "客户已存在"),
     CUSTOMER_NOT_EXISTS(160004, "客户不存在"),
-
+    NAME_IS_NULL(160005,"属性名称为空"),
+    ENGLISHNAME_IS_NULL(160006,"属性英文名称为空"),
+    FIELDTYPE_IS_NULL(160007,"字段类型为空"),
+    DATAMETACODE_IS_NULL(160008,"数据元编号为空"),
 
     /**
      * 数据库类型 dmp_ods

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.entity.StandardsPO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -62,5 +63,7 @@ public interface StandardsService extends IService<StandardsPO> {
     Page<StandardsMenuDTO> standardsQuery(StandardsQueryDTO dto);
 
     List<StandardsDTO> getStandardsBySource(Integer fieldMetadataId);
+
+    ResultEnum importExcelStandards(long menuId,MultipartFile file);
 }
 

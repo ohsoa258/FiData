@@ -1,5 +1,7 @@
 package com.fisk.datamanagement.service.impl;
 
+import cn.afterturn.easypoi.excel.ExcelImportUtil;
+import cn.afterturn.easypoi.excel.entity.ImportParams;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
@@ -27,6 +29,7 @@ import com.fisk.datamanagement.entity.StandardsBeCitedPO;
 import com.fisk.datamanagement.entity.StandardsMenuPO;
 import com.fisk.datamanagement.entity.StandardsPO;
 import com.fisk.datamanagement.enums.ValueRangeTypeEnum;
+import com.fisk.datamanagement.excelentity.StandardsExcel;
 import com.fisk.datamanagement.map.CodeSetMap;
 import com.fisk.datamanagement.map.StandardsBeCitedMap;
 import com.fisk.datamanagement.map.StandardsMap;
@@ -41,9 +44,11 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -641,6 +646,59 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         dto.setTableName(dbTableFiledNameDto.getTableName());
         dto.setDatabaseName(dbTableFiledNameDto.getDatabaseName());
         return this.baseMapper.getStandardsBySource(dto);
+    }
+
+    @Override
+    public ResultEnum importExcelStandards(long menuId,MultipartFile file) {
+        String excelName = file.getOriginalFilename();
+        if (!excelName.contains(".xlsx")) {
+            throw new FkException(ResultEnum.FILE_NAME_ERROR);
+        }
+        ImportParams params = new ImportParams();
+        //表格标题所占据的行数,默认0，代表没有标题
+        params.setTitleRows(1);
+        //表头所占据的行数行数,默认1，代表标题占据一行
+        params.setHeadRows(1);
+        try {
+            List<StandardsExcel> StandardsList = ExcelImportUtil.importExcel(file.getInputStream(), StandardsExcel.class, params);
+            checkData(StandardsList);
+            for (StandardsExcel standardsExcel : StandardsList) {
+                StandardsDTO standardsDTO = new StandardsDTO();
+                standardsDTO.setMenuId((int)menuId);
+                standardsDTO.setChineseName(standardsExcel.getName());
+                standardsDTO.setEnglishName(standardsExcel.getEnglishName());
+                standardsDTO.setDescription(standardsExcel.getDescription());
+                standardsDTO.setDatametaCode(standardsExcel.getDatametaCode());
+                standardsDTO.setFieldType(standardsExcel.getFieldType());
+                standardsDTO.setQualityRule(standardsExcel.getQualityRule());
+                standardsDTO.setSymbols("=");
+                standardsDTO.setValueRange("0");
+                standardsDTO.setValueRangeType(ValueRangeTypeEnum.VALUE);
+                addStandards(standardsDTO);
+            }
+        } catch (FkException fk){
+            throw new FkException(fk.getResultEnum());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    public void checkData(List<StandardsExcel> StandardsList){
+        for (StandardsExcel standardsExcel : StandardsList) {
+            if (standardsExcel.getName() == null){
+                throw new FkException(ResultEnum.NAME_IS_NULL);
+            }
+            if (standardsExcel.getEnglishName() == null){
+                throw new FkException(ResultEnum.ENGLISHNAME_IS_NULL);
+            }
+            if (standardsExcel.getFieldType() == null){
+                throw new FkException(ResultEnum.FIELDTYPE_IS_NULL);
+            }
+            if (standardsExcel.getDatametaCode() == null){
+                throw new FkException(ResultEnum.DATAMETACODE_IS_NULL);
+            }
+        }
     }
 
     /**

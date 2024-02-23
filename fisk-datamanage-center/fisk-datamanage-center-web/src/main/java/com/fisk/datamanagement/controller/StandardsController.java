@@ -8,9 +8,11 @@ import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.service.StandardsMenuService;
 import com.fisk.datamanagement.service.StandardsService;
+import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -113,5 +115,11 @@ public class StandardsController {
     public ResultEntity<List<StandardsDTO>> getStandardsBySource(Integer fieldMetadataId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardsBySource(fieldMetadataId));
     }
-
+    @ApiOperation("数据元导入基本属性")
+    @PostMapping("/importExcelStandards")
+    @ResponseBody
+    @ControllerAOPConfig(printParams = false)
+    public ResultEntity<Object> importExcelStandards(long menuId, @RequestParam("file") MultipartFile file){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.importExcelStandards(menuId,file));
+    }
 }
