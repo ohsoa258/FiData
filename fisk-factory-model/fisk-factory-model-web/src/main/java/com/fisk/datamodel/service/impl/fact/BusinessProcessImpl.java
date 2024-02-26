@@ -290,7 +290,7 @@ public class BusinessProcessImpl
                 pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.END_TIME.getValue());
                 // @start_time @end_time 想生效，这里不能用替换后的sql,而是使用原始sql,然后发布时在task模块替换@start_time 和 @end_time
                 //pushDto.queryEndTime = data1.get(SystemVariableTypeEnum.QUERY_SQL.getValue());
-                pushDto.sqlScript = data1.get(item.sqlScript);
+                pushDto.sqlScript = item.sqlScript;
                 pushDto.queryStartTime = data1.get(SystemVariableTypeEnum.START_TIME.getValue());
 
                 //获取维度键update语句  数仓建模，关联外键的sql在这里传递
