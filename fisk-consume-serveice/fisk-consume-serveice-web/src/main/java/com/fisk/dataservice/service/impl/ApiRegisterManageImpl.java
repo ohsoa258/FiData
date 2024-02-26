@@ -413,7 +413,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         int apiId;
         // 第一步：保存api信息
         ApiConfigPO apiConfigPO = ApiRegisterMap.INSTANCES.dtoToPo(dto.apiDTO);
-
+        if (apiConfigPO.getEnableCache() == 1){
+            Integer cacheTime = apiConfigPO.getCacheTime();
+            if (cacheTime == null || cacheTime < 5 || cacheTime > 300){
+                return ResultEnum.DATA_SERVER_CACHE_TIME_ERROR;
+            }
+        }
         ApiMenuConfigPO apiMenuConfigPO = new ApiMenuConfigPO();
         Integer menuId = dto.apiDTO.getMenuId();
         if (menuId == null){
@@ -509,7 +514,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (model == null) {
             return ResultEnum.DS_API_EXISTS;
         }
-
+        if (model.getEnableCache() == 1){
+            Integer cacheTime = model.getCacheTime();
+            if (cacheTime == null || cacheTime < 5 || cacheTime > 300){
+                return ResultEnum.DATA_SERVER_CACHE_TIME_ERROR;
+            }
+        }
         if (model.getCreateApiType() != 3) {
             DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
             if (dataSourceConPO == null)

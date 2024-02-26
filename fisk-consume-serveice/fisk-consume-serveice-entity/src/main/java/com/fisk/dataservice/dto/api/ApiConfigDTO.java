@@ -146,4 +146,14 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "api菜单id")
     private Integer apiMenuId;
+
+    /**
+     * 是否开启缓存 0否，1是
+     */
+    private int enableCache;
+
+    /**
+     * 缓存时间(秒)
+     */
+    private Integer cacheTime;
 }

@@ -35,6 +35,7 @@ import com.fisk.dataservice.enums.LogLevelTypeEnum;
 import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
+import com.fisk.dataservice.redisdata.RedisData;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.api.ApiProxyMsgVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
@@ -140,6 +141,22 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         Statement st = null;
         Connection conn = null;
 
+        //有缓存则直接返回并记录日志
+        RedisKeyEnum.DATA_SERVER_API_DATA.getName();
+        String parmKey = null;
+        if (CollectionUtils.isNotEmpty(dto.parmList)){
+            parmKey = dto.parmList.entrySet().stream()
+                    .map(entry -> entry.getKey() + "_" + entry.getValue())
+                    .collect(Collectors.joining("_"));
+        }
+        String redisKey = RedisKeyEnum.DATA_SERVER_API_DATA.getName()+":"+dto.apiCode+"_"+parmKey+"_"+dto.current+"_"+dto.size;
+        if (redisUtil.hasKey(redisKey)){
+            RedisData redisData = (RedisData) redisUtil.get(redisKey);
+            logPO = redisData.logPO;
+            logPO.setLogInfo("(本次查询为缓存数据)");
+            responseVO = redisData.getResponseVO();
+            return ResultEntityBuild.buildData(resultEnum, responseVO);
+        }
         try {
             // 开始记录日志
             logPO.setRequestStartDate(DateTimeUtils.getNow());
@@ -373,6 +390,13 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             logPO.setResponseStatus(HttpStatus.OK.getReasonPhrase());
             logPO.setNumber(totalCount);
             logPO.setImportantInterface(apiInfo.getImportantInterface());
+            if (apiInfo.getEnableCache() == 1){
+                //缓存本次查询至redis
+                RedisData redisData = new RedisData();
+                redisData.setResponseVO(responseVO);
+                redisData.setLogPO(logPO);
+                redisUtil.set(redisKey,redisData,apiInfo.getCacheTime());
+            }
         } catch (Exception e) {
             logPO.setLogLevel(LogLevelTypeEnum.ERROR.getName());
             logPO.setLogInfo(e.toString());

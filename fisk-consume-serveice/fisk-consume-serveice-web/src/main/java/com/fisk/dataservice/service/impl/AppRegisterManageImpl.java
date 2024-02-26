@@ -368,6 +368,7 @@ public class AppRegisterManageImpl
             }
             log.info("数据服务【appSubscribe】执行元数据同步结束");
         } catch (Exception ex) {
+            log.info(ex.toString());
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         return ResultEnum.SUCCESS;

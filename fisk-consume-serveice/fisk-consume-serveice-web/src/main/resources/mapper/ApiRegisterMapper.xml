@@ -24,7 +24,9 @@
         api.expiration_time,
         api.expiration_type,
         api.menu_id,
-        api.api_menu_id
+        api.api_menu_id,
+        api.enable_cache,
+        api.cache_time
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
