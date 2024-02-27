@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.ModelAreaAndFolderDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -191,6 +192,17 @@ public class BusinessAreaController {
     @GetMapping("/getAllAreaAndTables")
     public ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTables() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndTables());
+    }
+
+    /**
+     * 获取数仓建模所有业务域和业务域下文件夹
+     *
+     * @return
+     */
+    @ApiOperation("获取数仓建模所有业务域和业务域下文件夹")
+    @GetMapping("/getAllAreaAndFolder")
+    public ResultEntity<List<ModelAreaAndFolderDTO>> getAllAreaAndFolder() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndFolder());
     }
 
 }

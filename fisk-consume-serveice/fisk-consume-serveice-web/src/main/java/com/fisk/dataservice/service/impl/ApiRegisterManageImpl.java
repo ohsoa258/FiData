@@ -3,6 +3,7 @@ package com.fisk.dataservice.service.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -111,6 +112,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Value("${open-metadata}")
     private Boolean openMetadata;
+
+    @Resource
+    private ApiMenuConfigServiceImpl apiMenuConfigService;
 
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
@@ -404,10 +408,39 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(ApiRegisterDTO dto) {
+
         boolean isInsert = false;
         int apiId;
         // 第一步：保存api信息
         ApiConfigPO apiConfigPO = ApiRegisterMap.INSTANCES.dtoToPo(dto.apiDTO);
+        if (apiConfigPO.getEnableCache() == 1){
+            Integer cacheTime = apiConfigPO.getCacheTime();
+            if (cacheTime == null || cacheTime < 5 || cacheTime > 300){
+                return ResultEnum.DATA_SERVER_CACHE_TIME_ERROR;
+            }
+        }
+        ApiMenuConfigPO apiMenuConfigPO = new ApiMenuConfigPO();
+        Integer menuId = dto.apiDTO.getMenuId();
+        if (menuId == null){
+            return ResultEnum.DS_APISERVICE_MENUID_NOT_EXIST;
+        }
+        //查询排序添加位置
+        LambdaQueryWrapper<ApiMenuConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ApiMenuConfigPO::getPid,menuId);
+        queryWrapper.orderByDesc(ApiMenuConfigPO::getSort);
+        queryWrapper.last("LIMIT 1");
+        ApiMenuConfigPO tragetMenu = apiMenuConfigService.getOne(queryWrapper);
+        if (tragetMenu != null){
+            apiMenuConfigPO.setSort(tragetMenu.getSort()+1);
+        }else {
+            apiMenuConfigPO.setSort(1);
+        }
+        apiMenuConfigPO.setPid(menuId);
+        apiMenuConfigPO.setType(2);
+        apiMenuConfigPO.setServerType(dto.apiDTO.createApiType);
+        apiMenuConfigPO.setName(apiConfigPO.getApiName());
+        apiMenuConfigService.save(apiMenuConfigPO);
+
         if (apiConfigPO == null)
             return ResultEnum.SAVE_DATA_ERROR;
         if (apiConfigPO.getCreateApiType() != 3) {
@@ -420,11 +453,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         apiConfigPO.setCreateTime(LocalDateTime.now());
         Long userId = userHelper.getLoginUserInfo().getId();
         apiConfigPO.setCreateUser(userId.toString());
+        apiConfigPO.setApiMenuId((int)apiMenuConfigPO.getId());
         isInsert = baseMapper.insertOne(apiConfigPO) > 0;
         if (!isInsert)
             return ResultEnum.SAVE_DATA_ERROR;
         apiId = (int) apiConfigPO.getId();
-
         // API代理只需要保存API的基本信息
         if (apiConfigPO.getCreateApiType() == 3) {
             return ResultEnum.SUCCESS;
@@ -481,7 +514,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (model == null) {
             return ResultEnum.DS_API_EXISTS;
         }
-
+        if (model.getEnableCache() == 1){
+            Integer cacheTime = model.getCacheTime();
+            if (cacheTime == null || cacheTime < 5 || cacheTime > 300){
+                return ResultEnum.DATA_SERVER_CACHE_TIME_ERROR;
+            }
+        }
         if (model.getCreateApiType() != 3) {
             DataSourceConPO dataSourceConPO = dataSourceConMapper.selectById(dto.apiDTO.getDatasourceId());
             if (dataSourceConPO == null)
@@ -552,6 +590,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             if (!isUpdate)
                 return ResultEnum.SAVE_DATA_ERROR;
         }
+        ApiMenuConfigPO apiMenuConfigPO = apiMenuConfigService.getById(apiConfigPO.getMenuId());
+        apiMenuConfigPO.setName(apiConfigPO.getApiName());
+        apiMenuConfigService.updateById(apiMenuConfigPO);
         return ResultEnum.SUCCESS;
     }
 
@@ -572,6 +613,8 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         boolean isUpdate = false;
         // 第一步：编辑保存api信息部分信息
         model.setApiDesc(dto.getApiDesc());
+        model.setExpirationType(dto.getExpirationType());
+        model.setExpirationTime(dto.getExpirationTime());
         isUpdate = baseMapper.updateById(model) > 0;
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;

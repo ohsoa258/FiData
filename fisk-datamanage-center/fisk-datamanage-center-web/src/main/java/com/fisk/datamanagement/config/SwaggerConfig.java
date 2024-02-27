@@ -60,6 +60,8 @@ public class SwaggerConfig {
 
     public static final String STANDARDS = "数据标准";
 
+    public static final String CODESET = "代码集";
+
 
     @Bean
     public Docket createRestApi() {
@@ -91,6 +93,7 @@ public class SwaggerConfig {
                 .tags(new Tag(EXPORT_TEMPLATE, "元数据导出模板"))
                 .tags(new Tag(STANDARDS,"数据标准"))
                 .tags(new Tag(BUSINESS_Category, "指标数据对象"))
+                .tags(new Tag(CODESET,"代码集"))
                 .securityContexts(securityContexts());
     }
 

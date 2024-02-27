@@ -39,4 +39,6 @@ public class ModelPublishDataDTO extends MQBaseDTO {
      */
     @ApiModelProperty(value = "dim表 or fact表")
     public DataModelTblTypeEnum dimOrFact;
+
+
 }

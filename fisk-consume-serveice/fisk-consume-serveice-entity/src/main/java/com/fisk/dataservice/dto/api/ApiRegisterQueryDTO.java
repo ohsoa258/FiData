@@ -29,6 +29,11 @@ public class ApiRegisterQueryDTO {
      */
     @ApiModelProperty(value = "参数类型 1:api信息 2:参数信息")
     public Integer apiParamType;
+    /**
+     * menuId
+     */
+    @ApiModelProperty(value = "menuId")
+    public Integer menuId;
 
     /**
      * 分页对象

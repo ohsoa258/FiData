@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.ModelAreaAndFolderDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -234,4 +235,11 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     DataModelCountVO mainPageCount(Integer areaId);
+
+    /**
+     * 获取数仓建模所有业务域和业务域下文件夹
+     *
+     * @return
+     */
+    List<ModelAreaAndFolderDTO> getAllAreaAndFolder();
 }

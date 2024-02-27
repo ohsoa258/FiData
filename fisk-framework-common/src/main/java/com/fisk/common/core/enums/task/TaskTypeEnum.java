@@ -101,7 +101,8 @@ public enum TaskTypeEnum implements BaseEnum {
 
     BUILD_SERVER_DATA_SERVICE_API_TASK(25,"删除数据分发API服务nifi流程"),
     BUILD_DELETE_TABLE_SERVER_FLOW(26,"删除MDM主数据nifi流程"),
-    BACKGROUND_DELETE_TABLE_TASK_CREATION(27, "mdm删除后台表生成任务");
+    BACKGROUND_DELETE_TABLE_TASK_CREATION(27, "mdm删除后台表生成任务"),
+    BUILD_DELETE_MODEL_TABLE_SERVER_TASK(28, "数仓建模删除nifi流程"),;
 
     TaskTypeEnum(int value, String name) {
         this.value = value;

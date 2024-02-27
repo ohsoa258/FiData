@@ -2,6 +2,7 @@ package com.fisk.dataservice.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -105,4 +106,25 @@ public class ApiConfigPO extends BasePO
      * 有效期类型 1:永久有效 2:有效期至（yyyy-MM-dd HH:mm:ss）
      */
     private Integer expirationType;
+
+    /**
+     * 父级菜单id
+     */
+    private Integer menuId;
+
+    /**
+     * api菜单id
+     */
+    private Integer apiMenuId;
+
+
+    /**
+     * 是否开启缓存 0否，1是
+     */
+    private int enableCache;
+
+    /**
+     * 缓存时间(秒)
+     */
+    private Integer cacheTime;
 }

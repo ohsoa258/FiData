@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.annotation.JSONPOJOBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
@@ -28,6 +29,7 @@ import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.BusinessTargetinfoService;
+import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -36,9 +38,7 @@ import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -116,6 +116,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
             jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
             jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
+            jsonObject1.put("sourceSystem",list.get(i).getSourceSystem());
             jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
             jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
             jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
@@ -167,6 +168,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
                 jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
                 jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
+                jsonObject1.put("sourceSystem",list.get(i).getSourceSystem());
                 jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
                 jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
                 jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
@@ -469,11 +471,13 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             setResponseHeader(response, fileName);
             //获取输出流
             os = response.getOutputStream();
-            //内存中保留1000条数据，以免内存溢出，其余写入硬盘
-            SXSSFWorkbook wb = new SXSSFWorkbook(1000);
-            //获取该工作区的第一个sheet
-            Sheet sheet1 = wb.createSheet("sheet1");
-
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            XSSFSheet sheet = workbook.createSheet("sheet1");
+            XSSFRow row1 = sheet.createRow(0);
+            //添加表头
+            for (int i = 0; i < parentTargetinfoHeaders.length; i++) {
+                row1.createCell(i).setCellValue(parentTargetinfoHeaders[i]);
+            }
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             List<LinkedHashMap<String, Object>> data = new ArrayList<>();
             for (Map<String, Object> aa : dataList) {
@@ -540,153 +544,124 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             }
             for (Map<String, Object> stringObjectMap : dataList) {
                 LinkedHashMap<String, Object> datamap = new LinkedHashMap<>();
-                for (String key : stringObjectMap.keySet()) {
-                    if ("large_screen_link".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("namepid"))){
                         datamap.put("namepid", stringObjectMap.get("namepid"));
+                    }else {
+                        datamap.put("namepid", null);
                     }
-                    if ("responsible_dept".equals(key)) {
+
+                    if (!StringUtils.isEmpty(stringObjectMap.get("name"))){
                         datamap.put("name", stringObjectMap.get("name"));
-
+                    }else {
+                        datamap.put("name", null);
                     }
-                    if ("namepid".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("responsible_dept"))){
                         datamap.put("responsible_dept", stringObjectMap.get("responsible_dept"));
-
+                    }else {
+                        datamap.put("responsible_dept", null);
                     }
-                    if ("indicator_code".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_code"))){
                         datamap.put("indicator_code", stringObjectMap.get("indicator_code"));
-
+                    }else {
+                        datamap.put("indicator_code", null);
                     }
-                    if ("source_indicators".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_type"))){
                         datamap.put("indicator_type", stringObjectMap.get("indicator_type"));
-
+                    }else {
+                        datamap.put("indicator_type", null);
                     }
-                    if ("indicator_type".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_name"))){
                         datamap.put("indicator_name", stringObjectMap.get("indicator_name"));
-
+                    }else {
+                        datamap.put("indicator_name", null);
                     }
-                    if ("indicator_level".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_description"))){
                         datamap.put("indicator_description", stringObjectMap.get("indicator_description"));
-
+                    }else {
+                        datamap.put("indicator_description", null);
                     }
-                    if ("source_data_table".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_level"))){
                         datamap.put("indicator_level", stringObjectMap.get("indicator_level"));
-
+                    }else {
+                        datamap.put("indicator_level", null);
                     }
-                    if ("indicatorformula".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("unit_measurement"))){
                         datamap.put("unit_measurement", stringObjectMap.get("unit_measurement"));
-
+                    }else {
+                        datamap.put("unit_measurement", null);
                     }
-                    if ("sql_script".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("statistical_cycle"))){
                         datamap.put("statistical_cycle", stringObjectMap.get("statistical_cycle"));
-
+                    }else {
+                        datamap.put("statistical_cycle", null);
                     }
-                    if ("filtering_criteria".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicatorformula"))){
                         datamap.put("indicatorformula", stringObjectMap.get("indicatorformula"));
-
+                    }else {
+                        datamap.put("indicatorformula", null);
                     }
-                    if ("order_channel".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("sql_script"))){
                         datamap.put("sql_script", stringObjectMap.get("sql_script"));
-
+                    }else {
+                        datamap.put("sql_script", null);
                     }
-                    if ("data_granularity".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("source_indicators"))){
                         datamap.put("source_indicators", stringObjectMap.get("source_indicators"));
-
+                    }else {
+                        datamap.put("source_indicators", null);
                     }
-                    if ("statistical_cycle".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("filtering_criteria"))){
                         datamap.put("filtering_criteria", stringObjectMap.get("filtering_criteria"));
-
+                    }else {
+                        datamap.put("filtering_criteria", null);
                     }
-                    if ("source_system".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("source_system"))){
                         datamap.put("source_system", stringObjectMap.get("source_system"));
-
+                    }else {
+                        datamap.put("source_system", null);
                     }
-                    if ("indicator_name".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("source_data_table"))){
                         datamap.put("source_data_table", stringObjectMap.get("source_data_table"));
-
+                    }else {
+                        datamap.put("source_data_table", null);
                     }
-                    if ("unit_measurement".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_status"))){
                         datamap.put("indicator_status", stringObjectMap.get("indicator_status"));
-
+                    }else {
+                        datamap.put("indicator_status", null);
                     }
-                    if ("indicator_status".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("large_screen_link"))){
                         datamap.put("large_screen_link", stringObjectMap.get("large_screen_link"));
-
+                    }else {
+                        datamap.put("large_screen_link", null);
                     }
-                    if ("name”".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("order_channel"))){
                         datamap.put("order_channel", stringObjectMap.get("order_channel"));
+                    }else {
+                        datamap.put("order_channel", null);
                     }
-                    if ("indicator_description”".equals(key)) {
+                    if (!StringUtils.isEmpty(stringObjectMap.get("data_granularity"))){
                         datamap.put("data_granularity", stringObjectMap.get("data_granularity"));
+                    }else {
+                        datamap.put("data_granularity", null);
                     }
-                }
                 data.add(datamap);
             }
 
-
-            if (data != null && data.size() > 0) {
-                int excelRow = 0;
-                //获取字段信息
-                Map<String, Class<?>> columnType = ExcelUtil.getColumnType(data.get(0));
-                // 设置通用样式
-                XSSFWorkbook xssfWorkbook = new XSSFWorkbook();
-                XSSFCellStyle style = xssfWorkbook.createCellStyle();
-                style.setAlignment(HorizontalAlignment.CENTER); //居中
-                style.setBorderBottom(HSSFCellStyle.BORDER_THIN); //下边框
-                style.setBorderLeft(HSSFCellStyle.BORDER_THIN);//左边框
-                style.setBorderTop(HSSFCellStyle.BORDER_THIN);//上边框
-                style.setBorderRight(HSSFCellStyle.BORDER_THIN);//右边框
-                style.setWrapText(true); //自动换行
-                style.setHidden(true);//高度自动
-                style.setFillBackgroundColor(HSSFColor.PALE_BLUE.index); //背景颜色
-                sheet1.setDefaultColumnWidth(10); //设置宽度
-                style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-                style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
-                //创建标题行
-                Row titleRow = sheet1.createRow(excelRow++);
-                int index = 0;
-                for (String item : parentTargetinfoHeaders) {
-                    //创建该行下的每一列，并写入标题数据
-                    Cell cell = titleRow.createCell(index);
-                    cell.setCellStyle(style);
-                    cell.setCellValue(item);
-                    index++;
-                }
-                index = 0;
-
-                //设置内容行
-                for (Map<String, Object> row : data) {
-                    Row dataRow = sheet1.createRow(excelRow++);
-                    //内层for循环创建每行对应的列，并赋值
-                    int columnIndex = 0;
-                    for (Map.Entry<String, Object> item : row.entrySet()) {
-                        Cell cell = dataRow.createCell(columnIndex);
-                        columnIndex++;
-                        if (item.getValue() == null) {
-                            continue;
-                        }
-                        Class<?> type = columnType.get(item.getKey());
-                        if (Integer.class.equals(type)) {
-                            cell.setCellValue(((Integer) item.getValue()).doubleValue());
-                        } else if (Long.class.equals(type)) {
-                            cell.setCellValue(new Double((Long) item.getValue()));
-                        } else if (String.class.equals(type)) {
-                            cell.setCellValue((String) item.getValue());
-                        } else if (Date.class.equals(type)) {
-                            cell.setCellValue((Date) item.getValue());
-                        } else if (Timestamp.class.equals(type)) {
-                            cell.setCellValue(sdf.format((Timestamp) item.getValue()));
-                        } else if (BigDecimal.class.equals(type)) {
-                            cell.setCellValue(((BigDecimal) item.getValue()).doubleValue());
-                        } else if (Double.class.equals(type)) {
-                            cell.setCellValue((Double) item.getValue());
-                        }
-
+            if (!CollectionUtils.isEmpty(data)) {
+                for (int i = 0; i < data.size(); i++) {
+                    XSSFRow row = sheet.createRow(i + 1);
+                    Map<String, Object> jsonObject = data.get(i);
+                    int index = 0;
+                    for (Map.Entry<String, Object> stringObjectEntry : jsonObject.entrySet()) {
+                        row.createCell(index).setCellValue(stringObjectEntry.getValue() == null ? "" : stringObjectEntry.getValue().toString());
+                        index++;
                     }
                 }
-                //将整理好的excel数据写入流中
-                wb.write(os);
             }
+                //将整理好的excel数据写入流中
+            workbook.write(os);
+
         } catch (IOException e) {
             log.error("Excel导出失败，ex", e);
         } finally {

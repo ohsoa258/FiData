@@ -392,7 +392,13 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         StringBuilder suffixSql =
                 new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList,updateSql));
         //获取业务标识覆盖方式标识的字段
-        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+        List<PublishFieldDTO> pkFields;
+        //获取业务标识覆盖方式标识的字段
+        if (type == 1) {
+            pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+        } else {
+            pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+        }
 //        //筛选出只有源字段的字段
 //        pkFields = pkFields.stream().filter(f -> !StringUtils.isEmpty(f.sourceFieldName)).collect(Collectors.toList());
 
@@ -739,7 +745,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
      * @param tableName       真实表名
      * @param sourceTableName 来源表名（临时表名）
      * @param fieldList       前端传递的源表字段属性集合
-     * @param type       前端传递的源表字段属性集合
+     * @param type            前端传递的源表字段属性集合
      * @return
      */
     @Override
@@ -853,8 +859,15 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         startSql.append(" FROM ")
                 .append(sourceTableName)
                 .append(" WITH(nolock) WHERE fidata_batch_code='${fidata_batch_code}'AND fidata_flow_batch_code='${fragment.index}') AS SOURCE ON ");
+        List<PublishFieldDTO> pkFields;
+
         //获取业务标识覆盖方式标识的字段
-        List<PublishFieldDTO> pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+        if (type == 1) {
+            pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+        } else {
+            pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+        }
+
         //拼接开始：TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
         if (!CollectionUtils.isEmpty(pkFields)) {
             //遍历前端传递的字段集合--只包含主键

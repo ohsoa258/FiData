@@ -24,10 +24,7 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
-import com.fisk.common.service.accessAndModel.AccessAndModelTableTypeEnum;
-import com.fisk.common.service.accessAndModel.ServerTypeEnum;
+import com.fisk.common.service.accessAndModel.*;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -91,6 +88,8 @@ import com.fisk.datamodel.service.impl.fact.FactImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
 import com.fisk.datamodel.utils.sql.DbConnectionHelper;
 import com.fisk.datamodel.utils.sql.ModelMySqlConUtils;
+import com.fisk.datamodel.utils.sql.ModelPgSqlUtils;
+import com.fisk.datamodel.utils.sql.ModelSqlServerUtils;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.datamodel.vo.DimAndFactCountVO;
@@ -1563,7 +1562,9 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
             //先获取当前业务域下的所有维度表名
             LambdaQueryWrapper<DimensionPO> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.select(DimensionPO::getDimensionTabName).eq(DimensionPO::getBusinessId, areaId);
+            wrapper1.select(DimensionPO::getDimensionTabName)
+                    .eq(DimensionPO::getBusinessId, areaId)
+                    .eq(DimensionPO::getIsPublish,1);
             List<DimensionPO> dimList = dimensionImpl.list(wrapper1);
 
             //维度表个数
@@ -1587,7 +1588,9 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
             //获取当前业务域下的所有非维度表的表名 fact help config dwd dws
             LambdaQueryWrapper<FactPO> wrapper3 = new LambdaQueryWrapper<>();
-            wrapper3.select(FactPO::getFactTabName).eq(FactPO::getBusinessId, areaId);
+            wrapper3.select(FactPO::getFactTabName)
+                    .eq(FactPO::getBusinessId, areaId)
+                    .eq(FactPO::getIsPublish, 1);
             List<FactPO> factList = factImpl.list(wrapper3);
 
             //获取dmp_dw的类型 sqlserver / pg / doris
@@ -1631,6 +1634,60 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     /**
+     * 获取数仓建模所有业务域和业务域下文件夹
+     *
+     * @return
+     */
+    @Override
+    public List<ModelAreaAndFolderDTO> getAllAreaAndFolder() {
+        LambdaQueryWrapper<BusinessAreaPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName);
+        //获取除当前业务域外的其他所有业务域
+        List<BusinessAreaPO> list = list(wrapper);
+
+        List<ModelAreaAndFolderDTO> dtos = new ArrayList<>();
+
+        //分别获取业务域下的维度和事实文件夹信息
+        for (BusinessAreaPO businessAreaPO : list) {
+            ModelAreaAndFolderDTO dto = new ModelAreaAndFolderDTO();
+            dto.setId(Math.toIntExact(businessAreaPO.getId()));
+            dto.setName(businessAreaPO.getBusinessName());
+
+            List<FolderDTO> folderDTOList = new ArrayList<>();
+
+            //获取当前业务域下的所有维度文件夹
+            LambdaQueryWrapper<DimensionFolderPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.select(DimensionFolderPO::getId, DimensionFolderPO::getDimensionFolderCnName)
+                    .eq(DimensionFolderPO::getBusinessId, businessAreaPO.getId());
+            List<DimensionFolderPO> folderPOS = dimensionFolderImpl.list(wrapper1);
+            for (DimensionFolderPO folderPO : folderPOS) {
+                FolderDTO folderDTO = new FolderDTO();
+                folderDTO.setId((int) folderPO.getId());
+                folderDTO.setName(folderPO.getDimensionFolderCnName());
+                folderDTO.setType(0);
+                folderDTOList.add(folderDTO);
+            }
+
+            //获取当前业务域下的所有事实文件夹
+            LambdaQueryWrapper<BusinessProcessPO> wrapper2 = new LambdaQueryWrapper<>();
+            wrapper2.select(BusinessProcessPO::getId, BusinessProcessPO::getBusinessProcessCnName)
+                    .eq(BusinessProcessPO::getBusinessId, businessAreaPO.getId());
+            List<BusinessProcessPO> processPOS = businessProcessImpl.list(wrapper2);
+            for (BusinessProcessPO processPO : processPOS) {
+                FolderDTO folderDTO = new FolderDTO();
+                folderDTO.setId((int) processPO.getId());
+                folderDTO.setName(processPO.getBusinessProcessCnName());
+                folderDTO.setType(1);
+                folderDTOList.add(folderDTO);
+            }
+            dto.setChildren(folderDTOList);
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
+
+    /**
      * 获取数据量
      *
      * @param conType  dw库类型
@@ -1658,10 +1715,10 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             switch (conType) {
                 case SQLSERVER:
                     if (!CollectionUtils.isEmpty(dimList)) {
-                        dimSql = ModelMySqlConUtils.buildDataModelDimCountSql(dimList);
+                        dimSql = ModelSqlServerUtils.buildDataModelDimCountSql(dimList);
                     }
                     if (!CollectionUtils.isEmpty(factList)) {
-                        factSql = ModelMySqlConUtils.buildDataModelCountSql(factList);
+                        factSql = ModelSqlServerUtils.buildDataModelCountSql(factList);
                     }
 
                     if (StringUtils.isNotEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
@@ -1678,10 +1735,10 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                     break;
                 case POSTGRESQL:
                     if (!CollectionUtils.isEmpty(dimList)) {
-                        dimSql = ModelMySqlConUtils.buildDataModelDimCountSql(dimList);
+                        dimSql = ModelPgSqlUtils.buildDataModelDimCountSql(dimList);
                     }
                     if (!CollectionUtils.isEmpty(factList)) {
-                        factSql = ModelMySqlConUtils.buildDataModelCountSql(factList);
+                        factSql = ModelPgSqlUtils.buildDataModelCountSql(factList);
                     }
 
                     if (StringUtils.isNotEmpty(dimSql) && StringUtils.isNotEmpty(factSql)) {
@@ -1721,7 +1778,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                     throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
             statement = connection.createStatement();
-            log.info("数仓建模首页统计信息：执行的获取当前业务域下的所有目标表数据量的sql:" + factSql);
+            log.info("数仓建模首页统计信息：执行的获取当前业务域下的所有目标表数据量的sql:" + finalSql);
             resultSet = statement.executeQuery(finalSql);
             Map<String, Long> tbl_row = new HashMap<>();
             while (resultSet.next()) {

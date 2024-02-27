@@ -8,6 +8,7 @@ import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
@@ -26,11 +27,14 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.DimensionIfEndDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
+import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
@@ -110,6 +114,8 @@ public class DimensionImpl
     UserClient userClient;
     @Resource
     DataManageClient dataManageClient;
+    @Resource
+    private DimensionFolderImpl dimensionFolder;
 
     @Resource
     DataSourceConfigUtil dataSourceConfigUtil;
@@ -1084,6 +1090,76 @@ public class DimensionImpl
         List<DimensionTreeDTO> list = new ArrayList();
         list.add(dimensionTreeDTO);
         return list;
+    }
+
+    /**
+     * 维度表跨业务域移动
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEntity<Object> transDimToBArea(DimTransDTO dto) {
+        ResultEnum resultEnum = null;
+        /*
+        如果该事实表已被配置到管道中，则不允许转移，牵扯到kafka发消息的topic，因此给出提示
+         */
+        // 移动之前检查该事实表是否已经被配置到存在的管道里面：如果管道中有则不允许移动
+        // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该事实表，
+        // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数仓建模的事实表对应的table type是5  数仓表任务-数仓事实表任务
+        CheckPhyDimFactTableIfExistsDTO checkDto = new CheckPhyDimFactTableIfExistsDTO();
+        checkDto.setTblId((long) dto.dimId);
+        checkDto.setChannelDataEnum(ChannelDataEnum.getName(5));
+        ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(checkDto);
+        if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+            return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
+        }
+        List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
+        if (!CollectionUtils.isEmpty(data)) {
+            //这里的getWorkflowId 已经被替换为 workflowName
+            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+            log.info("当前要删除的表存在于以下管道中：" + collect);
+            return ResultEntityBuild.build(ResultEnum.FACT_EXISTS_IN_DISPATCH, collect);
+        }
+
+        /*
+        1、转移维度表
+         */
+        log.info("==========开始转移维度表==========");
+        //获取要转移的事实表信息
+        LambdaQueryWrapper<DimensionPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DimensionPO::getId, dto.getDimId());
+        DimensionPO one = getOne(wrapper);
+        //修改信息
+        one.setDimensionFolderId(dto.toDimensionFolderId);
+        one.setBusinessId(dto.toBusinessId);
+        updateById(one);
+        log.info("==========维度表转移完成==========");
+
+        /*
+        2、删除原nifi
+         */
+        log.info("==========开始删除nifi原流程==========");
+        //拼接删除niFi参数
+        DataModelVO vo = niFiDelProcess(dto.curBusinessId, dto.dimId);
+        ResultEntity<Object> result = publishTaskClient.deleteNifiFlowByKafka(vo);
+        log.info("==========nifi删除结果:" + result.getCode());
+
+        /*
+        3、重新发布维度表
+         */
+        log.info("==========开始重新发布==========");
+        DimensionFolderPublishQueryDTO queryDTO = new DimensionFolderPublishQueryDTO();
+        queryDTO.setBusinessAreaId(dto.toBusinessId);
+        List<Integer> dimIds = new ArrayList<>();
+        dimIds.add(dto.dimId);
+        queryDTO.setDimensionIds(dimIds);
+        //不同步数据
+        queryDTO.setOpenTransmission(false);
+        queryDTO.setRemark("从业务域" + dto.curBusinessId + " 移动到业务域 " + dto.toBusinessId);
+        resultEnum = dimensionFolder.batchPublishDimensionFolder(queryDTO);
+        log.info("==========重新发布结果:" + result.getCode());
+        return ResultEntityBuild.build(resultEnum);
     }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,

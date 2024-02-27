@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
@@ -71,6 +72,8 @@ public class DimensionAttributeImpl
     SystemVariablesImpl systemVariables;
     @Resource
     private IBusinessArea businessArea;
+    @Resource
+    private DimensionImpl dimension;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -80,6 +83,10 @@ public class DimensionAttributeImpl
         if (dimensionPo == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+
+        //查询sql保存改为最后一步才保存
+        dimensionPo.setDataSourceId(dto.dataSourceId);
+        dimensionPo.setSqlScript(dto.sqlScript);
 
         //获取公共域维度的文件夹id
         LambdaQueryWrapper<DimensionFolderPO> folderWrapper = new LambdaQueryWrapper<>();

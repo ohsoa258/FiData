@@ -22,12 +22,17 @@
         api.create_user,
         api.important_interface,
         api.expiration_time,
-        api.expiration_type
+        api.expiration_type,
+        api.menu_id,
+        api.api_menu_id,
+        api.enable_cache,
+        api.cache_time
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
         ON api.datasource_id = source.id
         where api.del_flag=1
+          and api.menu_id = #{query.menuId}
         <if test="query.createApiType !=null and query.createApiType!=0 ">
             and api.create_api_type = #{query.createApiType}
         </if>

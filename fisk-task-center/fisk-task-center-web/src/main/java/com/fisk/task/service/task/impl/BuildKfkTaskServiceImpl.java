@@ -13,6 +13,7 @@ import com.fisk.common.framework.mdc.MDCHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
+import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.dto.MQBaseDTO;
 import com.fisk.task.dto.TaskLogQuery;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
@@ -122,6 +123,30 @@ public class BuildKfkTaskServiceImpl extends ServiceImpl<TaskLogMapper, TaskLogP
             log.error("系统报错，", ex);
             return ResultEntityBuild.build(ResultEnum.ERROR);
         }
+    }
+
+
+    /**
+     * 发消息删除nifi流程
+     *
+     * @param name     提示框内容
+     * @param exchange MqConstants.ExchangeConstants.TASK_EXCHANGE_NAME
+     * @param queue    MqConstants.QueueConstants.NifiTopicConstants.BUILD_NIFI_FLOW
+     * @param data     data数据   DataModelVO
+     * @return
+     */
+    @Override
+    public ResultEntity<Object> publishTaskForDel(String name, String exchange, String queue, DataModelVO data) {
+        log.info("DataModelVO的信息:{}", JSON.toJSONString(data));
+        try {
+            //发送消息
+            kafkaTemplateHelper.sendMessageSync(queue, JSON.toJSONString(data));
+        } catch (Exception e) {
+            log.error("发消息删除nifi流程报错：" + e);
+            return ResultEntityBuild.build(ResultEnum.TASK_NIFI_DELETE_FLOW);
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+
     }
 
     @Override

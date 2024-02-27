@@ -1,10 +1,12 @@
 package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
+import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.dimension.DimensionPO;
 
@@ -137,6 +139,14 @@ public interface IDimension extends IService<DimensionPO> {
      * @return
      */
     List<DimensionTreeDTO> getDimensionTree();
+
+    /**
+     * 维度表跨业务域移动
+     *
+     * @param dto
+     * @return
+     */
+    ResultEntity<Object> transDimToBArea(DimTransDTO dto);
 
     //void asyncSynchronousMetadata(DimensionPO model);
 

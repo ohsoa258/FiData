@@ -63,8 +63,8 @@ public enum RedisKeyEnum implements BaseEnum {
 
     EMAIL_SEND_STATUS(-1,"monitor:emailSendStatus"),
 
-    TABLE_KSF_WEB_SERVER_SYNC(-1,"Ksf:tabelWebServerSync")
-
+    TABLE_KSF_WEB_SERVER_SYNC(-1,"Ksf:tabelWebServerSync"),
+    DATA_SERVER_API_DATA(40,"DataServer:dataServerApiData")
     ;
 
     RedisKeyEnum(int value, String name) {

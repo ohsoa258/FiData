@@ -286,6 +286,7 @@ public enum ResultEnum {
     GET_ACCESS_APP_ERROR(8021, "获取nifi同步日志-获取数据接入应用失败"),
     PUBLIC_DIM_PUBLISH_ERROR(8022, "公共域维度表发布失败，请回该表的初始创建业务域发布"),
     MODEL_MAIN_PAGE_COUNT_ERROR(8023, "获取dw主页数据量失败"),
+    FACT_EXISTS_IN_DISPATCH(8024, "禁止移动该表-该表存在于以下管道:"),
 
     /**
      * 数据工厂
@@ -353,6 +354,8 @@ public enum ResultEnum {
     LOAD_FIDATA_DATA_SERVICE_DATA_ERROR(10045, "加载DataServiceData报错"),
     DS_APISERVICE__EXPIRATION(10046,"api已过期"),
 
+    DS_APISERVICE_MENUID_NOT_EXIST(10047,"数据menuId未填写"),
+
     /**
      * 数据质量
      */
@@ -388,6 +391,7 @@ public enum ResultEnum {
     DATA_QUALITY_CURRENTLY_ONLY_NON_INSPECTION_QUALITY_REPORTS_ARE_SUPPORTED(11029, "暂只支持非检查质量报告"),
     DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS(11030, "检查代号已存在"),
     DATA_QUALITY_BUSINESS_RULE_ALREADY_EXISTS(11031, "清洗规则已存在"),
+    DATA_SERVER_CACHE_TIME_ERROR(11032, "缓存时间只能是5~300内数字"),
 
     /**
      * 数据安全
@@ -495,7 +499,10 @@ public enum ResultEnum {
     LICENCE_EXPIRED(160002, "licence已过期"),
     CUSTOMER_ALREADY_EXISTS(160003, "客户已存在"),
     CUSTOMER_NOT_EXISTS(160004, "客户不存在"),
-
+    NAME_IS_NULL(160005,"属性名称为空"),
+    ENGLISHNAME_IS_NULL(160006,"属性英文名称为空"),
+    FIELDTYPE_IS_NULL(160007,"字段类型为空"),
+    DATAMETACODE_IS_NULL(160008,"数据元编号为空"),
 
     /**
      * 数据库类型 dmp_ods

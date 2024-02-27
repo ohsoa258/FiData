@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
@@ -26,6 +27,7 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
@@ -91,6 +93,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     DataManageClient dataManageClient;
     @Resource
     SystemVariablesImpl systemVariables;
+    @Resource
+    BusinessProcessImpl businessProcess;
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
@@ -512,6 +516,81 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         List<FactTreeDTO> factTreeDTOS = new ArrayList<>();
         factTreeDTOS.add(factTreeDTO);
         return factTreeDTOS;
+    }
+
+    /**
+     * 事实表跨业务域移动
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEntity<Object> transFactToBArea(FactTransDTO dto) {
+        ResultEnum resultEnum = null;
+        /*
+        如果该事实表已被配置到管道中，则不允许转移，牵扯到kafka发消息的topic，因此给出提示
+         */
+        // 移动之前检查该事实表是否已经被配置到存在的管道里面：如果管道中有则不允许移动
+        // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该事实表，
+        // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数仓建模的事实表对应的table type是5  数仓表任务-数仓事实表任务
+        CheckPhyDimFactTableIfExistsDTO checkDto = new CheckPhyDimFactTableIfExistsDTO();
+        checkDto.setTblId((long) dto.factId);
+        checkDto.setChannelDataEnum(ChannelDataEnum.getName(5));
+        ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(checkDto);
+        if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+            return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
+        }
+        List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
+        if (!CollectionUtils.isEmpty(data)) {
+            //这里的getWorkflowId 已经被替换为 workflowName
+            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+            log.info("当前要删除的表存在于以下管道中：" + collect);
+            return ResultEntityBuild.build(ResultEnum.FACT_EXISTS_IN_DISPATCH, collect);
+        }
+
+        /*
+        1、转移事实表
+         */
+        log.info("==========开始转移事实表==========");
+        //获取要转移的事实表信息
+        LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FactPO::getId, dto.getFactId());
+        FactPO one = getOne(wrapper);
+        //修改信息
+        one.setBusinessProcessId(dto.toBusinessFolderId);
+        one.setBusinessId(dto.toBusinessId);
+        updateById(one);
+        log.info("==========事实表转移完成==========");
+
+        //数据表处理方式是批处理或流处理  0批处理 1流处理
+        if (one.batchOrStream == 1) {
+            return ResultEntityBuild.build(ResultEnum.SUCCESS);
+        }
+
+        /*
+        2、删除原nifi
+         */
+        log.info("==========开始删除nifi原流程==========");
+        //拼接删除niFi参数
+        DataModelVO vo = niFiDelTable(dto.curBusinessId, dto.factId);
+        ResultEntity<Object> result = publishTaskClient.deleteNifiFlowByKafka(vo);
+        log.info("==========nifi删除结果:" + result.getCode());
+
+        /*
+        3、重新发布
+         */
+        log.info("==========开始重新发布==========");
+        BusinessProcessPublishQueryDTO queryDTO = new BusinessProcessPublishQueryDTO();
+        queryDTO.setBusinessAreaId(dto.toBusinessId);
+        List<Integer> factIds = new ArrayList<>();
+        factIds.add(dto.factId);
+        queryDTO.setFactIds(factIds);
+        //不同步数据
+        queryDTO.setOpenTransmission(false);
+        queryDTO.setRemark("从业务域" + dto.curBusinessId + " 移动到业务域 " + dto.toBusinessId);
+        resultEnum = businessProcess.batchPublishBusinessProcess(queryDTO);
+        log.info("==========重新发布结果:" + result.getCode());
+        return ResultEntityBuild.build(resultEnum);
     }
 
     /**

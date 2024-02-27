@@ -174,9 +174,9 @@ public class ModelSqlServerUtils {
                 "    p.index_id IN (0,1) AND t.type_desc = 'USER_TABLE'");
         str.append(" AND t.name IN (");
         for (DimensionPO dimensionPO : dimList) {
-            str.append("\"")
+            str.append("'")
                     .append(dimensionPO.getDimensionTabName())
-                    .append("\",");
+                    .append("',");
         }
         str.deleteCharAt(str.lastIndexOf(","));
         str.append(")");
@@ -201,9 +201,9 @@ public class ModelSqlServerUtils {
                 "    p.index_id IN (0,1) AND t.type_desc = 'USER_TABLE'");
         str.append(" AND t.name IN (");
         for (FactPO factPO : factList) {
-            str.append("\"")
+            str.append("'")
                     .append(factPO.getFactTabName())
-                    .append("\",");
+                    .append("',");
         }
         str.deleteCharAt(str.lastIndexOf(","));
         str.append(")");

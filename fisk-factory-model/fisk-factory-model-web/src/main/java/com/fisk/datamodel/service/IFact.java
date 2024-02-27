@@ -2,6 +2,7 @@ package com.fisk.datamodel.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.datamodel.dto.QueryDTO;
@@ -114,4 +115,12 @@ public interface IFact extends IService<FactPO> {
      * @return
      */
     List<FactTreeDTO> getFactTree();
+
+    /**
+     * 事实表跨业务域移动
+     *
+     * @param dto
+     * @return
+     */
+    ResultEntity<Object> transFactToBArea(FactTransDTO dto);
 }
