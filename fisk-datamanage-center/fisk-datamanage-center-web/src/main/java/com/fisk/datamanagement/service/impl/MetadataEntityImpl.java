@@ -313,13 +313,15 @@ public class MetadataEntityImpl
 
         //获取元数据的分类
         for (MetaClassificationTypeEnum value : MetaClassificationTypeEnum.values()) {
-            EntityTreeDTO dto = new EntityTreeDTO();
-            dto.id = String.valueOf(value.getValue());
-            dto.label = value.getName();
-            dto.type = EntityTypeEnum.CLASSIFICATION.getName();
-            dto.parentId = "-100";
-            dto.displayName = value.getName();
-            list.add(buildChildTree(dto, poList));
+            if(!value.equals(MetaClassificationTypeEnum.OTHER)){
+                EntityTreeDTO dto = new EntityTreeDTO();
+                dto.id = String.valueOf(value.getValue());
+                dto.label = value.getName();
+                dto.type = EntityTypeEnum.CLASSIFICATION.getName();
+                dto.parentId = "-100";
+                dto.displayName = value.getName();
+                list.add(buildChildTree(dto, poList));
+            }
         }
 //获取实体关联业务分类数据
 //        List<MetadataClassificationMapInfoDTO> classificationMap = metaDataClassificationMapMapper.getMetaDataClassificationMap();
