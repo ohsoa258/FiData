@@ -4,6 +4,7 @@ import com.fisk.datamanagement.dto.label.GlobalSearchDto;
 import com.fisk.datamanagement.dto.labelcategory.FirstLabelCategorySummaryDto;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDTO;
 import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDataDTO;
+import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.entity.LabelCategoryPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -70,4 +71,6 @@ public interface LabelCategoryMap {
      * @return
      */
     FirstLabelCategorySummaryDto poToFirstLabelCategorySummaryDto(LabelCategoryPO po);
+
+
 }

@@ -18,7 +18,7 @@ public class GlobalSearchDto {
     public int id;
     @ApiModelProperty(value = "名称")
     public String name;
-    @ApiModelProperty(value = "类型 1属性 2属性分类 3术语 4术语分类")
+    @ApiModelProperty(value = "类型 1属性 2属性分类 3术语 4术语分类 5元数据")
     public DataAssetsTypeEnum type;
     @ApiModelProperty(value = "路径")
     public String path;
