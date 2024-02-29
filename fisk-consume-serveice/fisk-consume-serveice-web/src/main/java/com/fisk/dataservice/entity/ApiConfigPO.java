@@ -1,5 +1,7 @@
 package com.fisk.dataservice.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import io.swagger.annotations.ApiModelProperty;
@@ -126,5 +128,18 @@ public class ApiConfigPO extends BasePO
     /**
      * 缓存时间(秒)
      */
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer cacheTime;
+
+
+    /**
+     * 有无最大限制 0无 1有
+     */
+    private int maxSizeType;
+
+    /**
+     * api最大单次查询条数
+     */
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
+    private Integer maxSize;
 }

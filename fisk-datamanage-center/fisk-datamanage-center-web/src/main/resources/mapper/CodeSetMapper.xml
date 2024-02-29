@@ -19,5 +19,6 @@
         or name like concat('%', #{query.keyword}, '%')
         or description like concat('%', #{query.keyword}, '%'))
     </if>
+    ORDER BY create_time DESC
 </select>
 </mapper>

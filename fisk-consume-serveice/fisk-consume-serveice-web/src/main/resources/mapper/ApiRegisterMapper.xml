@@ -26,7 +26,9 @@
         api.menu_id,
         api.api_menu_id,
         api.enable_cache,
-        api.cache_time
+        api.cache_time,
+        api.max_size_type,
+        api.max_size
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
@@ -72,7 +74,11 @@
         create_user,
         api.important_interface,
         api.expiration_time,
-        api.expiration_type
+        api.expiration_type,
+        api.enable_cache,
+        api.cache_time,
+        api.max_size_type,
+        api.max_size
         FROM
         tb_api_config AS api
         WHERE
@@ -99,7 +105,11 @@
         api.create_count_sql,
         api.important_interface,
         api.expiration_time,
-        api.expiration_type
+        api.expiration_type,
+        api.enable_cache,
+        api.cache_time,
+        api.max_size_type,
+        api.max_size
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id

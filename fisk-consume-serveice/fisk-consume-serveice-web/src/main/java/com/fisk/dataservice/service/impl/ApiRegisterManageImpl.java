@@ -615,6 +615,10 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         model.setApiDesc(dto.getApiDesc());
         model.setExpirationType(dto.getExpirationType());
         model.setExpirationTime(dto.getExpirationTime());
+        model.setEnableCache(dto.getEnableCache());
+        model.setCacheTime(dto.getCacheTime());
+        model.setMaxSizeType(dto.getMaxSizeType());
+        model.setMaxSize(dto.getMaxSize());
         isUpdate = baseMapper.updateById(model) > 0;
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;

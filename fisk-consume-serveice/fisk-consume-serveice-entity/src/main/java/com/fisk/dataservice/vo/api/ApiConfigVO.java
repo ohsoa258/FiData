@@ -172,10 +172,24 @@ public class ApiConfigVO {
     /**
      * 是否开启缓存 0否，1是
      */
+    @ApiModelProperty(value = "是否开启缓存 0否，1是")
     private int enableCache;
 
     /**
      * 缓存时间(秒)
      */
+    @ApiModelProperty(value = "缓存时间(秒)")
     private Integer cacheTime;
+
+    /**
+     * 有无最大限制 0无 1有
+     */
+    @ApiModelProperty(value = "有无最大限制 0无 1有")
+    private Integer maxSizeType;
+
+    /**
+     * api最大单次查询条数
+     */
+    @ApiModelProperty(value = "api最大单次查询条数")
+    private Integer maxSize;
 }
