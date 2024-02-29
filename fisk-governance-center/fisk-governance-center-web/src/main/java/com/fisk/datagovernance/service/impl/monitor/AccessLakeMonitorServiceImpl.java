@@ -151,8 +151,12 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         } finally {
             try {
-                st.close();
-                conn.close();
+                if (st != null) {
+                    st.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
             } catch (SQLException e) {
                 log.error(e.getMessage());
                 throw new FkException(ResultEnum.ERROR);
