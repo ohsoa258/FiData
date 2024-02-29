@@ -19,11 +19,8 @@ import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -77,7 +74,7 @@ public class AccessLakeMonitorSchedule {
             for (CDCAppNameAndTableVO app : data) {
                 List<String> selectSql = new ArrayList<>();
                 List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
-                if (app.getDbType() == "sqlserver"){
+                if (Objects.equals(app.getDbType(), "sqlserver")){
                     tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
                         String dbName = i.getDbName();
                         dbName = dbName + "_dbo";
@@ -102,7 +99,7 @@ public class AccessLakeMonitorSchedule {
                         }
 
                     }else {
-                        String sql = app.getTableDbNameAndNameVO().stream().map(i -> {
+                        String sql = tableDbNameAndNameVO.stream().map(i -> {
                             String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
                             return str;
                         }).collect(Collectors.joining(" UNION ALL "));
