@@ -152,6 +152,10 @@ public class MetaDataImpl implements IMetaData {
     private static final String fact_prefix = "fact_";
     private static final String mdm_prefix = "mdm_";
     private static final String ods_prefix = "ods_";
+    private static final String dwd_prefix = "dwd_";
+    private static final String dws_prefix = "dws_";
+    private static final String help_prefix = "help_";
+    private static final String config_prefix = "config_";
     private static final String sync_database_prefix = "sync_database_";
 
     //endregion
@@ -216,7 +220,7 @@ public class MetaDataImpl implements IMetaData {
 //                        }
                         /*************************ODS和DW时需要同步STG表***********************************/
                         //如果数据接入应用为CDC类型时不需要同步STG表,等于空则为数仓建模表
-                        if (table.getAppType()==null||table.getAppType()!=2){
+                        if (table.getAppType() == null || table.getAppType() != 2) {
                             //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
                             String stgTableGuid = null;
                             if (!stg.equals(table.getComment())) {
@@ -292,7 +296,7 @@ public class MetaDataImpl implements IMetaData {
 
         if (!"stg".equals(dto.description)) {
             //同步业务分类和元数据的关联
-            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment,dto.getAppName());
+            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment, dto.getAppName());
         }
 
         return metadataEntity.toString();
@@ -361,8 +365,8 @@ public class MetaDataImpl implements IMetaData {
                     return;
                 }
                 data.typeName = first.get().name;
-            }else  if (DataSourceConfigEnum.DMP_MDM.getValue() == sourceData.get().id){
-                data.typeName=  appName;
+            } else if (DataSourceConfigEnum.DMP_MDM.getValue() == sourceData.get().id) {
+                data.typeName = appName;
             }
             dto.classification = data;
             classification.classificationAddAssociatedEntity(dto);
@@ -404,13 +408,25 @@ public class MetaDataImpl implements IMetaData {
         if (dto.name.indexOf(ods_prefix) >= 0) {
             //数据接入ODS表
             dto.name = dto.name.replace(ods_prefix, "stg_");
-        } else if (dto.name.indexOf(fact_prefix) >=  0) {
+        } else if (dto.name.indexOf(fact_prefix) >= 0) {
             //建模实时表
-            dto.name="stg_"+dto.name;
-        } else if (dto.name.indexOf(dim_prefix) >=  0) {
-            dto.name="stg_"+dto.name;
+            dto.name = "temp_" + dto.name;
+        } else if (dto.name.indexOf(dwd_prefix) >= 0) {
+            //建模实时表
+            dto.name = dto.name.replace(dwd_prefix, "temp_");
+        } else if (dto.name.indexOf(dws_prefix) >= 0) {
             //建模维度表
-        } else if (dto.name.indexOf(mdm_prefix) >=  0) {
+            dto.name = dto.name.replace(dws_prefix, "temp_");
+        } else if (dto.name.indexOf(config_prefix) >= 0) {
+            //建模维度表
+            dto.name = dto.name.replace(config_prefix, "temp_");
+        } else if (dto.name.indexOf(help_prefix) >= 0) {
+            //建模维度表
+            dto.name = dto.name.replace(help_prefix, "temp_");
+        } else if (dto.name.indexOf(dim_prefix) >= 0) {
+            //建模维度表
+            dto.name = dto.name.replace(dim_prefix, "temp_");
+        } else if (dto.name.indexOf(mdm_prefix) >= 0) {
             //主数据表
             dto.name = dto.name.replace(mdm_prefix, "stg_");
         }
@@ -461,9 +477,9 @@ public class MetaDataImpl implements IMetaData {
 
     private String metaDataStgField(MetaDataColumnAttributeDTO dto, String parentEntityId) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_suffix);
-        if (dto.name.indexOf(mdm_prefix) >=  0) {
-            dto.name=dto.name.replace(mdm_prefix,"");
-        }else{
+        if (dto.name.indexOf(mdm_prefix) >= 0) {
+            dto.name = dto.name.replace(mdm_prefix, "");
+        } else {
             dto.name = dto.name;
         }
 
@@ -1316,7 +1332,7 @@ public class MetaDataImpl implements IMetaData {
                 if (entityDto.createApiType != 3) {
                     //同步实体数据源的元数据
                     List<String> fromEntityId = syncEntitySourceMetaData(entityDto, allDataSourceList);
-                    if (fromEntityId!=null&&fromEntityId.stream().count()>0){
+                    if (fromEntityId != null && fromEntityId.stream().count() > 0) {
                         //同步源到目标的血缘
                         metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
                     }
@@ -1354,7 +1370,7 @@ public class MetaDataImpl implements IMetaData {
      * @param entityList
      */
     private void syncExternalDataSourceDbInstance(List<MetaDataEntityDTO> entityList, List<DataSourceDTO> allDataSource) {
-        Set<Integer> datasourceIdList = entityList.stream().filter(e->e.getDatasourceDbId()!=null).collect(Collectors.groupingBy(e -> e.datasourceDbId)).keySet();
+        Set<Integer> datasourceIdList = entityList.stream().filter(e -> e.getDatasourceDbId() != null).collect(Collectors.groupingBy(e -> e.datasourceDbId)).keySet();
         List<DataSourceDTO> dataSourceDTOList = allDataSource.stream()
                 .filter(e -> datasourceIdList.contains(e.getId()))
                 .filter(e -> e.getSourceType() == 2)
