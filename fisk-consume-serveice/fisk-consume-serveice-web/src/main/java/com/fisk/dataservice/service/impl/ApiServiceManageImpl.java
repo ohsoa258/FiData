@@ -232,13 +232,10 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             // 第七步：获取请求参数中的分页信息
             Integer current = dto.getCurrent();
             Integer size = dto.getSize();
-
-            // 未设置分页参数，默认查询第一页，查询数字的最大值
-            if (current == null) {
+            if (current == null && size == null) {
+                // 未设置分页参数，默认查询第一页，查询数字的最大值
                 current = 1;
-            }
-            if (size == null || size > 500) {
-                size = 500;
+                size = 1000;
             }
 
 //            // 第七步：获取请求参数中的分页信息 限制100条  2023-06-01 李世纪：暂时恢复原状
