@@ -77,6 +77,19 @@ public class AccessLakeMonitorSchedule {
             for (CDCAppNameAndTableVO app : data) {
                 List<String> selectSql = new ArrayList<>();
                 List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
+                if (app.getDbType() == "sqlserver"){
+                    tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                        String dbName = i.getDbName();
+                        dbName = dbName + "_dbo";
+                        i.setDbName(dbName);
+                        String tableName = i.getTableName();
+                        if (tableName.startsWith("dbo_")) {
+                            tableName = tableName.substring(4);
+                        }
+                        i.setTableName(tableName);
+                        return i;
+                    }).collect(Collectors.toList());
+                }
                 if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
                     if (tableDbNameAndNameVO.size()>50){
                         List<List<TableDbNameAndNameVO>> partition = Lists.partition(tableDbNameAndNameVO, 50);
