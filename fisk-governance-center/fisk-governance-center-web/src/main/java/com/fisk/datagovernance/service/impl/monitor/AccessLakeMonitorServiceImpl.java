@@ -27,10 +27,8 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -77,23 +75,23 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             log.error("dataAccessClient无法查询到目标库的连接信息");
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
-        DataSourceDTO dataSourceDTO = null;
-        ResultEntity<DataSourceDTO> dataSourceById = userClient.getFiDataDataSourceById(odsId);
-        if (cdcAppNameAndTables.code == ResultEnum.SUCCESS.getCode() && dataSourceById.getData() != null) {
-            dataSourceDTO = dataSourceById.getData();
-        } else {
-            log.error("dataAccessClient无法查询到目标库的连接信息");
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
-        }
         AccessLakeMonitorVO accessLakeMonitorVO = new AccessLakeMonitorVO();
         List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
         DataSourceTypeEnum type = DataSourceTypeEnum.getValue(app.getDbType());
+        if (type == DataSourceTypeEnum.SQLSERVER){
+            tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                String tableName = i.getTableName();
+                if (tableName.startsWith("dbo_")) {
+                    tableName = tableName.substring(4);
+                }
+                i.setTableName(tableName);
+                return i;
+            }).collect(Collectors.toList());
+        }
         String selectSourceSql = getSelectSourceSql(type, tableDbNameAndNameVO);
         log.info("源待查询sql:"+selectSourceSql);
-        String selectTargetSql = getSelectTargetSql(dataSourceDTO.conType,tableDbNameAndNameVO);
-        log.info("目标待查询sql:"+selectTargetSql);
         List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
-        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(tableDbNameAndNameVO);
+        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(type,tableDbNameAndNameVO);
         int sourceTotal = sourceTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         int targetTotal = targetTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         Map<String, TablesRowsDTO> targetTables = targetTablesRows.stream().collect(Collectors.toMap(i -> i.getDbName() + "." + i.getTableName(), i -> i));
@@ -164,10 +162,18 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
     }
 
-    private List<TablesRowsDTO> getTargetTablesRows(List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
+    private List<TablesRowsDTO> getTargetTablesRows(DataSourceTypeEnum type,List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
         List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
         for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
-            Object json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
+            Object json = null;
+            switch (type){
+                case DORIS_CATALOG:
+                    json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
+                    break;
+                case SQLSERVER:
+                    json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_SQLSERVER.getName() + ":"+ dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
+                    break;
+            }
             if (json != null){
                 TablesRowsDTO tablesRowsDTO = JSON.parseObject(json.toString(), TablesRowsDTO.class);
                 tablesRowsDTOS.add(tablesRowsDTO);
@@ -219,60 +225,12 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         return selectSourceSql;
     }
 
-    private String getSelectTargetSql(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum type,List<TableDbNameAndNameVO> tableDbNameAndNameVO){
-        String selectTargetSql = null;
-        switch (type) {
-            case DORIS:
-                selectTargetSql = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from "+catalogName+"." + i.getDbName() + ".`" + i.getTableName()+"`";
-                    return str;
-                }).collect(Collectors.joining(" UNION ALL "));
-                break;
-            case MYSQL:
-                selectTargetSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,table_name as tableName, table_rows as rowCount\n" +
-                        "FROM information_schema.tables\n" +
-                        "WHERE table_schema = '"+tableDbNameAndNameVO.get(0).getDbName()+"'\n" +
-                        "AND table_type = 'BASE TABLE'\n" +
-                        "AND table_name in(";
-                String mysqlTableName = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = "'"+i.getTableName()+"'";
-                    return str;
-                }).collect(Collectors.joining(","));
-                selectTargetSql = selectTargetSql+mysqlTableName+")";
-                break;
-            case SQLSERVER:
-                selectTargetSql = "SELECT "+tableDbNameAndNameVO.get(0).getDbName()+" as dbName,\n" +
-                        "    t.name AS tableName,\n" +
-                        "    SUM(p.rows) AS 'rowCount'\n" +
-                        "FROM \n" +
-                        "    sys.tables t\n" +
-                        "INNER JOIN \n" +
-                        "    sys.partitions p ON t.object_id = p.object_id\n" +
-                        "WHERE \n" +
-                        "    t.is_ms_shipped = 0\n" +
-                        "\t\tAND t.name in (";
-                String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
-                    String str = i.getTableName();
-                    if (str.startsWith("dbo_")) {
-                        str = str.substring(4);
-                    }
-                    str = "'"+str+"'";
-                    return str;
-                }).collect(Collectors.joining(","));
-                selectTargetSql = selectTargetSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
-                break;
-            default:
-                break;
-        }
-        return selectTargetSql;
-    }
-
     @Override
     public ResultEnum saveCatchTargetTableRows(){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String start = simpleDateFormat.format(new Date());
         long startTime = System.currentTimeMillis();
-        log.info("开始更新每个应用入湖DORIS表数据量:开始--"+start);
+        log.info("开始更新每个应用入湖表数据量:开始--"+start);
         try {
             ResultEntity<List<CDCAppNameAndTableVO>> cdcAppNameAndTables =
                     dataAccessClient.getCDCAppNameAndTables(0);
@@ -299,32 +257,54 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             if (CollectionUtils.isNotEmpty(data)){
                 for (CDCAppNameAndTableVO app : data) {
                     List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
+                    if (Objects.equals(app.getDbType(), "sqlserver")){
+                        tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                            String dbName = i.getDbName();
+                            dbName = dbName + "_dbo";
+                            i.setDbName(dbName);
+                            String tableName = i.getTableName();
+                            if (tableName.startsWith("dbo_")) {
+                                tableName = tableName.substring(4);
+                            }
+                            i.setTableName(tableName);
+                            return i;
+                        }).collect(Collectors.toList());
+                    }
                     if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
                         for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
                             Connection conn = null;
                             Statement st = null;
                             String selectSql = null;
                             try {
-                                switch (dataSourceDTO.getConType()){
-                                    case DORIS:
-                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName()+".`"+dbNameAndNameVO.getTableName()+"`";
-                                        break;
-                                }
                                 Class.forName(dataSourceDTO.getConType().getDriverName());
                                 conn = DriverManager.getConnection(dataSourceDTO.conStr, dataSourceDTO.conAccount, dataSourceDTO.conPassword);
                                 st = conn.createStatement();
+                                String redisKey = null;
+                                String dataSourceType = null;
+                                switch (dataSourceDTO.getConType()){
+                                    case DORIS:
+                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName()+".`"+dbNameAndNameVO.getTableName()+"`";
+                                        redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
+                                        dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName();
+                                        break;
+                                    case SQLSERVER:
+                                        selectSql = "select count(1) as 'rowCount' from "+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName()+"";
+                                        redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_SQLSERVER.getName()+":"+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
+                                        dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getName();
+                                        break;
+                                }
                                 ResultSet result = st.executeQuery(selectSql);
                                 while (result.next()) {
                                     TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
                                     tablesRowsDTO.setDbName(dbNameAndNameVO.getDbName());
                                     tablesRowsDTO.setTableName(dbNameAndNameVO.getTableName());
                                     tablesRowsDTO.setRows(Integer.valueOf(result.getString("rowCount")));
-                                    tablesRowsDTO.setDriverType(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName());
+                                    tablesRowsDTO.setDriverType(dataSourceType);
                                     LocalDateTime now = LocalDateTime.now();
                                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                                     String nowTime = now.format(formatter);
                                     tablesRowsDTO.setCatchTime(nowTime);
-                                    redisUtil.set(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName(), JSON.toJSONString(tablesRowsDTO));
+                                    redisUtil.set(redisKey, JSON.toJSONString(tablesRowsDTO));
                                 }
                             } catch (Exception e) {
                                 log.error(e.getMessage());
@@ -349,7 +329,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             long endTime = System.currentTimeMillis();
             // 计算接口耗时，单位为毫秒
             long elapsedTime = endTime - startTime;
-            log.info("更新每个应用入湖DORIS表数据量:结束--"+end+"--接口耗时：" + elapsedTime + " 毫秒");
+            log.info("更新每个应用入湖表数据量:结束--"+end+"--接口耗时：" + elapsedTime + " 毫秒");
             Thread.sleep(600000);
             new Thread(this::saveCatchTargetTableRows).start();
 
