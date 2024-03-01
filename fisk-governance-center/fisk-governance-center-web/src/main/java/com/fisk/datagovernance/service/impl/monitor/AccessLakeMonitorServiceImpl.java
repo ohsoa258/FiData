@@ -281,7 +281,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                 String dataSourceType = null;
                                 switch (dataSourceDTO.getConType()){
                                     case DORIS:
-                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName()+".`"+dbNameAndNameVO.getTableName()+"`";
+                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName().toLowerCase()+".`"+dbNameAndNameVO.getTableName()+"`";
                                         log.info("当前查询sql，doris:"+selectSql);
                                         redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
                                         dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName();
