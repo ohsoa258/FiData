@@ -259,9 +259,6 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                     List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
                     if (Objects.equals(app.getDbType(), "sqlserver")){
                         tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
-                            String dbName = i.getDbName();
-                            dbName = dbName + "_dbo";
-                            i.setDbName(dbName);
                             String tableName = i.getTableName();
                             if (tableName.startsWith("dbo_")) {
                                 tableName = tableName.substring(4);
