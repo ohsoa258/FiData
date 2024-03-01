@@ -267,6 +267,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                             return i;
                         }).collect(Collectors.toList());
                     }
+                    log.info("当前库类型:"+app.getDbType());
                     if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
                         for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
                             Connection conn = null;
@@ -281,11 +282,13 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                 switch (dataSourceDTO.getConType()){
                                     case DORIS:
                                         selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName()+".`"+dbNameAndNameVO.getTableName()+"`";
+                                        log.info("当前查询sql，doris:"+selectSql);
                                         redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
                                         dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName();
                                         break;
                                     case SQLSERVER:
                                         selectSql = "select count(1) as 'rowCount' from "+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName()+"";
+                                        log.info("当前查询sql，sqlserver:"+selectSql);
                                         redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_SQLSERVER.getName()+":"+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
                                         dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getName();
                                         break;

@@ -55,7 +55,7 @@ public class AccessLakeMonitorSchedule {
     public void setPrestoPort(String prestoPort){
         AccessLakeMonitorSchedule.prestoPort = prestoPort;
     }
-    @Scheduled(cron = "0 0 0/1 * * ? ") // cron表达式：每天凌晨 0点 执行
+    @Scheduled(cron = "0 0 0 * * ? ") // cron表达式：每天凌晨 0点 执行
     public void doTask(){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String start = simpleDateFormat.format(new Date());
