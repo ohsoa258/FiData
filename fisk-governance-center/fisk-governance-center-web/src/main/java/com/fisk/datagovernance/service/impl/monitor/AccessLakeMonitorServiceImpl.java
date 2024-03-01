@@ -91,7 +91,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         String selectSourceSql = getSelectSourceSql(type, tableDbNameAndNameVO);
         log.info("源待查询sql:"+selectSourceSql);
         List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
-        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(type,tableDbNameAndNameVO);
+        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(tableDbNameAndNameVO);
         int sourceTotal = sourceTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         int targetTotal = targetTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         Map<String, TablesRowsDTO> targetTables = targetTablesRows.stream().collect(Collectors.toMap(i -> i.getDbName() + "." + i.getTableName(), i -> i));
@@ -162,18 +162,10 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
     }
 
-    private List<TablesRowsDTO> getTargetTablesRows(DataSourceTypeEnum type,List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
+    private List<TablesRowsDTO> getTargetTablesRows(List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
         List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
         for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
-            Object json = null;
-            switch (type){
-                case DORIS_CATALOG:
-                    json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
-                    break;
-                case SQLSERVER:
-                    json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_SQLSERVER.getName() + ":"+ dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
-                    break;
-            }
+            Object json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + dbNameAndNameVO.getDbName() + "." + dbNameAndNameVO.getTableName());
             if (json != null){
                 TablesRowsDTO tablesRowsDTO = JSON.parseObject(json.toString(), TablesRowsDTO.class);
                 tablesRowsDTOS.add(tablesRowsDTO);
@@ -281,16 +273,10 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                                 String dataSourceType = null;
                                 switch (dataSourceDTO.getConType()){
                                     case DORIS:
-                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName().toLowerCase()+".`"+dbNameAndNameVO.getTableName()+"`";
+                                        selectSql = "select count(1) as rowCount from "+catalogName+"."+dbNameAndNameVO.getDbName().toLowerCase()+".`"+dbNameAndNameVO.getTableName().toLowerCase()+"`";
                                         log.info("当前查询sql，doris:"+selectSql);
                                         redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName()+":"+catalogName+"."+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
                                         dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName();
-                                        break;
-                                    case SQLSERVER:
-                                        selectSql = "select count(1) as 'rowCount' from "+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName()+"";
-                                        log.info("当前查询sql，sqlserver:"+selectSql);
-                                        redisKey = RedisKeyEnum.MONITOR_ACCESSLAKE_SQLSERVER.getName()+":"+dbNameAndNameVO.getDbName()+"."+dbNameAndNameVO.getTableName();
-                                        dataSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getName();
                                         break;
                                 }
                                 ResultSet result = st.executeQuery(selectSql);
