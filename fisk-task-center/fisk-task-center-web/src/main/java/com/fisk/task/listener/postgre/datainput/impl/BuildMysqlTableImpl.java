@@ -49,11 +49,6 @@ public class BuildMysqlTableImpl implements IbuildTable {
             } else {
                 sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append(") ");
             }
-            // 修改stg表,字段类型
-            if (!l.fieldType.contains("TEXT")) {
-                stgSql.append(l.fieldName).append(" varchar(4000),");
-            }
-
             //是否主键
             if (l.isPrimarykey == 1) {
                 pkFields.add(l.getFieldName());
