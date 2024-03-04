@@ -104,6 +104,15 @@ public class NifiController {
         return SqlForPgOds;
     }
 
+    @ApiOperation("获取DORIS Ods的Sql")
+    @PostMapping("/getSqlForDorisOds")
+    public ResultEntity<List<String>> getSqlForDorisOds(@RequestBody DataAccessConfigDTO configDTO) {
+        ResultEntity<List<String>> SqlForPgOds = new ResultEntity<>();
+        SqlForPgOds.data = iNiFiHelper.getSqlForDorisOds(configDTO);
+        SqlForPgOds.code = 0;
+        return SqlForPgOds;
+    }
+
     @ApiOperation("获取Pg Ods的Sql API&WEBSERVICE")
     @PostMapping("/getSqlForPgOdsV2")
     public ResultEntity<List<String>> getSqlForPgOdsV2(@RequestBody DataAccessConfigDTO configDTO) {

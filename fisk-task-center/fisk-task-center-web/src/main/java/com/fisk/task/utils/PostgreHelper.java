@@ -1,6 +1,7 @@
 package com.fisk.task.utils;
 
 import com.alibaba.fastjson.JSONArray;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -55,6 +56,47 @@ public class PostgreHelper {
             } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                 //开发doris-hive外部目录测试 暂时改为13
                 ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+                if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    DataSourceDTO data = fiDataDataSource.data;
+                    // 加载驱动类
+                    Class.forName(data.conType.getDriverName());
+                    conn = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                } else {
+                    log.error("userclient无法查询到ods库的连接信息");
+                    throw new FkException(ResultEnum.ERROR);
+                }
+            }
+
+        } catch (ClassNotFoundException e) {
+            log.error("找不到驱动程序类 ，加载驱动失败！" + StackTraceHelper.getStackTraceInfo(e));
+        } catch (SQLException e) {
+            log.error("数据库连接失败！" + StackTraceHelper.getStackTraceInfo(e));
+        }
+        return conn;
+    }
+
+    public Connection getConnectionByDbType(BusinessTypeEnum businessTypeEnum,DataSourceTypeEnum conType,Integer targetDbId) {
+        Connection conn = null;
+        try {
+            if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
+
+                ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+                if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+                    DataSourceDTO data = fiDataDataSource.data;
+                    // 加载驱动类
+                    Class.forName(data.conType.getDriverName());
+                    conn = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                } else {
+                    log.error("userclient无法查询到dw库的连接信息");
+                    throw new FkException(ResultEnum.ERROR);
+                }
+            } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
+                ResultEntity<DataSourceDTO> fiDataDataSource = null;
+                if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())){
+                    fiDataDataSource = userClient.getFiDataDataSourceById(targetDbId);
+                }else {
+                    fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+                }
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     DataSourceDTO data = fiDataDataSource.data;
                     // 加载驱动类
@@ -170,6 +212,44 @@ public class PostgreHelper {
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
             stmt.executeUpdate(executsql);
+        } catch (Exception e) {
+            //捕捉错误
+            log.error(e.getMessage());
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,e.getMessage());
+        } finally {
+            //关闭操作对象
+            PostgreHelper.closeStatement(stmt);
+            //关闭连接
+            PostgreHelper.closeConn(conn);
+        }
+    }
+
+    /**
+     * 执行pgsql语句 2021年08月27日10:29:12 Dennyhui
+     *
+     * @param executsql
+     * @param businessTypeEnum
+     */
+    public void postgreExecuteSqlByDbType(String executsql, BusinessTypeEnum businessTypeEnum, DataSourceTypeEnum conType,Integer targetDbId) {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            // 1获得连接
+            conn = getConnectionByDbType(businessTypeEnum,conType,targetDbId);
+            // 2执行对象
+            stmt = conn.createStatement();
+            // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作
+            if (executsql.contains(";")){
+                String[] sqls = executsql.split(";");
+                for (String sql : sqls) {
+                    stmt.executeUpdate(sql);
+                    Thread.sleep(500);
+                }
+
+            }else {
+                stmt.executeUpdate(executsql);
+            }
+
         } catch (Exception e) {
             //捕捉错误
             log.error(e.getMessage());

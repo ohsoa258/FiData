@@ -171,7 +171,7 @@ public class BuildDataModelDorisTableListener
                     }
                     log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
                 } else {
-                    msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+                    msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType, null);
 //                    resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
 //                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
                     if (!ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg) && !ResultEnum.SUCCESS.getMsg().equals(msg)) {
@@ -490,7 +490,7 @@ public class BuildDataModelDorisTableListener
 
                 //调用方法，保存建模相关表结构数据(保存版本号)
                 ResultEnum resultEnum = null;
-                String msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+                String msg = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType, null);
                 if (!ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg) && !ResultEnum.SUCCESS.getMsg().equals(msg)) {
                     taskPgTableStructureMapper.updatevalidVersion(version);
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, msg);

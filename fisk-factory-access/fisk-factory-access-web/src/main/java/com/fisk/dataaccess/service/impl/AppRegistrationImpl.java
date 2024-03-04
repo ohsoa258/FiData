@@ -50,6 +50,7 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
@@ -579,6 +580,139 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
+     * hudi入仓配置 重新同步指定单个来源数据库对应库下的表信息到fidata平台配置库
+     *
+     * @param dbId 引用的系统数据源id
+     * @param appDatasourceId 接入库里存的数据源id
+     * @param appName 应用名称
+     * @param appId 应用id
+     * @param tblId 表id
+     * @param fieldListPos 已有的字段集合
+     * @param tblName 表名称 （sqlserver的表名则带架构）
+     */
+    public void hudiReSyncOneTableToFidataConfig(Integer dbId, Integer appDatasourceId, Long appId, String appName, String tblName, Long tblId, List<TableFieldsPO> fieldListPos) {
+        log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
+        ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
+        DataSourceDTO dto = datasource.getData();
+        if (dto == null) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        Connection conn = null;
+        MongoClient mongoClient = null;
+
+        //获取到所有表名
+        List<TableStructureDTO> tables = new ArrayList<>();
+
+        log.info("引用的数据源类型" + dto.conType);
+        try {
+            switch (dto.conType) {
+                case MYSQL:
+                    MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tables = mysqlConUtils.getColNamesV2(conn, tblName, dto.conDbname);
+                    break;
+                case SQLSERVER:
+                    SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tables = sqlServerPlusUtils.getColumnsNameV2(conn, tblName, dto.conDbname);
+                    break;
+                case ORACLE:
+                    OracleUtils oracleUtils = new OracleUtils();
+                    log.info("ORACLE驱动开始加载");
+                    log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                    log.info("ORACLE驱动加载完毕");
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    tables = oracleUtils.getTableColumnInfoList(conn, tblName, dto.conDbname);
+                    break;
+                case MONGODB:
+                    MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                    ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
+                    List<ServerAddress> serverAddresses = new ArrayList<>();
+                    serverAddresses.add(serverAddress);
+
+                    //账号 验证数据库名 密码
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
+                    List<MongoCredential> mongoCredentials = new ArrayList<>();
+                    mongoCredentials.add(scramSha1Credential);
+
+                    mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+
+                    tables = mongoDbUtils.getTrueTableNameListForOneTbl(mongoClient, dto.conDbname, tblName);
+                default:
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+            }
+
+            log.info("查询到的库表字段详情：" + tables);
+            //todo:将获取到的字段和已有字段作比较  已存在的不变动  不存在的删掉  多出来的则新增
+            //已有的字段名称
+            List<String> existingFieldNames = fieldListPos.stream().map(TableFieldsPO::getFieldName).collect(Collectors.toList());
+            //新同步过来的字段名称
+            List<String> newlySyncedFieldNames = tables.stream().map(TableStructureDTO::getFieldName).collect(Collectors.toList());
+
+            //获取当前表的字段
+            List<TableFieldsDTO> list = new ArrayList<>();
+            for (TableStructureDTO field : tables) {
+                //1.已存在的不变动
+                if (existingFieldNames.contains(field.fieldName)){
+                    continue;
+                }
+
+                //2.多出来的则新增
+                TableFieldsDTO fieldDTO = new TableFieldsDTO();
+                fieldDTO.setTableAccessId(tblId);
+                fieldDTO.setSourceFieldName(field.fieldName);
+                fieldDTO.setSourceFieldType(field.fieldType);
+                fieldDTO.setFieldName(field.fieldName);
+                //todo:字段类型暂时设置为STRING
+                fieldDTO.setFieldType("STRING");
+//                fieldDTO.setFieldType(field.fieldType);
+                //todo:字段长度暂时不要
+//                fieldDTO.setFieldLength((long) field.fieldLength);
+                fieldDTO.setFieldDes(field.getFieldDes());
+                fieldDTO.setIsPrimarykey(field.getIsPk());
+                //1：是实时物理表的字段，
+                //0：非实时物理表的字段
+                fieldDTO.setIsRealtime(1);
+                fieldDTO.setIsBusinesstime(0);
+                fieldDTO.setIsTimestamp(0);
+                fieldDTO.setSourceDbName(field.sourceDbName);
+                fieldDTO.setSourceTblName(tblName);
+                list.add(fieldDTO);
+            }
+            List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
+            if (!CollectionUtils.isEmpty(tableFieldsPOS)){
+                tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
+            }
+
+
+            //3.不存在的删掉
+            ArrayList<Long> fieldIdsNeededToBeDel = new ArrayList<>();
+            for (TableFieldsPO fieldPO : fieldListPos) {
+                if (!newlySyncedFieldNames.contains(fieldPO.getFieldName())){
+                    fieldIdsNeededToBeDel.add(fieldPO.getId());
+                }
+            }
+            if (!CollectionUtils.isEmpty(fieldIdsNeededToBeDel)){
+                tableFieldsImpl.removeByIds(fieldIdsNeededToBeDel);
+            }
+
+
+        } catch (Exception e) {
+            log.error("hudi-入仓配置重新同步单张表--异常：" + e);
+            throw new FkException(ResultEnum.ACCESS_HUDI_RESYNC_ERROR, e);
+        } finally {
+            AbstractCommonDbHelper.closeConnection(conn);
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
+        }
+
+    }
+
+    /**
      * hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
      * 同步方式 1全量  2增量
      *
@@ -607,7 +741,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             //获取应用引用的appDatasource id
             int appDatasourceId = Math.toIntExact(appSource.get(0).getId());
 
-            //同步方式 1全量  2增量
+            //同步方式 1全量  2增量  3同步指定库 4
             int syncType = syncDto.getSyncType();
             switch (syncType) {
                 case 1:
@@ -627,6 +761,50 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             throw new FkException(ResultEnum.ACCESS_HUDI_SYNC_ERROR);
         }
 
+    }
+
+    /**
+     * hudi入仓配置 重新同步单个指定表
+     * 某张表结构变了  想重新同步一下   这张表的字段  已有的不要动  不存在的删掉  新加的再同步过来
+     *
+     * @param syncDto
+     */
+    @Override
+    public Object hudiReSyncOneTable(HudiReSyncDTO syncDto) {
+        try {
+            //获取应用id
+            Long appId = syncDto.getAppId();
+
+            LambdaQueryWrapper<AppRegistrationPO> w = new LambdaQueryWrapper<>();
+            w.eq(AppRegistrationPO::getId, appId);
+            //获取应用基本信息
+            AppRegistrationPO one = getOne(w);
+
+            //获取应用引用的appDatasource
+            List<AppDataSourceDTO> appSource = appDataSourceImpl.getAppSourcesByAppId(appId);
+            if (CollectionUtils.isEmpty(appSource)) {
+                return ResultEnum.DATASOURCE_INFORMATION_ISNULL;
+            }
+
+            //应用引用的系统模块平台配置数据源id
+            int systemDataSourceId = appSource.get(0).getSystemDataSourceId();
+            //获取应用引用的appDatasource id
+            int appDatasourceId = Math.toIntExact(appSource.get(0).getId());
+
+            //获取当前要重新同步的物理表id
+            Long accessTblId = syncDto.getAccessTblId();
+            LambdaQueryWrapper<TableFieldsPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TableFieldsPO::getTableAccessId, accessTblId);
+            //获取已同步的所有字段
+            List<TableFieldsPO> fieldListPos = tableFieldsImpl.list(wrapper);
+
+            hudiReSyncOneTableToFidataConfig(systemDataSourceId, appDatasourceId, appId, one.getAppName(), fieldListPos.get(0).getSourceTblName(), accessTblId, fieldListPos);
+
+            return ResultEnum.SUCCESS;
+        } catch (Exception e) {
+            log.error("hudi入仓配置同步表失败：" + e);
+            throw new FkException(ResultEnum.ACCESS_HUDI_SYNC_ERROR);
+        }
     }
 
 
@@ -876,7 +1054,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
-            tableNames = mongoDbUtils.getTrueTableNameListByTarget(mongoClient,dto.getConDbname());
+            tableNames = mongoDbUtils.getTrueTableNameListByTarget(mongoClient, dto.getConDbname());
             mongoClient.close();
             log.info("查询到的库表字段详情：" + tableNames);
             for (TablePyhNameDTO table : tableNames) {
@@ -1091,7 +1269,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     if (tableAccessPO.getTableName().equals(tableAccessDTO.getTableName())) {
                         ifSync = false;
                         break;
-                    }else {
+                    } else {
                         ifSync = true;
                     }
                 }
@@ -1185,7 +1363,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         if (tableAccessPO.getTableName().equals(tableAccessDTO.getTableName())) {
                             ifSync = false;
                             break;
-                        }else {
+                        } else {
                             ifSync = true;
                         }
                     }
@@ -3424,9 +3602,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
         //cdc类型应用， 表名称为原名称
-        if (app.appType==2){
+        if (app.appType == 2) {
             table.setName(tableAccess.getTableName());
-        }else {
+        } else {
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
         }
         table.setAppType(app.appType);

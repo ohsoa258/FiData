@@ -18,6 +18,8 @@ public class CodePreviewHelper {
                 return new FactoryCodePreviewPgSqlImpl();
             case DORIS:
                 return new FactoryCodePreviewDorisSqlImpl();
+            case MYSQL:
+                return new FactoryCodePreviewMysqlApiSqlImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

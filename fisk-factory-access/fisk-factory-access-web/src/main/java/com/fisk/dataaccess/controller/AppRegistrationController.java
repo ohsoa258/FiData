@@ -18,6 +18,7 @@ import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
+import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
@@ -513,6 +514,19 @@ public class AppRegistrationController {
     @PostMapping("/hudiSyncAllTables")
     public ResultEntity<Object> hudiSyncAllTables(@RequestBody HudiSyncDTO syncDto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.hudiSyncAllTables(syncDto));
+    }
+
+    /**
+     * hudi入仓配置 重新同步单个指定表
+     * 某张表结构变了  想重新同步一下   这张表的字段  已有的不要动  不存在的删掉  新加的再同步过来
+     *
+     *
+     * @param syncDto
+     */
+    @ApiOperation("hudi入仓配置 重新同步单个指定表")
+    @PostMapping("/hudiReSyncOneTable")
+    public ResultEntity<Object> hudiReSyncOneTable(@RequestBody HudiReSyncDTO syncDto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.hudiReSyncOneTable(syncDto));
     }
 
 }

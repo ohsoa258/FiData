@@ -75,7 +75,9 @@ public class BuildDataInputPgTableListener {
         ModelPublishTableDTO dto = buildPhysicalTableDTO.modelPublishTableDTO;
         //获取ods数据源的信息  dataSourceOdsId=2 ->  ods
         //开发doris-hive外部目录测试 暂时改为13
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+
+        //原本固定用的 dmp_system_db库里 tb_datasource_config id为2的 dmp_ods，现改为数据接入 应用在页面选择的目标位置
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(buildPhysicalTableDTO.targetDbId);
         DataSourceTypeEnum conType = null;
         log.info("ods数据源信息{}", JSON.toJSONString(fiDataDataSource));
 
@@ -99,29 +101,75 @@ public class BuildDataInputPgTableListener {
         DateFormat df = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         Calendar calendar = Calendar.getInstance();
         String version = df.format(calendar.getTime());
-        ResultEnum resultEnum = ResultEnum.SQL_ERROR;
+        ResultEnum resultEnum = null;
         try {
 
             //非hudi 原非实时物理表流程和实时api流程
             if (!buildPhysicalTableDTO.ifHive) {
                 //保存接入相关表结构数据(保存版本号)
-                resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
-                log.info("数接执行修改表结构的存储过程返回结果:" + resultEnum);
+                String msg = null;
+                //如果目标数据源类型既不是doris也不是mysql
+                if (!DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())
+                        && !DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(conType.getName())
+                ) {
+                    resultEnum = taskPgTableStructureHelper.saveTableStructure(dto, version, conType);
+                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                        taskPgTableStructureMapper.updatevalidVersion(version);
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, "修改表结构失败，请您检查表是否存在或字段数据格式是否能被转换为目标格式");
+                    }
+                    log.info("数仓执行修改表结构的存储过程返回结果" + resultEnum);
+                } else {
+                    msg = taskPgTableStructureHelper.saveTableStructureForDoris(dto, version, conType,buildPhysicalTableDTO.targetDbId);
+//                    resultEnum = taskPgTableStructureHelper.saveTableStructureForDoris(modelPublishTableDTO, version, conType);
+//                    if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    if (!ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg) && !ResultEnum.SUCCESS.getMsg().equals(msg)) {
+                        taskPgTableStructureMapper.updatevalidVersion(version);
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL, msg);
+                    }
+                    log.info("数仓执行修改表结构的存储过程返回结果" + msg);
+                }
+
 
                 log.info("保存版本号方法执行成功");
                 //获取建表语句
                 List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);
                 log.info("建表语句:" + JSON.toJSONString(sqlList));
                 //执行第二条建表语句--创建stg表
-                BusinessResult result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
+                BusinessResult result = null;
+
+                //Mysql 第三方ods  数据接入-restfulApi目标位置是第三方的mysql数据库
+                if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
+                    result = iJdbcBuild.buildTableByTargetDbType(sqlList.get(1), BusinessTypeEnum.DATAINPUT, conType, buildPhysicalTableDTO.targetDbId);
+                } else {
+                    result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
+                }
+
                 if (!result.success) {
                     throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
                 }
-                if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
-                    //执行第一条建表语句--创建目标表
-                    iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
-                    log.info("【PGSTG】" + sqlList.get(0));
-                    log.info("pg：建表完成");
+
+                if (resultEnum != null) {
+                    if (resultEnum.getCode() == ResultEnum.TASK_TABLE_NOT_EXIST.getCode()) {
+                        //执行第一条建表语句--创建目标表
+                        //Mysql 第三方ods  数据接入-restfulApi目标位置是第三方的mysql数据库
+                        if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
+                            iJdbcBuild.buildTableByTargetDbType(sqlList.get(0), BusinessTypeEnum.DATAINPUT, conType, buildPhysicalTableDTO.targetDbId);
+                        } else {
+                            iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
+                        }
+                        log.info("【PGODS】" + sqlList.get(0));
+                        log.info("pg：建表完成");
+                    }
+                } else {
+                    if (ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg)) {
+                        if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
+                            iJdbcBuild.buildTableByTargetDbType(sqlList.get(0), BusinessTypeEnum.DATAINPUT, conType, buildPhysicalTableDTO.targetDbId);
+                        } else {
+                            iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
+                        }
+                        log.info("【PGODS】" + sqlList.get(0));
+                        log.info("pg：建表完成");
+                    }
                 }
                 //hive(hudi)只建doris的外部目录
             } else {
@@ -168,6 +216,10 @@ public class BuildDataInputPgTableListener {
                     tableCount = Integer.parseInt(count.toString());
                 }
                 if (tableCount == buildPhysicalTableDTO.apiTableNames.size()) {
+                    dc.updateApiPublishStatus(modelPublishStatusDTO);
+                } else if (conType.getName().equals(DataSourceTypeEnum.DORIS.getName())) {
+                    dc.updateApiPublishStatus(modelPublishStatusDTO);
+                } else if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
                     dc.updateApiPublishStatus(modelPublishStatusDTO);
                 }
             } else if (Objects.equals(buildPhysicalTableDTO.driveType, DbTypeEnum.api)) {

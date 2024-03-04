@@ -2,6 +2,7 @@ package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -28,6 +29,23 @@ public class JdbcBuildImpl implements IJdbcBuild {
         String msg = null;
         try {
             postgreHelper.postgreExecuteSql(executsql,businessTypeEnum);
+            re = true;
+        } catch (Exception e) {
+            //捕捉错误
+            log.error(e.getMessage());
+            msg = e.getMessage();
+            throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL,e.getMessage());
+        }
+        BusinessResult res = new BusinessResult(re, msg);
+        return res;
+    }
+
+    @Override
+    public BusinessResult buildTableByTargetDbType(String executsql, BusinessTypeEnum businessTypeEnum, DataSourceTypeEnum conType,Integer targetDbId) {
+        boolean re = false;
+        String msg = null;
+        try {
+            postgreHelper.postgreExecuteSqlByDbType(executsql,businessTypeEnum,conType,targetDbId);
             re = true;
         } catch (Exception e) {
             //捕捉错误

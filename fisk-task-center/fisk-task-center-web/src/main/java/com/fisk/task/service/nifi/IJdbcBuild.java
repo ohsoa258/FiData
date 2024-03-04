@@ -1,6 +1,7 @@
 package com.fisk.task.service.nifi;
 
 import com.fisk.common.core.baseObject.entity.BusinessResult;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.task.dto.doris.UpdateLogAndImportDataDTO;
 
@@ -14,6 +15,14 @@ public interface IJdbcBuild {
       * @return 返回语句执行结果
       */
      BusinessResult postgreBuildTable(String executsql, BusinessTypeEnum businessTypeEnum);
+
+     /**
+      * executsql   执行的sql语句
+      * businessType   执行的数据库
+      * @param conType 目标数据库类型
+      * @return 返回语句执行结果
+      */
+     BusinessResult buildTableByTargetDbType(String executsql, BusinessTypeEnum businessTypeEnum, DataSourceTypeEnum conType,Integer targetDbId);
 
      /**
       * executsql   执行的sql语句
