@@ -78,4 +78,15 @@ public class UserAuthController {
         return userAuthService.singleLogin(ticketInfoDTO);
     }
 
+    /**
+     * 强生交通--单点登录
+     *
+     * @return 返回值 accesstoken
+     */
+    @ApiOperation(value = "强生交通--单点登录")
+    @PostMapping("/qsLogin")
+    public ResultEntity<String> qsLogin() {
+        return userAuthService.qsLogin();
+    }
+
 }

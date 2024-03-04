@@ -41,4 +41,11 @@ public interface UserAuthService {
      * @return
      */
     ResultEntity<String> singleLogin(TicketInfoDTO ticketInfoDTO);
+
+    /**
+     * 浦东应急局--单点登录
+     *
+     * @return accessToken
+     */
+    ResultEntity<String> qsLogin();
 }

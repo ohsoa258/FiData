@@ -1,8 +1,10 @@
 package com.fisk.auth.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.fisk.auth.constants.JwtConstants;
 import com.fisk.auth.dto.UserAuthDTO;
+import com.fisk.auth.dto.ssologin.QsSSODTO;
 import com.fisk.auth.dto.ssologin.SSOResultEntityDTO;
 import com.fisk.auth.dto.ssologin.SSOUserInfoDTO;
 import com.fisk.auth.dto.ssologin.TicketInfoDTO;
@@ -28,7 +30,6 @@ import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.enums.ssologin.SSORoleInfoEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -244,6 +245,37 @@ public class UserAuthServiceImpl implements UserAuthService {
             //todo:临时用户定期删除 待讨论
 
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.ERROR, e);
+        }
+    }
+
+    @Override
+    public ResultEntity<String> qsLogin() {
+        try {
+            QsSSODTO qsSSODTO = new QsSSODTO();
+            qsSSODTO.setClientId("1212540386178895872");
+            qsSSODTO.setClientSecret("e50cf84e527843568215612c9275e989");
+
+            String param = JSON.toJSONString(qsSSODTO);
+            //强生交通获取accessToken的地址
+            String url = "http://172.26.1.13:8080/wicrenet-iams-api/authentication/accessToken";
+            log.info("*****强生交通获取accessToken的地址*****" + url);
+            //获取
+            String result = HttpUtils.HttpPost(url, param);
+            log.info("*****强生交通获取accessToken方法的返回值*****" + result);
+            //解析返回的对象
+            JSONObject jsonObject = JSON.parseObject(result);
+            String code = jsonObject.getString("code");
+            String message = jsonObject.getString("message");
+            JSONObject data = jsonObject.getObject("data", JSONObject.class);
+            String accessToken = data.getString("accessToken");
+            log.info("*****code:*****" + code);
+            log.info("*****message:*****" + message);
+            log.info("*****data:*****" + data);
+            log.info("*****accessToken:*****" + accessToken);
+
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, accessToken);
         } catch (Exception e) {
             throw new FkException(ResultEnum.ERROR, e);
         }
