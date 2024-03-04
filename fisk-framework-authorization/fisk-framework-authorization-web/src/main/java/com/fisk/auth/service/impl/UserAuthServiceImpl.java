@@ -277,6 +277,8 @@ public class UserAuthServiceImpl implements UserAuthService {
 
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, accessToken);
         } catch (Exception e) {
+            log.error("强生交通获取accessToken方法报错msg："+e.getMessage());
+            log.error("强生交通获取accessToken方法报错stack："+e);
             throw new FkException(ResultEnum.ERROR, e);
         }
     }
