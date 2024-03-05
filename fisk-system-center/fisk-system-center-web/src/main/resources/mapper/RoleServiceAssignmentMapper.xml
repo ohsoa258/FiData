@@ -11,8 +11,11 @@
             role.switch_delete
         FROM
             tb_role_service_assignment role
+            LEFT JOIN tb_service_registry registry
+            on role.service_id=registry.id
         WHERE
             role.del_flag = 1
+            and registry.del_flag = 1
             and role.role_id = #{roleId}
     </select>
 </mapper>
