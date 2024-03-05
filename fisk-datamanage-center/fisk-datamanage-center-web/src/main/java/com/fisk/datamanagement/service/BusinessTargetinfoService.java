@@ -1,6 +1,5 @@
 package com.fisk.datamanagement.service;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
@@ -67,5 +66,5 @@ public interface BusinessTargetinfoService {
      */
     List<BusinessTargetinfoPO> getDimensionList(String name);
 
-
+    JSONObject getTargetinfoHistory(String historyId);
 }

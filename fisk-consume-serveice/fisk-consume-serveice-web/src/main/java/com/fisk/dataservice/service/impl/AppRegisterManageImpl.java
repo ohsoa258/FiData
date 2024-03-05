@@ -654,9 +654,9 @@ public class AppRegisterManageImpl
             // 请求参数新增分页参数说明
             requestDTO = new ApiRequestDTO();
             requestDTO.setParmName("size");
-            requestDTO.setIsRequired("否");
+            requestDTO.setIsRequired("是");
             requestDTO.setParmType("Integer"); //String特指这个类型，string适用于引用对象
-            requestDTO.setParmDesc("页数，建议每页500条，默认为null");
+            requestDTO.setParmDesc("页数：若未开启单次查询限制则该参数必填，建议每页500条。\n若开启单次查询限制则查询条数不会超过配置的最大条数，默认为最大条数。");
             requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
             apiRequestDTOS_fixed.add(requestDTO);
             trReqIndex_fixed[0]++;

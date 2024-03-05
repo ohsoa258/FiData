@@ -1,9 +1,9 @@
 package com.fisk.system.service;
 
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.LoginServiceDTO;
 import com.fisk.system.dto.RoleServiceAssignmentDTO;
+import com.fisk.system.dto.SaveRoleServiceAssignmentDTO;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public interface IRoleServiceAssignmentService {
      * @param dto dto
      * @return 保存结果
      */
-    ResultEnum addRoleServiceAssignment(AssignmentDTO dto);
+    ResultEnum addRoleServiceAssignment(SaveRoleServiceAssignmentDTO dto);
 
     /**
      * 根据登录人id,获取服务列表

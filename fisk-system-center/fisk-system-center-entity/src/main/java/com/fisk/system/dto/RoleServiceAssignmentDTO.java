@@ -15,4 +15,14 @@ public class RoleServiceAssignmentDTO {
     @ApiModelProperty(value = "服务Id")
     public int serviceId;
 
+    @ApiModelProperty(value = "是否启用添加")
+    public int switchAdd;
+
+    @ApiModelProperty(value = "是否启用修改")
+    public int switchUpdate;
+
+    @ApiModelProperty(value = "是否启用删除")
+    public int switchDelete;
+
+
 }

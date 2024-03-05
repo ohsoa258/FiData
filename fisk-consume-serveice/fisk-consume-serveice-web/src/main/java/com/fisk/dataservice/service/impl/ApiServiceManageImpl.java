@@ -239,7 +239,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             }
             //判断是否有最大条数限制
             if (apiInfo.getMaxSizeType() == 1){
-                if (size > apiInfo.getMaxSize()) {
+                if (size == null || size > apiInfo.getMaxSize()) {
                     size = apiInfo.getMaxSize();
                     dto.setSize(size);
                 }

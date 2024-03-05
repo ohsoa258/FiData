@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
 import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.QueryDTO;
+import com.fisk.system.dto.SaveRoleServiceAssignmentDTO;
 import com.fisk.system.dto.userinfo.UserGroupQueryDTO;
 import com.fisk.system.dto.userinfo.UserPowerDTO;
 import com.fisk.system.service.IRoleInfoService;
@@ -20,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -83,7 +85,7 @@ public class PermissionController {
 
     @PostMapping("/addService")
     @ApiOperation("根据角色,添加关联服务")
-    public ResultEntity<Object> addRoleService(@Validated @RequestBody AssignmentDTO dto) {
+    public ResultEntity<Object> addRoleService(@Validated @RequestBody SaveRoleServiceAssignmentDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.addRoleServiceAssignment(dto));
     }
 

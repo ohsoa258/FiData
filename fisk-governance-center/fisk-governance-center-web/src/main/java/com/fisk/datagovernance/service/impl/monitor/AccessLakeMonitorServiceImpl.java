@@ -211,6 +211,8 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 }).collect(Collectors.joining(","));
                 selectSourceSql = selectSourceSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
                 break;
+            case MONGODB:
+                break;
             default:
                 break;
         }

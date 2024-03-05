@@ -48,6 +48,16 @@ public class LoginServiceDTO {
     @ApiModelProperty(value = "无序列")
     public Integer sequenceNo;
 
+    @ApiModelProperty(value = "是否启用添加")
+    public int switchAdd;
+
+    @ApiModelProperty(value = "是否启用修改")
+    public int switchUpdate;
+
+    @ApiModelProperty(value = "是否启用删除")
+    public int switchDelete;
+
+
     @ApiModelProperty(value = "子类")
     public List<LoginServiceDTO> children;
 }

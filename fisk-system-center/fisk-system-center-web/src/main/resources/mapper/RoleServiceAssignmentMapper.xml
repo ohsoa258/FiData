@@ -1,0 +1,18 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.system.mapper.RoleServiceAssignmentMapper">
+    <select id="getRoleServiceAssignmentDto" resultType="com.fisk.system.dto.RoleServiceAssignmentDTO">
+        SELECT
+            role.role_id,
+            role.service_id,
+            role.switch_add,
+            role.switch_update,
+            role.switch_delete
+        FROM
+            tb_role_service_assignment role
+        WHERE
+            role.del_flag = 1
+            and role.role_id = #{roleId}
+    </select>
+</mapper>
