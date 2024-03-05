@@ -9,6 +9,7 @@ import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.TableDbNameAndNameVO;
 import lombok.extern.slf4j.Slf4j;
@@ -72,20 +73,32 @@ public class AccessLakeMonitorSchedule {
         Map<String,List<String>> map = new HashMap<>();
         if (CollectionUtils.isNotEmpty(data)){
             for (CDCAppNameAndTableVO app : data) {
+                DataSourceTypeEnum type = DataSourceTypeEnum.getValue(app.getDbType());
                 List<String> selectSql = new ArrayList<>();
                 List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
-                if (Objects.equals(app.getDbType(), "sqlserver")){
-                    tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
-                        String dbName = i.getDbName();
-                        dbName = dbName + "_dbo";
-                        i.setDbName(dbName);
-                        String tableName = i.getTableName();
-                        if (tableName.startsWith("dbo_")) {
-                            tableName = tableName.substring(4);
-                        }
-                        i.setTableName(tableName);
-                        return i;
-                    }).collect(Collectors.toList());
+                switch (type){
+                    case SQLSERVER:
+                        tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                            String dbName = i.getDbName();
+                            dbName = dbName + "_dbo";
+                            i.setDbName(dbName);
+                            String tableName = i.getTableName();
+                            if (tableName.startsWith("dbo_")) {
+                                tableName = tableName.substring(4);
+                            }
+                            i.setTableName(tableName);
+                            return i;
+                        }).collect(Collectors.toList());
+                        break;
+                    case MONGODB:
+                        tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                            String tableName = i.getTableName();
+                            String[] split = tableName.split("_", 2);
+                            i.setDbName(split[0]);
+                            i.setTableName(split[1]);
+                            return i;
+                        }).collect(Collectors.toList());
+                        break;
                 }
                 if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
                     if (tableDbNameAndNameVO.size()>50){

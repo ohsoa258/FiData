@@ -18,7 +18,14 @@ import com.fisk.datagovernance.vo.monitor.AccessLakeMonitorDetailVO;
 import com.fisk.datagovernance.vo.monitor.AccessLakeMonitorVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -90,8 +97,15 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
         String selectSourceSql = getSelectSourceSql(type, tableDbNameAndNameVO);
         log.info("源待查询sql:"+selectSourceSql);
-        List<TablesRowsDTO> sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
-        List<TablesRowsDTO> targetTablesRows = getTargetTablesRows(tableDbNameAndNameVO);
+        List<TablesRowsDTO> sourceTablesRows = null;
+        List<TablesRowsDTO> targetTablesRows = null;
+        if (type == DataSourceTypeEnum.MONGODB){
+            sourceTablesRows = getMongoSourceTablesRows(appDataSourceDTO, tableDbNameAndNameVO);
+            targetTablesRows = getMongoTargetTablesRows(tableDbNameAndNameVO);
+        }else {
+            sourceTablesRows = getSourceTablesRows(appDataSourceDTO, selectSourceSql);
+            targetTablesRows = getTargetTablesRows(tableDbNameAndNameVO);
+        }
         int sourceTotal = sourceTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         int targetTotal = targetTablesRows.stream().mapToInt(TablesRowsDTO::getRows).sum();
         Map<String, TablesRowsDTO> targetTables = targetTablesRows.stream().collect(Collectors.toMap(i -> i.getDbName() + "." + i.getTableName(), i -> i));
@@ -121,7 +135,41 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         accessLakeMonitorVO.setDetailVO(detailVOS);
         return accessLakeMonitorVO;
     }
+    private List<TablesRowsDTO> getMongoSourceTablesRows(AppDataSourceDTO appDataSourceDTO, List<TableDbNameAndNameVO> tableDbNameAndNameVO) {
 
+        Map<String, List<String>> map = getTableDbNameAndNames(tableDbNameAndNameVO);
+        ServerAddress serverAddress = new ServerAddress(appDataSourceDTO.host, Integer.parseInt(appDataSourceDTO.port));
+        List<ServerAddress> serverAddresses = new ArrayList<>();
+        serverAddresses.add(serverAddress);
+
+        //账号 验证数据库名 密码
+        MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(appDataSourceDTO.connectAccount, appDataSourceDTO.sysNr, appDataSourceDTO.connectPwd.toCharArray());
+        List<MongoCredential> mongoCredentials = new ArrayList<>();
+        mongoCredentials.add(scramSha1Credential);
+
+        MongoClient mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+        List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
+        for (Map.Entry<String, List<String>> dbListEntry : map.entrySet()) {
+            List<String> tableNames = dbListEntry.getValue();
+            MongoDatabase database = mongoClient.getDatabase(dbListEntry.getKey());
+            MongoIterable<String> collectionNames = database.listCollectionNames();
+            for (String collectionName : collectionNames) {
+                if (!tableNames.contains(collectionName)){
+                    continue;
+                }
+                MongoCollection<Document> collection = database.getCollection(collectionName);
+                long count = collection.countDocuments();
+                TablesRowsDTO tablesRowsDTO = new TablesRowsDTO();
+                tablesRowsDTO.setDbName(database.getName());
+                tablesRowsDTO.setTableName(collectionName);
+                tablesRowsDTO.setRows((int)count);
+                tablesRowsDTOS.add(tablesRowsDTO);
+                log.info("Database Name: " + database.getName() + ", Collection Name: " + collectionName + ", Count: " + count);
+            }
+        }
+        mongoClient.close();
+        return tablesRowsDTOS;
+    }
     private List<TablesRowsDTO> getSourceTablesRows(AppDataSourceDTO appDataSourceDTO, String selectSql) {
         Connection conn = null;
         Statement st = null;
@@ -172,6 +220,38 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
             }
         }
         return tablesRowsDTOS;
+    }
+
+    private List<TablesRowsDTO> getMongoTargetTablesRows(List<TableDbNameAndNameVO> tableDbNameAndNameVO ) {
+        Map<String, List<String>> tableDbNameAndNames = getTableDbNameAndNames(tableDbNameAndNameVO);
+        List<TablesRowsDTO> tablesRowsDTOS = new ArrayList<>();
+        for (Map.Entry<String, List<String>> stringListEntry : tableDbNameAndNames.entrySet()) {
+            List<String> tableName = stringListEntry.getValue();
+            for (String s : tableName) {
+                Object json = redisUtil.get(RedisKeyEnum.MONITOR_ACCESSLAKE_DORIS.getName() + ":" + catalogName + "." + stringListEntry.getKey() + "." + s);
+                if (json != null){
+                    TablesRowsDTO tablesRowsDTO = JSON.parseObject(json.toString(), TablesRowsDTO.class);
+                    tablesRowsDTOS.add(tablesRowsDTO);
+                }
+            }
+        }
+        return tablesRowsDTOS;
+    }
+
+    private Map<String, List<String>> getTableDbNameAndNames(List<TableDbNameAndNameVO> tableDbNameAndNameVO){
+        List<String> tableDbNameAndNames = tableDbNameAndNameVO.stream().map(TableDbNameAndNameVO::getTableName).collect(Collectors.toList());
+        //处理mongoDB的库名和表名
+        Map<String, List<String>> map = new HashMap<>();
+        for (String tableName : tableDbNameAndNames) {
+            String[] parts = tableName.split("_", 2);
+            String key = parts[0];
+            String value = parts[1];
+            if (!map.containsKey(key)) {
+                map.put(key, new ArrayList<>());
+            }
+            map.get(key).add(value);
+        }
+        return map;
     }
 
 
@@ -262,8 +342,18 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                         }).collect(Collectors.toList());
                     }
                     log.info("当前库类型:"+app.getDbType());
+                    DataSourceTypeEnum type = DataSourceTypeEnum.getValue(app.getDbType());
                     if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
                         for (TableDbNameAndNameVO dbNameAndNameVO : tableDbNameAndNameVO) {
+                            //处理mongodb
+                            switch (type){
+                                case MONGODB:
+                                    String tableName = dbNameAndNameVO.getTableName();
+                                    String[] split = tableName.split("_", 2);
+                                    dbNameAndNameVO.setDbName(split[0]);
+                                    dbNameAndNameVO.setTableName(split[1]);
+                                    break;
+                            }
                             Connection conn = null;
                             Statement st = null;
                             String selectSql = null;
