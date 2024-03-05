@@ -41,11 +41,11 @@ public class JdbcBuildImpl implements IJdbcBuild {
     }
 
     @Override
-    public BusinessResult buildTableByTargetDbType(String executsql, BusinessTypeEnum businessTypeEnum, DataSourceTypeEnum conType,Integer targetDbId) {
+    public BusinessResult buildTableByTargetDbType(String executsql, BusinessTypeEnum businessTypeEnum,Integer targetDbId) {
         boolean re = false;
         String msg = null;
         try {
-            postgreHelper.postgreExecuteSqlByDbType(executsql,businessTypeEnum,conType,targetDbId);
+            postgreHelper.postgreExecuteSqlByDbType(executsql,businessTypeEnum,targetDbId);
             re = true;
         } catch (Exception e) {
             //捕捉错误

@@ -75,7 +75,7 @@ public class PostgreHelper {
         return conn;
     }
 
-    public Connection getConnectionByDbType(BusinessTypeEnum businessTypeEnum,DataSourceTypeEnum conType,Integer targetDbId) {
+    public Connection getConnectionByDbType(BusinessTypeEnum businessTypeEnum,Integer targetDbId) {
         Connection conn = null;
         try {
             if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAMODEL)) {
@@ -226,12 +226,12 @@ public class PostgreHelper {
      * @param executsql
      * @param businessTypeEnum
      */
-    public void postgreExecuteSqlByDbType(String executsql, BusinessTypeEnum businessTypeEnum, DataSourceTypeEnum conType,Integer targetDbId) {
+    public void postgreExecuteSqlByDbType(String executsql, BusinessTypeEnum businessTypeEnum,Integer targetDbId) {
         Connection conn = null;
         Statement stmt = null;
         try {
             // 1获得连接
-            conn = getConnectionByDbType(businessTypeEnum,conType,targetDbId);
+            conn = getConnectionByDbType(businessTypeEnum,targetDbId);
             // 2执行对象
             stmt = conn.createStatement();
             // 3执行,executeUpdate用来执行除了查询的操作,executeQuery用来执行查询操作

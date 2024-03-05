@@ -19,10 +19,9 @@ public interface IJdbcBuild {
      /**
       * executsql   执行的sql语句
       * businessType   执行的数据库
-      * @param conType 目标数据库类型
       * @return 返回语句执行结果
       */
-     BusinessResult buildTableByTargetDbType(String executsql, BusinessTypeEnum businessTypeEnum, DataSourceTypeEnum conType,Integer targetDbId);
+     BusinessResult buildTableByTargetDbType(String executsql, BusinessTypeEnum businessTypeEnum,Integer targetDbId);
 
      /**
       * executsql   执行的sql语句

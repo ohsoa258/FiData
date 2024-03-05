@@ -139,7 +139,7 @@ public class BuildDataInputPgTableListener {
 
                 //Mysql 第三方ods  数据接入-restfulApi目标位置是第三方的mysql数据库
                 if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
-                    result = iJdbcBuild.buildTableByTargetDbType(sqlList.get(1), BusinessTypeEnum.DATAINPUT, conType, buildPhysicalTableDTO.targetDbId);
+                    result = iJdbcBuild.buildTableByTargetDbType(sqlList.get(1), BusinessTypeEnum.DATAINPUT, buildPhysicalTableDTO.targetDbId);
                 } else {
                     result = iJdbcBuild.postgreBuildTable(sqlList.get(1), BusinessTypeEnum.DATAINPUT);
                 }
@@ -153,7 +153,7 @@ public class BuildDataInputPgTableListener {
                         //执行第一条建表语句--创建目标表
                         //Mysql 第三方ods  数据接入-restfulApi目标位置是第三方的mysql数据库
                         if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
-                            iJdbcBuild.buildTableByTargetDbType(sqlList.get(0), BusinessTypeEnum.DATAINPUT, conType, buildPhysicalTableDTO.targetDbId);
+                            iJdbcBuild.buildTableByTargetDbType(sqlList.get(0), BusinessTypeEnum.DATAINPUT, buildPhysicalTableDTO.targetDbId);
                         } else {
                             iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
                         }
@@ -163,7 +163,7 @@ public class BuildDataInputPgTableListener {
                 } else {
                     if (ResultEnum.TASK_TABLE_NOT_EXIST.getMsg().equals(msg)) {
                         if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())) {
-                            iJdbcBuild.buildTableByTargetDbType(sqlList.get(0), BusinessTypeEnum.DATAINPUT, conType, buildPhysicalTableDTO.targetDbId);
+                            iJdbcBuild.buildTableByTargetDbType(sqlList.get(0), BusinessTypeEnum.DATAINPUT, buildPhysicalTableDTO.targetDbId);
                         } else {
                             iJdbcBuild.postgreBuildTable(sqlList.get(0), BusinessTypeEnum.DATAINPUT);
                         }
