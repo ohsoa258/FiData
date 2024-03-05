@@ -68,7 +68,13 @@ public class BuildDataInputDeletePgTableListener {
 
             //获取dw数仓数据库类型
             DataSourceDTO data = null;
-            ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            ResultEntity<DataSourceDTO> fiDataDataSource = null;
+            if (inputData.targetDbId!=null){
+                fiDataDataSource = userClient.getFiDataDataSourceById(inputData.targetDbId);
+            }else {
+                fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceDwId));
+            }
+
             if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                 data = fiDataDataSource.data;
             } else {
@@ -118,7 +124,11 @@ public class BuildDataInputDeletePgTableListener {
                         });
                         String delSqlStr = buildDelSqlStr.toString();
                         delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                        postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
+                        if (inputData.targetDbId!=null){
+                            postgreHelper.postgreExecuteSqlByDbType(delSqlStr, BusinessTypeEnum.DATAINPUT,conType, inputData.targetDbId);
+                        }else {
+                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
+                        }
                         log.info("delsql:" + delSqlStr);
                         log.info("执行pg delete table 完成");
                     } else {

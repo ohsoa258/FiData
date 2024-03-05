@@ -32,6 +32,8 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.apistate.ApiStateDTO;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -464,6 +466,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        Long appId = model.appId;
+        AppRegistrationDTO appById = appRegistrationImpl.getAppById(appId);
+
+        List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
 
         // 根据api_id查询物理表集合
         List<TableAccessPO> poList = getListTableAccessByApiId(id);
@@ -477,6 +483,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             NifiVO nifiVO = result.data;
 
             PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+            pgsqlDelTableDTO.targetDbId = appById.targetDbId;
             pgsqlDelTableDTO.userId = nifiVO.userId;
             pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
             pgsqlDelTableDTO.delApp = false;
@@ -504,9 +511,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dataModelVO.businessId = nifiVO.appId;
             dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
             dataModelVO.userId = nifiVO.userId;
-            // 删除nifi流程
-            publishTaskClient.deleteNifiFlow(dataModelVO);
-
+            // 删除nifi流程  目前只有api有nifi流程  restfulapi没有nifi流程
+            if (!CollectionUtils.isEmpty(appSourcesByAppId)){
+                AppDataSourceDTO dto1 = appSourcesByAppId.get(0);
+                if (dto1.getDriveType().equals(DataSourceTypeEnum.API.getName())){
+                    publishTaskClient.deleteNifiFlow(dataModelVO);
+                }
+            }
             if (openMetadata) {
                 // 删除元数据
                 MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();

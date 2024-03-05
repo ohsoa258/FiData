@@ -92,11 +92,7 @@ public class PostgreHelper {
                 }
             } else if (Objects.equals(businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
                 ResultEntity<DataSourceDTO> fiDataDataSource = null;
-                if (conType.getName().equals(DataSourceTypeEnum.MYSQL.getName())){
-                    fiDataDataSource = userClient.getFiDataDataSourceById(targetDbId);
-                }else {
-                    fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
-                }
+                fiDataDataSource = userClient.getFiDataDataSourceById(targetDbId);
                 if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
                     DataSourceDTO data = fiDataDataSource.data;
                     // 加载驱动类
