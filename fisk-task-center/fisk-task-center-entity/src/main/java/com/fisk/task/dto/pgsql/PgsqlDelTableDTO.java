@@ -44,6 +44,12 @@ public class PgsqlDelTableDTO extends MQBaseDTO {
     @ApiModelProperty(value = "应用简称")
     public String appAbbreviation;
 
+    /**
+     * 目标数据库id
+     */
+    @ApiModelProperty(value = "目标数据库id")
+    public Integer targetDbId;
+
 }
 
 

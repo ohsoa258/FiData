@@ -17,6 +17,7 @@ public class BuildKeepNumberSqlHelper {
                 return new KeepNumberPgImpl();
             case DORIS:
             case HUDI:
+            case MYSQL:
                 return new KeepNumberDorisImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);

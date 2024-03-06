@@ -2066,6 +2066,19 @@ public class TableFieldsImpl
             finalSql = finalSql.replaceAll(regex, "");
         }
 
+        //DORIS作为ods数仓类型时 restfulapi生成的覆盖预览sql需要去除where条件
+        //mysql 同理
+        if (
+                (driverTypes.contains(RESTFULAPI.getName()) && conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName())) ||
+                (driverTypes.contains(RESTFULAPI.getName()) && conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getName()))
+        ) {
+            String regex = "WHERE fidata_batch_code='";
+            int whereIndex = finalSql.lastIndexOf(regex);
+            if (whereIndex != -1) {
+                finalSql = finalSql.substring(0, whereIndex);
+            }
+        }
+
         //        //判断是否是全量覆盖方式 todo:全量覆盖,快照
         //返回最终拼接好的sql
         if (dto.snapshotDTO != null) {
@@ -2174,7 +2187,6 @@ public class TableFieldsImpl
         PreviewTableBusinessDTO previewTableBusinessDTO = AccessCodePreviewMapper.INSTANCES.dtoToDto(tableBusiness);
 
         //获取数据源类型  //todo：目前未从前端传参，暂时认定只有SqlServer
-        com.fisk.common.core.enums.dataservice.DataSourceTypeEnum sourceType = conType;
         //获取同步方式
         int syncMode = dto.syncMode;
         //获取表名
@@ -2188,7 +2200,7 @@ public class TableFieldsImpl
         List<PublishFieldDTO> fieldList = AccessCodePreviewMapper.INSTANCES.tableFieldsToPublishFields(fields);
 
         //根据数据库的不同连接类型，获取不同的sqlHelper实现类
-        IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(sourceType);
+        IBuildFactoryCodePreview sqlHelper = CodePreviewHelper.getSqlHelperByConType(conType);
 
         if (fields.isEmpty()) {
             return "请检查字段映射...";
@@ -2202,23 +2214,23 @@ public class TableFieldsImpl
             //全量
             case 1:
                 //调用封装的全量覆盖方式拼接sql方法并返回
-                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList,null);
+                return sqlHelper.fullVolumeSql(tableName, tempTableName, fieldList, null);
             //追加
             case 2:
                 //调用封装的追加覆盖方式拼接sql方法并返回
-                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList,null);
+                return sqlHelper.insertAndSelectSql(tableName, tempTableName, fieldList, null);
             //业务标识覆盖（业务主键覆盖）---merge覆盖
             case 3:
                 //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
-                return sqlHelper.merge(tableName, tempTableName, fieldList, null,null);
+                return sqlHelper.merge(tableName, tempTableName, fieldList, 2, null);
             //业务时间覆盖
             case 4:
                 //调用封装的业务时间覆盖方式的拼接sql方法并返回
-                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO,null);
+                return sqlHelper.businessTimeOverLay(tableName, tempTableName, fieldList, previewTableBusinessDTO, null);
             //业务标识覆盖（业务主键覆盖）--- delete insert 删除插入
             case 5:
                 //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
-                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList, null,null);
+                return sqlHelper.delAndInsert(tableName, tempTableName, fieldList, 2, null);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

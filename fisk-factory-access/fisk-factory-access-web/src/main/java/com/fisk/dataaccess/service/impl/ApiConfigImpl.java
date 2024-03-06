@@ -32,6 +32,8 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.api.httprequest.JwtRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.apistate.ApiStateDTO;
+import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.json.ApiTableDTO;
 import com.fisk.dataaccess.dto.json.JsonSchema;
 import com.fisk.dataaccess.dto.json.JsonTableData;
@@ -68,6 +70,8 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
@@ -144,6 +148,8 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private DataFactoryClient dataFactoryClient;
     @Resource
     private DataManageClient dataManageClient;
+    @Resource
+    private UserClient userClient;
     @Value("${dataservice.pdf.path}")
     private String templatePath;
     @Value("${dataservice.pdf.uat_address}")
@@ -169,6 +175,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     private Boolean openMetadata;
     @Value("${open-data-check}")
     private Boolean openDataCheck;
+
     @Resource
     PgsqlUtils pgsqlUtils;
 
@@ -459,6 +466,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        Long appId = model.appId;
+        AppRegistrationDTO appById = appRegistrationImpl.getAppById(appId);
+
+        List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
 
         // 根据api_id查询物理表集合
         List<TableAccessPO> poList = getListTableAccessByApiId(id);
@@ -472,6 +483,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             NifiVO nifiVO = result.data;
 
             PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
+            pgsqlDelTableDTO.targetDbId = appById.targetDbId;
             pgsqlDelTableDTO.userId = nifiVO.userId;
             pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
             pgsqlDelTableDTO.delApp = false;
@@ -499,9 +511,13 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dataModelVO.businessId = nifiVO.appId;
             dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
             dataModelVO.userId = nifiVO.userId;
-            // 删除nifi流程
-            publishTaskClient.deleteNifiFlow(dataModelVO);
-
+            // 删除nifi流程  目前只有api有nifi流程  restfulapi没有nifi流程
+            if (!CollectionUtils.isEmpty(appSourcesByAppId)){
+                AppDataSourceDTO dto1 = appSourcesByAppId.get(0);
+                if (dto1.getDriveType().equals(DataSourceTypeEnum.API.getName())){
+                    publishTaskClient.deleteNifiFlow(dataModelVO);
+                }
+            }
             if (openMetadata) {
                 // 删除元数据
                 MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
@@ -655,88 +671,36 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         StringBuilder msg = new StringBuilder("");
         Date startTime = new Date();
         try {
-            if (dto.getApiCode() == null) {
-                return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
-            }
-
+            //获取应用选择的数据源  判断连接类型  doris和mysql相同   和sqlserver/pg 的api推送数据方案是不同的
+            //1.获取 apiCode对应的api信息
             ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
             if (apiConfigPo == null) {
                 return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
             }
 
-            // flag=false: 第三方调用,需要验证账号是否属于当前api
-            if (!dto.isFlag()) {
-                AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
-                if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
-                    return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
-                }
-            }
-
-            // json解析的根节点
-            String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
-            log.info("json解析的根节点参数为: " + jsonKey);
-
-            // 根据api_id查询所有物理表
-            List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
-            if (CollectionUtils.isEmpty(accessPoList)) {
-                return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
-            }
-            // 获取当前api下的所有表数据
-            List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
-//            apiTableDtoList.forEach(System.out::println);
-
-            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+            //2.获取 api所属app的信息
+            AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
             if (modelApp == null) {
                 return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
             }
 
-            // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
-            // 0 接口禁用  1 接口启用
-            if (modelApp.ifAllowDatatransfer == 0) {
-                return ResultEntityBuild.build(ResultEnum.API_STATE_NOT_ALLOW_ERROR);
+            //3.获取当前app选择的数据源类型
+            ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(modelApp.targetDbId);
+            if (result.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
+            com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = result.getData().getConType();
 
-            // 防止\未被解析
-            String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
-            log.info("stg表数据用完即删");
-            pushDataStgToOds(dto.getApiCode(), 0);
-
-            // 将数据同步到pgsql
-            String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
-            ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, null);
-            resultEnum = ResultEnum.getEnum(result.code);
-            msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
-
-            // stg同步到ods(联调task)
-            if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
-                ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
-                msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+            //连接类型不同 同步逻辑则不同 例如：sqlserver和pg可以使用存储过程  mysql和doris则是使用页面的sql预览
+            if (!conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName())
+                    && !conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getName())
+            ) {
+                //sqlserver / pg
+                return pushDataForNotDoris(dto, msg, startTime);
             } else {
-                return ResultEntityBuild.build(resultEnum, result.data);
+                //mysql / doris
+                return pushDataForDoris(dto, msg, startTime);
             }
-
-            // 保存本次的日志信息
-            // 非实时api
-            // 系统内部调用 && 实时推送示例数据
-            if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
-                if (StringUtils.isNotBlank(msg)) {
-                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
-                }
-                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
-                // 实时调用
-                // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
-            } else if (dto.isFlag()) {
-                if (StringUtils.isNotBlank(msg)) {
-                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
-                }
-                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            } else if (!dto.isExecuteConfigFlag()) {
-                if (StringUtils.isNotBlank(msg)) {
-                    msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
-                }
-                savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
-            }
-
         } catch (FkException ex) {
             resultEnum = ex.getResultEnum();
             msg.append(ex.getErrorMsg());
@@ -745,6 +709,193 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             resultEnum = ResultEnum.PUSH_DATA_ERROR;
             log.error(String.format("【APICode：%s】推送数据失败，数据详情【%s】", dto.getApiCode(), dto.getPushData()), e);
             return ResultEntityBuild.build(resultEnum, msg);
+        }
+    }
+
+    /**
+     * restfulapi 推送数据  sqlserver/pg ods
+     *
+     * @param dto
+     * @param msg
+     * @param startTime
+     * @return
+     */
+    private ResultEntity<Object> pushDataForNotDoris(ReceiveDataDTO dto, StringBuilder msg, Date startTime) {
+        if (dto.getApiCode() == null) {
+            return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
+        }
+
+        ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
+        if (apiConfigPo == null) {
+            return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
+        }
+
+        // flag=false: 第三方调用,需要验证账号是否属于当前api
+        if (!dto.isFlag()) {
+            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
+            if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
+                return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
+            }
+        }
+
+        // json解析的根节点
+        String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+        log.info("json解析的根节点参数为: " + jsonKey);
+
+        // 根据api_id查询所有物理表
+        List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
+        if (CollectionUtils.isEmpty(accessPoList)) {
+            return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
+        }
+        // 获取当前api下的所有表数据
+        List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
+//            apiTableDtoList.forEach(System.out::println);
+
+        AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+        if (modelApp == null) {
+            return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
+        }
+
+        // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+        // 0 接口禁用  1 接口启用
+        if (modelApp.ifAllowDatatransfer == 0) {
+            return ResultEntityBuild.build(ResultEnum.API_STATE_NOT_ALLOW_ERROR);
+        }
+
+        // 防止\未被解析
+        String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
+        log.info("stg表数据用完即删");
+        pushDataStgToOds(dto.getApiCode(), 0);
+
+        // 将数据同步到pgsql
+        String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+        ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, null);
+        ResultEnum resultEnum = ResultEnum.getEnum(result.code);
+        msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
+
+        // stg同步到ods(联调task)
+        if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+            ResultEnum resultEnum1 = pushDataStgToOds(dto.getApiCode(), 1);
+            msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+        } else {
+            return ResultEntityBuild.build(resultEnum, result.data);
+        }
+
+        // 保存本次的日志信息
+        // 非实时api
+        // 系统内部调用 && 实时推送示例数据
+        if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
+            if (StringUtils.isNotBlank(msg)) {
+                msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+            }
+            savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+            // 实时调用
+            // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+        } else if (dto.isFlag()) {
+            if (StringUtils.isNotBlank(msg)) {
+                msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+            }
+            savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+        } else if (!dto.isExecuteConfigFlag()) {
+            if (StringUtils.isNotBlank(msg)) {
+                msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+            }
+            savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+        }
+        return ResultEntityBuild.build(resultEnum, msg);
+    }
+
+    /**
+     * restfulapi 推送数据  doris ods
+     *
+     * @param dto
+     * @param msg
+     * @param startTime
+     * @return
+     */
+    private ResultEntity<Object> pushDataForDoris(ReceiveDataDTO dto, StringBuilder msg, Date startTime) {
+        if (dto.getApiCode() == null) {
+            return ResultEntityBuild.build(ResultEnum.PUSH_TABLEID_NULL);
+        }
+
+        ApiConfigPO apiConfigPo = baseMapper.selectById(dto.getApiCode());
+        if (apiConfigPo == null) {
+            return ResultEntityBuild.build(ResultEnum.API_NOT_EXIST);
+        }
+
+        // flag=false: 第三方调用,需要验证账号是否属于当前api
+        if (!dto.isFlag()) {
+            AppDataSourcePO appDataSourcePo = appDataSourceImpl.query().eq("app_id", apiConfigPo.appId).one();
+            if (!appDataSourcePo.realtimeAccount.equalsIgnoreCase(userHelper.getLoginUserInfo().username)) {
+                return ResultEntityBuild.build(ResultEnum.ACCOUNT_CANNOT_OPERATION_API);
+            }
+        }
+
+        // json解析的根节点
+        String jsonKey = StringUtils.isNotBlank(apiConfigPo.jsonKey) ? apiConfigPo.jsonKey : "data";
+        log.info("json解析的根节点参数为: " + jsonKey);
+
+        // 根据api_id查询所有物理表
+        List<TableAccessPO> accessPoList = tableAccessImpl.query().eq("api_id", dto.getApiCode()).list();
+        if (CollectionUtils.isEmpty(accessPoList)) {
+            return ResultEntityBuild.build(ResultEnum.TABLE_NOT_EXIST);
+        }
+        // 获取当前api下的所有表数据
+        List<ApiTableDTO> apiTableDtoList = getApiTableDtoList(accessPoList);
+//            apiTableDtoList.forEach(System.out::println);
+
+        AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", accessPoList.get(0).appId).one();
+        if (modelApp == null) {
+            return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
+        }
+
+        // 2023-09-11 新增需求，数据接入应用块儿新增开关，控制实时api/restfulapi应用推数据的接口是否启用
+        // 0 接口禁用  1 接口启用
+        if (modelApp.ifAllowDatatransfer == 0) {
+            return ResultEntityBuild.build(ResultEnum.API_STATE_NOT_ALLOW_ERROR);
+        }
+
+        // 防止\未被解析
+        String jsonStr = StringEscapeUtils.unescapeJava(dto.getPushData());
+        log.info("stg表数据用完即删");
+        //0 清空stg表
+        pushDataDoris(dto.getApiCode(), 0);
+
+        // 将数据同步到pgsql
+        String stgName = TableNameGenerateUtils.buildStgTableName("", modelApp.appAbbreviation, modelApp.whetherSchema);
+        ResultEntity<Object> result = pushPgSql(null, jsonStr, apiTableDtoList, stgName, jsonKey, modelApp.targetDbId, null);
+        ResultEnum resultEnum = ResultEnum.getEnum(result.code);
+        msg.append(resultEnum.getMsg()).append(": ").append(result.msg == null ? "" : result.msg);
+
+        // stg同步到ods(联调task)
+        if (resultEnum.getCode() == ResultEnum.SUCCESS.getCode()) {
+            //1 stg数据 to ods
+            ResultEnum resultEnum1 = pushDataDoris(dto.getApiCode(), 1);
+            msg.append("数据同步到[ods]: ").append(resultEnum1.getMsg()).append("；");
+        } else {
+            return ResultEntityBuild.build(resultEnum, result.data);
+        }
+
+        // 保存本次的日志信息
+        // 非实时api
+        // 系统内部调用 && 实时推送示例数据
+        if (dto.isFlag() && !dto.isExecuteConfigFlag()) {
+            if (StringUtils.isNotBlank(msg)) {
+                msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+            }
+            savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_API.getValue(), msg.toString());
+            // 实时调用
+            // executeConfigFlag: true -- 本次同步的数据为前端页面测试示例
+        } else if (dto.isFlag()) {
+            if (StringUtils.isNotBlank(msg)) {
+                msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为前端页面测试示例]");
+            }
+            savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
+        } else if (!dto.isExecuteConfigFlag()) {
+            if (StringUtils.isNotBlank(msg)) {
+                msg.deleteCharAt(msg.length() - 1).append("。--[本次同步的数据为正式数据]");
+            }
+            savePushDataLogToTask(null, startTime, dto, resultEnum, OlapTableEnum.PHYSICS_RESTAPI.getValue(), msg.toString());
         }
         return ResultEntityBuild.build(resultEnum, msg);
     }
@@ -1113,7 +1264,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      * @date 2022/2/16 19:17
      */
     private ResultEntity<Object> ksfPushPgSqlForNotice(String jsonStr, List<ApiTableDTO> apiTableDtoList,
-                                              String tablePrefixName, String jsonKey, Integer targetDbId, String batchCode) {
+                                                       String tablePrefixName, String jsonKey, Integer targetDbId, String batchCode) {
         ResultEnum resultEnum;
         // 初始化数据
         StringBuilder checkResultMsg = new StringBuilder();
@@ -2506,6 +2657,156 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     }
 
     /**
+     * 将数据从stg同步到ods  doris
+     *
+     * @param apiId apiId
+     * @param flag  0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @return void
+     */
+    private ResultEnum pushDataStgToOdsForDoris(Long apiId, int flag) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        try {
+            // 1.根据apiId获取api所有信息
+            ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
+            if (apiConfigPo == null) {
+                return ResultEnum.API_NOT_EXIST;
+            }
+            // 2.根据appId获取app所有信息
+            AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
+            if (app == null) {
+                return ResultEnum.APP_NOT_EXIST;
+            }
+
+            // 3.根据apiId查询所有物理表详情
+            ApiConfigDTO dto = getData(apiId);
+            List<TableAccessNonDTO> tablelist = dto.list;
+            if (CollectionUtils.isEmpty(tablelist)) {
+                // 当前api下没有物理表
+                return ResultEnum.TABLE_NOT_EXIST;
+            }
+            // 4.组装参数,调用tasdk,获取推送数据所需的sql
+            for (TableAccessNonDTO e : tablelist) {
+                TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
+                DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
+                // 表名
+                ProcessorConfig processorConfig = new ProcessorConfig();
+                processorConfig.targetTableName = TableNameGenerateUtils.buildTableName(e.tableName, app.appAbbreviation, app.whetherSchema);
+                // 同步方式
+                DataSourceConfig dataSourceConfig = new DataSourceConfig();
+                dataSourceConfig.syncMode = syncmodePo.syncMode;
+                // 装接入数据库api的字段
+                List<TableFieldsPO> list = tableFieldImpl.query().eq("table_access_id", e.id).eq("del_flag", 1).list();
+                dataSourceConfig.tableFieldsList = TableFieldsMap.INSTANCES.listPoToDto(list);
+                // 增量对象
+                if (syncmodePo.syncMode == 4) {
+                    TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
+                    configDTO.businessDTO = TableBusinessMap.INSTANCES.poToDto(businessPo);
+                }
+
+                // 业务主键集合(逗号隔开)
+                List<TableFieldsDTO> fieldList = e.list;
+                if (!CollectionUtils.isEmpty(fieldList)) {
+                    String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                    // 去掉最后一位逗号","
+                    if (StringUtils.isNotBlank(collect)) {
+                        configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
+                    }
+                }
+
+                configDTO.processorConfig = processorConfig;
+                configDTO.targetDsConfig = dataSourceConfig;
+
+                // 获取同步数据的sql并执行
+                resultEnum = getSynchroDataSqlAndExcute(configDTO, flag, app.targetDbId);
+            }
+            return resultEnum;
+        } catch (Exception e) {
+            return ResultEnum.PUSH_DATA_ERROR;
+        }
+    }
+
+    /**
+     * 将数据从stg同步到ods  doris   与其他区别：不使用存储过程
+     *
+     * @param apiId apiId
+     * @param flag  0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @return void
+     * @author Lock
+     * @date 2022/2/25 16:41
+     */
+    private ResultEnum pushDataDoris(Long apiId, int flag) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        try {
+            // 1.根据apiId获取api所有信息
+            ApiConfigPO apiConfigPo = baseMapper.selectById(apiId);
+            if (apiConfigPo == null) {
+                return ResultEnum.API_NOT_EXIST;
+            }
+            // 2.根据appId获取app所有信息
+            AppRegistrationPO app = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
+            if (app == null) {
+                return ResultEnum.APP_NOT_EXIST;
+            }
+
+            // 3.根据apiId查询所有物理表详情
+            ApiConfigDTO dto = getData(apiId);
+            List<TableAccessNonDTO> tablelist = dto.list;
+            if (CollectionUtils.isEmpty(tablelist)) {
+                // 当前api下没有物理表
+                return ResultEnum.TABLE_NOT_EXIST;
+            }
+            // 4.组装参数,获取推送数据所需的sql
+            for (TableAccessNonDTO e : tablelist) {
+                TableSyncmodePO syncmodePo = tableSyncmodeImpl.query().eq("id", e.id).one();
+                DataAccessConfigDTO configDTO = new DataAccessConfigDTO();
+                // 表名
+                ProcessorConfig processorConfig = new ProcessorConfig();
+                processorConfig.targetTableName = TableNameGenerateUtils.buildTableName(e.tableName, app.appAbbreviation, app.whetherSchema);
+                // 同步方式
+                DataSourceConfig dataSourceConfig = new DataSourceConfig();
+                dataSourceConfig.syncMode = syncmodePo.syncMode;
+                // 装接入数据库api的字段
+                List<TableFieldsPO> list = tableFieldImpl.query().eq("table_access_id", e.id).eq("del_flag", 1).list();
+                dataSourceConfig.tableFieldsList = TableFieldsMap.INSTANCES.listPoToDto(list);
+                // 增量对象
+                if (syncmodePo.syncMode == 4) {
+                    TableBusinessPO businessPo = tableBusinessImpl.query().eq("access_id", e.id).one();
+                    configDTO.businessDTO = TableBusinessMap.INSTANCES.poToDto(businessPo);
+                }
+
+                // 全量则先清空目标表
+                // flag==0 清空stg
+                // flag==1 stg数据 to ods
+                if (syncmodePo.syncMode == 1 && flag == 1) {
+                    String sql = "TRUNCATE TABLE " + "ods_" + processorConfig.targetTableName;
+                    pgsqlUtils.excuteSql(sql, app.targetDbId);
+                }
+
+                // 业务主键集合(逗号隔开)
+                List<TableFieldsDTO> fieldList = e.list;
+                if (!CollectionUtils.isEmpty(fieldList)) {
+                    String collect = fieldList.stream().filter(f -> f.isPrimarykey == 1).map(f -> f.fieldName + ",").collect(Collectors.joining());
+                    // 去掉最后一位逗号","
+                    if (StringUtils.isNotBlank(collect)) {
+                        configDTO.businessKeyAppend = collect.substring(0, collect.length() - 1);
+                    }
+                }
+
+                configDTO.processorConfig = processorConfig;
+                configDTO.targetDsConfig = dataSourceConfig;
+
+                //因为doris没有存储过程 所以stg to ods的sql需要用如下方式获取
+                String sql = e.coverScript;
+                // 获取同步数据的sql并执行
+                resultEnum = getSynchroDataSqlAndExcuteForDoris(configDTO, flag, app.targetDbId, sql);
+            }
+            return resultEnum;
+        } catch (Exception e) {
+            return ResultEnum.PUSH_DATA_ERROR;
+        }
+    }
+
+    /**
      * 将数据从stg同步到ods webService
      *
      * @param apiId apiId
@@ -2595,6 +2896,37 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             log.info("task返回的执行sqlAE88: " + JSON.toJSONString(result));
             if (result.code == ResultEnum.SUCCESS.getCode()) {
                 List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
+                if (!CollectionUtils.isEmpty(sqlList)) {
+
+                    resultEnum = pgsqlUtils.stgToOds(sqlList, flag, targetDbId);
+                }
+            }
+        } catch (SQLException e) {
+            return ResultEnum.STG_TO_ODS_ERROR_DETAIL;
+        }
+        return resultEnum;
+    }
+
+    /**
+     * 获取同步数据的sql并执行 doris
+     *
+     * @param configDTO task需要的参数
+     * @param flag      0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     * @return void
+     * @author Lock
+     * @date 2022/2/25 16:06
+     */
+    private ResultEnum getSynchroDataSqlAndExcuteForDoris(DataAccessConfigDTO configDTO, int flag, int targetDbId, String stgToOdsSql) {
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        try {
+            // 调用task,获取同步数据的sql
+            log.info("DORIS 同步sql入参AE87: " + JSON.toJSONString(configDTO));
+            configDTO.odsSourceType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS;
+            ResultEntity<List<String>> result = publishTaskClient.getSqlForDorisOds(configDTO);
+            log.info("DORIS task返回的执行sqlAE88: " + JSON.toJSONString(result));
+            if (result.code == ResultEnum.SUCCESS.getCode()) {
+                List<String> sqlList = JSON.parseObject(JSON.toJSONString(result.data), List.class);
+                sqlList.add(stgToOdsSql);
                 if (!CollectionUtils.isEmpty(sqlList)) {
 
                     resultEnum = pgsqlUtils.stgToOds(sqlList, flag, targetDbId);

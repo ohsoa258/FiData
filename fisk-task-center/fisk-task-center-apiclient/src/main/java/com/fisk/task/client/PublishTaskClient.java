@@ -246,6 +246,15 @@ public interface PublishTaskClient {
      * @param configDTO configDTO
      * @return 返回值
      */
+    @PostMapping("/nifi/getSqlForDorisOds")
+    ResultEntity<List<String>> getSqlForDorisOds(@RequestBody DataAccessConfigDTO configDTO);
+
+    /**
+     * getSqlForPgOds
+     *
+     * @param configDTO configDTO
+     * @return 返回值
+     */
     @PostMapping("/nifi/getSqlForPgOdsV2")
     ResultEntity<List<String>> getSqlForPgOdsV2(@RequestBody DataAccessConfigDTO configDTO);
 

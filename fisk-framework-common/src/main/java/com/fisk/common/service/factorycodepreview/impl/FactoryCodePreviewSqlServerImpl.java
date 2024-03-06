@@ -370,7 +370,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         //全量和追加的区别在于：多了一段DELETE FROM tableName...
         //调用封装的追加方式拼接sql方法
         StringBuilder suffixSql =
-                new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList,updateSql));
+                new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList, updateSql));
 
         //返回的sql前加上需要的前缀truncate table tableName,并隔开两段sql
         StringBuilder fullVolumeSql = suffixSql.insert(0, "DELETE FROM " + tableName + " WHERE fidata_batch_code<>'${fidata_batch_code}';   ");
@@ -390,7 +390,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
     public String delAndInsert(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql) {
         //业务标识覆盖方式--删除插入和追加的区别在于：多了一段delete TARGET...
         StringBuilder suffixSql =
-                new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList,updateSql));
+                new StringBuilder(insertAndSelectSql(tableName, sourceTableName, fieldList, updateSql));
         //获取业务标识覆盖方式标识的字段
         List<PublishFieldDTO> pkFields;
         //获取业务标识覆盖方式标识的字段
@@ -403,18 +403,17 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
 //        pkFields = pkFields.stream().filter(f -> !StringUtils.isEmpty(f.sourceFieldName)).collect(Collectors.toList());
 
         //开始拼接前缀：delete TARGET...  拼接到SOURCE.fidata_batch_code
-        StringBuilder suffix = new StringBuilder();
-        suffix.append("DELETE TARGET FROM ")
-                .append(tableName)
-                .append(" TARGET JOIN (SELECT fidata_batch_code,")
-                .append(" ? ")
-                .append("FROM ")
-                .append(sourceTableName)
-                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'")
-                .append(" GROUP BY fidata_batch_code,")
-                .append(" <?> ")
-                .append(") ")
-                .append("SOURCE ON TARGET.fidata_batch_code <> SOURCE.fidata_batch_code ");
+        String suffix = "DELETE TARGET FROM " +
+                tableName +
+                " TARGET JOIN (SELECT fidata_batch_code," +
+                " ? " +
+                "FROM " +
+                sourceTableName +
+                " WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}'" +
+                " GROUP BY fidata_batch_code," +
+                " <?> " +
+                ") " +
+                "SOURCE ON TARGET.fidata_batch_code <> SOURCE.fidata_batch_code ";
 
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串，格式为:  字段a,字段b,字段c,字段end     为了替换suffix前缀中预留的占位符  ?
         StringBuilder pkFieldNames = new StringBuilder();
@@ -1178,7 +1177,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                     .append(";   ");
         }
         //调用追加的sql方法，用于拼接
-        String sql = insertAndSelectSql(tableName, sourceTableName, fieldList,updateSql);
+        String sql = insertAndSelectSql(tableName, sourceTableName, fieldList, updateSql);
         //拼接最终sql
         StringBuilder endSql = startSQL.append(sql)
                 .append(tailSql);

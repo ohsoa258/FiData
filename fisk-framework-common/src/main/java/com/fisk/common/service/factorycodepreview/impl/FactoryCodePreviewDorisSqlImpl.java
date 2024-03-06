@@ -121,9 +121,10 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("row_number() over() as `")
                 .append(tabNameWithoutPre)
                 .append("key` FROM ")
-                .append(sourceTableName)
-                .append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'")
-        ;
+                .append(sourceTableName);
+        if (StringUtils.isEmpty(updateSql)){
+            suffix.append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+        }
         //拼接select完毕
 
         //返回拼接完成的追加覆盖方式拼接的sql
@@ -169,6 +170,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 //fact那些表  业务标识覆盖字段用的是isPrimaryKey = 1
                 pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
             }
+        }else {
+            pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
         }
 
         //获取业务主键字段
@@ -181,6 +184,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 //fact那些表  主键标识用的是isBusinessKey = 1
                 pkFields1 = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
             }
+        }else {
+            pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
         }
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串  为了替换delete前缀中预留的占位符 lishiji
         StringBuilder pkFieldNames = new StringBuilder();
@@ -371,6 +376,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 //fact那些表  主键标识用的是isBusinessKey = 1
                 pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
             }
+        }else {
+            pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
         }
 
         //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key

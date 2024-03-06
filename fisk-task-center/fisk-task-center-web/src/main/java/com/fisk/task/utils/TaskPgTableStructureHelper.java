@@ -173,7 +173,7 @@ public class TaskPgTableStructureHelper
      * @param version        时间戳版本号
      * @param dataSourceType 数据源连接类型
      */
-    public String saveTableStructureForDoris(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType) {
+    public String saveTableStructureForDoris(ModelPublishTableDTO dto, String version, DataSourceTypeEnum dataSourceType, Integer targetDbId) {
         try {
             List<TaskPgTableStructurePO> poList = new ArrayList<>();
             Thread.sleep(200);
@@ -234,7 +234,7 @@ public class TaskPgTableStructureHelper
             String sql = getTblSchemaChangeSqlForDoris(version, type, dataSourceType);
             log.info("查看执行表结构方法,sql: {}, version: {},type: {}", sql, version, type);
             //判断是否有修改语句
-            return updateTableStructureForDoris(sql, version, dto.createType);
+            return updateTableStructureForDoris(sql, version, dto.createType, targetDbId);
         } catch (Exception ex) {
             log.error("saveTableStructureForDoris:" + ex);
             throw new FkException(ResultEnum.SAVE_DATA_ERROR, StackTraceHelper.getStackTraceInfo(ex));
@@ -426,7 +426,7 @@ public class TaskPgTableStructureHelper
      * @param version
      * @return
      */
-    public String updateTableStructureForDoris(String sql, String version, int createType) throws Exception {
+    public String updateTableStructureForDoris(String sql, String version, int createType, Integer targetDbId) throws Exception {
         String pgsqlOdsUrl = "";
         String pgsqlOdsUsername = "";
         String pgsqlOdsPassword = "";
@@ -437,7 +437,15 @@ public class TaskPgTableStructureHelper
         String pgsqlDwDriverClass = "";
         DataSourceTypeEnum type = null;
         DataSourceDTO odsData = new DataSourceDTO();
-        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        ResultEntity<DataSourceDTO> fiDataDataSource = null;
+
+        //如果方法携带的有targetDbId 说明是数据接入  反之则是数仓
+        if (targetDbId == null) {
+            fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        } else {
+            fiDataDataSource = userClient.getFiDataDataSourceById(targetDbId);
+        }
+
         if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
             odsData = fiDataDataSource.data;
             pgsqlOdsUrl = odsData.conStr;
@@ -492,6 +500,9 @@ public class TaskPgTableStructureHelper
                 String[] sqls = sql.split(";");
                 log.info("执行存储过程返回修改语句:" + Arrays.toString(sqls));
                 for (String s : sqls) {
+                    if (s.equals(" ")){
+                        continue;
+                    }
                     log.info("本次执行的doris sql" + s + ";");
                     st.execute(s + ";");
                     //doris不允许同时执行多个alter,这里休眠2秒
@@ -501,7 +512,7 @@ public class TaskPgTableStructureHelper
             }
             return "成功";
         } catch (SQLException e) {
-            log.error("updateTableStructureForDoris:" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("updateTableStructureForDoris报错:" + StackTraceHelper.getStackTraceInfo(e));
 ////            如果执行修改表结构的语句报错，则将刚才插入到tb_task_pg_table_structure表里的数据设置为无效，避免脏数据
 //            taskPgTableStructureMapper.updatevalidVersion(version);
             return e.toString();

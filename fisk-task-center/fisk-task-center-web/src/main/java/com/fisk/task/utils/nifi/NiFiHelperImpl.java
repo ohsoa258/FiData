@@ -554,11 +554,11 @@ public class NiFiHelperImpl implements INiFiHelper {
 
         //202306-202307 李世纪修改
         //设置等待超时时间  目前设为300秒
-        if (StringUtils.isNotEmpty(data.socketConnectTimeout)){
+        if (StringUtils.isNotEmpty(data.socketConnectTimeout)) {
             map.put("Connection Timeout", data.socketConnectTimeout);
         }
         //设置读取超时时间  目前设为300秒
-        if (StringUtils.isNotEmpty(data.socketReadTimeout)){
+        if (StringUtils.isNotEmpty(data.socketReadTimeout)) {
             map.put("Read Timeout", data.socketReadTimeout);
         }
 
@@ -818,7 +818,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
         config.setComments(buildCallDbProcedureProcessorDTO.details);
-        if (buildCallDbProcedureProcessorDTO.concurrencyNums!=null){
+        if (buildCallDbProcedureProcessorDTO.concurrencyNums != null) {
             // 组件并发数量
             config.setConcurrentlySchedulableTaskCount(buildCallDbProcedureProcessorDTO.concurrencyNums);
         }
@@ -926,7 +926,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
         config.setComments(executeSQLRecordDTO.details);
-        if (executeSQLRecordDTO.concurrencyNums!=null){
+        if (executeSQLRecordDTO.concurrencyNums != null) {
             // 组件并发数量
             config.setConcurrentlySchedulableTaskCount(executeSQLRecordDTO.concurrencyNums);
         }
@@ -1780,7 +1780,7 @@ public class NiFiHelperImpl implements INiFiHelper {
                 if (count == 0) {
                     try {
                         //无论是否成功删除任务组,都先暂停接收卡夫卡组件
-                        log.info("准备暂停接收kafka消息的组件:[{}]",tableNifiSettingPO.consumeKafkaProcessorId);
+                        log.info("准备暂停接收kafka消息的组件:[{}]", tableNifiSettingPO.consumeKafkaProcessorId);
                         ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(tableNifiSettingPO.consumeKafkaProcessorId);
                         this.stopProcessor(processor.getComponent().getParentGroupId(), processor);
                         log.info("暂停接收kafka消息的组件完毕...");
@@ -2498,6 +2498,17 @@ public class NiFiHelperImpl implements INiFiHelper {
         String toOdaSql = assemblySql(config, SynchronousTypeEnum.TOPGODS, FuncNameEnum.PG_DATA_STG_TO_ODS_TOTAL.getName(), null);
         SqlForPgOds.add(deleteSql);
         SqlForPgOds.add(toOdaSql);
+        return JSON.parseArray(JSON.toJSONString(SqlForPgOds).toLowerCase(), String.class);
+    }
+
+    @Override
+    public List<String> getSqlForDorisOds(DataAccessConfigDTO config) {
+        List<String> SqlForPgOds = new ArrayList<>();
+        String targetTableName = config.processorConfig.targetTableName;
+        IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(config.getOdsSourceType());
+        String stgTableName = dbCommand.getStgAndTableName(targetTableName).get(0);
+        String deleteSql = "TRUNCATE TABLE " + stgTableName +";";
+        SqlForPgOds.add(deleteSql);
         return JSON.parseArray(JSON.toJSONString(SqlForPgOds).toLowerCase(), String.class);
     }
 

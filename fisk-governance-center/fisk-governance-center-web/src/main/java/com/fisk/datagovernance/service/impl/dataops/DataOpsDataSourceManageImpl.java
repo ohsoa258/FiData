@@ -595,7 +595,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         for (PostgreDTO postgreDTO : list) {
             boolean exists = false;
             for (PostgreDTO uniquePostgreDTO : uniqueList) {
-                if (postgreDTO.getIp().equals(uniquePostgreDTO.getIp()) && postgreDTO.getPort() == uniquePostgreDTO.getPort()) {
+                if (postgreDTO.getIp().equals(uniquePostgreDTO.getIp()) && postgreDTO.getPort() == uniquePostgreDTO.getPort() && Objects.equals(postgreDTO.getDbName(), uniquePostgreDTO.getDbName())) {
                     exists = true;
                     break;
                 }

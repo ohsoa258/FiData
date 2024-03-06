@@ -60,7 +60,7 @@ public enum RedisKeyEnum implements BaseEnum {
     MONITOR_ACCESSLAKE_KAFKA(-1,"monitor:accesslake:kafka"),
 
     MONITOR_ACCESSLAKE_DORIS(-1,"monitor:accesslake:DORIS"),
-
+    MONITOR_ACCESSLAKE_SQLSERVER(-1,"monitor:accesslake:SQLSERVER"),
     EMAIL_SEND_STATUS(-1,"monitor:emailSendStatus"),
 
     TABLE_KSF_WEB_SERVER_SYNC(-1,"Ksf:tabelWebServerSync"),

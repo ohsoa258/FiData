@@ -1,5 +1,6 @@
 package com.fisk.task.dto.daconfig;
 
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -76,5 +77,11 @@ public class DataAccessConfigDTO {
      */
     @ApiModelProperty(value = "sapBw配置信息")
     public SapBwConfig sapBwConfig;
+
+    /**
+     * dmp_ods 类型
+     */
+    @ApiModelProperty(value = "ods SourceType")
+    public DataSourceTypeEnum odsSourceType;
 
 }

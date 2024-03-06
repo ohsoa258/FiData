@@ -141,6 +141,7 @@ public class SqlServerPlusUtils {
                 String name = resultSet.getString("name");
                 // 架构名
                 String field2 = resultSet.getString("field");
+                if (field2.equals("cdc")) continue;
                 tableMap.put(name, field2);
             }
         } catch (SQLException e) {

@@ -187,6 +187,36 @@ public class PgsqlUtils {
     }
 
     /**
+     * 将数据从stg同步到ods
+     *
+     * @return void
+     * @description 将数据从stg同步到ods
+     * @author Lock
+     * @date 2022/2/25 15:39
+     * @version v1.0
+     * @params sqlList sql集合
+     * @params flag 0: 推送数据前清空stg; 1: 推送完数据,开始同步stg->ods
+     */
+    public ResultEnum excuteSql(String sql, int targetDbId) throws SQLException {
+        Connection pgConn = getPgConn(targetDbId);
+        Statement statement = pgConn.createStatement();
+        try {
+            // 执行sql
+            log.info("restfulapi 推送数据，执行的doris sql;  " + sql);
+            log.info("pg推送数据的函数: " + sql);
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            log.error("执行DORIS SQL异常: " + e);
+            return ResultEnum.STG_TO_ODS_ERROR_DETAIL;
+        } finally {
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(pgConn);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
      * 批量执行pgsql
      *
      * @param res             json数据

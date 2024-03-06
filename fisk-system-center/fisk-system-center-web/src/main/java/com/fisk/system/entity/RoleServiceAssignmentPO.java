@@ -16,5 +16,16 @@ public class RoleServiceAssignmentPO extends BasePO {
     public int roleId;
 
     public int serviceId;
-
+    /**
+     * 是否启用添加
+     */
+    public int switchAdd;
+    /**
+     * 是否启用修改
+     */
+    public int switchUpdate;
+    /**
+     * 是否启用删除
+     */
+    public int switchDelete;
 }

@@ -9,6 +9,7 @@ import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
+import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.TableDbNameAndNameVO;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +20,8 @@ import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +56,7 @@ public class AccessLakeMonitorSchedule {
     public void setPrestoPort(String prestoPort){
         AccessLakeMonitorSchedule.prestoPort = prestoPort;
     }
-    @Scheduled(cron = "0 0 0/1 * * ? ") // cron表达式：每天凌晨 0点 执行
+    @Scheduled(cron = "0 0 0 * * ? ") // cron表达式：每天凌晨 0点 执行
     public void doTask(){
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String start = simpleDateFormat.format(new Date());
@@ -75,8 +73,33 @@ public class AccessLakeMonitorSchedule {
         Map<String,List<String>> map = new HashMap<>();
         if (CollectionUtils.isNotEmpty(data)){
             for (CDCAppNameAndTableVO app : data) {
+                DataSourceTypeEnum type = DataSourceTypeEnum.getValue(app.getDbType());
                 List<String> selectSql = new ArrayList<>();
                 List<TableDbNameAndNameVO> tableDbNameAndNameVO = app.getTableDbNameAndNameVO();
+                switch (type){
+                    case SQLSERVER:
+                        tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                            String dbName = i.getDbName();
+                            dbName = dbName + "_dbo";
+                            i.setDbName(dbName);
+                            String tableName = i.getTableName();
+                            if (tableName.startsWith("dbo_")) {
+                                tableName = tableName.substring(4);
+                            }
+                            i.setTableName(tableName);
+                            return i;
+                        }).collect(Collectors.toList());
+                        break;
+                    case MONGODB:
+                        tableDbNameAndNameVO = tableDbNameAndNameVO.stream().map(i -> {
+                            String tableName = i.getTableName();
+                            String[] split = tableName.split("_", 2);
+                            i.setDbName(split[0]);
+                            i.setTableName(split[1]);
+                            return i;
+                        }).collect(Collectors.toList());
+                        break;
+                }
                 if (CollectionUtils.isNotEmpty(tableDbNameAndNameVO)){
                     if (tableDbNameAndNameVO.size()>50){
                         List<List<TableDbNameAndNameVO>> partition = Lists.partition(tableDbNameAndNameVO, 50);
@@ -89,7 +112,7 @@ public class AccessLakeMonitorSchedule {
                         }
 
                     }else {
-                        String sql = app.getTableDbNameAndNameVO().stream().map(i -> {
+                        String sql = tableDbNameAndNameVO.stream().map(i -> {
                             String str = "select '" + i.getDbName() + "' as dbName,'" + i.getTableName() + "' as tableName,count(1) as rowCount from " + i.getDbName() + "." + i.getTableName();
                             return str;
                         }).collect(Collectors.joining(" UNION ALL "));

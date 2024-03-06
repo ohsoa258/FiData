@@ -1,20 +1,16 @@
 package com.fisk.datamanagement.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.azure.core.annotation.Post;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.businessmetadata.BusinessMetaDataDTO;
-import com.fisk.datamanagement.dto.classification.*;
+import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.FactTreePOs;
-import com.fisk.datamanagement.service.BusinessCategoryService;
-import com.fisk.datamanagement.service.BusinessExtendedfieldsService;
-import com.fisk.datamanagement.service.BusinessTargetinfoService;
-import com.fisk.datamanagement.service.FactTreeListExtendedfieldsService;
+import com.fisk.datamanagement.service.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -44,6 +40,9 @@ public class BusinessCategoryController {
 
     @Resource
     BusinessTargetinfoService businessTargetinfoService;
+
+    @Resource
+    BusinessHistoryService businessHistoryService;
 
     @ApiOperation("获取业务指标数据树状列表")
     @GetMapping("/getBusinessMetaDataList")
@@ -182,6 +181,16 @@ public class BusinessCategoryController {
             indicatorname = json.getString("indicatorname");
         }
         businessTargetinfoService.downLoad(id, indicatorname, response);
+    }
+    @ApiOperation("查询历史指标主题historyId")
+    @GetMapping("/getTargetinfoHistoryId/{id}")
+    public ResultEntity<Object> getTargetinfoHistoryId( @PathVariable("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,businessHistoryService.getHistoryId(id));
+    }
+    @ApiOperation("查询历史指标主题明细数据")
+    @GetMapping("/getTargetinfoHistory/{historyId}")
+    public ResultEntity<Object> getTargetinfoHistory( @PathVariable("historyId") String historyId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,businessTargetinfoService.getTargetinfoHistory(historyId));
     }
 
 }

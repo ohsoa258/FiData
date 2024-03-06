@@ -2916,6 +2916,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 while (databases.next()) {
                     String database = databases.getString("Database");
                     if ("default".equals(database)) continue;
+                    if ("mysql".equals(database)) continue;
+                    if ("dmp_ods".equals(database)) continue;
+                    if ("__internal_schema".equals(database)) continue;
+                    if ("information_schema".equals(database)) continue;
                     dbs.add(database);
                 }
 
@@ -2971,7 +2975,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             DataSourceDTO data = result.getData();
             connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
             statement = connection.createStatement();
-            statement.executeQuery("SWITCH " + catalogName + ";");
+            if (!catalogName.equals("_internal")){
+                statement.executeQuery("SWITCH " + catalogName + ";");
+            }
             statement.executeQuery("USE " + dbName + ";");
             tblSchema = statement.executeQuery("DESC " + tblName);
             while (tblSchema.next()) {

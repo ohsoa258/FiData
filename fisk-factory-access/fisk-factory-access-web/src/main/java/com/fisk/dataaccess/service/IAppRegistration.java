@@ -17,6 +17,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
@@ -424,9 +425,19 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
 
     /**
      * hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库
-     * 同步方式 1全量  2增量
+     * 同步方式 1全量  2增量  3同步指定库
      *
      * @param syncDto
      */
     Object hudiSyncAllTables(HudiSyncDTO syncDto);
+
+
+    /**
+     * hudi入仓配置 重新同步单个指定表
+     * 某张表结构变了  想重新同步一下   这张表的字段  已有的不要动  不存在的删掉  新加的再同步过来
+     *
+     *
+     * @param syncDto
+     */
+    Object hudiReSyncOneTable(HudiReSyncDTO syncDto);
 }
