@@ -153,7 +153,7 @@ public class SqlParserUtils {
                                                      String lastNodeId) {
         return TableMetaDataObject.builder()
                 .id(UUID.randomUUID().toString())
-                .name(tableInfo.name==null?"-1":tableInfo.name)
+                .name(tableInfo.name == null ? "-1" : tableInfo.name)
                 .alias(tableInfo.alias)
                 .details(details)
                 .schema(tableInfo.schema)
@@ -286,50 +286,51 @@ public class SqlParserUtils {
 
     /**
      * 数据库类型
-     * @param id appId
+     *
+     * @param id        appId
      * @param driveType 数据库类型
      * @param sqlScript SQL脚本
      * @return
      */
-    public static List<TableMetaDataObject> sqlDriveConversion(Integer id , String driveType, String sqlScript) {
+    public static List<TableMetaDataObject> sqlDriveConversion(Integer id, String driveType, String sqlScript) {
         DbType dbType;
-        if ("mysql".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
+        if ("mysql".equals(driveType) && !StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.mysql;
-        } else if ("oracle".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
+        } else if ("oracle".equals(driveType) && !StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.oracle;
-        } else if ("postgresql".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
+        } else if ("postgresql".equals(driveType) && !StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.postgresql;
-        } else if ("sqlserver".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
+        } else if ("sqlserver".equals(driveType) && !StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.sqlserver;
-        } else if("doris".equals(driveType)&&!StringUtils.isEmpty(sqlScript)){
-            dbType=DbType.mysql;
-        }else {
+        } else if ("doris".equals(driveType) && !StringUtils.isEmpty(sqlScript)) {
+            dbType = DbType.mysql;
+        } else {
             return new ArrayList<>();
         }
 
         List<TableMetaDataObject> res;
         try {
             log.debug("=============SQL解析START=============");
-            log.debug("SQL解析："+id+"ID===数据库类型:"+dbType+"===SQL语句"+sqlScript);
+            log.debug("SQL解析：" + id + "ID===数据库类型:" + dbType + "===SQL语句" + sqlScript);
             ISqlParser parser = SqlParserFactory.parser(ParserVersion.V1);
             res = parser.getDataTableBySql(sqlScript, dbType);
             log.debug("=============SQL解析END=============");
         } catch (Exception e) {
-            log.debug("sql解析失败==错误ID"+id+"===数据库类型:"+dbType+"==="+sqlScript);
-            log.debug("【sql解析失败】"+e.toString());
-            log.debug("【sql解析失败】"+e.getMessage());
+            log.debug("sql解析失败==错误ID" + id + "===数据库类型:" + dbType + "===" + sqlScript);
+            log.debug("【sql解析失败】" + e.toString());
+            log.debug("【sql解析失败】" + e.getMessage());
             throw new FkException(ResultEnum.SQL_PARSING);
         }
 
         return res;
     }
 
-    public static List<TableMetaDataObject> sqlDriveConversionName(Integer id,String driveType, String sqlScript) {
-        List<TableMetaDataObject> tableMetaDataObjects = sqlDriveConversion(id,driveType, sqlScript);
+    public static List<TableMetaDataObject> sqlDriveConversionName(Integer id, String driveType, String sqlScript) {
+        List<TableMetaDataObject> tableMetaDataObjects = sqlDriveConversion(id, driveType, sqlScript);
         if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
             return tableMetaDataObjects;
         }
-        log.debug("======tableMetaDataObjects======="+JSON.toJSONString(tableMetaDataObjects));
+        log.debug("======tableMetaDataObjects=======" + JSON.toJSONString(tableMetaDataObjects));
         List<TableMetaDataObject> tableMetaDataObjectList = tableMetaDataObjects.stream()
                 .filter(e -> !("-1").equals(e.name)).collect(Collectors.toList());
         tableMetaDataObjectList.forEach(e -> {
@@ -341,23 +342,26 @@ public class SqlParserUtils {
         return tableMetaDataObjectList;
     }
 
-    public static List<TableMetaDataObject> getAllTableMeta(String sql){
+    public static List<TableMetaDataObject> getAllTableMeta(String sql) {
+
         List<TableMetaDataObject> tableMetaDataObjects = new ArrayList<>();
-        try {
-            Statement statement =(Select)CCJSqlParserUtil.parse(sql);
-            if (statement instanceof Select) {
-                TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-                List<String> tableList = tablesNamesFinder.getTableList(statement);
-                tableList.forEach(e->{
-                    TableMetaDataObject tableMetaDataObject = new TableMetaDataObject();
-                    tableMetaDataObject.name=e.replace("[","").replace("]","").replace("`","");
-                    tableMetaDataObjects.add(tableMetaDataObject);
-                });
+        if (!StringUtils.isEmpty(sql)) {
+            try {
+                Statement statement = (Select) CCJSqlParserUtil.parse(sql);
+                if (statement instanceof Select) {
+                    TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+                    List<String> tableList = tablesNamesFinder.getTableList(statement);
+                    tableList.forEach(e -> {
+                        TableMetaDataObject tableMetaDataObject = new TableMetaDataObject();
+                        tableMetaDataObject.name = e.replace("[", "").replace("]", "").replace("`", "");
+                        tableMetaDataObjects.add(tableMetaDataObject);
+                    });
+
+                }
+            } catch (JSQLParserException e) {
+                log.debug("解析sql异常：错误信息" + e);
 
             }
-        } catch (JSQLParserException e) {
-            log.debug("解析sql异常：错误信息"+e);
-
         }
         return tableMetaDataObjects;
     }
