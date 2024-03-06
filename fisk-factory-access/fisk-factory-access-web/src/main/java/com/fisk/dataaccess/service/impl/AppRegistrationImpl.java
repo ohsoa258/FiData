@@ -582,13 +582,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     /**
      * hudi入仓配置 重新同步指定单个来源数据库对应库下的表信息到fidata平台配置库
      *
-     * @param dbId 引用的系统数据源id
+     * @param dbId            引用的系统数据源id
      * @param appDatasourceId 接入库里存的数据源id
-     * @param appName 应用名称
-     * @param appId 应用id
-     * @param tblId 表id
-     * @param fieldListPos 已有的字段集合
-     * @param tblName 表名称 （sqlserver的表名则带架构）
+     * @param appName         应用名称
+     * @param appId           应用id
+     * @param tblId           表id
+     * @param fieldListPos    已有的字段集合
+     * @param tblName         表名称 （sqlserver的表名则带架构）
      */
     public void hudiReSyncOneTableToFidataConfig(Integer dbId, Integer appDatasourceId, Long appId, String appName, String tblName, Long tblId, List<TableFieldsPO> fieldListPos) {
         log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
@@ -656,7 +656,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             List<TableFieldsDTO> list = new ArrayList<>();
             for (TableStructureDTO field : tables) {
                 //1.已存在的不变动
-                if (existingFieldNames.contains(field.fieldName)){
+                if (existingFieldNames.contains(field.fieldName)) {
                     continue;
                 }
 
@@ -683,7 +683,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 list.add(fieldDTO);
             }
             List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
-            if (!CollectionUtils.isEmpty(tableFieldsPOS)){
+            if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
                 tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
             }
 
@@ -691,11 +691,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             //3.不存在的删掉
             ArrayList<Long> fieldIdsNeededToBeDel = new ArrayList<>();
             for (TableFieldsPO fieldPO : fieldListPos) {
-                if (!newlySyncedFieldNames.contains(fieldPO.getFieldName())){
+                if (!newlySyncedFieldNames.contains(fieldPO.getFieldName())) {
                     fieldIdsNeededToBeDel.add(fieldPO.getId());
                 }
             }
-            if (!CollectionUtils.isEmpty(fieldIdsNeededToBeDel)){
+            if (!CollectionUtils.isEmpty(fieldIdsNeededToBeDel)) {
                 tableFieldsImpl.removeByIds(fieldIdsNeededToBeDel);
             }
 
@@ -3603,8 +3603,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
         //cdc类型应用， 表名称为原名称
         if (app.appType == 2) {
-            String[] tableNames = tableAccess.getDisplayName().split(".");
-            table.setName(tableNames[tableNames.length-1]);
+            String[] tableNames = tableAccess.getDisplayName().split("\\.");
+            table.setName(tableNames[tableNames.length - 1]);
+
         } else {
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
         }
