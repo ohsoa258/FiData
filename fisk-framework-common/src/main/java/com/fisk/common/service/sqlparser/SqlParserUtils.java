@@ -350,7 +350,7 @@ public class SqlParserUtils {
                 List<String> tableList = tablesNamesFinder.getTableList(statement);
                 tableList.forEach(e->{
                     TableMetaDataObject tableMetaDataObject = new TableMetaDataObject();
-                    tableMetaDataObject.name=e;
+                    tableMetaDataObject.name=e.replace("[","").replace("]","").replace("`","");
                     tableMetaDataObjects.add(tableMetaDataObject);
                 });
 

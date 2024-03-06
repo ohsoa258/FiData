@@ -949,6 +949,7 @@ public class MetadataEntityImpl
         });
         QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("name", tableName);
+        queryWrapper.eq("type_id",3);
         List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
         return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
     }

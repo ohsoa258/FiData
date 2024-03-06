@@ -3603,7 +3603,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
         //cdc类型应用， 表名称为原名称
         if (app.appType == 2) {
-            table.setName(tableAccess.getTableName());
+            String[] tableNames = tableAccess.getDisplayName().split(".");
+            table.setName(tableNames[tableNames.length-1]);
         } else {
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
         }
