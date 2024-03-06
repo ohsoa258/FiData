@@ -16,6 +16,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
@@ -313,7 +314,7 @@ public class MetadataEntityImpl
 
         //获取元数据的分类
         for (MetaClassificationTypeEnum value : MetaClassificationTypeEnum.values()) {
-            if(!value.equals(MetaClassificationTypeEnum.OTHER)){
+            if (!value.equals(MetaClassificationTypeEnum.OTHER)) {
                 EntityTreeDTO dto = new EntityTreeDTO();
                 dto.id = String.valueOf(value.getValue());
                 dto.label = value.getName();
@@ -675,16 +676,24 @@ public class MetadataEntityImpl
         return mapList;
     }
 
+    /**
+     * 添加元数据血缘关系  Source(来源表) --> STG(临时表)---> Target(目标表)
+     *
+     * @param dbName       目标表数据库名
+     * @param tableGuid    目标表元数据ID
+     * @param tableName    目标表名称
+     * @param stgTableGuid 临时表元数据ID
+     */
     public void synchronizationTableKinShip(String dbName,
                                             String tableGuid,
                                             String tableName,
                                             String stgTableGuid) {
-        String dbQualifiedName = whetherSynchronization(dbName, false);
-        if (StringUtils.isEmpty(dbQualifiedName)) {
+        //获取数据库QualifiedName
+        String targetDbQualifiedName = whetherSynchronization(dbName, false);
+        if (StringUtils.isEmpty(targetDbQualifiedName)) {
             return;
         }
 
-        //获取dw表信息
         ResultEntity<Object> result;
 
         List<Long> fromEntityIdList = new ArrayList<>();
@@ -693,32 +702,42 @@ public class MetadataEntityImpl
 
         List<SourceTableDTO> list = null;
 
-        ResultEntity<List<DataAccessSourceTableDTO>> odsResult = new ResultEntity<>();
-
         DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
 
         //血缘是否存在其他关联
         boolean existCorrelation = false;
 
+        //来源表到临时表sql
         String sqlScript = null;
 
         //判断流程类型
         if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
-            //同步stg与接入表血缘
-            odsResult = dataAccessClient.getDataAccessMetaData();
+            /**************************************数据接入血缘*********************************************************/
+            /**************************************解析SQL获取来源表信息******************************************/
+            //获取数据接入所有元数据信息
+//            odsResult = dataAccessClient.getDataAccessMetaData();
+//            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
+//                return;
+//            }
+//            //通过表名获取数据接入表的配置信息
+//            DataAccessSourceTableDTO first1 = odsResult.data.stream()
+//                    .filter(d -> !("sftp").equals(d.driveType))
+//                    .filter(d -> !("ftp").equals(d.driveType))
+//                    .filter(e -> e.tableName.equals(tableName)).findFirst().orElse(null);
+            ResultEntity<DataAccessSourceTableDTO> odsResult = dataAccessClient.getDataAccessMetaDataByTableName(tableName);
+            if (odsResult.code != ResultEnum.SUCCESS.getCode() || odsResult.data != null) {
+                return;
+            }
+            DataAccessSourceTableDTO first1 = odsResult.data;
+            if (first1 == null) {
+                return;
+            }
+            log.debug("=======开始获取sqlScript脚本========");
+            sqlScript = first1.sqlScript;
+            log.debug("========sqlScript脚本==============" + sqlScript);
 
-            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
-                return;
-            }
-            Optional<DataAccessSourceTableDTO> first1 = odsResult.data.stream()
-                    .filter(d -> !("sftp").equals(d.driveType))
-                    .filter(d -> !("ftp").equals(d.driveType))
-                    .filter(e -> e.tableName.equals(tableName)).findFirst();
-            if (!first1.isPresent()) {
-                return;
-            }
-            //解析sql
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id, dataSourceInfo.conType.getName().toLowerCase(), first1.get().sqlScript);
+            //解析来源表查询SQL，获取来源表元数据信息
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id, dataSourceInfo.conType.getName().toLowerCase(), first1.sqlScript);
             if (CollectionUtils.isEmpty(res)) {
                 return;
             }
@@ -726,54 +745,54 @@ public class MetadataEntityImpl
             log.debug("=======开始解析表名集合first1======" + JSON.toJSONString(first1));
             List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
             log.debug("=======转换后的表集合========:" + JSON.toJSONString(collect));
-            ResultEntity<AppDataSourceDTO> accessDataSources = dataAccessClient.getAccessDataSources(Long.valueOf(first1.get().dataSourceId));
+            ResultEntity<AppDataSourceDTO> accessDataSources = dataAccessClient.getAccessDataSources(Long.valueOf(first1.dataSourceId));
 
             if (accessDataSources.code != ResultEnum.SUCCESS.getCode()) {
                 log.error("获取dataAccessClient.getAccessDataSource数据集失败");
                 return;
             }
             if (accessDataSources.data == null) {
-                log.error("找不到数据源，数据集ID：" + first1.get().dataSourceId);
+                log.error("找不到数据源，数据集ID：" + first1.dataSourceId);
                 return;
             }
             AppDataSourceDTO datasource = accessDataSources.data;
-//            String dbQualifiedNames = first1.get().appId + "_" + first1.get().appAbbreviation + "_" + first1.get().dataSourceId;
-//            log.debug("=======appId"+first1.get().appId+"+名称"+first1.get().appAbbreviation+"+dataSourceId:"+first1.get().dataSourceId+"========");
-
             String dbQualifiedNames = datasource.getHost() + "_" + datasource.getDbName();
             log.debug("=======ConIp" + datasource.getHost() + " ConDbname: " + datasource.getDbName());
+            //根据来源表表名获取来源表元数据ID
             fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
             log.debug("========fromEntityIdList=========" + JSON.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 log.debug("==========fromEntityIdList等于空===========");
                 return;
             }
-            log.debug("=======开始获取sqlScript脚本========");
-            sqlScript = first1.get().sqlScript;
-            log.debug("========sqlScript脚本==============" + sqlScript);
-            //添加stg到ods血缘
-            String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.get().id + stg_prefix;
-            log.debug("=========stgQualifiedName:" + stgQualifiedName + "======dataSourceInfo.conIp：" + dataSourceInfo.conIp + "===first1.get().id + stg_prefix:" + first1.get().id + stg_prefix + "======");
-            synchronizationStgOdsKinShip(tableGuid, sqlScript, stgQualifiedName);
+            /**************************************END************************************************************/
+
+            /**************************************添加stg到ods血缘******************************************/
+            String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.id + stg_prefix;
+            log.debug("=========stgQualifiedName:" + stgQualifiedName + "======dataSourceInfo.conIp：" + dataSourceInfo.conIp + "===first1.get().id + stg_prefix:" + first1.id + stg_prefix + "======");
+            synchronizationStgOdsKinShip(tableGuid, first1.coverScript, stgQualifiedName);
+            /**************************************END*****************************************************/
 
         } else if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.DW) {
-            //获取ods表信息
-            odsResult = dataAccessClient.getDataAccessMetaData();
+            /**************************************数仓建模血缘******************************************/
+            //获取所有数据接入模块表信息
+            ResultEntity<List<DataAccessSourceTableDTO>> odsResult = dataAccessClient.getDataAccessMetaData();
             if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
                 return;
             }
+            //获取所有已发布建模表信息
             result = dataModelClient.getDataModelTable(1);
             if (result.code != ResultEnum.SUCCESS.getCode()) {
                 return;
             }
-            //序列化
             list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
             first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
             if (!first.isPresent()) {
                 return;
             }
-            //解析sql脚本
-            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id, dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
+            //解析sql脚本 ，获取源表信息
+//            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id, dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
+            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.getAllTableMeta(first.get().sqlScript);
             if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
                 return;
             }
@@ -782,12 +801,12 @@ public class MetadataEntityImpl
                     .map(e -> e.getName())
                     .distinct()
                     .collect(Collectors.toList());
-            //获取输入参数
+            //过滤sftp和ftp数据接入表信息
             List<DataAccessSourceTableDTO> collect = odsResult.data.stream()
                     .filter(d -> !("sftp").equals(d.driveType))
                     .filter(d -> !("ftp").equals(d.driveType)).collect(Collectors.toList());
-
-            fromEntityIdList = getTableList(tableList, collect, dbQualifiedName);
+            // 获取源表的元数据ID
+            fromEntityIdList = getTableListV2(tableList);
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 return;
             }
@@ -814,10 +833,9 @@ public class MetadataEntityImpl
                     newDbQualifiedName1);
         }
 
+        /**************************************添加来源表到临时表血缘******************************************/
         //判断是否已有血缘关系，存在则先删除
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(stgTableGuid), ProcessTypeEnum.SQL_PROCESS);
-
-        //新增process
         addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取", ProcessTypeEnum.SQL_PROCESS);
 
         if (existCorrelation) {
@@ -830,6 +848,18 @@ public class MetadataEntityImpl
             synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, stgTableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName, 1);
         }
 
+    }
+
+    /***
+     * 数仓建模中若源表为doris类型，存在外部目录，sql中可同时存在数据接入表、主数据表、数据建模表，需要根据源表的前缀判断表所属模块
+     * @return
+     */
+    public List<Long> getDorisTableInfo(List<String> tableList) {
+        tableList.forEach(e -> {
+            String[] tableNames = e.split(".");
+            String tableName = tableNames[tableNames.length - 1];
+        });
+        return null;
     }
 
     public String whetherSynchronization(String dbName, boolean isSkip) {
@@ -848,6 +878,10 @@ public class MetadataEntityImpl
         //dw
         else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
             dataSourceId = DataSourceConfigEnum.DMP_ODS.getValue();
+        }
+        //mdm
+        else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_MDM.getValue()) {
+            dataSourceId = DataSourceConfigEnum.DMP_MDM.getValue();
         }
         //olap
         else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_OLAP.getValue()) {
@@ -900,6 +934,25 @@ public class MetadataEntityImpl
         log.debug("==========正常查询=============" + JSON.toJSONString(poList));
         return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
     }
+
+    /**
+     * 获取ods与dw表血缘输入参数
+     *
+     * @param tableNameList
+     * @return
+     */
+    public List<Long> getTableListV2(List<String> tableNameList) {
+        List<String> tableName = new ArrayList<>();
+        tableNameList.forEach(e -> {
+            String[] tableNames = e.split(".");
+            tableName.add(tableNames[tableNames.length - 1]);
+        });
+        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.in("name", tableName);
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+        return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+    }
+
 
     /**
      * 获取ods与dw表血缘输入参数
@@ -1411,17 +1464,18 @@ public class MetadataEntityImpl
 
     /**
      * 获取字段名称获取父级数据库和表名
+     *
      * @return
      */
     @Override
-    public DBTableFiledNameDto getParentNameByFieldId(Integer fieldMetadataId){
-        MetadataEntityPO field = this.query().eq("id", fieldMetadataId).eq("type_id",EntityTypeEnum.RDBMS_COLUMN.getValue()).one();
-        if (field==null){
+    public DBTableFiledNameDto getParentNameByFieldId(Integer fieldMetadataId) {
+        MetadataEntityPO field = this.query().eq("id", fieldMetadataId).eq("type_id", EntityTypeEnum.RDBMS_COLUMN.getValue()).one();
+        if (field == null) {
             return null;
         }
         MetadataEntityPO table = this.query().eq("id", field.getParentId()).one();
         MetadataEntityPO db = this.query().eq("id", table.getParentId()).one();
-        DBTableFiledNameDto nameDto=new DBTableFiledNameDto();
+        DBTableFiledNameDto nameDto = new DBTableFiledNameDto();
         nameDto.setFieldName(field.getName());
         nameDto.setTableName(table.getName());
         nameDto.setDatabaseName(db.getName());

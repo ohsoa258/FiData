@@ -323,7 +323,8 @@ public class BloodCompensationImpl
             } else {
                 log.debug("accessTable日志" + accessTable);
                 log.debug("accessTable信息:表名称：" + accessTable.tableName + ",表ID" + accessTable.id + ",表脚本" + accessTable.sqlScript);
-                res = SqlParserUtils.sqlDriveConversionName(accessTable.appId, accessTable.driveType, accessTable.sqlScript);
+//                res = SqlParserUtils.sqlDriveConversionName(accessTable.appId, accessTable.driveType, accessTable.sqlScript);
+                res = SqlParserUtils.getAllTableMeta(accessTable.sqlScript);
             }
             if (CollectionUtils.isEmpty(res)) {
                 continue;

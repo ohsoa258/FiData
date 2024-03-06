@@ -17,6 +17,11 @@ import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.common.service.sqlparser.model.TableTypeEnum;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -296,7 +301,9 @@ public class SqlParserUtils {
             dbType = DbType.postgresql;
         } else if ("sqlserver".equals(driveType)&&!StringUtils.isEmpty(sqlScript)) {
             dbType = DbType.sqlserver;
-        } else {
+        } else if("doris".equals(driveType)&&!StringUtils.isEmpty(sqlScript)){
+            dbType=DbType.mysql;
+        }else {
             return new ArrayList<>();
         }
 
@@ -334,4 +341,24 @@ public class SqlParserUtils {
         return tableMetaDataObjectList;
     }
 
+    public static List<TableMetaDataObject> getAllTableMeta(String sql){
+        List<TableMetaDataObject> tableMetaDataObjects = new ArrayList<>();
+        try {
+            Statement statement =(Select)CCJSqlParserUtil.parse(sql);
+            if (statement instanceof Select) {
+                TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+                List<String> tableList = tablesNamesFinder.getTableList(statement);
+                tableList.forEach(e->{
+                    TableMetaDataObject tableMetaDataObject = new TableMetaDataObject();
+                    tableMetaDataObject.name=e;
+                    tableMetaDataObjects.add(tableMetaDataObject);
+                });
+
+            }
+        } catch (JSQLParserException e) {
+            log.debug("解析sql异常：错误信息"+e);
+
+        }
+        return tableMetaDataObjects;
+    }
 }

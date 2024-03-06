@@ -23,6 +23,12 @@ public interface IDataAccess {
     ResultEntity<List<DataAccessSourceTableDTO>> getDataAccessMetaData();
 
     /**
+     * 通过名称查询数据接入已发布的元数据对象
+     * @return
+     */
+    ResultEntity<DataAccessSourceTableDTO> getDataAccessMetaDataByTableName(String tableName);
+
+    /**
      * 构建元数据查询对象(表及下面的字段)
      *
      * @param dto dto

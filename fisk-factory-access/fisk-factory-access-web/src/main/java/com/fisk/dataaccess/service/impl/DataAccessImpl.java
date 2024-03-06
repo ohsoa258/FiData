@@ -14,6 +14,7 @@ import com.fisk.dataaccess.map.DataAccessMap;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.IDataAccess;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -48,6 +49,16 @@ public class DataAccessImpl implements IDataAccess {
             e.list = DataAccessMap.INSTANCES.fieldListPoToDto(fieldsList);
         });
         return ResultEntityBuild.build(ResultEnum.SUCCESS, tableDtoList);
+    }
+
+    @Override
+    public ResultEntity<DataAccessSourceTableDTO> getDataAccessMetaDataByTableName(String tableName) {
+        DataAccessSourceTableDTO dataAccessSourceTableDTO = tableAccessMapper.oneTableMetaDataByTableName(tableName).stream().findFirst().orElse(null);
+        if (dataAccessSourceTableDTO!=null){
+            List<TableFieldsPO> fieldsList = tableFieldsImpl.query().eq("table_access_id", dataAccessSourceTableDTO.getId()).list();
+            dataAccessSourceTableDTO.list = DataAccessMap.INSTANCES.fieldListPoToDto(fieldsList);
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataAccessSourceTableDTO);
     }
 
     @Override

@@ -64,6 +64,13 @@ public class DataAccessController {
         return service.getDataAccessMetaData();
     }
 
+    @ApiOperation("获取数据接入已发布的元数据对象")
+    @GetMapping("/getDataAccessMetaDataByTableName")
+    public ResultEntity<DataAccessSourceTableDTO> getDataAccessMetaDataByTableName(String tableName) {
+        return service.getDataAccessMetaDataByTableName(tableName);
+    }
+
+
     @ApiOperation("构建元数据查询对象(表及下面的字段)")
     @PostMapping("/buildFiDataTableMetaData")
     public ResultEntity<List<FiDataTableMetaDataDTO>> buildFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {

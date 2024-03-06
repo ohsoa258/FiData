@@ -38,6 +38,9 @@ public class DataAccessSourceTableDTO {
     @ApiModelProperty(value = "驱动类型")
     public String driveType;
 
+    @ApiModelProperty(value = "stg到target的sql")
+    public String coverScript;
+
     /**
      * 表字段集合
      */

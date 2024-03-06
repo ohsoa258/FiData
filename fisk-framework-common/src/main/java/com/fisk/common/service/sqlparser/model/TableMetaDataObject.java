@@ -29,4 +29,5 @@ public class TableMetaDataObject {
     public TableTypeEnum tableType;
     public List<FieldMetaDataObject> fields;
     public Map<String, Object> attributes;
+
 }

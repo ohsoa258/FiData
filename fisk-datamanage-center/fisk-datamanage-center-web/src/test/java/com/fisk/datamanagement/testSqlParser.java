@@ -1,5 +1,10 @@
 package com.fisk.datamanagement;
 
+import com.alibaba.druid.DbType;
+import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.service.sqlparser.ISqlParser;
+import com.fisk.common.service.sqlparser.ParserVersion;
+import com.fisk.common.service.sqlparser.SqlParserFactory;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import net.sf.jsqlparser.JSQLParserException;
@@ -13,7 +18,9 @@ import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -21,12 +28,7 @@ public class testSqlParser {
     public static void main(String[] args) {
         String sqlQuery = "WITH A1 AS(\n" +
                 "SELECT\n" +
-                "-- a.fidata_id,\n" +
-                "-- a.fidata_create_time,\n" +
-                "-- a.fidata_create_user,\n" +
-                "-- a.fidata_update_time,\n" +
-                "-- a.fidata_update_user,\n" +
-                "-- a.fidata_del_flag\n" +
+                "\n" +
                 "a.column_empid\n" +
                 ",a.column_empno\n" +
                 ",a.column_empname\n" +
@@ -36,70 +38,48 @@ public class testSqlParser {
                 ",a.column_deptno\n" +
                 ",a.column_costcenter\n" +
                 ",a.column_statorgid\n" +
-                "--,a.column_cardtype\n" +
+                "\n" +
                 ",D2.codevalue as cardtype\n" +
                 ",a.column_idcard\n" +
                 ",a.column_idcard2\n" +
-                "--,a.column_sex\n" +
+                "\n" +
                 ",D3.codevalue as sex\n" +
                 ",a.column_birthday\n" +
-                "-- ,a.column_country\n" +
+                "\n" +
                 ",D14.codevalue AS column_country\n" +
-                "-- ,a.column_nationality\n" +
+                "\n" +
                 ",D4.codevalue as nationality\n" +
-                "-- ,a.column_politicalparty\n" +
+                "\n" +
                 ",D5.codevalue as politicalparty\n" +
                 ",a.column_joinpartdate\n" +
-                "--,a.column_educationlevel\n" +
+                "\n" +
                 ",D6.codevalue as educationlevel\n" +
                 ",a.column_placeofbirth\n" +
                 ",a.column_hometown\n" +
                 ", D7.codevalue AS  registernature\n" +
                 ",a.column_mobile\n" +
                 ",a.column_email\n" +
-                ",a.column_photo\n" +
+                ",(SELECT id  from system_userinfo where id=3) as ccc\n" +
                 ",a.column_postcode\n" +
                 ",a.column_postlevel\n" +
-                "-- ,a.column_postgrade\n" +
                 ",D13.codevalue AS postgrade\n" +
                 ",a.column_posttitleid\n" +
                 ",a.column_posttitle\n" +
                 ",CASE WHEN column_probationstate='0'THEN '否'\n" +
                 "WHEN column_probationstate='1'THEN '是'\n" +
                 "ELSE NULL END AS  probationstate  -- 是否试用期? 0 否; 1 是\n" +
-                "/*,CASE WHEN a.column_emptype='ET1'THEN '合同工'\n" +
-                "WHEN a.column_emptype='ET2'THEN '劳务工(派遣)'\n" +
-                "WHEN a.column_emptype='ET3'THEN '其他从业人员'\n" +
-                "WHEN a.column_emptype='ET31'THEN '委派'\n" +
-                "WHEN a.column_emptype='ET32'THEN '退休返聘'\n" +
-                "WHEN a.column_emptype='ET33'THEN '协保'\n" +
-                "WHEN a.column_emptype='ET34'THEN '实习'\n" +
-                "WHEN a.column_emptype='ET35'THEN '灵活用工'\n" +
-                "WHEN a.column_emptype='ET39' THEN '其他'\n" +
-                "ELSE NULL END AS  emptype  -- 用工性质: ET1 合同工; ET2 劳务工(派遣); ET3 其他从业人员(ET31 委派, ET32 退休返聘, ET33 协保, ET34 实习,ET35 灵活用工, ET39 其他)\n" +
-                "*/\n" +
+                "\n" +
                 ",D8.codevalue AS emptype\n" +
                 ",D1.codevalue AS status\n" +
                 ",CASE WHEN a.column_poststatus='1'THEN '在岗'\n" +
                 "WHEN a.column_poststatus='2'THEN '离岗'\n" +
                 "WHEN a.column_poststatus='3'THEN '离退人员' -- 1-在岗; 2-离岗; 3-离退人员\n" +
                 "ELSE NULL END AS poststatus\n" +
-                "/* ,CASE WHEN a.column_contracttype='LW01'THEN '劳动合同'\n" +
-                "WHEN a.column_contracttype='LW02'THEN '劳务合同'\n" +
-                "WHEN a.column_contracttype='LW03'THEN '灵活用工合同'\n" +
-                "ELSE NULL END AS contracttype     -- 合同类别(最新)：LW01 劳动合同; LW02 劳务合同; LW03 灵活用工合同\n" +
-                "*/\n" +
+                "\n" +
                 ",D9.codevalue AS contracttype\n" +
                 ",a.column_contractstartdate\n" +
                 ",a.column_contractenddate\n" +
                 ",a.column_terminatedate\n" +
-                "/*,CASE WHEN a.column_terminatetype='TC21'THEN '违规'\n" +
-                "  WHEN a.column_terminatetype='TC22'THEN '合同终止'\n" +
-                "  WHEN a.column_terminatetype='TC23'THEN '合同解除' \n" +
-                "  WHEN a.column_terminatetype='TC25'THEN '退休' \n" +
-                "  WHEN a.column_terminatetype='TC51'THEN '员工辞职' \n" +
-                "  ELSE NULL END AS terminatetype     -- TC21 违规/TC22 合同终止/TC23 合同解除/TC25 退休/TC51 员工辞职/公司辞退/双方协商解除/员工到达法定退休年龄/员工死亡或失踪\n" +
-                "  */\n" +
                 "\n" +
                 ",D10.codevalue as terminatetype\n" +
                 ",CASE WHEN a.column_terminatestate='A'THEN '已登记'\n" +
@@ -124,23 +104,11 @@ public class testSqlParser {
                 ",b.column_shortcode\n" +
                 ",b.column_superid\n" +
                 ",b.column_superids\n" +
-                "-- ,b.column_supername\n" +
+                "\n" +
                 ",c.column_unitname as supername\n" +
-                "/*,CASE WHEN b.column_unittype='BD1' THEN '企业'\n" +
-                "WHEN b.column_unittype='BD2' THEN '事业'\n" +
-                "WHEN b.column_unittype='BD3' THEN '机关'\n" +
-                "WHEN b.column_unittype='BD4' THEN '主业'\n" +
-                "WHEN b.column_unittype='BD5' THEN '多经'\n" +
-                "ELSE NULL END AS unittype */\n" +
+                "\n" +
                 ",D11.codevalue AS unittype\n" +
-                "/*,CASE WHEN b.column_unitgrade='IH11' THEN '集团(总)公司'\n" +
-                "WHEN b.column_unitgrade='IH12' THEN '区域中心'\n" +
-                "WHEN b.column_unitgrade='IH13' THEN '公司'\n" +
-                "WHEN b.column_unitgrade='IH14' THEN '部门'\n" +
-                "WHEN b.column_unitgrade='IH23' THEN '室'\n" +
-                "WHEN b.column_unitgrade='IH25' THEN '团'\n" +
-                "ELSE NULL END AS  unitgrade   -- IH11 集团(总)公司; IH12 区域中心; IH13 公司; IH14 部门; IH23 室; IH25 团\n" +
-                "*/\n" +
+                "\n" +
                 ",D12.codevalue AS unitgrade\n" +
                 ",split_part(b.column_superids,',',2) AS dept_1 -- 一级部门\n" +
                 ",split_part(b.column_superids,',',3) AS dept_2 -- 二级部门\n" +
@@ -262,33 +230,70 @@ public class testSqlParser {
                 "LEFT JOIN qs_mdm_pg.public.mdm_staff_gcorgunit B4\n" +
                 "ON CASE WHEN NVL(A1.dept_3,'')<>'' AND NVL(A1.dept_4,'')='' THEN A1.emp_unitid ELSE A1.dept_4 END=B4.column_unitid\n" +
                 "LEFT JOIN qs_mdm_pg.public.mdm_staff_gcorgunit B5\n" +
-                "ON CASE WHEN NVL(A1.dept_4,'')<>'' AND NVL(A1.dept_5,'')='' THEN A1.emp_unitid ELSE A1.dept_5 END=B5.column_unitid";
-//        String sqlQuery2="WITH cte AS (SELECT column1 FROM table1) SELECT column1 FROM cte WHERE column2 = 'value'";
-//        List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(1, "postgresql", sqlQuery);
+                "ON CASE WHEN NVL(A1.dept_4,'')<>'' AND NVL(A1.dept_5,'')='' THEN A1.emp_unitid ELSE A1.dept_5 END=B5.column_unitid\n";
 
+        selectSqlParser(sqlQuery);
+//        try {
+//            Statement statement = CCJSqlParserUtil.parse(sqlQuery);
+//
+//            if (statement instanceof Select) {
+//                Select selectStatement = (Select) statement;
+//                TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+//                List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+//                System.out.println("Tables: " + tableList);
+//                // 获取第一个SELECT的元数据信息
+//                SelectBody selectBody = selectStatement.getSelectBody();
+//                processSelectBody(selectBody);
+//            }
+//
+//        } catch (JSQLParserException e) {
+//            e.printStackTrace();
+//        }
+
+
+
+
+//        try {
+//            ISqlParser parser = null;
+//            parser = SqlParserFactory.parser(ParserVersion.V1);
+//            List<TableMetaDataObject> dataTableBySql = parser.getDataTableBySql(sqlQuery, DbType.mysql);
+//            System.out.println(JSONObject.toJSONString(dataTableBySql));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+    }
+
+    public static void selectSqlParser(String sql){
+        Statement statement = null;
         try {
-            Statement statement = CCJSqlParserUtil.parse(sqlQuery);
-
-            if (statement instanceof Select) {
-                Select selectStatement = (Select) statement;
-                TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-                List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
-                System.out.println("Tables: " + tableList);
-                // 获取第一个SELECT的元数据信息
-                SelectBody selectBody = selectStatement.getSelectBody();
-                processSelectBody(selectBody);
-            }
-
+            statement = CCJSqlParserUtil.parse(sql);
         } catch (JSQLParserException e) {
             e.printStackTrace();
         }
 
+        /// 查询SQL分为两种种组合 一元 UNION ALL
+        if (statement instanceof Select) {
+            Select selectStatement = (Select) statement;
+            SelectBody selectBody = selectStatement.getSelectBody();
+            //是否存在CTE语法
+            List<WithItem> withItemsList = selectStatement.getWithItemsList();
+            if (withItemsList!=null&&withItemsList.stream().count()>0){
+                // 存在CTE
+                for (WithItem withItem : withItemsList) {
+                    String cteAlias = withItem.getName();
+                    SelectBody cteSelectBody = withItem.getSelectBody();
+                    processSelectBody(cteSelectBody);
+                }
+            }
+        }
     }
+
 
     private static void processSelectBody(SelectBody selectBody) {
         if (selectBody instanceof PlainSelect) {
             PlainSelect plainSelect = (PlainSelect) selectBody;
-            processPlainSelect(plainSelect, null);
+            processPlainSelect(plainSelect);
         } else if (selectBody instanceof SetOperationList) {
             SetOperationList setOperationList = (SetOperationList) selectBody;
             for (SelectBody select : setOperationList.getSelects()) {
@@ -297,37 +302,37 @@ public class testSqlParser {
         }
     }
 
-    private static void processPlainSelect(PlainSelect plainSelect, String alias) {
+    private static void processPlainSelect(PlainSelect plainSelect) {
         List<SelectItem> selectItems = plainSelect.getSelectItems();
         for (SelectItem selectItem : selectItems) {
             if (selectItem instanceof SelectExpressionItem) {
                 SelectExpressionItem expressionItem = (SelectExpressionItem) selectItem;
                 Expression expression = expressionItem.getExpression();
                 String columnAlias = expressionItem.getAlias() != null ? expressionItem.getAlias().getName() : null;
-                processExpression(expression, alias, columnAlias);
+                processExpression(expression);
             }
         }
 
         // 处理FROM子句
-        processFromItem(plainSelect.getFromItem(), alias);
+        processFromItem(plainSelect.getFromItem());
 
         // 处理JOIN子句
         List<Join> joins = plainSelect.getJoins();
         if (joins != null) {
             for (Join join : joins) {
-                processFromItem(join.getRightItem(), alias);
+                processFromItem(join.getRightItem());
             }
         }
     }
 
-    private static void processExpression(Expression expression, String tableAlias, String columnAlias) {
+    private static void processExpression(Expression expression) {
         if (expression instanceof Column) {
             Column column = (Column) expression;
             Table table = (Table) column.getTable();
-            String tableName = getRealTableName(table, tableAlias);
+            String tableName = getRealTableName(table);
             String columnName = column.getColumnName();
 
-            System.out.println("Table: " + tableName + ", Column: " + columnName + ", Alias: " + columnAlias);
+            System.out.println("Table: " + tableName + ", Column: " + columnName );
         } else if (expression instanceof SubSelect) {
             // 处理子查询
             SubSelect subSelect = (SubSelect) expression;
@@ -337,14 +342,14 @@ public class testSqlParser {
 //            Function fun = (Function) expression;
 
         } else {
-            processExpression(expression);
+
         }
     }
 
-    private static void processFromItem(FromItem fromItem, String parentAlias) {
+    private static void processFromItem(FromItem fromItem) {
         if (fromItem instanceof Table) {
             Table table = (Table) fromItem;
-            String tableName = getRealTableName(table, parentAlias);
+            String tableName = getRealTableName(table);
             System.out.println("Table: " + tableName);
         } else if (fromItem instanceof SubSelect) {
             // 处理子查询
@@ -353,45 +358,77 @@ public class testSqlParser {
         }
     }
 
-    private static String getRealTableName(Table table, String parentAlias) {
+    private static String getRealTableName(Table table) {
         if (table != null) {
             String tableName = table.getName();
-            String tableAlias = table.getAlias() != null ? table.getAlias().getName() : parentAlias;
+            String tableAlias = table.getAlias().getName();
             return (tableAlias != null) ? tableAlias : tableName;
         }
         return null;
     }
 
 
-    private static void processExpression(Expression expression) {
-        expression.accept(new ExpressionVisitorAdapter() {
-            @Override
-            public void visit(Function function) {
-                System.out.println("Function Name: " + function.getName());
-                System.out.println("Parameters: " + function.getParameters());
-            }
+//    private static void processExpression(Expression expression) {
+//        expression.accept(new ExpressionVisitorAdapter() {
+//            @Override
+//            public void visit(Function function) {
+//                System.out.println("Function Name: " + function.getName());
+//                System.out.println("Parameters: " + function.getParameters());
+//            }
+//
+//            @Override
+//            public void visit(CastExpression cast) {
+//                System.out.println("CAST to: " + cast.getType());
+//                System.out.println("Expression inside CAST:");
+//                processExpression(cast.getLeftExpression());
+//            }
+//
+//            @Override
+//            public void visit(Column column) {
+//                System.out.println("Column: " + column.getColumnName());
+//            }
+//
+//            @Override
+//            public void visit(Addition addition) {
+//                System.out.println("Addition Operation");
+//                processExpression(addition.getLeftExpression());
+//                processExpression(addition.getRightExpression());
+//            }
+//
+//            // 可以添加其他表达式类型的处理
+//
+//        });
+//    }
 
-            @Override
-            public void visit(CastExpression cast) {
-                System.out.println("CAST to: " + cast.getType());
-                System.out.println("Expression inside CAST:");
-                processExpression(cast.getLeftExpression());
-            }
 
-            @Override
-            public void visit(Column column) {
-                System.out.println("Column: " + column.getColumnName());
-            }
+    public class TableMetaDataInfo{
+        /**
+         * 原始表名
+         */
+        public String name;
+        /**
+         * 别名
+         */
+        public String alias;
+        /**
+         * 是否为临时表
+         */
+        public Boolean isTemp;
+        /**
+         * 表名
+         */
+        public List<FiledMetaDataInfo> fileds;
 
-            @Override
-            public void visit(Addition addition) {
-                System.out.println("Addition Operation");
-                processExpression(addition.getLeftExpression());
-                processExpression(addition.getRightExpression());
-            }
+    }
 
-            // 可以添加其他表达式类型的处理
-
-        });
+    public class FiledMetaDataInfo{
+        /**
+         * 字段名
+         */
+        public String name;
+        /**
+         * 别名
+         */
+        public String alias;
     }
 }

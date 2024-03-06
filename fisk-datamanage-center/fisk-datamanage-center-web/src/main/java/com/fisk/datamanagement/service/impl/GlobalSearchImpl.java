@@ -158,27 +158,11 @@ public class GlobalSearchImpl implements IGlobalSearch {
         //合并集合
         glossaryLibraryDtos.addAll(glossaryDtos);
 
-        //元数据
-        List<EntitiesDTO> entitiesDTOS = metadataEntityMapper.searchEntitys(keyword, 0, 100);
-        List<GlobalSearchDto> entityGlobalSearchDtos = MetadataEntityMap.INSTANCES.entitiesDtoToTermDtoList(entitiesDTOS);
-        glossaryLibraryDtos.addAll(entityGlobalSearchDtos);
+//        //元数据
+//        List<EntitiesDTO> entitiesDTOS = metadataEntityMapper.searchEntitys(keyword, 0, 100);
+//        List<GlobalSearchDto> entityGlobalSearchDtos = MetadataEntityMap.INSTANCES.entitiesDtoToTermDtoList(entitiesDTOS);
+//        glossaryLibraryDtos.addAll(entityGlobalSearchDtos);
         return glossaryLibraryDtos;
-//        List<GlossaryAttributeDTO> glossaryList = glossary.getGlossaryList();
-//        List<GlossaryTermAttributeDTO> list = new ArrayList<>();
-//        for (GlossaryAttributeDTO item : glossaryList) {
-//            if (CollectionUtils.isEmpty(item.terms)) {
-//                continue;
-//            }
-//            List<GlossaryTermAttributeDTO> filterTerms = item.terms.stream()
-//                    .filter(e -> e.displayText.contains(keyword.toLowerCase())||e.displayText.contains(keyword.toUpperCase()))
-//                    .collect(Collectors.toList());
-//            //过滤是否存在术语
-//            if (CollectionUtils.isEmpty(filterTerms)) {
-//                continue;
-//            }
-//            list.addAll(filterTerms);
-//        }
-//        return list;
     }
 
     @Override

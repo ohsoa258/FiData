@@ -37,6 +37,7 @@ public class GlobalSearchController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchQuick(query, limit, offset));
     }
 
+
     @ApiOperation("首页文本框查询Suggestions")
     @GetMapping("/searchSuggestions")
     public ResultEntity<Object> searchSuggestions(String prefixString) {

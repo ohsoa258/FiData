@@ -140,7 +140,7 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
      *
      * @return
      */
-    @Select("SELECT a.id,a.app_id,a.sql_script,c.app_abbreviation,b.drive_type,b.id as data_source_id," +
+    @Select("SELECT a.id,a.app_id,a.sql_script,a.cover_script,c.app_abbreviation,b.drive_type,b.id as data_source_id," +
             "CASE c.whether_schema " +
             "WHEN 0 THEN " +
             "CONCAT( 'ods', '_', c.app_abbreviation, '_', a.table_name ) " +
@@ -151,6 +151,17 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
             "where a.del_flag=1 ")
     //and a.publish=1
     List<DataAccessSourceTableDTO> listTableMetaData();
+
+    @Select("SELECT a.id,a.app_id,a.sql_script,a.cover_script,c.app_abbreviation,b.drive_type,b.id as data_source_id," +
+            "CASE c.whether_schema " +
+            "WHEN 0 THEN " +
+            "CONCAT( 'ods', '_', c.app_abbreviation, '_', a.table_name ) " +
+            "ELSE concat( c.app_abbreviation, '.', a.table_name ) END AS tableName," +
+            "a.table_des from tb_table_access a \n" +
+            "join tb_app_datasource b on a.app_data_source_id = b.id \n" +
+            "join tb_app_registration c on c.id = b.app_id\n" +
+            "where a.del_flag=1 and a.table_name = #{tableName} ")
+    List<DataAccessSourceTableDTO> oneTableMetaDataByTableName(@Param("tableName") String tableName);
 
     /**
      * 修改jobId
