@@ -231,7 +231,7 @@ public class testSqlParser {
                 "ON CASE WHEN NVL(A1.dept_3,'')<>'' AND NVL(A1.dept_4,'')='' THEN A1.emp_unitid ELSE A1.dept_4 END=B4.column_unitid\n" +
                 "LEFT JOIN qs_mdm_pg.public.mdm_staff_gcorgunit B5\n" +
                 "ON CASE WHEN NVL(A1.dept_4,'')<>'' AND NVL(A1.dept_5,'')='' THEN A1.emp_unitid ELSE A1.dept_5 END=B5.column_unitid\n";
-
+        String[] tableNames = "123".split("\\.");
         selectSqlParser(sqlQuery);
 //        try {
 //            Statement statement = CCJSqlParserUtil.parse(sqlQuery);

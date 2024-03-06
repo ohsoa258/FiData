@@ -944,7 +944,7 @@ public class MetadataEntityImpl
     public List<Long> getTableListV2(List<String> tableNameList) {
         List<String> tableName = new ArrayList<>();
         tableNameList.forEach(e -> {
-            String[] tableNames = e.split(".");
+            String[] tableNames = e.split("\\.");
             tableName.add(tableNames[tableNames.length - 1]);
         });
         QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
