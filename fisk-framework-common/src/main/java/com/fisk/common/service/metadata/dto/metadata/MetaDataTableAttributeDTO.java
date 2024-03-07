@@ -29,4 +29,24 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
      */
 
     public Integer AppType;
+
+    /**
+     * 源表配置ID
+     */
+    public Integer tableConfigId;
+
+    /**
+     * 来源表到STG表 sql
+     */
+    public String sqlScript;
+
+    /**
+     * STG到目标表SQL
+     */
+    public String coverScript;
+
+    /**
+     *  数据源ID
+     */
+    public Integer dataSourceId;
 }

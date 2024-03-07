@@ -27,6 +27,7 @@ import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.enums.*;
 import com.fisk.mdm.map.AttributeMap;
 import com.fisk.mdm.map.EntityMap;
+import com.fisk.mdm.mapper.AccessDataMapper;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
@@ -84,6 +85,8 @@ public class EntityServiceImpl implements EntityService {
     UserHelper userHelper;
     @Resource
     AccessDataServiceImpl accessDataService;
+    @Resource
+    AccessDataMapper accessDataMapper;
 
     @Resource
     DataManageClient dataManageClient;
@@ -628,6 +631,7 @@ public class EntityServiceImpl implements EntityService {
      */
     public List<MetaDataTableAttributeDTO> getEntityAttributeMetaData(String dbQualifiedName, Integer entityId) {
         List<MetaDataTableAttributeDTO> tableAttributeDTOList = new ArrayList<>();
+        List<AccessDataPO> accessDataPOS = accessDataMapper.selectList(null);
         List<EntityPO> entityPOList = new ArrayList<>();
         if (entityId == null) {
             //获取所有已发布成功实体
@@ -651,6 +655,12 @@ public class EntityServiceImpl implements EntityService {
                 tableAttributeDTO.setAppName(model.getDisplayName());
                 tableAttributeDTO.setAppId((int) model.getId());
                 tableAttributeDTO.setOwner(entity.createUser);
+                AccessDataPO accessDataPO = accessDataPOS.stream().filter(e -> e.getEntityId() == entity.getId()).findFirst().orElse(null);
+                if (accessDataPO!=null){
+                    tableAttributeDTO.sqlScript=accessDataPO.getExtractionSql();
+                    tableAttributeDTO.coverScript=accessDataPO.getLoadingSql();
+                    tableAttributeDTO.dataSourceId=accessDataPO.getSouceSystemId();
+                }
                 //获取实体下的属性
                 List<AttributePO> attributePOList = attributeService.getAttributeByEntityId((int) entity.getId());
                 List<MetaDataColumnAttributeDTO> metaDataColumnAttributeDTOList = new ArrayList<>();

@@ -27,14 +27,12 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.DimensionIfEndDTO;
-import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.dimension.*;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeListDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionMetaDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
-import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
@@ -1185,6 +1183,10 @@ public class DimensionImpl
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
             table.displayName = item.dimensionCnName;
             table.owner = businessAdmin;
+            table.sqlScript= item.sqlScript;
+            table.coverScript=item.coverScript;
+            table.tableConfigId = Long.valueOf(item.id).intValue();
+            table.dataSourceId=item.dataSourceId;
             table.columnList = getDimensionAttributeMetaData(item.id, table);
             tableList.add(table);
         }

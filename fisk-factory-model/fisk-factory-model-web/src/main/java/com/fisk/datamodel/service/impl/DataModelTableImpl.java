@@ -103,6 +103,8 @@ public class DataModelTableImpl implements IDataModelTable {
                 dto.type = publishStatus == DataModelTableTypeEnum.DW_DIMENSION.getValue() ? DataModelTableTypeEnum.DW_DIMENSION.getValue() : DataModelTableTypeEnum.DORIS_DIMENSION.getValue();
                 dto.tableDes = dimensionPo.dimensionDesc == null ? dimensionPo.dimensionTabName : dimensionPo.dimensionDesc;
                 dto.sqlScript = dimensionPo.sqlScript;
+                dto.coverScript= dimensionPo.coverScript;
+                dto.dataSourceId=dimensionPo.dataSourceId;
                 List<SourceFieldDTO> fieldDtoList = new ArrayList<>();
                 List<DimensionAttributePO> attributePoList = dimensionAttributePoList.stream()
                         .filter(e -> e.dimensionId == dimensionPo.id).collect(Collectors.toList());
@@ -196,6 +198,8 @@ public class DataModelTableImpl implements IDataModelTable {
                 dto.type = OlapTableEnum.FACT.getValue();
                 dto.tableDes = factPo.factTableDesc;
                 dto.sqlScript = factPo.sqlScript;
+                dto.coverScript=factPo.coverScript;
+                dto.dataSourceId=factPo.dataSourceId;
                 List<SourceFieldDTO> fieldDtoList = new ArrayList<>();
                 List<FactAttributePO> attributePoList = factAttributePoList.stream()
                         .filter(e -> e.factId == factPo.id).collect(Collectors.toList());
@@ -269,6 +273,8 @@ public class DataModelTableImpl implements IDataModelTable {
             dto.type = DataModelTableTypeEnum.DORIS_FACT.getValue();
             dto.tableDes = item.factTableDesc == null ? item.factTabName : item.factTableDesc;
             dto.sqlScript = item.sqlScript;
+            dto.coverScript=item.coverScript;
+            dto.dataSourceId =item.dataSourceId;
             List<AtomicIndicatorPushDTO> atomicIndicator = atomicIndicators.getAtomicIndicator((int) item.id);
             if (CollectionUtils.isEmpty(atomicIndicator)) {
                 continue;
@@ -349,6 +355,7 @@ public class DataModelTableImpl implements IDataModelTable {
             dto.type = DataModelTableTypeEnum.WIDE_TABLE.getValue();
             dto.sqlScript = item.sqlScript;
             dto.fieldList = new ArrayList<>();
+
             WideTableFieldConfigDTO wideTableFieldDto = JSON.parseObject(item.configDetails, WideTableFieldConfigDTO.class);
             if (wideTableFieldDto == null || CollectionUtils.isEmpty(wideTableFieldDto.entity)) {
                 continue;

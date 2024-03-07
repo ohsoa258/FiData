@@ -674,6 +674,10 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
             table.displayName = fact.factTableCnName;
             table.owner = businessAdmin;
+            table.sqlScript= fact.sqlScript;
+            table.coverScript=fact.coverScript;
+            table.tableConfigId = Long.valueOf(fact.id).intValue();
+            table.dataSourceId=fact.dataSourceId;
 
             //字段
             table.columnList = getFactAttributeMetaData(fact.id, table);

@@ -92,7 +92,7 @@ public class BloodCompensationImpl
             TruncateBlood();
         }
         //为空则同步所有模块
-        if ( moduleIds.stream().count() == 0) {
+        if ( moduleIds==null|| moduleIds.stream().count() == 0) {
             moduleIds = Arrays.stream(ClassificationTypeEnum.values()).map(e -> e.getValue()).collect(Collectors.toList());
         }
         if (moduleIds.contains(ClassificationTypeEnum.DATA_ACCESS.getValue())) {
@@ -106,6 +106,7 @@ public class BloodCompensationImpl
             log.info("******3.开始同步数据接入ods表以及stg表元数据******");
             //同步数据接入ods表以及stg表元数据
             synchronousAccessTableSourceMetaData(currUserName);
+            log.info("******4.数据接入ods表以及stg表元数据同步成功******");
         }
 
         if (moduleIds.contains(ClassificationTypeEnum.ANALYZE_DATA.getValue())) {
@@ -114,8 +115,9 @@ public class BloodCompensationImpl
             ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
             log.info("********2.开始同步建模业务分类元数据********");
             synchronousClassification(businessAreaList, ClassificationTypeEnum.ANALYZE_DATA);
-            log.info("********2.开始同步建模ods表以及stg表元数据********");
+            log.info("********3.开始同步建模ods表以及stg表元数据********");
             synchronousDataModelTableSourceMetaData(currUserName);
+            log.info("******4.建模ods表以及stg表元数据同步成功******");
         }
 
         if (moduleIds.contains(ClassificationTypeEnum.API_GATEWAY_SERVICE.getValue())) {
@@ -125,6 +127,7 @@ public class BloodCompensationImpl
             synchronousClassification(apiAppList, ClassificationTypeEnum.API_GATEWAY_SERVICE);
             log.info("********2.开始API网关服务的元数据******************");
             synchronousAPIServiceMetaData(currUserName);
+            log.info("******3.API网关服务的元数据同步成功******");
         }
 
         if (moduleIds.contains(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue())) {
@@ -134,6 +137,7 @@ public class BloodCompensationImpl
             synchronousClassification(viewAppList, ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
             log.info("********2.开始视图服务的元数据******************");
             synchronousViewServiceMetaData(currUserName);
+            log.info("******3.视图服务的元数据同步成功******");
         }
 
         if (moduleIds.contains(ClassificationTypeEnum.DATA_DISTRIBUTION.getValue())) {
@@ -143,6 +147,7 @@ public class BloodCompensationImpl
             synchronousClassification(tableAppList, ClassificationTypeEnum.DATA_DISTRIBUTION);
             log.info("********2.开始数据库同步服务的元数据******************");
             synchronousDataBaseSyncMetaData(currUserName);
+            log.info("******3.数据库同步服务的元数据同步成功******");
         }
 
         if (moduleIds.contains(ClassificationTypeEnum.MASTER_DATA.getValue())) {
@@ -152,6 +157,7 @@ public class BloodCompensationImpl
             synchronousClassification(masterDataModel, ClassificationTypeEnum.MASTER_DATA);
             log.info("********2.开始主数据的元数据******************");
             synchronousMasterDataMetaData(currUserName);
+            log.info("********3.主数据的元数据同步成功******************");
 
         }
         return ResultEnum.SUCCESS;
@@ -324,7 +330,7 @@ public class BloodCompensationImpl
                 log.debug("accessTable日志" + accessTable);
                 log.debug("accessTable信息:表名称：" + accessTable.tableName + ",表ID" + accessTable.id + ",表脚本" + accessTable.sqlScript);
 //                res = SqlParserUtils.sqlDriveConversionName(accessTable.appId, accessTable.driveType, accessTable.sqlScript);
-                res = SqlParserUtils.getAllTableMeta(accessTable.sqlScript);
+                res = SqlParserUtils.getAllTableFiledMeta(accessTable.sqlScript);
             }
             if (CollectionUtils.isEmpty(res)) {
                 continue;

@@ -678,86 +678,57 @@ public class MetadataEntityImpl
 
     /**
      * 添加元数据血缘关系  Source(来源表) --> STG(临时表)---> Target(目标表)
-     *
      * @param dbName       目标表数据库名
      * @param tableGuid    目标表元数据ID
      * @param tableName    目标表名称
      * @param stgTableGuid 临时表元数据ID
+     * @param sqlScript    抽取sql
+     * @param coverScript  stg到target覆盖sql
+     * @param sourceDataSourceId 来源数据源id
+     * @param tableConfigId 表配置ID
      */
     public void synchronizationTableKinShip(String dbName,
                                             String tableGuid,
                                             String tableName,
-                                            String stgTableGuid) {
-        //获取数据库QualifiedName
-        String targetDbQualifiedName = whetherSynchronization(dbName, false);
-        if (StringUtils.isEmpty(targetDbQualifiedName)) {
-            return;
-        }
-
-        ResultEntity<Object> result;
+                                            String stgTableGuid,
+                                            String sqlScript,
+                                            String coverScript,
+                                            Integer sourceDataSourceId,
+                                            Integer tableConfigId) {
 
         List<Long> fromEntityIdList = new ArrayList<>();
 
-        Optional<SourceTableDTO> first = null;
-
         List<SourceTableDTO> list = null;
 
-        DataSourceDTO dataSourceInfo = getDataSourceInfo(dbName);
+        DataSourceDTO targetDataSourceInfo = getDataSourceInfo(dbName);
 
         //血缘是否存在其他关联
         boolean existCorrelation = false;
 
-        //来源表到临时表sql
-        String sqlScript = null;
-
+        log.debug("========sqlScript脚本==============" + sqlScript);
         //判断流程类型
-        if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
+        if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
             /**************************************数据接入血缘*********************************************************/
             /**************************************解析SQL获取来源表信息******************************************/
-            //获取数据接入所有元数据信息
-//            odsResult = dataAccessClient.getDataAccessMetaData();
-//            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
-//                return;
-//            }
-//            //通过表名获取数据接入表的配置信息
-//            DataAccessSourceTableDTO first1 = odsResult.data.stream()
-//                    .filter(d -> !("sftp").equals(d.driveType))
-//                    .filter(d -> !("ftp").equals(d.driveType))
-//                    .filter(e -> e.tableName.equals(tableName)).findFirst().orElse(null);
-            ResultEntity<DataAccessSourceTableDTO> odsResult = dataAccessClient.getDataAccessMetaDataByTableName(tableName);
-            if (odsResult.code != ResultEnum.SUCCESS.getCode() || odsResult.data != null) {
-                return;
-            }
-            DataAccessSourceTableDTO first1 = odsResult.data;
-            if (first1 == null) {
-                return;
-            }
-            log.debug("=======开始获取sqlScript脚本========");
-            sqlScript = first1.sqlScript;
-            log.debug("========sqlScript脚本==============" + sqlScript);
-
-            //解析来源表查询SQL，获取来源表元数据信息
-            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id, dataSourceInfo.conType.getName().toLowerCase(), first1.sqlScript);
-            if (CollectionUtils.isEmpty(res)) {
-                return;
-            }
-            //解析表名集合
-            log.debug("=======开始解析表名集合first1======" + JSON.toJSONString(first1));
-            List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
-            log.debug("=======转换后的表集合========:" + JSON.toJSONString(collect));
-            ResultEntity<AppDataSourceDTO> accessDataSources = dataAccessClient.getAccessDataSources(Long.valueOf(first1.dataSourceId));
-
+            ResultEntity<AppDataSourceDTO> accessDataSources = dataAccessClient.getAccessDataSources(Long.valueOf(sourceDataSourceId));
             if (accessDataSources.code != ResultEnum.SUCCESS.getCode()) {
                 log.error("获取dataAccessClient.getAccessDataSource数据集失败");
                 return;
             }
             if (accessDataSources.data == null) {
-                log.error("找不到数据源，数据集ID：" + first1.dataSourceId);
+                log.error("找不到数据源，数据集ID：" + sourceDataSourceId);
                 return;
             }
-            AppDataSourceDTO datasource = accessDataSources.data;
-            String dbQualifiedNames = datasource.getHost() + "_" + datasource.getDbName();
-            log.debug("=======ConIp" + datasource.getHost() + " ConDbname: " + datasource.getDbName());
+            AppDataSourceDTO sourceDatasourceInfo = accessDataSources.data;
+            String dbQualifiedNames = sourceDatasourceInfo.getHost() + "_" + sourceDatasourceInfo.getDbName();
+            //解析来源表查询SQL，获取来源表元数据信息
+            List<TableMetaDataObject> res = SqlParserUtils.sqlDriveConversionName(Long.valueOf(sourceDatasourceInfo.id).intValue(), sourceDatasourceInfo.driveType, sqlScript);
+            if (CollectionUtils.isEmpty(res)) {
+                return;
+            }
+            log.debug("=======开始解析表名集合first1======");
+            List<String> collect = res.stream().map(e -> e.name).collect(Collectors.toList());
+            log.debug("=======转换后的表集合========:" + JSON.toJSONString(collect));
             //根据来源表表名获取来源表元数据ID
             fromEntityIdList = getOdsTableList(collect, dbQualifiedNames);
             log.debug("========fromEntityIdList=========" + JSON.toJSONString(fromEntityIdList));
@@ -768,69 +739,50 @@ public class MetadataEntityImpl
             /**************************************END************************************************************/
 
             /**************************************添加stg到ods血缘******************************************/
-            String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_" + first1.id + stg_prefix;
-            log.debug("=========stgQualifiedName:" + stgQualifiedName + "======dataSourceInfo.conIp：" + dataSourceInfo.conIp + "===first1.get().id + stg_prefix:" + first1.id + stg_prefix + "======");
-            synchronizationStgOdsKinShip(tableGuid, first1.coverScript, stgQualifiedName);
+            log.debug("=========stgTableGuid"+stgTableGuid+"======");
+            synchronizationStgOdsKinShip(tableGuid, coverScript, stgTableGuid);
             /**************************************END*****************************************************/
 
-        } else if (dataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.DW) {
+        } else if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.DW) {
             /**************************************数仓建模血缘******************************************/
-            //获取所有数据接入模块表信息
-            ResultEntity<List<DataAccessSourceTableDTO>> odsResult = dataAccessClient.getDataAccessMetaData();
-            if (odsResult.code != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(odsResult.data)) {
+            List<String> tableList = SqlParserUtils.getAllTableMeta(sqlScript);
+            if (CollectionUtils.isEmpty(tableList)) {
                 return;
             }
-            //获取所有已发布建模表信息
-            result = dataModelClient.getDataModelTable(1);
-            if (result.code != ResultEnum.SUCCESS.getCode()) {
-                return;
-            }
-            list = JSON.parseArray(JSON.toJSONString(result.data), SourceTableDTO.class);
-            first = list.stream().filter(e -> tableName.equals(e.tableName)).findFirst();
-            if (!first.isPresent()) {
-                return;
-            }
-            //解析sql脚本 ，获取源表信息
-//            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.sqlDriveConversionName(dataSourceInfo.id, dataSourceInfo.conType.getName().toLowerCase(), first.get().sqlScript);
-            List<TableMetaDataObject> tableMetaDataObjects = SqlParserUtils.getAllTableMeta(first.get().sqlScript);
-            if (CollectionUtils.isEmpty(tableMetaDataObjects)) {
-                return;
-            }
-            List<String> tableList = tableMetaDataObjects
-                    .stream()
-                    .map(e -> e.getName())
-                    .distinct()
-                    .collect(Collectors.toList());
-            //过滤sftp和ftp数据接入表信息
-            List<DataAccessSourceTableDTO> collect = odsResult.data.stream()
-                    .filter(d -> !("sftp").equals(d.driveType))
-                    .filter(d -> !("ftp").equals(d.driveType)).collect(Collectors.toList());
+            log.debug("DWSQL解析，解析表如下："+JSONObject.toJSONString(tableList));
             // 获取源表的元数据ID
             fromEntityIdList = getTableListV2(tableList);
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 return;
             }
-            sqlScript = first.get().sqlScript;
             existCorrelation = true;
 
             //stg与事实维度关联以及自定义脚本血缘
-            String stgQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname + "_";
-            if (dim_prefix.equals(first.get().tableName.substring(0, 4))) {
+            String stgQualifiedName = targetDataSourceInfo.conIp + "_" + targetDataSourceInfo.conDbname + "_";
+            if (dim_prefix.equals(tableName.substring(0, 4))) {
                 stgQualifiedName += "1";
             } else {
                 stgQualifiedName += "2";
             }
-            stgQualifiedName = stgQualifiedName + "_" + first.get().id + stg_prefix;
-            String newDbQualifiedName1 = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
-
+            stgQualifiedName = stgQualifiedName + "_" + tableConfigId + stg_prefix;
+            String newDbQualifiedName1 = targetDataSourceInfo.conIp + "_" + targetDataSourceInfo.conDbname;
+            /**************************************添加临时表到目标表血缘******************************************/
             synchronizationStgAndCustomScriptTableKinShip(stgQualifiedName,
                     tableGuid,
                     sqlScript,
-                    (int) first.get().id,
-                    first.get().tableName,
-                    dataSourceInfo.conType.getName().toLowerCase(),
+                    tableConfigId,
+                    tableName,
+                    targetDataSourceInfo.conType.getName().toLowerCase(),
                     list,
                     newDbQualifiedName1);
+        }else if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.MDM){
+            List<String> tableList = SqlParserUtils.getAllTableMeta(sqlScript);
+            fromEntityIdList = getTableListV2(tableList);
+            if (CollectionUtils.isEmpty(fromEntityIdList)) {
+                log.debug("==========fromEntityIdList等于空===========");
+                return;
+            }
+            synchronizationStgOdsKinShip(tableGuid, coverScript, stgTableGuid);
         }
 
         /**************************************添加来源表到临时表血缘******************************************/
@@ -838,14 +790,15 @@ public class MetadataEntityImpl
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(stgTableGuid), ProcessTypeEnum.SQL_PROCESS);
         addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取", ProcessTypeEnum.SQL_PROCESS);
 
+        /*****************************************数仓建模关联维度血缘**********************************************************/
         if (existCorrelation) {
 
-            String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
+//            String newDbQualifiedName = dataSourceInfo.conIp + "_" + dataSourceInfo.conDbname;
             //关联维度
-            associateInputTableList(first.get(), newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION, stgTableGuid);
+//            associateInputTableList(first, newDbQualifiedName, DataModelTableTypeEnum.DW_DIMENSION, stgTableGuid);
 
             //新增自定义脚本
-            synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, stgTableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName, 1);
+//            synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, stgTableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName, 1);
         }
 
     }
@@ -877,7 +830,7 @@ public class MetadataEntityImpl
         }
         //dw
         else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_DW.getValue()) {
-            dataSourceId = DataSourceConfigEnum.DMP_ODS.getValue();
+            dataSourceId = DataSourceConfigEnum.DMP_DW.getValue();
         }
         //mdm
         else if (dataSourceInfo.id == DataSourceConfigEnum.DMP_MDM.getValue()) {
@@ -913,6 +866,7 @@ public class MetadataEntityImpl
         }
         return first.get();
     }
+
 
     public List<Long> getOdsTableList(List<String> tableNameList, String dbQualifiedName) {
         log.debug("====================转换前参数tableNameList========================" + JSON.toJSONString(tableNameList));
@@ -989,23 +943,25 @@ public class MetadataEntityImpl
      *
      * @param odsTableGuid
      * @param sqlScript
-     * @param stgQualifiedName
+     * @param stgTableGuid
      */
-    public void synchronizationStgOdsKinShip(String odsTableGuid, String sqlScript, String stgQualifiedName) {
+    public void synchronizationStgOdsKinShip(String odsTableGuid, String sqlScript, String stgTableGuid) {
 
-        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(MetadataEntityPO::getQualifiedName, stgQualifiedName);
-        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(poList)) {
-            return;
-        }
+//        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.lambda().eq(MetadataEntityPO::getQualifiedName, stgQualifiedName);
+//        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+//        if (CollectionUtils.isEmpty(poList)) {
+//            return;
+//        }
 
-        List<Long> collect = poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+//        List<Long> collect = poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+        List<Long> stgTableGuidList = new ArrayList<Long>();
+        stgTableGuidList.add(Long.valueOf(stgTableGuid));
 
         //判断是否已有血缘关系，存在则先删除
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(odsTableGuid), ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
-        addProcess(sqlScript, collect, odsTableGuid, processName, ProcessTypeEnum.TEMP_TABLE_PROCESS);
+        addProcess(sqlScript, stgTableGuidList, odsTableGuid, processName, ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
     }
 
@@ -1032,7 +988,7 @@ public class MetadataEntityImpl
 
         addProcess(sqlScript, collect, tableGuid, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
 
-        synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
+//        synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
     }
 
     public void synchronizationCustomScriptKinShip(Integer tableId,

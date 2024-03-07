@@ -12,7 +12,7 @@ import java.util.Arrays;
 @Slf4j
 public class ObjectInfoUtils {
 
-    public static String[] arr = {"name", "description", "displayName", "owner", "qualifiedName", "dbList", "tableList", "columnList","attributeDTOList","createSql","datasourceDbId","appName","entityType","targetTable","targetDbId"};
+    public static String[] arr = {"name", "description", "displayName", "owner", "qualifiedName", "dbList", "tableList", "columnList","attributeDTOList","createSql","datasourceDbId","appName","entityType","targetTable","targetDbId","tableConfigId","sqlScript","coverScript","dataSourceId"};
 
     /**
      * 获取对象属性名集合

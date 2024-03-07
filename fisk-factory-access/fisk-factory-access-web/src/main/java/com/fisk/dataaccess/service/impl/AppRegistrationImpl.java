@@ -3615,7 +3615,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setComment(String.valueOf(app.getId()));
         table.setDisplayName(tableAccess.displayName);
         table.setOwner(app.createUser);
-
+        table.setSqlScript(tableAccess.sqlScript);
+        table.setCoverScript(tableAccess.coverScript);
+        table.setDataSourceId(tableAccess.getAppDataSourceId());
         // 字段
         List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id).list().stream().filter(Objects::nonNull).map(e -> {
             MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();

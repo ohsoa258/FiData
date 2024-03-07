@@ -342,7 +342,7 @@ public class SqlParserUtils {
         return tableMetaDataObjectList;
     }
 
-    public static List<TableMetaDataObject> getAllTableMeta(String sql) {
+    public static List<TableMetaDataObject> getAllTableFiledMeta(String sql) {
 
         List<TableMetaDataObject> tableMetaDataObjects = new ArrayList<>();
         if (!StringUtils.isEmpty(sql)) {
@@ -361,6 +361,26 @@ public class SqlParserUtils {
             } catch (JSQLParserException e) {
                 log.debug("解析sql异常：错误信息" + e);
 
+            }
+        }
+        return tableMetaDataObjects;
+    }
+
+    public static List<String> getAllTableMeta(String sql) {
+        List<String> tableMetaDataObjects = new ArrayList<>();
+        if (!StringUtils.isEmpty(sql)) {
+            try {
+                Statement statement = (Select) CCJSqlParserUtil.parse(sql);
+                if (statement instanceof Select) {
+                    TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+                    tableMetaDataObjects = tablesNamesFinder.getTableList(statement)
+                            .stream()
+                            .map(e-> e.replace("[", "").replace("]", "").replace("`", ""))
+                            .distinct()
+                            .collect(Collectors.toList());
+                }
+            } catch (JSQLParserException e) {
+                log.debug("解析sql异常：错误信息" + e);
             }
         }
         return tableMetaDataObjects;

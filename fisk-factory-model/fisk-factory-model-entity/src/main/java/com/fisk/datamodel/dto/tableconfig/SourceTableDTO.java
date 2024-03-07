@@ -26,6 +26,12 @@ public class SourceTableDTO {
     @ApiModelProperty(value = "sql脚本")
     public String sqlScript;
 
+    @ApiModelProperty(value="覆盖脚本")
+    public String coverScript;
+
+    @ApiModelProperty(value = "数据源脚本")
+    public Integer dataSourceId;
+
     @ApiModelProperty(value = "字段列表")
     public List<SourceFieldDTO> fieldList;
 }

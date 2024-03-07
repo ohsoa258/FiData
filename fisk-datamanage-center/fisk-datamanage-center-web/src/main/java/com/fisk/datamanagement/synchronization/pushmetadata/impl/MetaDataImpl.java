@@ -232,7 +232,7 @@ public class MetaDataImpl implements IMetaData {
                                 }
                             }
                             //同步血缘
-                            synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid);
+                            synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid,table.sqlScript,table.coverScript,table.dataSourceId,table.tableConfigId);
                         }
                     }
 
@@ -513,8 +513,12 @@ public class MetaDataImpl implements IMetaData {
     private void synchronizationTableKinShip(String dbName,
                                              String tableGuid,
                                              String tableName,
-                                             String stgTableGuid) {
-        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid);
+                                             String stgTableGuid,
+                                             String sqlScript,
+                                             String coverScript,
+                                             Integer dataSourceId,
+                                             Integer tableConfigId) {
+        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid,sqlScript,coverScript,dataSourceId,tableConfigId);
         /*try {
 
             //获取实体详情
