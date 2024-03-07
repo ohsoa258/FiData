@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.system.dto.AssignmentDTO;
+import com.fisk.system.dto.auditlogs.AuditLogsDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -284,5 +285,14 @@ public interface UserClient {
     @ApiOperation("根据角色名获取角色id")
     @GetMapping("/role/getRoleByRoleName")
     ResultEntity<RoleInfoDTO> getRoleByRoleName(@RequestParam("roleName")String roleName);
+
+    /**
+     * 保存一条操作记录
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/auditLogs/saveAuditLog")
+    ResultEntity<Object> saveAuditLog(@RequestBody AuditLogsDTO dto);
 
 }
