@@ -706,6 +706,8 @@ public class MetadataEntityImpl
         boolean existCorrelation = false;
 
         log.debug("========sqlScript脚本==============" + sqlScript);
+        log.debug("======== coverScript脚本==============" + coverScript);
+        log.debug(" 参数：dbName：" + dbName+" ，tableGuid: "+tableGuid+" ，stgTableGuid："+stgTableGuid+"，sourceDataSourceId："+sourceDataSourceId+", tableConfigId: "+tableConfigId);
         //判断流程类型
         if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
             /**************************************数据接入血缘*********************************************************/
@@ -752,7 +754,9 @@ public class MetadataEntityImpl
             log.debug("DWSQL解析，解析表如下："+JSONObject.toJSONString(tableList));
             // 获取源表的元数据ID
             fromEntityIdList = getTableListV2(tableList);
+            log.debug("fromEntityIdList ："+JSONObject.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
+                log.debug("==========fromEntityIdList等于空===========");
                 return;
             }
             existCorrelation = true;
@@ -778,6 +782,7 @@ public class MetadataEntityImpl
         }else if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.MDM){
             List<String> tableList = SqlParserUtils.getAllTableMeta(sqlScript);
             fromEntityIdList = getTableListV2(tableList);
+            log.debug("fromEntityIdList ："+JSONObject.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 log.debug("==========fromEntityIdList等于空===========");
                 return;
@@ -1120,7 +1125,8 @@ public class MetadataEntityImpl
                            String processName,
                            ProcessTypeEnum processType) {
         //去除换行符,以及转小写
-        sql = sql.replace("\n", "").toLowerCase();
+
+        sql =StringUtils.isEmpty(sql)?"": sql.replace("\n", "").toLowerCase();
 
         //新增process
         MetadataEntityPO po = new MetadataEntityPO();
