@@ -243,6 +243,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     size = apiInfo.getMaxSize();
                     dto.setSize(size);
                 }
+            }else {
+                dto.setSize(500);
             }
 //            // 第七步：获取请求参数中的分页信息 限制100条  2023-06-01 李世纪：暂时恢复原状
 //            Integer current = dto.getCurrent();
