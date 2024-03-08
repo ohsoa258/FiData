@@ -202,10 +202,10 @@ public class BuildPowerBiListener implements IpowerBiListener {
     public void refreshPowerbi(String url, String authHeader) {
         // 设置Authorization
         //String authHeader = "Bearer " + "your_access_token_here";
-
+        log.info("开始创建刷新client");
         // 创建HttpClient对象
         HttpClient httpClient = HttpClientBuilder.create().build();
-
+        log.info("创建刷新client完成");
         // 创建HttpGet请求对象，设置请求的URL
         HttpPost httpPost = new HttpPost(url);
 
@@ -213,10 +213,17 @@ public class BuildPowerBiListener implements IpowerBiListener {
         httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
 
         try {
+            log.info("url:"+url);
             // 执行请求
-            httpClient.execute(httpPost);
+            HttpResponse response = httpClient.execute(httpPost);
+            // 读取响应体中的内容
+            String responseBody = EntityUtils.toString(response.getEntity());
+            // 输出响应内容
+            log.info("-------------------------" + responseBody);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            log.error("刷新pbi报错："+e);
+            throw new FkException(ResultEnum.ERROR,e.getMessage());
         }
     }
 
