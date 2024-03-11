@@ -31,23 +31,26 @@ public class BuildMysqlTableImpl implements IbuildTable {
         List<String> pkFields = new ArrayList<>();
         //ods与stg类型不变,不然有的值,类型转换不来
         tableFieldsDTOS.forEach((l) -> {
+            if (l.getFieldDes() == null) {
+                l.setFieldDes("No field description is set");
+            }
             if (l.fieldType.contains("FLOAT")) {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             } else if (l.fieldType.contains("INT")) {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             } else if (l.fieldType.contains("TEXT")) {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
                 stgSql.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(",");
             } else if (l.fieldType.toUpperCase().equals("DATE")) {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             } else if (l.fieldType.toUpperCase().equals("TIME")) {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             } else if (l.fieldType.contains("TIMESTAMP") || StringUtils.equals(l.fieldType.toUpperCase(), "DATETIME")) {
-                sqlFileds.append(l.fieldName).append(" datetime ");
+                sqlFileds.append(l.fieldName).append(" datetime ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             } else if (l.fieldType.contains("BIT")) {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append(" ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             } else {
-                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append(") ");
+                sqlFileds.append(l.fieldName).append(" ").append(l.fieldType.toLowerCase()).append("(").append(l.fieldLength).append(") ").append(" COMMENT '").append(l.getFieldDes()).append("' ");
             }
             // 修改stg表,字段类型
             if (!l.fieldType.contains("TEXT")) {
@@ -74,7 +77,7 @@ public class BuildMysqlTableImpl implements IbuildTable {
             }
             pksql.deleteCharAt(pksql.lastIndexOf(","));
             pksql.append(")");
-        }else {
+        } else {
             pksql.append(" ");
         }
 
