@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.interceptor;
+package com.fisk.datamodel.interceptor;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.SystemConstants;
@@ -9,6 +9,7 @@ import com.fisk.common.framework.jwt.model.UserDetail;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.auditlogs.AuditLogsDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -21,8 +22,10 @@ import javax.servlet.http.HttpServletResponse;
 public class LogInterceptor implements HandlerInterceptor {
 
     @Resource
+    @Lazy
     private UserClient userClient;
     @Resource
+    @Lazy
     private JwtUtils jwtUtils;
 
     //前置拦截器 记录用户操作日志
@@ -31,7 +34,7 @@ public class LogInterceptor implements HandlerInterceptor {
         try {
             //获取被拦截方法的详情
             AuditLogsDTO auditLogsDTO = new AuditLogsDTO();
-            auditLogsDTO.setServiceType(AuditServiceTypeEnum.FISK_FACTORY_ACCESS.getValue());
+            auditLogsDTO.setServiceType(AuditServiceTypeEnum.FISK_FACTORY_MODEL.getValue());
             auditLogsDTO.setRequestType(request.getMethod());
             auditLogsDTO.setRequestAddr(request.getRequestURI());
             auditLogsDTO.setIpAddr(request.getRemoteAddr());

@@ -7,6 +7,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
+import java.util.List;
+
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface AuditLogsMap {
 
@@ -21,6 +23,8 @@ public interface AuditLogsMap {
     @Mapping(target = "createUser", ignore = true)
     @Mapping(target = "createTime", ignore = true)
     AuditLogsPO dtoToPo(AuditLogsDTO dto);
+
+    List<AuditLogsDTO> listPoToDto(List<AuditLogsPO> list);
 
 
 }
