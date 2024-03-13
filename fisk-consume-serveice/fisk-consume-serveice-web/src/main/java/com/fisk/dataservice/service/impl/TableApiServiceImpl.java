@@ -232,7 +232,7 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         }
         po.setPublish(dto.status);
         if (this.updateById(po)) {
-            log.error("表服务修改状态失败,原因表:修改异常");
+            log.error("表服务修改状态失败,原因:表修改异常");
         }
     }
     @Override
