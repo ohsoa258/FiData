@@ -660,6 +660,7 @@ public class EntityServiceImpl implements EntityService {
                     tableAttributeDTO.sqlScript=accessDataPO.getExtractionSql();
                     tableAttributeDTO.coverScript=accessDataPO.getLoadingSql();
                     tableAttributeDTO.dataSourceId=accessDataPO.getSouceSystemId();
+                    tableAttributeDTO.tableConfigId= accessDataPO.getEntityId();
                 }
                 //获取实体下的属性
                 List<AttributePO> attributePOList = attributeService.getAttributeByEntityId((int) entity.getId());

@@ -773,7 +773,7 @@ public class MetadataEntityImpl
             /**************************************添加临时表到目标表血缘******************************************/
             synchronizationStgAndCustomScriptTableKinShip(stgQualifiedName,
                     tableGuid,
-                    sqlScript,
+                    coverScript,
                     tableConfigId,
                     tableName,
                     targetDataSourceInfo.conType.getName().toLowerCase(),
@@ -993,7 +993,7 @@ public class MetadataEntityImpl
 
         addProcess(sqlScript, collect, tableGuid, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
 
-//        synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
+ //       synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
     }
 
     public void synchronizationCustomScriptKinShip(Integer tableId,
