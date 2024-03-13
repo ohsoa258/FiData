@@ -1,4 +1,4 @@
-package com.fisk.dataaccess.interceptor;
+package com.fisk.system.interceptor;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.SystemConstants;
@@ -6,8 +6,8 @@ import com.fisk.common.core.enums.system.AuditServiceTypeEnum;
 import com.fisk.common.framework.jwt.JwtUtils;
 import com.fisk.common.framework.jwt.model.Payload;
 import com.fisk.common.framework.jwt.model.UserDetail;
-import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.auditlogs.AuditLogsDTO;
+import com.fisk.system.service.impl.AuditLogsServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 public class LogInterceptor implements HandlerInterceptor {
 
     @Resource
-    private UserClient userClient;
+    private AuditLogsServiceImpl auditLogsService;
     @Resource
     private JwtUtils jwtUtils;
 
@@ -31,7 +31,7 @@ public class LogInterceptor implements HandlerInterceptor {
         try {
             //获取被拦截方法的详情
             AuditLogsDTO auditLogsDTO = new AuditLogsDTO();
-            auditLogsDTO.setServiceType(AuditServiceTypeEnum.FISK_FACTORY_ACCESS.getValue());
+            auditLogsDTO.setServiceType(AuditServiceTypeEnum.FISK_SYSTEM_CENTER.getValue());
             auditLogsDTO.setRequestType(request.getMethod());
             auditLogsDTO.setRequestAddr(request.getRequestURI());
             auditLogsDTO.setIpAddr(request.getRemoteAddr());
@@ -59,7 +59,7 @@ public class LogInterceptor implements HandlerInterceptor {
             }
 
             //记录操作日志
-            userClient.saveAuditLog(auditLogsDTO);
+            auditLogsService.saveAuditLog(auditLogsDTO);
 
         } catch (Exception e) {
             log.error("*******************************");

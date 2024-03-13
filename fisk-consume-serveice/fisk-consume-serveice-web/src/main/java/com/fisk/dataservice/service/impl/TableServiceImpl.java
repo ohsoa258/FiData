@@ -222,7 +222,6 @@ public class TableServiceImpl
     @Transactional(rollbackFor = Exception.class)
     @Override
     public ResultEnum delTableServiceById(long id) {
-        List<MetaDataEntityDTO> tableSyncMetaDataById = tableAppManage.getTableSyncMetaDataById(id);
 
         TableServicePO po = mapper.selectById(id);
         if (po == null) {
@@ -259,6 +258,7 @@ public class TableServiceImpl
 
         //删除元数据
         if (openMetadata){
+            List<MetaDataEntityDTO> tableSyncMetaDataById = tableAppManage.getTableSyncMetaDataById(id);
             dataManageClient.deleteConsumptionMetaData(tableSyncMetaDataById);
         }
         return ResultEnum.SUCCESS;

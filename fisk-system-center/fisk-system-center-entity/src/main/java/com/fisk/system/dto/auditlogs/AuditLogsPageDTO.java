@@ -25,7 +25,11 @@ public class AuditLogsPageDTO implements Serializable {
     @ApiModelProperty(value = "分页大小")
     private Integer size;
 
-
+    /**
+     * 检索查询类型
+     */
+    @ApiModelProperty(value = "检索查询类型")
+    private AuditLogQueryType queryType;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
