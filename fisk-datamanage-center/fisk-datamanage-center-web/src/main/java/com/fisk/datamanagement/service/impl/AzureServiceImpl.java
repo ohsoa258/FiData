@@ -34,6 +34,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author: wangjian
@@ -198,16 +202,23 @@ public class AzureServiceImpl implements AzureService {
                 .build();
         CloseableHttpResponse response = null;
         try {
-            // 创建Http Post请求
-            String url = endpoint;
-            HttpPost httpPost = new HttpPost(url);
-            httpPost.setConfig(requestConfig);
-            httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
-            httpPost.setHeader("api-key", azureOpenaiKey);
-            // 模拟表单
-            httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString(),"UTF-8"));
+            ExecutorService executorService = null;
+            executorService = Executors.newSingleThreadExecutor();
+            Future<CloseableHttpResponse> clientFuture = executorService.submit(() -> {
+                CloseableHttpResponse response1 = null;
+                // 创建Http Post请求
+                String url = endpoint;
+                HttpPost httpPost = new HttpPost(url);
+                httpPost.setConfig(requestConfig);
+                httpPost.setHeader("Content-Type", String.valueOf(MediaType.APPLICATION_JSON_VALUE));
+                httpPost.setHeader("api-key", azureOpenaiKey);
+                // 模拟表单
+                httpPost.setEntity(new StringEntity(BinaryData.fromObject(completionsOptions).toString(),"UTF-8"));
+                response1 = httpClient.execute(httpPost);
+                return response1;
+            });
             // 执行http请求
-            response = httpClient.execute(httpPost);
+            response = clientFuture.get(10, TimeUnit.SECONDS);
             ObjectMapper mapper = new ObjectMapper();
             String resultString = EntityUtils.toString(response.getEntity());
             Completions completions = mapper.readValue(resultString,Completions.class);
@@ -225,8 +236,12 @@ public class AzureServiceImpl implements AzureService {
             log.error("OpenAI请求报错" + e.getMessage());
         } finally {
             try {
-                httpClient.close();
-                response.close();
+                if (httpClient != null){
+                    httpClient.close();
+                }
+                if (response != null){
+                    response.close();
+                }
             } catch (IOException e) {
                 log.error("OpenAI请求报错" + e.getMessage());
             }
