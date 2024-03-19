@@ -15,6 +15,7 @@ public class ViwGroupPO extends BasePO {
 
     private Integer entityId;
     private String name;
+    private String displayName;
     private String columnName;
     private String details;
 }
