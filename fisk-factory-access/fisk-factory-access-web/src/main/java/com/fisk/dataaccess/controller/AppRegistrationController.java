@@ -529,4 +529,13 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.hudiReSyncOneTable(syncDto));
     }
 
+    /**
+     * 获取所有被应用引用的数据源信息
+     */
+    @ApiOperation("获取所有被应用引用的数据源信息")
+    @GetMapping("/getAppSources")
+    public List<AppDataSourceDTO> getAppSources(){
+        return service.getAppSources();
+    }
+
 }

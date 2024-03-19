@@ -678,6 +678,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.coverScript=fact.coverScript;
             table.tableConfigId = Long.valueOf(fact.id).intValue();
             table.dataSourceId=fact.dataSourceId;
+            table.isExistClassification=true;
+            table.isExistStg=true;
 
             //字段
             table.columnList = getFactAttributeMetaData(fact.id, table);

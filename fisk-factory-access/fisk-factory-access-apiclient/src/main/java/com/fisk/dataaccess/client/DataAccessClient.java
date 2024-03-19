@@ -557,4 +557,11 @@ public interface DataAccessClient {
     @ApiOperation("通过物理表id获取应用详情")
     @GetMapping("/appRegistration/getAppByTableAccessId")
     ResultEntity<AppRegistrationDTO> getAppByTableAccessId(@RequestParam("tblId") Integer tblId);
+
+    /**
+     * 获取所有被应用引用的数据源信息
+     */
+    @ApiOperation("获取所有被应用引用的数据源信息")
+    @GetMapping("/appRegistration/getAppSources")
+    List<AppDataSourceDTO> getAppSources();
 }

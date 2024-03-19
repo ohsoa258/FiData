@@ -185,7 +185,7 @@ public class MetaDataImpl implements IMetaData {
      * @param currUserName 当前账号
      */
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName,ClassificationTypeEnum classificationTypeEnum) {
         log.info("开始同步元数据***********");
         try {
             for (MetaDataInstanceAttributeDTO instance : data) {
@@ -202,8 +202,8 @@ public class MetaDataImpl implements IMetaData {
 
                     for (MetaDataTableAttributeDTO table : db.tableList) {
                         String tableName = table.name;
-                        //元数据对参观：数据表 新增/修改 表新增/修改, 并且添加业务分类和表元数据的关联
-                        String tableGuid = metaDataTable(table, dbGuid, db.name);
+                        //元数据：数据表 新增/修改 , 并且添加业务分类和表元数据的关联
+                        String tableGuid = metaDataTable(table, dbGuid,classificationTypeEnum);
                         List<String> qualifiedNames = new ArrayList<>();
                         for (MetaDataColumnAttributeDTO field : table.columnList) {
                             //新增表字段
@@ -220,7 +220,7 @@ public class MetaDataImpl implements IMetaData {
 //                        }
                         /*************************ODS和DW时需要同步STG表***********************************/
                         //如果数据接入应用为CDC类型时不需要同步STG表,等于空则为数仓建模表
-                        if (table.getAppType() == null || table.getAppType() != 2) {
+                        if (table.isExistStg) {
                             //新增stg表，comment字段值为stg时则表示源表，则不需要添加stg表实体
                             String stgTableGuid = null;
                             if (!stg.equals(table.getComment())) {
@@ -230,9 +230,9 @@ public class MetaDataImpl implements IMetaData {
                                     metaDataStgField(field, stgTableGuid);
 
                                 }
+                                //同步血缘
+                                synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid,table.sqlScript,table.coverScript,table.dataSourceId,table.tableConfigId);
                             }
-                            //同步血缘
-                            synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid,table.sqlScript,table.coverScript,table.dataSourceId,table.tableConfigId);
                         }
                     }
 
@@ -285,7 +285,7 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityId
      * @return
      */
-    private String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId, String dbName) {
+    private String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId,ClassificationTypeEnum classificationTypeEnum) {
 
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
@@ -294,9 +294,9 @@ public class MetaDataImpl implements IMetaData {
             metadataEntity = this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_TABLE.getName());
         }
 
-        if (!"stg".equals(dto.description)) {
+        if (dto.isExistClassification) {
             //同步业务分类和元数据的关联
-            associatedClassification(metadataEntity.toString(), dto.name, dbName, dto.comment, dto.getAppName());
+            associatedClassification(metadataEntity.toString(),dto,classificationTypeEnum);
         }
 
         return metadataEntity.toString();
@@ -308,65 +308,35 @@ public class MetaDataImpl implements IMetaData {
      * 实体关联业务分类  数据工厂 建模，主数据建模。主数据
      *
      * @param tableGuid
-     * @param tableName
-     * @param dbName
      */
     private void associatedClassification(String tableGuid,
-                                          String tableName,
-                                          String dbName,
-                                          String comment,
-                                          String appName) {
+                                          MetaDataTableAttributeDTO metaDataTableAttributeDTO,
+                                            ClassificationTypeEnum classificationTypeEnum) {
         try {
-            //获取数据源列表
-            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
-            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
-                return;
-            }
-            Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
-            if (!sourceData.isPresent()) {
-                return;
-            }
             ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
             dto.entityGuids = new ArrayList<>();
             dto.entityGuids.add(tableGuid);
             ClassificationDTO data = new ClassificationDTO();
             //ods表关联业务数据分类
-            if (SourceBusinessTypeEnum.ODS == sourceData.get().sourceBusinessType) {
-                //获取接入应用列表
-                ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
-                if (appList.code != ResultEnum.SUCCESS.getCode()) {
-                    return;
-                }
-                Optional<AppBusinessInfoDTO> first = appList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
-                if (!first.isPresent()) {
-                    return;
-                }
-                data.typeName = first.get().name;
-            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
-                //获取所有业务域
-                ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
-                if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
-                    return;
-                }
+            if (ClassificationTypeEnum.DATA_ACCESS.equals(classificationTypeEnum)) {
+                data.typeName = metaDataTableAttributeDTO.AppName;
+            } else if (ClassificationTypeEnum.ANALYZE_DATA.equals(classificationTypeEnum)) {
                 //判断是否为公共维度
-                if (dim_prefix.equals(tableName.substring(0, 4))) {
-                    ResultEntity<DimensionFolderDTO> dimensionFolder = dataModelClient.getDimensionFolderByTableName(tableName);
-                    if (dimensionFolder.code != ResultEnum.SUCCESS.getCode()) {
-                        return;
-                    }
+                if (dim_prefix.equals(metaDataTableAttributeDTO.name.substring(0, 4))) {
                     //共享维度关联所有分析指标业务分类
-                    if (dimensionFolder.data.share) {
+                    if (metaDataTableAttributeDTO.isShareDim) {
+                        //获取所有业务域
+                        ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+                        if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
+                            return;
+                        }
                         batchAssociateClassification(tableGuid, businessAreaList.data);
                         return;
                     }
                 }
-                Optional<AppBusinessInfoDTO> first = businessAreaList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
-                if (!first.isPresent()) {
-                    return;
-                }
-                data.typeName = first.get().name;
-            } else if (DataSourceConfigEnum.DMP_MDM.getValue() == sourceData.get().id) {
-                data.typeName = appName;
+                data.typeName = metaDataTableAttributeDTO.AppName;
+            } else if (ClassificationTypeEnum.MASTER_DATA.equals(classificationTypeEnum)) {
+                data.typeName = metaDataTableAttributeDTO.AppName;
             }
             dto.classification = data;
             classification.classificationAddAssociatedEntity(dto);
@@ -375,6 +345,78 @@ public class MetaDataImpl implements IMetaData {
         }
 
     }
+
+//    /**
+//     * 实体关联业务分类  数据工厂 建模，主数据建模。主数据
+//     *
+//     * @param tableGuid
+//     * @param tableName
+//     * @param dbName
+//     */
+//    private void associatedClassification(String tableGuid,
+//                                          String tableName,
+//                                          String dbName,
+//                                          String comment,
+//                                          String appName) {
+//        try {
+//            //获取数据源列表
+//            ResultEntity<List<DataSourceDTO>> allFiDataDataSource = userClient.getAllFiDataDataSource();
+//            if (allFiDataDataSource.code != ResultEnum.SUCCESS.getCode()) {
+//                return;
+//            }
+//            Optional<DataSourceDTO> sourceData = allFiDataDataSource.data.stream().filter(e -> e.conDbname.equals(dbName)).findFirst();
+//            if (!sourceData.isPresent()) {
+//                return;
+//            }
+//            ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
+//            dto.entityGuids = new ArrayList<>();
+//            dto.entityGuids.add(tableGuid);
+//            ClassificationDTO data = new ClassificationDTO();
+//            //ods表关联业务数据分类
+//            if (SourceBusinessTypeEnum.ODS == sourceData.get().sourceBusinessType) {
+//                //获取接入应用列表
+//                ResultEntity<List<AppBusinessInfoDTO>> appList = dataAccessClient.getAppList();
+//                if (appList.code != ResultEnum.SUCCESS.getCode()) {
+//                    return;
+//                }
+//                Optional<AppBusinessInfoDTO> first = appList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
+//                if (!first.isPresent()) {
+//                    return;
+//                }
+//                data.typeName = first.get().name;
+//            } else if (DataSourceConfigEnum.DMP_DW.getValue() == sourceData.get().id) {
+//                //获取所有业务域
+//                ResultEntity<List<AppBusinessInfoDTO>> businessAreaList = dataModelClient.getBusinessAreaList();
+//                if (businessAreaList.code != ResultEnum.SUCCESS.getCode()) {
+//                    return;
+//                }
+//                //判断是否为公共维度
+//                if (dim_prefix.equals(tableName.substring(0, 4))) {
+//                    ResultEntity<DimensionFolderDTO> dimensionFolder = dataModelClient.getDimensionFolderByTableName(tableName);
+//                    if (dimensionFolder.code != ResultEnum.SUCCESS.getCode()) {
+//                        return;
+//                    }
+//                    //共享维度关联所有分析指标业务分类
+//                    if (dimensionFolder.data.share) {
+//                        batchAssociateClassification(tableGuid, businessAreaList.data);
+//                        return;
+//                    }
+//                }
+//                Optional<AppBusinessInfoDTO> first = businessAreaList.data.stream().filter(e -> e.id == Long.parseLong(comment)).findFirst();
+//                if (!first.isPresent()) {
+//                    return;
+//                }
+//                data.typeName = first.get().name;
+//            } else if (DataSourceConfigEnum.DMP_MDM.getValue() == sourceData.get().id) {
+//                data.typeName = appName;
+//            }
+//            dto.classification = data;
+//            classification.classificationAddAssociatedEntity(dto);
+//        } catch (Exception e) {
+//            log.error("associatedClassification ex:", e);
+//        }
+//
+//    }
 
 
     /**
@@ -970,7 +1012,7 @@ public class MetaDataImpl implements IMetaData {
     //region Controlor 调用方法
 
     @Override
-    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data) {
+    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data,ClassificationTypeEnum classificationTypeEnum) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance, "-1");
@@ -984,7 +1026,7 @@ public class MetaDataImpl implements IMetaData {
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
                     String tableName = table.name;
-                    String tableGuid = metaDataTable(table, dbGuid, db.name);
+                    String tableGuid = metaDataTable(table, dbGuid,classificationTypeEnum);
                     //新增stg表
                     String stgTableGuid = null;
                     if (!stg.equals(table.getComment())) {

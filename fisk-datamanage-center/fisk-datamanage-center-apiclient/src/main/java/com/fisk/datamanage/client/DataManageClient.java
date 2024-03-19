@@ -1,5 +1,6 @@
 package com.fisk.datamanage.client;
 
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
@@ -102,7 +103,7 @@ public interface DataManageClient {
      * @return
      */
     @PostMapping("/MetaData/addFiledAndUpdateFiled")
-    ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto);
+    ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto,@RequestParam ClassificationTypeEnum classificationTypeEnum);
 
     /**
      * 数据接入应用同步到业务分类

@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.synchronization.pushmetadata;
 
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
@@ -30,10 +31,10 @@ public interface IMetaData {
      * @param data
      * @return
      */
-    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data,String currUserName);
+    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum);
 
 
-    ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data);
+    ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data,ClassificationTypeEnum classificationTypeEnum);
 
     /**
      * 删除元数据实体
