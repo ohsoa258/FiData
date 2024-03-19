@@ -66,6 +66,8 @@ public interface ViwGroupMap {
      */
     List<ViwGroupDetailsDTO> detailsPoToDtoList(List<ViwGroupDetailsPO> poList);
 
+
+    ViewGroupDropDownVO poToDropDownVo(ViwGroupPO poList);
     /**
      * poList==>DropDownVo
      *
