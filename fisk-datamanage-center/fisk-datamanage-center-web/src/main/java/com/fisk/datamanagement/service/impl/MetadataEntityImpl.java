@@ -8,7 +8,6 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.common.core.utils.ObjectInfoUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
@@ -32,14 +31,18 @@ import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.dto.search.SearchParametersDto;
-import com.fisk.datamanagement.entity.*;
+import com.fisk.datamanagement.entity.BusinessClassificationPO;
+import com.fisk.datamanagement.entity.GlossaryPO;
+import com.fisk.datamanagement.entity.LineageMapRelationPO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
 import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.enums.ProcessTypeEnum;
-import com.fisk.datamanagement.map.MetadataAttributeMapImpl;
 import com.fisk.datamanagement.map.MetadataEntityMap;
-import com.fisk.datamanagement.mapper.*;
+import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
+import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
+import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
@@ -216,7 +219,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //添加审计日志
-        metadataEntityAuditLog.setMetadataAuditLog(dto,(int)po.id,MetadataAuditOperationTypeEnum.ADD,rdbmsType);
+        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType);
         //添加技术属性
         metadataAttribute.addMetadataAttribute(dto, (int) po.id);
 
@@ -245,7 +248,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //添加审计日志
-        metadataEntityAuditLog.setMetadataAuditLog(dto,entityId,MetadataAuditOperationTypeEnum.EDIT,rdbmsType);
+        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType);
         //添加技术属性
         metadataAttribute.operationMetadataAttribute(dto, entityId);
 
@@ -270,7 +273,6 @@ public class MetadataEntityImpl
         return ResultEnum.SUCCESS;
 
     }
-
 
 
     public List<EntityTreeDTO> getMetadataEntityTree() {
@@ -390,6 +392,98 @@ public class MetadataEntityImpl
 //        }
 
         return list;
+    }
+
+    public List<EntityTreeDTO> getTreeForAdHocQuery() {
+        List<EntityTreeDTO> list = new ArrayList<>();
+        //获取所有实体
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntity(EntityTypeEnum.PROCESS.getValue());
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+        //获取父级实体
+        List<MetadataEntityPO> parentList = poList.stream().filter(e -> e.parentId == -1).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(parentList)) {
+            return list;
+        }
+
+        //获取平台配置的所有数据源
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSourceResult = userClient.getAllFiDataDataSource();
+        if (allFiDataDataSourceResult.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        List<DataSourceDTO> dataSourceDTOList = allFiDataDataSourceResult.data;
+        //筛选数据工厂类型的数据源
+        List<DataSourceDTO> collect = dataSourceDTOList.stream().filter(dto -> dto.getSourceType() == 1).collect(Collectors.toList());
+
+        for (MetadataEntityPO parent : parentList) {
+            //根据数据源IP查找数据源所属类型
+            Optional<DataSourceDTO> dataSourceDTOResult = collect.stream().filter(e -> e.getConIp().equals(parent.getName())).findFirst();
+            if (dataSourceDTOResult.isPresent()) {
+                //数据工厂
+                parent.setParentId(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
+
+            }
+        }
+
+        MetaClassificationTypeEnum[] values = MetaClassificationTypeEnum.values();
+
+        //获取元数据的分类 即席查询只获取数据工厂
+        for (MetaClassificationTypeEnum value : values) {
+            if (value.equals(MetaClassificationTypeEnum.DATA_FACTORY)) {
+                EntityTreeDTO dto = new EntityTreeDTO();
+                dto.id = String.valueOf(value.getValue());
+                dto.label = value.getName();
+                dto.type = EntityTypeEnum.CLASSIFICATION.getName();
+                dto.parentId = "-100";
+                dto.displayName = value.getName();
+                EntityTreeDTO entityTreeDTO = buildBetterChildTree(dto, poList);
+                list.add(entityTreeDTO);
+            }
+        }
+
+        return list;
+    }
+
+    public EntityTreeDTO buildBetterChildTree(EntityTreeDTO pNode, List<MetadataEntityPO> poList) {
+        // 创建一个HashMap来存储每个父节点的子节点列表
+        Map<String, List<EntityTreeDTO>> childrenMap = new HashMap<>();
+
+        // 遍历poList，构建每个节点的EntityTreeDTO，并添加到childrenMap中
+        for (MetadataEntityPO item : poList) {
+            String parentId = String.valueOf(item.getParentId());
+            EntityTreeDTO dto = new EntityTreeDTO();
+            dto.id = String.valueOf(item.id);
+            dto.label = item.name;
+
+            // 缓存类型名，避免重复计算
+            String typeName = EntityTypeEnum.getValue(item.typeId).getName();
+            if (item.typeId == EntityTypeEnum.DB_NAME.getValue()) {
+                typeName = pNode.displayName;
+            }
+            dto.type = typeName;
+            dto.parentId = parentId;
+            dto.displayName = item.displayName;
+
+            // 将当前节点添加到其父节点的子节点列表中
+            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
+        }
+
+        // 递归地构建子树  将构建好的子树附加到当前节点
+        pNode.children = buildChildTrees(childrenMap, pNode.id);
+        return pNode;
+    }
+
+    /**
+     * 递归地构建子树
+     */
+    private List<EntityTreeDTO> buildChildTrees(Map<String, List<EntityTreeDTO>> childrenMap, String parentId) {
+        List<EntityTreeDTO> children = childrenMap.getOrDefault(parentId, Collections.emptyList());
+        for (EntityTreeDTO child : children) {
+            // 递归构建子节点的子树
+            child.children = buildChildTrees(childrenMap, child.id);
+        }
+        return children;
     }
 
     public EntityTreeDTO buildChildTree(EntityTreeDTO pNode, List<MetadataEntityPO> poList) {

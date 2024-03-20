@@ -46,6 +46,17 @@ public class MetaDataEntityController {
         service.refreshEntityTreeList();
     }
 
+    @ApiOperation("为即席查询获取元数据对象树形列表（ods dw mdm olap）")
+    @GetMapping("/getEntityListFroAdHocQuery")
+    public ResultEntity<Object> getEntityListForAdHocQuery() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityListForAdHocQuery());
+    }
+
+    @ApiOperation("刷新即席查询元数据对象树形列表（ods dw mdm olap）")
+    @GetMapping("/refreshEntityTreeForAdHocQuery")
+    public void refreshEntityTreeForAdHocQuery() {
+        service.refreshEntityTreeForAdHocQuery();
+    }
 
     @ApiOperation("添加元数据对象：实例、数据库、表、字段、血缘")
     @PostMapping("/addEntity")
@@ -112,7 +123,5 @@ public class MetaDataEntityController {
     public ResultEntity<Object> getInstanceDetail(@PathVariable("guid") String guid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getInstanceDetail(guid));
     }
-
-
 
 }

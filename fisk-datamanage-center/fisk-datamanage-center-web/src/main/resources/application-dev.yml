@@ -61,3 +61,6 @@ azure:
     key: 4412a8536d5843d4800d3a7aa8d2d306
     endpoint: http://4.216.139.151
     deploymodel: text-davinci-003
+
+#  数据资产即席查询树 redis key
+redisKeyFroAdHocQuery: AdHoc1N

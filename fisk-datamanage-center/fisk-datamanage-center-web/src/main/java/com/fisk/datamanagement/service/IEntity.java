@@ -21,10 +21,22 @@ public interface IEntity {
     List<EntityTreeDTO> getEntityTreeList();
 
     /**
+     * 为即席查询获取元数据对象树形列表（ods dw mdm）
+     * @return
+     */
+    List<EntityTreeDTO> getEntityListForAdHocQuery();
+
+    /**
      *刷新元数据对象树形列表
      */
 
     void refreshEntityTreeList();
+
+    /**
+     *刷新即席查询元数据对象树形列表（ods dw mdm olap）
+     */
+    void refreshEntityTreeForAdHocQuery();
+
 
     /**
      * 添加元数据对象：实例、数据库、表、字段
