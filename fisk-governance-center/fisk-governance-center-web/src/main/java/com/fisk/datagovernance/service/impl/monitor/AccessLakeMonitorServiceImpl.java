@@ -272,14 +272,12 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                 break;
             case SQLSERVER:
                 selectSourceSql = "SELECT '"+tableDbNameAndNameVO.get(0).getDbName()+"' as dbName,\n" +
-                        "    t.name AS tableName,\n" +
-                        "    SUM(p.rows) AS 'rowCount'\n" +
+                        " t.name AS tableName,\n" +
+                        " i.rows AS 'rowCount'\n" +
                         "FROM \n" +
-                        "    sys.tables t\n" +
-                        "INNER JOIN \n" +
-                        "    sys.partitions p ON t.object_id = p.object_id\n" +
+                        " sys.tables t, sysindexes as i\n" +
                         "WHERE \n" +
-                        "    t.is_ms_shipped = 0\n" +
+                        " t.object_id = i.id and i.indid <=1\n" +
                         "\t\tAND t.name in (";
                 String sqlServerTableName = tableDbNameAndNameVO.stream().map(i -> {
                     String str = i.getTableName();
@@ -289,7 +287,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
                     str = "'"+str+"'";
                     return str;
                 }).collect(Collectors.joining(","));
-                selectSourceSql = selectSourceSql+sqlServerTableName+") GROUP BY t.name ORDER BY t.name";
+                selectSourceSql = selectSourceSql+sqlServerTableName+") ORDER BY t.name";
                 break;
             case MONGODB:
                 break;
