@@ -82,10 +82,22 @@ public class BusinessPageResultDTO {
     public Integer dimCount;
 
     /**
-     * 当前应用下事实表总数
+     * 当前应用下事实表总数 fact config help
      */
     @ApiModelProperty(value = "当前应用下事实表总数")
     public Integer factCount;
+
+    /**
+     * 当前应用下dwd表总数
+     */
+    @ApiModelProperty(value = "当前应用下事实表总数")
+    public Integer dwdCount;
+
+    /**
+     * 当前应用下dws表总数
+     */
+    @ApiModelProperty(value = "当前应用下事实表总数")
+    public Integer dwsCount;
 
     /**
      * 数仓连接类型

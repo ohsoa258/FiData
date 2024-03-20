@@ -526,14 +526,18 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         data.where = str.toString();
         Page<BusinessPageResultDTO> page = baseMapper.queryList(query.page, data);
         List<BusinessPageResultDTO> records = page.getRecords();
-        records.stream().forEach(businessPageResultDTO -> {
+        records.forEach(businessPageResultDTO -> {
             int id = (int) businessPageResultDTO.getId();
             int dimCount = dimensionImpl.getDimCountByBid(id);
             int factCount = factImpl.getFactCountByBid(id);
-            int totalCount = dimCount + factCount;
+            int dwdCount = factImpl.getDwdCountByBid(id);
+            int dwsCount = factImpl.getDwsCountByBid(id);
+            //当前应用下的所有表总数
+            int totalCount = dimCount + factCount + dwdCount + dwsCount;
             businessPageResultDTO.setDimCount(dimCount);
             businessPageResultDTO.setFactCount(factCount);
-            businessPageResultDTO.setTblCount(totalCount);
+            businessPageResultDTO.setDwdCount(dwdCount);
+            businessPageResultDTO.setDwsCount(dwsCount);
             businessPageResultDTO.setDwType(type);
         });
         return page;

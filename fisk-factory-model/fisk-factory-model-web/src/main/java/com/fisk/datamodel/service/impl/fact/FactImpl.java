@@ -24,10 +24,13 @@ import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DeleteTableDetailDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datagovernance.client.DataGovernanceClient;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.AtomicIndicatorPushDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
@@ -47,6 +50,8 @@ import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -91,6 +96,10 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     DimensionImpl dimensionImpl;
     @Resource
     DataManageClient dataManageClient;
+    @Resource
+    private DataGovernanceClient dataGovernanceClient;
+    @Resource
+    private UserClient userClient;
     @Resource
     SystemVariablesImpl systemVariables;
     @Resource
@@ -446,14 +455,41 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     }
 
     /**
-     * 获取业务域下的事实表计数
+     * 获取业务域下的事实表计数 fact config help
      *
      * @return
      */
     @Override
     public Integer getFactCountByBid(Integer id) {
         LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FactPO::getBusinessId, id);
+        wrapper.eq(FactPO::getBusinessId, id)
+                .likeRight(FactPO::getFactTabName,"fact_");
+        return mapper.selectCount(wrapper);
+    }
+
+    /**
+     * 获取业务域下的dwd表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getDwdCountByBid(Integer id) {
+        LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FactPO::getBusinessId, id)
+                .likeRight(FactPO::getFactTabName,"dwd_");;
+        return mapper.selectCount(wrapper);
+    }
+
+    /**
+     * 获取业务域下的dws表计数
+     *
+     * @return
+     */
+    @Override
+    public Integer getDwsCountByBid(Integer id) {
+        LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FactPO::getBusinessId, id)
+                .likeRight(FactPO::getFactTabName,"dws_");;
         return mapper.selectCount(wrapper);
     }
 
@@ -591,6 +627,36 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         resultEnum = businessProcess.batchPublishBusinessProcess(queryDTO);
         log.info("==========重新发布结果:" + result.getCode());
         return ResultEntityBuild.build(resultEnum);
+    }
+
+    /**
+     * 数仓建模 同步表数据（触发nifi）
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEntity<Object> modelSyncData(ModelSyncDataDTO dto) {
+        TableDataSyncDTO tableDataSyncDTO = new TableDataSyncDTO();
+        switch (dto.getTblType()){
+            //维度表
+            case 0:
+                //获取维度表
+                DimensionDTO dimension = dimensionImpl.getDimension(Math.toIntExact(dto.getTblId()));
+                //1数仓 2数接 3mdm
+                tableDataSyncDTO.setDatasourceId(1);
+                tableDataSyncDTO.setTableFullName(dimension.getDimensionTabName());
+                return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+            //事实表
+            case 1:
+                FactDTO fact = getFact(Math.toIntExact(dto.getTblId()));
+                tableDataSyncDTO.setDatasourceId(1);
+                tableDataSyncDTO.setTableFullName(fact.getFactTabName());
+                return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+            default:
+                return ResultEntityBuild.build(ResultEnum.WRONG_TABLE_TYPE_ERROR);
+        }
+
     }
 
     /**

@@ -46,8 +46,21 @@ public class AppRegistrationVO{
      */
     @ApiModelProperty(value = "创建时间", required = true)
     public LocalDateTime createTime;
+
     @ApiModelProperty(value = "驱动类型", required = true)
     public String driveType;
+
+    /**
+     * 数据库账号
+     */
+    @ApiModelProperty(value = "数据库账号")
+    public String dbAccount;
+
+    /**
+     * 数据库连接字符串
+     */
+    @ApiModelProperty(value = "数据库连接字符串")
+    public String conStr;
 
     /**
      * 部门名称(浦东应急局专供)

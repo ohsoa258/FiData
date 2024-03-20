@@ -269,6 +269,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * hudi入仓配置 修改表的cdc状态
+     *
      * @param dto
      * @return
      */
@@ -447,4 +448,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @param catalogName 目录名
      */
     Map<String, List<String>> refreshDorisCatalog(Integer dbID, String catalogName);
+
+    /**
+     * 数据接入 同步表数据（触发nifi）
+     *
+     * @param dto
+     * @return
+     */
+    ResultEntity<Object> accessSyncData(AccessSyncDataDTO dto);
 }

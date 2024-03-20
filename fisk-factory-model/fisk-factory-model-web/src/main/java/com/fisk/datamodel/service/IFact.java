@@ -103,6 +103,20 @@ public interface IFact extends IService<FactPO> {
     Integer getFactCountByBid(Integer id);
 
     /**
+     * 获取业务域下的事实表计数
+     *
+     * @return
+     */
+    Integer getDwdCountByBid(Integer id);
+
+    /**
+     * 获取业务域下的事实表计数
+     *
+     * @return
+     */
+    Integer getDwsCountByBid(Integer id);
+
+    /**
      * 获取所有事实表计数
      *
      * @return
@@ -123,4 +137,13 @@ public interface IFact extends IService<FactPO> {
      * @return
      */
     ResultEntity<Object> transFactToBArea(FactTransDTO dto);
+
+    /**
+     * 数仓建模 同步表数据（触发nifi）
+     *
+     * @param dto
+     * @return
+     */
+    ResultEntity<Object> modelSyncData(ModelSyncDataDTO dto);
+
 }

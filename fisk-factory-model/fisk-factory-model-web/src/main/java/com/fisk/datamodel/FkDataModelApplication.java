@@ -25,12 +25,14 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.fisk.common.framework.actuators"},
         exclude = {RabbitAutoConfiguration.class})
 @MapperScan("com.fisk.datamodel.mapper")
-@EnableFeignClients(basePackages = {"com.fisk.auth.client",
+@EnableFeignClients(basePackages = {
+        "com.fisk.auth.client",
         "com.fisk.task.client",
         "com.fisk.dataaccess.client",
         "com.fisk.datafactory.client",
         "com.fisk.system.client",
-        "com.fisk.datamanage.client"
+        "com.fisk.datamanage.client",
+        "com.fisk.datagovernance.client"
 })
 @EnableHystrix
 public class FkDataModelApplication {

@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
+import com.fisk.dataaccess.dto.table.AccessSyncDataDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableKeepNumberDTO;
@@ -125,6 +126,17 @@ public class TableAccessController {
     @ApiOperation(value = "数接--回显统计当前数据接入总共有多少非实时表和实时api")
     public ResultEntity<PhyTblAndApiTblVO> countTbl() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.countTbl());
+    }
+
+    /**
+     * 数据接入 同步表数据（触发nifi）
+     * @param dto
+     * @return
+     */
+    @PostMapping("/accessSyncData")
+    @ApiOperation(value = "数据接入 同步表数据（触发nifi）")
+    public ResultEntity<Object> accessSyncData(@RequestBody AccessSyncDataDTO dto) {
+        return service.accessSyncData(dto);
     }
 
 }

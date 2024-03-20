@@ -2113,9 +2113,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
             if (driveTypePOList != null) {
                 for (AppRegistrationVO item : appRegistrationVOList) {
-                    String driveType = Objects.requireNonNull(driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null)).getDriveType();
+                    AppDataSourcePO po = driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null);
+                    String driveType = Objects.requireNonNull(po).getDriveType();
                     log.info("应用驱动类型：" + driveType);
                     item.setDriveType(driveType);
+                    //数据库连接账号
+                    item.setDbAccount(po.getConnectAccount());
+                    //数据库连接字符串
+                    item.setConStr(po.getConnectStr());
+
                     //实时和非实时计数方式不同
                     if (item.appType == 0) {
                         if (DbTypeEnum.doris_catalog.getName().equalsIgnoreCase(driveType)) {

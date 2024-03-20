@@ -9,6 +9,7 @@ import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
+import com.fisk.datamodel.dto.fact.ModelSyncDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IFact;
 import io.swagger.annotations.Api;
@@ -112,6 +113,19 @@ public class FactController {
     @PutMapping("/transFactToBArea")
     public ResultEntity<Object> transFactToBArea(@RequestBody FactTransDTO dto) {
         return service.transFactToBArea(dto);
+    }
+
+
+    /**
+     * 数仓建模 同步表数据（触发nifi）
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/modelSyncData")
+    @ApiOperation(value = "数仓建模 同步表数据（触发nifi）")
+    public ResultEntity<Object> modelSyncData(@RequestBody ModelSyncDataDTO dto) {
+        return service.modelSyncData(dto);
     }
 
 }

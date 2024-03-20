@@ -92,6 +92,8 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
+import com.fisk.datagovernance.client.DataGovernanceClient;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -182,6 +184,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private FtpImpl ftpImpl;
     @Resource
     private DataManageClient dataManageClient;
+    @Resource
+    private DataGovernanceClient dataGovernanceClient;
     @Resource
     GetConfigDTO getConfig;
     @Resource
@@ -2975,7 +2979,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             DataSourceDTO data = result.getData();
             connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
             statement = connection.createStatement();
-            if (!catalogName.equals("_internal")){
+            if (!catalogName.equals("_internal")) {
                 statement.executeQuery("SWITCH " + catalogName + ";");
             }
             statement.executeQuery("USE " + dbName + ";");
@@ -3025,6 +3029,50 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             throw new FkException(ResultEnum.REFRESH_REDIS_DORIS_CATALOG_ERROR, e);
         }
         return map;
+    }
+
+    @Override
+    public ResultEntity<Object> accessSyncData(AccessSyncDataDTO dto) {
+
+        TableDataSyncDTO tableDataSyncDTO = new TableDataSyncDTO();
+        LambdaQueryWrapper<TableAccessPO> w = new LambdaQueryWrapper<>();
+        w.eq(TableAccessPO::getId, dto.getTblId());
+        //获取物理表
+        TableAccessPO one = getOne(w);
+        //获取应用
+        AppRegistrationDTO app = appRegistration.getAppById(one.getAppId());
+
+        String fullTblName = null;
+
+        String defaultScheamName = "";
+
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(app.getTargetDbId());
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        DataSourceDTO data = resultEntity.getData();
+
+        if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.equals(data.getConType())) {
+            defaultScheamName = "dbo.ods" + app.appAbbreviation + "_";
+        } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL.equals(data.getConType())) {
+            defaultScheamName = "public.ods" + app.appAbbreviation + "_";
+        } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.equals(data.getConType())) {
+            defaultScheamName = "ods" + app.appAbbreviation + "_";
+        }
+
+        //拼接完整表名 架构.表名
+        //如果应用简称作为架构  则应用简称是架构名
+        if (app.whetherSchema) {
+            fullTblName = app.appAbbreviation + "." + one.getTableName();
+        } else {
+            //如果应用简称作为架构 则规则如下 dbo.ods_简称_表名
+            fullTblName = defaultScheamName + one.getTableName();
+        }
+
+        //1表示数仓 2表示数接 3表示mdm
+        tableDataSyncDTO.setDatasourceId(2);
+        tableDataSyncDTO.setTableFullName(fullTblName);
+        return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
     }
 
 
