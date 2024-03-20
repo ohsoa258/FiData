@@ -130,7 +130,7 @@ public class EntityImpl implements IEntity {
     public List<EntityTreeDTO> getEntityList() {
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getMetadataEntityTree();
         String jsonString = JSONObject.toJSONString(metadataEntityTree);
-        redisTemplate.opsForValue().set(redisKeyFroAdHocQuery, jsonString);
+        redisTemplate.opsForValue().set(metadataEntity, jsonString);
         return metadataEntityTree;
     }
 
