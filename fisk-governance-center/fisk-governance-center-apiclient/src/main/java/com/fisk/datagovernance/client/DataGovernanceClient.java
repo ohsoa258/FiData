@@ -2,11 +2,11 @@ package com.fisk.datagovernance.client;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckSyncDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckWebDTO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
-import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
@@ -83,4 +83,14 @@ public interface DataGovernanceClient {
      */
     @GetMapping("/intelligentdiscovery/createScanReport")
     ResultEntity<Object> createScanReport(@RequestParam("id") int id);
+
+    /**
+     * 数据运维，表数据同步
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/datasource/tableDataSync")
+    ResultEntity<Object> tableDataSync(@RequestBody TableDataSyncDTO dto);
+
 }
