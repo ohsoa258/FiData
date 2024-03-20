@@ -2,6 +2,8 @@ package com.fisk.datamanagement.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.metadataattribute.MetadataAttributeDTO;
+import com.fisk.datamanagement.entity.MetadataAttributePO;
+import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 
 import java.util.List;
 
@@ -35,5 +37,12 @@ public interface IMetadataAttribute {
      * @return
      */
     ResultEnum metadataCustomAttribute(List<MetadataAttributeDTO> dtoList);
+
+    /**
+     * 获取元数据下的技术属性
+     * @param entityId
+     * @return
+     */
+    List<MetadataAttributePO> getMetadataAttribute(Integer entityId);
 
 }

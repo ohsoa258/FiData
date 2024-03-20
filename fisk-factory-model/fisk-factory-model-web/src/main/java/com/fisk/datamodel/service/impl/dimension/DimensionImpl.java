@@ -1188,6 +1188,9 @@ public class DimensionImpl
             table.tableConfigId = Long.valueOf(item.id).intValue();
             table.dataSourceId=item.dataSourceId;
             table.columnList = getDimensionAttributeMetaData(item.id, table);
+            table.isExistStg=true;
+            table.isExistClassification=true;
+            table.isShareDim=item.share;
             tableList.add(table);
         }
 

@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.controller;
 
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
@@ -36,10 +37,11 @@ public class MetaDataController {
 
     @Resource
     IMetadataEntity iMetadataEntity;
+
     @ApiOperation("根据接入表ID+字段ID查找对应元数据中的字段")
     @GetMapping("/queryMetadaFildes/{tableId}/{fldeId}")
-    public List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId")Integer tableId, @PathVariable("fldeId")Integer fldeId){
-        return iMetadataEntity.queryFildes(tableId,fldeId);
+    public List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId") Integer tableId, @PathVariable("fldeId") Integer fldeId) {
+        return iMetadataEntity.queryFildes(tableId, fldeId);
     }
 
     @ApiOperation("元数据实时同步")
@@ -50,25 +52,26 @@ public class MetaDataController {
 
     @ApiOperation("添加元数据实体")
     @PostMapping("/consumeMetaData")
-    public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto) {
-        return ResultEntityBuild.build(service.consumeMetaData(dto,dto.get(0).currUserName));
+    public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto, @RequestParam ClassificationTypeEnum classificationTypeEnum) {
+        return ResultEntityBuild.build(service.consumeMetaData(dto, dto.get(0).currUserName, classificationTypeEnum));
     }
+
     @ApiOperation("元数据字段新增或修改字段")
     @PostMapping("/addFiledAndUpdateFiled")
-    public ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto){
-        return ResultEntityBuild.build(service.addFiledAndUpdateFiled(dto));
+    public ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto, @RequestParam ClassificationTypeEnum classificationTypeEnum) {
+        return ResultEntityBuild.build(service.addFiledAndUpdateFiled(dto, classificationTypeEnum));
     }
 
     @ApiOperation("导出元数据")
     @PostMapping(path = "/export")
     @ControllerAOPConfig(printParams = false)
-    public void export(@Validated  @RequestBody ExportMetaDataDto dto,HttpServletResponse response){
-        service.export(dto,response);
+    public void export(@Validated @RequestBody ExportMetaDataDto dto, HttpServletResponse response) {
+        service.export(dto, response);
     }
 
     @ApiOperation("刷新导出元数据Redis缓存")
     @PostMapping(path = "/refreshRedisExcelMetadata")
-    public void refreshRedisExcelMetadata(){
+    public void refreshRedisExcelMetadata() {
         service.refreshRedisExcelMetadata();
     }
 
@@ -88,14 +91,14 @@ public class MetaDataController {
 
     @ApiOperation("添加数据消费元数据")
     @PostMapping("/syncDataConsumptionMetaData")
-    public ResultEntity<Object> syncDataConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList){
-        return ResultEntityBuild.build(service.syncDataConsumptionMetaData(entityList,""));
+    public ResultEntity<Object> syncDataConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList) {
+        return ResultEntityBuild.build(service.syncDataConsumptionMetaData(entityList, ""));
     }
 
 
     @ApiOperation("删除数据消费元数据")
     @PostMapping("/deleteConsumptionMetaData")
-    public ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList){
+    public ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList) {
         return ResultEntityBuild.build(service.deleteDataConsumptionMetaData(entityList));
     }
 

@@ -3611,10 +3611,13 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (app.appType == 2) {
             String[] tableNames = tableAccess.getDisplayName().split("\\.");
             table.setName(tableNames[tableNames.length - 1]);
+            table.setIsExistStg(false);
 
         } else {
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
+            table.setIsExistStg(true);
         }
+        table.setIsExistClassification(true);
         table.setAppType(app.appType);
         table.setContact_info(app.getAppPrincipal());
         table.setDescription(tableAccess.getTableDes());
@@ -3624,6 +3627,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setSqlScript(tableAccess.sqlScript);
         table.setCoverScript(tableAccess.coverScript);
         table.setDataSourceId(tableAccess.getAppDataSourceId());
+        table.setAppName(app.getAppName());
         // 字段
         List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id).list().stream().filter(Objects::nonNull).map(e -> {
             MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
@@ -3657,5 +3661,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return getOne(wrapper);
     }
 
-
+    /**
+     * 获取所有被应用引用的数据源信息
+     */
+    @Override
+    public List<AppDataSourceDTO> getAppSources(){
+        List<AppRegistrationPO> list = list();
+        List<AppDataSourceDTO> appSources = new ArrayList<>();
+        for (AppRegistrationPO appRegistrationPO : list) {
+            List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appRegistrationPO.getId());
+            appSources.add(appSourcesByAppId.get(0));
+        }
+        return appSources;
+    }
 }

@@ -14,6 +14,16 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
     @ApiModelProperty(value = "字段集合")
     public List<MetaDataColumnAttributeDTO> columnList;
 
+
+    /**
+     * 是否存在所属临时表 null true则存在 ，false不存在
+     */
+    public Boolean isExistStg;
+    /**
+     * 是否关联存在业务分类 null true则存在 ，false不存在
+     */
+    public Boolean isExistClassification;
+
     /**
      *  应用名称（数据接入、数据建模、数据消费) 模型名(主数据)
      */
@@ -25,7 +35,7 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
     public Integer AppId;
 
     /**
-     *  应用类型(数据接入)  0 1 2 实时
+     *  应用类型(数据接入)  0 1 2 实时 非实时 CDC
      */
 
     public Integer AppType;
@@ -49,4 +59,9 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
      *  数据源ID
      */
     public Integer dataSourceId;
+
+    /**
+     * 是否为公共维度
+     */
+    public Boolean isShareDim;
 }

@@ -153,7 +153,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
             e.getVersions().stream().map(p -> p.displayName = p.name).collect(Collectors.toList());
             e.setEntity(entityServiceImpl.getEntityDropDown(e.id));
             e.getEntity().forEach(p -> p.setViewGroups(viwGroupService.getViewGroupByEntityId(p.id)));
-            e.getEntity().forEach(p -> p.getViewGroups().forEach(t -> t.displayName = t.name));
+//            e.getEntity().forEach(p -> p.getViewGroups().forEach(t -> t.displayName = t.name));
         });
         return data;
     }

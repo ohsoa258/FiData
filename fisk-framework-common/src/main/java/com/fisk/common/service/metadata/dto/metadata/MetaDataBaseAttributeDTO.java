@@ -17,7 +17,7 @@ public class MetaDataBaseAttributeDTO {
     public String contact_info;
     @ApiModelProperty(value = "描述")
     public String description;
-    @ApiModelProperty(value = "说明，对应数据接入中的应用ID")
+    @ApiModelProperty(value = "说明，数据接入中的应用ID")
     public String comment;
     @ApiModelProperty(value = "所属人")
     public String owner;

@@ -17,6 +17,8 @@ public class ViwGroupDTO {
     private Integer entityId;
     @ApiModelProperty(value = "名称")
     private String name;
+    @ApiModelProperty(value = "显示名称")
+    private String displayName;
     @ApiModelProperty(value = "详细信息")
     private String details;
 }

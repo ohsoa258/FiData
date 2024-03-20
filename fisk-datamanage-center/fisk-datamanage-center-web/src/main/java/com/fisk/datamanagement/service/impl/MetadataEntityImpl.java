@@ -8,6 +8,7 @@ import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.ObjectInfoUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
@@ -16,7 +17,6 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
-import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
@@ -32,19 +32,14 @@ import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.dto.search.SearchParametersDto;
-import com.fisk.datamanagement.dto.standards.StandardsSourceQueryDTO;
-import com.fisk.datamanagement.entity.BusinessClassificationPO;
-import com.fisk.datamanagement.entity.GlossaryPO;
-import com.fisk.datamanagement.entity.LineageMapRelationPO;
-import com.fisk.datamanagement.entity.MetadataEntityPO;
+import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
+import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.enums.ProcessTypeEnum;
+import com.fisk.datamanagement.map.MetadataAttributeMapImpl;
 import com.fisk.datamanagement.map.MetadataEntityMap;
-import com.fisk.datamanagement.mapper.BusinessClassificationMapper;
-import com.fisk.datamanagement.mapper.MetaDataClassificationMapMapper;
-import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
-import com.fisk.datamanagement.mapper.MetadataEntityMapper;
+import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
@@ -101,9 +96,9 @@ public class MetadataEntityImpl
     BusinessClassificationMapper businessClassificationMapper;
     @Resource
     MetaDataGlossaryMapMapper metaDataGlossaryMapMapper;
-    @Resource
-    MetaDataClassificationMapMapper metaDataClassificationMapMapper;
 
+    @Resource
+    MetadataEntityAuditLogImpl metadataEntityAuditLog;
 
     @Resource
     UserClient userClient;
@@ -220,7 +215,9 @@ public class MetadataEntityImpl
         if (!save) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-
+        //添加审计日志
+        metadataEntityAuditLog.setMetadataAuditLog(dto,(int)po.id,MetadataAuditOperationTypeEnum.ADD,rdbmsType);
+        //添加技术属性
         metadataAttribute.addMetadataAttribute(dto, (int) po.id);
 
         return (int) po.id;
@@ -247,7 +244,9 @@ public class MetadataEntityImpl
         if (!flat) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-
+        //添加审计日志
+        metadataEntityAuditLog.setMetadataAuditLog(dto,entityId,MetadataAuditOperationTypeEnum.EDIT,rdbmsType);
+        //添加技术属性
         metadataAttribute.operationMetadataAttribute(dto, entityId);
 
         return (int) po.id;
@@ -271,6 +270,7 @@ public class MetadataEntityImpl
         return ResultEnum.SUCCESS;
 
     }
+
 
 
     public List<EntityTreeDTO> getMetadataEntityTree() {
@@ -678,14 +678,15 @@ public class MetadataEntityImpl
 
     /**
      * 添加元数据血缘关系  Source(来源表) --> STG(临时表)---> Target(目标表)
-     * @param dbName       目标表数据库名
-     * @param tableGuid    目标表元数据ID
-     * @param tableName    目标表名称
-     * @param stgTableGuid 临时表元数据ID
-     * @param sqlScript    抽取sql
-     * @param coverScript  stg到target覆盖sql
+     *
+     * @param dbName             目标表数据库名
+     * @param tableGuid          目标表元数据ID
+     * @param tableName          目标表名称
+     * @param stgTableGuid       临时表元数据ID
+     * @param sqlScript          抽取sql
+     * @param coverScript        stg到target覆盖sql
      * @param sourceDataSourceId 来源数据源id
-     * @param tableConfigId 表配置ID
+     * @param tableConfigId      表配置ID
      */
     public void synchronizationTableKinShip(String dbName,
                                             String tableGuid,
@@ -707,7 +708,7 @@ public class MetadataEntityImpl
 
         log.debug("========sqlScript脚本==============" + sqlScript);
         log.debug("======== coverScript脚本==============" + coverScript);
-        log.debug(" 参数：dbName：" + dbName+" ，tableGuid: "+tableGuid+" ，stgTableGuid："+stgTableGuid+"，sourceDataSourceId："+sourceDataSourceId+", tableConfigId: "+tableConfigId);
+        log.debug(" 参数：dbName：" + dbName + " ，tableGuid: " + tableGuid + " ，stgTableGuid：" + stgTableGuid + "，sourceDataSourceId：" + sourceDataSourceId + ", tableConfigId: " + tableConfigId);
         //判断流程类型
         if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.ODS) {
             /**************************************数据接入血缘*********************************************************/
@@ -741,7 +742,7 @@ public class MetadataEntityImpl
             /**************************************END************************************************************/
 
             /**************************************添加stg到ods血缘******************************************/
-            log.debug("=========stgTableGuid"+stgTableGuid+"======");
+            log.debug("=========stgTableGuid" + stgTableGuid + "======");
             synchronizationStgOdsKinShip(tableGuid, coverScript, stgTableGuid);
             /**************************************END*****************************************************/
 
@@ -751,10 +752,10 @@ public class MetadataEntityImpl
             if (CollectionUtils.isEmpty(tableList)) {
                 return;
             }
-            log.debug("DWSQL解析，解析表如下："+JSONObject.toJSONString(tableList));
+            log.debug("DWSQL解析，解析表如下：" + JSONObject.toJSONString(tableList));
             // 获取源表的元数据ID
             fromEntityIdList = getTableListV2(tableList);
-            log.debug("fromEntityIdList ："+JSONObject.toJSONString(fromEntityIdList));
+            log.debug("fromEntityIdList ：" + JSONObject.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 log.debug("==========fromEntityIdList等于空===========");
                 return;
@@ -779,10 +780,10 @@ public class MetadataEntityImpl
                     targetDataSourceInfo.conType.getName().toLowerCase(),
                     list,
                     newDbQualifiedName1);
-        }else if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.MDM){
+        } else if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.MDM) {
             List<String> tableList = SqlParserUtils.getAllTableMeta(sqlScript);
             fromEntityIdList = getTableListV2(tableList);
-            log.debug("fromEntityIdList ："+JSONObject.toJSONString(fromEntityIdList));
+            log.debug("fromEntityIdList ：" + JSONObject.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 log.debug("==========fromEntityIdList等于空===========");
                 return;
@@ -901,16 +902,20 @@ public class MetadataEntityImpl
      * @return
      */
     public List<Long> getTableListV2(List<String> tableNameList) {
-        List<String> tableName = new ArrayList<>();
-        tableNameList.forEach(e -> {
-            String[] tableNames = e.split("\\.");
-            tableName.add(tableNames[tableNames.length - 1]);
-        });
-        QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("name", tableName);
-        queryWrapper.eq("type_id",3);
-        List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
-        return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+        if (tableNameList.stream().count() > 0) {
+            List<String> tableName = new ArrayList<>();
+            tableNameList.forEach(e -> {
+                String[] tableNames = e.split("\\.");
+                tableName.add(tableNames[tableNames.length - 1]);
+            });
+            QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("name", tableName);
+            queryWrapper.eq("type_id", 3);
+            List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+            return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
     }
 
 
@@ -993,7 +998,7 @@ public class MetadataEntityImpl
 
         addProcess(sqlScript, collect, tableGuid, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
 
- //       synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
+        //       synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
     }
 
     public void synchronizationCustomScriptKinShip(Integer tableId,
@@ -1126,7 +1131,7 @@ public class MetadataEntityImpl
                            ProcessTypeEnum processType) {
         //去除换行符,以及转小写
 
-        sql =StringUtils.isEmpty(sql)?"": sql.replace("\n", "").toLowerCase();
+        sql = StringUtils.isEmpty(sql) ? "" : sql.replace("\n", "").toLowerCase();
 
         //新增process
         MetadataEntityPO po = new MetadataEntityPO();

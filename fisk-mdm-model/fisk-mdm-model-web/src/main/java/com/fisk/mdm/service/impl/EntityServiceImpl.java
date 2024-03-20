@@ -566,7 +566,7 @@ public class EntityServiceImpl implements EntityService {
      * @return
      */
     @Override
-    public List<MetaDataInstanceAttributeDTO> getMasterDataMetaData(Integer entityId) {
+    public List<MetaDataInstanceAttributeDTO>   getMasterDataMetaData(Integer entityId) {
         List<MetaDataInstanceAttributeDTO> metaDataInstanceAttributeDTOList = new ArrayList<>();
         //获取实例、数据库元数据
         MetaDataInstanceAttributeDTO masterDataMetaDataInstance = getInstanceDataBaseMetaData();
@@ -655,6 +655,8 @@ public class EntityServiceImpl implements EntityService {
                 tableAttributeDTO.setAppName(model.getDisplayName());
                 tableAttributeDTO.setAppId((int) model.getId());
                 tableAttributeDTO.setOwner(entity.createUser);
+                tableAttributeDTO.setIsExistClassification(true);
+                tableAttributeDTO.setIsExistStg(true);
                 AccessDataPO accessDataPO = accessDataPOS.stream().filter(e -> e.getEntityId() == entity.getId()).findFirst().orElse(null);
                 if (accessDataPO!=null){
                     tableAttributeDTO.sqlScript=accessDataPO.getExtractionSql();

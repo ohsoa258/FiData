@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamanagement.mapper.MetadataEntityAuditAttributeChangeMapper">
+
+    <resultMap id="BaseResultMap" type="com.fisk.datamanagement.entity.MetadataEntityAuditAttributeChangePO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="auditId" column="audit_id" jdbcType="INTEGER"/>
+            <result property="attribute" column="attribute" jdbcType="VARCHAR"/>
+            <result property="beforeValue" column="before_value" jdbcType="VARCHAR"/>
+            <result property="afterValue" column="after_value" jdbcType="VARCHAR"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,audit_id,attribute,
+        before_value,after_value,create_user,
+        update_user,create_time,update_time,
+        del_flag
+    </sql>
+</mapper>

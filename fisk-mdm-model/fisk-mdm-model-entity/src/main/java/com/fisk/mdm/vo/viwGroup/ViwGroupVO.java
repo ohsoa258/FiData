@@ -20,6 +20,7 @@ public class ViwGroupVO extends BaseUserInfoVO {
     private Integer id;
     private Integer entityId;
     private String name;
+    private String displayName;
     private String columnName;
     private String details;
 

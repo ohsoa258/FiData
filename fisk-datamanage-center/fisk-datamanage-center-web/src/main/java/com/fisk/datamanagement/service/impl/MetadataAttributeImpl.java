@@ -7,6 +7,7 @@ import com.fisk.common.core.utils.ObjectInfoUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.metadataattribute.MetadataAttributeDTO;
 import com.fisk.datamanagement.entity.MetadataAttributePO;
+import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.map.MetadataAttributeMap;
 import com.fisk.datamanagement.mapper.MetadataAttributeMapper;
 import com.fisk.datamanagement.service.IMetadataAttribute;
@@ -150,6 +151,13 @@ public class MetadataAttributeImpl
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<MetadataAttributePO> getMetadataAttribute(Integer entityId) {
+        QueryWrapper<MetadataAttributePO> queryWrapper= new QueryWrapper<MetadataAttributePO>();
+        queryWrapper.lambda().eq(MetadataAttributePO::getMetadataEntityId,entityId);
+        return  mapper.selectList(queryWrapper);
     }
 
 }
