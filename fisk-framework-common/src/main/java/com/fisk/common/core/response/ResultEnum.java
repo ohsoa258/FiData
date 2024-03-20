@@ -288,6 +288,7 @@ public enum ResultEnum {
     PUBLIC_DIM_PUBLISH_ERROR(8022, "公共域维度表发布失败，请回该表的初始创建业务域发布"),
     MODEL_MAIN_PAGE_COUNT_ERROR(8023, "获取dw主页数据量失败"),
     FACT_EXISTS_IN_DISPATCH(8024, "禁止移动该表-该表存在于以下管道:"),
+    WRONG_TABLE_TYPE_ERROR(8025, "表类型只能为 0：维度表 1事实表"),
 
     /**
      * 数据工厂
