@@ -14,7 +14,6 @@ import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.entity.GlossaryLibraryPO;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
-import com.fisk.datamanagement.enums.DataAssetsTypeEnum;
 import com.fisk.datamanagement.map.GlossaryMap;
 import com.fisk.datamanagement.mapper.GlossaryLibraryMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
@@ -212,7 +211,8 @@ public class GlossaryImpl
             dto.setGuid(String.valueOf(model.id));
             dto.setGlossaryLibraryId(Integer.parseInt(guid));
             dto.setName(model.name);
-            dto.setShortDescription(model.shortDescription);
+            // 20240321 去掉含义 前端不展示
+//            dto.setShortDescription(model.shortDescription);
             dto.setLongDescription(model.longDescription);
             list.add(dto);
         }

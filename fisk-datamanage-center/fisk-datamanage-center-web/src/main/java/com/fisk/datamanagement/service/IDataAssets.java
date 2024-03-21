@@ -15,4 +15,11 @@ public interface IDataAssets {
      */
     DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto);
 
+    /**
+     * 数据资产-拖动字段+筛选获取数据
+     * @param dto
+     * @return
+     */
+    DataAssetsResultDTO getDataByFilter(DataAssetsParameterDTO dto);
+
 }

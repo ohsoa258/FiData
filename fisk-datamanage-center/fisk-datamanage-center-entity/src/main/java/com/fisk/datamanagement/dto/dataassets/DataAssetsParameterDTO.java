@@ -22,6 +22,25 @@ public class DataAssetsParameterDTO {
      */
     @ApiModelProperty(value = "数据库名称")
     public String dbName;
+
+    /**
+     * 数据库ip
+     */
+    @ApiModelProperty(value = "数据库ip")
+    public String ip;
+
+    /**
+     * 要查询的字段
+     */
+    @ApiModelProperty(value = "要查询的字段")
+    public List<String> fieldNames;
+
+    /**
+     * where 筛选条件
+     */
+    @ApiModelProperty(value = "where 筛选条件")
+    public String whereCondition;
+
     /**
      * 表名称
      */

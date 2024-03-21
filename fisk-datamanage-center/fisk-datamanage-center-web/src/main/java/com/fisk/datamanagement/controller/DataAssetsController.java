@@ -56,10 +56,15 @@ public class DataAssetsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
 
-    @ApiOperation("数据资产-拖到字段+筛选获取数据")
+    /**
+     * 数据资产-拖动字段+筛选获取数据
+     * @param dto
+     * @return
+     */
+    @ApiOperation("数据资产-拖动字段+筛选获取数据")
     @PostMapping("/getDataByFilter")
     public ResultEntity<Object> getDataByFilter(@Validated @RequestBody DataAssetsParameterDTO dto) {
-        DataAssetsResultDTO result = service.getDataAssetsTableList(dto);
+        DataAssetsResultDTO result = service.getDataByFilter(dto);
         if (dto.export) {
             exportTable(result, dto);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
