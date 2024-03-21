@@ -1300,7 +1300,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setIsBusinesstime(0);
                         fieldDTO.setIsTimestamp(0);
                         fieldDTO.setSourceDbName(field.sourceDbName);
-                        fieldDTO.setSourceTblName(field.sourceDbName);
+                        fieldDTO.setSourceTblName(field.sourceTblName);
                         list.add(fieldDTO);
                     }
                     List<TableFieldsPO> tableFieldsPOS = TableFieldsMap.INSTANCES.listDtoToPo(list);
