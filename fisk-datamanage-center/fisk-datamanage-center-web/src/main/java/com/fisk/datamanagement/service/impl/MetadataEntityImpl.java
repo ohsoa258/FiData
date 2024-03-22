@@ -541,6 +541,10 @@ public class MetadataEntityImpl
         if (CollectionUtils.isEmpty(guidList)) {
             return ResultEnum.SUCCESS;
         }
+        //添加审计日志
+        guidList.forEach(e->{
+            metadataEntityAuditLog.setMetadataAuditLog(null,Integer.valueOf(e),MetadataAuditOperationTypeEnum.DELETE,EntityTypeEnum.RDBMS_COLUMN.getName());
+        });
         int delete = metadataEntityMapper.delete(queryWrapper);
         if (delete == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

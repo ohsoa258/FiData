@@ -5,8 +5,10 @@ import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.enums.dbdatatype.OpenEdgeTypeEnum;
 import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import lombok.Data;
+import org.joda.time.DateTime;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 
@@ -21,12 +23,17 @@ public class MetadataEntityAuditLogPO extends BasePO implements Serializable {
     /**
      * 元数据qualified_name
      */
-    private Integer entityId;
+    public Integer entityId;
 
     /**
      * 类型 1 新增 2 修改 3 删除
      */
-    private MetadataAuditOperationTypeEnum operationType;
+    public MetadataAuditOperationTypeEnum operationType;
+
+//    /**
+//     * 发现时间
+//     */
+//    public LocalDateTime time;
 
 
 

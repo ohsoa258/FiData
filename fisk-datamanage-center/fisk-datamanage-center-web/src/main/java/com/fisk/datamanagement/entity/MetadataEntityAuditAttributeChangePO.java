@@ -14,7 +14,6 @@ import lombok.Data;
 @Data
 public class MetadataEntityAuditAttributeChangePO extends BasePO implements Serializable {
 
-
     /**
      * 
      */

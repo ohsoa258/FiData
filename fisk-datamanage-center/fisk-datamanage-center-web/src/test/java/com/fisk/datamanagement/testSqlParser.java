@@ -17,6 +17,9 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +29,8 @@ import java.util.stream.Collectors;
 
 public class testSqlParser {
     public static void main(String[] args) {
+        LocalDateTime.of(LocalDate.now(),LocalTime.of(23, 59, 59));
+
         String sqlQuery = "WITH A1 AS(\n" +
                 "SELECT\n" +
                 "\n" +

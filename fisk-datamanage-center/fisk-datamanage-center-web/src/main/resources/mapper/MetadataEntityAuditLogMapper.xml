@@ -20,4 +20,17 @@
         create_user,update_user,create_time,
         update_time,del_flag
     </sql>
+
+    <select id="getDayTotal" resultType="com.fisk.datamanagement.dto.metaauditlog.AuditAnalysisDayChangeTotalVO">
+        SELECT
+            DATE_FORMAT(create_time, '%Y-%m-%d') AS day,
+            SUM(CASE WHEN operation_type = '1' THEN 1 ELSE 0 END) AS `add`,
+            SUM(CASE WHEN operation_type = '2' THEN 1 ELSE 0 END) AS `edit`,
+            SUM(CASE WHEN operation_type = '3' THEN 1 ELSE 0 END) AS `delete`
+            FROM `tb_metadata_entity_audit_log`
+            where create_time BETWEEN #{beginTime} AND #{endTime}
+            GROUP BY
+                DATE_FORMAT(create_time, '%Y-%m-%d')
+            ORDER BY day;
+    </select>
 </mapper>

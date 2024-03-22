@@ -58,10 +58,11 @@ public class SwaggerConfig {
     public static final String EXPORT_TEMPLATE = "元数据导出模板";
     public static final String BUSINESS_Category = "指标数据对象";
 
+
     public static final String STANDARDS = "数据标准";
 
     public static final String CODESET = "代码集";
-
+    public static final String METADATA_AUDIT = "元数据审计日志";
 
     @Bean
     public Docket createRestApi() {
@@ -91,9 +92,10 @@ public class SwaggerConfig {
                 .tags(new Tag(MetadataAttribute, "元数据属性"))
                 .tags(new Tag(AZURE_SERVER, "Azure服务 OpenAI"))
                 .tags(new Tag(EXPORT_TEMPLATE, "元数据导出模板"))
-                .tags(new Tag(STANDARDS,"数据标准"))
+                .tags(new Tag(STANDARDS, "数据标准"))
                 .tags(new Tag(BUSINESS_Category, "指标数据对象"))
-                .tags(new Tag(CODESET,"代码集"))
+                .tags(new Tag(CODESET, "代码集"))
+                .tags(new Tag(METADATA_AUDIT,"元数据审计日志"))
                 .securityContexts(securityContexts());
     }
 

@@ -1,8 +1,12 @@
 package com.fisk.datamanagement.mapper;
 
+import com.azure.core.annotation.Get;
+import com.fisk.datamanagement.dto.metaauditlog.AuditAnalysisDayChangeTotalVO;
 import com.fisk.datamanagement.entity.MetadataEntityAuditLogPO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Delete;
+
+import java.util.List;
 
 /**
 * @author JinXingWang
@@ -14,6 +18,8 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
     
     @Delete("truncate TABLE tb_metadata_entity_audit_log")
     int truncateTable();
+
+    List<AuditAnalysisDayChangeTotalVO> getDayTotal(String beginTime,String endTime);
 }
 
 
