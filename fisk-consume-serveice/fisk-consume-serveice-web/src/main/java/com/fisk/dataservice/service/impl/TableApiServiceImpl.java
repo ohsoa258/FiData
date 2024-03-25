@@ -374,6 +374,39 @@ public class TableApiServiceImpl extends ServiceImpl<TableApiServiceMapper, Tabl
         return null;
     }
 
+    @Override
+    public List<TableApiParameterDTO> getApiParameter(Integer apiId) {
+        LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TableApiParameterPO::getApiId,apiId);
+        List<TableApiParameterPO> apiParameterList = tableApiParameterService.list(queryWrapper);
+        return TableApiParameterMap.INSTANCES.listPoToDto(apiParameterList);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum setApiParameterEncrypt(List<TableApiParameterDTO> list) {
+        List<TableApiParameterDTO> encryptKey = list.stream().filter(i -> i.getEncryptKey() == 1).collect(Collectors.toList());
+        if (encryptKey.size()  != 1){
+            throw new FkException(ResultEnum.SERVICE_ENCRYPT_NOT_EXIST);
+        }else if (encryptKey.size()>1){
+            throw new FkException(ResultEnum.SERVICE_ENCRYPT_ONLY_ONE);
+        }
+        List<TableApiParameterDTO> addParameter = list.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
+
+        if (CollectionUtils.isNotEmpty(addParameter)){
+            for (TableApiParameterDTO tableApiParameterDTO : addParameter) {
+                TableApiParameterPO tableApiParameterPO = TableApiParameterMap.INSTANCES.dtoToPo(tableApiParameterDTO);
+                tableApiParameterService.save(tableApiParameterPO);
+            }
+        }
+        List<TableApiParameterDTO> updateParameter = list.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(updateParameter)){
+            List<TableApiParameterPO> tableApiParameterPOS = TableApiParameterMap.INSTANCES.listDtoToPo(updateParameter);
+            tableApiParameterService.updateBatchById(tableApiParameterPOS);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
     private ResultEnum updateTableApiService(TableApiServiceDTO dto) {
         dto.enable = 1;
         TableApiServicePO po = this.query().eq("id", dto.id).one();

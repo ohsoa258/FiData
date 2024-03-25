@@ -4,7 +4,10 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
@@ -26,6 +29,8 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
+import com.fisk.dataservice.dto.api.FieldEncryptConfigDTO;
+import com.fisk.dataservice.dto.api.FieldEncryptDTO;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
@@ -36,6 +41,7 @@ import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.redisdata.RedisData;
+import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.api.ApiProxyMsgVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
@@ -52,6 +58,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -102,6 +110,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private IApiRegisterManageService apiRegisterManageService;
 
     @Override
     public ResultEntity<Object> getToken(TokenDTO dto) {
@@ -348,6 +359,21 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 log.info("数据服务【getData】自定义模式SQL参数【countSql】：" + countSql);
             }
 
+            //判断是否需要加密字段
+            Boolean encrypt = false;
+            List<String> fieldName = new ArrayList<>();
+            String encryptKey = null;
+            FieldEncryptConfigDTO fieldEncryptAll = apiRegisterManageService.getFieldEncryptAll((int) apiInfo.id);
+            if (fieldEncryptAll != null){
+                if (StringUtils.isNotEmpty(fieldEncryptAll.getEncryptKey())){
+                    encrypt = true;
+                    encryptKey = fieldEncryptAll.getEncryptKey();
+                }
+                List<FieldEncryptDTO> fieldEncryptDTOS = fieldEncryptAll.getFieldEncryptDTOS();
+                if (CollectionUtils.isNotEmpty(fieldEncryptDTOS)){
+                    fieldName = fieldEncryptDTOS.stream().filter(i->i.getEncrypt() == 1).map(FieldEncryptDTO::getFieldName).collect(Collectors.toList());
+                }
+            }
             // 第十步：判断数据源类型，加载数据库驱动，执行SQL
             logPO.setParamCheckDate(DateTimeUtils.getNow());
             conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
@@ -364,6 +390,15 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     String columnName = metaData.getColumnLabel(i);
                     //获取sql查询数据集合
                     Object value = rs.getObject(columnName);
+
+                    //加密字段
+                    if (encrypt){
+                        if (fieldName.contains(columnName)){
+                            if (!ObjectUtils.isEmpty(value)) {
+                                value = encryptField(value.toString(), encryptKey);
+                            }
+                        }
+                    }
                     jsonObj.put(columnName, value);
                 }
                 dataArray.add(jsonObj);
@@ -380,7 +415,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 }
                 countRs.close();
             }
-
+            if (encrypt){
+                responseVO.setEncryptKey(encryptKey);
+            }
             if (dto.getCurrent() != null && dto.getSize() != null) {
                 responseVO.setCurrent(current);
                 responseVO.setSize(size);
@@ -429,6 +466,14 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             // System.gc();
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
+    }
+    private static String encryptField(String fieldValue, String key) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+        byte[] encryptedBytes = cipher.doFinal(fieldValue.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
     }
 
     @Override

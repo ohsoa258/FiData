@@ -109,5 +109,9 @@ public interface ITableApiService extends IService<TableApiServicePO> {
     Page<ApiLogVO> getApiLogs(ApiLogPageDTO apiLogPageDTO);
 
     ResultEnum sendAcknowledgement(Integer logId);
+
+    List<TableApiParameterDTO> getApiParameter(Integer apiId);
+
+    ResultEnum setApiParameterEncrypt(List<TableApiParameterDTO> list);
 }
 

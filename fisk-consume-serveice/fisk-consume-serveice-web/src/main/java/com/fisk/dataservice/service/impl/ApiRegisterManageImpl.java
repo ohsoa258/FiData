@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -29,6 +30,7 @@ import com.fisk.dataservice.enums.ApiTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
 import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
+import com.fisk.dataservice.service.ApiEncryptConfigService;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
@@ -45,6 +47,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -115,6 +120,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Resource
     private ApiMenuConfigServiceImpl apiMenuConfigService;
+
+    @Resource
+    private ApiEncryptConfigService apiEncryptConfigService;
 
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
@@ -708,12 +716,89 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     }
 
     @Override
+    public FieldEncryptConfigDTO getFieldEncryptAll(int apiId) {
+        FieldEncryptConfigDTO encryptConfigDTO = new FieldEncryptConfigDTO();
+
+        List<FieldEncryptDTO> fieldList = new ArrayList<>();
+        QueryWrapper<FieldConfigPO> query = new QueryWrapper<>();
+        query.lambda()
+                .eq(FieldConfigPO::getApiId, apiId)
+                .eq(FieldConfigPO::getDelFlag, 1);
+        List<FieldConfigPO> selectList = apiFieldMapper.selectList(query);
+        if (CollectionUtils.isNotEmpty(selectList)) {
+            encryptConfigDTO.setApiId(apiId);
+            fieldList = ApiFieldMap.INSTANCES.listPoToDTO(selectList);
+        }
+        encryptConfigDTO.setFieldEncryptDTOS(fieldList);
+
+        LambdaQueryWrapper<ApiEncryptConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ApiEncryptConfigPO::getApiId,apiId);
+        ApiEncryptConfigPO apiEncryptConfigPO = apiEncryptConfigService.getOne(queryWrapper);
+        if (apiEncryptConfigPO != null){
+            encryptConfigDTO.setEncryptKey(apiEncryptConfigPO.getEncryptKey());
+        }
+        return encryptConfigDTO;
+    }
+
+    @Override
     public ResultEnum setField(List<FieldConfigEditDTO> dto) {
         if (CollectionUtils.isEmpty(dto)) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
         List<FieldConfigPO> fieldList = ApiFieldMap.INSTANCES.listDtoToPo(dto);
         return apiFieldManageImpl.updateBatchById(fieldList) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultEnum setFieldEncrypt(FieldEncryptConfigDTO dto) {
+        List<FieldEncryptDTO> fieldEncryptDTOS = dto.fieldEncryptDTOS;
+        if (dto.apiId == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        if (StringUtils.isEmpty(dto.encryptKey)) {
+            dto.encryptKey = generateKey();
+        }
+        if (CollectionUtils.isEmpty(fieldEncryptDTOS)) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        List<FieldConfigPO> fieldList = ApiFieldMap.INSTANCES.listEncryptDtoToPo(fieldEncryptDTOS);
+        boolean saveField = apiFieldManageImpl.updateBatchById(fieldList);
+
+        ApiEncryptConfigPO apiEncryptConfigPO = ApiEncryptConfigMap.INSTANCES.dtoToPo(dto);
+        LambdaQueryWrapper<ApiEncryptConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ApiEncryptConfigPO::getApiId,dto.apiId);
+        ApiEncryptConfigPO configPO = apiEncryptConfigService.getOne(queryWrapper);
+        boolean update = false;
+        if (configPO != null){
+            UpdateWrapper<ApiEncryptConfigPO> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("api_id",dto.apiId);
+            update = apiEncryptConfigService.update(apiEncryptConfigPO, updateWrapper);
+        }else {
+            update = apiEncryptConfigService.save(apiEncryptConfigPO);
+        }
+        if (saveField && update){
+            return ResultEnum.SUCCESS;
+        }else {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+    }
+
+    // 生成密钥的方法
+    private static String generateKey() {
+        KeyGenerator keyGen = null;
+        try {
+            keyGen = KeyGenerator.getInstance("AES");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        SecretKey secretKey = keyGen.generateKey();
+        byte[] keyBytes = secretKey.getEncoded();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : keyBytes) {
+            sb.append(String.format("%02X", b));
+        }
+        return sb.toString();
     }
 
     @Override

@@ -30,9 +30,16 @@ public class TableApiParameterDTO {
 
     @ApiModelProperty(value = "字段名称")
     private String parameterName;
+
     @ApiModelProperty(value = "字段值")
     private String parameterValue;
+
     @ApiModelProperty(value = "1选中2不选")
     private String selected;
 
+    @ApiModelProperty(value = "是否加密")
+    private int encrypt;
+
+    @ApiModelProperty(value = "是否作用于密钥key")
+    private int encryptKey;
 }

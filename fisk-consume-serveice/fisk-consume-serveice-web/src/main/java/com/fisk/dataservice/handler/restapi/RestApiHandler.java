@@ -19,8 +19,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import java.sql.*;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,6 +71,14 @@ public abstract class RestApiHandler {
         LambdaQueryWrapper<TableApiParameterPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TableApiParameterPO::getApiId, apiId);
         List<TableApiParameterPO> apiParameterPOList = tableApiParameterService.list(queryWrapper);
+        Boolean encryptFlag = false;
+        String encryptKey = null;
+        List<TableApiParameterPO> parameterEncryptKey = apiParameterPOList.stream().filter(i -> i.getEncryptKey() == 1).collect(Collectors.toList());
+        List<String> parameterName = apiParameterPOList.stream().filter(i -> i.getEncrypt() == 1).map(TableApiParameterPO::getParameterName).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(parameterName)){
+            encryptFlag = true;
+            encryptKey = parameterEncryptKey.get(0).getParameterValue();
+        }
 
         TableAppPO tableAppPO = tableAppService.getById(tableApiServicePO.getAppId());
         JSONArray resultJsonData = null;
@@ -82,7 +94,7 @@ public abstract class RestApiHandler {
                 //无需判断ddl语句执行结果,因为如果执行失败会进catch
                 log.info("开始执行脚本:{}", tableApiServicePO.getSqlScript());
                 ResultSet resultSet = st.executeQuery(tableApiServicePO.getSqlScript());
-                resultJsonData = resultSetToJsonArray(resultSet);
+                resultJsonData = resultSetToJsonArray(resultSet,encryptFlag,parameterName,encryptKey);
                 number = resultJsonData.size();
                 apiResultDTO.setNumber(number);
             } catch (Exception e) {
@@ -143,7 +155,7 @@ public abstract class RestApiHandler {
     }
 
     public abstract ApiResultDTO sendHttpPost(TableAppPO tableAppPO, TableApiServicePO tableApiServicePO, String body,Boolean flag);
-    public JSONArray resultSetToJsonArray(ResultSet rs) throws SQLException {
+    public JSONArray resultSetToJsonArray(ResultSet rs,Boolean flag,List<String> parameterName,String encryptKey) throws Exception {
         JSONArray array = new JSONArray();
         ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
@@ -154,10 +166,26 @@ public abstract class RestApiHandler {
                 String columnName = metaData.getColumnLabel(i);
                 //获取sql查询数据集合
                 String value = rs.getString(columnName);
+                if (flag){
+                    if (parameterName.contains(columnName)){
+                        if (!StringUtils.isEmpty(value)){
+                            value = encryptField(value,encryptKey);
+                        }
+                    }
+                }
                 jsonObj.put(columnName, value);
             }
             array.add(jsonObj);
         }
         return array;
+    }
+
+    private static String encryptField(String fieldValue, String key) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+        byte[] encryptedBytes = cipher.doFinal(fieldValue.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
     }
 }

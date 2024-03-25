@@ -359,6 +359,9 @@ public enum ResultEnum {
 
     DS_APISERVICE_MENUID_NOT_EXIST(10047,"数据menuId未填写"),
 
+    SERVICE_ENCRYPT_NOT_EXIST(10048,"未设置密钥"),
+    SERVICE_ENCRYPT_ONLY_ONE(10049,"密钥只能有一个"),
+
     /**
      * 数据质量
      */

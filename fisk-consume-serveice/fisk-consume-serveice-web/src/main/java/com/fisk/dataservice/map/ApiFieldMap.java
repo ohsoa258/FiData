@@ -2,6 +2,7 @@ package com.fisk.dataservice.map;
 
 import com.fisk.dataservice.dto.api.FieldConfigDTO;
 import com.fisk.dataservice.dto.api.FieldConfigEditDTO;
+import com.fisk.dataservice.dto.api.FieldEncryptDTO;
 import com.fisk.dataservice.entity.FieldConfigPO;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
 import org.mapstruct.Mapper;
@@ -27,12 +28,28 @@ public interface ApiFieldMap {
     List<FieldConfigVO> listPoToVo(List<FieldConfigPO> list);
 
     /**
+     * list集合 po -> vo
+     *
+     * @param list source
+     * @return target
+     */
+    List<FieldEncryptDTO> listPoToDTO(List<FieldConfigPO> list);
+
+    /**
      * list集合 dto -> po
      *
      * @param list source
      * @return target
      */
     List<FieldConfigPO> listDtoToPo(List<FieldConfigEditDTO> list);
+
+    /**
+     * list集合 dto -> po
+     *
+     * @param list source
+     * @return target
+     */
+    List<FieldConfigPO> listEncryptDtoToPo(List<FieldEncryptDTO> list);
 
     /**
      * list集合 dto -> po

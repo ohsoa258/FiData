@@ -122,10 +122,24 @@ public class ApiDocDTO {
     public String apiCodeExamples_net;
 
     /**
+     * 调用API C#代码解密示例
+     */
+    @ApiModelProperty(value = "调用API C#代码解密示例")
+    public String apiCodeExamples_net_encrypt;
+
+
+    /**
      * 调用API JAVA代码示例
      */
     @ApiModelProperty(value = "调用API JAVA代码示例")
     public String apiCodeExamples_java;
+
+    /**
+     * 调用API C#代码解密示例
+     */
+    @ApiModelProperty(value = "调用API JAVA代码解密示例")
+    public String apiCodeExamples_java_encrypt;
+
 
     /**
      * API返回代码示例

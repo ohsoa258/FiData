@@ -564,6 +564,16 @@
         </pre>
     </div>
 </div>
+<div>
+    <div>
+        <p style="font-weight: bold;">3.1&nbsp;&nbsp;C#代码解密调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_net" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamples_net_encrypt?html}
+        </pre>
+    </div>
+</div>
 <span style="page-break-after:always;"></span>
 <!---Restful API C# 调用示例 end-->
 
@@ -575,6 +585,16 @@
     <div style="width: 100%;padding-left: 20px;">
         <pre id="out_pre_apiCodeExamples_java" style="word-wrap: break-word; white-space: pre-wrap;">
           ${apiCodeExamples_java?html}
+        </pre>
+    </div>
+</div>
+<div>
+    <div>
+        <p style="font-weight: bold;">4.1&nbsp;&nbsp;java代码解密调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_java" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamples_java_encrypt?html}
         </pre>
     </div>
 </div>

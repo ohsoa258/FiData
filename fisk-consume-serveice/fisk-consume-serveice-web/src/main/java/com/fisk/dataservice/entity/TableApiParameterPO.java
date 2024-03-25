@@ -29,4 +29,10 @@ public class TableApiParameterPO extends BasePO {
 
     @ApiModelProperty(value = "1选中2不选")
     private Integer selected;
+
+    @ApiModelProperty(value = "是否加密")
+    private int encrypt;
+
+    @ApiModelProperty(value = "是否作用于密钥key")
+    private int encryptKey;
 }

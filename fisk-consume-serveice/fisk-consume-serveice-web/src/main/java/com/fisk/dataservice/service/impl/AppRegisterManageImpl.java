@@ -572,8 +572,12 @@ public class AppRegisterManageImpl
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         // API文档代码示例 c#
         apiDocDTO.apiCodeExamples_net = DATASERVICE_APICODEEXAMPLES_NET.replace("{api_prd_address}", api_address);
+        apiDocDTO.apiCodeExamples_net_encrypt = DATASERVICE_APICODEEXAMPLES_NET_ENCRYPT;
+
+
         // API文档代码示例 java
         apiDocDTO.apiCodeExamples_java = DATASERVICE_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", api_address);
+        apiDocDTO.apiCodeExamples_java_encrypt = DATASERVICE_APICODEEXAMPLES_JAVA_ENCRYPT;
 
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
@@ -641,6 +645,16 @@ public class AppRegisterManageImpl
             apiRequestDTOS_fixed.add(requestDTO);
             trReqIndex_fixed[0]++;
 
+            // 请求参数新增密钥参数说明
+            requestDTO = new ApiRequestDTO();
+            requestDTO.setParmName("encryptKey");
+            requestDTO.setIsRequired("否");
+            requestDTO.setParmType("String"); //String特指这个类型，string适用于引用对象
+            requestDTO.setParmDesc("密钥key,用于字段加密和解密");
+            requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
+            apiRequestDTOS_fixed.add(requestDTO);
+            trReqIndex_fixed[0]++;
+
             // 请求参数新增分页参数说明
             requestDTO = new ApiRequestDTO();
             requestDTO.setParmName("current");
@@ -704,6 +718,9 @@ public class AppRegisterManageImpl
                         apiResponseDTO.parmName = e.fieldName;
                         apiResponseDTO.parmType = e.fieldType;
                         apiResponseDTO.parmDesc = e.fieldDesc;
+                        if (e.encrypt == 1){
+                            e.fieldDesc = e.fieldDesc + "加密字段";
+                        }
                         apiResponseDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
                         apiResponseDTOS.add(apiResponseDTO);
                         trIndex[0]++;
@@ -719,6 +736,7 @@ public class AppRegisterManageImpl
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"size\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"total\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"page\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"encryptKey\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"dataArray\":[] --%s\n" +
                     " &nbsp;&nbsp;},\n" +
                     " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +

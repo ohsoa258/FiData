@@ -102,10 +102,22 @@ public class ApiRegisterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getFieldAll(apiId));
     }
 
+    @ApiOperation("查询api字段加密列表")
+    @GetMapping("/getFieldEncryptAll/{apiId}")
+    public ResultEntity<FieldEncryptConfigDTO> getFieldEncryptAll(@PathVariable("apiId") int apiId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getFieldEncryptAll(apiId));
+    }
+
     @ApiOperation("设置字段属性")
     @PutMapping("/setField")
     public ResultEntity<Object> setField(@RequestBody List<FieldConfigEditDTO> dto) {
         return ResultEntityBuild.build(service.setField(dto));
+    }
+
+    @ApiOperation("设置字段加密")
+    @PutMapping("/setFieldEncrypt")
+    public ResultEntity<Object> setFieldEncrypt(@RequestBody FieldEncryptConfigDTO dto) {
+        return ResultEntityBuild.build(service.setFieldEncrypt(dto));
     }
 
     @ApiOperation("预览")
