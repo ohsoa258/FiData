@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -181,8 +182,14 @@ public class DataAssetsImpl implements IDataAssets {
             log.debug("con commit");
             log.debug("========连接数据源END========");
             //拼接筛选条件
-            String condition = " " + dto.whereCondition;
+            String condition = dto.whereCondition;
             String sql = null;
+            //拼接where条件
+            if (StringUtils.isBlank(condition)) {
+                condition = " ";
+            } else {
+                condition = " " + condition + " ";
+            }
             //拼接查询字段
             StringBuilder fields = new StringBuilder();
             List<String> fieldNames = dto.getFieldNames();
@@ -418,6 +425,11 @@ public class DataAssetsImpl implements IDataAssets {
         int skipCount = dto.pageIndex * dto.pageSize;
         switch (typeEnum) {
             case SQLSERVER:
+                if (StringUtils.isBlank(condition)) {
+                    condition = " where ";
+                } else {
+                    condition = condition + " and ";
+                }
                 str.append("select top ");
                 str.append(dto.pageSize);
                 str.append(" * from (select row_number() over(order by ");
@@ -425,7 +437,7 @@ public class DataAssetsImpl implements IDataAssets {
                 str.append(dto.tableName);
                 str.append(") temp_row ");
                 str.append(condition);
-                str.append(" and rownumber>");
+                str.append("rownumber>");
                 str.append(offset);
                 break;
             case ORACLE:
@@ -440,7 +452,8 @@ public class DataAssetsImpl implements IDataAssets {
             case POSTGRESQL:
             case DORIS:
                 str.append("select ").append(fields).append(" from ");
-                str.append(dto.tableName).append(condition);
+                str.append(dto.tableName)
+                        .append(condition);
                 str.append(" order by ").append(dto.columnName);
                 str.append(" limit ");
                 str.append(dto.pageSize);
