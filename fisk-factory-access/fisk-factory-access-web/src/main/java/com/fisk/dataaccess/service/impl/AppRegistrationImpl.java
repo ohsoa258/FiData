@@ -512,6 +512,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
                     tables = mongoDbUtils.getTrueTableNameListForOneTbl(mongoClient, dto.conDbname, tblName);
+                    break;
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
             }
@@ -603,6 +604,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         //获取到所有表名
         List<TableStructureDTO> tables = new ArrayList<>();
 
+        String sourceDbName = null;
         log.info("引用的数据源类型" + dto.conType);
         try {
             switch (dto.conType) {
@@ -628,6 +630,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     tables = oracleUtils.getTableColumnInfoList(conn, tblName, dto.conDbname);
                     break;
                 case MONGODB:
+                    //获取mongodb的数据库名
+                    if (!CollectionUtils.isEmpty(fieldListPos)) {
+                        sourceDbName = fieldListPos.get(0).getSourceDbName();
+                    } else {
+                        //获取不到则不进行任何操作
+                        log.debug("该表在配置库中没有字段 不进行任何重新同步操作,table_access_id:" + tblId);
+                        break;
+                    }
                     MongoDbUtils mongoDbUtils = new MongoDbUtils();
                     ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
                     List<ServerAddress> serverAddresses = new ArrayList<>();
@@ -640,7 +650,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     mongoClient = new MongoClient(serverAddresses, mongoCredentials);
 
-                    tables = mongoDbUtils.getTrueTableNameListForOneTbl(mongoClient, dto.conDbname, tblName);
+                    if (StringUtils.isEmpty(sourceDbName)) {
+                        return;
+                    }
+                    tables = mongoDbUtils.getTrueTableNameListForReSync(mongoClient, tblName, sourceDbName);
+                    break;
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
             }
@@ -651,6 +665,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             List<String> existingFieldNames = fieldListPos.stream().map(TableFieldsPO::getFieldName).collect(Collectors.toList());
             //新同步过来的字段名称
             List<String> newlySyncedFieldNames = tables.stream().map(TableStructureDTO::getFieldName).collect(Collectors.toList());
+
+            //没字段不进行任何操作
+            if (CollectionUtils.isEmpty(existingFieldNames)) {
+                log.debug("该表在配置库中没有字段 不进行任何重新同步操作,table_access_id:" + tblId);
+                return;
+            }
 
             //获取当前表的字段
             List<TableFieldsDTO> list = new ArrayList<>();
@@ -770,7 +790,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param syncDto
      */
     @Override
-    public Object hudiReSyncOneTable(HudiReSyncDTO syncDto) {
+    public ResultEnum hudiReSyncOneTable(HudiReSyncDTO syncDto) {
         try {
             //获取应用id
             Long appId = syncDto.getAppId();
@@ -797,6 +817,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             wrapper.eq(TableFieldsPO::getTableAccessId, accessTblId);
             //获取已同步的所有字段
             List<TableFieldsPO> fieldListPos = tableFieldsImpl.list(wrapper);
+            if (CollectionUtils.isEmpty(fieldListPos)){
+                return ResultEnum.RESYNC_NO_FIELD_WARNING;
+            }
 
             hudiReSyncOneTableToFidataConfig(systemDataSourceId, appDatasourceId, appId, one.getAppName(), fieldListPos.get(0).getSourceTblName(), accessTblId, fieldListPos);
 
@@ -3665,7 +3688,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 获取所有被应用引用的数据源信息
      */
     @Override
-    public List<AppDataSourceDTO> getAppSources(){
+    public List<AppDataSourceDTO> getAppSources() {
         List<AppRegistrationPO> list = list();
         List<AppDataSourceDTO> appSources = new ArrayList<>();
         for (AppRegistrationPO appRegistrationPO : list) {

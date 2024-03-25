@@ -439,7 +439,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      *
      * @param syncDto
      */
-    Object hudiReSyncOneTable(HudiReSyncDTO syncDto);
+    ResultEnum hudiReSyncOneTable(HudiReSyncDTO syncDto);
 
     /**
      * 获取所有被应用引用的数据源信息

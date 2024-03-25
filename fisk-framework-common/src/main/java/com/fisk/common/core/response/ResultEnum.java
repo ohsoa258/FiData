@@ -235,6 +235,7 @@ public enum ResultEnum {
     GET_ACCESS_TREE_FAILURE(5105, "获取数据接入应用-表树结构失败"),
     ACCESS_HUDI_SYNC_ERROR(5106, "获取数据-入仓配置同步表失败"),
     ACCESS_HUDI_RESYNC_ERROR(5107, "hudi-入仓配置重新同步单张表--异常"),
+    RESYNC_NO_FIELD_WARNING(5108, "没有字段的表不允许重新同步"),
 
     /**
      * 后台任务模块

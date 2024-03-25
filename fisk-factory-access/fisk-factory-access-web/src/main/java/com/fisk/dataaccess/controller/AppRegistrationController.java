@@ -520,13 +520,12 @@ public class AppRegistrationController {
      * hudi入仓配置 重新同步单个指定表
      * 某张表结构变了  想重新同步一下   这张表的字段  已有的不要动  不存在的删掉  新加的再同步过来
      *
-     *
      * @param syncDto
      */
     @ApiOperation("hudi入仓配置 重新同步单个指定表")
     @PostMapping("/hudiReSyncOneTable")
     public ResultEntity<Object> hudiReSyncOneTable(@RequestBody HudiReSyncDTO syncDto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.hudiReSyncOneTable(syncDto));
+        return ResultEntityBuild.build(service.hudiReSyncOneTable(syncDto));
     }
 
     /**
@@ -534,7 +533,7 @@ public class AppRegistrationController {
      */
     @ApiOperation("获取所有被应用引用的数据源信息")
     @GetMapping("/getAppSources")
-    public List<AppDataSourceDTO> getAppSources(){
+    public List<AppDataSourceDTO> getAppSources() {
         return service.getAppSources();
     }
 
