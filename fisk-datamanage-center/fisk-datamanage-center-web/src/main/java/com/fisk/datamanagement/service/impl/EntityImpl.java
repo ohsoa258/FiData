@@ -59,7 +59,10 @@ public class EntityImpl implements IEntity {
     private String metaDataEntity;
 
     @Value("${redisKeyFroAdHocQuery}")
-    private String redisKeyFroAdHocQuery;
+    private String redisKeyForAdHocQuery;
+
+    @Value("${redisKeyForTerm}")
+    private String redisKeyForTerm;
 
     @Resource
     MetadataEntityImpl metadataEntity;
@@ -85,15 +88,34 @@ public class EntityImpl implements IEntity {
     @Override
     public List<EntityTreeDTO> getEntityListForAdHocQuery() {
         List<EntityTreeDTO> list;
-        boolean exist = redisUtil.hasKey(redisKeyFroAdHocQuery);
+        boolean exist = redisUtil.hasKey(redisKeyForAdHocQuery);
         if (exist) {
-            String treeList = Objects.requireNonNull(redisUtil.get(redisKeyFroAdHocQuery)).toString();
+            String treeList = Objects.requireNonNull(redisUtil.get(redisKeyForAdHocQuery)).toString();
             list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
             return list;
         }
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getTreeForAdHocQuery();
         String jsonString = JSONObject.toJSONString(metadataEntityTree);
-        redisUtil.set(redisKeyFroAdHocQuery, jsonString);
+        redisUtil.set(redisKeyForAdHocQuery, jsonString);
+        return metadataEntityTree;
+    }
+
+    /**
+     * 为业务术语获取元数据对象树形列表
+     * @return
+     */
+    @Override
+    public List<EntityTreeDTO> getEntityListForBusinessTerm() {
+        List<EntityTreeDTO> list;
+        boolean exist = redisUtil.hasKey(redisKeyForTerm);
+        if (exist) {
+            String treeList = Objects.requireNonNull(redisUtil.get(redisKeyForTerm)).toString();
+            list = JSONObject.parseArray(treeList, EntityTreeDTO.class);
+            return list;
+        }
+        List<EntityTreeDTO> metadataEntityTree = metadataEntity.getTreeForBusinessTerm();
+        String jsonString = JSONObject.toJSONString(metadataEntityTree);
+        redisUtil.set(redisKeyForTerm, jsonString);
         return metadataEntityTree;
     }
 
@@ -113,13 +135,24 @@ public class EntityImpl implements IEntity {
      */
     @Override
     public void refreshEntityTreeForAdHocQuery() {
-        boolean exist = redisUtil.hasKey(redisKeyFroAdHocQuery);
+        boolean exist = redisUtil.hasKey(redisKeyForAdHocQuery);
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getTreeForAdHocQuery();
         String jsonString = JSONObject.toJSONString(metadataEntityTree);
         if (exist) {
-            redisUtil.del(redisKeyFroAdHocQuery);
+            redisUtil.del(redisKeyForAdHocQuery);
         }
-        redisUtil.set(metaDataEntity, jsonString);
+        redisUtil.set(redisKeyForAdHocQuery, jsonString);
+    }
+
+    @Override
+    public void refreshEntityTreeForTerm() {
+        boolean exist = redisUtil.hasKey(redisKeyForTerm);
+        List<EntityTreeDTO> metadataEntityTree = metadataEntity.getTreeForBusinessTerm();
+        String jsonString = JSONObject.toJSONString(metadataEntityTree);
+        if (exist) {
+            redisUtil.del(redisKeyForTerm);
+        }
+        redisUtil.set(redisKeyForTerm, jsonString);
     }
 
     /**
