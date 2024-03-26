@@ -451,6 +451,11 @@ public class DataAssetsImpl implements IDataAssets {
             case MYSQL:
             case POSTGRESQL:
             case DORIS:
+                if (StringUtils.isBlank(condition)) {
+                    condition = " ";
+                } else {
+                    condition = " where " + condition;
+                }
                 str.append("select ").append(fields).append(" from ");
                 str.append(dto.tableName)
                         .append(condition);
