@@ -174,6 +174,8 @@ public class DataAssetsImpl implements IDataAssets {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             log.debug("数据源信息constr{" + first.get().conStr + "}conip{" + first.get().conIp + "},conport{" + first.get().conPort + "},ConPWD{" + first.get().getConPassword() + "},conAccount{" + first.get().conAccount + "}");
+            DataSourceTypeEnum conType = first.get().getConType();
+
             //连接数据源
             log.debug("========连接数据源START========");
             conn = getConnection(first.get());
@@ -184,11 +186,22 @@ public class DataAssetsImpl implements IDataAssets {
             //拼接筛选条件
             String condition = dto.whereCondition;
             String sql = null;
+
             //拼接where条件
             if (StringUtils.isBlank(condition)) {
                 condition = " ";
             } else {
                 condition = " " + condition + " ";
+                //根据数据源 确定where条件的列名区分符号 前端默认给的是 [ ] 因此sqlserver不用管
+                if (conType.equals(DataSourceTypeEnum.DORIS)
+                        || conType.equals(DataSourceTypeEnum.MYSQL)
+                ) {
+                    condition = condition.replaceAll("\\[", "`");
+                    condition = condition.replaceAll("]", "`");
+                } else if (conType.equals(DataSourceTypeEnum.POSTGRESQL)) {
+                    condition = condition.replaceAll("\\[", "\"");
+                    condition = condition.replaceAll("]", "\"");
+                }
             }
             //拼接查询字段
             StringBuilder fields = new StringBuilder();
@@ -211,7 +224,7 @@ public class DataAssetsImpl implements IDataAssets {
             } else {
                 //获取总条数
                 log.debug("=====获取总条数START======");
-                String getTotalSql = "select count(*) as totalNum from " + dto.tableName +" where "+ condition;
+                String getTotalSql = "select count(*) as totalNum from " + dto.tableName + " where " + condition;
                 log.debug("=====获取总条数SQL语句======" + getTotalSql);
                 log.debug("==conn.createStatement() START==");
                 st = conn.createStatement();
@@ -428,7 +441,7 @@ public class DataAssetsImpl implements IDataAssets {
                 if (StringUtils.isBlank(condition)) {
                     condition = " where ";
                 } else {
-                    condition = " where "+ condition + " and ";
+                    condition = " where " + condition + " and ";
                 }
                 str.append("select top ");
                 str.append(dto.pageSize);
