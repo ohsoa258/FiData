@@ -135,6 +135,11 @@ public class ApiBasicInfoDTO {
      */
     @ApiModelProperty(value = "api返回参数json示例 目录")
     public String apiResponseExamplesCatalogue;
+    /**
+     * API返回参数
+     */
+    @ApiModelProperty(value = "api返回参数(dataArray)")
+    public List<ApiResponseDTO> apiResponseDataArray;
 
     /**
      * API返回参数

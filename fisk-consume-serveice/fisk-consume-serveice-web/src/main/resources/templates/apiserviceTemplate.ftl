@@ -547,6 +547,73 @@
                     </tbody>
                 </table>
             </div>
+            <#if apiBasicItem.apiResponseDataArray?? && (apiBasicItem.apiResponseDataArray?size>0)>
+                <div>
+                    <p>dataArray参数说明</p>
+                </div>
+                <div>
+                    <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
+                        <thead>
+                        <tr>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">参数名
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">类型
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">说明
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <#list apiBasicItem.apiResponseDataArray as apiResponseItem>
+                            <tr style="${apiResponseItem.trStyle!}">
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmName!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmType!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmDesc!}
+                                </td>
+                            </tr>
+                        </#list>
+                        </tbody>
+                    </table>
+                </div>
+            </#if>
         </div>
     </#list>
 </div>
