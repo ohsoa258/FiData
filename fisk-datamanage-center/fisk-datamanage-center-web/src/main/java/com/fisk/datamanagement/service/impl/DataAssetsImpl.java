@@ -211,7 +211,7 @@ public class DataAssetsImpl implements IDataAssets {
             } else {
                 //获取总条数
                 log.debug("=====获取总条数START======");
-                String getTotalSql = "select count(*) as totalNum from " + dto.tableName + condition;
+                String getTotalSql = "select count(*) as totalNum from " + dto.tableName +" where "+ condition;
                 log.debug("=====获取总条数SQL语句======" + getTotalSql);
                 log.debug("==conn.createStatement() START==");
                 st = conn.createStatement();
@@ -428,7 +428,7 @@ public class DataAssetsImpl implements IDataAssets {
                 if (StringUtils.isBlank(condition)) {
                     condition = " where ";
                 } else {
-                    condition = condition + " and ";
+                    condition = " where "+ condition + " and ";
                 }
                 str.append("select top ");
                 str.append(dto.pageSize);
