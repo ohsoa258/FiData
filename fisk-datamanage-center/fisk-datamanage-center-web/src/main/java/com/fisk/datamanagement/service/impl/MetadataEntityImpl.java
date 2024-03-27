@@ -459,7 +459,7 @@ public class MetadataEntityImpl
     public List<EntityTreeDTO> getTreeForBusinessTerm() {
         List<EntityTreeDTO> list = new ArrayList<>();
         //获取所有实体
-        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntity(EntityTypeEnum.PROCESS.getValue());
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntityWithoutTemp(EntityTypeEnum.PROCESS.getValue());
         if (CollectionUtils.isEmpty(poList)) {
             return list;
         }

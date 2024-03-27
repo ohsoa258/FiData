@@ -7,6 +7,7 @@
         SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1
     </select>
 
+    <!-- 排除数仓的temp_表 -->
     <select id="selectMetadataEntityWithoutTemp" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
         SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1 and LEFT(name,5) != "temp_"
     </select>
