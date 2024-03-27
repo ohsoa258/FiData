@@ -1,11 +1,9 @@
 package com.fisk.datamanagement.dto.metadataglossarymap;
 
-import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
-import com.fisk.datamanagement.enums.EntityTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
  * @author zjy
@@ -14,11 +12,15 @@ import java.util.List;
  * @description
  */
 @Data
-public class MetadataEntitySimpleDTO {
+public class MetadataEntitySimpleDTO implements Serializable {
+
     @ApiModelProperty(value = "id")
     public long id;
 
-    @ApiModelProperty(value = "类型id")
-    public EntityTypeEnum typeId;
+    @ApiModelProperty(value = "id")
+    public String entityName;
+
+    @ApiModelProperty(value = "类型")
+    public Integer type;
 
 }

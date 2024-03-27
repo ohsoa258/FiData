@@ -143,10 +143,28 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iCategory.getGlossaryCategorySummary());
     }
 
+    /**
+     * 业务术语-关联元数据id
+     *
+     * @param dto
+     * @return
+     */
     @ApiOperation("业务术语-关联元数据id")
     @PostMapping("/mapGlossaryWithMetaEntity")
     public ResultEntity<Object> mapGlossaryWithMetaEntity(@RequestBody GlossaryAndMetaDatasMapDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.mapGlossaryWithMetaEntity(dto));
+    }
+
+    /**
+     * 业务术语-回显该术语关联的所有元数据信息
+     *
+     * @param glossaryId
+     * @return
+     */
+    @ApiOperation("业务术语-回显该术语关联的所有元数据信息")
+    @GetMapping("/getMetaEntitiesByGlossary")
+    public ResultEntity<Object> getMetaEntitiesByGlossary(@RequestParam("glossaryId") Integer glossaryId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.getMetaEntitiesByGlossary(glossaryId));
     }
 
 }

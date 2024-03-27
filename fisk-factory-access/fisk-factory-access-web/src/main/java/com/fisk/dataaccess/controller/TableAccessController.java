@@ -58,7 +58,7 @@ public class TableAccessController {
      * @return
      */
     @PutMapping("/editHudiConfigCdc")
-    @ApiOperation(value = "修改物理表信息&保存sql_script(ftp信息)")
+    @ApiOperation(value = "hudi入仓配置 修改表的cdc状态")
     public ResultEntity<Object> editHudiConfigCdc(@RequestBody TbTableAccessDTO dto) {
         return ResultEntityBuild.build(service.editHudiConfigCdc(dto));
     }

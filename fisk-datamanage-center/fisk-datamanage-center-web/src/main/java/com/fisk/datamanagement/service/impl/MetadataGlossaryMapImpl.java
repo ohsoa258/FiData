@@ -5,43 +5,87 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryAndMetaDatasMapDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetadataEntitySimpleDTO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.mapper.MetaDataGlossaryMapMapper;
 import com.fisk.datamanagement.service.IMetadataGlossaryMap;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MetadataGlossaryMapImpl
         extends ServiceImpl<MetaDataGlossaryMapMapper, MetaDataGlossaryMapPO>
         implements IMetadataGlossaryMap {
 
+    @Resource
+    private MetadataEntityImpl metadataEntityImpl;
+
+    /**
+     * 业务术语-关联元数据id
+     *
+     * @param dto
+     * @return
+     */
     @Override
     public Object mapGlossaryWithMetaEntity(GlossaryAndMetaDatasMapDTO dto) {
         //先根据术语id删除所有关联关系
         Integer glossaryId = dto.getGlossaryId();
         LambdaQueryWrapper<MetaDataGlossaryMapPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId,glossaryId);
+        wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
         remove(wrapper);
 
         // 获取本次术语要绑定的元数据集合
         List<MetadataEntitySimpleDTO> metadataEntityIds = dto.getMetadataEntityIds();
-        if (CollectionUtils.isEmpty(metadataEntityIds)){
+        // 元数据集合为空则不往下进行
+        if (CollectionUtils.isEmpty(metadataEntityIds)) {
             return null;
         }
 
         ArrayList<MetaDataGlossaryMapPO> metaDataGlossaryMapPOS = new ArrayList<>();
 
+        //获取术语 和 元数据对象们 的map对象
         for (MetadataEntitySimpleDTO simDto : metadataEntityIds) {
             MetaDataGlossaryMapPO metaDataGlossaryMapPO = new MetaDataGlossaryMapPO();
 
             metaDataGlossaryMapPO.setMetadataEntityId((int) simDto.getId());
             metaDataGlossaryMapPO.setGlossaryId(glossaryId);
+            metaDataGlossaryMapPO.setTypeId(simDto.getType());
+            metaDataGlossaryMapPOS.add(metaDataGlossaryMapPO);
         }
 
+        //保存
+        return saveBatch(metaDataGlossaryMapPOS);
+    }
 
-        return null;
+    /**
+     * 业务术语-回显该术语关联的所有元数据信息
+     *
+     * @param glossaryId
+     * @return
+     */
+    @Override
+    public List<MetadataEntitySimpleDTO> getMetaEntitiesByGlossary(Integer glossaryId) {
+        LambdaQueryWrapper<MetaDataGlossaryMapPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+        List<MetaDataGlossaryMapPO> list = list(wrapper);
+
+        //获取术语下绑定的元数据
+        List<Integer> collect = list.stream().map(MetaDataGlossaryMapPO::getMetadataEntityId).collect(Collectors.toList());
+
+        List<MetadataEntitySimpleDTO> metadataEntitySimpleDTOS = new ArrayList<>();
+        List<MetadataEntityPO> metadataEntityPOS = metadataEntityImpl.listByIds(collect);
+        for (MetadataEntityPO metadataEntityPO : metadataEntityPOS) {
+            MetadataEntitySimpleDTO dto = new MetadataEntitySimpleDTO();
+            dto.setId(metadataEntityPO.getId());
+            dto.setEntityName(metadataEntityPO.getName());
+            dto.setType(metadataEntityPO.getTypeId());
+            metadataEntitySimpleDTOS.add(dto);
+        }
+
+        return metadataEntitySimpleDTOS;
     }
 }
