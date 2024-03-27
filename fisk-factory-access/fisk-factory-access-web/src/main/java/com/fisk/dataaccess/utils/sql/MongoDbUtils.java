@@ -31,9 +31,10 @@ public class MongoDbUtils {
                 MongoDatabase database = mongoClient.getDatabase(dbName);
                 //根据collection名获取collection
                 MongoCollection<Document> collection;
-
+                FindIterable<Document> documents;
                 try {
                     collection = database.getCollection(COLLECTION_NAME);
+                    documents = collection.find();
                 } catch (Exception e) {
                     log.error("mongodb获取_schema信息失败，库名称：" + dbName);
                     log.error("mongodb获取_schema信息失败，原因：" + e.getMessage());
@@ -41,7 +42,7 @@ public class MongoDbUtils {
                 }
 
                 //查找collection中的所有数据
-                for (Document document : collection.find()) {
+                for (Document document : documents) {
                     String tblName = (String) document.get("table");
                     log.info("mongo表名：" + tblName);
                     List<Document> fields = (List<Document>) document.get("fields");
