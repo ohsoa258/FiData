@@ -189,7 +189,7 @@ public class DataAssetsImpl implements IDataAssets {
 
             //拼接where条件
             if (StringUtils.isBlank(condition)) {
-                condition = " ";
+                condition = " 1=1 ";
             } else {
                 condition = " " + condition + " ";
                 //根据数据源 确定where条件的列名区分符号 前端默认给的是 [ ] 因此sqlserver不用管
@@ -220,7 +220,7 @@ public class DataAssetsImpl implements IDataAssets {
 
             //是否导出
             if (dto.export) {
-                sql = "select " + fields + " from " + dto.tableName + condition;
+                sql = "select " + fields + " from " + dto.tableName +  " where " + condition;
             } else {
                 //获取总条数
                 log.debug("=====获取总条数START======");
