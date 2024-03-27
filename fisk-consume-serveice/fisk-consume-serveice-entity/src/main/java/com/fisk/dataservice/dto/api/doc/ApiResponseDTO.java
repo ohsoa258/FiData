@@ -35,6 +35,12 @@ public class ApiResponseDTO {
     public String  parmDesc;
 
     /**
+     * 参数是否加密
+     */
+    @ApiModelProperty(value = "参数是否加密")
+    public String  parmEncrypt;
+
+    /**
      * 行样式
      */
     @ApiModelProperty(value = "行样式")

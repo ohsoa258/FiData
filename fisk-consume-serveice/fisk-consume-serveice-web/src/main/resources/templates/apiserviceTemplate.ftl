@@ -579,6 +579,14 @@
             font-weight: normal;
             text-align: center;">说明
                             </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">是否加密
+                            </th>
                         </tr>
                         </thead>
                         <tbody>
@@ -607,6 +615,14 @@
             font-weight: normal;
             text-align: center;
             word-break: break-all;">${apiResponseItem.parmDesc!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmEncrypt!}
                                 </td>
                             </tr>
                         </#list>

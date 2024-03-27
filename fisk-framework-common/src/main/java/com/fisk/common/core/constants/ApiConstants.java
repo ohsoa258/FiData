@@ -282,6 +282,11 @@ public class ApiConstants {
             "            \"catalogueName\":\"获取Token接口\"\n" +
             "        },\n" +
             "        {\n" +
+            "            \"grade\":3,\n" +
+            "            \"catalogueIndex\":\"2.5.\",\n" +
+            "            \"catalogueName\":\"获取密钥接口\"\n" +
+            "        },\n" +
+            "        {\n" +
             "            \"grade\":2,\n" +
             "            \"catalogueIndex\":\"3.\",\n" +
             "            \"catalogueName\":\"C#代码调用示例\"\n" +
@@ -348,6 +353,51 @@ public class ApiConstants {
             "                }\n" +
             "            ],\n" +
             "            \"apiResponseCatalogue\":\"2.4.9.\"\n" +
+            "        },\n" +
+            "        {\n" +
+            "            \"apiName\":\"获取密钥接口\",\n" +
+            "            \"apiNameCatalogue\":\"2.5.\",\n" +
+            "            \"apiAddress\":\"/dataservice/apiService/getEncryptKey\",\n" +
+            "            \"apiAddressCatalogue\":\"2.5.1.\",\n" +
+            "            \"apiDesc\":\"获取密钥值，后续如果字段需要解密则使用该密钥通过AES算法进行解密。\",\n" +
+            "            \"apiDescCatalogue\":\"2.5.2.\",\n" +
+            "            \"apiRequestType\":\"POST\",\n" +
+            "            \"apiRequestTypeCatalogue\":\"2.5.3.\",\n" +
+            "            \"apiContentType\":\"application/json\",\n" +
+            "            \"apiContentTypeCatalogue\":\"2.5.5\",\n" +
+            "            \"apiHeader\":\"Authorization: Bearer {token}\",\n" +
+            "            \"apiHeaderCatalogue\":\"2.5.5.\",\n" +
+            "            \"apiRequestExamplesCatalogue\":\"2.5.6.\",\n" +
+            "            \"apiRequestDTOS\":[\n" +
+            "                {\n" +
+            "                    \"parmName\":\"apiCode\",\n" +
+            "                    \"isRequired\":\"是\",\n" +
+            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmDesc\":\"API标识\"\n" +
+            "                }\n" +
+            "            ],\n" +
+            "            \"apiRequestCatalogue\":\"2.5.7.\",\n" +
+            "            \"apiResponseExamples\":\"\",\n" +
+            "            \"apiResponseExamplesCatalogue\":\"2.5.8.\",\n" +
+            "            \"apiResponseHeaderDesc\":\"返回参数说明\",\n" +
+            "            \"apiResponseDTOS\":[\n" +
+            "                {\n" +
+            "                    \"parmName\":\"msg\",\n" +
+            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmDesc\":\"调用结果描述\"\n" +
+            "                },\n" +
+            "                {\n" +
+            "                    \"parmName\":\"code\",\n" +
+            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmDesc\":\"调用结果状态\"\n" +
+            "                },\n" +
+            "                {\n" +
+            "                    \"parmName\":\"data\",\n" +
+            "                    \"parmType\":\"string\",\n" +
+            "                    \"parmDesc\":\"密钥值（调用成功后返回）\"\n" +
+            "                }\n" +
+            "            ],\n" +
+            "            \"apiResponseCatalogue\":\"2.5.9.\"\n" +
             "        }\n" +
             "    ],\n" +
             "    \"apiContactsDTOS\":[\n" +
@@ -589,7 +639,6 @@ public class ApiConstants {
             "                    \"\"size\"\": 10,\n" +
             "                    \"\"total\"\": 1,\n" +
             "                    \"\"page\"\": 1,\n" +
-            "                    \"\"encryptKey\"\": \"\"mysecretpassword\"\",\n" +
             "                    \"\"dataArray\"\": [\n" +
             "                        {\n" +
             "                            \"\"table_name_alias\"\": \"\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\"\",\n" +
@@ -605,12 +654,12 @@ public class ApiConstants {
             "                }\n" +
             "            }\";\n" +
             "\n" +
+            "            string encryptKey = \"mysecretpassword\";\n" +
             "            string[] columnNames = { \"table_name_alias\", \"table_name\", \"table_type\" };\n" +
             "\n" +
             "            try\n" +
             "            {\n" +
             "                JObject jsonArray = JObject.Parse(encryptedTableData);\n" +
-            "                string encryptKey = jsonArray[\"data\"][\"encryptKey\"].Value<string>();\n" +
             "                JArray jsonNodes = (JArray)jsonArray[\"data\"][\"dataArray\"];\n" +
             "                foreach (JObject jsonNode in jsonNodes)\n" +
             "                {\n" +
@@ -1002,7 +1051,6 @@ public class ApiConstants {
             "                \"        \\\"size\\\": 10,\\n\" +\n" +
             "                \"        \\\"total\\\": 1,\\n\" +\n" +
             "                \"        \\\"page\\\": 1,\\n\" +\n" +
-            "                \"        \\\"encryptKey\\\": \\\"mysecretpassword\\\",\\n\" +\n" +
             "                \"        \\\"dataArray\\\": [\\n\" +\n" +
             "                \"            {\\n\" +\n" +
             "                \"                \\\"table_name_alias\\\": \\\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\\\",\\n\" +\n" +
@@ -1017,13 +1065,13 @@ public class ApiConstants {
             "                \"        ]\\n\" +\n" +
             "                \"    }\\n\" +\n" +
             "                \"}\";\n" +
+            "        String encryptKey = \"mysecretpassword\";\n" +
             "        String[] columnNames = {\"table_name_alias\",\"table_name\",\"table_type\"};\n" +
             "\n" +
             "\n" +
             "        try {\n" +
             "            ObjectMapper objectMapper = new ObjectMapper();\n" +
             "            JsonNode jsonArray = objectMapper.readTree(encryptedTableData);\n" +
-            "            String encryptKey = jsonArray.get(\"data\").get(\"encryptKey\").textValue();\n" +
             "            JsonNode jsonNodes = jsonArray.get(\"data\").get(\"dataArray\");\n" +
             "            for (JsonNode jsonNode : jsonNodes) {\n" +
             "                for (String columnName : columnNames) {\n" +
