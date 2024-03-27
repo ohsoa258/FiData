@@ -2,6 +2,7 @@ package com.fisk.dataservice.controller;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataservice.config.SwaggerConfig;
+import com.fisk.dataservice.dto.apiservice.RequestEncryptDTO;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.service.IApiServiceManageService;
@@ -43,5 +44,12 @@ public class ApiServiceController {
     public ResultEntity<Object> getData(@Validated @RequestBody RequstDTO dto)
     {
         return service.getData(dto);
+    }
+
+    @ApiOperation("获取密钥")
+    @PostMapping("/getEncryptKey")
+    public ResultEntity<Object> getEncryptKey(@Validated @RequestBody RequestEncryptDTO dto)
+    {
+        return service.getEncryptKey(dto);
     }
 }

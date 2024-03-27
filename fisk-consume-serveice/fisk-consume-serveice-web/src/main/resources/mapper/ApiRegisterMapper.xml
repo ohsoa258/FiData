@@ -34,7 +34,12 @@
         left join tb_datasource_config as source
         ON api.datasource_id = source.id
         where api.del_flag=1
-          and api.menu_id = #{query.menuId}
+        <if test="query.menuIds != null and query.menuIds.size > 0">
+            AND api.menu_id IN
+            <foreach item="item" index="index" collection="query.menuIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
         <if test="query.createApiType !=null and query.createApiType!=0 ">
             and api.create_api_type = #{query.createApiType}
         </if>

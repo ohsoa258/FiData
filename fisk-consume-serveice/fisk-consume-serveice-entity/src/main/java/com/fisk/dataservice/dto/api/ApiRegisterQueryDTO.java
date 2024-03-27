@@ -3,6 +3,9 @@ package com.fisk.dataservice.dto.api;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+import java.util.List;
 
 
 /**
@@ -11,6 +14,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description API查询 DTO
  * @date 2022/1/6 14:51
  */
+@Data
 public class ApiRegisterQueryDTO {
     /**
      * 搜索条件
@@ -34,6 +38,12 @@ public class ApiRegisterQueryDTO {
      */
     @ApiModelProperty(value = "menuId")
     public Integer menuId;
+
+    /**
+     * menuIds
+     */
+    @ApiModelProperty(value = "menuIds")
+    public List<String> menuIds;
 
     /**
      * 分页对象

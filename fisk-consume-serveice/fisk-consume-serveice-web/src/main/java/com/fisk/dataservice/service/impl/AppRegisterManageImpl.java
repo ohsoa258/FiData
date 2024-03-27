@@ -592,7 +592,19 @@ public class AppRegisterManageImpl
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS_Fixed = apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS;
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS = new ArrayList<>();
 
-        BigDecimal catalogueIndex = new BigDecimal("2.4");
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestExamples = "{\n" +
+                "&nbsp;&nbsp; \"apiCode\": \"xxx\",\n" +
+                "}";
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiResponseExamples = String.format("{\n" +
+                "&nbsp;&nbsp; \"code\": 200,\n" +
+                "&nbsp;&nbsp; \"data\": \"xxx\", --%s\n" +
+                "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
+                "}", "2.4.9");
+        // 特殊处理获取密钥接口的请求参数
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestDTOS_Fixed = apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestDTOS;
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestDTOS = new ArrayList<>();
+
+        BigDecimal catalogueIndex = new BigDecimal("2.5");
         List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
         for (int i = 0; i < apiList.size(); i++) {
 
@@ -732,13 +744,13 @@ public class AppRegisterManageImpl
             apiResponseDTOS.add(apiResponseDTO);
             trIndex_data[0]++;
             // 请求参数新增密钥参数说明
-            apiResponseDTO = new ApiResponseDTO();
-            apiResponseDTO.setParmName("encryptKey");
-            apiResponseDTO.setParmType("String");
-            apiResponseDTO.setParmDesc("密钥key，用于字段加密和解密，若未加密则为null");
-            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
-            apiResponseDTOS.add(apiResponseDTO);
-            trIndex_data[0]++;
+//            apiResponseDTO = new ApiResponseDTO();
+//            apiResponseDTO.setParmName("encryptKey");
+//            apiResponseDTO.setParmType("String");
+//            apiResponseDTO.setParmDesc("密钥key，用于字段加密和解密，若未加密则为null");
+//            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+//            apiResponseDTOS.add(apiResponseDTO);
+//            trIndex_data[0]++;
             List<ApiResponseDTO> apiResponseDataArrays = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(fieldList)) {
                 final int[] trIndex = {1};
@@ -750,7 +762,9 @@ public class AppRegisterManageImpl
                         apiResponseDataArray.parmType = e.fieldType;
                         apiResponseDataArray.parmDesc = e.fieldDesc;
                         if (e.encrypt == 1){
-                            e.fieldDesc = e.fieldDesc + "加密字段";
+                            apiResponseDataArray.parmEncrypt = "是";
+                        }else {
+                            apiResponseDataArray.parmEncrypt = "否";
                         }
                         apiResponseDataArray.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
                         apiResponseDataArrays.add(apiResponseDataArray);
@@ -768,7 +782,6 @@ public class AppRegisterManageImpl
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"size\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"total\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"page\":null,\n" +
-                    " &nbsp;&nbsp;&nbsp;&nbsp;\"encryptKey\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"dataArray\":[] --%s\n" +
                     " &nbsp;&nbsp;},\n" +
                     " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +

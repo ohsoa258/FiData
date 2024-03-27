@@ -36,11 +36,11 @@ public class ResponseVO {
      */
     @ApiModelProperty(value = "page")
     public Integer page;
-    /**
-     * 密钥
-     */
-    @ApiModelProperty(value = "密钥")
-    public String encryptKey;
+//    /**
+//     * 密钥
+//     */
+//    @ApiModelProperty(value = "密钥")
+//    public String encryptKey;
 
     /**
      * 查询数据集
