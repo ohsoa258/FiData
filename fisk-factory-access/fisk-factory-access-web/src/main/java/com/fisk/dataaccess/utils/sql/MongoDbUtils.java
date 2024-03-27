@@ -30,7 +30,16 @@ public class MongoDbUtils {
                 //获取库
                 MongoDatabase database = mongoClient.getDatabase(dbName);
                 //根据collection名获取collection
-                MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
+                MongoCollection<Document> collection;
+
+                try {
+                    collection = database.getCollection(COLLECTION_NAME);
+                } catch (Exception e) {
+                    log.error("mongodb获取_schema信息失败，库名称：" + dbName);
+                    log.error("mongodb获取_schema信息失败，原因：" + e.getMessage());
+                    continue;
+                }
+
                 //查找collection中的所有数据
                 for (Document document : collection.find()) {
                     String tblName = (String) document.get("table");
@@ -152,7 +161,7 @@ public class MongoDbUtils {
                 String tblName = (String) document.get("table");
                 log.info("mongo表名：" + tblName);
                 //只获取要重新同步的表的结构
-                if (!tableName.equals(tblName)){
+                if (!tableName.equals(tblName)) {
                     continue;
                 }
 
