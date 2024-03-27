@@ -8,7 +8,7 @@
     </select>
 
     <select id="selectMetadataEntityWithoutTemp" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
-        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1 and LEFT(name,5) = "temp_"
+        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1 and LEFT(name,5) != "temp_"
     </select>
 
     <!--查询抽取详情，和输入输出源-->

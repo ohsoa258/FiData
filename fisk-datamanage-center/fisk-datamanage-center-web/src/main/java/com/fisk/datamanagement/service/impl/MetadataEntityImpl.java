@@ -422,6 +422,7 @@ public class MetadataEntityImpl
         List<DataSourceDTO> collect = dataSourceDTOList.stream().filter(dto -> dto.getSourceType() == 1).collect(Collectors.toList());
         //工厂类型的 hudi排除掉
         collect = collect.stream().filter(dataSourceDTO -> !dataSourceDTO.getConType().equals(DataSourceTypeEnum.HUDI)).collect(Collectors.toList());
+
         for (MetadataEntityPO parent : parentList) {
             //根据数据源IP查找数据源所属类型
             Optional<DataSourceDTO> dataSourceDTOResult = collect.stream().filter(e -> e.getConIp().equals(parent.getName())).findFirst();
