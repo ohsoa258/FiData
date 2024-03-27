@@ -513,7 +513,17 @@ public enum ResultEnum {
     /**
      * 数据库类型 dmp_ods
      */
-    TYPE_OF_DATABASE_DMP_ODS(17001, "dmp_ods");
+    TYPE_OF_DATABASE_DMP_ODS(17001, "dmp_ods"),
+
+    /**
+     * 数据资产模块
+     */
+    GET_GLOSSARY_ASSIGN_METAS_ERROR(18001, "获取业务术语关联的元数据报错"),
+
+
+
+
+    ;
 
     ResultEnum(int code, String msg) {
         this.code = code;

@@ -2,6 +2,8 @@ package com.fisk.datamanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryAndMetaDatasMapDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetadataEntitySimpleDTO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
@@ -69,23 +71,33 @@ public class MetadataGlossaryMapImpl
      */
     @Override
     public List<MetadataEntitySimpleDTO> getMetaEntitiesByGlossary(Integer glossaryId) {
-        LambdaQueryWrapper<MetaDataGlossaryMapPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
-        List<MetaDataGlossaryMapPO> list = list(wrapper);
-
-        //获取术语下绑定的元数据
-        List<Integer> collect = list.stream().map(MetaDataGlossaryMapPO::getMetadataEntityId).collect(Collectors.toList());
-
         List<MetadataEntitySimpleDTO> metadataEntitySimpleDTOS = new ArrayList<>();
-        List<MetadataEntityPO> metadataEntityPOS = metadataEntityImpl.listByIds(collect);
-        for (MetadataEntityPO metadataEntityPO : metadataEntityPOS) {
-            MetadataEntitySimpleDTO dto = new MetadataEntitySimpleDTO();
-            dto.setId(metadataEntityPO.getId());
-            dto.setEntityName(metadataEntityPO.getName());
-            dto.setType(metadataEntityPO.getTypeId());
-            metadataEntitySimpleDTOS.add(dto);
-        }
+        try {
+            //获取术语下绑定的所有元数据
+            LambdaQueryWrapper<MetaDataGlossaryMapPO> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+            List<MetaDataGlossaryMapPO> list = list(wrapper);
+            //筛选出元数据id集合
+            List<Integer> collect = list.stream().map(MetaDataGlossaryMapPO::getMetadataEntityId).collect(Collectors.toList());
+            //若是没绑定任何元数据则返回空集合
+            if (CollectionUtils.isEmpty(collect)){
+                return metadataEntitySimpleDTOS;
+            }
 
-        return metadataEntitySimpleDTOS;
+            List<MetadataEntityPO> metadataEntityPOS = metadataEntityImpl.listByIds(collect);
+            for (MetadataEntityPO metadataEntityPO : metadataEntityPOS) {
+                MetadataEntitySimpleDTO dto = new MetadataEntitySimpleDTO();
+                dto.setId(metadataEntityPO.getId());
+                dto.setEntityName(metadataEntityPO.getName());
+                dto.setType(metadataEntityPO.getTypeId());
+                metadataEntitySimpleDTOS.add(dto);
+            }
+            return metadataEntitySimpleDTOS;
+        }catch (Exception e){
+            log.error("获取术语绑定的元数据失败："+e.getMessage());
+            log.error("获取术语绑定的元数据失败堆栈："+e);
+            throw new FkException(ResultEnum.GET_GLOSSARY_ASSIGN_METAS_ERROR);
+        }
     }
+
 }
