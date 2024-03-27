@@ -126,6 +126,11 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
+        List<ApiMenuConfigPO> list = apiMenuConfigService.list();
+        List<Integer> allMenuId = findAllChildrenIdsWithParent(list, query.menuId);
+        allMenuId.add(query.menuId);
+        List<String> ids = allMenuId.stream().map(String::valueOf).collect(Collectors.toList());
+        query.setMenuIds(ids);
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords().stream()
@@ -147,6 +152,20 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             }
         }
         return all;
+    }
+
+    // 递归查询所有子 ID（包含父 ID）
+    public List<Integer> findAllChildrenIdsWithParent(List<ApiMenuConfigPO> list, Integer parentId) {
+        List<Integer> childrenIds = new ArrayList<>();
+        List<ApiMenuConfigPO> children = list.stream()
+                .filter(item -> item.getPid().equals(parentId))
+                .collect(Collectors.toList());
+
+        for (ApiMenuConfigPO child : children) {
+            childrenIds.add((int)child.getId());
+            childrenIds.addAll(findAllChildrenIdsWithParent(list, (int)child.getId()));
+        }
+        return childrenIds;
     }
 
     @Override
