@@ -7,6 +7,10 @@
         SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1
     </select>
 
+    <select id="selectMetadataEntityWithoutTemp" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
+        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1 and LEFT(name,5) = "temp_"
+    </select>
+
     <!--查询抽取详情，和输入输出源-->
     <resultMap id="processMap" type="com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO">
         <id property="id" column="id" />
