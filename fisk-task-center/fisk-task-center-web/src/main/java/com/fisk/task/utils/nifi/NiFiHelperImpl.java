@@ -2509,7 +2509,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         String stgTableName = dbCommand.getStgAndTableName(targetTableName).get(0);
         String deleteSql = "TRUNCATE TABLE " + stgTableName +";";
         SqlForPgOds.add(deleteSql);
-        return JSON.parseArray(JSON.toJSONString(SqlForPgOds).toLowerCase(), String.class);
+        return JSON.parseArray(JSON.toJSONString(SqlForPgOds), String.class);
     }
 
     @Override
