@@ -817,7 +817,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             wrapper.eq(TableFieldsPO::getTableAccessId, accessTblId);
             //获取已同步的所有字段
             List<TableFieldsPO> fieldListPos = tableFieldsImpl.list(wrapper);
-            if (CollectionUtils.isEmpty(fieldListPos)){
+            if (CollectionUtils.isEmpty(fieldListPos)) {
                 return ResultEnum.RESYNC_NO_FIELD_WARNING;
             }
 
@@ -3121,7 +3121,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
-        List<DataSourceDTO> collect = allExternalDataSource.data.stream().filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName())).collect(Collectors.toList());
+        List<DataSourceDTO> collect = allExternalDataSource.data.stream()
+                .filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName())
+                        || SourceBusinessTypeEnum.LAKE.getName().equals(e.sourceBusinessType.getName())
+                ).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collect)) {
             return new ArrayList<>();
         }

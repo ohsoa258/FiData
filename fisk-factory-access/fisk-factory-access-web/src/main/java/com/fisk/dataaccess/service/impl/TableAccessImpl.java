@@ -1606,6 +1606,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             return root;
         }
         for (ExternalDataSourceDTO item : fiDataDataSource) {
+            //hudi类型的数据源 不作为数仓的树展示
+            if (item.getDbType().equalsIgnoreCase(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.HUDI.getName())){
+                continue;
+            }
             AppAllRegistrationDataDTO dto = new AppAllRegistrationDataDTO();
             dto.setId(item.getId());
             dto.setName(item.getName());
