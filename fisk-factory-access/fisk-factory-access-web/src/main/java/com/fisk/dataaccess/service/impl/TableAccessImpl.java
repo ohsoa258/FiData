@@ -1661,9 +1661,12 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //                    .collect(Collectors.toList());
 
             item.tableDtoList.forEach(tableAccessDataDTO -> {
-                //如果是doris_catalog 则表名不要拼接应用简称或ods_  其余可以拼接
+                //如果不是doris_catalog 则表名依据情况 要拼接ods_  其余可以拼接
                 if (!appDataSourceDTO.getDriveType().equals(DataSourceTypeEnum.DORIS_CATALOG.getName())){
                     tableAccessDataDTO.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
+                }else {
+                    //如果是doris_catalog 则表名不要拼接ods_  其余可以拼接
+                    tableAccessDataDTO.tableName = TableNameGenerateUtils.buildCatalogName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
                 }
             });
 
