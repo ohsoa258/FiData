@@ -36,6 +36,13 @@ public class ResponseVO {
      */
     @ApiModelProperty(value = "page")
     public Integer page;
+
+    /**
+     * 加密字段
+     */
+    @ApiModelProperty(value = "加密字段")
+    public String[] encryptedFields;
+
 //    /**
 //     * 密钥
 //     */

@@ -743,6 +743,15 @@ public class AppRegisterManageImpl
             apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
             apiResponseDTOS.add(apiResponseDTO);
             trIndex_data[0]++;
+
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("encryptedFields");
+            apiResponseDTO.setParmType("String[]");
+            apiResponseDTO.setParmDesc("加密字段列表");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
             // 请求参数新增密钥参数说明
 //            apiResponseDTO = new ApiResponseDTO();
 //            apiResponseDTO.setParmName("encryptKey");
@@ -782,6 +791,7 @@ public class AppRegisterManageImpl
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"size\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"total\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"page\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"encryptedFields\":[],\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"dataArray\":[] --%s\n" +
                     " &nbsp;&nbsp;},\n" +
                     " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +

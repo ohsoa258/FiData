@@ -371,6 +371,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             Boolean encrypt = false;
             List<String> fieldName = new ArrayList<>();
             String encryptKey = null;
+            String[] encryptedFields = null;
             FieldEncryptConfigDTO fieldEncryptAll = apiRegisterManageService.getFieldEncryptAll((int) apiInfo.id);
             if (fieldEncryptAll != null){
                 if (StringUtils.isNotEmpty(fieldEncryptAll.getEncryptKey())){
@@ -380,8 +381,10 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 List<FieldEncryptDTO> fieldEncryptDTOS = fieldEncryptAll.getFieldEncryptDTOS();
                 if (CollectionUtils.isNotEmpty(fieldEncryptDTOS)){
                     fieldName = fieldEncryptDTOS.stream().filter(i->i.getEncrypt() == 1).map(FieldEncryptDTO::getFieldName).collect(Collectors.toList());
+                    encryptedFields = fieldName.toArray(new String[0]);
                 }
             }
+            responseVO.setEncryptedFields(encryptedFields);
             // 第十步：判断数据源类型，加载数据库驱动，执行SQL
             logPO.setParamCheckDate(DateTimeUtils.getNow());
             conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
