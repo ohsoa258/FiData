@@ -405,10 +405,13 @@ public interface ITableAccess extends IService<TableAccessPO> {
 
     /**
      * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     * 根据应用类型区分
+     * 应用类型    (0:实时应用  1:非实时应用 2:CDC)
      *
+     * @param appType 应用类型    (0:实时应用  1:非实时应用 2:CDC)
      * @return
      */
-    PhyTblAndApiTblVO countTbl();
+    PhyTblAndApiTblVO countTbl(Integer appType);
 
     /**
      * 根据应用id获取当前应用下表总数

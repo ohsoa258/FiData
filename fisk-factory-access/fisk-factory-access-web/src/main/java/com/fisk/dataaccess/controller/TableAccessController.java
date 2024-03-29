@@ -119,13 +119,16 @@ public class TableAccessController {
 
     /**
      * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     * 根据应用类型区分
+     * 应用类型    (0:实时应用  1:非实时应用 2:CDC)
      *
+     * @param appType 应用类型    (0:实时应用  1:非实时应用 2:CDC)
      * @return
      */
     @GetMapping("/countTbl")
     @ApiOperation(value = "数接--回显统计当前数据接入总共有多少非实时表和实时api")
-    public ResultEntity<PhyTblAndApiTblVO> countTbl() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.countTbl());
+    public ResultEntity<PhyTblAndApiTblVO> countTbl(@RequestParam("appType")Integer appType) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.countTbl(appType));
     }
 
     /**

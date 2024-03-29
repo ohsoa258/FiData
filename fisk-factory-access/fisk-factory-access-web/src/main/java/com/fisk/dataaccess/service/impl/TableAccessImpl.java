@@ -96,6 +96,7 @@ import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
@@ -117,6 +118,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Duration;
 import java.time.Instant;
@@ -159,6 +161,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     private PublishTaskClient publishTaskClient;
     @Resource
     private UserClient userClient;
+
+    @Resource
+    private DataModelClient modelClient;
+
     @Resource
     private DataFactoryClient dataFactoryClient;
     @Resource
@@ -1601,13 +1607,21 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<AppAllRegistrationDataDTO> root = new ArrayList<>();
 
         // 获取所有的ods数据源
-        List<ExternalDataSourceDTO> fiDataDataSource = appRegistrationImpl.getFiDataDataSource();
+        List<ExternalDataSourceDTO> fiDataDataSource = appRegistrationImpl.getFiDataOdsAndLakeSource();
         if (CollectionUtils.isEmpty(fiDataDataSource)) {
             return root;
         }
+
+        //获取id为1的系统数据源 即dmp_dw
+        ExternalDataSourceDTO dwSource = null;
+        Optional<ExternalDataSourceDTO> first = fiDataDataSource.stream().filter(dto -> dto.getId() == 1).findFirst();
+        if (first.isPresent()) {
+            dwSource = first.get();
+        }
+
         for (ExternalDataSourceDTO item : fiDataDataSource) {
             //hudi类型的数据源 不作为数仓的树展示
-            if (item.getDbType().equalsIgnoreCase(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.HUDI.getName())){
+            if (item.getDbType().equalsIgnoreCase(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.HUDI.getName())) {
                 continue;
             }
             AppAllRegistrationDataDTO dto = new AppAllRegistrationDataDTO();
@@ -1621,7 +1635,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         QueryWrapper<AppRegistrationPO> appQw = new QueryWrapper<>();
         appQw.eq("del_flag", 1)
                 //2024 03 28 排除CDC类型的应用 数仓etl抽数不从CDC入仓配置的应用抽
-                .lambda().ne(AppRegistrationPO::getAppType,2);
+                .lambda().ne(AppRegistrationPO::getAppType, 2);
         List<AppRegistrationPO> appPoList = registrationMapper.selectList(appQw);
         if (CollectionUtils.isEmpty(appPoList)) {
             return root;
@@ -1648,7 +1662,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             //获取当前应用引用的数据源 根据引用数据源的类型决定表名（目录名）
             List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(item.getId());
             //如果应用没有引用数据源（虽然不可能）则报错
-            if (CollectionUtils.isEmpty(appSourcesByAppId)){
+            if (CollectionUtils.isEmpty(appSourcesByAppId)) {
                 throw new FkException(ResultEnum.DATA_OPS_CONFIG_EXISTS);
             }
             AppDataSourceDTO appDataSourceDTO = appSourcesByAppId.get(0);
@@ -1661,11 +1675,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 //                    .collect(Collectors.toList());
 
             item.tableDtoList.forEach(tableAccessDataDTO -> {
-                //如果不是doris_catalog 则表名依据情况 要拼接ods_  其余可以拼接
-                if (!appDataSourceDTO.getDriveType().equals(DataSourceTypeEnum.DORIS_CATALOG.getName())){
+                //如果不是doris_catalog 则表名依据情况 要拼接ods_ 或简称作为schema...
+                if (!appDataSourceDTO.getDriveType().equals(DataSourceTypeEnum.DORIS_CATALOG.getName())) {
                     tableAccessDataDTO.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
-                }else {
-                    //如果是doris_catalog 则表名不要拼接ods_  其余可以拼接
+                } else {
+                    //如果是doris_catalog 则表名不要拼接ods_
                     tableAccessDataDTO.tableName = TableNameGenerateUtils.buildCatalogName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
                 }
             });
@@ -1691,6 +1705,26 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         for (AppAllRegistrationDataDTO parent : root) {
             parent.setAppList(appList.stream().filter(e -> e.getTargetDbId() == parent.getId()).collect(Collectors.toList()));
         }
+
+        /*
+        产品优化：2024-03-29
+        数仓etl配置树新增数仓下的业务域+表节点
+         */
+        if (dwSource != null) {
+            AppAllRegistrationDataDTO dwNode = new AppAllRegistrationDataDTO();
+            dwNode.setId(dwSource.getId());
+            dwNode.setName(dwSource.getName());
+
+//            //1.查询数仓所拥有的业务域及业务域下的表和字段
+//            modelClient.
+//
+//
+//
+//
+//            dwNode.setAppList();
+        }
+
+
         return root;
     }
 
@@ -2775,25 +2809,97 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return TableAccessMap.INSTANCES.listPoToDto(list);
     }
 
+//    /**
+//     * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+//     * 根据应用类型区分
+//     * 应用类型    (0:实时应用  1:非实时应用 2:CDC)
+//     *
+//     * @param appType 应用类型    (0:实时应用  1:非实时应用 2:CDC)
+//     * @return
+//     */
+//    @Override
+//    public PhyTblAndApiTblVO countTbl(Integer appType) {
+//        LambdaQueryWrapper<AppRegistrationPO> w = new LambdaQueryWrapper<>();
+//        if (appType == 2) {
+//            w.eq(AppRegistrationPO::getAppType, 2);
+//        } else {
+//            w.ne(AppRegistrationPO::getAppType, 2);
+//        }
+//
+//        int phyCount = 0;
+//        int apiCount = 0;
+//        List<AppRegistrationPO> list = appRegistrationImpl.list(w);
+//
+//        for (AppRegistrationPO appRegistrationPO : list) {
+//
+//            //api_id为空 则是表
+//            LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
+//            wrapper.eq(TableAccessPO::getAppId, appRegistrationPO.getId())
+//                    .isNull(TableAccessPO::getApiId);
+//
+//            phyCount += accessMapper.selectCount(wrapper);
+//
+//            //api_id不为空 则是api
+//            LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
+//            wrapper1.eq(TableAccessPO::getAppId, appRegistrationPO.getId())
+//                    .isNotNull(TableAccessPO::getApiId);
+//            apiCount += accessMapper.selectCount(wrapper1);
+//        }
+//
+//        PhyTblAndApiTblVO vo = new PhyTblAndApiTblVO();
+//        vo.setPhyCount(phyCount);
+//        vo.setApiCount(apiCount);
+//        return vo;
+//    }
+
     /**
      * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     * 根据应用类型区分
+     * 应用类型    (0:实时应用  1:非实时应用 2:CDC)
      *
+     * @param appType 应用类型    (0:实时应用  1:非实时应用 2:CDC)
      * @return
      */
     @Override
-    public PhyTblAndApiTblVO countTbl() {
-        LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.isNull(TableAccessPO::getApiId);
-        Integer phyCount = accessMapper.selectCount(wrapper);
+    public PhyTblAndApiTblVO countTbl(Integer appType) {
+        int totalPhyCount = 0;
+        int totalApiCount = 0;
 
-        LambdaQueryWrapper<TableAccessPO> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.isNotNull(TableAccessPO::getApiId);
-        Integer apiCount = accessMapper.selectCount(wrapper1);
+        List<Map<String, Object>> resultList;
+
+        List<Map<String, Object>> resultList1 = null;
+        //如果是cdc 则只需要统计appType为 2（cdc）的应用下有多少张表即可
+        if (appType == 2) {
+            resultList = accessMapper.countTbl(appType);
+        } else {
+            //如果不是cdc 则只需要统计appType为0（非实时）和1（实时） 的应用下有多少张表即可
+            resultList = accessMapper.countTbl(0);
+            resultList1 = accessMapper.countTbl(1);
+        }
+
+        //cdc表 or 非实时表
+        for (Map<String, Object> map : resultList) {
+            //mysql sum函数返回的是BigDecimal 因此不能直接用int类型接收 会报错类型转换失败
+            BigDecimal phyCount = (BigDecimal) map.get("phyCount");
+            BigDecimal apiCount = (BigDecimal) map.get("apiCount");
+            totalPhyCount += phyCount.intValue();
+            totalApiCount += apiCount.intValue();
+        }
+
+        // 实时api
+        if (!CollectionUtils.isEmpty(resultList1)) {
+            for (Map<String, Object> map : resultList1) {
+                //mysql sum函数返回的是BigDecimal 因此不能直接用int类型接收 会报错类型转换失败
+                BigDecimal phyCount = (BigDecimal) map.get("phyCount");
+                BigDecimal apiCount = (BigDecimal) map.get("apiCount");
+                totalPhyCount += phyCount.intValue();
+                totalApiCount += apiCount.intValue();
+            }
+        }
 
         PhyTblAndApiTblVO vo = new PhyTblAndApiTblVO();
-        vo.setPhyCount(phyCount);
-        vo.setApiCount(apiCount);
-
+        vo.setPhyCount(totalPhyCount);
+        vo.setApiCount(totalApiCount);
         return vo;
     }
 
