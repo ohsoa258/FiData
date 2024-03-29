@@ -639,6 +639,11 @@ public class ApiConstants {
             "                    \"\"size\"\": 10,\n" +
             "                    \"\"total\"\": 1,\n" +
             "                    \"\"page\"\": 1,\n" +
+            "                    \"\"encryptedFields\"\": [ \n" +
+            "                        \"\"table_name\"\",\n" +
+            "                        \"\"table_name_alias\"\",\n" +
+            "                        \"\"table_type\"\"\n" +
+            "                    ],\n" +
             "                    \"\"dataArray\"\": [\n" +
             "                        {\n" +
             "                            \"\"table_name_alias\"\": \"\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\"\",\n" +
@@ -653,13 +658,13 @@ public class ApiConstants {
             "                    ]\n" +
             "                }\n" +
             "            }\";\n" +
-            "\n" +
             "            string encryptKey = \"mysecretpassword\";\n" +
-            "            string[] columnNames = { \"table_name_alias\", \"table_name\", \"table_type\" };\n" +
+            "            string[] columnNames;\n" +
             "\n" +
             "            try\n" +
             "            {\n" +
             "                JObject jsonArray = JObject.Parse(encryptedTableData);\n" +
+            "                columnNames = jsonArray[\"data\"][\"encryptedFields\"].ToObject<string[]>();\n" +
             "                JArray jsonNodes = (JArray)jsonArray[\"data\"][\"dataArray\"];\n" +
             "                foreach (JObject jsonNode in jsonNodes)\n" +
             "                {\n" +
@@ -1032,53 +1037,58 @@ public class ApiConstants {
             "}\n";
 
     public static final String DATASERVICE_APICODEEXAMPLES_JAVA_ENCRYPT = "package com.fisk.dataservice.util;\n" +
-            "\n" +
             "import com.fasterxml.jackson.databind.JsonNode;\n" +
             "import com.fasterxml.jackson.databind.ObjectMapper;\n" +
             "import com.fasterxml.jackson.databind.node.ObjectNode;\n" +
-            "\n" +
             "import javax.crypto.Cipher;\n" +
             "import javax.crypto.spec.SecretKeySpec;\n" +
             "import java.util.Base64;\n" +
-            "\n" +
             "public class AESEncrypt {\n" +
             "    public static void main(String[] args) {\n" +
             "        String encryptedTableData = \"{\\n\" +\n" +
-            "                \"    \\\"code\\\": 200,\\n\" +\n" +
-            "                \"    \\\"msg\\\": \\\"请求成功\\\",\\n\" +\n" +
-            "                \"    \\\"data\\\": {\\n\" +\n" +
-            "                \"        \\\"current\\\": 1,\\n\" +\n" +
-            "                \"        \\\"size\\\": 10,\\n\" +\n" +
-            "                \"        \\\"total\\\": 1,\\n\" +\n" +
-            "                \"        \\\"page\\\": 1,\\n\" +\n" +
-            "                \"        \\\"dataArray\\\": [\\n\" +\n" +
-            "                \"            {\\n\" +\n" +
-            "                \"                \\\"table_name_alias\\\": \\\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\\\",\\n\" +\n" +
-            "                \"                \\\"table_name\\\": \\\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\\\",\\n\" +\n" +
-            "                \"                \\\"table_type\\\": \\\"lMNgph4i2FMlIt8zlZu+Ig==\\\"\\n\" +\n" +
-            "                \"            },\\n\" +\n" +
-            "                \"            {\\n\" +\n" +
-            "                \"                \\\"table_name_alias\\\": \\\"srS1j7V53QsaUka6HjLUJjDR/6/k1CNjrIqcFbFrugQ=\\\",\\n\" +\n" +
-            "                \"                \\\"table_name\\\": \\\"srS1j7V53QsaUka6HjLUJjDR/6/k1CNjrIqcFbFrugQ=\\\",\\n\" +\n" +
-            "                \"                \\\"table_type\\\": \\\"lMNgph4i2FMlIt8zlZu+Ig==\\\"\\n\" +\n" +
-            "                \"            }\\n\" +\n" +
-            "                \"        ]\\n\" +\n" +
-            "                \"    }\\n\" +\n" +
+            "                \" \\\"code\\\": 200,\\n\" +\n" +
+            "                \" \\\"msg\\\": \\\"\\\",\\n\" +\n" +
+            "                \" \\\"data\\\": {\\n\" +\n" +
+            "                \" \\\"current\\\": 1,\\n\" +\n" +
+            "                \" \\\"size\\\": 10,\\n\" +\n" +
+            "                \" \\\"total\\\": 1,\\n\" +\n" +
+            "                \" \\\"page\\\": 1,\\n\" +\n" +
+            "                \"\\\"encryptedFields\\\": [ \\n\" +\n" +
+            "                \"\\\"table_name\\\",\\n\" +\n" +
+            "                \"\\\"table_name_alias\\\",\\n\" +\n" +
+            "                \"\\\"table_type\\\"\\n\" +\n" +
+            "                \" ], \\n\" +\n" +
+            "                \" \\\"dataArray\\\": [\\n\" +\n" +
+            "                \" {\\n\" +\n" +
+            "                \" \\\"table_name_alias\\\":\\\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\\\",\\n\" +\n" +
+            "                \" \\\"table_name\\\":\\\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\\\",\\n\" +\n" +
+            "                \" \\\"table_type\\\": \\\"lMNgph4i2FMlIt8zlZu+Ig==\\\"\\n\" +\n" +
+            "                \" },\\n\" +\n" +
+            "                \" {\\n\" +\n" +
+            "        \" \\\"table_name_alias\\\":\\\"srS1j7V53QsaUka6HjLUJjDR/6/k1CNjrIqcFbFrugQ=\\\",\\n\" +\n" +
+            "                \" \\\"table_name\\\":\\\"srS1j7V53QsaUka6HjLUJjDR/6/k1CNjrIqcFbFrugQ=\\\",\\n\" +\n" +
+            "                \" \\\"table_type\\\": \\\"lMNgph4i2FMlIt8zlZu+Ig==\\\"\\n\" +\n" +
+            "                \" }\\n\" +\n" +
+            "                \" ]\\n\" +\n" +
+            "                \" }\\n\" +\n" +
             "                \"}\";\n" +
             "        String encryptKey = \"mysecretpassword\";\n" +
-            "        String[] columnNames = {\"table_name_alias\",\"table_name\",\"table_type\"};\n" +
-            "\n" +
-            "\n" +
+            "        String[] columnNames;\n" +
             "        try {\n" +
             "            ObjectMapper objectMapper = new ObjectMapper();\n" +
             "            JsonNode jsonArray = objectMapper.readTree(encryptedTableData);\n" +
-            "            JsonNode jsonNodes = jsonArray.get(\"data\").get(\"dataArray\");\n" +
-            "            for (JsonNode jsonNode : jsonNodes) {\n" +
-            "                for (String columnName : columnNames) {\n" +
-            "                    if (jsonNode.has(columnName)) {\n" +
-            "                        String illegallyNum = jsonNode.get(columnName).asText();\n" +
-            "                        String encryptedIllegallyNum = decryptField(illegallyNum, encryptKey);\n" +
-            "                        ((ObjectNode) jsonNode).put(columnName, encryptedIllegallyNum);\n" +
+            "            JsonNode encryptedFields = jsonArray.get(\"data\").get(\"encryptedFields\");\n" +
+            "//            encryptedFields = null;\n" +
+            "            if (encryptedFields != null){\n" +
+            "                columnNames = objectMapper.readValue(encryptedFields.toString(), String[].class);\n" +
+            "                JsonNode jsonNodes = jsonArray.get(\"data\").get(\"dataArray\");\n" +
+            "                for (JsonNode jsonNode : jsonNodes) {\n" +
+            "                    for (String columnName : columnNames) {\n" +
+            "                        if (jsonNode.has(columnName)) {\n" +
+            "                            String illegallyNum = jsonNode.get(columnName).asText();\n" +
+            "                            String encryptedIllegallyNum = decryptField(illegallyNum, encryptKey);\n" +
+            "                            ((ObjectNode) jsonNode).put(columnName, encryptedIllegallyNum);\n" +
+            "                        }\n" +
             "                    }\n" +
             "                }\n" +
             "            }\n" +
@@ -1088,16 +1098,14 @@ public class ApiConstants {
             "            e.printStackTrace();\n" +
             "        }\n" +
             "    }\n" +
-            "\n" +
             "    private static String decryptField(String encryptedValue, String key) throws Exception {\n" +
             "        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), \"AES\");\n" +
             "        Cipher cipher = Cipher.getInstance(\"AES\");\n" +
             "        cipher.init(Cipher.DECRYPT_MODE, secretKey);\n" +
-            "\n" +
             "        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedValue));\n" +
             "        return new String(decryptedBytes);\n" +
             "    }\n" +
-            "}\n";
+            "}";
     public static final String DATAACCESS_APICODEEXAMPLES_JAVA = "\n" +
             "package com.fisk.dataaccess.test;\n" +
             "\n" +

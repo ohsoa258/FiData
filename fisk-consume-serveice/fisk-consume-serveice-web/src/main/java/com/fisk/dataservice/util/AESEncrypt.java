@@ -15,6 +15,11 @@ public class AESEncrypt {
                 " \"size\": 10,\n" +
                 " \"total\": 1,\n" +
                 " \"page\": 1,\n" +
+                "\"encryptedFields\": [ \n" +
+                "\"table_name\",\n" +
+                "\"table_name_alias\",\n" +
+                "\"table_type\"\n" +
+                " ], \n" +
                 " \"dataArray\": [\n" +
                 " {\n" +
                 " \"table_name_alias\":\"srS1j7V53QsaUka6HjLUJnLZCq9kQV+mcAMmImMzX1V3rj2tmnVi2uMbdI9bNZSb\",\n" +
@@ -30,17 +35,22 @@ public class AESEncrypt {
                 " }\n" +
                 "}";
         String encryptKey = "mysecretpassword";
-        String[] columnNames = {"table_name_alias","table_name","table_type"};
+        String[] columnNames;
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonArray = objectMapper.readTree(encryptedTableData);
-            JsonNode jsonNodes = jsonArray.get("data").get("dataArray");
-            for (JsonNode jsonNode : jsonNodes) {
-                for (String columnName : columnNames) {
-                    if (jsonNode.has(columnName)) {
-                        String illegallyNum = jsonNode.get(columnName).asText();
-                        String encryptedIllegallyNum = decryptField(illegallyNum, encryptKey);
-                        ((ObjectNode) jsonNode).put(columnName, encryptedIllegallyNum);
+            JsonNode encryptedFields = jsonArray.get("data").get("encryptedFields");
+//            encryptedFields = null;
+            if (encryptedFields != null){
+                columnNames = objectMapper.readValue(encryptedFields.toString(), String[].class);
+                JsonNode jsonNodes = jsonArray.get("data").get("dataArray");
+                for (JsonNode jsonNode : jsonNodes) {
+                    for (String columnName : columnNames) {
+                        if (jsonNode.has(columnName)) {
+                            String illegallyNum = jsonNode.get(columnName).asText();
+                            String encryptedIllegallyNum = decryptField(illegallyNum, encryptKey);
+                            ((ObjectNode) jsonNode).put(columnName, encryptedIllegallyNum);
+                        }
                     }
                 }
             }
