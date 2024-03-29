@@ -3139,6 +3139,41 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return list;
     }
 
+    /**
+     * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     * @return
+     */
+    @Override
+    public List<ExternalDataSourceDTO> getFiDataOdsAndLakeSource() {
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = userClient.getAllFiDataDataSource();
+        if (allExternalDataSource.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        List<DataSourceDTO> collect = allExternalDataSource.data.stream()
+                .filter(e -> SourceBusinessTypeEnum.ODS.getName().equals(e.sourceBusinessType.getName())
+                        || SourceBusinessTypeEnum.LAKE.getName().equals(e.sourceBusinessType.getName())
+                        || SourceBusinessTypeEnum.DW.getName().equals(e.sourceBusinessType.getName())
+                ).collect(Collectors.toList());
+
+        //排除掉HUDI类型的ODS
+        collect = collect.stream()
+                .filter(dataSourceDTO -> !com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.HUDI.equals(dataSourceDTO.conType))
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(collect)) {
+            return new ArrayList<>();
+        }
+        List<ExternalDataSourceDTO> list = new ArrayList<>();
+        for (DataSourceDTO item : collect) {
+            ExternalDataSourceDTO data = new ExternalDataSourceDTO();
+            data.id = item.id;
+            data.name = item.name;
+            data.dbType = item.conType.getName().toLowerCase();
+            list.add(data);
+        }
+        return list;
+    }
+
     @Override
     public List<MetaDataInstanceAttributeDTO> synchronizationAppRegistration() {
         List<AppRegistrationPO> appRegistrationList = this.query().list();

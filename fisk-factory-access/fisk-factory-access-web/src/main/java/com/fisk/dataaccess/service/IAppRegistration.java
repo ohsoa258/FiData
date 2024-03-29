@@ -293,6 +293,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<ExternalDataSourceDTO> getFiDataDataSource();
 
     /**
+     * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     * @return
+     */
+    List<ExternalDataSourceDTO> getFiDataOdsAndLakeSource();
+
+    /**
      * 数据类型集合
      *
      * @param appId

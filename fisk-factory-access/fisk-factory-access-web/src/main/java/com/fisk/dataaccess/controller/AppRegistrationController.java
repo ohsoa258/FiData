@@ -388,6 +388,17 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataDataSource());
     }
 
+    /**
+     * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     * @return
+     */
+    @GetMapping("/getFiDataOdsAndLakeSource")
+    @ApiOperation(value = "数仓建模获取fidata数据源（ods & lake） 不包含HUDI")
+    public ResultEntity<Object> getFiDataOdsAndLakeSource() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataOdsAndLakeSource());
+    }
+
     @GetMapping("/getDataTypeList/{appId}")
     @ApiOperation(value = "获取FiData ODS数据类型")
     public ResultEntity<Object> getDataTypeList(@PathVariable("appId") Integer appId) {
