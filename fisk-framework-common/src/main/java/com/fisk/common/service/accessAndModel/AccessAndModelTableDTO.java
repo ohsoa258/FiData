@@ -2,6 +2,8 @@ package com.fisk.common.service.accessAndModel;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class AccessAndModelTableDTO {
 
@@ -35,5 +37,7 @@ public class AccessAndModelTableDTO {
      * 页数量大小
      */
     private Integer size;
+
+    private List<AccessAndModelFieldDTO> tblFields;
 
 }

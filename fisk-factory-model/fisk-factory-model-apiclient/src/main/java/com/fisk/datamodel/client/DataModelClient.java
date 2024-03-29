@@ -389,4 +389,12 @@ public interface DataModelClient {
     @GetMapping("/business/getAllAreaAndTables")
     ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTables();
 
+    /**
+     * 为数仓etl树获取数仓建模所有业务域和业务域下的所有表
+     *
+     * @return
+     */
+    @GetMapping("/business/getAllAreaAndTablesForEtlTree")
+    ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTablesForEtlTree();
+
 }

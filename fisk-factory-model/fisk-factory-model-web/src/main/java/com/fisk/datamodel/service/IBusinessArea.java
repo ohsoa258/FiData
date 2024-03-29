@@ -227,6 +227,12 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     List<AccessAndModelAppDTO> getAllAreaAndTables();
 
+    /**
+     * 为数仓etl树获取数仓建模所有业务域和业务域下的所有表
+     * @return
+     */
+    List<AccessAndModelAppDTO> getAllAreaAndTablesForEtlTree();
+
 
     /**
      * 获取当前业务域的首页计数信息

@@ -195,6 +195,17 @@ public class BusinessAreaController {
     }
 
     /**
+     * 为数仓etl树获取数仓建模所有业务域和业务域下的所有表
+     *
+     * @return
+     */
+    @ApiOperation("为数仓etl树获取数仓建模所有业务域和业务域下的所有表")
+    @GetMapping("/getAllAreaAndTablesForEtlTree")
+    public ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTablesForEtlTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndTablesForEtlTree());
+    }
+
+    /**
      * 获取数仓建模所有业务域和业务域下文件夹
      *
      * @return

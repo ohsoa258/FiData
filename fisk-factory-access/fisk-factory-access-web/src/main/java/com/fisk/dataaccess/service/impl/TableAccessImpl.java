@@ -28,6 +28,9 @@ import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelFieldDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -47,10 +50,7 @@ import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
-import com.fisk.dataaccess.dto.datamodel.AppAllRegistrationDataDTO;
-import com.fisk.dataaccess.dto.datamodel.AppRegistrationDataDTO;
-import com.fisk.dataaccess.dto.datamodel.TableAccessDataDTO;
-import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
+import com.fisk.dataaccess.dto.datamodel.*;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
@@ -1715,16 +1715,47 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dwNode.setId(dwSource.getId());
             dwNode.setName(dwSource.getName());
 
-//            //1.查询数仓所拥有的业务域及业务域下的表和字段
-//            modelClient.
-//
-//
-//
-//
-//            dwNode.setAppList();
+            //1.查询数仓所拥有的业务域及业务域下的表和字段
+            ResultEntity<List<AccessAndModelAppDTO>> resultEntity = modelClient.getAllAreaAndTablesForEtlTree();
+            //获取数据
+            List<AccessAndModelAppDTO> data = resultEntity.getData();
+
+            //业务域集合
+            List<AppRegistrationDataDTO> dwAppList = new ArrayList<>();
+
+            for (AccessAndModelAppDTO datum : data) {
+                //业务域
+                AppRegistrationDataDTO dwApp = new AppRegistrationDataDTO();
+                dwApp.setId(datum.getAppId());
+                dwApp.setAppName(datum.getAppName());
+                dwApp.setTargetDbId(1);
+                //表集合
+                List<TableAccessDataDTO> dwAppTbls = new ArrayList<>();
+
+                for (AccessAndModelTableDTO table : datum.getTables()) {
+                    //表
+                    TableAccessDataDTO tableAccessDataDTO = new TableAccessDataDTO();
+                    tableAccessDataDTO.setId(table.getTblId());
+                    tableAccessDataDTO.setTableName(table.getTableName());
+                    //字段集合
+                    List<TableFieldDataDTO> dwAppFields = new ArrayList<>();
+                    for (AccessAndModelFieldDTO tblField : table.getTblFields()) {
+                        //字段
+                        TableFieldDataDTO tableFieldDataDTO = new TableFieldDataDTO();
+                        tableFieldDataDTO.setId(tblField.getId());
+                        tableFieldDataDTO.setFieldName(tblField.getFieldEnName());
+                        tableFieldDataDTO.setFieldType(tblField.getFieldType());
+                        dwAppFields.add(tableFieldDataDTO);
+                    }
+                    tableAccessDataDTO.setFieldDtoList(dwAppFields);
+                    dwAppTbls.add(tableAccessDataDTO);
+                }
+                dwApp.setTableDtoList(dwAppTbls);
+                dwAppList.add(dwApp);
+            }
+            dwNode.setAppList(dwAppList);
+            root.add(dwNode);
         }
-
-
         return root;
     }
 
