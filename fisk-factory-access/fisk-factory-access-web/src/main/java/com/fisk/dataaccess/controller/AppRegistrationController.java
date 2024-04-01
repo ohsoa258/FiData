@@ -29,6 +29,7 @@ import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.table.CDCAppNameVO;
@@ -480,6 +481,17 @@ public class AppRegistrationController {
     @ApiOperation(value = "获取cdc类型所有应用及表名")
     public ResultEntity<List<CDCAppNameAndTableVO>> getCDCAppNameAndTables(@RequestParam("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCDCAppNameAndTables(appId));
+    }
+
+    /**
+     * 获取cdc类型所有应用的库名
+     *
+     * @return
+     */
+    @GetMapping("/getCDCAppDbName")
+    @ApiOperation(value = "获取cdc类型所有应用的库名")
+    public ResultEntity<List<CDCAppDbNameVO>> getCDCAppDbName() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCDCAppDbName());
     }
 
     /**

@@ -473,9 +473,8 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         // 设置当前时间为historyId
         Date currentTime = new Date();
         // 创建时间格式化对象
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         String historyId = sdf.format(currentTime);
-        historyId +="-"+UUID.randomUUID();
         BusinessTargetinfoHistoryPO targetinfoHistoryPO = BeanHelper.copyProperties(model, BusinessTargetinfoHistoryPO.class);
         targetinfoHistoryPO.setHistoryId(historyId);
         if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())){

@@ -135,4 +135,17 @@
           AND b.if_open_cdc = 1
           AND c.del_flag = 1
     </select>
+
+    <select id="getCDCAppDbName" resultType="com.fisk.dataaccess.vo.CDCAppDbNameVO">
+        SELECT DISTINCT
+            a.id,
+            b.db_name
+        FROM
+            tb_app_registration a
+                LEFT JOIN tb_app_datasource b ON a.id = b.app_id
+        WHERE
+            a.del_flag = 1
+          AND a.app_type = 2
+          AND b.del_flag = 1
+    </select>
 </mapper>

@@ -23,6 +23,7 @@ import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -536,6 +537,13 @@ public interface DataAccessClient {
     @ApiOperation(value = "获取cdc类型所有应用及表名")
     ResultEntity<List<CDCAppNameAndTableVO>> getCDCAppNameAndTables(@RequestParam("appId") Integer appId);
 
+    /**
+     * 获取cdc类型所有应用的库名
+     * @param
+     * @return
+     */
+    @GetMapping("/appRegistration/getCDCAppDbName")
+    ResultEntity<List<CDCAppDbNameVO>>getCDCAppDbName();
     @ApiOperation(value = "根据appId获取所有数据源")
     @GetMapping("/datasource/getAppSourcesByAppId")
     ResultEntity<List<AppDataSourceDTO>> getAppSourcesByAppId(@RequestParam("appId") Integer appId);

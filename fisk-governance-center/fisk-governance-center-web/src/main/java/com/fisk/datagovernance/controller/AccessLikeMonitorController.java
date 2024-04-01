@@ -39,7 +39,7 @@ public class AccessLikeMonitorController {
 
     @ApiOperation("添加入湖缓存数据")
     @GetMapping("/setLakeRedis")
-    public ResultEntity<AccessLakeMonitorVO> setLakeRedis(@RequestParam("appId") Integer appId){
+    public ResultEntity<AccessLakeMonitorVO> setLakeRedis(){
         AccessLakeMonitorSchedule accessLakeMonitorSchedule = new AccessLakeMonitorSchedule();
         log.info("开始添加入湖缓存");
         accessLakeMonitorSchedule.doTask();

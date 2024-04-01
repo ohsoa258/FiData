@@ -76,6 +76,7 @@ import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -3498,6 +3499,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId) {
         return baseMapper.getCDCAppNameAndTables(appId);
+    }
+    /**
+     * 获取cdc类型所有应用的库名
+     *
+     * @return
+     */
+    @Override
+    public List<CDCAppDbNameVO> getCDCAppDbName(){
+        return baseMapper.getCDCAppDbName();
     }
 
     @Override

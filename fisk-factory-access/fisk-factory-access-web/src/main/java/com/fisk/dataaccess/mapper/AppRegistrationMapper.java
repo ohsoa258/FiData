@@ -9,6 +9,7 @@ import com.fisk.dataaccess.dto.app.LogMessageFilterVO;
 import com.fisk.dataaccess.dto.app.RepeatNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -148,6 +149,8 @@ public interface AppRegistrationMapper extends FKBaseMapper<AppRegistrationPO> {
      *获取cdc类型所有应用及表名
      */
     List<CDCAppNameAndTableVO> getCDCAppNameAndTables(@Param("appId") Integer appId);
+
+    List<CDCAppDbNameVO> getCDCAppDbName();
 
     @Select("SELECT a.id, a.app_name FROM tb_app_registration a WHERE a.del_flag = 1 AND a.app_type = 2")
     List<AppRegistrationPO> getAllCDCAppName();
