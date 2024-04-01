@@ -1624,6 +1624,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (item.getDbType().equalsIgnoreCase(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.HUDI.getName())) {
                 continue;
             }
+            //dmp_dw第一个空节点不展示
+            if (item.getId() == 1) {
+                continue;
+            }
             AppAllRegistrationDataDTO dto = new AppAllRegistrationDataDTO();
             dto.setId(item.getId());
             dto.setName(item.getName());
