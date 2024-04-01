@@ -315,7 +315,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
 //                paramList.forEach(e -> {
 //                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
-//                    ji9otif (stringObjectEntry != null) {
+//                    if (stringObjectEntry != null) {
 //                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
 //                    } else {
 //                        e.setParmValue(null);
