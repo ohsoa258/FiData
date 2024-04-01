@@ -2,8 +2,13 @@ package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fisk.chartvisual.enums.IndicatorTypeEnum;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -12,12 +17,13 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
-import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
-import com.fisk.datamanagement.dto.classification.FacttreeListDTOs;
+import com.fisk.datamanagement.dto.businessclassification.ChildBusinessTreeDTO;
+import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.entity.*;
+import com.fisk.datamanagement.map.FactTreeHistoryMap;
+import com.fisk.datamanagement.map.FactTreeMap;
+import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.mapper.FactTreeListMapper;
@@ -28,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -39,6 +46,7 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -70,6 +78,15 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     BusinessHistoryService businessHistoryService;
 
     @Resource
+    BusinessCategoryMapper businessCategoryMapper;
+
+    @Resource
+    BusinessExtendedfieldsService businessExtendedfieldsService;
+
+    @Resource
+    FactTreeListExtendedfieldsService factTreeService;
+
+    @Resource
     UserClient userClient;
 
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
@@ -89,6 +106,11 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
         String indexid= pid;
         //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
+        List<Integer> ParentBusinessIds = list.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
+        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(BusinessTargetinfoPO::getId,ParentBusinessIds);
+        List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
+        Map<Integer, String> parentBusinessNameMap = businessTargetinfoPOS.stream().collect(Collectors.toMap(i -> (int) i.getId(), BusinessTargetinfoPO::getIndicatorName));
         for(int i=0;i<list.size();i++){
             List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
             List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(list.get(i).getId()+"");
@@ -121,6 +143,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("indicatorName",list.get(i).getIndicatorName());
             jsonObject1.put("indicatorDescription",list.get(i).getIndicatorDescription());
             jsonObject1.put("indicatorLevel",list.get(i).getIndicatorLevel());
+            jsonObject1.put("largeScreenLink",list.get(i).getLargeScreenLink());
             jsonObject1.put("unitMeasurement",list.get(i).getUnitMeasurement());
             jsonObject1.put("statisticalCycle",list.get(i).getStatisticalCycle());
             jsonObject1.put("indicatorformula",list.get(i).getIndicatorformula());
@@ -136,11 +159,73 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("name",list.get(i).getName());
             jsonObject1.put("sqlScript",list.get(i).getSqlScript());
             jsonObject1.put("dimensionData",list1);
-            jsonObject1.put("facttreeListData",list2);
+            List<FacttreeListDTO> facttreeListData = list2.stream().map(FactTreeMap.INSTANCES::poToDto).collect(Collectors.toList());
+            jsonObject1.put("facttreeListData",facttreeListData);
+            Integer parentBusinessId = list.get(i).getParentBusinessId();
+            if (parentBusinessId != null){
+                jsonObject1.put("parentBusinessId",parentBusinessId);
+                jsonObject1.put("parentBusinessName",parentBusinessNameMap.get(parentBusinessId));
+            }
+
+            BusinessTargetinfoPO businessTargetinfoPO = list.get(i);
+            if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(businessTargetinfoPO.getIndicatorType())){
+                LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
+                businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId,businessTargetinfoPO.id);
+                List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(businessTargetinfoWrapper);
+
+                Map<String, ChildBusinessTreeDTO> childBusinessMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+                    childBusinessMap = businessTargetinfoPOList.stream().map(t -> {
+                        ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
+                        treeDTO.setId(String.valueOf(t.getId()));
+                        treeDTO.setPid(t.getPid());
+                        treeDTO.setType(2);
+                        treeDTO.setName(t.getIndicatorName());
+                        return treeDTO;
+                    }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId,t->t));
+                }
+
+                List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
+                List<ChildBusinessTreeDTO> allBusinessTree = data.stream().map(e -> {
+                    ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
+                    treeDTO.setId(String.valueOf(e.getId()));
+                    treeDTO.setPid(String.valueOf(e.getPid()));
+                    treeDTO.setType(1);
+                    treeDTO.setName(e.getName());
+                    return treeDTO;
+                }).collect(Collectors.toList());
+
+
+                List<ChildBusinessTreeDTO> parentTree = new ArrayList<>();
+                for (Map.Entry<String, ChildBusinessTreeDTO> entry : childBusinessMap.entrySet()) {
+                    ChildBusinessTreeDTO child = entry.getValue();
+                    child = findParentById(allBusinessTree, child.getPid(), child);
+                    parentTree.add(child);
+                }
+                jsonObject1.put("derivedMetric",parentTree);
+            }
+
             array1.set(i,jsonObject1);
         }
-
+        
         return array1;
+    }
+
+    private ChildBusinessTreeDTO findParentById(List<ChildBusinessTreeDTO> treeList, String pid, ChildBusinessTreeDTO child) {
+        ChildBusinessTreeDTO tree = child;
+        for (ChildBusinessTreeDTO childBusinessTreeDTO : treeList) {
+            ChildBusinessTreeDTO newChild = new ChildBusinessTreeDTO();
+            newChild.setId(childBusinessTreeDTO.getId());
+            newChild.setType(childBusinessTreeDTO.getType());
+            newChild.setSort(childBusinessTreeDTO.getSort());
+            newChild.setPid(childBusinessTreeDTO.getPid());
+            newChild.setName(childBusinessTreeDTO.getName());
+            if (newChild.id.equals(pid)){
+                newChild.setChild(child);
+                tree = findParentById(treeList,newChild.pid,newChild);
+            }
+        }
+        return tree;
     }
 
 
@@ -188,7 +273,8 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 jsonObject1.put("name",list.get(i).getName());
                 jsonObject1.put("sqlScript",list.get(i).getSqlScript());
                 jsonObject1.put("dimensionData",list1);
-                jsonObject1.put("facttreeListData",list3);
+                List<FacttreeListDTO> facttreeListData = list3.stream().map(FactTreeMap.INSTANCES::poToDto).collect(Collectors.toList());
+                jsonObject1.put("facttreeListData",facttreeListData);
                 if (jsonObject1 != null){array1.set(n,jsonObject1);}
 
             }
@@ -273,6 +359,9 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             model.setIndicatorType(item.indicatorType);
             model.setName(item.name);
             model.setSqlScript(item.sqlScript);
+            if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(item.indicatorType)){
+                model.setParentBusinessId(item.parentBusinessId);
+            }
             int flag = businessTargetinfoMapper.insert(model);
             if (flag < 0) {
                 throw new FkException(ResultEnum.ERROR, "保存失败");
@@ -389,6 +478,56 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         historyId +="-"+UUID.randomUUID();
         BusinessTargetinfoHistoryPO targetinfoHistoryPO = BeanHelper.copyProperties(model, BusinessTargetinfoHistoryPO.class);
         targetinfoHistoryPO.setHistoryId(historyId);
+        if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())){
+            LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
+            businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId,model.getId());
+            List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(businessTargetinfoWrapper);
+
+            Map<String, ChildBusinessTreeDTO> childBusinessMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+                childBusinessMap = businessTargetinfoPOList.stream().map(t -> {
+                    ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
+                    treeDTO.setId(String.valueOf(t.getId()));
+                    treeDTO.setPid(t.getPid());
+                    treeDTO.setType(2);
+                    treeDTO.setName(t.getIndicatorName());
+                    return treeDTO;
+                }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId,t->t));
+            }
+
+            List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
+            List<ChildBusinessTreeDTO> allBusinessTree = data.stream().map(e -> {
+                ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
+                treeDTO.setId(String.valueOf(e.getId()));
+                treeDTO.setPid(String.valueOf(e.getPid()));
+                treeDTO.setType(1);
+                treeDTO.setName(e.getName());
+                return treeDTO;
+            }).collect(Collectors.toList());
+
+
+            List<ChildBusinessTreeDTO> parentTree = new ArrayList<>();
+            for (Map.Entry<String, ChildBusinessTreeDTO> entry : childBusinessMap.entrySet()) {
+                ChildBusinessTreeDTO child = entry.getValue();
+                parentTree.add(findParentById(allBusinessTree,child.getPid(),child));
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                if (CollectionUtils.isNotEmpty(parentTree)){
+                    targetinfoHistoryPO.setDerivedMetric(objectMapper.writeValueAsString(parentTree));
+                }
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+
+        }else if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())){
+            LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(BusinessTargetinfoPO::getId,model.parentBusinessId);
+            BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
+            targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
+            targetinfoHistoryPO.setParentBusinessName(businessTargetinfoPOS.getIndicatorName());
+        }
+
         boolean save = businessTargetinfoHistoryService.save(targetinfoHistoryPO);
         if (!save){
             throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
@@ -415,77 +554,172 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         model.setIndicatorType(item.indicatorType);
         model.setName(item.name);
         model.setSqlScript(item.sqlScript);
+        if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(item.indicatorType)){
+            model.setParentBusinessId(item.parentBusinessId);
+        }else {
+            model.setParentBusinessId(null);
+        }
         if (businessTargetinfoMapper.updateById(model) <= 0) {
             throw new FkException(ResultEnum.ERROR, "修改指标明细数据失败");
         }
-        QueryWrapper<BusinessTargetinfoPO> qwnew = new QueryWrapper<>();
-        qw.eq("indicator_name", item.indicatorName).eq("del_flag", 1).eq("pid", item.pid);
-        BusinessTargetinfoPO bcPOnew = businessTargetinfoMapper.selectOne(qw);
-        int flag1 = businessExtendedfieldsMapper.updateByName(bcPOnew.id+"");
-        for (int j=0;j<item.getDimensionData().size();j++){
-            BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
 
-            BusinessExtendedfieldsHistoryPO businessExtendedfieldsHistoryPO = BeanHelper.copyProperties(model2, BusinessExtendedfieldsHistoryPO.class);
-            businessExtendedfieldsHistoryPO.setHistoryId(historyId);
-            businessExtendedfieldsHistoryPO.setCreatedUser(userHelper.getLoginUserInfo().username);
-            DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            businessExtendedfieldsHistoryPO.setCreatedTime(format.format(new Date()));
-            businessExtendedfieldsHistoryPO.setDelFlag(1);
-            boolean save1 = businessExtendedfieldsHistoryService.save(businessExtendedfieldsHistoryPO);
-            if (!save1){
-                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
-            }
-            BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
-            model1.setAttribute(model2.attribute);
-            model1.setAttributeid(model2.attributeid);
-            model1.setDimdomain(model2.dimdomain);
-            model1.setDimdomainid(model2.dimdomainid);
-            model1.setDimdomaintype(model2.dimdomaintype);
-            model1.setDimtable(model2.dimtable);
-            model1.setDimtableid(model2.dimtableid);
-            model1.setIndexid(bcPOnew.id+"");
-            model1.setCreatedUser(userHelper.getLoginUserInfo().username);
-            model1.setCreatedTime(format.format(new Date()));
-            model1.setDelFlag(1);
-            int flag2 = businessExtendedfieldsMapper.insert(model1);
-            if (flag2 < 0) {
-                throw new FkException(ResultEnum.ERROR, "保存失败");
+        //处理指标粒度
+        List<BusinessExtendedfieldsDTO> dimensionData = item.getDimensionData();
+
+        //找出待删除的数据
+        LambdaQueryWrapper<BusinessExtendedfieldsPO> extendedfieldsWrapper = new LambdaQueryWrapper<>();
+        extendedfieldsWrapper.eq(BusinessExtendedfieldsPO::getIndexid,model.id);
+        List<BusinessExtendedfieldsPO> businessExtendedfieldsPOS = businessExtendedfieldsMapper.selectList(extendedfieldsWrapper);
+
+        if (!CollectionUtils.isEmpty(businessExtendedfieldsPOS)){
+            if (!CollectionUtils.isEmpty(dimensionData)){
+                List<Integer> dimensionDataIds = dimensionData.stream().map(BusinessExtendedfieldsDTO::getId).collect(Collectors.toList());
+                List<BusinessExtendedfieldsPO> delExtendedfields = businessExtendedfieldsPOS.stream().filter(i -> !dimensionDataIds.contains(i.getId())).collect(Collectors.toList());
+                List<Integer> delIds = delExtendedfields.stream().map(BusinessExtendedfieldsPO::getId).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(delIds)){
+                    businessExtendedfieldsMapper.deleteBatchIds(delIds);
+                }
             }
         }
-        int flag3= factTreeListMapper.updateByName(bcPOnew.id+"");
-        for (int n=0; n<item.getFacttreeListData().size();n++){
-            FacttreeListDTOs model4= item.getFacttreeListData().get(n);
+        List<BusinessExtendedfieldsPO> extendedfieldsPOS = dimensionData.stream().map(i -> {
+            BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
+            if (i.getId() != null){
+                model1.setId(i.getId());
+            }
+            model1.setAttribute(i.getAttribute());
+            model1.setAttributeid(i.getAttributeid());
+            model1.setDimdomain(i.getDimdomain());
+            model1.setDimdomainid(i.getDimdomainid());
+            model1.setDimdomaintype(i.getDimdomaintype());
+            model1.setDimtable(i.getDimtable());
+            model1.setDimtableid(i.getDimtableid());
+            model1.setIndexid(String.valueOf(item.getId()));
+            if (i.getCreatedUser() != null){
+                model1.setCreatedUser(i.getCreatedUser());
+            }else {
+                model1.setCreatedUser(userHelper.getLoginUserInfo().username);
+            }
 
-            FacttreelistHistoryPO facttreelistHistoryPO = new FacttreelistHistoryPO();
-            facttreelistHistoryPO.setHistoryId(historyId);
-            facttreelistHistoryPO.setPid(bcPOnew.id+"");
-            facttreelistHistoryPO.setBusinessNameId(model4.businessNameId);
-            facttreelistHistoryPO.setBusinessName(model4.businessName);
-            facttreelistHistoryPO.setFactTabNameId(model4.businessNameId);
-            facttreelistHistoryPO.setFactTabName(model4.factTabName);
-            facttreelistHistoryPO.setFactFieldEnNameId(model4.factFieldEnNameId);
-            facttreelistHistoryPO.setFactFieldEnName(model4.factFieldEnName);
-            facttreelistHistoryPO.setCreateUser(userHelper.getLoginUserInfo().username);
-            facttreelistHistoryPO.setCreateTime(LocalDateTime.now());
-            facttreelistHistoryPO.setDelFlag(1);
-            boolean save1 = facttreelistHistoryService.save(facttreelistHistoryPO);
-            if (!save1){
+            if (i.getCreatedTime() != null){
+                DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                LocalDateTime localDateTime = LocalDateTime.parse(i.getCreatedTime().toString(), inputFormatter);
+                DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                // 格式化为指定格式的字符串
+                String outputDateTime = localDateTime.format(outputFormatter);
+                model1.setCreatedTime(outputDateTime);
+            }else {
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                model1.setCreatedTime(format.format(new Date()));
+            }
+            model1.setDelFlag(1);
+            return model1;
+        }).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(extendedfieldsPOS)){
+            //找出待添加数据
+            List<BusinessExtendedfieldsPO> addExtendedfields = extendedfieldsPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
+            //找出待修改数据
+            List<BusinessExtendedfieldsPO> updateExtendedfields = extendedfieldsPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(addExtendedfields)){
+                businessExtendedfieldsService.saveBatch(addExtendedfields);
+            }
+            if (CollectionUtils.isNotEmpty(updateExtendedfields)){
+                businessExtendedfieldsService.updateBatchById(updateExtendedfields);
+            }
+        }
+
+        String finalHistoryId = historyId;
+        //保存历史数据
+        if (CollectionUtils.isNotEmpty(businessExtendedfieldsPOS)){
+            List<BusinessExtendedfieldsHistoryPO> extendedfieldsHistorys = businessExtendedfieldsPOS.stream().map(i -> {
+                BusinessExtendedfieldsHistoryPO businessExtendedfieldsHistoryPO = BeanHelper.copyProperties(i, BusinessExtendedfieldsHistoryPO.class);
+                businessExtendedfieldsHistoryPO.setHistoryId(finalHistoryId);
+                businessExtendedfieldsHistoryPO.setCreatedUser(i.createdUser);
+                businessExtendedfieldsHistoryPO.setCreatedTime(i.createdTime);
+                businessExtendedfieldsHistoryPO.setDelFlag(1);
+                return businessExtendedfieldsHistoryPO;
+            }).collect(Collectors.toList());
+            boolean b = businessExtendedfieldsHistoryService.saveBatch(extendedfieldsHistorys);
+            if (!b){
                 throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
             }
-            FactTreePOs model3 = new FactTreePOs();
-            model3.setPid(bcPOnew.id+"");
-            model3.setBusinessNameId(model4.businessNameId);
-            model3.setBusinessName(model4.businessName);
-            model3.setFactTabNameId(model4.businessNameId);
-            model3.setFactTabName(model4.factTabName);
-            model3.setFactFieldEnNameId(model4.factFieldEnNameId);
-            model3.setFactFieldEnName(model4.factFieldEnName);
-            model3.setCreateUser(userHelper.getLoginUserInfo().username);
-            model3.setCreateTime(LocalDateTime.now());
-            model3.setDelFlag(1);
-            int flag2= factTreeListMapper.insert(model3);
-            if (flag2 < 0) {
-                throw new FkException(ResultEnum.ERROR, "保存失败");
+        }
+        //处理指标所属
+        List<FacttreeListDTOs> facttreeListData = item.getFacttreeListData();
+        List<FactTreePOs> facttreeListPOs = facttreeListData.stream().map(i -> {
+            FactTreePOs model1 = new FactTreePOs();
+            if (i.getId() != null){
+                model1.setId(i.getId());
+            }
+            model1.setPid(item.id+"");
+            model1.setBusinessNameId(i.getBusinessNameId());
+            model1.setBusinessName(i.getBusinessName());
+            model1.setFactTabNameId(i.getFactTabNameId());
+            model1.setFactTabName(i.getFactTabName());
+            model1.setFactFieldEnNameId(i.getFactFieldEnNameId());
+            model1.setFactFieldEnName(i.getFactFieldEnName());
+            if (i.getCreatedUser() != null){
+                model1.setCreateUser(i.getCreatedUser());
+            }else {
+                model1.setCreateUser(userHelper.getLoginUserInfo().id.toString());
+            }
+            if (i.getCreatedTime() != null){
+                model1.setCreateTime(i.getCreatedTime());
+            }else {
+                model1.setCreateTime(LocalDateTime.now());
+            }
+            model1.setDelFlag(1);
+            return model1;
+        }).collect(Collectors.toList());
+        //找出待删除的数据
+        LambdaQueryWrapper<FactTreePOs> factTreeWrapper = new LambdaQueryWrapper<>();
+        factTreeWrapper.eq(FactTreePOs::getPid,model.id);
+        List<FactTreePOs> factTreePOS = factTreeService.list(factTreeWrapper);
+        if (!CollectionUtils.isEmpty(factTreePOS)){
+            if (!CollectionUtils.isEmpty(facttreeListPOs)){
+                List<Integer> factTreeIds = facttreeListPOs.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+                List<FactTreePOs> delFactTrees = factTreePOS.stream().filter(i -> !factTreeIds.contains((int)i.getId())).collect(Collectors.toList());
+                List<Integer> delIds = delFactTrees.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(delIds)){
+                    factTreeListMapper.deleteBatchIds(delIds);
+                }
+            }
+        }
+
+        if(CollectionUtils.isNotEmpty(facttreeListPOs)){
+            //找出待添加数据
+            List<FactTreePOs> addFactTrees = facttreeListPOs.stream().filter(i -> i.getId() == 0 ).collect(Collectors.toList());
+            //找出待修改数据
+            List<FactTreePOs> updateFactTrees = facttreeListPOs.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(addFactTrees)){
+                factTreeService.saveBatch(addFactTrees);
+            }
+            if (CollectionUtils.isNotEmpty(updateFactTrees)){
+                factTreeService.updateBatchById(updateFactTrees);
+            }
+        }
+
+
+        //保存历史数据
+        if (CollectionUtils.isNotEmpty(factTreePOS)){
+            String finalHistoryId1 = historyId;
+            List<FacttreelistHistoryPO> factHistoryTreePOs = factTreePOS.stream().map(i -> {
+                FacttreelistHistoryPO facttreelistHistoryPO = new FacttreelistHistoryPO();
+                facttreelistHistoryPO.setHistoryId(finalHistoryId1);
+                facttreelistHistoryPO.setPid(item.id+"");
+                facttreelistHistoryPO.setBusinessNameId(i.businessNameId);
+                facttreelistHistoryPO.setBusinessName(i.businessName);
+                facttreelistHistoryPO.setFactTabNameId(i.businessNameId);
+                facttreelistHistoryPO.setFactTabName(i.factTabName);
+                facttreelistHistoryPO.setFactFieldEnNameId(i.factFieldEnNameId);
+                facttreelistHistoryPO.setFactFieldEnName(i.factFieldEnName);
+                facttreelistHistoryPO.setCreateUser(i.createUser);
+                facttreelistHistoryPO.setCreateTime(i.createTime);
+                facttreelistHistoryPO.setDelFlag(1);
+                return facttreelistHistoryPO;
+            }).collect(Collectors.toList());
+            boolean b = facttreelistHistoryService.saveBatch(factHistoryTreePOs);
+            if (!b){
+                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
             }
         }
         BusinessHistoryPO businessHistoryPO = new BusinessHistoryPO();
@@ -794,6 +1028,7 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("indicatorCode",targetinfoHistoryPO.getIndicatorCode());
             jsonObject1.put("indicatorName",targetinfoHistoryPO.getIndicatorName());
             jsonObject1.put("indicatorDescription",targetinfoHistoryPO.getIndicatorDescription());
+            jsonObject1.put("largeScreenLink",targetinfoHistoryPO.getLargeScreenLink());
             jsonObject1.put("indicatorLevel",targetinfoHistoryPO.getIndicatorLevel());
             jsonObject1.put("unitMeasurement",targetinfoHistoryPO.getUnitMeasurement());
             jsonObject1.put("statisticalCycle",targetinfoHistoryPO.getStatisticalCycle());
@@ -810,6 +1045,27 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("name",targetinfoHistoryPO.getName());
             jsonObject1.put("sqlScript",targetinfoHistoryPO.getSqlScript());
             jsonObject1.put("dimensionData",list1);
+            List<FacttreelistHistoryDTO> facttreeListData = list2.stream().map(FactTreeHistoryMap.INSTANCES::poToDto).collect(Collectors.toList());
+            jsonObject1.put("facttreeListData",facttreeListData);
+            Integer parentBusinessId = targetinfoHistoryPO.getParentBusinessId();
+
+
+            if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+                jsonObject1.put("parentBusinessId",parentBusinessId);
+                jsonObject1.put("parentBusinessName",targetinfoHistoryPO.getParentBusinessName());
+            }else if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+                String derivedMetric = targetinfoHistoryPO.getDerivedMetric();
+                if (derivedMetric != null){
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        List<ChildBusinessTreeDTO> childBusinessTreeDTOList = objectMapper.readValue(derivedMetric,ArrayList.class);
+                        jsonObject1.put("derivedMetric", childBusinessTreeDTOList);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+            }
             jsonObject1.put("facttreeListData",list2);
 
         return jsonObject1;

@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.alibaba.fastjson.JSONArray;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
+import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
 import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 
@@ -61,5 +62,5 @@ public interface BusinessCategoryService {
 
     JSONArray getFactTreeList();
 
-
+    List<ParentBusinessTreeDTO> getParentBusinessDataList();
 }
