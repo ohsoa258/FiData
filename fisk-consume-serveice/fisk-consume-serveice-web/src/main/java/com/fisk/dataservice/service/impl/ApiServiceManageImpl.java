@@ -303,15 +303,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     dto.parmList.put("current", current);
                     dto.parmList.put("size", size);
                 }
-
-                paramList.forEach(e -> {
-                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+                //如果是强生分支则将for (ParmConfigPO parmConfigPO : paramList) 注释掉并放开下面的 paramList.forEach(e -> {
+                for (ParmConfigPO parmConfigPO : paramList) {
+                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(parmConfigPO.getParmName())).findFirst().orElse(null);
                     if (stringObjectEntry != null) {
-                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+                        parmConfigPO.setParmValue(String.valueOf(stringObjectEntry.getValue()));
                     } else {
-                        e.setParmValue(null);
+                        return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_PARAMLIST_IS_NULL, responseVO);
                     }
-                });
+                }
+
+//                paramList.forEach(e -> {
+//                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+//                    if (stringObjectEntry != null) {
+//                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+//                    } else {
+//                        e.setParmValue(null);
+//                    }
+//                });
 
                 List<Long> collect = paramList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
                 List<BuiltinParmPO> builtinParamList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), collect);

@@ -1,9 +1,7 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.datamanagement.entity.FactTreePOs;
-import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
-import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.FactTreeListExtendedfieldsService;
 import org.springframework.stereotype.Service;
@@ -13,7 +11,7 @@ import java.util.List;
 
 
 @Service
-public class FactTreeListExtendedfieldsImp implements FactTreeListExtendedfieldsService {
+public class FactTreeListExtendedfieldsImp extends ServiceImpl<FactTreeListMapper, FactTreePOs> implements FactTreeListExtendedfieldsService {
     @Resource
     FactTreeListMapper factTreeListMapper;
 

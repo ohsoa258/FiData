@@ -3,8 +3,10 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -12,11 +14,15 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
+import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
+import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
+import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.service.BusinessCategoryService;
+import com.fisk.datamanagement.service.BusinessTargetinfoService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
@@ -43,8 +49,8 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
     BusinessCategoryMapper businessCategoryMapper;
     @Resource
     private DataModelClient dataModelClient;
-
-
+    @Resource
+    private BusinessTargetinfoMapper businessTargetinfoMapper;
     /**
      * 更改指标名称属性_
      *
@@ -346,5 +352,74 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             data.add(data1);
         }
         return data;
+    }
+
+    @Override
+    public List<ParentBusinessTreeDTO> getParentBusinessDataList() {
+        // 查询所有数据
+        List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(data)) {
+            return new ArrayList<>();
+        }
+
+        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BusinessTargetinfoPO::getIndicatorType, IndicatorTypeEnum.ATOMIC_INDICATORS.getName());
+        List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
+        Map<String, List<ParentBusinessTreeDTO>> parentBusinessTreeDTOMap = businessTargetinfoPOS.stream().map(i -> {
+            ParentBusinessTreeDTO parentBusinessTreeDTO = new ParentBusinessTreeDTO();
+            parentBusinessTreeDTO.setId(String.valueOf(i.getId()));
+            parentBusinessTreeDTO.setPid(i.getPid());
+            parentBusinessTreeDTO.setType(2);
+            parentBusinessTreeDTO.setName(i.getIndicatorName());
+            return parentBusinessTreeDTO;
+        }).collect(Collectors.groupingBy(ParentBusinessTreeDTO::getPid));
+
+        // 数据转换
+        List<ParentBusinessTreeDTO> allData = data.stream().map(item -> {
+            ParentBusinessTreeDTO dto = new ParentBusinessTreeDTO();
+            dto.setId(String.valueOf(item.id));
+            if (item.pid == null || item.pid == 0) {
+                dto.setPid("0");
+            } else {
+                dto.setPid(item.getPid().toString());
+            }
+            dto.setName(item.name);
+            dto.setSort(item.sort);
+            dto.setType(1);
+            List<ParentBusinessTreeDTO> parentBusinessTreeDTO = parentBusinessTreeDTOMap.get(String.valueOf(item.getId()));
+            dto.setChild(parentBusinessTreeDTO);
+            return dto;
+        }).collect(Collectors.toList());
+        List<ParentBusinessTreeDTO> parentList = childClassTree(allData, "0");
+        return parentList;
+    }
+
+    public final List<ParentBusinessTreeDTO> childClassTree(List<ParentBusinessTreeDTO> list, String pid) {
+        List<ParentBusinessTreeDTO> parentList = list.stream().filter(item -> (pid + "").equals(item.pid)).collect(Collectors.toList());
+        if (!parentList.isEmpty()) {
+            List<ParentBusinessTreeDTO> ResultList = new ArrayList<>();
+            for (int i = 0; i < parentList.size(); i++) {
+                List<ParentBusinessTreeDTO> children = new ArrayList<>();
+                for (int j = 0; j < list.size(); j++) {
+                    if (list.get(j).pid.equals(parentList.get(i).id)) {
+                        children = childClassTree(list, parentList.get(i).id);
+                    }
+                }
+                // 递归处理
+                List<ParentBusinessTreeDTO> child = parentList.get(i).getChild();
+                if (CollectionUtils.isEmpty(child)){
+                    parentList.get(i).setChild(children);
+                }else {
+                    child.addAll(children);
+                    parentList.get(i).setChild(child);
+                }
+
+                ResultList.add(parentList.get(i));
+            }
+            ResultList.sort(Comparator.comparing(ParentBusinessTreeDTO::getSort));
+
+            return ResultList;
+        }
+        return null;
     }
 }

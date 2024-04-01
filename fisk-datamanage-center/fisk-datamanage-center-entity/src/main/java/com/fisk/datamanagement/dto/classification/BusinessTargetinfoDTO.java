@@ -52,4 +52,6 @@ public class BusinessTargetinfoDTO {
     public DateTime createdTime;
     public String createdUser;
 
+    public Integer parentBusinessId;
+
 }

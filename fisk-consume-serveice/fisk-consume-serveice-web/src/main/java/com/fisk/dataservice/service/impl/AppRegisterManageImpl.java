@@ -647,10 +647,18 @@ public class AppRegisterManageImpl
             apiRequestDTOS_fixed.add(requestDTO);
             trReqIndex_fixed[0]++;
 
+            String flag = "否";
+            if (CollectionUtils.isNotEmpty(paramsList)) {
+                List<ParmConfigPO> collect = paramsList.stream().filter(v -> v.getApiId() == apiConfigPO.id).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(collect)){
+                    flag = "是";
+                }
+            }
             // 请求参数新增parmList参数说明
             requestDTO = new ApiRequestDTO();
             requestDTO.setParmName("parmList");
-            requestDTO.setIsRequired("否");
+
+            requestDTO.setIsRequired(flag);
             requestDTO.setParmType("HashMap");
             requestDTO.setParmDesc("API参数列表，详情见parmList参数说明，默认为null");
             requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");

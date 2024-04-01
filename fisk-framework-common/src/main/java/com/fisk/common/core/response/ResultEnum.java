@@ -362,6 +362,7 @@ public enum ResultEnum {
 
     SERVICE_ENCRYPT_NOT_EXIST(10048,"未设置密钥"),
     SERVICE_ENCRYPT_ONLY_ONE(10049,"密钥只能有一个"),
+    DS_APISERVICE_PARAMLIST_IS_NULL(10050,"请求参数中缺少必填参数"),
 
     /**
      * 数据质量

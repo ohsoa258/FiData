@@ -1,11 +1,7 @@
 package com.fisk.datamanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.joda.time.DateTime;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +12,8 @@ import java.time.LocalDateTime;
 @Data
 @TableName("tb_business_extendedfields")
 public class BusinessExtendedfieldsPO {
+    @TableId(value = "id", type = IdType.AUTO)
+    public int id;
     public String  dimdomaintype;
     public String  dimdomainid;
     public String  dimdomain;

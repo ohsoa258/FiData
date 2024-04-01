@@ -1,13 +1,9 @@
 package com.fisk.datamanagement.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import lombok.Data;
 import io.swagger.annotations.ApiModelProperty;
-
-import java.io.Serializable;
-import java.util.Date;
+import lombok.Data;
 
 /**
  * @author wangjian
@@ -86,4 +82,12 @@ public class BusinessTargetinfoHistoryPO extends BasePO {
     @ApiModelProperty(value = "")
     private String sqlScript;
 
+    @ApiModelProperty(value = "历史上级指标id")
+    public Integer parentBusinessId;
+
+    @ApiModelProperty(value = "历史上级指标名称")
+    public String parentBusinessName;
+
+    @ApiModelProperty(value = "历史派生指标")
+    public String derivedMetric;
 }
