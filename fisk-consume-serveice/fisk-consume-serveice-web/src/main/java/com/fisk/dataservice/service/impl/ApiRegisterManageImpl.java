@@ -617,7 +617,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             if (!isUpdate)
                 return ResultEnum.SAVE_DATA_ERROR;
         }
-        ApiMenuConfigPO apiMenuConfigPO = apiMenuConfigService.getById(apiConfigPO.getApiMenuId());
+        ApiMenuConfigPO apiMenuConfigPO = apiMenuConfigService.getById(model.getApiMenuId());
         apiMenuConfigPO.setName(apiConfigPO.getApiName());
         apiMenuConfigService.updateById(apiMenuConfigPO);
         return ResultEnum.SUCCESS;
