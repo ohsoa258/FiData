@@ -3168,6 +3168,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             ExternalDataSourceDTO data = new ExternalDataSourceDTO();
             data.id = item.id;
             data.name = item.name;
+            //因为前端的 数仓etl树是按conType区分的  dw虽然也可以是doris 但返回时改成别的类型 让前端能够区分树的结构的不同
+            if (SourceBusinessTypeEnum.DW.getName().equals(item.sourceBusinessType.getName())){
+                item.conType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER;
+            }
             data.dbType = item.conType.getName().toLowerCase();
             list.add(data);
         }
