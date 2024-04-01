@@ -521,11 +521,13 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             }
 
         }else if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())){
-            LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(BusinessTargetinfoPO::getId,model.parentBusinessId);
-            BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
-            targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
-            targetinfoHistoryPO.setParentBusinessName(businessTargetinfoPOS.getIndicatorName());
+            if (model.parentBusinessId != null){
+                LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(BusinessTargetinfoPO::getId,model.parentBusinessId);
+                BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
+                targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
+                targetinfoHistoryPO.setParentBusinessName(businessTargetinfoPOS.getIndicatorName());
+            }
         }
 
         boolean save = businessTargetinfoHistoryService.save(targetinfoHistoryPO);
