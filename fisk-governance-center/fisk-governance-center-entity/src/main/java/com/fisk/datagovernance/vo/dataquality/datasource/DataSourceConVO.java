@@ -2,6 +2,7 @@ package com.fisk.datagovernance.vo.dataquality.datasource;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -79,6 +80,12 @@ public class DataSourceConVO {
      */
     @ApiModelProperty(value = "密码")
     public String conPassword;
+
+    /**
+     * 数据源业务类型：1dw 2ods 3mdm 4olap
+     */
+    @ApiModelProperty(value = "数据源业务类型：1dw 2ods 3mdm 4olap")
+    public SourceBusinessTypeEnum sourceBusinessType;
 
     /**
      * 创建时间

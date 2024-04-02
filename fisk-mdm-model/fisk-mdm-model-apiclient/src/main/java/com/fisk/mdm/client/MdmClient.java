@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -168,6 +169,20 @@ public interface MdmClient {
      */
     @PostMapping("/model/setDataStructure")
     ResultEntity<Object> setMDMDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+    /**
+     * 获取主数据表结构(数据标准用)
+     * @return
+     */
+    @PostMapping("/model/getTableDataStructure")
+    ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    /**
+     * 获取主数据字段结构(数据标准用)
+     * @param dto
+     * @return
+     */
+    @PostMapping("/model/getFieldDataStructure")
+    ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto);
 
     /**
      * 数据访问配置

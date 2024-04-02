@@ -29,11 +29,13 @@ file:
   echoPath: D:/Excel/
   logoPath: D:/image/companyLogo.jpg
   excelFilePath: D:/Excel/
+doris:
+  catalogName: qs_dmp_ods
+checkStandards: true
+
 kafka-monitor:
   url: 192.168.11.130
   port: 9092
-doris:
-  catalogName: qs_dmp_ods
 tableMappingTopicDatabase:
   conStr: jdbc:mysql://192.168.11.130:3306/dmp_datagovernance_db?useSSL=false
   conAccount: root

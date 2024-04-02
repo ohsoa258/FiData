@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
@@ -20,6 +21,8 @@ import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.CreateSchemaSqlUtils;
 import com.fisk.common.core.utils.FileBinaryUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
@@ -829,6 +832,185 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.error("hudi入仓配置同步表失败：" + e);
             throw new FkException(ResultEnum.ACCESS_HUDI_SYNC_ERROR);
         }
+    }
+
+    /**
+     * 获取数据接入表结构(数据标准用)
+     * @param dto
+     * @return
+     */
+    @Override
+    public List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO dto) {
+
+        // 所有应用
+        List<AppRegistrationPO> appPoList = this.query().orderByDesc("create_time").list();
+        List<TableNameDTO> tables = new ArrayList<>();
+        //处理实时应用
+        List<AppRegistrationPO> realTimeAppPOS = appPoList.stream().filter(Objects::nonNull).filter(e -> e.appType == 0).collect(Collectors.toList());
+        Map<Long, AppRegistrationPO> realTimeAppMap = realTimeAppPOS.stream().collect(Collectors.toMap(i -> i.id, i -> i));
+        if (!CollectionUtils.isEmpty(realTimeAppMap.keySet())){
+            QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
+            appDataSourcePOQueryWrapper.lambda().in(AppDataSourcePO::getAppId, realTimeAppMap.keySet()).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
+            List<AppDataSourcePO> realTimeDataSource = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
+            Set<Long> realTimeDataSourceIds = realTimeDataSource.stream().map(AppDataSourcePO::getAppId).collect(Collectors.toSet());
+
+            Iterator<Long> realTimeIterator = realTimeAppMap.keySet().iterator();
+
+            while (realTimeIterator.hasNext()) {
+                Long key = (Long) realTimeIterator.next();
+                if (!realTimeDataSourceIds.contains(key)) {
+                    realTimeIterator.remove();
+                    realTimeAppMap.remove(key);
+                }
+            }
+        }
+        if (!CollectionUtils.isEmpty(realTimeAppMap.keySet())){
+            // 当前app下的所有api
+            List<ApiConfigPO> realTimeApiConfigPOList = this.apiConfigImpl.query().in("app_id", realTimeAppMap.keySet()).orderByDesc("create_time").list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+            List<Long> realTimeApiIds = realTimeApiConfigPOList.stream().map(BasePO::getId).collect(Collectors.toList());
+            // 第二层: table层
+            if (!CollectionUtils.isEmpty(realTimeApiIds)){
+                List<TableNameDTO> realTimeTables = this.tableAccessImpl.query().in("api_id", realTimeApiIds).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                    AppRegistrationPO app = realTimeAppMap.get(table.appId);
+                    TableNameDTO tableNameDTO = new TableNameDTO();
+                    tableNameDTO.setTableId(String.valueOf(table.id));
+                    tableNameDTO.setTableName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                    tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.NONE);
+                    if (app.whetherSchema) {
+                        tableNameDTO.setSchemaName(app.appAbbreviation);
+                    }
+                    return tableNameDTO;
+                }).collect(Collectors.toList());
+                tables.addAll(realTimeTables);
+            }
+        }
+
+        Map<Long, AppRegistrationPO> noRealTimeAppDataBaseMap = new HashMap<>();
+        //处理非实时应用
+        List<AppRegistrationPO> noRealTimeAppPOS = appPoList.stream().filter(Objects::nonNull).filter(e -> e.appType == 1).collect(Collectors.toList());
+        Map<Long, AppRegistrationPO> noRealTimeAppMap = noRealTimeAppPOS.stream().collect(Collectors.toMap(AppRegistrationPO::getId, i -> i));
+        if (!CollectionUtils.isEmpty(noRealTimeAppMap.keySet())){
+            QueryWrapper<AppDataSourcePO> appDataSourceQueryWrapper = new QueryWrapper<>();
+            appDataSourceQueryWrapper.lambda().in(AppDataSourcePO::getAppId, noRealTimeAppMap.keySet()).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
+            List<AppDataSourcePO> noRealTimeDataSource = appDataSourceMapper.selectList(appDataSourceQueryWrapper);
+            Set<Long> noRealTimeDataSourceIds = noRealTimeDataSource.stream().map(AppDataSourcePO::getAppId).collect(Collectors.toSet());
+            Iterator<Long> noRealTimeIterator = noRealTimeAppMap.keySet().iterator();
+            while (noRealTimeIterator.hasNext()) {
+                Long key = (Long) noRealTimeIterator.next();
+                if (!noRealTimeDataSourceIds.contains(key)) {
+                    noRealTimeAppDataBaseMap.put(key,noRealTimeAppMap.get(key));
+                    noRealTimeIterator.remove();
+                    realTimeAppMap.remove(key);
+                }
+            }
+        }
+        // app下的所有api
+        if (!CollectionUtils.isEmpty(noRealTimeAppMap.keySet())) {
+            List<ApiConfigPO> apiConfigPOList = this.apiConfigImpl.query().in("app_id", noRealTimeAppMap.keySet()).orderByDesc("create_time").list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+            List<Long> apiIds = apiConfigPOList.stream().map(BasePO::getId).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(apiIds)) {
+                // apiTable层
+                List<TableNameDTO> apiTableNames = this.tableAccessImpl.query().in("api_id", apiIds).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                    AppRegistrationPO app = noRealTimeAppMap.get(table.appId);
+                    TableNameDTO tableNameDTO = new TableNameDTO();
+                    tableNameDTO.setTableId(String.valueOf(table.id));
+                    tableNameDTO.setTableName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                    tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.NONE);
+                    if (app.whetherSchema) {
+                        tableNameDTO.setSchemaName(app.appAbbreviation);
+                    }
+                    return tableNameDTO;
+                }).collect(Collectors.toList());
+                tables.addAll(apiTableNames);
+            }
+        }
+        //app下的所有数据表
+        if (!CollectionUtils.isEmpty(noRealTimeAppDataBaseMap.keySet())){
+            List<TableNameDTO> tableAccessTables = this.tableAccessImpl.query().in("app_id", noRealTimeAppDataBaseMap.keySet()).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                AppRegistrationPO app = noRealTimeAppDataBaseMap.get(table.appId);
+                TableNameDTO tableNameDTO = new TableNameDTO();
+                tableNameDTO.setTableId(String.valueOf(table.id));
+                tableNameDTO.setTableName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.NONE);
+                if (app.whetherSchema) {
+                    tableNameDTO.setSchemaName(app.appAbbreviation);
+                }
+                return tableNameDTO;
+            }).collect(Collectors.toList());
+            tables.addAll(tableAccessTables);
+        }
+//        List<List<TableNameDTO>> tableNameNonRealTime = appPoList.stream().filter(Objects::nonNull)
+//                // 非实时应用
+//                .filter(e -> e.appType == 1).map(app -> {
+//
+//                    // 查询驱动类型
+//                    String type = "dataBase";
+//                    QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
+//                    appDataSourcePOQueryWrapper.lambda().eq(AppDataSourcePO::getAppId, app.id).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.API.getName());
+//                    List<AppDataSourcePO> appDataSourcePOS = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
+//                    if (!CollectionUtils.isEmpty(appDataSourcePOS)) {
+//                        type = "api";
+//                    }
+//                    // 根据驱动类型封装不同的子级
+//
+//                    List<TableNameDTO> tables = new ArrayList<>();
+//                    switch (type) {
+//                        // api层
+//                        case "api":
+//                            // 当前app下的所有api
+//                            List<ApiConfigPO> apiConfigPOList = this.apiConfigImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+//                            List<Long> apiIds = apiConfigPOList.stream().map(BasePO::getId).collect(Collectors.toList());
+//                                // 第二层: table层
+//                            tables = this.tableAccessImpl.query().in("api_id", apiIds).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+//                                TableNameDTO tableNameDTO = new TableNameDTO();
+//                                tableNameDTO.setTableId(String.valueOf(table.id));
+//                                tableNameDTO.setTableName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+//                                tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.NONE);
+//                                if (app.whetherSchema) {
+//                                    tableNameDTO.setSchemaName(app.appAbbreviation);
+//                                }
+//                                return tableNameDTO;
+//                            }).collect(Collectors.toList());
+//                            break;
+//                        // 第二层: table层
+//                        case "dataBase":
+//                            tables = this.tableAccessImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+//                                TableNameDTO tableNameDTO = new TableNameDTO();
+//                                tableNameDTO.setTableId(String.valueOf(table.id));
+//                                tableNameDTO.setTableName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+//                                tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.NONE);
+//                                if (app.whetherSchema) {
+//                                    tableNameDTO.setSchemaName(app.appAbbreviation);
+//                                }
+//                                return tableNameDTO;
+//                            }).collect(Collectors.toList());
+//                            break;
+//                        default:
+//                            break;
+//                    }
+//                    return tables;
+//                }).collect(Collectors.toList());
+//
+//        List<TableNameDTO> tableName2 = tableNameNonRealTime.stream()
+//                .flatMap(List::stream) // 将多个列表合并为一个流
+//                .collect(Collectors.toList());// 将流转换为 List
+//        tableName1.addAll(tableName2);
+        return tables;
+    }
+
+    @Override
+    public List<TableColumnDTO> getFieldsDataStructure(ColumnQueryDTO dto) {
+        return this.tableFieldsImpl.query().eq("table_access_id", dto.tableId).list().stream().filter(Objects::nonNull).map(field -> {
+
+            TableColumnDTO fieldDtoTree = new TableColumnDTO();
+            fieldDtoTree.setFieldId(String.valueOf(field.id));
+            fieldDtoTree.setFieldDes(field.fieldDes);
+            fieldDtoTree.setFieldName(field.fieldName);
+            fieldDtoTree.setFieldType(field.fieldType);
+            fieldDtoTree.setFieldLength(field.fieldLength.intValue());
+            fieldDtoTree.setFieldPrecision(field.fieldPrecision);
+            return fieldDtoTree;
+        }).collect(Collectors.toList());
     }
 
 
@@ -2750,6 +2932,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         appTreeByNonRealTime.setLevelType(LevelTypeEnum.FOLDER);
         appTreeByNonRealTime.setSourceType(1);
         appTreeByNonRealTime.setSourceId(Integer.parseInt(id));
+//
+//        FiDataMetaDataTreeDTO appTreeByCDCAccess = new FiDataMetaDataTreeDTO();
+//        String appTreeByCDCAccessGuid = UUID.randomUUID().toString();
+//        appTreeByCDCAccess.setId(appTreeByCDCAccessGuid);
+//        appTreeByCDCAccess.setParentId(id);
+//        appTreeByCDCAccess.setLabel("CDC接入");
+//        appTreeByCDCAccess.setLabelAlias("CDC接入");
+//        appTreeByCDCAccess.setLevelType(LevelTypeEnum.FOLDER);
+//        appTreeByCDCAccess.setSourceType(1);
+//        appTreeByCDCAccess.setSourceId(Integer.parseInt(id));
 
         // 所有应用
         List<AppRegistrationPO> appPoList = this.query().orderByDesc("create_time").list();
@@ -2765,10 +2957,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByNonRealTime = fiDataMetaDataTreeByNonRealTime.entrySet().iterator().next();
         appTreeByNonRealTime.setChildren(nextTreeByNonRealTime.getValue());
         tableFieldList.addAll(nextTreeByNonRealTime.getKey());
+//
+//        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByCDCAccess = getFiDataMetaDataTreeByCDCAccess(appTreeByCDCAccessGuid, id, appPoList);
+//        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByCDCAccess = fiDataMetaDataTreeByCDCAccess.entrySet().iterator().next();
+//        appTreeByCDCAccess.setChildren(nextTreeByCDCAccess.getValue());
+//        tableFieldList.addAll(nextTreeByCDCAccess.getKey());
 
         appTypeTreeList.add(appTreeByRealTime);
         appTypeTreeList.add(appTreeByNonRealTime);
-
+//        appTypeTreeList.add(appTreeByCDCAccess);
         // key是表字段 value是tree
         hashMap.put(tableFieldList, appTypeTreeList);
         return hashMap;
@@ -2840,7 +3037,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                 // 第三层: table层
                                 List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("api_id", api.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                    tableDtoTree.setId(String.valueOf(table.id));
+                                    tableDtoTree.setId(table.getTableName());
                                     tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
                                     tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                     tableDtoTree.setLabelAlias(table.tableName);
@@ -2862,7 +3059,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query().eq("table_access_id", table.id).list().stream().filter(Objects::nonNull).map(field -> {
 
                                         FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                        fieldDtoTree.setId(String.valueOf(field.id));
+                                        fieldDtoTree.setId(field.getFieldName());
                                         fieldDtoTree.setParentId(String.valueOf(table.id));
                                         fieldDtoTree.setLabel(field.fieldName);
                                         fieldDtoTree.setLabelAlias(field.fieldName);
@@ -3098,6 +3295,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 }).collect(Collectors.toList());
         hashMap.put(key, value);
         return hashMap;
+    }
+
+    /**
+     * 获取CDC接入应用结构
+     *@param appTreeByCDCAccessGuid        guid
+     * @param id        id
+     * @param appPoList 所有的应用实体对象
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/16 15:21
+     */
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByCDCAccess(String appTreeByCDCAccessGuid, String id, List<AppRegistrationPO> appPoList){
+        return null;
     }
 
     /**

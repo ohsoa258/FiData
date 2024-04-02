@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
@@ -248,4 +249,8 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<ModelAreaAndFolderDTO> getAllAreaAndFolder();
+
+    List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO dto);
+
+    List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO dto);
 }

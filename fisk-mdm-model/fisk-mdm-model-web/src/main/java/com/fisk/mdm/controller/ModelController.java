@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
@@ -79,6 +80,20 @@ public class ModelController {
     @ResponseBody
     public ResultEntity<Object> setDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.setDataStructure(dto));
+    }
+
+    @ApiOperation("获取主数据表结构(数据标准用)")
+    @PostMapping("/getTableDataStructure")
+    @ResponseBody
+    public ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getTableDataStructure(dto));
+    }
+
+    @ApiOperation("获取主数据字段结构(数据标准用)")
+    @PostMapping("/getFieldDataStructure")
+    @ResponseBody
+    public ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto){
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getFieldDataStructure(dto));
     }
 
     @ApiOperation("获取主数据结构")

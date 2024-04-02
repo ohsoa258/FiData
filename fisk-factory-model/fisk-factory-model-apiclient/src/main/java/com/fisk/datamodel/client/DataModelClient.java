@@ -12,6 +12,7 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
@@ -297,6 +298,22 @@ public interface DataModelClient {
     @PostMapping("/business/setDataStructure")
     ResultEntity<Object> setDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto);
 
+    /**
+     * 获取数据建模表结构
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/getTableDataStructure")
+    ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    /**
+     * 获取数据建模字段结构
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/getFieldDataStructure")
+    ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto);
     @PostMapping("/business/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);

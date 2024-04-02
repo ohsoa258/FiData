@@ -4,11 +4,12 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.service.StandardsMenuService;
 import com.fisk.datamanagement.service.StandardsService;
-import com.fisk.mdm.dto.masterdata.ImportParamDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -121,5 +122,10 @@ public class StandardsController {
     @ControllerAOPConfig(printParams = false)
     public ResultEntity<Object> importExcelStandards(long menuId, @RequestParam("file") MultipartFile file){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.importExcelStandards(menuId,file));
+    }
+    @ApiOperation("获取所有数据标准树形结构(数据校验用)")
+    @PostMapping("/getAllStandardsTree")
+    public ResultEntity<Object> getAllStandardsTree(@RequestParam("id") String id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.getAllStandardsTree(id));
     }
 }

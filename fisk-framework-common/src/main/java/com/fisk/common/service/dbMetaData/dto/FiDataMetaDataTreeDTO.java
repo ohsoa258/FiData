@@ -5,7 +5,9 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dick
@@ -81,4 +83,7 @@ public class FiDataMetaDataTreeDTO {
 
     @ApiModelProperty(value = "子集树，递归")
     public List<FiDataMetaDataTreeDTO> children;
+
+    @ApiModelProperty(value = "节点携带不规则数据")
+    public Map<String,Object> data;
 }

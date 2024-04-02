@@ -352,6 +352,16 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataAccessStructure(dto));
     }
 
+    @PostMapping("/getTableDataStructure")
+    @ApiOperation(value = "获取数据接入表结构(数据标准用)")
+    public ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableDataStructure(dto));
+    }
+    @ApiOperation("获取数据接入字段结构(数据标准用)")
+    @PostMapping("/getFieldsDataStructure")
+    public ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldsDataStructure(dto));
+    }
     @PostMapping("/buildTableRuleInfo")
     @ApiOperation(value = "构建业务元数据其他数据信息")
     public ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto) {

@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
@@ -458,4 +460,17 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 获取所有被应用引用的数据源信息
      */
     List<AppDataSourceDTO> getAppSources();
+
+    /**
+     * 获取数据接入表结构(数据标准用)
+     * @param dto
+     * @return
+     */
+    List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO dto);
+    /**
+     * 获取数据接入字段结构(数据标准用)
+     * @param dto
+     * @return
+     */
+    List<TableColumnDTO> getFieldsDataStructure(ColumnQueryDTO dto);
 }

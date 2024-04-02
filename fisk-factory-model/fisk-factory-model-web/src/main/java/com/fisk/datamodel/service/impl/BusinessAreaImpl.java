@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.datamodel.ModelTblTypePrefixEnum;
@@ -18,6 +19,7 @@ import com.fisk.common.core.enums.task.FuncNameEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
@@ -864,6 +866,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             List<FiDataMetaDataTreeDTO> folderList = new ArrayList<>();
 
             List<FiDataMetaDataTreeDTO> dimensionFolderTreeList = new ArrayList<>();
+
 
             // 第四层 - 1: 维度文件夹（公共域维度）
             if (finalDimensionFolderPO_Public != null) {
@@ -1788,6 +1791,123 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         }
 
         return dtos;
+    }
+
+    @Override
+    public List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO dto) {
+        List<TableNameDTO> tableNames = null;
+        if ("1".equalsIgnoreCase(dto.dataSourceId)) {
+            tableNames = buildTableNames(TableBusinessTypeEnum.DW_FACT);
+        }else if ("4".equalsIgnoreCase(dto.dataSourceId)){
+            tableNames = buildTableNames(TableBusinessTypeEnum.DORIS_FACT);
+        }
+        return tableNames;
+    }
+
+    @Override
+    public List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO dto) {
+        List<TableColumnDTO> tableColumnDTOS = new ArrayList<>();
+        switch (dto.tableBusinessTypeEnum){
+            case DW_DIMENSION:
+                tableColumnDTOS = dimensionAttribute.query().eq("dimension_id", dto.tableId).list().stream().filter(Objects::nonNull).map(field -> {
+                    TableColumnDTO tableColumnDTO = new TableColumnDTO();
+                    tableColumnDTO.setFieldId(String.valueOf(field.id));
+                    tableColumnDTO.setFieldName(field.sourceFieldName);
+                    tableColumnDTO.setFieldType(field.dimensionFieldType);
+                    tableColumnDTO.setFieldLength(field.dimensionFieldLength);
+                    tableColumnDTO.setFieldDes(field.dimensionFieldDes);
+                    return tableColumnDTO;
+                }).collect(Collectors.toList());
+                break;
+            case DW_FACT:
+                tableColumnDTOS = factAttributeImpl.query().eq("fact_id", dto.tableId).list().stream().filter(Objects::nonNull).map(field -> {
+
+                    TableColumnDTO tableColumnDTO = new TableColumnDTO();
+                    tableColumnDTO.setFieldId(String.valueOf(field.id));
+                    tableColumnDTO.setFieldName(field.sourceFieldName);
+                    tableColumnDTO.setFieldType(field.factFieldType);
+                    tableColumnDTO.setFieldLength(field.factFieldLength);
+                    tableColumnDTO.setFieldDes(field.factFieldDes);
+                    return tableColumnDTO;
+                }).collect(Collectors.toList());
+                break;
+            case DORIS_FACT:
+                tableColumnDTOS = atomicIndicators.getAtomicIndicator(Integer.parseInt(dto.tableId)).stream().filter(Objects::nonNull).map(field -> {
+                    TableColumnDTO tableColumnDTO = new TableColumnDTO();
+                    tableColumnDTO.setFieldId(String.valueOf(field.id));
+                    tableColumnDTO.setFieldName(field.factFieldName);
+                    tableColumnDTO.setFieldType(field.factFieldType);
+                    tableColumnDTO.setFieldLength(field.factFieldLength);
+                    return tableColumnDTO;
+                }).collect(Collectors.toList());
+                break;
+
+            case WIDE_TABLE:
+                break;
+            case DORIS_DIMENSION:
+                break;
+        }
+        return tableColumnDTOS;
+    }
+
+    private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum){
+
+        // 建模暂时没有schema的设置
+        List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
+
+        // 维度文件夹（公共域维度）
+        DimensionFolderPO dimensionFolderPO_Public = null;
+        List<DimensionFolderPO> dimensionFolderPOList_Public = dimensionFolderImpl.query().eq("share", 1).list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(dimensionFolderPOList_Public)) {
+            dimensionFolderPO_Public = dimensionFolderPOList_Public.get(0);
+        }
+        DimensionFolderPO finalDimensionFolderPO_Public = dimensionFolderPO_Public;
+        List<TableNameDTO> dimension_folder_public_table = dimensionImpl.query().eq("dimension_folder_id", finalDimensionFolderPO_Public.id).list().stream().filter(Objects::nonNull).map(dimension -> {
+            TableNameDTO tableNameDTO = new TableNameDTO();
+            tableNameDTO.setTableId(String.valueOf(dimension.id));
+            tableNameDTO.setTableName(dimension.dimensionTabName);
+            tableNameDTO.setSchemaName(dimension.dimensionTabName);
+            tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.DW_DIMENSION);
+            return tableNameDTO;
+        }).collect(Collectors.toList());
+        List<TableNameDTO> tableNameDTOList = new ArrayList<>();
+        tableNameDTOList.addAll(dimension_folder_public_table);
+        List<BusinessAreaPO> businessAreaPOS = businessPoList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<Long> businessAreaIds = businessAreaPOS.stream().map(i -> i.getId()).collect(Collectors.toList());
+        // 1: 维度表（当前域维度）
+        List<DimensionFolderPO> dimensionFolderPOS = dimensionFolderImpl.query().in("business_id", businessAreaIds).list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<Long> dimensionFolderIds = dimensionFolderPOS.stream().map(BasePO::getId).collect(Collectors.toList());
+        List<TableNameDTO> dimension_folder_table = dimensionImpl.query().in("dimension_folder_id", dimensionFolderIds).list().stream().filter(Objects::nonNull).map(dimension -> {
+            TableNameDTO tableNameDTO = new TableNameDTO();
+            tableNameDTO.setTableId(String.valueOf(dimension.id));
+            tableNameDTO.setTableName(dimension.dimensionTabName);
+            tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.DW_DIMENSION);
+            return tableNameDTO;
+        }).collect(Collectors.toList());
+        tableNameDTOList.addAll(dimension_folder_table);
+        // 2: 事实表
+        List<BusinessProcessPO> businessProcess = this.businessProcessImpl.query().in("business_id", businessAreaIds).list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<Long> businessProcessIds = businessProcess.stream().map(BasePO::getId).collect(Collectors.toList());
+        // 事实表
+        List<TableNameDTO> factTableNameList = factImpl.query().in("business_process_id", businessProcessIds).list().stream().filter(Objects::nonNull).map(fact -> {
+            TableNameDTO tableNameDTO = new TableNameDTO();
+            tableNameDTO.setTableId(String.valueOf(fact.id));
+            tableNameDTO.setTableName(fact.factTabName);
+            tableNameDTO.setTableBusinessTypeEnum(tableBusinessTypeEnum);
+            return tableNameDTO;
+        }).collect(Collectors.toList());
+        tableNameDTOList.addAll(factTableNameList);
+
+        // 3: 宽表
+        List<TableNameDTO> wideTableTreeList = this.wideTableImpl.query().in("business_id", businessAreaIds).list().stream().filter(Objects::nonNull).map(wideTable1 -> {
+            TableNameDTO tableNameDTO = new TableNameDTO();
+            tableNameDTO.setTableId(String.valueOf(wideTable1.id));
+            tableNameDTO.setTableName(wideTable1.name);
+            tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.WIDE_TABLE);
+            return tableNameDTO;
+        }).collect(Collectors.toList());
+        tableNameDTOList.addAll(wideTableTreeList);
+        return tableNameDTOList;
     }
 
     /**

@@ -20,7 +20,9 @@ public enum TableBusinessTypeEnum implements BaseEnum {
 
     DATA_SERVICE_TABLE(7,"data_service_table"),//数据分发表服务
 
-    DATA_SERVICE_API(8,"data_service_api");//数据分发api服务
+    DATA_SERVICE_API(8,"data_service_api"),//数据分发api服务
+
+    STANDARD_DATABASE(9,"standard_database");//数据标准
 
     TableBusinessTypeEnum(int value, String name) {
         this.value = value;

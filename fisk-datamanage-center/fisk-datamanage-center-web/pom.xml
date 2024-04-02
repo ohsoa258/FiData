@@ -330,6 +330,10 @@
                         </include>
                         <include>
                             <groupId>com.fisk</groupId>
+                            <artifactId>fisk-mdm-model-apiclient</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
                             <artifactId>fisk-system-center-apiclient</artifactId>
                         </include>
                         <include>
@@ -382,6 +386,7 @@
                                 fisk-governance-center-apiclient,
                                 fisk-governance-center-entity,
                                 fisk-mdm-model-entity,
+                                fisk-mdm-model-apiclient,
                                 fisk-system-center-apiclient,
                                 fisk-system-center-entity,
                                 fisk-task-center-apiclient,

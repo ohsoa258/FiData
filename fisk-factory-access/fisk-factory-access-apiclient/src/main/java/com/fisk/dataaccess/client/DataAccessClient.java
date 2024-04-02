@@ -1,10 +1,13 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
@@ -572,4 +575,26 @@ public interface DataAccessClient {
     @ApiOperation("获取所有被应用引用的数据源信息")
     @GetMapping("/appRegistration/getAppSources")
     List<AppDataSourceDTO> getAppSources();
+
+    /**
+     * 获取数据接入表结构
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("获取数据接入表结构")
+    @PostMapping("/appRegistration/getTableDataStructure")
+    ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+
+    /**
+     * 获取数据接入字段结构
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("获取数据接入字段结构")
+    @PostMapping("/appRegistration/getFieldsDataStructure")
+    ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto);
+
 }

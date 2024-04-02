@@ -23,7 +23,7 @@ dataservice:
   # 数据分发api失败重试时间间隔
   retrytime: 10000
 # 是否同步元数据
-open-metadata: true
+open-metadata: false
 spring:
   hikari:
     maximum-pool-size: 60

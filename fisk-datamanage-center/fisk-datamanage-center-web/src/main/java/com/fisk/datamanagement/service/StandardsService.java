@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.entity.StandardsPO;
 import org.springframework.web.multipart.MultipartFile;
@@ -65,5 +67,7 @@ public interface StandardsService extends IService<StandardsPO> {
     List<StandardsDTO> getStandardsBySource(Integer fieldMetadataId);
 
     ResultEnum importExcelStandards(long menuId,MultipartFile file);
+
+    List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id);
 }
 

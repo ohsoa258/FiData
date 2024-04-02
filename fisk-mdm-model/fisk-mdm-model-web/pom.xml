@@ -144,12 +144,6 @@
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.fisk</groupId>
-            <artifactId>fisk-datamanage-center-apiclient</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -224,6 +218,10 @@
                             <groupId>com.fisk</groupId>
                             <artifactId>fisk-factory-model-entity</artifactId>
                         </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-datamanage-center-apiclient</artifactId>
+                        </include>
                     </includes>
                     <!--配置为执行-->
                     <!--<classifier>exec</classifier>-->
@@ -261,7 +259,8 @@
                                 fisk-system-center-apiclient,
                                 fisk-task-center-apiclient,
                                 fisk-consume-visual-entity,
-                                fisk-factory-model-entity
+                                fisk-factory-model-entity,
+                                fisk-datamanage-center-apiclient
                             </excludeArtifactIds>
                             <skip>${package.switch}</skip>
                         </configuration>

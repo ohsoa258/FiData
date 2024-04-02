@@ -16,6 +16,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
@@ -25,6 +27,7 @@ import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelTableTypeEnum;
 import com.fisk.common.service.accessAndModel.ServerTypeEnum;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -450,6 +453,44 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
             redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
         }
         return true;
+    }
+
+    @Override
+    public List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO reqDto) {
+        List<TableNameDTO> tableNames = new ArrayList<>();
+        //获取实体表名
+        List<ModelPO> modelPoList = baseMapper.selectList(null);
+        modelPoList = modelPoList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<Long> modelIds = modelPoList.stream().map(BasePO::getId).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(modelIds)){
+            LambdaQueryWrapper<EntityPO> entityQueryWrapper = new LambdaQueryWrapper<>();
+            entityQueryWrapper.in(EntityPO::getModelId,modelIds);
+            List<EntityPO> entityPOList = entityMapper.selectList(entityQueryWrapper);
+            if (CollectionUtils.isNotEmpty(entityPOList)){
+                for (EntityPO entityPO : entityPOList) {
+                    TableNameDTO tableName = new TableNameDTO();
+                    tableName.setTableId(String.valueOf(entityPO.getId()));
+                    tableName.setTableName(entityPO.getTableName());
+                    tableName.setTableBusinessTypeEnum(TableBusinessTypeEnum.ENTITY_TABLR);
+                    tableNames.add(tableName);
+                }
+            }
+        }
+        return tableNames;
+    }
+
+    @Override
+    public List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO reqDto) {
+        List<AttributeInfoDTO> attributeList = entityService.getAttributeById(Integer.valueOf(reqDto.getTableId()), null).getAttributeList();
+        return attributeList.stream().map(i->{
+            TableColumnDTO tableColumnDTO = new TableColumnDTO();
+            tableColumnDTO.setFieldId(String.valueOf(i.getId()));
+            tableColumnDTO.setFieldLength(i.getDataTypeLength());
+            tableColumnDTO.setFieldName(i.getColumnName());
+            tableColumnDTO.setFieldDes(i.getDesc());
+            tableColumnDTO.setFieldPrecision(i.getDataTypeDecimalLength());
+            return tableColumnDTO;
+        }).collect(Collectors.toList());
     }
 
     /**

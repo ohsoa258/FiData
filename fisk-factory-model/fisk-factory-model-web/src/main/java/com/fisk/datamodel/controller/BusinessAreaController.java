@@ -130,6 +130,18 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataModelStructure(dto));
     }
 
+
+    @PostMapping("/getTableDataStructure")
+    @ApiOperation(value = "获取数据建模表结构(数据标准用)")
+    public ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableDataStructure(dto));
+    }
+
+    @PostMapping("/getFieldDataStructure")
+    @ApiOperation(value = "获取数据建模字段结构(数据标准用)")
+    public ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldDataStructure(dto));
+    }
     @PostMapping("/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {

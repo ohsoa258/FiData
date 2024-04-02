@@ -803,8 +803,7 @@ public class TableServiceImpl
                         // 当前app下的所有table
                         List<FiDataMetaDataTreeDTO> tableTreeList = this.query().in("id", tableServiceIds).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
                             FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                            String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
-                            tableDtoTree.setId(uuid_apiId);// String.valueOf(api.id)
+                            tableDtoTree.setId(String.valueOf(table.id));// String.valueOf(api.id)
                             tableDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                             tableDtoTree.setLabel(table.tableName);
                             tableDtoTree.setLabelAlias(table.displayName);
@@ -891,9 +890,7 @@ public class TableServiceImpl
                     // 当前app下的所有api
                     List<FiDataMetaDataTreeDTO> apiTreeList = tableApiService.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(api -> {
                         FiDataMetaDataTreeDTO apiDtoTree = new FiDataMetaDataTreeDTO();
-
-                        String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
-                        apiDtoTree.setId(uuid_apiId); // String.valueOf(api.id)
+                        apiDtoTree.setId(String.valueOf(api.id)); // String.valueOf(api.id)
                         apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
                         apiDtoTree.setLabel(api.getApiName());
                         apiDtoTree.setLabelAlias(api.getApiName());
