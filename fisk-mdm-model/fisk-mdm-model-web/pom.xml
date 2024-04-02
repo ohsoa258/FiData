@@ -222,6 +222,10 @@
                             <groupId>com.fisk</groupId>
                             <artifactId>fisk-datamanage-center-apiclient</artifactId>
                         </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
+                            <artifactId>fisk-datamanage-center-entity</artifactId>
+                        </include>
                     </includes>
                     <!--配置为执行-->
                     <!--<classifier>exec</classifier>-->
@@ -260,6 +264,7 @@
                                 fisk-task-center-apiclient,
                                 fisk-consume-visual-entity,
                                 fisk-factory-model-entity,
+                                fisk-datamanage-center-entity,
                                 fisk-datamanage-center-apiclient
                             </excludeArtifactIds>
                             <skip>${package.switch}</skip>
