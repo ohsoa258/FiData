@@ -760,6 +760,14 @@ public class AppRegisterManageImpl
             apiResponseDTOS.add(apiResponseDTO);
             trIndex_data[0]++;
 
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("dataArray");
+            apiResponseDTO.setParmType("Object[]");
+            apiResponseDTO.setParmDesc("返回结果对象列表");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
             // 请求参数新增密钥参数说明
 //            apiResponseDTO = new ApiResponseDTO();
 //            apiResponseDTO.setParmName("encryptKey");
