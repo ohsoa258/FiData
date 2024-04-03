@@ -2417,6 +2417,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     log.info("注册OpenEdge驱动程序后...");
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     allDatabases.addAll(OpenEdgeUtils.getAllDatabases(conn));
+                    break;
                 case SAPBW:
                     ProviderAndDestination providerAndDestination = DbConnectionHelper.myDestination(dto.host, dto.sysNr, dto.port, dto.connectAccount, dto.connectPwd, dto.lang);
                     JCoDestination destination = providerAndDestination.getDestination();
@@ -2431,6 +2432,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     List<String> catNames = allCubes.getCatNames();
                     // 只返回cubeNames
                     allDatabases.addAll(cubeNames);
+                    break;
                 case DORIS_CATALOG:
                     log.info("注册HIVE驱动程序前...");
                     // 加载Hive驱动
@@ -2441,6 +2443,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     log.info("注册HIVE驱动程序后...");
                     allDatabases.addAll(hiveUtils.getAllDatabases(conn));
+                    break;
                     // 达梦数据库
                 case DM8:
                     log.info("注册达梦数据库驱动程序前...");
@@ -2449,9 +2452,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     conn = DriverManager.getConnection(dto.connectStr, dto.connectAccount, dto.connectPwd);
                     log.info("连接达梦数据库成功...");
                     allDatabases.addAll(dm8Utils.getAllDatabases(conn));
+                    break;
                     // todo:强生入仓配置 hudi的测试连接先不做
                 case HUDI:
                     allDatabases.addAll(new ArrayList<>());
+                    break;
                 case MONGODB:
                     ServerAddress serverAddress = new ServerAddress(dto.host, Integer.parseInt(dto.port));
                     List<ServerAddress> serverAddresses = new ArrayList<>();
@@ -2464,17 +2469,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     mongoClient = new MongoClient(serverAddresses, mongoCredentials);
                     allDatabases.addAll(new ArrayList<>());
+                    break;
                 default:
                     break;
             }
         } catch (Exception e) {
-            //数据库账号或密码不正确
-            ResultEnum resultEnum = ((FkException) e).getResultEnum();
-            if (resultEnum.getCode() == 4001) {
-                log.error("测试连接用户名或密码不正确:{}", e);
-                throw new FkException(ResultEnum.REALTIME_ACCOUNT_OR_PWD_ERROR);
-            }
-            log.error("测试连接失败:{}", e);
+            log.error("测试连接失败:", e);
             throw new FkException(ResultEnum.DATAACCESS_CONNECTDB_ERROR);
         } finally {
             if (myProvider != null) {

@@ -200,7 +200,7 @@ public class OpenEdgeUtils {
                 dbName.add(resultSet.getString("OWNER"));
             }
         } catch (SQLException e) {
-            log.error("获取OpenEdge所有库失败,{}", e);
+            log.error("获取OpenEdge所有库失败:"+ e);
             throw new FkException(ResultEnum.GET_DATABASE_ERROR);
         } finally {
             AbstractCommonDbHelper.closeStatement(stmt);
