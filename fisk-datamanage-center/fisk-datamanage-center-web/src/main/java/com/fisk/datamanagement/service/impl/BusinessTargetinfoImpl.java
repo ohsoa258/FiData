@@ -118,10 +118,6 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(BusinessTargetinfoPO::getId,ParentBusinessIds);
         List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(businessTargetinfoPOS)){
-            return array1;
-        }
-        Map<Integer, String> parentBusinessNameMap = businessTargetinfoPOS.stream().collect(Collectors.toMap(i -> (int) i.getId(), BusinessTargetinfoPO::getIndicatorName));
         for(int i=0;i<list.size();i++){
             List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
             List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(list.get(i).getId()+"");
@@ -297,7 +293,10 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             Integer parentBusinessId = list.get(i).getParentBusinessId();
             if (parentBusinessId != null){
                 jsonObject1.put("parentBusinessId",parentBusinessId);
-                jsonObject1.put("parentBusinessName",parentBusinessNameMap.get(parentBusinessId));
+                if (CollectionUtils.isNotEmpty(businessTargetinfoPOS)){
+                    Map<Integer, String> parentBusinessNameMap = businessTargetinfoPOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), BusinessTargetinfoPO::getIndicatorName));
+                    jsonObject1.put("parentBusinessName",parentBusinessNameMap.get(parentBusinessId));
+                }
             }
 
             BusinessTargetinfoPO businessTargetinfoPO = list.get(i);
