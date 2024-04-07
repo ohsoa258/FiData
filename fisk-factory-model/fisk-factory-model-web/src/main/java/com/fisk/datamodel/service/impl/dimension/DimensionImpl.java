@@ -1160,6 +1160,11 @@ public class DimensionImpl
         return ResultEntityBuild.build(resultEnum);
     }
 
+    @Override
+    public List<DimensionDTO> getDimensionTableByIds(List<Integer> ids) {
+        return DimensionMap.INSTANCES.listPoToListDto(dimension.getBaseMapper().selectBatchIds(ids));
+    }
+
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,
                                                                 String dbQualifiedName,
                                                                 Integer dataModelType,

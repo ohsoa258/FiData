@@ -253,4 +253,6 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
     List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO dto);
 
     List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO dto);
+
+    List<BusinessAreaDTO> getBusinessAreaByIds(List<Integer> ids);
 }

@@ -659,6 +659,11 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
 
     }
 
+    @Override
+    public List<FactDTO> getFactTableByIds(List<Integer> ids) {
+        return FactMap.INSTANCES.poListToFactDtoList(baseMapper.selectBatchIds(ids));
+    }
+
     /**
      * 事实/指标表获取字段
      *

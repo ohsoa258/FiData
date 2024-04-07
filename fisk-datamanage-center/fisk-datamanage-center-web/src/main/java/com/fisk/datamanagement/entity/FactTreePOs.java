@@ -14,13 +14,7 @@ public class FactTreePOs extends BasePO {
 
     public String businessNameId;
 
-    public String businessName;
-
     public String factTabNameId;
 
-    public String factTabName;
-
     public String factFieldEnNameId;
-
-    public String factFieldEnName;
 }

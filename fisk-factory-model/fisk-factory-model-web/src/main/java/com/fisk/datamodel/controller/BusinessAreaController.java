@@ -228,4 +228,9 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndFolder());
     }
 
+    @PostMapping("/getBusinessAreaByIds")
+    @ApiOperation("根据业务id集合获取业务详情")
+    public ResultEntity<List<BusinessAreaDTO>> getBusinessAreaByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaByIds(ids));
+    }
 }

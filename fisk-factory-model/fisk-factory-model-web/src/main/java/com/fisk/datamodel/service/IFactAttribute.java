@@ -57,6 +57,8 @@ public interface IFactAttribute {
      */
     FactAttributeUpdateDTO getFactAttributeDetail(int factAttributeId);
 
+    List<FactAttributeDTO> getFactAttributeByIds(List<Integer> ids);
+
     /**
      * 事实字段数据更改
      *

@@ -28,9 +28,13 @@ public class FacttreelistHistoryPO{
 
     public String factTabName;
 
+    public String factTabCnName;
+
     public String factFieldEnNameId;
 
     public String factFieldEnName;
+
+    public String factFieldCnName;
 
     @TableId(value = "id", type = IdType.AUTO)
     public long id;

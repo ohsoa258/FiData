@@ -75,6 +75,13 @@ public class FactAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeDetail(id));
     }
 
+
+    @PostMapping("/getFactAttributeByIds")
+    @ApiOperation("根据事实字段id集合获取事实字段详情")
+    public ResultEntity<List<FactAttributeDTO>> getFactAttributeByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactAttributeByIds(ids));
+    }
+
     @ApiOperation("修改事实字段")
     @PutMapping("/editFactAttribute")
     public ResultEntity<Object> editFactAttribute(@Validated @RequestBody FactAttributeUpdateDTO dto) {

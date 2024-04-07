@@ -149,5 +149,5 @@ public interface IDimension extends IService<DimensionPO> {
     ResultEntity<Object> transDimToBArea(DimTransDTO dto);
 
     //void asyncSynchronousMetadata(DimensionPO model);
-
+    List<DimensionDTO> getDimensionTableByIds(List<Integer> ids);
 }

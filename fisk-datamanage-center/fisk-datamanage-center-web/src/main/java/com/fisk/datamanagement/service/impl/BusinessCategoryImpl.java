@@ -289,10 +289,12 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                                 if(array3.size() > 0){
                                     json.put("dimtableid",array3.getString("id"));
                                     json.put("dimtable",array3.getString("dimensionCnName"));
+                                    json.put("dimtablename",array3.getString("dimensionTabName"));
                                 }
                                 if(array6.size() > 0){
                                     json.put("attributeid",array7.getString("id"));
                                     json.put("attribute",array7.getString("dimensionFieldCnName"));
+                                    json.put("attributeEnName",array7.getString("dimensionFieldEnName"));
                                 }
                                 array7.put("extendedfields",json);
                                 array6.set(k,array7);
@@ -328,6 +330,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                 JSONObject jsonObject1 = array1.getJSONObject(j);
                 data2.put("id",jsonObject1.getString("id"));
                 data2.put("name",jsonObject1.getString("factTabName"));
+                data2.put("cnName",jsonObject1.getString("factTableCnName"));
                 JSONArray array2= jsonObject1.getJSONArray("attributeList");
                 JSONArray array3= new JSONArray();
                 for (int m=0; m<array2.size();m++){
@@ -336,12 +339,15 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                     JSONObject data4 = new JSONObject();
                     data3.put("id",jsonObject2.getString("id"));
                     data3.put("name",jsonObject2.getString("factFieldEnName"));
+                    data3.put("cnName",jsonObject2.getString("factFieldCnName"));
                     data4.put("businessNameId",jsonObject.getString("id"));
                     data4.put("businessName",jsonObject.getString("businessName"));
                     data4.put("factTabNameId",jsonObject1.getString("id"));
                     data4.put("factTabName",jsonObject1.getString("factTabName"));
+                    data4.put("factTableCnName",jsonObject1.getString("factTableCnName"));
                     data4.put("factFieldEnNameId",jsonObject2.getString("id"));
                     data4.put("factFieldEnName",jsonObject2.getString("factFieldEnName"));
+                    data4.put("factFieldCnName",jsonObject2.getString("factFieldCnName"));
                     data3.put("other",data4);
                     array3.add(data3);
                 }

@@ -19,7 +19,6 @@ import com.fisk.dataaccess.dto.table.FieldNameDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
-import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
 import com.fisk.datamodel.dto.factattribute.*;
@@ -254,6 +253,11 @@ public class FactAttributeImpl
     @Override
     public FactAttributeUpdateDTO getFactAttributeDetail(int factAttributeId) {
         return FactAttributeMap.INSTANCES.poDetailToDto(mapper.selectById(factAttributeId));
+    }
+
+    @Override
+    public List<FactAttributeDTO> getFactAttributeByIds(List<Integer> ids) {
+        return FactAttributeMap.INSTANCES.poListsToDtoList(mapper.selectBatchIds(ids));
     }
 
     @Override

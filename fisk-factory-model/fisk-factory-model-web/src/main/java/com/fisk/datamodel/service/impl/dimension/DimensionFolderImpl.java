@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl.dimension;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.datamodel.DataModelTblTypeEnum;
@@ -617,6 +618,13 @@ public class DimensionFolderImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
         return DimensionFolderMap.INSTANCES.poToDto(po);
+    }
+
+    @Override
+    public List<DimensionFolderDTO> getDimensionFolderByIds(List<Integer> ids) {
+        LambdaQueryWrapper<DimensionFolderPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(DimensionFolderPO::getBusinessId, ids);
+        return DimensionFolderMap.INSTANCES.poFolderToDtoList(this.baseMapper.selectList(queryWrapper));
     }
 
 

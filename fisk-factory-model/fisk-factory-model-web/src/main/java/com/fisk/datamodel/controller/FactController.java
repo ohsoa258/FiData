@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactTransDTO;
@@ -128,4 +129,10 @@ public class FactController {
         return service.modelSyncData(dto);
     }
 
+
+    @PostMapping("/getFactTableByIds")
+    @ApiOperation("根据业务id集合获取业务详情")
+    public ResultEntity<List<FactDTO>> getFactTableByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactTableByIds(ids));
+    }
 }

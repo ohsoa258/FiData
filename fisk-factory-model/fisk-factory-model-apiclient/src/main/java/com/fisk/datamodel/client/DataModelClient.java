@@ -22,15 +22,20 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
+import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -413,5 +418,21 @@ public interface DataModelClient {
      */
     @GetMapping("/business/getAllAreaAndTablesForEtlTree")
     ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTablesForEtlTree();
+
+    @PostMapping("/attribute/getDimensionAttributeByIds")
+    ResultEntity<List<DimensionAttributeDTO>> getDimensionAttributeByIds(@RequestBody List<Integer> ids);
+
+    @PostMapping("/dimensionFolder/getDimensionFolderByIds")
+    ResultEntity<List<DimensionFolderDTO>> getDimensionFolderByIds(@RequestBody List<Integer> ids);
+
+    @PostMapping("/dimension/getDimensionTableByIds")
+    ResultEntity<List<DimensionDTO>> getDimensionTableByIds(@RequestBody List<Integer> ids);
+
+    @PostMapping("/business/getBusinessAreaByIds")
+    ResultEntity<List<BusinessAreaDTO>> getBusinessAreaByIds(@RequestBody List<Integer> ids);
+    @PostMapping("/fact/getFactTableByIds")
+    ResultEntity<List<FactDTO>> getFactTableByIds(@RequestBody List<Integer> ids);
+    @PostMapping("/factAttribute/getFactAttributeByIds")
+    ResultEntity<List<FactAttributeDTO>> getFactAttributeByIds(@RequestBody List<Integer> ids);
 
 }

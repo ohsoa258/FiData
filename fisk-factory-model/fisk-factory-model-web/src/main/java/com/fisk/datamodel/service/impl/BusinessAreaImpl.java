@@ -1850,6 +1850,11 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return tableColumnDTOS;
     }
 
+    @Override
+    public List<BusinessAreaDTO> getBusinessAreaByIds(List<Integer> ids) {
+        return BusinessAreaMap.INSTANCES.poListToDtoList(baseMapper.selectBatchIds(ids));
+    }
+
     private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum){
 
         // 建模暂时没有schema的设置

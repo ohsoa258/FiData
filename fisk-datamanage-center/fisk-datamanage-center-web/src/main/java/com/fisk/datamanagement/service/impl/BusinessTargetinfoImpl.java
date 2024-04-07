@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -21,20 +20,25 @@ import com.fisk.datamanagement.dto.businessclassification.ChildBusinessTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.entity.*;
-import com.fisk.datamanagement.map.FactTreeHistoryMap;
 import com.fisk.datamanagement.map.FactTreeMap;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.*;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
+import com.fisk.datamodel.dto.fact.FactDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -46,6 +50,7 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -89,6 +94,9 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     @Resource
     UserClient userClient;
 
+    @Resource
+    DataModelClient modelClient;
+
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
             "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道","数据粒度"};
 
@@ -110,6 +118,9 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(BusinessTargetinfoPO::getId,ParentBusinessIds);
         List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(businessTargetinfoPOS)){
+            return array1;
+        }
         Map<Integer, String> parentBusinessNameMap = businessTargetinfoPOS.stream().collect(Collectors.toMap(i -> (int) i.getId(), BusinessTargetinfoPO::getIndicatorName));
         for(int i=0;i<list.size();i++){
             List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
@@ -131,7 +142,8 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 });
             }
             JSONObject jsonObject1 =  new JSONObject();
-            jsonObject1.put("id",list.get(i).getId());
+            long id = list.get(i).getId();
+            jsonObject1.put("id",id);
             jsonObject1.put("createTime",list.get(i).getCreateTime());
             jsonObject1.put("createUser",list.get(i).getCreateUser());
             jsonObject1.put("updateTime",list.get(i).getUpdateTime());
@@ -158,9 +170,130 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("indicatorType",list.get(i).getIndicatorType());
             jsonObject1.put("name",list.get(i).getName());
             jsonObject1.put("sqlScript",list.get(i).getSqlScript());
-            jsonObject1.put("dimensionData",list1);
-            List<FacttreeListDTO> facttreeListData = list2.stream().map(FactTreeMap.INSTANCES::poToDto).collect(Collectors.toList());
-            jsonObject1.put("facttreeListData",facttreeListData);
+            if (CollectionUtils.isNotEmpty(list1)){
+                List<Integer> dimAttributeIds = list1.stream().map(q -> Integer.valueOf(q.getAttributeid())).collect(Collectors.toList());
+                ResultEntity<List<DimensionAttributeDTO>> dimensionAttributeByIds = modelClient.getDimensionAttributeByIds(dimAttributeIds);
+                List<DimensionAttributeDTO> dimAttributeDTOS = new ArrayList<>();
+                if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                    dimAttributeDTOS = dimensionAttributeByIds.data;
+                }
+                List<Integer> dimFolderIds = list1.stream().map(q -> Integer.valueOf(q.getDimdomainid())).collect(Collectors.toList());
+                ResultEntity<List<DimensionFolderDTO>> dimensionFolderByIds = modelClient.getDimensionFolderByIds(dimFolderIds);
+                List<DimensionFolderDTO> dimFolderDTOS = new ArrayList<>();
+                if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                    dimFolderDTOS = dimensionFolderByIds.data;
+                }
+
+                List<Integer> dimTableIds = list1.stream().map(q -> Integer.valueOf(q.getDimtableid())).collect(Collectors.toList());
+                ResultEntity<List<DimensionDTO>> dimensionTableByIds = modelClient.getDimensionTableByIds(dimTableIds);
+                List<DimensionDTO> dimTableDTOS = new ArrayList<>();
+                if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                    dimTableDTOS = dimensionTableByIds.data;
+                }
+                Map<Integer, DimensionAttributeDTO> dimAttributeMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(dimAttributeDTOS)){
+                    dimAttributeMap = dimAttributeDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
+                }
+                Map<Integer, DimensionFolderDTO> dimFolderMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(dimFolderDTOS)){
+                    dimFolderMap = dimFolderDTOS.stream().collect(Collectors.toMap(e->(int)e.getBusinessId(), e -> e));
+                }
+                Map<Integer, DimensionDTO> dimTableMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(dimTableDTOS)){
+                    dimTableMap = dimTableDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
+                }
+                List<BusinessExtendedfieldsDTO> dimensionData = new ArrayList<>();
+                for (BusinessExtendedfieldsPO businessExtendedfieldsPO : list1) {
+                    DimensionAttributeDTO dimensionAttribute = dimAttributeMap.get(Integer.valueOf(businessExtendedfieldsPO.getAttributeid()));
+                    DimensionFolderDTO dimensionFolderDTO = dimFolderMap.get(Integer.valueOf(businessExtendedfieldsPO.getDimdomainid()));
+                    DimensionDTO dimensionDTO = dimTableMap.get(Integer.valueOf(businessExtendedfieldsPO.getDimtableid()));
+
+                    BusinessExtendedfieldsDTO businessExtendedfieldsDTO = new BusinessExtendedfieldsDTO();
+                    businessExtendedfieldsDTO.setId(businessExtendedfieldsPO.id);
+                    businessExtendedfieldsDTO.setDimdomainid(businessExtendedfieldsPO.dimdomainid);
+                    if (dimensionFolderDTO != null){
+                        businessExtendedfieldsDTO.setDimdomain(dimensionFolderDTO.getDimensionFolderCnName());
+                        businessExtendedfieldsDTO.setDimdomaintype(dimensionFolderDTO.dimensionFolderCnName);
+                    }
+                    businessExtendedfieldsDTO.setDimtableid(businessExtendedfieldsPO.dimtableid);
+                    if (dimensionDTO != null){
+                        businessExtendedfieldsDTO.setDimtable(dimensionDTO.getDimensionTabName());
+                    }
+                    businessExtendedfieldsDTO.setAttributeid(businessExtendedfieldsPO.attributeid);
+                    if (dimensionAttribute != null) {
+                        businessExtendedfieldsDTO.setAttribute(dimensionAttribute.getDimensionFieldCnName());
+                        businessExtendedfieldsDTO.setAttributeEnName(dimensionAttribute.getDimensionFieldEnName());
+                    }
+                    businessExtendedfieldsDTO.setIndexid(String.valueOf(id));
+                    businessExtendedfieldsDTO.setCreatedUser(businessExtendedfieldsPO.getCreatedUser());
+                    businessExtendedfieldsDTO.setCreatedTime(LocalDateTime.parse(businessExtendedfieldsPO.getCreatedTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))));
+                    businessExtendedfieldsDTO.setDelFlag(businessExtendedfieldsPO.getDelFlag());
+                    dimensionData.add(businessExtendedfieldsDTO);
+                }
+                jsonObject1.put("dimensionData",dimensionData);
+            }
+            List<FacttreeListDTO> facttreeList = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(list2)){
+                List<Integer> factAttributeIds = list2.stream().map(e->Integer.valueOf(e.getFactFieldEnNameId())).collect(Collectors.toList());
+                ResultEntity<List<FactAttributeDTO>> factAttributeByIds = modelClient.getFactAttributeByIds(factAttributeIds);
+                List<FactAttributeDTO> factAttributeDTOS = new ArrayList<>();
+                if (factAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                    factAttributeDTOS = factAttributeByIds.data;
+                }
+                Map<Integer, FactAttributeDTO> factAttributeMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(factAttributeDTOS)){
+                    factAttributeMap = factAttributeDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
+                }
+                List<Integer> businessAreaIds = list2.stream().map(e->Integer.valueOf(e.getBusinessNameId())).collect(Collectors.toList());
+                ResultEntity<List<BusinessAreaDTO>> businessAreaByIds = modelClient.getBusinessAreaByIds(businessAreaIds);
+                List<BusinessAreaDTO> businessAreaDTOS = new ArrayList<>();
+                if (businessAreaByIds.code == ResultEnum.SUCCESS.getCode()) {
+                    businessAreaDTOS = businessAreaByIds.data;
+                }
+                Map<Integer, BusinessAreaDTO> businessAreaMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(factAttributeDTOS)){
+                    businessAreaMap = businessAreaDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
+                }
+                List<Integer> factTableIds = list2.stream().map(e->Integer.valueOf(e.getFactTabNameId())).collect(Collectors.toList());
+                ResultEntity<List<FactDTO>> factTableByIds = modelClient.getFactTableByIds(factTableIds);
+                List<FactDTO> factTableDTOS = new ArrayList<>();
+                if (factTableByIds.code == ResultEnum.SUCCESS.getCode()) {
+                    factTableDTOS = factTableByIds.data;
+                }
+                Map<Integer, FactDTO> factTableMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(factAttributeDTOS)){
+                    factTableMap = factTableDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
+                }
+
+
+                for (FactTreePOs factTreePOs : list2) {
+                    FacttreeListDTO facttreeListDTO = new FacttreeListDTO();
+                    facttreeListDTO.setId((int)factTreePOs.getId());
+                    facttreeListDTO.setPid(String.valueOf(id));
+                    BusinessAreaDTO businessAreaDTO = businessAreaMap.get(Integer.valueOf(factTreePOs.getBusinessNameId()));
+                    if (businessAreaDTO != null){
+                        facttreeListDTO.setBusinessName(businessAreaDTO.getBusinessName());
+                    }
+                    facttreeListDTO.setBusinessNameId(factTreePOs.businessNameId);
+                    FactDTO factDTO = factTableMap.get(Integer.valueOf(factTreePOs.getFactTabNameId()));
+                    if(factDTO != null){
+                        facttreeListDTO.setFactTabName(factDTO.getFactTabName());
+                    }
+                    facttreeListDTO.setFactTabNameId(factTreePOs.factTabNameId);
+                    FactAttributeDTO factAttribute = factAttributeMap.get(Integer.valueOf(factTreePOs.getFactFieldEnNameId()));
+                    if (factAttribute != null){
+                        facttreeListDTO.setFactFieldCnName(factAttribute.getFactFieldCnName());
+                        facttreeListDTO.setFactFieldEnName(factAttribute.getFactFieldEnName());
+                    }
+                    facttreeListDTO.setFactFieldEnNameId(factTreePOs.factFieldEnNameId);
+                    facttreeListDTO.setCreateUser(factTreePOs.getCreateUser());
+                    facttreeListDTO.setCreateTime(factTreePOs.getCreateTime());
+                    facttreeListDTO.setDelFlag(factTreePOs.getDelFlag());
+                    facttreeList.add(facttreeListDTO);
+                }
+
+                jsonObject1.put("facttreeListData",facttreeList);
+            }
             Integer parentBusinessId = list.get(i).getParentBusinessId();
             if (parentBusinessId != null){
                 jsonObject1.put("parentBusinessId",parentBusinessId);
@@ -372,12 +505,13 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             for (int j=0;j<item.getDimensionData().size();j++){
                BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
                BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
-               model1.setAttribute(model2.attribute);
+//               model1.setAttribute(model2.attribute);
+//               model1.setAttributeEnName(model2.attributeEnName);
                model1.setAttributeid(model2.attributeid);
-               model1.setDimdomain(model2.dimdomain);
+//               model1.setDimdomain(model2.dimdomain);
                model1.setDimdomainid(model2.dimdomainid);
-               model1.setDimdomaintype(model2.dimdomaintype);
-               model1.setDimtable(model2.dimtable);
+//               model1.setDimdomaintype(model2.dimdomaintype);
+//               model1.setDimtable(model2.dimtable);
                model1.setDimtableid(model2.dimtableid);
                model1.setIndexid(bcPOnew.id+"");
                model1.setCreatedUser(userHelper.getLoginUserInfo().username);
@@ -394,11 +528,12 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 FactTreePOs model3 = new FactTreePOs();
                 model3.setPid(bcPOnew.id+"");
                 model3.setBusinessNameId(model4.businessNameId);
-                model3.setBusinessName(model4.businessName);
+//                model3.setBusinessName(model4.businessName);
                 model3.setFactTabNameId(model4.factTabNameId);
-                model3.setFactTabName(model4.factTabName);
+//                model3.setFactTabName(model4.factTabName);
                 model3.setFactFieldEnNameId(model4.factFieldEnNameId);
-                model3.setFactFieldEnName(model4.factFieldEnName);
+//                model3.setFactFieldEnName(model4.factFieldEnName);
+//                model3.setFactFieldCnName(model4.factFieldCnName);
                 model3.setCreateUser(userHelper.getLoginUserInfo().username);
                 DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 model3.setCreateTime(LocalDateTime.now());
@@ -587,14 +722,15 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             if (i.getId() != null){
                 model1.setId(i.getId());
             }
-            model1.setAttribute(i.getAttribute());
+//            model1.setAttribute(i.getAttribute());
             model1.setAttributeid(i.getAttributeid());
-            model1.setDimdomain(i.getDimdomain());
+//            model1.setDimdomain(i.getDimdomain());
             model1.setDimdomainid(i.getDimdomainid());
-            model1.setDimdomaintype(i.getDimdomaintype());
-            model1.setDimtable(i.getDimtable());
+//            model1.setDimdomaintype(i.getDimdomaintype());
+//            model1.setDimtable(i.getDimtable());
             model1.setDimtableid(i.getDimtableid());
             model1.setIndexid(String.valueOf(item.getId()));
+//            model1.setAttributeEnName(i.getAttributeEnName());
             if (i.getCreatedUser() != null){
                 model1.setCreatedUser(i.getCreatedUser());
             }else {
@@ -628,22 +764,23 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             }
         }
 
-        String finalHistoryId = historyId;
-        //保存历史数据
-        if (CollectionUtils.isNotEmpty(businessExtendedfieldsPOS)){
-            List<BusinessExtendedfieldsHistoryPO> extendedfieldsHistorys = businessExtendedfieldsPOS.stream().map(i -> {
-                BusinessExtendedfieldsHistoryPO businessExtendedfieldsHistoryPO = BeanHelper.copyProperties(i, BusinessExtendedfieldsHistoryPO.class);
-                businessExtendedfieldsHistoryPO.setHistoryId(finalHistoryId);
-                businessExtendedfieldsHistoryPO.setCreatedUser(i.createdUser);
-                businessExtendedfieldsHistoryPO.setCreatedTime(i.createdTime);
-                businessExtendedfieldsHistoryPO.setDelFlag(1);
-                return businessExtendedfieldsHistoryPO;
-            }).collect(Collectors.toList());
-            boolean b = businessExtendedfieldsHistoryService.saveBatch(extendedfieldsHistorys);
-            if (!b){
-                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
-            }
-        }
+//        String finalHistoryId = historyId;
+//        //保存历史数据
+//        if (CollectionUtils.isNotEmpty(businessExtendedfieldsPOS)){
+//            List<BusinessExtendedfieldsHistoryPO> extendedfieldsHistorys = businessExtendedfieldsPOS.stream().map(i -> {
+//                BusinessExtendedfieldsHistoryPO businessExtendedfieldsHistoryPO = BeanHelper.copyProperties(i, BusinessExtendedfieldsHistoryPO.class);
+//                businessExtendedfieldsHistoryPO.setHistoryId(finalHistoryId);
+//                businessExtendedfieldsHistoryPO.setCreatedUser(i.createdUser);
+//                businessExtendedfieldsHistoryPO.setCreatedTime(i.createdTime);
+//                businessExtendedfieldsHistoryPO.setAttributeEnName(i.attributeEnName);
+//                businessExtendedfieldsHistoryPO.setDelFlag(1);
+//                return businessExtendedfieldsHistoryPO;
+//            }).collect(Collectors.toList());
+//            boolean b = businessExtendedfieldsHistoryService.saveBatch(extendedfieldsHistorys);
+//            if (!b){
+//                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
+//            }
+//        }
         //处理指标所属
         List<FacttreeListDTOs> facttreeListData = item.getFacttreeListData();
         List<FactTreePOs> facttreeListPOs = facttreeListData.stream().map(i -> {
@@ -653,11 +790,12 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             }
             model1.setPid(item.id+"");
             model1.setBusinessNameId(i.getBusinessNameId());
-            model1.setBusinessName(i.getBusinessName());
+//            model1.setBusinessName(i.getBusinessName());
             model1.setFactTabNameId(i.getFactTabNameId());
-            model1.setFactTabName(i.getFactTabName());
+//            model1.setFactTabName(i.getFactTabName());
             model1.setFactFieldEnNameId(i.getFactFieldEnNameId());
-            model1.setFactFieldEnName(i.getFactFieldEnName());
+//            model1.setFactFieldEnName(i.getFactFieldEnName());
+//            model1.setFactFieldCnName(i.getFactFieldCnName());
             if (i.getCreatedUser() != null){
                 model1.setCreateUser(i.getCreatedUser());
             }else {
@@ -701,35 +839,32 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
 
 
         //保存历史数据
-        if (CollectionUtils.isNotEmpty(factTreePOS)){
-            String finalHistoryId1 = historyId;
-            List<FacttreelistHistoryPO> factHistoryTreePOs = factTreePOS.stream().map(i -> {
-                FacttreelistHistoryPO facttreelistHistoryPO = new FacttreelistHistoryPO();
-                facttreelistHistoryPO.setHistoryId(finalHistoryId1);
-                facttreelistHistoryPO.setPid(item.id+"");
-                facttreelistHistoryPO.setBusinessNameId(i.businessNameId);
-                facttreelistHistoryPO.setBusinessName(i.businessName);
-                facttreelistHistoryPO.setFactTabNameId(i.businessNameId);
-                facttreelistHistoryPO.setFactTabName(i.factTabName);
-                facttreelistHistoryPO.setFactFieldEnNameId(i.factFieldEnNameId);
-                facttreelistHistoryPO.setFactFieldEnName(i.factFieldEnName);
-                facttreelistHistoryPO.setCreateUser(i.createUser);
-                facttreelistHistoryPO.setCreateTime(i.createTime);
-                facttreelistHistoryPO.setDelFlag(1);
-                return facttreelistHistoryPO;
-            }).collect(Collectors.toList());
-            boolean b = facttreelistHistoryService.saveBatch(factHistoryTreePOs);
-            if (!b){
-                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
-            }
-        }
-        BusinessHistoryPO businessHistoryPO = new BusinessHistoryPO();
-        businessHistoryPO.setHistoryId(historyId);
-        businessHistoryPO.setTargetinfoId((int)model.getId());
-        boolean save1 = businessHistoryService.save(businessHistoryPO);
-        if (!save1){
-            throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
-        }
+//        if (CollectionUtils.isNotEmpty(factTreePOS)){
+//            String finalHistoryId1 = historyId;
+//            List<FacttreelistHistoryPO> factHistoryTreePOs = factTreePOS.stream().map(i -> {
+//                FacttreelistHistoryPO facttreelistHistoryPO = new FacttreelistHistoryPO();
+//                facttreelistHistoryPO.setHistoryId(finalHistoryId1);
+//                facttreelistHistoryPO.setPid(item.id+"");
+//                facttreelistHistoryPO.setFactFieldEnNameId(i.factFieldEnNameId);
+//                facttreelistHistoryPO.setFactFieldEnName(i.factFieldEnName);
+//                facttreelistHistoryPO.setFactFieldCnName(i.factFieldCnName);
+//                facttreelistHistoryPO.setCreateUser(i.createUser);
+//                facttreelistHistoryPO.setCreateTime(i.createTime);
+//                facttreelistHistoryPO.setDelFlag(1);
+//                return facttreelistHistoryPO;
+//            }).collect(Collectors.toList());
+//            boolean b = facttreelistHistoryService.saveBatch(factHistoryTreePOs);
+//            if (!b){
+//                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
+//            }
+//        }
+//        BusinessHistoryPO businessHistoryPO = new BusinessHistoryPO();
+//        businessHistoryPO.setHistoryId(historyId);
+//        businessHistoryPO.setTargetinfoId((int)model.getId());
+//        boolean save1 = businessHistoryService.save(businessHistoryPO);
+//        if (!save1){
+//            throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
+//        }
         return ResultEnum.SUCCESS;
     }
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
@@ -998,25 +1133,25 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
     @Override
     public JSONObject getTargetinfoHistory(String historyId) {
         BusinessTargetinfoHistoryPO targetinfoHistoryPO = businessTargetinfoHistoryService.selectClassification(historyId);
-            List<BusinessExtendedfieldsHistoryPO> list1= businessExtendedfieldsHistoryService.selectHistoryId(historyId);
-            List<FacttreelistHistoryPO> list2 = facttreelistHistoryService.selectHistoryId(historyId);
-        List<Long> userIds = list2.stream()
-                .filter(x -> org.apache.commons.lang.StringUtils.isNotEmpty(x.createUser))
-                .map(x -> Long.valueOf(x.createUser))
-                .distinct()
-                .collect(Collectors.toList());
-
-        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-        if (userListByIds.code == ResultEnum.SUCCESS.getCode()
-                && CollectionUtils.isNotEmpty(userListByIds.getData())) {
-            list2.forEach(e -> {
-                userListByIds.getData()
-                        .stream()
-                        .filter(user -> user.getId().toString().equals(e.createUser))
-                        .findFirst()
-                        .ifPresent(user -> e.createUser = user.userAccount);
-            });
-        }
+//            List<BusinessExtendedfieldsHistoryPO> list1= businessExtendedfieldsHistoryService.selectHistoryId(historyId);
+//            List<FacttreelistHistoryPO> list2 = facttreelistHistoryService.selectHistoryId(historyId);
+//        List<Long> userIds = list2.stream()
+//                .filter(x -> org.apache.commons.lang.StringUtils.isNotEmpty(x.createUser))
+//                .map(x -> Long.valueOf(x.createUser))
+//                .distinct()
+//                .collect(Collectors.toList());
+//
+//        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+//        if (userListByIds.code == ResultEnum.SUCCESS.getCode()
+//                && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+//            list2.forEach(e -> {
+//                userListByIds.getData()
+//                        .stream()
+//                        .filter(user -> user.getId().toString().equals(e.createUser))
+//                        .findFirst()
+//                        .ifPresent(user -> e.createUser = user.userAccount);
+//            });
+//        }
             JSONObject jsonObject1 =  new JSONObject();
             jsonObject1.put("id",targetinfoHistoryPO.getId());
             jsonObject1.put("createTime",targetinfoHistoryPO.getCreateTime());
@@ -1045,9 +1180,9 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             jsonObject1.put("indicatorType",targetinfoHistoryPO.getIndicatorType());
             jsonObject1.put("name",targetinfoHistoryPO.getName());
             jsonObject1.put("sqlScript",targetinfoHistoryPO.getSqlScript());
-            jsonObject1.put("dimensionData",list1);
-            List<FacttreelistHistoryDTO> facttreeListData = list2.stream().map(FactTreeHistoryMap.INSTANCES::poToDto).collect(Collectors.toList());
-            jsonObject1.put("facttreeListData",facttreeListData);
+//            jsonObject1.put("dimensionData",list1);
+//            List<FacttreelistHistoryDTO> facttreeListData = list2.stream().map(FactTreeHistoryMap.INSTANCES::poToDto).collect(Collectors.toList());
+//            jsonObject1.put("facttreeListData",facttreeListData);
             Integer parentBusinessId = targetinfoHistoryPO.getParentBusinessId();
 
 
@@ -1067,7 +1202,6 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
                 }
 
             }
-            jsonObject1.put("facttreeListData",list2);
 
         return jsonObject1;
     }
