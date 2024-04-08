@@ -197,4 +197,10 @@ public class BusinessCategoryController {
     public ResultEntity<Object> getParentBusinessDataList()  {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getParentBusinessDataList());
     }
+
+    @ApiOperation("获取业务指标数据树状列表(目录和数据)")
+    @GetMapping("/getAllBusinessMetaDataList")
+    public ResultEntity<Object> getAllBusinessMetaDataList()  {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getAllBusinessMetaDataList());
+    }
 }

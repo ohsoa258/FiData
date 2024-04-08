@@ -14,16 +14,12 @@ import java.time.LocalDateTime;
 public class BusinessExtendedfieldsPO {
     @TableId(value = "id", type = IdType.AUTO)
     public int id;
-    public String  dimdomaintype;
-    public String  dimdomainid;
-    public String  dimdomain;
-    public String  dimtableid;
-    public String  dimtable;
-    public String  attributeid;
-    public String  attribute;
-    public  String indexid;
+    public String dimdomainid;
+    public String dimtableid;
+    public String attributeid;
+    public String indexid;
     public String createdUser;
-//    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    //    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public String createdTime;
 
     @TableField(value = "update_time", fill = FieldFill.UPDATE)
