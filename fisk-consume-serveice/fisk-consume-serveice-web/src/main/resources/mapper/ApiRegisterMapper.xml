@@ -28,7 +28,8 @@
         api.enable_cache,
         api.cache_time,
         api.max_size_type,
-        api.max_size
+        api.max_size,
+        api.tag
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
@@ -58,6 +59,11 @@
                     or field.field_desc like concat('%', #{query.keyword}, '%'))
                 </if>)
             </when>
+            <when test="query.apiParamType == 3">
+                <if test="query.keyword !=null and query.keyword.length()>0 ">
+                    and FIND_IN_SET(#{query.keyword},tag)
+                </if>
+            </when>
         </choose>
     </select>
     <select id="getList" resultType="com.fisk.dataservice.entity.ApiConfigPO">
@@ -83,7 +89,8 @@
         api.enable_cache,
         api.cache_time,
         api.max_size_type,
-        api.max_size
+        api.max_size,
+        api.tag
         FROM
         tb_api_config AS api
         WHERE
@@ -114,7 +121,8 @@
         api.enable_cache,
         api.cache_time,
         api.max_size_type,
-        api.max_size
+        api.max_size,
+        api.tag
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id

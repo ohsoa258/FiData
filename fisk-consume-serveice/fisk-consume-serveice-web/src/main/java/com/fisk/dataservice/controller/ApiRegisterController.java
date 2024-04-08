@@ -173,4 +173,10 @@ public class ApiRegisterController {
     public ResultEntity<Object> apiSort(@RequestBody ApiSortDTO dto) {
         return ResultEntityBuild.build(apiMenuConfigService.apiSort(dto));
     }
+
+    @ApiOperation("获取所有标签")
+    @PostMapping("/getAllTag")
+    public ResultEntity<Object> getAllTag() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAllTag());
+    }
 }

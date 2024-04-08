@@ -402,6 +402,21 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         return null;
     }
 
+    @Override
+    public List<String> getAllTag() {
+        List<ApiConfigPO> apiConfigPOS = this.list();
+        List<String> tags = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(apiConfigPOS)){
+            List<String> apiTags = apiConfigPOS.stream().map(ApiConfigPO::getTag).filter(StringUtils::isNotEmpty).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(apiTags)){
+                tags = apiTags.stream()
+                        .flatMap(input -> Arrays.stream(input.split(",")))
+                        .distinct().collect(Collectors.toList());
+            }
+        }
+        return tags;
+    }
+
     public ResultEnum delAppServiceConfig(Integer appId, Integer type) {
         QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
@@ -646,6 +661,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         model.setCacheTime(dto.getCacheTime());
         model.setMaxSizeType(dto.getMaxSizeType());
         model.setMaxSize(dto.getMaxSize());
+        model.setTag(dto.getTag());
         isUpdate = baseMapper.updateById(model) > 0;
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;
