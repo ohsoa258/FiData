@@ -965,11 +965,23 @@ public class NiFiHelperImpl implements INiFiHelper {
             map.put("put-db-record-translate-field-names", putDatabaseRecordDTO.putDbRecordTranslateFieldNames);
         }
         //组件配置信息
-        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        //继承nifi组件配置类  添加缺失属性
+        MyProcessorConfigDTO config = new MyProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
         config.setConcurrentlySchedulableTaskCount(Integer.valueOf(putDatabaseRecordDTO.concurrentTasks));
         config.setComments(putDatabaseRecordDTO.details);
+
+        ArrayList<String> relationShips = new ArrayList<>();
+        //配置需要重试的结果 failure retry
+        relationShips.add("failure");
+        config.setRetriedRelationships(relationShips);
+        //重试最长回退期 默认10分钟
+        config.setMaxBackoffPeriod("10 mins");
+        //重试回退策略 礼让
+        config.setBackoffMechanism("YIELD_PROCESSOR");
+        //重试次数 5次
+        config.setRetryCount(5);
 
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
