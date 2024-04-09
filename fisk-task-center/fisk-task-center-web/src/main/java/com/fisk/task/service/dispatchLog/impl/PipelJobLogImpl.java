@@ -370,12 +370,11 @@ public class PipelJobLogImpl extends ServiceImpl<PipelJobLogMapper, PipelJobLogP
         //TaskHierarchyDTO
         TaskHierarchyDTO taskHierarchy = JSON.parseObject(hmget.get(String.valueOf(id)).toString(), TaskHierarchyDTO.class);
         Map<Object, Object> taskMap = new HashMap<>();
+        taskHierarchy.taskProcessed = true;
         if (i == 1) {
             taskHierarchy.taskStatus = DispatchLogEnum.taskfailure;
-            taskHierarchy.taskProcessed = true;
         } else {
             taskHierarchy.taskStatus = DispatchLogEnum.taskpass;
-            taskHierarchy.taskProcessed = false;
         }
         i++;
         taskMap.put(String.valueOf(taskHierarchy.id), JSON.toJSONString(taskHierarchy));
