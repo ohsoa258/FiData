@@ -112,6 +112,9 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
 
         JSONArray array1 =new JSONArray();
         List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
+        if(CollectionUtils.isEmpty(list)){
+            return array1;
+        }
         String indexid= pid;
         //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
         List<Integer> ParentBusinessIds = list.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
@@ -707,13 +710,11 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         List<BusinessExtendedfieldsPO> businessExtendedfieldsPOS = businessExtendedfieldsMapper.selectList(extendedfieldsWrapper);
 
         if (!CollectionUtils.isEmpty(businessExtendedfieldsPOS)){
-            if (!CollectionUtils.isEmpty(dimensionData)){
-                List<Integer> dimensionDataIds = dimensionData.stream().map(BusinessExtendedfieldsDTO::getId).collect(Collectors.toList());
-                List<BusinessExtendedfieldsPO> delExtendedfields = businessExtendedfieldsPOS.stream().filter(i -> !dimensionDataIds.contains(i.getId())).collect(Collectors.toList());
-                List<Integer> delIds = delExtendedfields.stream().map(BusinessExtendedfieldsPO::getId).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(delIds)){
-                    businessExtendedfieldsMapper.deleteBatchIds(delIds);
-                }
+            List<Integer> dimensionDataIds = dimensionData.stream().map(BusinessExtendedfieldsDTO::getId).collect(Collectors.toList());
+            List<BusinessExtendedfieldsPO> delExtendedfields = businessExtendedfieldsPOS.stream().filter(i -> !dimensionDataIds.contains(i.getId())).collect(Collectors.toList());
+            List<Integer> delIds = delExtendedfields.stream().map(BusinessExtendedfieldsPO::getId).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(delIds)){
+                businessExtendedfieldsMapper.deleteBatchIds(delIds);
             }
         }
         List<BusinessExtendedfieldsPO> extendedfieldsPOS = dimensionData.stream().map(i -> {
@@ -813,13 +814,11 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
         factTreeWrapper.eq(FactTreePOs::getPid,model.id);
         List<FactTreePOs> factTreePOS = factTreeService.list(factTreeWrapper);
         if (!CollectionUtils.isEmpty(factTreePOS)){
-            if (!CollectionUtils.isEmpty(facttreeListPOs)){
-                List<Integer> factTreeIds = facttreeListPOs.stream().map(i->(int)i.getId()).collect(Collectors.toList());
-                List<FactTreePOs> delFactTrees = factTreePOS.stream().filter(i -> !factTreeIds.contains((int)i.getId())).collect(Collectors.toList());
-                List<Integer> delIds = delFactTrees.stream().map(i->(int)i.getId()).collect(Collectors.toList());
-                if (CollectionUtils.isNotEmpty(delIds)){
-                    factTreeListMapper.deleteBatchIds(delIds);
-                }
+            List<Integer> factTreeIds = facttreeListPOs.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+            List<FactTreePOs> delFactTrees = factTreePOS.stream().filter(i -> !factTreeIds.contains((int)i.getId())).collect(Collectors.toList());
+            List<Integer> delIds = delFactTrees.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(delIds)){
+                factTreeListMapper.deleteBatchIds(delIds);
             }
         }
 
