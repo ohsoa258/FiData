@@ -112,6 +112,9 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
 
         JSONArray array1 =new JSONArray();
         List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
+        if(CollectionUtils.isEmpty(list)){
+            return array1;
+        }
         String indexid= pid;
         //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
         List<Integer> ParentBusinessIds = list.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
