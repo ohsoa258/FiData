@@ -168,4 +168,6 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      */
     Long getApiIdByApiName(String apiName);
 
+    List<String> getAllTag();
+
 }
