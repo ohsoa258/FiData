@@ -23,5 +23,5 @@ public class BusinessMetaDataTreeDTO {
     @ApiModelProperty(value = "排序")
     public Integer sort;
     @ApiModelProperty(value = "子类")
-    public List<BusinessMetaDataTreeDTO> Children;
+    public List<BusinessMetaDataTreeDTO> children;
 }
