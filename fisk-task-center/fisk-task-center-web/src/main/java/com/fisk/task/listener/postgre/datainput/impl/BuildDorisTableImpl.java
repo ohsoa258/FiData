@@ -156,6 +156,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         wrapper1.select(" DISTINCT version")
                 .lambda()
                 .eq(TaskPgTableStructurePO::getTableId, tblId)
+                .eq(TaskPgTableStructurePO::getTableType, type)
                 .eq(TaskPgTableStructurePO::getValidVersion, 1)
                 .orderByDesc(TaskPgTableStructurePO::getVersion);
         List<TaskPgTableStructurePO> versions = structureMapper.selectList(wrapper1);
