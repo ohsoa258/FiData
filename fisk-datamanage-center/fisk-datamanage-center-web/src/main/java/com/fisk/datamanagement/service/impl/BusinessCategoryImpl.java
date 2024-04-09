@@ -396,19 +396,17 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
     @Override
     public List<BusinessMetaDataTreeDTO> getAllBusinessMetaDataList() {
         List<BusinessMetaDataTreeDTO> allList = new ArrayList<>();
-        LambdaQueryWrapper<BusinessCategoryPO> businessCategoryWrapper = new LambdaQueryWrapper<>();
-        businessCategoryWrapper.select(BusinessCategoryPO::getId,BusinessCategoryPO::getPid,BusinessCategoryPO::getName);
         // 从数据库中查询所有BusinessCategoryPO对象
-        List<BusinessCategoryPO> businessCategoryPOS = this.businessCategoryMapper.selectList(businessCategoryWrapper);
+        List<BusinessCategoryPO> businessCategoryPOS = this.businessCategoryMapper.selectList(new QueryWrapper<>());
         if (CollectionUtils.isNotEmpty(businessCategoryPOS)){
             List<BusinessMetaDataTreeDTO> businessMetaDataTreeDTOS = businessCategoryPOS.stream().map(i -> {
 
                 // 将BusinessCategoryPO对象转换为BusinessMetaDataTreeDTO对象
                 BusinessMetaDataTreeDTO businessMetaDataTreeDTO = new BusinessMetaDataTreeDTO();
-                businessMetaDataTreeDTO.setId((int) i.getId());
+                businessMetaDataTreeDTO.setId(~(int) i.getId()+1);
                 businessMetaDataTreeDTO.setName(i.getName());
                 // 处理可能的空指针异常，如果pid为null或0，设置为0
-                businessMetaDataTreeDTO.setPid(i.getPid() != null && i.getPid() != 0 ? i.getPid() : 0);
+                businessMetaDataTreeDTO.setPid(i.getPid() != null && i.getPid() != 0 ? ~i.getPid()+1 : 0);
                 businessMetaDataTreeDTO.setType(1);
                 businessMetaDataTreeDTO.setSort(i.getSort());
                 return businessMetaDataTreeDTO;
@@ -423,7 +421,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                 BusinessMetaDataTreeDTO businessMetaDataTreeDTO = new BusinessMetaDataTreeDTO();
                 businessMetaDataTreeDTO.setId((int) i.getId());
                 businessMetaDataTreeDTO.setName(i.getIndicatorName());
-                businessMetaDataTreeDTO.setPid(Integer.valueOf(i.getPid()));
+                businessMetaDataTreeDTO.setPid(~Integer.parseInt(i.getPid()) + 1);
                 businessMetaDataTreeDTO.setType(2);
                 businessMetaDataTreeDTO.setSort(0);
                 return businessMetaDataTreeDTO;
@@ -435,6 +433,8 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         // 若根节点列表为空，返回一个空列表
         if (CollectionUtils.isEmpty(parentList)){
             return new ArrayList<>();
+        }else {
+            parentList.sort(Comparator.comparing(BusinessMetaDataTreeDTO::getSort).reversed());
         }
         // 递归处理子集
         bussinessCategoryTree(allList, parentList);
