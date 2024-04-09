@@ -513,7 +513,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
 
         for (BusinessAreaPO businessAreaPO : businessAreaPOS) {
             LambdaQueryWrapper<FactPO> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.eq(FactPO::getBusinessId, businessAreaPO.getId());
+            wrapper1.eq(FactPO::getBusinessId, businessAreaPO.getId())
+                    .orderByAsc(FactPO::getFactTabName);
             List<FactPO> factPOS = list(wrapper1);
 
             BusinessAreaFactDTO businessAreaFactDTO = new BusinessAreaFactDTO();
