@@ -3,6 +3,7 @@ package com.fisk.datamanagement.controller;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
@@ -11,6 +12,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataExpiresTimeDto;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import io.swagger.annotations.Api;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -99,6 +102,13 @@ public class MetaDataController {
     @PostMapping("/deleteConsumptionMetaData")
     public ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList) {
         return ResultEntityBuild.build(service.deleteDataConsumptionMetaData(entityList));
+    }
+
+
+    @ApiOperation("设置元数据过期时间")
+    @PostMapping("/setMetadataExpiresTime")
+    public ResultEntity<Object> setMetadataExpiresTime(@RequestBody UpdateMetadataExpiresTimeDto dto) {
+        return ResultEntityBuild.build(iMetadataEntity.setMetadataExpiresTime(dto));
     }
 
 }

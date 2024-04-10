@@ -5,8 +5,10 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataExpiresTimeDto;
 import com.fisk.datamanagement.dto.standards.StandardsSourceQueryDTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -59,4 +61,6 @@ public interface IMetadataEntity {
      * @return
      */
     DBTableFiledNameDto getParentNameByFieldId(Integer fieldMetadataId);
+
+    ResultEnum setMetadataExpiresTime(UpdateMetadataExpiresTimeDto dto);
 }

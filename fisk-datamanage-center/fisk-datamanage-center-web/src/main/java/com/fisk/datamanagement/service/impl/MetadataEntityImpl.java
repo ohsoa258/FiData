@@ -27,6 +27,7 @@ import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataExpiresTimeDto;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
@@ -58,6 +59,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -542,8 +545,8 @@ public class MetadataEntityImpl
             return ResultEnum.SUCCESS;
         }
         //添加审计日志
-        guidList.forEach(e->{
-            metadataEntityAuditLog.setMetadataAuditLog(null,Integer.valueOf(e),MetadataAuditOperationTypeEnum.DELETE,EntityTypeEnum.RDBMS_COLUMN.getName());
+        guidList.forEach(e -> {
+            metadataEntityAuditLog.setMetadataAuditLog(null, Integer.valueOf(e), MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName());
         });
         int delete = metadataEntityMapper.delete(queryWrapper);
         if (delete == 0) {
@@ -567,9 +570,11 @@ public class MetadataEntityImpl
         }
 
         int metadataEntityId = Integer.parseInt(entityId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         Map infoMap = metadataAttribute.setMedataAttribute(metadataEntityId, 0);
         infoMap.put("name", one.name);
+        infoMap.put("expiresTime", one.expiresTime != null ? one.expiresTime.format(formatter) : "");
         infoMap.put("description", one.description);
         infoMap.put("owner", one.owner);
         infoMap.put("qualifiedName", one.qualifiedName);
@@ -1546,5 +1551,13 @@ public class MetadataEntityImpl
         nameDto.setTableName(table.getName());
         nameDto.setDatabaseName(db.getName());
         return nameDto;
+    }
+
+    @Override
+    public ResultEnum setMetadataExpiresTime(UpdateMetadataExpiresTimeDto dto) {
+        MetadataEntityPO po = this.getById(dto.entityId);
+        po.expiresTime = dto.expiresTime;
+        updateById(po);
+        return ResultEnum.SUCCESS;
     }
 }

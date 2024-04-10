@@ -5,6 +5,7 @@ import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -24,6 +25,8 @@ public class MetadataEntityPO extends BasePO {
     public String description;
 
     public Integer typeId;
+
+    public LocalDateTime expiresTime;
 
     public Integer parentId;
 
