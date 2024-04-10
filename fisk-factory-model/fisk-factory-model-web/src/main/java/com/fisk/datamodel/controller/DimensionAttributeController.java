@@ -59,6 +59,12 @@ public class DimensionAttributeController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttribute(id));
     }
 
+    @PostMapping("/getDimensionAttributeByIds")
+    @ApiOperation("根据维度字段id集合获取维度字段详情")
+    public ResultEntity<List<DimensionAttributeDTO>> getDimensionAttributeByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionAttributeByIds(ids));
+    }
+
     @GetMapping("/getDimensionAttributeData/{id}")
     @ApiOperation("根据维度id获取维度字段列表")
     public ResultEntity<Object> getDimensionAttributeData(@RequestParam("id") int id) {

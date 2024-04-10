@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -397,10 +398,14 @@ public class MetadataEntityImpl
         return list;
     }
 
+    /**
+     * 为即席查询获取元数据对象树形列表（ods dw mdm）
+     * @return
+     */
     public List<EntityTreeDTO> getTreeForAdHocQuery() {
         List<EntityTreeDTO> list = new ArrayList<>();
-        //获取所有实体
-        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntity(EntityTypeEnum.PROCESS.getValue());
+        //获取所有实体  排除temp表
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntityWithoutTemp(EntityTypeEnum.PROCESS.getValue());
         if (CollectionUtils.isEmpty(poList)) {
             return list;
         }
@@ -418,6 +423,8 @@ public class MetadataEntityImpl
         List<DataSourceDTO> dataSourceDTOList = allFiDataDataSourceResult.data;
         //筛选数据工厂类型的数据源
         List<DataSourceDTO> collect = dataSourceDTOList.stream().filter(dto -> dto.getSourceType() == 1).collect(Collectors.toList());
+        //工厂类型的 hudi排除掉
+        collect = collect.stream().filter(dataSourceDTO -> !dataSourceDTO.getConType().equals(DataSourceTypeEnum.HUDI)).collect(Collectors.toList());
 
         for (MetadataEntityPO parent : parentList) {
             //根据数据源IP查找数据源所属类型
@@ -434,6 +441,64 @@ public class MetadataEntityImpl
         //获取元数据的分类 即席查询只获取数据工厂
         for (MetaClassificationTypeEnum value : values) {
             if (value.equals(MetaClassificationTypeEnum.DATA_FACTORY)) {
+                EntityTreeDTO dto = new EntityTreeDTO();
+                dto.id = String.valueOf(value.getValue());
+                dto.label = value.getName();
+                dto.type = EntityTypeEnum.CLASSIFICATION.getName();
+                dto.parentId = "-100";
+                dto.displayName = value.getName();
+                EntityTreeDTO entityTreeDTO = buildBetterChildTree(dto, poList);
+                list.add(entityTreeDTO);
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * 为业务术语获取元数据对象树形列表
+     * @return
+     */
+    public List<EntityTreeDTO> getTreeForBusinessTerm() {
+        List<EntityTreeDTO> list = new ArrayList<>();
+        //获取所有实体
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntityWithoutTemp(EntityTypeEnum.PROCESS.getValue());
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+        //获取父级实体
+        List<MetadataEntityPO> parentList = poList.stream().filter(e -> e.parentId == -1).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(parentList)) {
+            return list;
+        }
+
+        //获取平台配置的所有数据源
+        ResultEntity<List<DataSourceDTO>> allFiDataDataSourceResult = userClient.getAllFiDataDataSource();
+        if (allFiDataDataSourceResult.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        List<DataSourceDTO> dataSourceDTOList = allFiDataDataSourceResult.data;
+        for (MetadataEntityPO parent : parentList) {
+            //根据数据源IP查找数据源所属类型
+            Optional<DataSourceDTO> dataSourceDTOResult = dataSourceDTOList.stream().filter(e -> e.getConIp().equals(parent.getName())).findFirst();
+            if (dataSourceDTOResult.isPresent()) {
+                //存在，数据源，数据工厂
+                DataSourceDTO sourceDTO = dataSourceDTOResult.get();
+                if (sourceDTO.getSourceType() == 1) {
+                    //数据工厂
+                    parent.setParentId(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
+                } else {
+                    //数据源
+                    parent.setParentId(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
+                }
+            }
+        }
+
+        MetaClassificationTypeEnum[] values = MetaClassificationTypeEnum.values();
+
+        //获取元数据的分类 排除其他分类
+        for (MetaClassificationTypeEnum value : values) {
+            if (!value.equals(MetaClassificationTypeEnum.OTHER)) {
                 EntityTreeDTO dto = new EntityTreeDTO();
                 dto.id = String.valueOf(value.getValue());
                 dto.label = value.getName();

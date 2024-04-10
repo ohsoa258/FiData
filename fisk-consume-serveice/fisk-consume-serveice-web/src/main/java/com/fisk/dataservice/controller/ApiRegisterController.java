@@ -102,10 +102,22 @@ public class ApiRegisterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getFieldAll(apiId));
     }
 
+    @ApiOperation("查询api字段加密列表")
+    @GetMapping("/getFieldEncryptAll/{apiId}")
+    public ResultEntity<FieldEncryptConfigDTO> getFieldEncryptAll(@PathVariable("apiId") int apiId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getFieldEncryptAll(apiId));
+    }
+
     @ApiOperation("设置字段属性")
     @PutMapping("/setField")
     public ResultEntity<Object> setField(@RequestBody List<FieldConfigEditDTO> dto) {
         return ResultEntityBuild.build(service.setField(dto));
+    }
+
+    @ApiOperation("设置字段加密")
+    @PutMapping("/setFieldEncrypt")
+    public ResultEntity<Object> setFieldEncrypt(@RequestBody FieldEncryptConfigDTO dto) {
+        return ResultEntityBuild.build(service.setFieldEncrypt(dto));
     }
 
     @ApiOperation("预览")
@@ -160,5 +172,11 @@ public class ApiRegisterController {
     @PostMapping("/apiSort")
     public ResultEntity<Object> apiSort(@RequestBody ApiSortDTO dto) {
         return ResultEntityBuild.build(apiMenuConfigService.apiSort(dto));
+    }
+
+    @ApiOperation("获取所有标签")
+    @PostMapping("/getAllTag")
+    public ResultEntity<Object> getAllTag() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAllTag());
     }
 }

@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
 import com.fisk.datamodel.service.IDimensionFolder;
@@ -68,6 +69,12 @@ public class DimensionFolderController {
     @PostMapping("/getDimensionFolderByTableName")
     public ResultEntity<DimensionFolderDTO> getDimensionFolderByTableName(@Validated @RequestBody String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionFolderByTableName(tableName));
+    }
+
+    @PostMapping("/getDimensionFolderByIds")
+    @ApiOperation("根据维度文件夹id集合获取维度文件夹详情")
+    public ResultEntity<List<DimensionFolderDTO>> getDimensionFolderByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionFolderByIds(ids));
     }
 
 }

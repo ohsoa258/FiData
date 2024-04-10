@@ -8,7 +8,11 @@ import lombok.Data;
  */
 @Data
 public class TableColumnDTO {
-
+    /**
+     * 字段名
+     */
+    @ApiModelProperty(value = "字段名", required = true)
+    public String fieldId;
     /**
      * 字段名
      */

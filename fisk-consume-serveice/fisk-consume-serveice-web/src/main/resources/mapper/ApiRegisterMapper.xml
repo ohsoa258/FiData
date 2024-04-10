@@ -28,13 +28,19 @@
         api.enable_cache,
         api.cache_time,
         api.max_size_type,
-        api.max_size
+        api.max_size,
+        api.tag
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
         ON api.datasource_id = source.id
         where api.del_flag=1
-          and api.menu_id = #{query.menuId}
+        <if test="query.menuIds != null and query.menuIds.size > 0">
+            AND api.menu_id IN
+            <foreach item="item" index="index" collection="query.menuIds" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
         <if test="query.createApiType !=null and query.createApiType!=0 ">
             and api.create_api_type = #{query.createApiType}
         </if>
@@ -52,6 +58,11 @@
                     and (field.field_name like concat('%', #{query.keyword}, '%')
                     or field.field_desc like concat('%', #{query.keyword}, '%'))
                 </if>)
+            </when>
+            <when test="query.apiParamType == 3">
+                <if test="query.keyword !=null and query.keyword.length()>0 ">
+                    and FIND_IN_SET(#{query.keyword},tag)
+                </if>
             </when>
         </choose>
     </select>
@@ -78,7 +89,8 @@
         api.enable_cache,
         api.cache_time,
         api.max_size_type,
-        api.max_size
+        api.max_size,
+        api.tag
         FROM
         tb_api_config AS api
         WHERE
@@ -109,7 +121,8 @@
         api.enable_cache,
         api.cache_time,
         api.max_size_type,
-        api.max_size
+        api.max_size,
+        api.tag
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id

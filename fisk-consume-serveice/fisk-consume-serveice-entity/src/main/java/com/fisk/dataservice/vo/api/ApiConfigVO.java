@@ -192,4 +192,10 @@ public class ApiConfigVO {
      */
     @ApiModelProperty(value = "api最大单次查询条数")
     private Integer maxSize;
+
+    /**
+     * 标签
+     */
+    @ApiModelProperty(value = "标签")
+    private String tag;
 }

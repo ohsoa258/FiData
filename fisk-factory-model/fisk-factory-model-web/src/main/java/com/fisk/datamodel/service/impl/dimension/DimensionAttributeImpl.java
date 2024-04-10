@@ -267,6 +267,11 @@ public class DimensionAttributeImpl
     }
 
     @Override
+    public List<DimensionAttributeDTO> getDimensionAttributeByIds(List<Integer> ids) {
+        return DimensionAttributeMap.INSTANCES.poListToDtoList(attributeMapper.selectBatchIds(ids));
+    }
+
+    @Override
     public DimensionAttributeListDTO getDimensionAttributeList(int dimensionId) {
         DimensionAttributeListDTO data = new DimensionAttributeListDTO();
         DimensionPO dimensionPo = mapper.selectById(dimensionId);

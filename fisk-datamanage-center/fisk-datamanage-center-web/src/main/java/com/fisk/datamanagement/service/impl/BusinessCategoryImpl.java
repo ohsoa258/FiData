@@ -1,28 +1,27 @@
 package com.fisk.datamanagement.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.fisk.common.core.response.ResultEntity;
+import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.framework.redis.RedisUtil;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
+import com.fisk.datamanagement.dto.businessclassification.BusinessMetaDataTreeDTO;
+import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
 import com.fisk.datamanagement.dto.classification.*;
+import com.fisk.datamanagement.dto.standards.StandardsTreeDTO;
 import com.fisk.datamanagement.entity.BusinessCategoryPO;
-import com.fisk.datamanagement.entity.BusinessClassificationPO;
+import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
+import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
-import lombok.Data;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -43,8 +42,8 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
     BusinessCategoryMapper businessCategoryMapper;
     @Resource
     private DataModelClient dataModelClient;
-
-
+    @Resource
+    private BusinessTargetinfoMapper businessTargetinfoMapper;
     /**
      * 更改指标名称属性_
      *
@@ -283,10 +282,12 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                                 if(array3.size() > 0){
                                     json.put("dimtableid",array3.getString("id"));
                                     json.put("dimtable",array3.getString("dimensionCnName"));
+                                    json.put("dimtablename",array3.getString("dimensionTabName"));
                                 }
                                 if(array6.size() > 0){
                                     json.put("attributeid",array7.getString("id"));
                                     json.put("attribute",array7.getString("dimensionFieldCnName"));
+                                    json.put("attributeEnName",array7.getString("dimensionFieldEnName"));
                                 }
                                 array7.put("extendedfields",json);
                                 array6.set(k,array7);
@@ -322,6 +323,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                 JSONObject jsonObject1 = array1.getJSONObject(j);
                 data2.put("id",jsonObject1.getString("id"));
                 data2.put("name",jsonObject1.getString("factTabName"));
+                data2.put("cnName",jsonObject1.getString("factTableCnName"));
                 JSONArray array2= jsonObject1.getJSONArray("attributeList");
                 JSONArray array3= new JSONArray();
                 for (int m=0; m<array2.size();m++){
@@ -330,12 +332,15 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                     JSONObject data4 = new JSONObject();
                     data3.put("id",jsonObject2.getString("id"));
                     data3.put("name",jsonObject2.getString("factFieldEnName"));
+                    data3.put("cnName",jsonObject2.getString("factFieldCnName"));
                     data4.put("businessNameId",jsonObject.getString("id"));
                     data4.put("businessName",jsonObject.getString("businessName"));
                     data4.put("factTabNameId",jsonObject1.getString("id"));
                     data4.put("factTabName",jsonObject1.getString("factTabName"));
+                    data4.put("factTableCnName",jsonObject1.getString("factTableCnName"));
                     data4.put("factFieldEnNameId",jsonObject2.getString("id"));
                     data4.put("factFieldEnName",jsonObject2.getString("factFieldEnName"));
+                    data4.put("factFieldCnName",jsonObject2.getString("factFieldCnName"));
                     data3.put("other",data4);
                     array3.add(data3);
                 }
@@ -346,5 +351,139 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             data.add(data1);
         }
         return data;
+    }
+
+    @Override
+    public List<ParentBusinessTreeDTO> getParentBusinessDataList() {
+        // 查询所有数据
+        List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isEmpty(data)) {
+            return new ArrayList<>();
+        }
+
+        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BusinessTargetinfoPO::getIndicatorType, IndicatorTypeEnum.ATOMIC_INDICATORS.getName());
+        List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
+        Map<String, List<ParentBusinessTreeDTO>> parentBusinessTreeDTOMap = businessTargetinfoPOS.stream().map(i -> {
+            ParentBusinessTreeDTO parentBusinessTreeDTO = new ParentBusinessTreeDTO();
+            parentBusinessTreeDTO.setId(String.valueOf(i.getId()));
+            parentBusinessTreeDTO.setPid(i.getPid());
+            parentBusinessTreeDTO.setType(2);
+            parentBusinessTreeDTO.setName(i.getIndicatorName());
+            return parentBusinessTreeDTO;
+        }).collect(Collectors.groupingBy(ParentBusinessTreeDTO::getPid));
+
+        // 数据转换
+        List<ParentBusinessTreeDTO> allData = data.stream().map(item -> {
+            ParentBusinessTreeDTO dto = new ParentBusinessTreeDTO();
+            dto.setId(String.valueOf(item.id));
+            if (item.pid == null || item.pid == 0) {
+                dto.setPid("0");
+            } else {
+                dto.setPid(item.getPid().toString());
+            }
+            dto.setName(item.name);
+            dto.setSort(item.sort);
+            dto.setType(1);
+            List<ParentBusinessTreeDTO> parentBusinessTreeDTO = parentBusinessTreeDTOMap.get(String.valueOf(item.getId()));
+            dto.setChild(parentBusinessTreeDTO);
+            return dto;
+        }).collect(Collectors.toList());
+        List<ParentBusinessTreeDTO> parentList = childClassTree(allData, "0");
+        return parentList;
+    }
+
+    @Override
+    public List<BusinessMetaDataTreeDTO> getAllBusinessMetaDataList() {
+        List<BusinessMetaDataTreeDTO> allList = new ArrayList<>();
+        // 从数据库中查询所有BusinessCategoryPO对象
+        List<BusinessCategoryPO> businessCategoryPOS = this.businessCategoryMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isNotEmpty(businessCategoryPOS)){
+            List<BusinessMetaDataTreeDTO> businessMetaDataTreeDTOS = businessCategoryPOS.stream().map(i -> {
+
+                // 将BusinessCategoryPO对象转换为BusinessMetaDataTreeDTO对象
+                BusinessMetaDataTreeDTO businessMetaDataTreeDTO = new BusinessMetaDataTreeDTO();
+                businessMetaDataTreeDTO.setId(~(int) i.getId()+1);
+                businessMetaDataTreeDTO.setName(i.getName());
+                // 处理可能的空指针异常，如果pid为null或0，设置为0
+                businessMetaDataTreeDTO.setPid(i.getPid() != null && i.getPid() != 0 ? ~i.getPid()+1 : 0);
+                businessMetaDataTreeDTO.setType(1);
+                businessMetaDataTreeDTO.setSort(i.getSort());
+                return businessMetaDataTreeDTO;
+            }).collect(Collectors.toList());
+            allList.addAll(businessMetaDataTreeDTOS);
+        }
+        // 从数据库中查询所有BusinessTargetinfoPO对象
+        List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(new QueryWrapper<>());
+        if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+            List<BusinessMetaDataTreeDTO> businessMetaDataTreeDTOS = businessTargetinfoPOList.stream().map(i -> {
+                // 将BusinessTargetinfoPO对象转换为BusinessMetaDataTreeDTO对象
+                BusinessMetaDataTreeDTO businessMetaDataTreeDTO = new BusinessMetaDataTreeDTO();
+                businessMetaDataTreeDTO.setId((int) i.getId());
+                businessMetaDataTreeDTO.setName(i.getIndicatorName());
+                businessMetaDataTreeDTO.setPid(~Integer.parseInt(i.getPid()) + 1);
+                businessMetaDataTreeDTO.setType(2);
+                businessMetaDataTreeDTO.setSort(0);
+                return businessMetaDataTreeDTO;
+            }).collect(Collectors.toList());
+            allList.addAll(businessMetaDataTreeDTOS);
+        }
+        // 从allList中筛选出pid为0的元素，作为根节点列表
+        List<BusinessMetaDataTreeDTO> parentList = allList.stream().filter(item -> item.getPid() == 0).collect(Collectors.toList());
+        // 若根节点列表为空，返回一个空列表
+        if (CollectionUtils.isEmpty(parentList)){
+            return new ArrayList<>();
+        }else {
+            parentList.sort(Comparator.comparing(BusinessMetaDataTreeDTO::getSort).reversed());
+        }
+        // 递归处理子集
+        bussinessCategoryTree(allList, parentList);
+        return parentList;
+    }
+
+    // 递归处理子节点，构建树形结构
+    private void bussinessCategoryTree(List<BusinessMetaDataTreeDTO> allList, List<BusinessMetaDataTreeDTO> parentList) {
+        Map<Integer, List<BusinessMetaDataTreeDTO>> childrenMap = new HashMap<>();
+        for (BusinessMetaDataTreeDTO dto : allList) {
+            int parentId = dto.getPid() != null ? dto.getPid() : 0;
+            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
+        }
+        for (BusinessMetaDataTreeDTO parent : parentList) {
+            List<BusinessMetaDataTreeDTO> children = childrenMap.get(parent.getId());
+            if (children != null) {
+                children.sort(Comparator.comparing(BusinessMetaDataTreeDTO::getSort).reversed());
+                parent.setChildren(children);
+                bussinessCategoryTree(allList, children);
+            }
+        }
+    }
+
+    public final List<ParentBusinessTreeDTO> childClassTree(List<ParentBusinessTreeDTO> list, String pid) {
+        List<ParentBusinessTreeDTO> parentList = list.stream().filter(item -> (pid + "").equals(item.pid)).collect(Collectors.toList());
+        if (!parentList.isEmpty()) {
+            List<ParentBusinessTreeDTO> ResultList = new ArrayList<>();
+            for (int i = 0; i < parentList.size(); i++) {
+                List<ParentBusinessTreeDTO> children = new ArrayList<>();
+                for (int j = 0; j < list.size(); j++) {
+                    if (list.get(j).pid.equals(parentList.get(i).id)) {
+                        children = childClassTree(list, parentList.get(i).id);
+                    }
+                }
+                // 递归处理
+                List<ParentBusinessTreeDTO> child = parentList.get(i).getChild();
+                if (CollectionUtils.isEmpty(child)){
+                    parentList.get(i).setChild(children);
+                }else {
+                    child.addAll(children);
+                    parentList.get(i).setChild(child);
+                }
+
+                ResultList.add(parentList.get(i));
+            }
+            ResultList.sort(Comparator.comparing(ParentBusinessTreeDTO::getSort));
+
+            return ResultList;
+        }
+        return null;
     }
 }

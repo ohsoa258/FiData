@@ -3,8 +3,12 @@ package com.fisk.dataservice.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fisk.auth.client.AuthClient;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.common.core.constants.RedisTokenKey;
@@ -26,6 +30,10 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.BuildDataServiceHelper;
 import com.fisk.common.service.dbBEBuild.dataservice.IBuildDataServiceSqlCommand;
+import com.fisk.datamanagement.dto.labelcategory.LabelCategoryDataDTO;
+import com.fisk.dataservice.dto.api.FieldEncryptConfigDTO;
+import com.fisk.dataservice.dto.api.FieldEncryptDTO;
+import com.fisk.dataservice.dto.apiservice.RequestEncryptDTO;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
@@ -36,6 +44,8 @@ import com.fisk.dataservice.enums.LogTypeEnum;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.redisdata.RedisData;
+import com.fisk.dataservice.service.ApiEncryptConfigService;
+import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.service.IApiServiceManageService;
 import com.fisk.dataservice.vo.api.ApiProxyMsgVO;
 import com.fisk.dataservice.vo.apiservice.ResponseVO;
@@ -43,6 +53,7 @@ import com.fisk.dataservice.vo.app.AppWhiteListVO;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.google.common.base.Joiner;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -52,6 +63,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -102,6 +115,12 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
     @Resource
     private RedisUtil redisUtil;
+
+    @Resource
+    private IApiRegisterManageService apiRegisterManageService;
+
+    @Resource
+    private ApiEncryptConfigService apiEncryptConfigService;
 
     @Override
     public ResultEntity<Object> getToken(TokenDTO dto) {
@@ -284,15 +303,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     dto.parmList.put("current", current);
                     dto.parmList.put("size", size);
                 }
-
-                paramList.forEach(e -> {
-                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+                //如果是强生分支则将for (ParmConfigPO parmConfigPO : paramList) 注释掉并放开下面的 paramList.forEach(e -> {
+                for (ParmConfigPO parmConfigPO : paramList) {
+                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(parmConfigPO.getParmName())).findFirst().orElse(null);
                     if (stringObjectEntry != null) {
-                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+                        parmConfigPO.setParmValue(String.valueOf(stringObjectEntry.getValue()));
                     } else {
-                        e.setParmValue(null);
+                        return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_PARAMLIST_IS_NULL, responseVO);
                     }
-                });
+                }
+
+//                paramList.forEach(e -> {
+//                    Map.Entry<String, Object> stringObjectEntry = dto.getParmList().entrySet().stream().filter(item -> item.getKey().equals(e.getParmName())).findFirst().orElse(null);
+//                    if (stringObjectEntry != null) {
+//                        e.setParmValue(String.valueOf(stringObjectEntry.getValue()));
+//                    } else {
+//                        e.setParmValue(null);
+//                    }
+//                });
 
                 List<Long> collect = paramList.stream().map(ParmConfigPO::getId).collect(Collectors.toList());
                 List<BuiltinParmPO> builtinParamList = apiBuiltinParmMapper.getListBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id), collect);
@@ -348,6 +376,24 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 log.info("数据服务【getData】自定义模式SQL参数【countSql】：" + countSql);
             }
 
+            //判断是否需要加密字段
+            Boolean encrypt = false;
+            List<String> fieldName = new ArrayList<>();
+            String encryptKey = null;
+            String[] encryptedFields = null;
+            FieldEncryptConfigDTO fieldEncryptAll = apiRegisterManageService.getFieldEncryptAll((int) apiInfo.id);
+            if (fieldEncryptAll != null){
+                if (StringUtils.isNotEmpty(fieldEncryptAll.getEncryptKey())){
+                    encrypt = true;
+                    encryptKey = fieldEncryptAll.getEncryptKey();
+                }
+                List<FieldEncryptDTO> fieldEncryptDTOS = fieldEncryptAll.getFieldEncryptDTOS();
+                if (CollectionUtils.isNotEmpty(fieldEncryptDTOS)){
+                    fieldName = fieldEncryptDTOS.stream().filter(i->i.getEncrypt() == 1).map(FieldEncryptDTO::getFieldName).collect(Collectors.toList());
+                    encryptedFields = fieldName.toArray(new String[0]);
+                }
+            }
+            responseVO.setEncryptedFields(encryptedFields);
             // 第十步：判断数据源类型，加载数据库驱动，执行SQL
             logPO.setParamCheckDate(DateTimeUtils.getNow());
             conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
@@ -364,6 +410,15 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     String columnName = metaData.getColumnLabel(i);
                     //获取sql查询数据集合
                     Object value = rs.getObject(columnName);
+
+                    //加密字段
+                    if (encrypt){
+                        if (fieldName.contains(columnName)){
+                            if (!ObjectUtils.isEmpty(value)) {
+                                value = encryptField(value.toString(), encryptKey);
+                            }
+                        }
+                    }
                     jsonObj.put(columnName, value);
                 }
                 dataArray.add(jsonObj);
@@ -380,7 +435,9 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 }
                 countRs.close();
             }
-
+//            if (encrypt){
+//                responseVO.setEncryptKey(encryptKey);
+//            }
             if (dto.getCurrent() != null && dto.getSize() != null) {
                 responseVO.setCurrent(current);
                 responseVO.setSize(size);
@@ -429,6 +486,81 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             // System.gc();
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
+    }
+
+    @Override
+    public ResultEntity<Object> getEncryptKey(RequestEncryptDTO dto) {
+        String appAccount = "";
+        ResultEnum resultEnum = ResultEnum.REQUEST_SUCCESS;
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        if (userInfo == null) {
+            resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+            return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, null);
+        }
+
+        // 第一步：验证是否已进行授权认证
+        appAccount = userInfo.getUsername();
+        if (appAccount == null || appAccount.isEmpty()) {
+            resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+            return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, null);
+        }
+
+        // 第二步：验证当前应用（下游系统）是否有效
+        AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
+        if (appInfo == null) {
+            resultEnum = ResultEnum.DS_APISERVICE_APP_EXISTS;
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, null);
+        }
+
+        // 第三步：验证当前请求的API是否有效
+        ApiConfigPO apiInfo = apiRegisterMapper.getByApiCode(dto.apiCode);
+        if (apiInfo == null) {
+            resultEnum = ResultEnum.DS_APISERVICE_API_EXISTS;
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, null);
+        }
+        //验证api是否在有效期内
+        if (apiInfo.getExpirationType() == 2){
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            if (currentDateTime.isAfter(apiInfo.getExpirationTime())){
+                resultEnum = ResultEnum.DS_APISERVICE__EXPIRATION;
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE__EXPIRATION, null);
+            }
+        }
+        // 第五步：验证当前请求的API是否具备访问权限
+        AppServiceConfigPO subscribeBy = appApiMapper.getSubscribeBy(Math.toIntExact(appInfo.id), Math.toIntExact(apiInfo.id));
+        if (subscribeBy == null) {
+            resultEnum = ResultEnum.DS_APISERVICE_APP_NOTSUB;
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTSUB, null);
+        }
+        if (subscribeBy.apiState == ApiStateTypeEnum.Disable.getValue()) {
+            resultEnum = ResultEnum.DS_APISERVICE_APP_NOTENABLE;
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_NOTENABLE, null);
+        }
+
+        String encryptKey = null;
+        ApiConfigPO byApiCode = apiRegisterMapper.getByApiCode(dto.apiCode);
+        if (byApiCode == null){
+            resultEnum = ResultEnum.NOTFOUND;
+        }else {
+            LambdaQueryWrapper<ApiEncryptConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ApiEncryptConfigPO::getApiId,byApiCode.id);
+            ApiEncryptConfigPO encrypt = apiEncryptConfigService.getOne(queryWrapper);
+            if (encrypt == null){
+                resultEnum = ResultEnum.NOTFOUND;
+            }else {
+                encryptKey = encrypt.getEncryptKey();
+            }
+        }
+        return ResultEntityBuild.buildData(resultEnum, encryptKey);
+    }
+
+    private static String encryptField(String fieldValue, String key) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(), "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+
+        byte[] encryptedBytes = cipher.doFinal(fieldValue.getBytes());
+        return Base64.getEncoder().encodeToString(encryptedBytes);
     }
 
     @Override

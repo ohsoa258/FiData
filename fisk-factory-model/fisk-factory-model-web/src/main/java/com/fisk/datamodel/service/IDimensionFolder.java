@@ -63,4 +63,5 @@ public interface IDimensionFolder {
      */
     DimensionFolderDTO getDimensionFolderByTableName(String tableName);
 
+    List<DimensionFolderDTO> getDimensionFolderByIds(List<Integer> ids);
 }

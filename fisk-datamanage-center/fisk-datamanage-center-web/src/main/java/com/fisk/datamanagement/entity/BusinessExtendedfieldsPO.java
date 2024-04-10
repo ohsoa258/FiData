@@ -1,11 +1,7 @@
 package com.fisk.datamanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import org.joda.time.DateTime;
 
 import java.time.LocalDateTime;
 
@@ -16,16 +12,14 @@ import java.time.LocalDateTime;
 @Data
 @TableName("tb_business_extendedfields")
 public class BusinessExtendedfieldsPO {
-    public String  dimdomaintype;
-    public String  dimdomainid;
-    public String  dimdomain;
-    public String  dimtableid;
-    public String  dimtable;
-    public String  attributeid;
-    public String  attribute;
-    public  String indexid;
+    @TableId(value = "id", type = IdType.AUTO)
+    public int id;
+    public String dimdomainid;
+    public String dimtableid;
+    public String attributeid;
+    public String indexid;
     public String createdUser;
-//    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    //    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern="yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public String createdTime;
 
     @TableField(value = "update_time", fill = FieldFill.UPDATE)

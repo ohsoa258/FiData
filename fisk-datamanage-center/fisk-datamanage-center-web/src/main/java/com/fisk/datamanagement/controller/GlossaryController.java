@@ -7,10 +7,12 @@ import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.label.GlobalSearchDto;
+import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryAndMetaDatasMapDTO;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
 import com.fisk.datamanagement.dto.term.TermDTO;
-import com.fisk.datamanagement.service.IGlossaryCategory;
 import com.fisk.datamanagement.service.IGlossary;
+import com.fisk.datamanagement.service.IGlossaryCategory;
+import com.fisk.datamanagement.service.IMetadataGlossaryMap;
 import com.fisk.datamanagement.service.ITerm;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -19,7 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author JianWenYang
@@ -36,6 +37,9 @@ public class GlossaryController {
     ITerm iTerm;
     @Resource
     IGlossaryCategory iCategory;
+
+    @Resource
+    private IMetadataGlossaryMap metadataGlossaryMap;
 
     @ApiOperation("获取术语库列表,包含术语库下术语、类别.已重构")
     @GetMapping("/getGlossaryList")
@@ -126,10 +130,11 @@ public class GlossaryController {
     public ResultEntity<Object> getTermList(@RequestParam(value = "guid") String guid, @RequestParam(value = "parent") Boolean parent) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTermList(guid, parent));
     }
+
     @ApiOperation("通过术语分类id获取术语")
     @GetMapping("/queryGlossaryListById")
-    public ResultEntity<Object> queryGlossaryListById(GlobalSearchDto dto){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.queryGlossaryListById(dto));
+    public ResultEntity<Object> queryGlossaryListById(GlobalSearchDto dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryGlossaryListById(dto));
     }
 
     @ApiOperation("获取术语分类下的汇总数据")
@@ -137,4 +142,29 @@ public class GlossaryController {
     public ResultEntity<Object> getGlossaryCategorySummary() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, iCategory.getGlossaryCategorySummary());
     }
+
+    /**
+     * 业务术语-关联元数据id
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("业务术语-关联元数据id")
+    @PostMapping("/mapGlossaryWithMetaEntity")
+    public ResultEntity<Object> mapGlossaryWithMetaEntity(@RequestBody GlossaryAndMetaDatasMapDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.mapGlossaryWithMetaEntity(dto));
+    }
+
+    /**
+     * 业务术语-回显该术语关联的所有元数据信息
+     *
+     * @param glossaryId
+     * @return
+     */
+    @ApiOperation("业务术语-回显该术语关联的所有元数据信息")
+    @GetMapping("/getMetaEntitiesByGlossary")
+    public ResultEntity<Object> getMetaEntitiesByGlossary(@RequestParam("glossaryId") Integer glossaryId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.getMetaEntitiesByGlossary(glossaryId));
+    }
+
 }

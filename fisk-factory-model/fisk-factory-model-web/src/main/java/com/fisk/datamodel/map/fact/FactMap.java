@@ -59,4 +59,6 @@ public interface FactMap {
      */
     List<FactDataDTO> poListToDtoList(List<FactPO> po);
 
+
+    List<FactDTO> poListToFactDtoList(List<FactPO> po);
 }

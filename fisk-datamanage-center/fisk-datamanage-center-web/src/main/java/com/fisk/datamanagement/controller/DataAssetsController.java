@@ -11,6 +11,7 @@ import com.fisk.datamanagement.service.IAssetsDirectory;
 import com.fisk.datamanagement.service.IDataAssets;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -27,6 +29,7 @@ import java.io.OutputStream;
 @Api(tags = {SwaggerConfig.DATA_ASSETS})
 @RestController
 @RequestMapping("/DataAssets")
+@Slf4j
 public class DataAssetsController {
 
     @Resource
@@ -66,7 +69,7 @@ public class DataAssetsController {
     public ResultEntity<Object> getDataByFilter(@Validated @RequestBody DataAssetsParameterDTO dto) {
         DataAssetsResultDTO result = service.getDataByFilter(dto);
         if (dto.export) {
-            exportTable(result, dto);
+            exportTableForFilter(result, dto);
             return ResultEntityBuild.build(ResultEnum.SUCCESS);
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
@@ -130,6 +133,61 @@ public class DataAssetsController {
             output.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * 导出Excel数据优化  只导出查询字段列
+     *
+     * @param result
+     * @param dto
+     */
+    public void exportTableForFilter(DataAssetsResultDTO result, DataAssetsParameterDTO dto) {
+        SXSSFWorkbook workbook = new SXSSFWorkbook();
+        Sheet sheet = workbook.createSheet(dto.tableName);
+        SXSSFRow row1 = (SXSSFRow) sheet.createRow(0);
+        List<String> fieldNames = dto.getFieldNames();
+        for (int i = 0; i < fieldNames.size(); i++) {
+            //创建列头 设置列名
+            row1.createCell(i).
+                    setCellValue(fieldNames.get(i));
+        }
+
+        //记录额外创建的sheet数量
+        int index = 0;
+        for (int i = 0; i < result.dataArray.size(); i++) {
+            if ((i + 1) % max_row == 0) {
+                sheet = workbook.createSheet(dto.tableName + index);
+                row1 = (SXSSFRow) sheet.createRow(0);
+                for (int j = 0; j < fieldNames.size(); j++) {
+                    row1.createCell(j).setCellValue(fieldNames.get(j));
+                }
+                index++;
+            }
+            row1 = (SXSSFRow) sheet.createRow((i + 1) - (index * max_row));
+            JSONObject jsonObject = JSONObject.parseObject(result.dataArray.get(i).toString());
+            for (int j = 0; j < fieldNames.size(); j++) {
+                Object o = jsonObject.get(fieldNames.get(j));
+                if (o == null) {
+                    continue;
+                }
+                row1.createCell(j).setCellValue(o.toString());
+            }
+
+        }
+
+        //将文件存到指定位置
+        try {
+            //输出Excel文件
+            OutputStream output = response.getOutputStream();
+            response.reset();
+            response.setHeader("Content-disposition", "attachment; filename=" + dto.tableName + ".xlsx");
+            response.setContentType("application/x-xls");
+            workbook.write(output);
+            output.close();
+        } catch (Exception e) {
+            log.error("数据资产-即席查询导出excel失败："+e);
         }
 
     }

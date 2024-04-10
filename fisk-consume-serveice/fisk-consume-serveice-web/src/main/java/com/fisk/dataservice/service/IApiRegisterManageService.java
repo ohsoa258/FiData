@@ -86,12 +86,29 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
     List<FieldConfigVO> getFieldAll(int apiId);
 
     /**
+     * 查询api字段加密列表
+     *
+     * @param apiId apiId
+     * @return api字段列表
+     */
+    FieldEncryptConfigDTO getFieldEncryptAll(int apiId);
+
+
+    /**
      * 设置字段属性
      *
      * @param dto 字段信息
      * @return 执行结果
      */
     ResultEnum setField(List<FieldConfigEditDTO> dto);
+
+    /**
+     * 设置字段加密
+     *
+     * @param dto 字段信息
+     * @return 执行结果
+     */
+    ResultEnum setFieldEncrypt(FieldEncryptConfigDTO dto);
 
     /**
      * 预览
@@ -150,5 +167,7 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      * @return
      */
     Long getApiIdByApiName(String apiName);
+
+    List<String> getAllTag();
 
 }

@@ -12,6 +12,7 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
@@ -21,15 +22,20 @@ import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
+import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
+import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
+import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.dto.syncmode.GetTableBusinessDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -297,6 +303,22 @@ public interface DataModelClient {
     @PostMapping("/business/setDataStructure")
     ResultEntity<Object> setDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto);
 
+    /**
+     * 获取数据建模表结构
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/getTableDataStructure")
+    ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+    /**
+     * 获取数据建模字段结构
+     * @param dto
+     * @return
+     */
+    @PostMapping("/business/getFieldDataStructure")
+    ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto);
     @PostMapping("/business/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);
@@ -388,5 +410,29 @@ public interface DataModelClient {
     @ApiOperation("获取数仓建模所有业务域和业务域下的所有表（包含事实表和维度表和应用下建的公共域维度表）")
     @GetMapping("/business/getAllAreaAndTables")
     ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTables();
+
+    /**
+     * 为数仓etl树获取数仓建模所有业务域和业务域下的所有表
+     *
+     * @return
+     */
+    @GetMapping("/business/getAllAreaAndTablesForEtlTree")
+    ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTablesForEtlTree();
+
+    @PostMapping("/attribute/getDimensionAttributeByIds")
+    ResultEntity<List<DimensionAttributeDTO>> getDimensionAttributeByIds(@RequestBody List<Integer> ids);
+
+    @PostMapping("/dimensionFolder/getDimensionFolderByIds")
+    ResultEntity<List<DimensionFolderDTO>> getDimensionFolderByIds(@RequestBody List<Integer> ids);
+
+    @PostMapping("/dimension/getDimensionTableByIds")
+    ResultEntity<List<DimensionDTO>> getDimensionTableByIds(@RequestBody List<Integer> ids);
+
+    @PostMapping("/business/getBusinessAreaByIds")
+    ResultEntity<List<BusinessAreaDTO>> getBusinessAreaByIds(@RequestBody List<Integer> ids);
+    @PostMapping("/fact/getFactTableByIds")
+    ResultEntity<List<FactDTO>> getFactTableByIds(@RequestBody List<Integer> ids);
+    @PostMapping("/factAttribute/getFactAttributeByIds")
+    ResultEntity<List<FactAttributeDTO>> getFactAttributeByIds(@RequestBody List<Integer> ids);
 
 }

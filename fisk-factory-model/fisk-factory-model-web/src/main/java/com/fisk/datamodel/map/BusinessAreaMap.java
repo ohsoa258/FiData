@@ -35,6 +35,8 @@ public interface BusinessAreaMap {
      */
     BusinessAreaDTO poToDto(BusinessAreaPO po);
 
+    List<BusinessAreaDTO> poListToDtoList(List<BusinessAreaPO> po);
+
     /**
      * po==>BusinessAreaInfo
      *

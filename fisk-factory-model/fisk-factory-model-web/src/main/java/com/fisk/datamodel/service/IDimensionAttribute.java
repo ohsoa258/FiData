@@ -69,6 +69,8 @@ public interface IDimensionAttribute {
      */
     DimensionAttributeUpdateDTO getDimensionAttribute(int id);
 
+    List<DimensionAttributeDTO> getDimensionAttributeByIds(List<Integer> ids);
+
     /**
      * 根据维度表id,查看字段与关联关系
      * @param dimensionId

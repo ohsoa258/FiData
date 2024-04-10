@@ -1033,7 +1033,8 @@ public class DimensionImpl
 
         for (BusinessAreaPO businessAreaPO : businessAreaPOS) {
             LambdaQueryWrapper<DimensionPO> wrapper1 = new LambdaQueryWrapper<>();
-            wrapper1.eq(DimensionPO::getBusinessId, businessAreaPO.getId());
+            wrapper1.eq(DimensionPO::getBusinessId, businessAreaPO.getId())
+                    .orderByAsc(DimensionPO::getDimensionTabName);
             List<DimensionPO> dimensionPOS = dimension.list(wrapper1);
 
             BusinessAreaDimDTO businessAreaDimDTO = new BusinessAreaDimDTO();
@@ -1158,6 +1159,11 @@ public class DimensionImpl
         resultEnum = dimensionFolder.batchPublishDimensionFolder(queryDTO);
         log.info("==========重新发布结果:" + result.getCode());
         return ResultEntityBuild.build(resultEnum);
+    }
+
+    @Override
+    public List<DimensionDTO> getDimensionTableByIds(List<Integer> ids) {
+        return DimensionMap.INSTANCES.listPoToListDto(dimension.getBaseMapper().selectBatchIds(ids));
     }
 
     public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,

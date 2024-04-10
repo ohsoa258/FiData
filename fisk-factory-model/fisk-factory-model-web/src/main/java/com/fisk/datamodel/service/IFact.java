@@ -146,4 +146,6 @@ public interface IFact extends IService<FactPO> {
      */
     ResultEntity<Object> modelSyncData(ModelSyncDataDTO dto);
 
+
+    List<FactDTO> getFactTableByIds(List<Integer> ids);
 }

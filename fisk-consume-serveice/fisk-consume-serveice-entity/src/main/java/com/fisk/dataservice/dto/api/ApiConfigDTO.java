@@ -170,4 +170,10 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "缓存时间(秒)")
     private Integer cacheTime;
+
+    /**
+     * 标签
+     */
+    @ApiModelProperty(value = "标签")
+    private String tag;
 }

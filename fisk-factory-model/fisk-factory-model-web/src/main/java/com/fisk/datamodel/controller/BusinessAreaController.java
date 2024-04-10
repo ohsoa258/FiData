@@ -130,6 +130,18 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataModelStructure(dto));
     }
 
+
+    @PostMapping("/getTableDataStructure")
+    @ApiOperation(value = "获取数据建模表结构(数据标准用)")
+    public ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableDataStructure(dto));
+    }
+
+    @PostMapping("/getFieldDataStructure")
+    @ApiOperation(value = "获取数据建模字段结构(数据标准用)")
+    public ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldDataStructure(dto));
+    }
     @PostMapping("/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
@@ -195,6 +207,17 @@ public class BusinessAreaController {
     }
 
     /**
+     * 为数仓etl树获取数仓建模所有业务域和业务域下的所有表
+     *
+     * @return
+     */
+    @ApiOperation("为数仓etl树获取数仓建模所有业务域和业务域下的所有表")
+    @GetMapping("/getAllAreaAndTablesForEtlTree")
+    public ResultEntity<List<AccessAndModelAppDTO>> getAllAreaAndTablesForEtlTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndTablesForEtlTree());
+    }
+
+    /**
      * 获取数仓建模所有业务域和业务域下文件夹
      *
      * @return
@@ -205,4 +228,9 @@ public class BusinessAreaController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAreaAndFolder());
     }
 
+    @PostMapping("/getBusinessAreaByIds")
+    @ApiOperation("根据业务id集合获取业务详情")
+    public ResultEntity<List<BusinessAreaDTO>> getBusinessAreaByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaByIds(ids));
+    }
 }

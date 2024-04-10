@@ -27,6 +27,14 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
     List<MetadataEntityPO> selectMetadataEntity(@Param("type") Integer type);
 
     /**
+     * 获取实体集合 排除temp表
+     *
+     * @param type
+     * @return
+     */
+    List<MetadataEntityPO> selectMetadataEntityWithoutTemp(@Param("type") Integer type);
+
+    /**
      * 根据类型获取实体集合
      *
      * @param typeId

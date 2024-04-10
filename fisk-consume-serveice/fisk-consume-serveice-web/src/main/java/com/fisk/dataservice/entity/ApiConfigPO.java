@@ -142,4 +142,9 @@ public class ApiConfigPO extends BasePO
      */
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Integer maxSize;
+
+    /**
+     * 标签
+     */
+    private String tag;
 }

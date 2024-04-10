@@ -16,7 +16,8 @@ public enum LevelTypeEnum implements BaseEnum {
     DATABASE(3, "DATABASE"),
     TABLE(4, "TABLE"),
     VIEW(5, "VIEW"),
-    FIELD(6, "FIELD");
+    FIELD(6, "FIELD"),
+    STANDARD(7,"STANDARD");
 
     LevelTypeEnum(int value, String name) {
         this.value = value;

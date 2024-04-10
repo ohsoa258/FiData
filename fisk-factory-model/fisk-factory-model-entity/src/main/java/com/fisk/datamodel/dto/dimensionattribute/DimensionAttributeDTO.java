@@ -10,6 +10,12 @@ import lombok.Data;
 public class DimensionAttributeDTO {
     @ApiModelProperty(value = "id")
     public long id;
+
+    /**
+     * 维度表id
+     */
+    @ApiModelProperty(value = "维度表id")
+    public int dimensionId;
     /**
      * 维度表中文字段名称
      */

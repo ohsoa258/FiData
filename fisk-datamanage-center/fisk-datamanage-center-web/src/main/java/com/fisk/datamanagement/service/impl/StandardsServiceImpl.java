@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service.impl;
 
 import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
@@ -10,6 +11,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
@@ -20,7 +23,11 @@ import com.fisk.common.core.utils.dbutils.utils.PgSqlUtils;
 import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.standards.*;
@@ -39,6 +46,8 @@ import com.fisk.datamanagement.service.StandardsBeCitedService;
 import com.fisk.datamanagement.service.StandardsMenuService;
 import com.fisk.datamanagement.service.StandardsService;
 import com.fisk.datamanagement.utils.freemarker.FreeMarkerUtils;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
@@ -48,7 +57,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -72,6 +81,15 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 
     @Resource
     ICodeSetService dataSetService;
+
+    @Resource
+    DataAccessClient dataAccessClient;
+
+    @Resource
+    DataModelClient dataModelClient;
+
+    @Resource
+    MdmClient mdmClient;
 
     @Override
     public StandardsDTO getStandards(int id) {
@@ -251,7 +269,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         if (all.getCode() != ResultEnum.SUCCESS.getCode() || CollectionUtils.isEmpty(all.data)) {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
-        List<DataSourceDTO> allDatasources = all.data.stream().filter(i -> i.getSourceType() == 1).collect(Collectors.toList());
+        List<DataSourceDTO> allDatasources = all.data.stream().filter(i -> i.id == 1 || i.id == 2 || i.id == 3).collect(Collectors.toList());
 
         List<DataSourceInfoDTO> list = new ArrayList<>();
 
@@ -354,55 +372,68 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
      * @return
      */
     public List<TableNameDTO> getDbTable(DataSourceDTO dto) {
-        Connection conn = null;
         try {
-            AbstractCommonDbHelper commonDbHelper = new AbstractCommonDbHelper();
             List<TableNameDTO> data = new ArrayList<>();
-            switch (dto.conType) {
-                case MYSQL:
-                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
-                    data = MySqlConUtils.getTableName(conn);
+            FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
+            reqDTO.setDataSourceId(String.valueOf(dto.getId()));
+            reqDTO.setDataSourceName(dto.getConDbname());
+            switch (dto.sourceBusinessType){
+                case NONE:
                     break;
-                case SQLSERVER:
-                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
-                    data = SqlServerUtils.getTableName(conn);
+                case DW:
+                case OLAP:
+                    ResultEntity<Object> tableDataStructure1 = dataModelClient.getTableDataStructure(reqDTO);
+                    if (tableDataStructure1.code == ResultEnum.SUCCESS.getCode()){
+                        data = (List<TableNameDTO>)tableDataStructure1.data;
+                    }
                     break;
-                case POSTGRESQL:
-                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
-                    data = PgSqlUtils.getTableName(conn);
+                case ODS:
+                    ResultEntity<Object> tableDataStructure2 = dataAccessClient.getTableDataStructure(reqDTO);
+                    if (tableDataStructure2.code == ResultEnum.SUCCESS.getCode()){
+                        data = (List<TableNameDTO>)tableDataStructure2.data;
+                    }
                     break;
-                case ORACLE:
-                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
-                    data = OracleUtils.getTableName(conn);
+                case MDM:
+                    ResultEntity<Object> tableDataStructure3 = mdmClient.getTableDataStructure(reqDTO);
+                    if (tableDataStructure3.code == ResultEnum.SUCCESS.getCode()){
+                        data = (List<TableNameDTO>)tableDataStructure3.data;
+                    }
                     break;
-                case DORIS:
-                    conn = commonDbHelper.connection(dto.conStr, dto.conAccount, dto.conPassword, dto.conType);
-                    data = DorisConUtils.getTableName(conn);
-                    break;
-                default:
-                    throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
             }
             return data;
         } catch (Exception e) {
             log.error("【获取表信息失败】,{}", e);
             return null;
-        } finally {
-            AbstractCommonDbHelper.closeConnection(conn);
         }
     }
 
     @Override
     public List<TableColumnDTO> getColumn(ColumnQueryDTO dto) {
-        //获取数据源
-        ResultEntity<DataSourceDTO> dataSource = userClient.getFiDataDataSourceById(dto.getDbId());
-        if (dataSource.getCode() != ResultEnum.SUCCESS.getCode()) {
-            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        List<TableColumnDTO> tableColumnDTOS = new ArrayList<>();
+        switch (dto.tableBusinessTypeEnum){
+            case NONE:
+                ResultEntity<Object> fieldsDataStructure1 = dataAccessClient.getFieldsDataStructure(dto);
+                if (fieldsDataStructure1.code == ResultEnum.SUCCESS.getCode()){
+                    tableColumnDTOS = (List<TableColumnDTO>)fieldsDataStructure1.data;
+                }
+                break;
+            case DW_FACT:
+            case DW_DIMENSION:
+            case DORIS_DIMENSION:
+            case WIDE_TABLE:
+                ResultEntity<Object> fieldsDataStructure2 = dataModelClient.getFieldDataStructure(dto);
+                if (fieldsDataStructure2.code == ResultEnum.SUCCESS.getCode()){
+                    tableColumnDTOS = (List<TableColumnDTO>)fieldsDataStructure2.data;
+                }
+                break;
+            case ENTITY_TABLR:
+                ResultEntity<Object> fieldsDataStructure3 = mdmClient.getFieldDataStructure(dto);
+                if (fieldsDataStructure3.code == ResultEnum.SUCCESS.getCode()){
+                    tableColumnDTOS = (List<TableColumnDTO>)fieldsDataStructure3.data;
+                }
+                break;
         }
-        if (dataSource.data == null) {
-            return new ArrayList<>();
-        }
-
-        return getColumnByTableName(dataSource.data, dto.tableName);
+        return tableColumnDTOS;
     }
 
     @Override
@@ -682,6 +713,93 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             throw new RuntimeException(e);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id) {
+        List<StandardsMenuPO> standardsMenus = standardsMenuService.list();
+        if (CollectionUtils.isEmpty(standardsMenus)){
+            return new ArrayList<>();
+        }
+
+        List<StandardsMenuPO> standardsDataMenus = standardsMenus.stream().filter(i -> i.getType() == 2).collect(Collectors.toList());
+
+        List<Long> standardsDataMenuIds = standardsDataMenus.stream().map(BasePO::getId).collect(Collectors.toList());
+
+        LambdaQueryWrapper<StandardsPO> standardQueryWrapper = new LambdaQueryWrapper<>();
+        standardQueryWrapper.in(StandardsPO::getMenuId,standardsDataMenuIds);
+        List<StandardsPO> standardsPOS = this.list(standardQueryWrapper);
+        standardsPOS.stream().collect(Collectors.toMap(i->i.getId(),i->i));
+        Map<Integer, StandardsPO> standardMap = standardsPOS.stream().collect(Collectors.toMap(StandardsPO::getMenuId, i -> i));
+        List<Long> standardIds = standardsPOS.stream().map(BasePO::getId).collect(Collectors.toList());
+
+        LambdaQueryWrapper<StandardsBeCitedPO> beCitedQueryWrapper = new LambdaQueryWrapper<>();
+        beCitedQueryWrapper.in(StandardsBeCitedPO::getStandardsId,standardIds);
+        List<StandardsBeCitedPO> beCiteds = standardsBeCitedService.list(beCitedQueryWrapper);
+        Map<Integer, List<FiDataMetaDataTreeDTO>> dataMap = beCiteds.stream().collect(groupingBy(StandardsBeCitedPO::getStandardsId,
+                Collectors.mapping(i -> {
+                    FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+                    Map<String, Object> data = JSON.parseObject(JSON.toJSONString(i), Map.class);
+                    fiDataMetaDataTreeDTO.setData(data);
+                    return fiDataMetaDataTreeDTO;
+                }, Collectors.toList())));
+        List<FiDataMetaDataTreeDTO> allTree = standardsMenus.stream().map(i -> {
+            FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+            if (i.getType() == 1) {
+                fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
+                if (i.getPid() == null || i.getPid() == 0) {
+                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(id));
+                } else {
+                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
+                }
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.FOLDER);
+                fiDataMetaDataTreeDTO.setLabel(i.getName());
+                fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
+                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
+                fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
+                fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+            } else if (i.getType() == 2) {
+                fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
+                if (i.getPid() == null || i.getPid() == 0) {
+                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(id));
+                } else {
+                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
+                }
+
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD);
+                fiDataMetaDataTreeDTO.setLabel(i.getName());
+                fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
+                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
+                fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
+                fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+
+                StandardsPO standardsPO = standardMap.get((int) i.getId());
+                if (standardsPO != null){
+                    List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeDTOS = dataMap.get((int) standardsPO.getId());
+                    fiDataMetaDataTreeDTO.setChildren(fiDataMetaDataTreeDTOS);
+                }
+            }
+            return fiDataMetaDataTreeDTO;
+        }).collect(Collectors.toList());
+
+        List<FiDataMetaDataTreeDTO> parentTree = allTree.stream().filter(i -> i.getParentId().equals(id)).collect(Collectors.toList());
+        standardsTree(allTree,parentTree);
+        return parentTree;
+    }
+
+    private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {
+        Map<String, List<FiDataMetaDataTreeDTO>> childrenMap = new HashMap<>();
+        for (FiDataMetaDataTreeDTO dto : allList) {
+            String parentId = dto.getParentId() != null ? dto.getParentId() : "0";
+            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
+        }
+        for (FiDataMetaDataTreeDTO parent : parentList) {
+            List<FiDataMetaDataTreeDTO> children = childrenMap.get(parent.getId());
+            if (children != null) {
+                parent.setChildren(children);
+                standardsTree(allList, children);
+            }
+        }
     }
 
     public void checkData(List<StandardsExcel> StandardsList){

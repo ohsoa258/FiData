@@ -121,7 +121,7 @@ public class BusinessCategoryController {
 
     @ApiOperation("获取业务指标明细数据列表")
     @GetMapping("/getBusinessMetaDataDetailList")
-    public ResultEntity<Object> getBusinessMetaDataDetailList(String pid) {
+    public ResultEntity<Object> getBusinessMetaDataDetailList(@RequestParam("pid") String pid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassification(pid));
     }
 
@@ -192,5 +192,15 @@ public class BusinessCategoryController {
     public ResultEntity<Object> getTargetinfoHistory( @PathVariable("historyId") String historyId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,businessTargetinfoService.getTargetinfoHistory(historyId));
     }
+    @ApiOperation("获取上级指标数据树状列表")
+    @GetMapping("/getParentBusinessDataList")
+    public ResultEntity<Object> getParentBusinessDataList()  {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getParentBusinessDataList());
+    }
 
+    @ApiOperation("获取业务指标数据树状列表(目录和数据)")
+    @GetMapping("/getAllBusinessMetaDataList")
+    public ResultEntity<Object> getAllBusinessMetaDataList()  {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getAllBusinessMetaDataList());
+    }
 }

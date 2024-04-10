@@ -1,13 +1,11 @@
 package com.fisk.datamanagement.service;
 
-import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.datamanagement.entity.FactTreePOs;
-import com.fisk.datamanagement.mapper.FactTreeListMapper;
 
-import javax.annotation.Resource;
 import java.util.List;
 
-public interface FactTreeListExtendedfieldsService {
+public interface FactTreeListExtendedfieldsService extends IService<FactTreePOs> {
 
     List<FactTreePOs> addFactTreeListExtendedfields(String pid);
 }

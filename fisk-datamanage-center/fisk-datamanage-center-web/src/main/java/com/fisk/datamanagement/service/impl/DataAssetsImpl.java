@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -173,6 +174,8 @@ public class DataAssetsImpl implements IDataAssets {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             log.debug("数据源信息constr{" + first.get().conStr + "}conip{" + first.get().conIp + "},conport{" + first.get().conPort + "},ConPWD{" + first.get().getConPassword() + "},conAccount{" + first.get().conAccount + "}");
+            DataSourceTypeEnum conType = first.get().getConType();
+
             //连接数据源
             log.debug("========连接数据源START========");
             conn = getConnection(first.get());
@@ -181,8 +184,25 @@ public class DataAssetsImpl implements IDataAssets {
             log.debug("con commit");
             log.debug("========连接数据源END========");
             //拼接筛选条件
-            String condition = " " + dto.whereCondition;
+            String condition = dto.whereCondition;
             String sql = null;
+
+            //拼接where条件
+            if (StringUtils.isBlank(condition)) {
+                condition = " 1=1 ";
+            } else {
+                condition = " " + condition + " ";
+                //根据数据源 确定where条件的列名区分符号 前端默认给的是 [ ] 因此sqlserver不用管
+                if (conType.equals(DataSourceTypeEnum.DORIS)
+                        || conType.equals(DataSourceTypeEnum.MYSQL)
+                ) {
+                    condition = condition.replaceAll("\\[", "`");
+                    condition = condition.replaceAll("]", "`");
+                } else if (conType.equals(DataSourceTypeEnum.POSTGRESQL)) {
+                    condition = condition.replaceAll("\\[", "\"");
+                    condition = condition.replaceAll("]", "\"");
+                }
+            }
             //拼接查询字段
             StringBuilder fields = new StringBuilder();
             List<String> fieldNames = dto.getFieldNames();
@@ -200,11 +220,11 @@ public class DataAssetsImpl implements IDataAssets {
 
             //是否导出
             if (dto.export) {
-                sql = "select " + fields + " from " + dto.tableName + condition;
+                sql = "select " + fields + " from " + dto.tableName +  " where " + condition;
             } else {
                 //获取总条数
                 log.debug("=====获取总条数START======");
-                String getTotalSql = "select count(*) as totalNum from " + dto.tableName + condition;
+                String getTotalSql = "select count(*) as totalNum from " + dto.tableName + " where " + condition;
                 log.debug("=====获取总条数SQL语句======" + getTotalSql);
                 log.debug("==conn.createStatement() START==");
                 st = conn.createStatement();
@@ -418,6 +438,11 @@ public class DataAssetsImpl implements IDataAssets {
         int skipCount = dto.pageIndex * dto.pageSize;
         switch (typeEnum) {
             case SQLSERVER:
+                if (StringUtils.isBlank(condition)) {
+                    condition = " where ";
+                } else {
+                    condition = " where " + condition + " and ";
+                }
                 str.append("select top ");
                 str.append(dto.pageSize);
                 str.append(" * from (select row_number() over(order by ");
@@ -425,7 +450,7 @@ public class DataAssetsImpl implements IDataAssets {
                 str.append(dto.tableName);
                 str.append(") temp_row ");
                 str.append(condition);
-                str.append(" and rownumber>");
+                str.append("rownumber>");
                 str.append(offset);
                 break;
             case ORACLE:
@@ -439,8 +464,14 @@ public class DataAssetsImpl implements IDataAssets {
             case MYSQL:
             case POSTGRESQL:
             case DORIS:
+                if (StringUtils.isBlank(condition)) {
+                    condition = " ";
+                } else {
+                    condition = " where " + condition;
+                }
                 str.append("select ").append(fields).append(" from ");
-                str.append(dto.tableName).append(condition);
+                str.append(dto.tableName)
+                        .append(condition);
                 str.append(" order by ").append(dto.columnName);
                 str.append(" limit ");
                 str.append(dto.pageSize);

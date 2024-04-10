@@ -4,6 +4,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataservice.config.SwaggerConfig;
+import com.fisk.dataservice.dto.api.FieldEncryptConfigDTO;
 import com.fisk.dataservice.dto.tableapi.*;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
 import com.fisk.dataservice.service.ITableApiLogService;
@@ -21,6 +22,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -74,6 +76,17 @@ public class TableApiServiceController {
     @PostMapping("/TableApiServiceSave")
     public ResultEntity<Object> TableApiServiceSave(@RequestBody TableApiServiceSaveDTO dto) {
         return ResultEntityBuild.build(tableApiService.TableApiServiceSave(dto));
+    }
+    @ApiOperation("查询api字段加密列表")
+    @GetMapping("/getApiParameter/{apiId}")
+    public ResultEntity<List<TableApiParameterDTO>> getApiParameter(@PathVariable("apiId") int apiId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableApiService.getApiParameter(apiId));
+    }
+
+    @ApiOperation("设置api字段加密")
+    @PostMapping("/setApiParameterEncrypt")
+    public ResultEntity<ResultEnum> setApiParameterEncrypt(@RequestBody List<TableApiParameterDTO> list) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,tableApiService.setApiParameterEncrypt(list));
     }
 
     @ApiOperation("删除数据分发服务Api服务配置")
@@ -142,5 +155,11 @@ public class TableApiServiceController {
     @GetMapping("/sendAcknowledgement")
     public ResultEntity<Object> sendAcknowledgement(Integer apiLogId) {
         return ResultEntityBuild.build(tableApiService.sendAcknowledgement(apiLogId));
+    }
+
+    @ApiOperation("测试获取数据")
+    @PostMapping("/test")
+    public ResultEntity<Object> getApiTest(@RequestBody HashMap<Object,Object> map) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,map);
     }
 }

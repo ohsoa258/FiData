@@ -21,4 +21,6 @@ public class MetaDataGlossaryMapPO extends BasePO {
     public Integer metadataEntityId;
 
     public Integer glossaryId;
+
+    public Integer typeId;
 }

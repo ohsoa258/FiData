@@ -27,6 +27,12 @@ public interface IEntity {
     List<EntityTreeDTO> getEntityListForAdHocQuery();
 
     /**
+     * 为业务术语获取元数据对象树形列表
+     * @return
+     */
+    List<EntityTreeDTO> getEntityListForBusinessTerm();
+
+    /**
      *刷新元数据对象树形列表
      */
 
@@ -36,6 +42,11 @@ public interface IEntity {
      *刷新即席查询元数据对象树形列表（ods dw mdm olap）
      */
     void refreshEntityTreeForAdHocQuery();
+
+    /**
+     * 刷新业务术语元数据对象树形列表
+     */
+    void refreshEntityTreeForTerm();
 
 
     /**

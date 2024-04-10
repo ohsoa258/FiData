@@ -11,6 +11,18 @@ public class FactAttributeDataDTO {
 
     @ApiModelProperty(value = "id")
     public long id;
+
+    /**
+     * 事实表id
+     */
+    @ApiModelProperty(value = "事实表id")
+    public int factId;
+
+    /**
+     * 事实表字段类型
+     */
+    @ApiModelProperty(value = "事实表字段类型")
+    public String factFieldType;
     /**
      * 事实字段中文名称
      */

@@ -214,4 +214,20 @@ public interface TableAccessMapper extends FKBaseMapper<TableAccessPO> {
     @Select("select s.sync_mode as syncMode, count(1) as count from tb_table_access as a right join tb_table_syncmode as s on a.id = s.id " +
             "where a.del_flag = #{flag} and a.app_id = #{appId} group by s.sync_mode")
     List<SyncTableCountPO> getSyncTableCount(@Param("appId") Integer appId, @Param("flag") int flag);
+
+    /**
+     * 数接--回显统计当前数据接入总共有多少非实时表和实时api
+     * 根据应用类型区分
+     * 应用类型    (0:实时应用  1:非实时应用 2:CDC)
+     *
+     * @param appType 应用类型    (0:实时应用  1:非实时应用 2:CDC)
+     * @return
+     */
+    @Select("SELECT ar.id, SUM(CASE WHEN ta.api_id IS NULL THEN 1 ELSE 0 END) as phyCount, " +
+            "SUM(CASE WHEN ta.api_id IS NOT NULL THEN 1 ELSE 0 END) as apiCount " +
+            "FROM tb_app_registration ar " +
+            "LEFT JOIN tb_table_access ta ON ar.id = ta.app_id " +
+            "WHERE ar.app_type = #{appType} AND ar.del_flag = 1 AND ta.del_flag = 1 " +
+            "GROUP BY ar.id")
+    List<Map<String, Object>> countTbl(@Param("appType") Integer appType);
 }

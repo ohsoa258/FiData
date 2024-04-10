@@ -1,8 +1,8 @@
 dataservice:
   pdf:
     # pdf文档模板路径
-    #path: /root/java/fisk-consume-serveice/pdf
-    path: D:\Work\java\FiData_Server\public\Fisk.DMP.Project\fisk-consume-serveice\fisk-consume-serveice-web\target\classes
+    path: /data/dev/fisk-consume-serveice-web/pdf
+#    path: D:\work project\Fisk.DMP.Project\fisk-consume-serveice\fisk-consume-serveice-web\target\classes
     # 接口文档中的环境信息
     api_address: http://192.168.11.130:8083
   datasource:
@@ -23,7 +23,7 @@ dataservice:
   # 数据分发api失败重试时间间隔
   retrytime: 10000
 # 是否同步元数据
-open-metadata: true
+open-metadata: false
 spring:
   hikari:
     maximum-pool-size: 60

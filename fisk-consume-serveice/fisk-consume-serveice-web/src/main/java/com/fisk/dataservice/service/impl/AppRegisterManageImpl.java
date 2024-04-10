@@ -572,8 +572,12 @@ public class AppRegisterManageImpl
         apiDocDTO = JSON.parseObject(jsonResult, ApiDocDTO.class);
         // API文档代码示例 c#
         apiDocDTO.apiCodeExamples_net = DATASERVICE_APICODEEXAMPLES_NET.replace("{api_prd_address}", api_address);
+        apiDocDTO.apiCodeExamples_net_encrypt = DATASERVICE_APICODEEXAMPLES_NET_ENCRYPT;
+
+
         // API文档代码示例 java
         apiDocDTO.apiCodeExamples_java = DATASERVICE_APICODEEXAMPLES_JAVA.replace("{api_prd_address}", api_address);
+        apiDocDTO.apiCodeExamples_java_encrypt = DATASERVICE_APICODEEXAMPLES_JAVA_ENCRYPT;
 
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestExamples = "{\n" +
                 "&nbsp;&nbsp; \"appAccount\": \"xxx\",\n" +
@@ -588,7 +592,19 @@ public class AppRegisterManageImpl
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS_Fixed = apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS;
         apiDocDTO.apiBasicInfoDTOS.get(0).apiRequestDTOS = new ArrayList<>();
 
-        BigDecimal catalogueIndex = new BigDecimal("2.4");
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestExamples = "{\n" +
+                "&nbsp;&nbsp; \"apiCode\": \"xxx\",\n" +
+                "}";
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiResponseExamples = String.format("{\n" +
+                "&nbsp;&nbsp; \"code\": 200,\n" +
+                "&nbsp;&nbsp; \"data\": \"xxx\", --%s\n" +
+                "&nbsp;&nbsp; \"msg\": \"xxx\"\n" +
+                "}", "2.4.9");
+        // 特殊处理获取密钥接口的请求参数
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestDTOS_Fixed = apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestDTOS;
+        apiDocDTO.apiBasicInfoDTOS.get(1).apiRequestDTOS = new ArrayList<>();
+
+        BigDecimal catalogueIndex = new BigDecimal("2.5");
         List<ApiBasicInfoDTO> apiBasicInfoDTOS = new ArrayList<>();
         for (int i = 0; i < apiList.size(); i++) {
 
@@ -631,10 +647,18 @@ public class AppRegisterManageImpl
             apiRequestDTOS_fixed.add(requestDTO);
             trReqIndex_fixed[0]++;
 
+            String flag = "否";
+            if (CollectionUtils.isNotEmpty(paramsList)) {
+                List<ParmConfigPO> collect = paramsList.stream().filter(v -> v.getApiId() == apiConfigPO.id).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(collect)){
+                    flag = "是";
+                }
+            }
             // 请求参数新增parmList参数说明
             requestDTO = new ApiRequestDTO();
             requestDTO.setParmName("parmList");
-            requestDTO.setIsRequired("否");
+
+            requestDTO.setIsRequired(flag);
             requestDTO.setParmType("HashMap");
             requestDTO.setParmDesc("API参数列表，详情见parmList参数说明，默认为null");
             requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
@@ -656,7 +680,7 @@ public class AppRegisterManageImpl
             requestDTO.setParmName("size");
             requestDTO.setIsRequired("是");
             requestDTO.setParmType("Integer"); //String特指这个类型，string适用于引用对象
-            requestDTO.setParmDesc("页数：若未开启单次查询限制则该参数必填，建议每页500条。\n若开启单次查询限制则查询条数不会超过配置的最大条数，默认为最大条数。");
+            requestDTO.setParmDesc("每页数量：若未开启单次查询限制则该参数必填，建议每页500条。\n若开启单次查询限制则查询条数不会超过配置的最大条数，默认为最大条数。");
             requestDTO.setTrStyle(trReqIndex_fixed[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff");
             apiRequestDTOS_fixed.add(requestDTO);
             trReqIndex_fixed[0]++;
@@ -695,22 +719,86 @@ public class AppRegisterManageImpl
 
             /* 设置API返回参数 start */
             List<ApiResponseDTO> apiResponseDTOS = new ArrayList<>();
+            final int[] trIndex_data = {1};
+            ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("current");
+            apiResponseDTO.setParmType("Integer");
+            apiResponseDTO.setParmDesc("当前页码");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("size");
+            apiResponseDTO.setParmType("Integer");
+            apiResponseDTO.setParmDesc("当前页大小");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("total");
+            apiResponseDTO.setParmType("Integer");
+            apiResponseDTO.setParmDesc("总数");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("page");
+            apiResponseDTO.setParmType("Integer");
+            apiResponseDTO.setParmDesc("总页数");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("encryptedFields");
+            apiResponseDTO.setParmType("String[]");
+            apiResponseDTO.setParmDesc("加密字段列表");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
+            apiResponseDTO = new ApiResponseDTO();
+            apiResponseDTO.setParmName("dataArray");
+            apiResponseDTO.setParmType("Object[]");
+            apiResponseDTO.setParmDesc("返回结果对象列表");
+            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+            apiResponseDTOS.add(apiResponseDTO);
+            trIndex_data[0]++;
+
+            // 请求参数新增密钥参数说明
+//            apiResponseDTO = new ApiResponseDTO();
+//            apiResponseDTO.setParmName("encryptKey");
+//            apiResponseDTO.setParmType("String");
+//            apiResponseDTO.setParmDesc("密钥key，用于字段加密和解密，若未加密则为null");
+//            apiResponseDTO.trStyle = trIndex_data[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+//            apiResponseDTOS.add(apiResponseDTO);
+//            trIndex_data[0]++;
+            List<ApiResponseDTO> apiResponseDataArrays = new ArrayList<>();
             if (CollectionUtils.isNotEmpty(fieldList)) {
                 final int[] trIndex = {1};
                 List<FieldConfigPO> collect = fieldList.stream().filter(item -> item.apiId == apiConfigPO.id).sorted(Comparator.comparing(FieldConfigPO::getFieldSort)).collect(Collectors.toList());
                 if (CollectionUtils.isNotEmpty(collect)) {
                     collect.forEach(e -> {
-                        ApiResponseDTO apiResponseDTO = new ApiResponseDTO();
-                        apiResponseDTO.parmName = e.fieldName;
-                        apiResponseDTO.parmType = e.fieldType;
-                        apiResponseDTO.parmDesc = e.fieldDesc;
-                        apiResponseDTO.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
-                        apiResponseDTOS.add(apiResponseDTO);
+                        ApiResponseDTO apiResponseDataArray = new ApiResponseDTO();
+                        apiResponseDataArray.parmName = e.fieldName;
+                        apiResponseDataArray.parmType = e.fieldType;
+                        apiResponseDataArray.parmDesc = e.fieldDesc;
+                        if (e.encrypt == 1){
+                            apiResponseDataArray.parmEncrypt = "是";
+                        }else {
+                            apiResponseDataArray.parmEncrypt = "否";
+                        }
+                        apiResponseDataArray.trStyle = trIndex[0] % 2 == 0 ? "background-color: #f8f8f8" : "background-color: #fff";
+                        apiResponseDataArrays.add(apiResponseDataArray);
                         trIndex[0]++;
                     });
                 }
             }
-            apiBasicInfoDTO.apiResponseHeaderDesc = "返回参数（dataArray）说明";
+            apiBasicInfoDTO.apiResponseDataArray = apiResponseDataArrays;
+            apiBasicInfoDTO.apiResponseHeaderDesc = "返回参数说明";
             apiBasicInfoDTO.apiResponseDTOS = apiResponseDTOS;
             apiBasicInfoDTO.apiResponseExamples = String.format("{\n" +
                     " &nbsp;&nbsp;\"code\":200,\n" +
@@ -719,6 +807,7 @@ public class AppRegisterManageImpl
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"size\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"total\":null,\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"page\":null,\n" +
+                    " &nbsp;&nbsp;&nbsp;&nbsp;\"encryptedFields\":[],\n" +
                     " &nbsp;&nbsp;&nbsp;&nbsp;\"dataArray\":[] --%s\n" +
                     " &nbsp;&nbsp;},\n" +
                     " &nbsp;&nbsp;\"msg\":\"xxx\"\n" +

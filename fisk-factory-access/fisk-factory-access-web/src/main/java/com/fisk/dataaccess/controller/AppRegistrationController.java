@@ -29,6 +29,7 @@ import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.table.CDCAppNameVO;
@@ -351,6 +352,16 @@ public class AppRegistrationController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataAccessStructure(dto));
     }
 
+    @PostMapping("/getTableDataStructure")
+    @ApiOperation(value = "获取数据接入表结构(数据标准用)")
+    public ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableDataStructure(dto));
+    }
+    @ApiOperation("获取数据接入字段结构(数据标准用)")
+    @PostMapping("/getFieldsDataStructure")
+    public ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldsDataStructure(dto));
+    }
     @PostMapping("/buildTableRuleInfo")
     @ApiOperation(value = "构建业务元数据其他数据信息")
     public ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto) {
@@ -386,6 +397,17 @@ public class AppRegistrationController {
     public ResultEntity<Object> getFiDataDataSource() {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataDataSource());
+    }
+
+    /**
+     * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     * @return
+     */
+    @GetMapping("/getFiDataOdsAndLakeSource")
+    @ApiOperation(value = "数仓建模获取fidata数据源（ods & lake） 不包含HUDI")
+    public ResultEntity<Object> getFiDataOdsAndLakeSource() {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataOdsAndLakeSource());
     }
 
     @GetMapping("/getDataTypeList/{appId}")
@@ -472,6 +494,17 @@ public class AppRegistrationController {
     }
 
     /**
+     * 获取cdc类型所有应用的库名
+     *
+     * @return
+     */
+    @GetMapping("/getCDCAppDbName")
+    @ApiOperation(value = "获取cdc类型所有应用的库名")
+    public ResultEntity<List<CDCAppDbNameVO>> getCDCAppDbName() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCDCAppDbName());
+    }
+
+    /**
      * 获取cdc类型所有应用及表名
      *
      * @return
@@ -520,13 +553,12 @@ public class AppRegistrationController {
      * hudi入仓配置 重新同步单个指定表
      * 某张表结构变了  想重新同步一下   这张表的字段  已有的不要动  不存在的删掉  新加的再同步过来
      *
-     *
      * @param syncDto
      */
     @ApiOperation("hudi入仓配置 重新同步单个指定表")
     @PostMapping("/hudiReSyncOneTable")
     public ResultEntity<Object> hudiReSyncOneTable(@RequestBody HudiReSyncDTO syncDto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.hudiReSyncOneTable(syncDto));
+        return ResultEntityBuild.build(service.hudiReSyncOneTable(syncDto));
     }
 
     /**
@@ -534,7 +566,7 @@ public class AppRegistrationController {
      */
     @ApiOperation("获取所有被应用引用的数据源信息")
     @GetMapping("/getAppSources")
-    public List<AppDataSourceDTO> getAppSources(){
+    public List<AppDataSourceDTO> getAppSources() {
         return service.getAppSources();
     }
 

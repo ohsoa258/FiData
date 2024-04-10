@@ -533,6 +533,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                     tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
                 } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
                     ifDoris += 1;
+                    if (postgreDTO.getDbName().equals("dmp_ods")){
+                        continue;
+                    }
                     tablesPlus = dorisConUtils.getTablesPlusForOps(connection);
                 }
                 if (CollectionUtils.isNotEmpty(tablesPlus)) {

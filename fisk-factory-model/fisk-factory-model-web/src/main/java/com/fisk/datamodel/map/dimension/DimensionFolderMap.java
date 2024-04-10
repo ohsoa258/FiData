@@ -38,4 +38,6 @@ public interface DimensionFolderMap {
      */
     List<DimensionFolderDataDTO> poListToDtoList(List<DimensionFolderPO> po);
 
+    List<DimensionFolderDTO> poFolderToDtoList(List<DimensionFolderPO> po);
+
 }

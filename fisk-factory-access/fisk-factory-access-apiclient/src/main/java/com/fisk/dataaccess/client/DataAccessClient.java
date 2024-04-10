@@ -1,10 +1,13 @@
 package com.fisk.dataaccess.client;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
@@ -23,6 +26,7 @@ import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
@@ -536,6 +540,13 @@ public interface DataAccessClient {
     @ApiOperation(value = "获取cdc类型所有应用及表名")
     ResultEntity<List<CDCAppNameAndTableVO>> getCDCAppNameAndTables(@RequestParam("appId") Integer appId);
 
+    /**
+     * 获取cdc类型所有应用的库名
+     * @param
+     * @return
+     */
+    @GetMapping("/appRegistration/getCDCAppDbName")
+    ResultEntity<List<CDCAppDbNameVO>>getCDCAppDbName();
     @ApiOperation(value = "根据appId获取所有数据源")
     @GetMapping("/datasource/getAppSourcesByAppId")
     ResultEntity<List<AppDataSourceDTO>> getAppSourcesByAppId(@RequestParam("appId") Integer appId);
@@ -564,4 +575,26 @@ public interface DataAccessClient {
     @ApiOperation("获取所有被应用引用的数据源信息")
     @GetMapping("/appRegistration/getAppSources")
     List<AppDataSourceDTO> getAppSources();
+
+    /**
+     * 获取数据接入表结构
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("获取数据接入表结构")
+    @PostMapping("/appRegistration/getTableDataStructure")
+    ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
+
+    /**
+     * 获取数据接入字段结构
+     *
+     * @param dto dto
+     * @return 元数据对象
+     */
+    @ApiOperation("获取数据接入字段结构")
+    @PostMapping("/appRegistration/getFieldsDataStructure")
+    ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto);
+
 }

@@ -64,3 +64,5 @@ azure:
 
 #  数据资产即席查询树 redis key
 redisKeyFroAdHocQuery: AdHoc1N
+# 数据资产 业务术语树 redis key
+redisKeyForTerm: Term2B

@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.datasource.ExternalDataSourceDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
@@ -25,6 +27,7 @@ import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
 import com.fisk.dataaccess.entity.AppRegistrationPO;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
+import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
@@ -293,6 +296,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<ExternalDataSourceDTO> getFiDataDataSource();
 
     /**
+     * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     * @return
+     */
+    List<ExternalDataSourceDTO> getFiDataOdsAndLakeSource();
+
+    /**
      * 数据类型集合
      *
      * @param appId
@@ -401,6 +410,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * 获取cdc类型所有应用及表名
      */
     List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId);
+    /**
+     * 获取cdc类型所有应用的库名
+     *
+     * @return
+     */
+    List<CDCAppDbNameVO> getCDCAppDbName();
 
     /**
      * 获取cdc类型所有应用
@@ -439,10 +454,23 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      *
      * @param syncDto
      */
-    Object hudiReSyncOneTable(HudiReSyncDTO syncDto);
+    ResultEnum hudiReSyncOneTable(HudiReSyncDTO syncDto);
 
     /**
      * 获取所有被应用引用的数据源信息
      */
     List<AppDataSourceDTO> getAppSources();
+
+    /**
+     * 获取数据接入表结构(数据标准用)
+     * @param dto
+     * @return
+     */
+    List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO dto);
+    /**
+     * 获取数据接入字段结构(数据标准用)
+     * @param dto
+     * @return
+     */
+    List<TableColumnDTO> getFieldsDataStructure(ColumnQueryDTO dto);
 }

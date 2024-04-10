@@ -15,7 +15,7 @@ import java.util.Date;
  */
 @TableName("tb_facttreelist_history")
 @Data
-public class FacttreelistHistoryPO extends BasePO{
+public class FacttreelistHistoryPO{
     public String pid;
 
     private String historyId;
@@ -28,7 +28,27 @@ public class FacttreelistHistoryPO extends BasePO{
 
     public String factTabName;
 
+    public String factTabCnName;
+
     public String factFieldEnNameId;
 
     public String factFieldEnName;
+
+    public String factFieldCnName;
+
+    @TableId(value = "id", type = IdType.AUTO)
+    public long id;
+
+    public LocalDateTime createTime;
+
+    public String createUser;
+
+    @TableField(value = "update_time", fill = FieldFill.UPDATE)
+    public LocalDateTime updateTime;
+
+    @TableField(value = "update_user", fill = FieldFill.UPDATE)
+    public String updateUser;
+
+    @TableLogic
+    public int delFlag;
 }

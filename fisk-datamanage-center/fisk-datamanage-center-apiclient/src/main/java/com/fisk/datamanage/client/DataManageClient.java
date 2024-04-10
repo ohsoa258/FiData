@@ -157,5 +157,7 @@ public interface DataManageClient {
      */
     @PostMapping("/MetaData/deleteConsumptionMetaData")
     ResultEntity<Object> deleteConsumptionMetaData(@RequestBody  List<MetaDataEntityDTO> entityList);
+    @PostMapping("/Standards/getAllStandardsTree")
+    ResultEntity<Object> getAllStandardsTree(@RequestParam("id") String id);
 
 }

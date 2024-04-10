@@ -4,8 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -78,6 +81,19 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     boolean setDataStructure(FiDataMetaDataReqDTO reqDto);
+
+    /**
+     * 获取主数据表结构(数据标准用)
+     * @param reqDto
+     * @return
+     */
+    List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO reqDto);
+    /**
+     * 获取主数据字段结构(数据标准用)
+     * @param reqDto
+     * @return
+     */
+    List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO reqDto);
 
     /**
      * 获取模型名称和实体名称

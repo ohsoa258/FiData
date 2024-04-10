@@ -37,6 +37,7 @@ import com.fisk.datagovernance.service.dataops.DataObsSqlService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
+import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
@@ -100,6 +101,12 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private DataObsSqlService dataObsSqlService;
+
+    @Value("${checkStandards}")
+    private Boolean checkStandards;
+
+    @Resource
+    private DataManageClient dataManageClient;
 
     @Override
     public Page<DataSourceConVO> page(DataSourceConQuery query) {
@@ -252,9 +259,35 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
             fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
         }
+        if (checkStandards){
+            FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
+            fiDataMetaDataTreeBase.children.add(standardsTree);
+        }
         return fiDataMetaDataTreeBase;
     }
 
+    public FiDataMetaDataTreeDTO getStandardsTree(String id){
+        FiDataMetaDataTreeDTO standardsTree = new FiDataMetaDataTreeDTO();
+        String standardsUuid = UUID.randomUUID().toString().replace("-", "");
+        standardsTree.setId(standardsUuid);
+        standardsTree.setParentId("-10");
+        standardsTree.setLabel("数据标准");
+        standardsTree.setLabelAlias("数据标准");
+        standardsTree.setLabelDesc("数据标准");
+        standardsTree.setLevelType(LevelTypeEnum.DATABASE);
+        standardsTree.setSourceId(Integer.parseInt(id));
+        standardsTree.setSourceType(1);
+        standardsTree.setChildren(getStandardsTreeChildren(standardsUuid));
+        return standardsTree;
+    }
+
+    public List<FiDataMetaDataTreeDTO> getStandardsTreeChildren(String id){
+        ResultEntity<Object> allStandardsTree = dataManageClient.getAllStandardsTree(id);
+        if (allStandardsTree.code != ResultEnum.SUCCESS.getCode()){
+            return new ArrayList<>();
+        }
+        return (List<FiDataMetaDataTreeDTO>)allStandardsTree.data;
+    }
     @Override
     public FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount) {
         // 第一步：获取Tree
@@ -316,7 +349,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum reloadDataSource(int id) {
         try {
             List<DataSourceConVO> allDataSource = getAllDataSource();
-            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == id).findFirst().orElse(null);
             if (dataSourceConVO == null) {
                 return ResultEnum.DS_DATASOURCE_NOTEXISTS;
             }
@@ -326,15 +359,15 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
                     reqDTO.setDataSourceId(String.valueOf(dataSourceConVO.getDatasourceId()));
                     reqDTO.setDataSourceName(dataSourceConVO.getConDbname());
-                    switch (dataSourceConVO.getDatasourceId()) {
-                        case 1:
-                        case 4:
+                    switch (dataSourceConVO.getSourceBusinessType()) {
+                        case DW:
+                        case OLAP:
                             dataModelClient.setDataModelStructure(reqDTO);
                             break;
-                        case 2:
+                        case ODS:
                             dataAccessClient.setDataAccessStructure(reqDTO);
                             break;
-                        case 3:
+                        case MDM:
                             mdmClient.setMDMDataStructure(reqDTO);
                             break;
                     }
@@ -399,6 +432,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     dataSourceConVO.setConType(DataSourceTypeEnum.getEnum(dataSourceDTO.getConType().getValue()));
                     dataSourceConVO.setConAccount(dataSourceDTO.getConAccount());
                     dataSourceConVO.setConPassword(dataSourceDTO.getConPassword());
+                    dataSourceConVO.setSourceBusinessType(dataSourceDTO.getSourceBusinessType());
                     dataSourceList.add(dataSourceConVO);
                 }
             });

@@ -38,4 +38,9 @@ public class FieldConfigPO extends BasePO
      * 字段描述
      */
     public String fieldDesc;
+
+    /**
+     * 加密
+     */
+    public int encrypt;
 }

@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.*;
+import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.fact.FactTransDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IDimension;
@@ -124,4 +125,9 @@ public class DimensionController {
     }
 
 
+    @PostMapping("/getDimensionTableByIds")
+    @ApiOperation("根据维度表id集合获取维度表详情")
+    public ResultEntity<List<DimensionDTO>> getDimensionTableByIds(@RequestBody List<Integer> ids) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDimensionTableByIds(ids));
+    }
 }

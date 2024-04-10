@@ -547,6 +547,89 @@
                     </tbody>
                 </table>
             </div>
+            <#if apiBasicItem.apiResponseDataArray?? && (apiBasicItem.apiResponseDataArray?size>0)>
+                <div>
+                    <p>dataArray参数说明</p>
+                </div>
+                <div>
+                    <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
+                        <thead>
+                        <tr>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">参数名
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">类型
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">说明
+                            </th>
+                            <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">是否加密
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <#list apiBasicItem.apiResponseDataArray as apiResponseItem>
+                            <tr style="${apiResponseItem.trStyle!}">
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmName!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmType!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmDesc!}
+                                </td>
+                                <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">${apiResponseItem.parmEncrypt!}
+                                </td>
+                            </tr>
+                        </#list>
+                        </tbody>
+                    </table>
+                </div>
+            </#if>
         </div>
     </#list>
 </div>
@@ -564,6 +647,16 @@
         </pre>
     </div>
 </div>
+<div>
+    <div>
+        <p style="font-weight: bold;">3.1&nbsp;&nbsp;C#代码解密调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_net" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamples_net_encrypt?html}
+        </pre>
+    </div>
+</div>
 <span style="page-break-after:always;"></span>
 <!---Restful API C# 调用示例 end-->
 
@@ -575,6 +668,16 @@
     <div style="width: 100%;padding-left: 20px;">
         <pre id="out_pre_apiCodeExamples_java" style="word-wrap: break-word; white-space: pre-wrap;">
           ${apiCodeExamples_java?html}
+        </pre>
+    </div>
+</div>
+<div>
+    <div>
+        <p style="font-weight: bold;">4.1&nbsp;&nbsp;java代码解密调用示例</p>
+    </div>
+    <div style="width: 100%;padding-left: 20px;">
+        <pre id="out_pre_apiCodeExamples_java" style="word-wrap: break-word; white-space: pre-wrap;">
+          ${apiCodeExamples_java_encrypt?html}
         </pre>
     </div>
 </div>

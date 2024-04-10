@@ -46,6 +46,10 @@ public class BusinessExtendedfieldsHistoryPO {
     @ApiModelProperty(value = "")
     private String indexid;
 
+    @ApiModelProperty(value = "")
+    private String attributeEnName;
+
+    public String dimtableEnName;
 
     public String createdTime;
 

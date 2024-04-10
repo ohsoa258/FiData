@@ -13,7 +13,9 @@ public enum SourceBusinessTypeEnum implements BaseEnum {
     DW(1, "DW"),
     ODS(2, "ODS"),
     MDM(3, "MDM"),
-    OLAP(4, "OLAP");
+    OLAP(4, "OLAP"),
+    LAKE(5, "LAKE")
+    ;
 
     SourceBusinessTypeEnum(int value, String name) {
         this.name = name;

@@ -235,6 +235,8 @@ public enum ResultEnum {
     GET_ACCESS_TREE_FAILURE(5105, "获取数据接入应用-表树结构失败"),
     ACCESS_HUDI_SYNC_ERROR(5106, "获取数据-入仓配置同步表失败"),
     ACCESS_HUDI_RESYNC_ERROR(5107, "hudi-入仓配置重新同步单张表--异常"),
+    RESYNC_NO_FIELD_WARNING(5108, "没有字段的表不允许重新同步"),
+    APICONFIG_ENCRYPT_ISNULL(5109, "api密钥不存在"),
 
     /**
      * 后台任务模块
@@ -357,6 +359,10 @@ public enum ResultEnum {
     DS_APISERVICE__EXPIRATION(10046,"api已过期"),
 
     DS_APISERVICE_MENUID_NOT_EXIST(10047,"数据menuId未填写"),
+
+    SERVICE_ENCRYPT_NOT_EXIST(10048,"未设置密钥"),
+    SERVICE_ENCRYPT_ONLY_ONE(10049,"密钥只能有一个"),
+    DS_APISERVICE_PARAMLIST_IS_NULL(10050,"请求参数中缺少必填参数"),
 
     /**
      * 数据质量
@@ -509,7 +515,17 @@ public enum ResultEnum {
     /**
      * 数据库类型 dmp_ods
      */
-    TYPE_OF_DATABASE_DMP_ODS(17001, "dmp_ods");
+    TYPE_OF_DATABASE_DMP_ODS(17001, "dmp_ods"),
+
+    /**
+     * 数据资产模块
+     */
+    GET_GLOSSARY_ASSIGN_METAS_ERROR(18001, "获取业务术语关联的元数据报错"),
+
+
+
+
+    ;
 
     ResultEnum(int code, String msg) {
         this.code = code;

@@ -39,6 +39,27 @@ public class TableNameGenerateUtils {
     }
 
     /**
+     * 生成ods表名
+     *
+     * @param tableName
+     * @param appAbbreviation 应用简称
+     * @param whetherSchema   是否是架构名
+     * @return
+     */
+    public static String buildCatalogName(String tableName, String appAbbreviation, Boolean whetherSchema) {
+        StringBuilder str = new StringBuilder();
+        if (whetherSchema) {
+            str.append(appAbbreviation);
+            str.append(".");
+        } else {
+            str.append(appAbbreviation);
+            str.append("_");
+        }
+        str.append(tableName);
+        return str.toString();
+    }
+
+    /**
      * 生成stg表名
      *
      * @param tableName
