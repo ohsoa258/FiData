@@ -3,6 +3,8 @@ package com.fisk.datamodel.dto.factattribute;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author JianWenYang
  */
@@ -118,5 +120,11 @@ public class FactAttributeDTO {
      */
     @ApiModelProperty(value = "doris聚合模型，聚合函数类型：...")
     public String aggregateType;
+
+    /**
+     * 数仓贯标关联对象（指标或数据元）
+     */
+    @ApiModelProperty(value = "数仓贯标关联对象（指标或数据元）")
+    public List<FieldsAssociatedMetricsOrMetaObjDTO> associatedDto;
 
 }

@@ -6,8 +6,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datamanagement.config.SwaggerConfig;
-import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
+import com.fisk.datamanagement.dto.classification.*;
+import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.service.*;
@@ -203,4 +203,63 @@ public class BusinessCategoryController {
     public ResultEntity<Object> getAllBusinessMetaDataList()  {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getAllBusinessMetaDataList());
     }
+
+    /**
+     * 关联数仓表字段和指标标准（维度表字段 指标粒度）
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    @ApiOperation("关联数仓表字段和指标标准（维度表字段 指标粒度）")
+    @PutMapping("/setMetricGranularityByModelField")
+    public ResultEntity<Object> setMetricGranularityByModelField(@RequestBody List<ModelAndIndexMappingDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessExtendedfieldsService.setMetricGranularityByModelField(dtos));
+    }
+
+    /**
+     * 关联数仓表字段和指标标准（事实表字段 指标所属）
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    @ApiOperation("关联数仓表字段和指标标准（事实表字段 指标所属）")
+    @PutMapping("/setMetricBelongsByModelField")
+    public ResultEntity<Object> setMetricBelongsByModelField(@RequestBody List<ModelAndIndexMappingDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, factTreeListExtendedfieldsService.setMetricBelongsByModelField(dtos));
+    }
+
+    /**
+     * 数仓建模获取所有业务指标 只获取id 名称
+     * @return
+     */
+    @ApiOperation("数仓建模获取所有业务指标 只获取id 名称")
+    @GetMapping("/modelGetBusinessTargetInfoList")
+    public List<BusinessTargetinfoDTO> modelGetBusinessTargetInfoList() {
+        return businessTargetinfoService.modelGetBusinessTargetInfoList();
+    }
+
+    /**
+     * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
+     * @return
+     */
+    @ApiOperation("获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id")
+    @GetMapping("/modelGetFactTreeList")
+    public List<FacttreeListDTO> modelGetFactTreeList() {
+        return businessTargetinfoService.modelGetFactTreeList();
+    }
+
+    /**
+     * 获取数仓字段和指标粒度表里所有关联关系 只获取字段id 和指标id
+     * @return
+     */
+    @ApiOperation("获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id")
+    @GetMapping("/modelGetMetricMapList")
+    public List<BusinessExtendedfieldsDTO> modelGetMetricMapList() {
+        return businessTargetinfoService.modelGetMetricMapList();
+    }
+
 }

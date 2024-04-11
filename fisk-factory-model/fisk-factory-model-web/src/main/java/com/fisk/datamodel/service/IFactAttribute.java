@@ -3,6 +3,8 @@ package com.fisk.datamodel.service;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.fact.FactAttributeDetailDTO;
@@ -154,4 +156,21 @@ public interface IFactAttribute {
      * @return 执行结果
      */
     ResultEnum editFactField(FactAttributeDTO dto);
+
+    /**
+     * 关联数仓表字段和数据元标准
+     * @param dtos
+     * @return
+     */
+    Object mapModelFieldsWithStandards(List<StandardsBeCitedDTO> dtos);
+
+    /**
+     关联数仓表字段和指标标准
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    Object mapModelFieldsWithIndex(List<ModelAndIndexMappingDTO> dtos);
 }

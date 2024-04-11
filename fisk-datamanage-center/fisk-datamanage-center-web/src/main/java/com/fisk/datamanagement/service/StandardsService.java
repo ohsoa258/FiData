@@ -69,5 +69,24 @@ public interface StandardsService extends IService<StandardsPO> {
     ResultEnum importExcelStandards(long menuId,MultipartFile file);
 
     List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id);
+
+    /**
+     * 数仓建模-关联字段和数据源标准
+     * @param dtos
+     * @return
+     */
+    Object setStandardsByModelField(List<StandardsBeCitedDTO> dtos);
+
+    /**
+     * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid
+     * @return
+     */
+    List<StandardsDTO> modelGetStandards();
+
+    /**
+     * 数仓建模-获取所有数仓字段和数据元标准的关联关系
+     * @return
+     */
+    List<StandardsBeCitedDTO> modelGetStandardsMap();
 }
 

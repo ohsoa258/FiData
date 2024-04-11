@@ -2,13 +2,15 @@ package com.fisk.datamanage.client;
 
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
+import com.fisk.datamanagement.dto.classification.FacttreeListDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingSourceDTO;
 import com.fisk.datamanagement.dto.datamasking.DataMaskingTargetDTO;
 import com.fisk.datamanagement.dto.datamasking.SourceTableDataDTO;
@@ -16,6 +18,11 @@ import com.fisk.datamanagement.dto.dataquality.DataQualityDTO;
 import com.fisk.datamanagement.dto.dataquality.UpperLowerBloodParameterDTO;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.metadataentityoperationLog.MetaDataEntityOperationLogDTO;
+import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +37,7 @@ public interface DataManageClient {
 
     /**
      * 数据源是否存在atlas
+     *
      * @param dto
      * @return
      */
@@ -38,6 +46,7 @@ public interface DataManageClient {
 
     /**
      * 是否存在上下血缘
+     *
      * @param dto
      * @return
      */
@@ -99,11 +108,12 @@ public interface DataManageClient {
 
     /**
      * 单个元数据信息消费
+     *
      * @param dto
      * @return
      */
     @PostMapping("/MetaData/addFiledAndUpdateFiled")
-    ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto,@RequestParam ClassificationTypeEnum classificationTypeEnum);
+    ResultEntity<Object> addFiledAndUpdateFiled(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto, @RequestParam ClassificationTypeEnum classificationTypeEnum);
 
     /**
      * 数据接入应用同步到业务分类
@@ -116,6 +126,7 @@ public interface DataManageClient {
 
     /**
      * 日志记录
+     *
      * @param dto
      * @return
      */
@@ -124,6 +135,7 @@ public interface DataManageClient {
 
     /**
      * 根据IDS删除字段
+     *
      * @param ids
      * @return
      */
@@ -132,12 +144,13 @@ public interface DataManageClient {
 
     /**
      * 根据数据接入表ID和字段ID
+     *
      * @param tableId
      * @param fldeId
      * @return
      */
     @GetMapping("/MetaData/queryMetadaFildes/{tableId}/{fldeId}")
-    List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId")Integer tableId, @PathVariable("fldeId")Integer fldeId);
+    List<MetadataEntityDTO> queryMetadaFildes(@PathVariable("tableId") Integer tableId, @PathVariable("fldeId") Integer fldeId);
 
 
     /**
@@ -147,7 +160,7 @@ public interface DataManageClient {
      * @return
      */
     @PostMapping("/MetaData/syncDataConsumptionMetaData")
-    ResultEntity<Object> syncDataConsumptionMetaData(@RequestBody  List<MetaDataEntityDTO> entityList);
+    ResultEntity<Object> syncDataConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList);
 
     /**
      * 元数据实时同步
@@ -156,8 +169,89 @@ public interface DataManageClient {
      * @return
      */
     @PostMapping("/MetaData/deleteConsumptionMetaData")
-    ResultEntity<Object> deleteConsumptionMetaData(@RequestBody  List<MetaDataEntityDTO> entityList);
+    ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList);
+
     @PostMapping("/Standards/getAllStandardsTree")
     ResultEntity<Object> getAllStandardsTree(@RequestParam("id") String id);
+
+    /**
+     * 数仓建模-关联字段和数据源标准
+     *
+     * @param dtos
+     * @return
+     */
+    @PostMapping("/Standards/setStandardsByModelField")
+    ResultEntity<Object> setStandardsByModelField(@RequestBody List<StandardsBeCitedDTO> dtos);
+
+    /**
+     * 关联数仓表字段和指标标准（维度表字段 指标粒度）
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    @PutMapping("/BusinessCategory/setMetricGranularityByModelField")
+    ResultEntity<Object> setMetricGranularityByModelField(@RequestBody List<ModelAndIndexMappingDTO> dtos);
+
+    /**
+     * 关联数仓表字段和指标标准（事实表字段 指标所属）
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    @PutMapping("/BusinessCategory/setMetricBelongsByModelField")
+    ResultEntity<Object> setMetricBelongsByModelField(@RequestBody List<ModelAndIndexMappingDTO> dtos);
+
+    /**
+     * 数仓建模获取所有业务指标 只获取id 名称
+     *
+     * @return
+     */
+    @GetMapping("/BusinessCategory/modelGetBusinessTargetInfoList")
+    List<BusinessTargetinfoDTO> modelGetBusinessTargetInfoList();
+
+    /**
+     * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
+     *
+     * @return
+     */
+    @ApiOperation("获取数仓字段和指标关联表里所有关联关系 只获取字段id 和指标id")
+    @GetMapping("/BusinessCategory/modelGetFactTreeList")
+    List<FacttreeListDTO> modelGetFactTreeList();
+
+    /**
+     * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名
+     *
+     * @return
+     */
+    @ApiOperation("数仓建模-获取所有数据元标准 只获取数据元id 和中文名")
+    @GetMapping("/Standards/modelGetStandards")
+    List<StandardsDTO> modelGetStandards();
+
+    @ApiOperation("获取所有数据元标准menu-只要id和name")
+    @GetMapping("/Standards/getStandardMenus")
+    List<StandardsMenuDTO> getStandardMenus();
+
+    /**
+     * 数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     *
+     * @return
+     */
+    @ApiOperation("数仓建模-获取所有数仓字段和数据元标准的关联关系")
+    @GetMapping("/Standards/modelGetStandardsMap")
+    List<StandardsBeCitedDTO> modelGetStandardsMap();
+
+
+    /**
+     * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
+     *
+     * @return
+     */
+    @ApiOperation("获取数仓字段和指标关联表里所有关联关系 只获取字段id 和指标id")
+    @GetMapping("/BusinessCategory/modelGetMetricMapList")
+    List<BusinessExtendedfieldsDTO> modelGetMetricMapList();
 
 }

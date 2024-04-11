@@ -4,7 +4,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
+import com.fisk.datamanagement.dto.classification.FacttreeListDTO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -68,4 +71,22 @@ public interface BusinessTargetinfoService {
     List<BusinessTargetinfoPO> getDimensionList(String name);
 
     JSONObject getTargetinfoHistory(String historyId);
+
+    /**
+     * 数仓建模获取所有业务指标 只获取id 名称
+     * @return
+     */
+    List<BusinessTargetinfoDTO> modelGetBusinessTargetInfoList();
+
+    /**
+     * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
+     * @return
+     */
+    List<FacttreeListDTO> modelGetFactTreeList();
+
+    /**
+     * 获取数仓字段和指标粒度表里所有关联关系 只获取字段id 和指标id
+     * @return
+     */
+    List<BusinessExtendedfieldsDTO> modelGetMetricMapList();
 }

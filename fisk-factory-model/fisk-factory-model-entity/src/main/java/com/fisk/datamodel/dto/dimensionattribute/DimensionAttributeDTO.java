@@ -1,7 +1,10 @@
 package com.fisk.datamodel.dto.dimensionattribute;
 
+import com.fisk.datamodel.dto.factattribute.FieldsAssociatedMetricsOrMetaObjDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -105,5 +108,11 @@ public class DimensionAttributeDTO {
      */
     @ApiModelProperty(value = "是否是doris分桶字段 1：是 0：不是")
     public int isDistributedKey;
+
+    /**
+     * 数仓贯标关联对象（指标或数据元）
+     */
+    @ApiModelProperty(value = "数仓贯标关联对象（指标或数据元）")
+    public List<FieldsAssociatedMetricsOrMetaObjDTO> associatedDto;
 
 }

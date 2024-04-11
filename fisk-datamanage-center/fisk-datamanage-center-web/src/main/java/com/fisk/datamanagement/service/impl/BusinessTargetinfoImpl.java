@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
@@ -61,7 +62,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
+public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMapper, BusinessTargetinfoPO> implements BusinessTargetinfoService {
     @Resource
     BusinessTargetinfoMapper businessTargetinfoMapper;
     @Resource
@@ -1202,5 +1203,63 @@ public class BusinessTargetinfoImpl implements BusinessTargetinfoService {
             }
 
         return jsonObject1;
+    }
+
+    /**
+     * 数仓建模获取所有业务指标 只获取id 名称
+     * @return
+     */
+    @Override
+    public List<BusinessTargetinfoDTO> modelGetBusinessTargetInfoList() {
+        LambdaQueryWrapper<BusinessTargetinfoPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BusinessTargetinfoPO::getId,BusinessTargetinfoPO::getIndicatorName);
+        List<BusinessTargetinfoPO> list = this.list();
+        List<BusinessTargetinfoDTO> dtos = new ArrayList<>();
+        for (BusinessTargetinfoPO po : list) {
+            //只获取id 名称
+            BusinessTargetinfoDTO businessTargetinfoDTO = new BusinessTargetinfoDTO();
+            businessTargetinfoDTO.setId(po.getId());
+            businessTargetinfoDTO.setIndicatorName(po.getIndicatorName());
+            dtos.add(businessTargetinfoDTO);
+        }
+        return dtos;
+    }
+
+    /**
+     * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
+     * @return
+     */
+    @Override
+    public List<FacttreeListDTO> modelGetFactTreeList() {
+        LambdaQueryWrapper<FactTreePOs> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(FactTreePOs::getPid,FactTreePOs::getFactFieldEnNameId);
+        List<FactTreePOs> list = factTreeService.list();
+        List<FacttreeListDTO> dtos = new ArrayList<>();
+        for (FactTreePOs po : list) {
+            FacttreeListDTO dto = new FacttreeListDTO();
+            dto.setPid(po.getPid());
+            dto.setFactFieldEnNameId(po.getFactFieldEnNameId());
+            dtos.add(dto);
+        }
+        return dtos;
+    }
+
+    /**
+     * 获取数仓字段和指标粒度表里所有关联关系 只获取字段id 和指标id
+     * @return
+     */
+    @Override
+    public List<BusinessExtendedfieldsDTO> modelGetMetricMapList() {
+        LambdaQueryWrapper<BusinessExtendedfieldsPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BusinessExtendedfieldsPO::getIndexid,BusinessExtendedfieldsPO::getAttributeid);
+        List<BusinessExtendedfieldsPO> list = businessExtendedfieldsService.list();
+        List<BusinessExtendedfieldsDTO> dtos = new ArrayList<>();
+        for (BusinessExtendedfieldsPO po : list) {
+            BusinessExtendedfieldsDTO dto = new BusinessExtendedfieldsDTO();
+            dto.setIndexid(po.getIndexid());
+            dto.setAttributeid(po.getAttributeid());
+            dtos.add(dto);
+        }
+        return dtos;
     }
 }

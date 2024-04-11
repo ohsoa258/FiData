@@ -5,9 +5,12 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.IBuildDataModelSqlCommand;
@@ -16,6 +19,13 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
+import com.fisk.datamanagement.dto.classification.FacttreeListDTO;
+import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
@@ -53,9 +63,11 @@ import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
 import com.fisk.datamodel.service.impl.widetable.WideTableImpl;
 import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
+import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -100,6 +112,15 @@ public class FactAttributeImpl
     SystemVariablesImpl systemVariables;
     @Resource
     private FactImpl fact;
+
+    @Value("${fiData-data-dw-source}")
+    private Integer dwSource;
+    @Resource
+    private UserClient userClient;
+    @Resource
+    private DataManageClient dataManageClient;
+    @Resource
+    private UserHelper userHelper;
 
     @Override
     public List<FactAttributeListDTO> getFactAttributeList(int factId) {
@@ -351,7 +372,97 @@ public class FactAttributeImpl
         QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(FactAttributePO::getFactId, factId);
         List<FactAttributePO> list = mapper.selectList(queryWrapper);
-        data.attributeDTO = FactAttributeMap.INSTANCES.poListsToDtoList(list);
+        List<FactAttributeDTO> factAttributeDTOS = FactAttributeMap.INSTANCES.poListsToDtoList(list);
+
+        //获取不到贯标--不能影响正常获取字段  考虑许多客户并没有部署数据资产模块
+        try {
+            /*
+            2024 04 03 数仓贯标 字段回显新增贯标列 展示数仓的字段和哪些指标或数据元关联
+            */
+            //1.1获取所有指标 -> 指标id 指标名称    事实表 = 指标所属
+            List<BusinessTargetinfoDTO> dtos = dataManageClient.modelGetBusinessTargetInfoList();
+
+            //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    事实表 = 指标所属
+            List<FacttreeListDTO> facttreeListDTOS = dataManageClient.modelGetFactTreeList();
+
+            //2.1获取所有数据元 -> 数据元id 数据元名称
+            List<StandardsDTO> standardsDTOS = dataManageClient.modelGetStandards();
+
+            //2.2获取所有数据元标准menu-只要id和name
+            List<StandardsMenuDTO> standardMenus = dataManageClient.getStandardMenus();
+            Map<Integer, String> standardsMenuMap = standardMenus.stream()
+                    .collect(Collectors.toMap(
+                            StandardsMenuDTO::getId,
+                            StandardsMenuDTO::getName
+                    ));
+
+            //2.3获取数仓字段和数据元关联表里所有关联关系
+            List<StandardsBeCitedDTO> standardsBeCitedDTOS = dataManageClient.modelGetStandardsMap();
+
+            for (FactAttributeDTO factAttributeDTO : factAttributeDTOS) {
+                List<FieldsAssociatedMetricsOrMetaObjDTO> objDTOS = new ArrayList<>();
+                //获取字段id
+                long filedId = factAttributeDTO.getId();
+
+                //不为空则说明该事实表字段关联的有指标标准
+                if (!CollectionUtils.isEmpty(facttreeListDTOS)){
+                    //循环指标关联关系
+                    for (FacttreeListDTO d : facttreeListDTOS) {
+                        if (d.getFactFieldEnNameId().equals(String.valueOf(filedId))){
+                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
+
+                            //循环指标 获取指标名称
+                            for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
+                                if (d.getPid().equals(String.valueOf(businessTargetinfoDTO.getId()))){
+                                    dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
+                                    dto.setName(businessTargetinfoDTO.getIndicatorName());
+                                }
+                            }
+                            //类型 0指标 1数据元
+                            dto.setType(0);
+                            objDTOS.add(dto);
+                        }
+                    }
+                }
+
+                //不为空则说明该事实表字段关联的有数据元标准
+                if (!CollectionUtils.isEmpty(standardsBeCitedDTOS)){
+                    //循环数据元标准关联关系
+                    for (StandardsBeCitedDTO s : standardsBeCitedDTOS) {
+                        //只获取事实表的关联关系
+                        if (!TableBusinessTypeEnum.DW_FACT.equals(s.getTableBusinessType())){
+                            continue;
+                        }
+                        if (s.getFieldId().equals(String.valueOf(filedId))){
+                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
+
+                            //循环数据元标准集合 获取数据元标准名称
+                            for (StandardsDTO standardsDTO : standardsDTOS) {
+                                if (s.getStandardsId().equals(standardsDTO.getId())){
+                                    //获取到数据元标准id关联的数据元标准menuid
+                                    int menuId = standardsDTO.getMenuId();
+                                    //获取menuId对应的菜单名称
+                                    String menuName = standardsMenuMap.get(menuId);
+                                    dto.setId(menuId);
+                                    dto.setName(menuName);
+                                }
+                            }
+                            //类型 0指标 1数据元
+                            dto.setType(1);
+                            objDTOS.add(dto);
+                        }
+
+                    }
+                }
+                factAttributeDTO.setAssociatedDto(objDTOS);
+            }
+        } catch (Exception e) {
+            log.error("==============================");
+            log.error("获取数仓贯标失败..."+e);
+            log.error("==============================");
+        }
+
+        data.attributeDTO = factAttributeDTOS;
         //获取增量配置信息
         QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
         syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, po.id)
@@ -604,6 +715,74 @@ public class FactAttributeImpl
             return ResultEnum.DATA_EXISTS;
         }
         return this.updateById(FactAttributeMap.INSTANCES.dtoToPo(dto)) ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+    }
+
+    /**
+     * 关联数仓表字段和数据元标准
+     *
+     * @param dtos
+     * @return
+     */
+    @Override
+    public Object mapModelFieldsWithStandards(List<StandardsBeCitedDTO> dtos) {
+//        if (CollectionUtils.isEmpty(dtos)) {
+//            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+//        }
+
+        //获取 dmp_dw配置信息
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(dwSource);
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        DataSourceDTO data = resultEntity.getData();
+
+        //重新装载前端没有的信息
+        for (StandardsBeCitedDTO dto : dtos) {
+            //设置数据库名称
+            dto.setDatabaseName(data.getConDbname());
+            //设置数据源id
+            dto.setDbId(dwSource);
+            //设置数据源名称
+            dto.setDatasourceName(data.getName());
+        }
+
+        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos);
+
+        return result.getData();
+    }
+
+    /**
+     * 关联数仓表字段和指标标准
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    @Override
+    public Object mapModelFieldsWithIndex(List<ModelAndIndexMappingDTO> dtos) {
+        //参数非空集合校验
+        if (CollectionUtils.isEmpty(dtos)) {
+            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+        }
+
+        //表类型：0公共域维度 1其他域维度 2事实表
+        Integer tblType = dtos.get(0).getTblType();
+        UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+        for (ModelAndIndexMappingDTO dto : dtos) {
+            dto.setCreateUser(loginUserInfo.getId().toString());
+        }
+
+        //事实表 则调用存储指标所属的方法
+        if (tblType == 2) {
+            return dataManageClient.setMetricBelongsByModelField(dtos);
+
+        } else {
+            //维度表则调用存储指标粒度的方法
+            return dataManageClient.setMetricGranularityByModelField(dtos);
+        }
+
     }
 
     public String buildFactUpdateSql(int factId) {

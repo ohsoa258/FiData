@@ -36,5 +36,17 @@ public interface StandardsMenuService extends IService<StandardsMenuPO> {
      * @return
      */
     ResultEnum delStandardsMenu(List<Integer> ids);
+
+    /**
+     * 查看数据标准树形标签--非懒加载
+     * @return
+     */
+    List<StandardsTreeDTO> getStandardsAllTree();
+
+    /**
+     * 获取所有数据元标准menu-只要id和name
+     * @return
+     */
+    List<StandardsMenuDTO> getStandardMenus();
 }
 

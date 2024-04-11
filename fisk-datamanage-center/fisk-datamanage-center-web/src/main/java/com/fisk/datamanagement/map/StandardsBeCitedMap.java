@@ -23,4 +23,6 @@ public interface StandardsBeCitedMap {
     StandardsBeCitedDTO poToDTO(StandardsBeCitedPO dto);
 
     List<StandardsBeCitedDTO> poListToDTOList(List<StandardsBeCitedPO> dto);
+
+    List<StandardsBeCitedPO> dtoListToPoList(List<StandardsBeCitedDTO> dto);
 }

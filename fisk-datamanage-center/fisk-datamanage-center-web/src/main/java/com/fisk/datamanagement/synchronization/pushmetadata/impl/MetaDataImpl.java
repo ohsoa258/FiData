@@ -447,28 +447,28 @@ public class MetaDataImpl implements IMetaData {
     private String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityId) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_suffix);
 
-        if (dto.name.indexOf(ods_prefix) >= 0) {
+        if (dto.name.contains(ods_prefix)) {
             //数据接入ODS表
             dto.name = dto.name.replace(ods_prefix, "stg_");
-        } else if (dto.name.indexOf(fact_prefix) >= 0) {
+        } else if (dto.name.contains(fact_prefix)) {
             //建模实时表
             dto.name = "temp_" + dto.name;
-        } else if (dto.name.indexOf(dwd_prefix) >= 0) {
+        } else if (dto.name.contains(dwd_prefix)) {
             //建模实时表
             dto.name = dto.name.replace(dwd_prefix, "temp_");
-        } else if (dto.name.indexOf(dws_prefix) >= 0) {
+        } else if (dto.name.contains(dws_prefix)) {
             //建模维度表
             dto.name = dto.name.replace(dws_prefix, "temp_");
-        } else if (dto.name.indexOf(config_prefix) >= 0) {
+        } else if (dto.name.contains(config_prefix)) {
             //建模维度表
             dto.name = dto.name.replace(config_prefix, "temp_");
-        } else if (dto.name.indexOf(help_prefix) >= 0) {
+        } else if (dto.name.contains(help_prefix)) {
             //建模维度表
             dto.name = dto.name.replace(help_prefix, "temp_");
-        } else if (dto.name.indexOf(dim_prefix) >= 0) {
+        } else if (dto.name.contains(dim_prefix)) {
             //建模维度表
             dto.name = dto.name.replace(dim_prefix, "temp_");
-        } else if (dto.name.indexOf(mdm_prefix) >= 0) {
+        } else if (dto.name.contains(mdm_prefix)) {
             //主数据表
             dto.name = dto.name.replace(mdm_prefix, "stg_");
         }

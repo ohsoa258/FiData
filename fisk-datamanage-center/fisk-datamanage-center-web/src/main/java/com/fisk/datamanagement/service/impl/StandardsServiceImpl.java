@@ -57,7 +57,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,26 +93,26 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public StandardsDTO getStandards(int id) {
         LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
-        queryStandards.eq(StandardsPO::getMenuId,id);
+        queryStandards.eq(StandardsPO::getMenuId, id);
         StandardsPO standardsPO = this.getOne(queryStandards);
-        if (standardsPO == null){
+        if (standardsPO == null) {
             throw new FkException(ResultEnum.DATA_EXISTS);
         }
         LambdaQueryWrapper<StandardsBeCitedPO> queryBeCited = new LambdaQueryWrapper<>();
-        queryBeCited.eq(StandardsBeCitedPO::getStandardsId,standardsPO.getId());
+        queryBeCited.eq(StandardsBeCitedPO::getStandardsId, standardsPO.getId());
         List<StandardsBeCitedPO> standardsBeCitedPOList = standardsBeCitedService.list(queryBeCited);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsBeCitedPOList.stream().map(StandardsBeCitedMap.INSTANCES::poToDTO).collect(Collectors.toList());
         StandardsDTO standardsDTO = StandardsMap.INSTANCES.poToDTO(standardsPO);
 
         //处理值域范围回显
-        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()) {
             String DataSetIds = standardsPO.getValueRange();
             List<Long> ids = Stream.of(DataSetIds.split(","))
                     .map(Long::valueOf)
                     .collect(Collectors.toList());
             //根据数据标准中存入的代码集id查询代码集内容
             List<CodeSetPO> codeSetPOList = dataSetService.listByIds(ids);
-            if (!CollectionUtils.isEmpty(codeSetPOList)){
+            if (!CollectionUtils.isEmpty(codeSetPOList)) {
                 List<CodeSetDTO> codeSetDTOS = CodeSetMap.INSTANCES.poListToDTOList(codeSetPOList);
                 standardsDTO.setCodeSetDTOList(codeSetDTOS);
                 //拼接code和name
@@ -139,7 +138,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 
         //查询排序添加位置
         LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(StandardsMenuPO::getPid,standardsDTO.getMenuId());
+        queryWrapper.eq(StandardsMenuPO::getPid, standardsDTO.getMenuId());
         queryWrapper.orderByDesc(StandardsMenuPO::getSort);
         queryWrapper.last("LIMIT 1");
         StandardsMenuPO tragetMenu = standardsMenuService.getOne(queryWrapper);
@@ -149,29 +148,29 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         standardsMenuPO.setPid(standardsDTO.getMenuId());
         standardsMenuPO.setType(2);
         standardsMenuPO.setName(standardsDTO.getChineseName());
-        if (tragetMenu == null){
+        if (tragetMenu == null) {
             standardsMenuPO.setSort(1);
-        }else {
-            standardsMenuPO.setSort(tragetMenu.getSort()+1);
+        } else {
+            standardsMenuPO.setSort(tragetMenu.getSort() + 1);
         }
         standardsMenuService.save(standardsMenuPO);
-        standardsDTO.setMenuId((int)standardsMenuPO.getId());
+        standardsDTO.setMenuId((int) standardsMenuPO.getId());
 
         LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
-        queryStandards.eq(StandardsPO::getMenuId,standardsDTO.getMenuId());
+        queryStandards.eq(StandardsPO::getMenuId, standardsDTO.getMenuId());
         StandardsPO standard = this.getOne(queryStandards);
-        if (standard != null){
+        if (standard != null) {
             return ResultEnum.DATA_EXISTS;
         }
         //添加数据标准
         StandardsPO standardsPO = StandardsMap.INSTANCES.dtoToPo(standardsDTO);
-        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()) {
             String ids = standardsDTO.getCodeSetDTOList().stream().map(i -> i.getId().toString()).collect(Collectors.joining(","));
             standardsPO.setValueRange(ids);
         }
         save(standardsPO);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
-        if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)){
+        if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)) {
             List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedDTOList.stream().map(StandardsBeCitedMap.INSTANCES::dtoToPo).collect(Collectors.toList());
             standardsBeCitedPOS = standardsBeCitedPOS.stream().map(i -> {
                 i.setStandardsId((int) standardsPO.getId());
@@ -186,29 +185,29 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public ResultEnum updateStandards(StandardsDTO standardsDTO) {
         StandardsPO standardsPO = StandardsMap.INSTANCES.dtoToPo(standardsDTO);
-        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
+        if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()) {
             String ids = standardsDTO.getCodeSetDTOList().stream().map(i -> i.getId().toString()).collect(Collectors.joining(","));
             standardsPO.setValueRange(ids);
         }
         updateById(standardsPO);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
 
-        if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)){
+        if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)) {
             //DTO数据类型转PO
             List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedDTOList.stream().map(StandardsBeCitedMap.INSTANCES::dtoToPo).collect(Collectors.toList());
             //查询未修改时详情数据
             LambdaQueryWrapper<StandardsBeCitedPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(StandardsBeCitedPO::getStandardsId,standardsDTO.getId());
+            queryWrapper.eq(StandardsBeCitedPO::getStandardsId, standardsDTO.getId());
             List<StandardsBeCitedPO> all = standardsBeCitedService.list(queryWrapper);
             //找出待删除数据id
             List<Integer> Ids = standardsBeCitedDTOList.stream().map(StandardsBeCitedDTO::getId).filter(Objects::nonNull).collect(Collectors.toList());
             List<StandardsBeCitedPO> dels = new ArrayList<>();
-            if (!CollectionUtils.isEmpty(all)){
-                if (!CollectionUtils.isEmpty(Ids)){
-                    dels = all.stream().filter(i -> !Ids.contains((int)i.getId())).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(all)) {
+                if (!CollectionUtils.isEmpty(Ids)) {
+                    dels = all.stream().filter(i -> !Ids.contains((int) i.getId())).collect(Collectors.toList());
                     List<Long> delIds = dels.stream().map(StandardsBeCitedPO::getId).collect(Collectors.toList());
                     standardsBeCitedService.removeByIds(delIds);
-                }else {
+                } else {
                     List<Long> delIds = all.stream().map(StandardsBeCitedPO::getId).collect(Collectors.toList());
                     standardsBeCitedService.removeByIds(delIds);
                 }
@@ -218,10 +217,10 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             List<StandardsBeCitedPO> adds = standardsBeCitedPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
             //找出待修改数据
             List<StandardsBeCitedPO> updates = standardsBeCitedPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(adds)){
+            if (!CollectionUtils.isEmpty(adds)) {
                 standardsBeCitedService.saveBatch(adds);
             }
-            if (!CollectionUtils.isEmpty(updates)){
+            if (!CollectionUtils.isEmpty(updates)) {
                 standardsBeCitedService.updateBatchById(updates);
             }
         }
@@ -238,12 +237,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         StandardsMenuPO standardsMenuServiceById = standardsMenuService.getById(id);
         standardsMenuService.removeById(id);
         LambdaQueryWrapper<StandardsPO> queryStandard = new LambdaQueryWrapper<>();
-        queryStandard.eq(StandardsPO::getMenuId,standardsMenuServiceById.getId());
+        queryStandard.eq(StandardsPO::getMenuId, standardsMenuServiceById.getId());
         StandardsPO standardsPO = getOne(queryStandard);
-        if (standardsPO !=null){
+        if (standardsPO != null) {
             removeById(standardsPO.id);
             LambdaQueryWrapper<StandardsBeCitedPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(StandardsBeCitedPO::getStandardsId,standardsPO.id);
+            queryWrapper.eq(StandardsBeCitedPO::getStandardsId, standardsPO.id);
             standardsBeCitedService.remove(queryWrapper);
         }
         return ResultEnum.SUCCESS;
@@ -253,12 +252,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     public ResultEnum delStandards(List<Integer> ids) {
         standardsMenuService.removeByIds(ids);
         LambdaQueryWrapper<StandardsPO> queryStandard = new LambdaQueryWrapper<>();
-        queryStandard.in(StandardsPO::getMenuId,ids);
+        queryStandard.in(StandardsPO::getMenuId, ids);
         List<StandardsPO> standardsPOS = list(queryStandard);
         List<Long> standardsIds = standardsPOS.stream().map(StandardsPO::getId).collect(Collectors.toList());
         removeByIds(standardsIds);
         LambdaQueryWrapper<StandardsBeCitedPO> queryBeCited = new LambdaQueryWrapper<>();
-        queryBeCited.in(StandardsBeCitedPO::getStandardsId,standardsIds);
+        queryBeCited.in(StandardsBeCitedPO::getStandardsId, standardsIds);
         standardsBeCitedService.remove(queryBeCited);
         return ResultEnum.SUCCESS;
     }
@@ -303,11 +302,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             conn = getConnection(dataSourceConfig.data);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
-            query.setQuerySql("select * from "+ query.tableName);
+            query.setQuerySql("select * from " + query.tableName);
             rs = st.executeQuery(query.getQuerySql());
             // 获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
-            array.sql = "select * from "+ query.tableName;
+            array.sql = "select * from " + query.tableName;
             array.total = array.dataArray.size();
         } catch (SQLException e) {
             log.error("preview ex:", e);
@@ -377,26 +376,26 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
             reqDTO.setDataSourceId(String.valueOf(dto.getId()));
             reqDTO.setDataSourceName(dto.getConDbname());
-            switch (dto.sourceBusinessType){
+            switch (dto.sourceBusinessType) {
                 case NONE:
                     break;
                 case DW:
                 case OLAP:
                     ResultEntity<Object> tableDataStructure1 = dataModelClient.getTableDataStructure(reqDTO);
-                    if (tableDataStructure1.code == ResultEnum.SUCCESS.getCode()){
-                        data = (List<TableNameDTO>)tableDataStructure1.data;
+                    if (tableDataStructure1.code == ResultEnum.SUCCESS.getCode()) {
+                        data = (List<TableNameDTO>) tableDataStructure1.data;
                     }
                     break;
                 case ODS:
                     ResultEntity<Object> tableDataStructure2 = dataAccessClient.getTableDataStructure(reqDTO);
-                    if (tableDataStructure2.code == ResultEnum.SUCCESS.getCode()){
-                        data = (List<TableNameDTO>)tableDataStructure2.data;
+                    if (tableDataStructure2.code == ResultEnum.SUCCESS.getCode()) {
+                        data = (List<TableNameDTO>) tableDataStructure2.data;
                     }
                     break;
                 case MDM:
                     ResultEntity<Object> tableDataStructure3 = mdmClient.getTableDataStructure(reqDTO);
-                    if (tableDataStructure3.code == ResultEnum.SUCCESS.getCode()){
-                        data = (List<TableNameDTO>)tableDataStructure3.data;
+                    if (tableDataStructure3.code == ResultEnum.SUCCESS.getCode()) {
+                        data = (List<TableNameDTO>) tableDataStructure3.data;
                     }
                     break;
             }
@@ -410,11 +409,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public List<TableColumnDTO> getColumn(ColumnQueryDTO dto) {
         List<TableColumnDTO> tableColumnDTOS = new ArrayList<>();
-        switch (dto.tableBusinessTypeEnum){
+        switch (dto.tableBusinessTypeEnum) {
             case NONE:
                 ResultEntity<Object> fieldsDataStructure1 = dataAccessClient.getFieldsDataStructure(dto);
-                if (fieldsDataStructure1.code == ResultEnum.SUCCESS.getCode()){
-                    tableColumnDTOS = (List<TableColumnDTO>)fieldsDataStructure1.data;
+                if (fieldsDataStructure1.code == ResultEnum.SUCCESS.getCode()) {
+                    tableColumnDTOS = (List<TableColumnDTO>) fieldsDataStructure1.data;
                 }
                 break;
             case DW_FACT:
@@ -422,14 +421,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             case DORIS_DIMENSION:
             case WIDE_TABLE:
                 ResultEntity<Object> fieldsDataStructure2 = dataModelClient.getFieldDataStructure(dto);
-                if (fieldsDataStructure2.code == ResultEnum.SUCCESS.getCode()){
-                    tableColumnDTOS = (List<TableColumnDTO>)fieldsDataStructure2.data;
+                if (fieldsDataStructure2.code == ResultEnum.SUCCESS.getCode()) {
+                    tableColumnDTOS = (List<TableColumnDTO>) fieldsDataStructure2.data;
                 }
                 break;
             case ENTITY_TABLR:
                 ResultEntity<Object> fieldsDataStructure3 = mdmClient.getFieldDataStructure(dto);
-                if (fieldsDataStructure3.code == ResultEnum.SUCCESS.getCode()){
-                    tableColumnDTOS = (List<TableColumnDTO>)fieldsDataStructure3.data;
+                if (fieldsDataStructure3.code == ResultEnum.SUCCESS.getCode()) {
+                    tableColumnDTOS = (List<TableColumnDTO>) fieldsDataStructure3.data;
                 }
                 break;
         }
@@ -448,13 +447,13 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         }).collect(Collectors.toList());
         //根据标签id查询需要导出的数据
         LambdaQueryWrapper<StandardsPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(StandardsPO::getMenuId,ids);
+        queryWrapper.in(StandardsPO::getMenuId, ids);
         List<StandardsPO> standardsPOS = this.list(queryWrapper);
 
         //获取本次导出需要用到的数据集内容
         Map<Long, CodeSetPO> codeSetMap = new HashMap<>();
         List<StandardsPO> dataSetList = standardsPOS.stream().filter(i -> i.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()).collect(Collectors.toList());
-        if (!CollectionUtils.isEmpty(dataSetList)){
+        if (!CollectionUtils.isEmpty(dataSetList)) {
             String DataSetId = dataSetList.stream()
                     .map(StandardsPO::getValueRange)
                     .collect(Collectors.joining(","));
@@ -466,10 +465,10 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         }
         Map<Long, CodeSetPO> finalCodeSetMap = codeSetMap;
         //处理值域范围字段内容
-        standardsPOS = standardsPOS.stream().map(i->{
+        standardsPOS = standardsPOS.stream().map(i -> {
             StringBuilder stringBuilder;
-            if (i.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()){
-                if (i.getValueRange() != null){
+            if (i.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()) {
+                if (i.getValueRange() != null) {
                     String codeSetId = i.getValueRange();
                     List<Long> codeSetIds = Stream.of(codeSetId.split(","))
                             .map(Long::valueOf)
@@ -477,7 +476,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                     List<String> codeSet = new ArrayList<>();
                     for (Long id : codeSetIds) {
                         CodeSetPO codeSetPO = finalCodeSetMap.get(id);
-                        if (codeSetPO != null){
+                        if (codeSetPO != null) {
                             stringBuilder = new StringBuilder();
                             stringBuilder.append(codeSetPO.getCode()).append("-").append(codeSetPO.getName());
                             codeSet.add(stringBuilder.toString());
@@ -488,12 +487,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                             .collect(Collectors.joining(" "));
                     i.setValueRange(valueRange);
                 }
-            }else if (i.getValueRangeType() == ValueRangeTypeEnum.VALUE.getValue()){
+            } else if (i.getValueRangeType() == ValueRangeTypeEnum.VALUE.getValue()) {
                 stringBuilder = new StringBuilder();
                 stringBuilder.append(i.getSymbols())
                         .append(i.getValueRange());
                 i.setValueRange(stringBuilder.toString());
-            }else if (i.getValueRangeType() == ValueRangeTypeEnum.VALUE_RANGE.getValue()){
+            } else if (i.getValueRangeType() == ValueRangeTypeEnum.VALUE_RANGE.getValue()) {
                 stringBuilder = new StringBuilder();
                 stringBuilder.append(i.getValueRange())
                         .append("~")
@@ -506,14 +505,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         //查询关联数据元表数据
         List<Integer> standardsIds = standardsExportDTOS.stream().map(StandardsExportDTO::getId).collect(Collectors.toList());
         LambdaQueryWrapper<StandardsBeCitedPO> queryBeCited = new LambdaQueryWrapper<>();
-        queryBeCited.in(StandardsBeCitedPO::getStandardsId,standardsIds);
+        queryBeCited.in(StandardsBeCitedPO::getStandardsId, standardsIds);
         List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedService.list(queryBeCited);
         List<StandardsBeCitedDTO> standardsBeCitedDTOS = StandardsBeCitedMap.INSTANCES.poListToDTOList(standardsBeCitedPOS);
         Map<Integer, List<StandardsBeCitedDTO>> standardsBeCitedMap = standardsBeCitedDTOS.stream().collect(groupingBy(StandardsBeCitedDTO::getStandardsId));
         //组装数据标准
-        standardsExportDTOS = standardsExportDTOS.stream().map(i->{
+        standardsExportDTOS = standardsExportDTOS.stream().map(i -> {
             List<StandardsBeCitedDTO> list = standardsBeCitedMap.get(i.getId());
-            if (!CollectionUtils.isEmpty(list)){
+            if (!CollectionUtils.isEmpty(list)) {
                 i.setStandardsBeCitedDTOList(list);
                 i.setNum(list.size());
             }
@@ -530,9 +529,9 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         String templateName = "dataStandard.xml";
         String fileName = "数据标准.doc";
         Map<String, Object> dataModel = new HashMap<>();
-        dataModel.put("standards",standardsMenuDataDTOS);
+        dataModel.put("standards", standardsMenuDataDTOS);
         // 执行导出
-        FreeMarkerUtils.exportWord(templateName, fileName, dataModel,response);
+        FreeMarkerUtils.exportWord(templateName, fileName, dataModel, response);
     }
 
     @Override
@@ -541,18 +540,18 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         Integer tragetId = dto.getTragetId();
         StandardsMenuPO standardsMenuPO = standardsMenuService.getById(dto.getMenuId());
         StandardsMenuPO tragetMenuPO = standardsMenuService.getById(tragetId);
-        if (dto.getCrossLevel()){
-            if (tragetId == null || tragetId == 0){
+        if (dto.getCrossLevel()) {
+            if (tragetId == null || tragetId == 0) {
                 Integer pid = standardsMenuPO.getPid();
                 Integer sort = standardsMenuPO.getSort();
 
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
+                queryWrapper.eq(StandardsMenuPO::getPid, dto.getPid());
                 List<StandardsMenuPO> all = standardsMenuService.list(queryWrapper);
-                if (!CollectionUtils.isEmpty(all)){
+                if (!CollectionUtils.isEmpty(all)) {
                     List<StandardsMenuPO> menus = new ArrayList<>();
                     for (StandardsMenuPO menuPO : all) {
-                        menuPO.setSort(menuPO.getSort()+1);
+                        menuPO.setSort(menuPO.getSort() + 1);
                         menus.add(menuPO);
                     }
                     standardsMenuService.updateBatchById(menus);
@@ -562,97 +561,97 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 standardsMenuService.updateById(standardsMenuPO);
 
                 LambdaQueryWrapper<StandardsMenuPO> selectMenus = new LambdaQueryWrapper<>();
-                selectMenus.eq(StandardsMenuPO::getPid,pid);
-                selectMenus.gt(StandardsMenuPO::getSort,sort);
+                selectMenus.eq(StandardsMenuPO::getPid, pid);
+                selectMenus.gt(StandardsMenuPO::getSort, sort);
                 List<StandardsMenuPO> lastMenus = standardsMenuService.list(selectMenus);
                 List<StandardsMenuPO> menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : lastMenus) {
-                    menuPO.setSort(menuPO.getSort()-1);
+                    menuPO.setSort(menuPO.getSort() - 1);
                     menus.add(menuPO);
                 }
-                if (!CollectionUtils.isEmpty(menus)){
+                if (!CollectionUtils.isEmpty(menus)) {
                     standardsMenuService.updateBatchById(menus);
                 }
-            }else {
+            } else {
                 Integer pid = standardsMenuPO.getPid();
                 Integer sort = standardsMenuPO.getSort();
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(StandardsMenuPO::getPid,dto.getPid());
-                queryWrapper.ge(StandardsMenuPO::getSort,tragetMenuPO.getSort()+1);
+                queryWrapper.eq(StandardsMenuPO::getPid, dto.getPid());
+                queryWrapper.ge(StandardsMenuPO::getSort, tragetMenuPO.getSort() + 1);
                 List<StandardsMenuPO> lastMenus = standardsMenuService.list(queryWrapper);
                 List<StandardsMenuPO> menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : lastMenus) {
-                    menuPO.setSort(menuPO.getSort()+1);
+                    menuPO.setSort(menuPO.getSort() + 1);
                     menus.add(menuPO);
                 }
-                if (!CollectionUtils.isEmpty(menus)){
+                if (!CollectionUtils.isEmpty(menus)) {
                     standardsMenuService.updateBatchById(menus);
                 }
                 standardsMenuPO.setPid(dto.getPid());
-                standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
+                standardsMenuPO.setSort(tragetMenuPO.getSort() + 1);
                 standardsMenuService.updateById(standardsMenuPO);
 
                 LambdaQueryWrapper<StandardsMenuPO> selectMenus = new LambdaQueryWrapper<>();
-                selectMenus.eq(StandardsMenuPO::getPid,pid);
-                selectMenus.gt(StandardsMenuPO::getSort,sort);
+                selectMenus.eq(StandardsMenuPO::getPid, pid);
+                selectMenus.gt(StandardsMenuPO::getSort, sort);
                 List<StandardsMenuPO> Menus = standardsMenuService.list(selectMenus);
                 menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : Menus) {
-                    menuPO.setSort(menuPO.getSort()-1);
+                    menuPO.setSort(menuPO.getSort() - 1);
                     menus.add(menuPO);
                 }
-                if (!CollectionUtils.isEmpty(menus)){
+                if (!CollectionUtils.isEmpty(menus)) {
                     standardsMenuService.updateBatchById(menus);
                 }
             }
-        }else {
-            if (tragetId == null || tragetId == 0){
+        } else {
+            if (tragetId == null || tragetId == 0) {
                 LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-                queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                queryWrapper.eq(StandardsMenuPO::getPid, standardsMenuPO.getPid());
+                queryWrapper.lt(StandardsMenuPO::getSort, standardsMenuPO.getSort());
                 List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
                 List<StandardsMenuPO> menus = new ArrayList<>();
                 for (StandardsMenuPO menuPO : list) {
-                    menuPO.setSort(menuPO.getSort()+1);
+                    menuPO.setSort(menuPO.getSort() + 1);
                     menus.add(menuPO);
                 }
-                if (!CollectionUtils.isEmpty(menus)){
+                if (!CollectionUtils.isEmpty(menus)) {
                     standardsMenuService.updateBatchById(menus);
                 }
                 standardsMenuPO.setSort(1);
                 standardsMenuService.updateById(standardsMenuPO);
-            }else {
-                if (tragetMenuPO.getSort()>standardsMenuPO.getSort()){
+            } else {
+                if (tragetMenuPO.getSort() > standardsMenuPO.getSort()) {
                     LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-                    queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-                    queryWrapper.gt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
-                    queryWrapper.le(StandardsMenuPO::getSort,tragetMenuPO.getSort());
+                    queryWrapper.eq(StandardsMenuPO::getPid, standardsMenuPO.getPid());
+                    queryWrapper.gt(StandardsMenuPO::getSort, standardsMenuPO.getSort());
+                    queryWrapper.le(StandardsMenuPO::getSort, tragetMenuPO.getSort());
                     List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
                     List<StandardsMenuPO> menus = new ArrayList<>();
                     for (StandardsMenuPO menuPO : list) {
-                        menuPO.setSort(menuPO.getSort()-1);
+                        menuPO.setSort(menuPO.getSort() - 1);
                         menus.add(menuPO);
                     }
-                    if (!CollectionUtils.isEmpty(menus)){
+                    if (!CollectionUtils.isEmpty(menus)) {
                         standardsMenuService.updateBatchById(menus);
                     }
                     standardsMenuPO.setSort(tragetMenuPO.getSort());
                     standardsMenuService.updateById(standardsMenuPO);
-                }else if (tragetMenuPO.getSort()<standardsMenuPO.getSort()){
+                } else if (tragetMenuPO.getSort() < standardsMenuPO.getSort()) {
                     LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
-                    queryWrapper.eq(StandardsMenuPO::getPid,standardsMenuPO.getPid());
-                    queryWrapper.gt(StandardsMenuPO::getSort,tragetMenuPO.getSort());
-                    queryWrapper.lt(StandardsMenuPO::getSort,standardsMenuPO.getSort());
+                    queryWrapper.eq(StandardsMenuPO::getPid, standardsMenuPO.getPid());
+                    queryWrapper.gt(StandardsMenuPO::getSort, tragetMenuPO.getSort());
+                    queryWrapper.lt(StandardsMenuPO::getSort, standardsMenuPO.getSort());
                     List<StandardsMenuPO> list = standardsMenuService.list(queryWrapper);
                     List<StandardsMenuPO> menus = new ArrayList<>();
                     for (StandardsMenuPO menuPO : list) {
-                        menuPO.setSort(menuPO.getSort()+1);
+                        menuPO.setSort(menuPO.getSort() + 1);
                         menus.add(menuPO);
                     }
-                    if (!CollectionUtils.isEmpty(menus)){
+                    if (!CollectionUtils.isEmpty(menus)) {
                         standardsMenuService.updateBatchById(menus);
                     }
-                    standardsMenuPO.setSort(tragetMenuPO.getSort()+1);
+                    standardsMenuPO.setSort(tragetMenuPO.getSort() + 1);
                     standardsMenuService.updateById(standardsMenuPO);
                 }
             }
@@ -669,10 +668,10 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     public List<StandardsDTO> getStandardsBySource(Integer fieldMetadataId) {
 
         DBTableFiledNameDto dbTableFiledNameDto = metadataEntity.getParentNameByFieldId(fieldMetadataId);
-        if (dbTableFiledNameDto==null){
+        if (dbTableFiledNameDto == null) {
             return new ArrayList<>();
         }
-        StandardsSourceQueryDTO dto=new StandardsSourceQueryDTO();
+        StandardsSourceQueryDTO dto = new StandardsSourceQueryDTO();
         dto.setFieldName(dbTableFiledNameDto.getFieldName());
         dto.setTableName(dbTableFiledNameDto.getTableName());
         dto.setDatabaseName(dbTableFiledNameDto.getDatabaseName());
@@ -680,7 +679,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
-    public ResultEnum importExcelStandards(long menuId,MultipartFile file) {
+    public ResultEnum importExcelStandards(long menuId, MultipartFile file) {
         String excelName = file.getOriginalFilename();
         if (!excelName.contains(".xlsx")) {
             throw new FkException(ResultEnum.FILE_NAME_ERROR);
@@ -695,7 +694,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             checkData(StandardsList);
             for (StandardsExcel standardsExcel : StandardsList) {
                 StandardsDTO standardsDTO = new StandardsDTO();
-                standardsDTO.setMenuId((int)menuId);
+                standardsDTO.setMenuId((int) menuId);
                 standardsDTO.setChineseName(standardsExcel.getName());
                 standardsDTO.setEnglishName(standardsExcel.getEnglishName());
                 standardsDTO.setDescription(standardsExcel.getDescription());
@@ -707,7 +706,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 standardsDTO.setValueRangeType(ValueRangeTypeEnum.VALUE);
                 addStandards(standardsDTO);
             }
-        } catch (FkException fk){
+        } catch (FkException fk) {
             throw new FkException(fk.getResultEnum());
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -718,7 +717,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id) {
         List<StandardsMenuPO> standardsMenus = standardsMenuService.list();
-        if (CollectionUtils.isEmpty(standardsMenus)){
+        if (CollectionUtils.isEmpty(standardsMenus)) {
             return new ArrayList<>();
         }
 
@@ -727,14 +726,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         List<Long> standardsDataMenuIds = standardsDataMenus.stream().map(BasePO::getId).collect(Collectors.toList());
 
         LambdaQueryWrapper<StandardsPO> standardQueryWrapper = new LambdaQueryWrapper<>();
-        standardQueryWrapper.in(StandardsPO::getMenuId,standardsDataMenuIds);
+        standardQueryWrapper.in(StandardsPO::getMenuId, standardsDataMenuIds);
         List<StandardsPO> standardsPOS = this.list(standardQueryWrapper);
-        standardsPOS.stream().collect(Collectors.toMap(i->i.getId(),i->i));
+        standardsPOS.stream().collect(Collectors.toMap(i -> i.getId(), i -> i));
         Map<Integer, StandardsPO> standardMap = standardsPOS.stream().collect(Collectors.toMap(StandardsPO::getMenuId, i -> i));
         List<Long> standardIds = standardsPOS.stream().map(BasePO::getId).collect(Collectors.toList());
 
         LambdaQueryWrapper<StandardsBeCitedPO> beCitedQueryWrapper = new LambdaQueryWrapper<>();
-        beCitedQueryWrapper.in(StandardsBeCitedPO::getStandardsId,standardIds);
+        beCitedQueryWrapper.in(StandardsBeCitedPO::getStandardsId, standardIds);
         List<StandardsBeCitedPO> beCiteds = standardsBeCitedService.list(beCitedQueryWrapper);
         Map<Integer, List<FiDataMetaDataTreeDTO>> dataMap = beCiteds.stream().collect(groupingBy(StandardsBeCitedPO::getStandardsId,
                 Collectors.mapping(i -> {
@@ -774,7 +773,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
 
                 StandardsPO standardsPO = standardMap.get((int) i.getId());
-                if (standardsPO != null){
+                if (standardsPO != null) {
                     List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeDTOS = dataMap.get((int) standardsPO.getId());
                     fiDataMetaDataTreeDTO.setChildren(fiDataMetaDataTreeDTOS);
                 }
@@ -783,8 +782,82 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         }).collect(Collectors.toList());
 
         List<FiDataMetaDataTreeDTO> parentTree = allTree.stream().filter(i -> i.getParentId().equals(id)).collect(Collectors.toList());
-        standardsTree(allTree,parentTree);
+        standardsTree(allTree, parentTree);
         return parentTree;
+    }
+
+    /**
+     * 数仓建模-关联字段和数据源标准
+     *
+     * @param dtos
+     * @return
+     */
+    @Override
+    public Object setStandardsByModelField(List<StandardsBeCitedDTO> dtos) {
+        //获取集合内第一个元素 查看指标id是否为空 若为空 此次则为删除关联关系的操作
+        StandardsBeCitedDTO standardsBeCitedDTO = dtos.get(0);
+        //获取本次操作的字段id(数仓的字段id 维度表字段/事实表字段)
+        String fieldId = standardsBeCitedDTO.getFieldId();
+
+        //如果本次没选择任何数据元标准 则认为此次为清空关联关系
+        if (standardsBeCitedDTO.getStandardsId() == null) {
+            LambdaQueryWrapper<StandardsBeCitedPO> delWrapper = new LambdaQueryWrapper<>();
+            delWrapper.eq(StandardsBeCitedPO::getFieldId, fieldId);
+            return standardsBeCitedService.remove(delWrapper);
+        }
+
+        /*
+        每次做关联 逻辑为：先删除字段原来关联的所有数据元标准  再添加这次选中的数据源标准
+         */
+        //1.删除字段原来关联的数据元标准
+        LambdaQueryWrapper<StandardsBeCitedPO> delAll = new LambdaQueryWrapper<>();
+        delAll.eq(StandardsBeCitedPO::getFieldId, fieldId);
+        standardsBeCitedService.remove(delAll);
+
+        //将standards menuId 替换为 standards id
+        for (StandardsBeCitedDTO dto : dtos) {
+            Integer standardMenuId = dto.getStandardsId();
+            StandardsPO one = getOne(new LambdaQueryWrapper<StandardsPO>().eq(StandardsPO::getMenuId, standardMenuId));
+            dto.setStandardsId(Math.toIntExact(one.getId()));
+        }
+
+        //2.删除字段原来关联的数据元标准
+        List<StandardsBeCitedPO> standardsBeCitedPOS = StandardsBeCitedMap.INSTANCES.dtoListToPoList(dtos);
+        return standardsBeCitedService.saveBatch(standardsBeCitedPOS);
+    }
+
+    /**
+     * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid
+     *
+     * @return
+     */
+    @Override
+    public List<StandardsDTO> modelGetStandards() {
+        LambdaQueryWrapper<StandardsPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(StandardsPO::getId, StandardsPO::getChineseName,StandardsPO::getMenuId);
+        List<StandardsPO> list = this.list(wrapper);
+        List<StandardsDTO> dtos = new ArrayList<>();
+        for (StandardsPO po : list) {
+            StandardsDTO dto = new StandardsDTO();
+            dto.setId((int) po.getId());
+            dto.setMenuId(po.getMenuId());
+            dto.setChineseName(po.getChineseName());
+            dtos.add(dto);
+        }
+        return dtos;
+    }
+
+    /**
+     * 数仓建模-获取所有数仓字段和数据元标准的关联关系  数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     * @return
+     */
+    @Override
+    public List<StandardsBeCitedDTO> modelGetStandardsMap() {
+        LambdaQueryWrapper<StandardsBeCitedPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(StandardsBeCitedPO::getStandardsId,StandardsBeCitedPO::getFieldId)
+                .eq(StandardsBeCitedPO::getDbId,1);
+        List<StandardsBeCitedPO> list = standardsBeCitedService.list();
+        return StandardsBeCitedMap.INSTANCES.poListToDTOList(list);
     }
 
     private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {
@@ -802,18 +875,18 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         }
     }
 
-    public void checkData(List<StandardsExcel> StandardsList){
+    public void checkData(List<StandardsExcel> StandardsList) {
         for (StandardsExcel standardsExcel : StandardsList) {
-            if (standardsExcel.getName() == null){
+            if (standardsExcel.getName() == null) {
                 throw new FkException(ResultEnum.NAME_IS_NULL);
             }
-            if (standardsExcel.getEnglishName() == null){
+            if (standardsExcel.getEnglishName() == null) {
                 throw new FkException(ResultEnum.ENGLISHNAME_IS_NULL);
             }
-            if (standardsExcel.getFieldType() == null){
+            if (standardsExcel.getFieldType() == null) {
                 throw new FkException(ResultEnum.FIELDTYPE_IS_NULL);
             }
-            if (standardsExcel.getDatametaCode() == null){
+            if (standardsExcel.getDatametaCode() == null) {
                 throw new FkException(ResultEnum.DATAMETACODE_IS_NULL);
             }
         }
@@ -859,7 +932,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         } catch (Exception e) {
             log.error("【获取表信息失败】,{}", e);
             return null;
-        }finally {
+        } finally {
             AbstractCommonDbHelper.closeConnection(conn);
         }
     }

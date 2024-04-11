@@ -7,9 +7,11 @@ import com.fisk.common.core.enums.BaseEnum;
  */
 
 public enum MetadataAuditOperationTypeEnum implements BaseEnum {
+    ALL(0,"全部"),
     ADD(1,"添加"),
     EDIT(2,"编辑"),
-    DELETE(3,"删除");
+    DELETE(3,"删除"),
+    ;
     private final int value;
     private final String name;
 

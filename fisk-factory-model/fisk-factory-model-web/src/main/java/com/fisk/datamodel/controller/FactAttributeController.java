@@ -3,6 +3,8 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeAddDTO;
@@ -147,4 +149,30 @@ public class FactAttributeController {
     public ResultEntity<Object> executeFactTableSql(@Validated @RequestBody WideTableFieldConfigDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.executeFactTableSql(dto));
     }
+
+    /**
+     * 关联数仓表字段和数据元标准
+     * @param dtos
+     * @return
+     */
+    @ApiOperation("关联数仓表字段和数据元标准")
+    @PostMapping("/mapModelFieldsWithStandards")
+    public ResultEntity<Object> mapModelFieldsWithStandards(@RequestBody List<StandardsBeCitedDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.mapModelFieldsWithStandards(dtos));
+    }
+
+    /**
+     * 关联数仓表字段和指标标准
+     * 维度表字段则关联 指标粒度
+     * 事实表字段则关联 指标所属
+     *
+     * @param dtos
+     * @return
+     */
+    @ApiOperation("关联数仓表字段和指标标准")
+    @PostMapping("/mapModelFieldsWithIndex")
+    public ResultEntity<Object> mapModelFieldsWithIndex(@RequestBody List<ModelAndIndexMappingDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.mapModelFieldsWithIndex(dtos));
+    }
+
 }

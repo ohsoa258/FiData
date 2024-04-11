@@ -5,7 +5,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.service.StandardsMenuService;
@@ -37,6 +36,12 @@ public class StandardsController {
     @GetMapping("/getStandardsTree")
     public ResultEntity<List<StandardsTreeDTO>> getStandardsTree() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsMenuService.getStandardsTree());
+    }
+
+    @ApiOperation("查看数据标准树形标签--非懒加载")
+    @GetMapping("/getStandardsAllTree")
+    public ResultEntity<List<StandardsTreeDTO>> getStandardsAllTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsMenuService.getStandardsAllTree());
     }
 
     @ApiOperation("添加或修改数据标准标签")
@@ -123,9 +128,48 @@ public class StandardsController {
     public ResultEntity<Object> importExcelStandards(long menuId, @RequestParam("file") MultipartFile file){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.importExcelStandards(menuId,file));
     }
+
     @ApiOperation("获取所有数据标准树形结构(数据校验用)")
     @PostMapping("/getAllStandardsTree")
     public ResultEntity<Object> getAllStandardsTree(@RequestParam("id") String id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.getAllStandardsTree(id));
     }
+
+    /**
+     * 数仓建模-关联字段和数据源标准
+     * @param dtos
+     * @return
+     */
+    @ApiOperation("数仓建模-关联字段和数据源标准")
+    @PostMapping("/setStandardsByModelField")
+    public ResultEntity<Object> setStandardsByModelField(@RequestBody List<StandardsBeCitedDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.setStandardsByModelField(dtos));
+    }
+
+    /**
+     * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid
+     * @return
+     */
+    @ApiOperation("数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid")
+    @GetMapping("/modelGetStandards")
+    public List<StandardsDTO> modelGetStandards() {
+        return standardsService.modelGetStandards();
+    }
+
+    /**
+     * 数仓建模-获取所有数仓字段和数据元标准的关联关系 数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     * @return
+     */
+    @ApiOperation("数仓建模-获取所有数仓字段和数据元标准的关联关系")
+    @GetMapping("/modelGetStandardsMap")
+    public List<StandardsBeCitedDTO> modelGetStandardsMap() {
+        return standardsService.modelGetStandardsMap();
+    }
+
+    @ApiOperation("获取所有数据元标准menu-只要id和name")
+    @GetMapping("/getStandardMenus")
+    public List<StandardsMenuDTO> getStandardMenus() {
+        return standardsMenuService.getStandardMenus();
+    }
+
 }

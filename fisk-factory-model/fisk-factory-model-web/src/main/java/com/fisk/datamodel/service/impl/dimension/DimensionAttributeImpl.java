@@ -4,15 +4,21 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
-import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderPublishQueryDTO;
+import com.fisk.datamodel.dto.factattribute.FieldsAssociatedMetricsOrMetaObjDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
 import com.fisk.datamodel.entity.SyncModePO;
 import com.fisk.datamodel.entity.TableBusinessPO;
@@ -74,6 +80,8 @@ public class DimensionAttributeImpl
     private IBusinessArea businessArea;
     @Resource
     private DimensionImpl dimension;
+    @Resource
+    private DataManageClient dataManageClient;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -287,7 +295,85 @@ public class DimensionAttributeImpl
         QueryWrapper<DimensionAttributePO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(DimensionAttributePO::getDimensionId, dimensionId);
         List<DimensionAttributePO> list = attributeMapper.selectList(queryWrapper);
-        data.attributeDTOList = DimensionAttributeMap.INSTANCES.poListToDtoList(list);
+        List<DimensionAttributeDTO> dimensionAttributeDTOS = DimensionAttributeMap.INSTANCES.poListToDtoList(list);
+
+        try {
+            /*
+            2024 04 03 数仓贯标 字段回显新增贯标列 展示数仓的字段和哪些指标或数据元关联
+            */
+            //1.1获取所有指标 -> 指标id 指标名称    维度表 = 指标粒度
+            List<BusinessTargetinfoDTO> dtos = dataManageClient.modelGetBusinessTargetInfoList();
+
+            //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    事实表 = 指标粒度
+            List<BusinessExtendedfieldsDTO> businessExtendedfieldsDTOS = dataManageClient.modelGetMetricMapList();
+
+            //2.1获取所有数据元 -> 数据元id 数据元名称
+            List<StandardsDTO> standardsDTOS = dataManageClient.modelGetStandards();
+
+            //2.2获取数仓字段和数据元关联表里所有关联关系
+            List<StandardsBeCitedDTO> standardsBeCitedDTOS = dataManageClient.modelGetStandardsMap();
+
+            ArrayList<FieldsAssociatedMetricsOrMetaObjDTO> objDTOS = new ArrayList<>();
+
+            for (DimensionAttributeDTO dimensionAttributeDTO : dimensionAttributeDTOS) {
+                //获取字段id
+                long filedId = dimensionAttributeDTO.getId();
+
+                //不为空则说明该维度表字段关联的有指标标准
+                if (!org.springframework.util.CollectionUtils.isEmpty(businessExtendedfieldsDTOS)) {
+                    //循环指标关联关系
+                    for (BusinessExtendedfieldsDTO d : businessExtendedfieldsDTOS) {
+                        if (d.getAttributeid().equals(String.valueOf(filedId))) {
+                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
+                            dto.setId(d.getId());
+                            //循环指标 获取指标名称
+                            for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
+                                if (d.getIndexid().equals(String.valueOf(businessTargetinfoDTO.getId()))) {
+                                    dto.setName(businessTargetinfoDTO.getName());
+                                }
+                            }
+                            //类型 0指标 1数据元
+                            dto.setType(0);
+                            objDTOS.add(dto);
+                        }
+                    }
+                }
+
+                //不为空则说明该事实表字段关联的有数据元标准
+                if (org.springframework.util.CollectionUtils.isEmpty(standardsBeCitedDTOS)) {
+                    //循环数据元标准关联关系
+                    for (StandardsBeCitedDTO s : standardsBeCitedDTOS) {
+                        //只获取维度表的关联关系
+                        if (!TableBusinessTypeEnum.DW_DIMENSION.equals(s.getTableBusinessType())) {
+                            continue;
+                        }
+
+                        if (s.getFieldId().equals(String.valueOf(filedId))) {
+                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
+                            dto.setId(s.getId());
+                            //循环数据元标准集合 获取数据元标准名称
+                            for (StandardsDTO standardsDTO : standardsDTOS) {
+                                if (s.getStandardsId().equals(standardsDTO.getId())) {
+                                    dto.setName(standardsDTO.getChineseName());
+                                }
+                            }
+                            //类型 0指标 1数据元
+                            dto.setType(1);
+                            objDTOS.add(dto);
+                        }
+
+                    }
+                }
+                dimensionAttributeDTO.setAssociatedDto(objDTOS);
+            }
+        } catch (Exception e) {
+            log.error("==============================");
+            log.error("获取数仓贯标失败..." + e);
+            log.error("==============================");
+        }
+
+        data.attributeDTOList = dimensionAttributeDTOS;
+
         //获取增量配置信息
         QueryWrapper<SyncModePO> syncModePoQueryWrapper = new QueryWrapper<>();
         syncModePoQueryWrapper.lambda().eq(SyncModePO::getSyncTableId, dimensionPo.id)
