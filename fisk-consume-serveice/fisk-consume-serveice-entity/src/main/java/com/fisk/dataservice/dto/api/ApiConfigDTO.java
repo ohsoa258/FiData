@@ -176,4 +176,10 @@ public class ApiConfigDTO
      */
     @ApiModelProperty(value = "标签")
     private String tag;
+
+    /**
+     * 是否公开 1公开 0不公开
+     */
+    @ApiModelProperty(value = "是否公开 1公开 0不公开")
+    private int accessibility;
 }

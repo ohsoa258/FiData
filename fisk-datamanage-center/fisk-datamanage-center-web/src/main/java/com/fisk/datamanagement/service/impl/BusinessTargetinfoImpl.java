@@ -527,7 +527,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                }
            }
             for (int m=0;m<item.getFacttreeListData().size();m++){
-                FacttreeListDTOs model4= item.getFacttreeListData().get(m);
+                FacttreeListDTO model4= item.getFacttreeListData().get(m);
                 FactTreePOs model3 = new FactTreePOs();
                 model3.setPid(bcPOnew.id+"");
                 model3.setBusinessNameId(model4.businessNameId);
@@ -739,11 +739,11 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             }
 
             if (i.getCreatedTime() != null){
-                DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-                LocalDateTime localDateTime = LocalDateTime.parse(i.getCreatedTime().toString(), inputFormatter);
+//                DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+//                LocalDateTime localDateTime = LocalDateTime.parse(i.getCreatedTime().toString(), inputFormatter);
                 DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 // 格式化为指定格式的字符串
-                String outputDateTime = localDateTime.format(outputFormatter);
+                String outputDateTime = i.getCreatedTime().format(outputFormatter);
                 model1.setCreatedTime(outputDateTime);
             }else {
                 DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -783,7 +783,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 //            }
 //        }
         //处理指标所属
-        List<FacttreeListDTOs> facttreeListData = item.getFacttreeListData();
+        List<FacttreeListDTO> facttreeListData = item.getFacttreeListData();
         List<FactTreePOs> facttreeListPOs = facttreeListData.stream().map(i -> {
             FactTreePOs model1 = new FactTreePOs();
             if (i.getId() != null){
@@ -797,13 +797,13 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             model1.setFactFieldEnNameId(i.getFactFieldEnNameId());
 //            model1.setFactFieldEnName(i.getFactFieldEnName());
 //            model1.setFactFieldCnName(i.getFactFieldCnName());
-            if (i.getCreatedUser() != null){
-                model1.setCreateUser(i.getCreatedUser());
+            if (i.getCreateUser() != null){
+                model1.setCreateUser(i.getCreateUser());
             }else {
                 model1.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             }
-            if (i.getCreatedTime() != null){
-                model1.setCreateTime(i.getCreatedTime());
+            if (i.getCreateTime() != null){
+                model1.setCreateTime(i.getCreateTime());
             }else {
                 model1.setCreateTime(LocalDateTime.now());
             }

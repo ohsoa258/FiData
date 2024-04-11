@@ -662,6 +662,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         model.setMaxSizeType(dto.getMaxSizeType());
         model.setMaxSize(dto.getMaxSize());
         model.setTag(dto.getTag());
+        model.setAccessibility(dto.getAccessibility());
         isUpdate = baseMapper.updateById(model) > 0;
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;

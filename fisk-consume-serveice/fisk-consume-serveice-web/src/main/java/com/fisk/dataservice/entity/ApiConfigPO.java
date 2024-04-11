@@ -147,4 +147,9 @@ public class ApiConfigPO extends BasePO
      * 标签
      */
     private String tag;
+
+    /**
+     * 是否公开 1公开 0不公开
+     */
+    private int accessibility;
 }

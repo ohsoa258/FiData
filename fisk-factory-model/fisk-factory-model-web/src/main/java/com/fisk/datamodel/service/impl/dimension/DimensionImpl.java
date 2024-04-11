@@ -1208,7 +1208,7 @@ public class DimensionImpl
                                                                           List<Integer> tblIds,
                                                                           String dbQualifiedName,
                                                                           Integer dataModelType,
-                                                                          String businessAdmin) {
+                                                                           String businessAdmin) {
         List<DimensionPO> list = this.query()
                 .eq("business_id", businessId)
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
