@@ -29,7 +29,8 @@
         api.cache_time,
         api.max_size_type,
         api.max_size,
-        api.tag
+        api.tag,
+        api.accessibility
         -- userinfo.user_account as create_user
         from tb_api_config as api
         left join tb_datasource_config as source
@@ -90,7 +91,8 @@
         api.cache_time,
         api.max_size_type,
         api.max_size,
-        api.tag
+        api.tag,
+        api.accessibility
         FROM
         tb_api_config AS api
         WHERE
@@ -122,7 +124,8 @@
         api.cache_time,
         api.max_size_type,
         api.max_size,
-        api.tag
+        api.tag,
+        api.accessibility
         FROM
         tb_api_config api
         LEFT JOIN tb_app_service_config appapi ON api.id = appapi.service_id
