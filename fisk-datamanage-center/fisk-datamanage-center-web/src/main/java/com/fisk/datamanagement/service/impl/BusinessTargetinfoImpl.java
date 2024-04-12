@@ -797,14 +797,10 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             model1.setFactFieldEnNameId(i.getFactFieldEnNameId());
 //            model1.setFactFieldEnName(i.getFactFieldEnName());
 //            model1.setFactFieldCnName(i.getFactFieldCnName());
-            if (i.getCreateUser() != null){
-                model1.setCreateUser(i.getCreateUser());
-            }else {
+            if (i.getCreateUser() == null){
                 model1.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             }
-            if (i.getCreateTime() != null){
-                model1.setCreateTime(i.getCreateTime());
-            }else {
+            if (i.getCreateTime() == null){
                 model1.setCreateTime(LocalDateTime.now());
             }
             model1.setDelFlag(1);
