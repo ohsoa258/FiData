@@ -41,7 +41,7 @@ eureka:
       enabled: true
     serviceUrl:
       # eureka服务端地址
-      defaultZone: http://192.168.11.130:8082/eureka
+      defaultZone: http://127.0.0.1:8082/eureka
     # 自己去服务端获取其他服务注册信息间隔时间，默认30秒
     registry-fetch-interval-seconds: 2
     # 客户端连接eureka服务端超时时间，默认为5秒
