@@ -159,10 +159,23 @@ public class BuildDataModelDorisTableListener
                 Calendar calendar = Calendar.getInstance();
                 String version = df.format(calendar.getTime());
 
-                //todo：doris数据库不支持存储过程，因此这里先将doris数仓排除在外
                 //调用方法，保存建模相关表结构数据(保存版本号)
                 ResultEnum resultEnum = null;
                 String msg = null;
+
+                //如果前端选择删除目标表 则这里删除目标表
+                if (inpData.ifDropTargetTbl) {
+                    log.info("开始删除目标表");
+                    String dropSql = "DROP TABLE IF EXISTS " + modelPublishTableDTO.tableName;
+                    BusinessResult businessResult = iPostgreBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
+                    if (!businessResult.success) {
+                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
+                    } else {
+                        msg = "表不存在";
+                        resultEnum = ResultEnum.TASK_TABLE_NOT_EXIST;
+                    }
+                }
+
                 if (!DataSourceTypeEnum.DORIS.getName().equalsIgnoreCase(conType.getName())) {
                     resultEnum = taskPgTableStructureHelper.saveTableStructure(modelPublishTableDTO, version, conType);
                     if (resultEnum.getCode() != ResultEnum.TASK_TABLE_NOT_EXIST.getCode() && resultEnum.getCode() != ResultEnum.SUCCESS.getCode()) {
@@ -180,20 +193,6 @@ public class BuildDataModelDorisTableListener
                     }
                     log.info("数仓执行修改表结构的存储过程返回结果" + msg);
                 }
-
-                //如果前端选择删除目标表 则这里删除目标表
-                if (inpData.ifDropTargetTbl) {
-                    log.info("开始删除目标表");
-                    String dropSql = "DROP TABLE IF EXISTS " + modelPublishTableDTO.tableName;
-                    BusinessResult businessResult = iPostgreBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
-                    if (!businessResult.success) {
-                        throw new FkException(ResultEnum.TASK_TABLE_CREATE_FAIL);
-                    } else {
-                        msg = "表不存在";
-                        resultEnum = ResultEnum.TASK_TABLE_NOT_EXIST;
-                    }
-                }
-
 
                 //生成建表语句
                 List<String> pgdbTable2 = new ArrayList<>();

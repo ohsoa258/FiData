@@ -14,6 +14,7 @@ import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
@@ -304,32 +305,39 @@ public class DimensionAttributeImpl
             //1.1获取所有指标 -> 指标id 指标名称    维度表 = 指标粒度
             List<BusinessTargetinfoDTO> dtos = dataManageClient.modelGetBusinessTargetInfoList();
 
-            //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    事实表 = 指标粒度
+            //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    维度表 = 指标粒度
             List<BusinessExtendedfieldsDTO> businessExtendedfieldsDTOS = dataManageClient.modelGetMetricMapList();
 
             //2.1获取所有数据元 -> 数据元id 数据元名称
             List<StandardsDTO> standardsDTOS = dataManageClient.modelGetStandards();
 
             //2.2获取数仓字段和数据元关联表里所有关联关系
+            List<StandardsMenuDTO> standardMenus = dataManageClient.getStandardMenus();
+            Map<Integer, String> standardsMenuMap = standardMenus.stream()
+                    .collect(Collectors.toMap(
+                            StandardsMenuDTO::getId,
+                            StandardsMenuDTO::getName
+                    ));
+
+            //2.3获取数仓字段和数据元关联表里所有关联关系
             List<StandardsBeCitedDTO> standardsBeCitedDTOS = dataManageClient.modelGetStandardsMap();
 
-            ArrayList<FieldsAssociatedMetricsOrMetaObjDTO> objDTOS = new ArrayList<>();
-
             for (DimensionAttributeDTO dimensionAttributeDTO : dimensionAttributeDTOS) {
+                ArrayList<FieldsAssociatedMetricsOrMetaObjDTO> objDTOS = new ArrayList<>();
                 //获取字段id
                 long filedId = dimensionAttributeDTO.getId();
 
                 //不为空则说明该维度表字段关联的有指标标准
-                if (!org.springframework.util.CollectionUtils.isEmpty(businessExtendedfieldsDTOS)) {
+                if (!CollectionUtils.isEmpty(businessExtendedfieldsDTOS)) {
                     //循环指标关联关系
                     for (BusinessExtendedfieldsDTO d : businessExtendedfieldsDTOS) {
                         if (d.getAttributeid().equals(String.valueOf(filedId))) {
                             FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
-                            dto.setId(d.getId());
                             //循环指标 获取指标名称
                             for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
                                 if (d.getIndexid().equals(String.valueOf(businessTargetinfoDTO.getId()))) {
-                                    dto.setName(businessTargetinfoDTO.getName());
+                                    dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
+                                    dto.setName(businessTargetinfoDTO.getIndicatorName());
                                 }
                             }
                             //类型 0指标 1数据元
@@ -340,7 +348,7 @@ public class DimensionAttributeImpl
                 }
 
                 //不为空则说明该事实表字段关联的有数据元标准
-                if (org.springframework.util.CollectionUtils.isEmpty(standardsBeCitedDTOS)) {
+                if (!CollectionUtils.isEmpty(standardsBeCitedDTOS)) {
                     //循环数据元标准关联关系
                     for (StandardsBeCitedDTO s : standardsBeCitedDTOS) {
                         //只获取维度表的关联关系
@@ -350,11 +358,16 @@ public class DimensionAttributeImpl
 
                         if (s.getFieldId().equals(String.valueOf(filedId))) {
                             FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
-                            dto.setId(s.getId());
+
                             //循环数据元标准集合 获取数据元标准名称
                             for (StandardsDTO standardsDTO : standardsDTOS) {
                                 if (s.getStandardsId().equals(standardsDTO.getId())) {
-                                    dto.setName(standardsDTO.getChineseName());
+                                    //获取到数据元标准id关联的数据元标准menuid
+                                    int menuId = standardsDTO.getMenuId();
+                                    //获取menuId对应的菜单名称
+                                    String menuName = standardsMenuMap.get(menuId);
+                                    dto.setId(menuId);
+                                    dto.setName(menuName);
                                 }
                             }
                             //类型 0指标 1数据元

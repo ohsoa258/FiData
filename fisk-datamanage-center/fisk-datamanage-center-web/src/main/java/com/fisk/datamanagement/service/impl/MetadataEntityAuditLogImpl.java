@@ -417,15 +417,10 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             DELETE(3,"删除"),
          */
         MetadataAuditOperationTypeEnum operationType = dto.getOperationType();
-
         //获取元数据类型
         EntityTypeEnum entityType = dto.getEntityType();
 
-
-        // 计算总记录数
-        long totalRecords;
         List<AuditLogWithEntityTypeAndDetailPO> auditLogs;
-
         //根据查询操作类型 决定查询的内容
         if (operationType.equals(MetadataAuditOperationTypeEnum.ALL)) {
             /*
@@ -444,7 +439,16 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             detailDTO.setEntityId(po.getEntityId());
             detailDTO.setAuditId(po.auditId);
             detailDTO.setType(entityType);
-            detailDTO.setTypeName(entityType.getName());
+
+            //切换类型名称
+            if (entityType.equals(EntityTypeEnum.RDBMS_TABLE)){
+                detailDTO.setTypeName("表");
+            }else if (entityType.equals(EntityTypeEnum.RDBMS_COLUMN)){
+                detailDTO.setTypeName("字段");
+            }else {
+                detailDTO.setTypeName(entityType.getName());
+            }
+
             detailDTO.setEntityName(po.name);
             detailDTO.setEntityType(po.operationType);
             if (po.operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
@@ -459,7 +463,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             }
             detailDTO.setChangeContent(content);
 
-            //如果是字段 则可以检索该字段元数据属于哪些表
+            //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (entityType.equals(EntityTypeEnum.RDBMS_COLUMN)) {
                 //获取该字段所属的表的元数据id
                 int parentId = po.getParentId();
