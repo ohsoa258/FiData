@@ -138,8 +138,8 @@ public class BuildDataInputDeletePgTableListener {
                         //DROP TABLE IF EXISTS fact_dr_01;DROP TABLE IF EXISTS temp_fact_dr_01;
                         if (Objects.equals(DataSourceTypeEnum.DORIS, conType)) {
                             inputData.tableList.forEach((t) -> {
-                                buildDelSqlStr.append(t.tableName).append("; ");
-                                buildDelSqlStr.append("DROP TABLE IF EXISTS ").append("temp_").append(t.tableName).append(", ");
+                                buildDelSqlStr.append(t.tableName).append(" FORCE; ");
+                                buildDelSqlStr.append("DROP TABLE IF EXISTS ").append("temp_").append(t.tableName).append(" FORCE, ");
                                 conditionHashMap.put("table_name", t.tableName);
                                 taskPgTableStructureMapper.deleteByMap(conditionHashMap);
                                 tbetlIncremental.delEtlIncrementalList(t.tableName);
@@ -148,8 +148,8 @@ public class BuildDataInputDeletePgTableListener {
                             });
                             String delSqlStr = buildDelSqlStr.toString();
                             delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
                             log.info("delsql:" + delSqlStr);
+                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
                             log.info("执行pg delete table 完成");
                         } else {
                             inputData.tableList.forEach((t) -> {
@@ -163,8 +163,8 @@ public class BuildDataInputDeletePgTableListener {
                             });
                             String delSqlStr = buildDelSqlStr.toString();
                             delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
                             log.info("delsql:" + delSqlStr);
+                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
                             log.info("执行pg delete table 完成");
                         }
                     }
@@ -173,7 +173,7 @@ public class BuildDataInputDeletePgTableListener {
             }
 
         } catch (Exception e) {
-            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+            log.error("删除表失败：" + StackTraceHelper.getStackTraceInfo(e));
             return ResultEnum.ERROR;
         } finally {
             acke.acknowledge();
