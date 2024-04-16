@@ -66,6 +66,7 @@ import com.fisk.datamodel.utils.mysql.DataSourceConfigUtil;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -80,6 +81,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class FactAttributeImpl
         extends ServiceImpl<FactAttributeMapper, FactAttributePO>
         implements IFactAttribute {
@@ -411,8 +413,9 @@ public class FactAttributeImpl
                         if (d.getFactFieldEnNameId().equals(String.valueOf(filedId))){
                             //循环指标 获取指标名称
                             for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
-                                FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                 if (d.getPid().equals(String.valueOf(businessTargetinfoDTO.getId()))){
+                                    log.info("指标信息："+ JSON.toJSONString(businessTargetinfoDTO));
+                                    FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                     dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
                                     dto.setName(businessTargetinfoDTO.getIndicatorName());
                                     //类型 0指标 1数据元

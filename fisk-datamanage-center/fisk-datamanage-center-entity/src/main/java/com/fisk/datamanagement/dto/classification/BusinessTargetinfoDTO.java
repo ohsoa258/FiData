@@ -1,13 +1,8 @@
 package com.fisk.datamanagement.dto.classification;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.joda.time.DateTime;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -16,37 +11,37 @@ import java.util.List;
  */
 @Data
 public class BusinessTargetinfoDTO {
-    public long  id;
-    public String  pid;
-    public String  responsibleDept;
-    public String  indicatorCode;
-    public String  indicatorName;
-    public String  indicatorDescription;
-    public String  indicatorLevel;
-    public String  unitMeasurement;
-    public String  statisticalCycle;
-    public String  indicatorformula;
-    public String  indicatorStatus;
-    public String  filteringCriteria;
-    public String  largeScreenLink;
-    public String  dataGranularity;
-    public String  operationalAttributes;
-    public String  sourceSystem;
-    public String  sourceDataTable;
-    public String  sourceIndicators;
-    public String  orderChannel;
-    public String  indicatorType;
-    public String  attributesNumber;
-    public String  name;
-    public String  sqlScript;
-    public String  dimdomaintype;
-    public String  dimdomainid;
-    public String  dimdomain;
-    public String  dimtableid;
-    public String  dimtable;
-    public String  attributeid;
-    public String  attribute;
-    public  String indexid;
+    public long id;
+    public String pid;
+    public String responsibleDept;
+    public String indicatorCode;
+    public String indicatorName;
+    public String indicatorDescription;
+    public String indicatorLevel;
+    public String unitMeasurement;
+    public String statisticalCycle;
+    public String indicatorformula;
+    public String indicatorStatus;
+    public String filteringCriteria;
+    public String largeScreenLink;
+    public String dataGranularity;
+    public String operationalAttributes;
+    public String sourceSystem;
+    public String sourceDataTable;
+    public String sourceIndicators;
+    public String orderChannel;
+    public String indicatorType;
+    public String attributesNumber;
+    public String name;
+    public String sqlScript;
+    public String dimdomaintype;
+    public String dimdomainid;
+    public String dimdomain;
+    public String dimtableid;
+    public String dimtable;
+    public String attributeid;
+    public String attribute;
+    public String indexid;
     public List<BusinessExtendedfieldsDTO> dimensionData;
     public List<FacttreeListDTO> facttreeListData;
     public DateTime createdTime;
