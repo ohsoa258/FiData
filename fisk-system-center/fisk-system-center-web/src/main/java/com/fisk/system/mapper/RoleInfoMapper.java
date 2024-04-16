@@ -25,6 +25,13 @@ public interface RoleInfoMapper extends FKBaseMapper<RoleInfoPO> {
     List<RoleInfoDTO> roleList();
 
     /**
+     * 获取所有角色
+     *
+     * @return 查询结果
+     */
+    List<RoleInfoDTO> getAllRole();
+
+    /**
      * 获取角色分页数据
      * @param page
      * @param query

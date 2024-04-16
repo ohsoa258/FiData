@@ -61,6 +61,11 @@ public class RoleInfoImpl extends ServiceImpl<RoleInfoMapper, RoleInfoPO> implem
     }
 
     @Override
+    public List<RoleInfoDTO> getAllRole() {
+        return baseMapper.getAllRole();
+    }
+
+    @Override
     public ResultEnum addRole(RoleInfoDTO dto) {
 
         QueryWrapper<RoleInfoPO> queryWrapper = new QueryWrapper<>();

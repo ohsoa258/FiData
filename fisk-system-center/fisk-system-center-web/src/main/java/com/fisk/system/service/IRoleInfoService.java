@@ -26,6 +26,10 @@ public interface IRoleInfoService extends IService<RoleInfoPO> {
      * @return 查询结果
      */
     Page<RoleInfoDTO> listRoleData(RoleInfoQueryDTO query);
+    /**
+     * 获取角色列表
+     */
+    List<RoleInfoDTO>getAllRole();
 
     /**
      * 添加角色

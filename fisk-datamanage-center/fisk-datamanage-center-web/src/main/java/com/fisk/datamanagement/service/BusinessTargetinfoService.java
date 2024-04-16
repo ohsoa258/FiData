@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
 import com.fisk.datamanagement.dto.classification.FacttreeListDTO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 
@@ -16,12 +17,13 @@ import java.util.List;
 public interface BusinessTargetinfoService {
 
 
+    List<BusinessTargetinfoMenuDTO> getBusinessMetaDataDetailMenuList(String pid);
     /**
      * 查询业务分类
      * @param
      * @return
      */
-    JSONArray SelectClassification(String pid);
+    JSONObject SelectClassification(String id);
 
 
     JSONArray SelectClassifications(Integer fieldMetadataId);

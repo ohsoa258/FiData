@@ -295,4 +295,7 @@ public interface UserClient {
     @PostMapping("/auditLogs/saveAuditLog")
     ResultEntity<Object> saveAuditLog(@RequestBody AuditLogsDTO dto);
 
+    @GetMapping("/auth/getBusinessAssignment")
+    @ApiOperation("根据当前登录人,获取指标管理授权权限")
+    ResultEntity<List<Integer>> getBusinessAssignment(@RequestParam("userId") Integer userId);
 }

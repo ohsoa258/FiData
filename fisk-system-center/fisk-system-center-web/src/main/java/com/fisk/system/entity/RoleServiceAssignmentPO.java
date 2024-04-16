@@ -28,4 +28,9 @@ public class RoleServiceAssignmentPO extends BasePO {
      * 是否启用删除
      */
     public int switchDelete;
+
+    /**
+     * 是否授权(指标管理用)
+     */
+    public int switchAuthorization;
 }

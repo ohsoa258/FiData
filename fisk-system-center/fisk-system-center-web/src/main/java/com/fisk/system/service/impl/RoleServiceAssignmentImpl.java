@@ -76,6 +76,7 @@ public class RoleServiceAssignmentImpl
             model.switchAdd = item.switchAdd;
             model.switchUpdate = item.switchUpdate;
             model.switchDelete = item.switchDelete;
+            model.setSwitchAuthorization(item.switchAuthorization);
             list.add(model);
         }
         return this.saveBatch(list)==true?ResultEnum.SUCCESS:ResultEnum.SAVE_DATA_ERROR;
@@ -118,6 +119,9 @@ public class RoleServiceAssignmentImpl
             if (i.switchDelete == 1){
                 servicePermissions.computeIfAbsent(i.getServiceId(),k->new HashMap<>()).put("switchDelete",1);
             }
+            if (i.switchAuthorization == 1){
+                servicePermissions.computeIfAbsent(i.getServiceId(),k->new HashMap<>()).put("switchAuthorization",1);
+            }
         });
         List<Object> serviceIds = roleServiceAssignmentPOS
                 .stream()
@@ -140,6 +144,26 @@ public class RoleServiceAssignmentImpl
 
 
         return buildMenu(collect,servicePermissions);
+    }
+
+    @Override
+    public List<Integer> getBusinessAssignment(Integer userId) {
+        /*查询当前用户下所有角色*/
+        QueryWrapper<RoleUserAssignmentPO> roleData = new QueryWrapper<>();
+        roleData.select("role_id").lambda().eq(RoleUserAssignmentPO::getUserId, userId);
+        List<Object> idList = roleUserMapper
+                .selectObjs(roleData)
+                .stream()
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(idList)) {
+            return new ArrayList<>();
+        }
+        List<Integer> businessAssignmentRoleId = serviceRegistryMapper.getBusinessAssignmentRoleId();
+        if (CollectionUtils.isNotEmpty(businessAssignmentRoleId)){
+            idList = idList.stream().filter(i->businessAssignmentRoleId.contains(Integer.valueOf(i.toString()))).collect(Collectors.toList());
+        }
+        return idList.stream().map(i->Integer.valueOf(i.toString())).collect(Collectors.toList());
     }
 
     @Override
@@ -297,6 +321,7 @@ public class RoleServiceAssignmentImpl
                     Integer switchAdd = permissions.get("switchAdd");
                     Integer switchUpdate = permissions.get("switchUpdate");
                     Integer switchDelete = permissions.get("switchDelete");
+                    Integer switchAuthorization = permissions.get("switchAuthorization");
                     if (switchAdd != null){
                         obj.setSwitchAdd(switchAdd);
                     }
@@ -305,6 +330,9 @@ public class RoleServiceAssignmentImpl
                     }
                     if (switchDelete != null){
                         obj.setSwitchDelete(switchDelete);
+                    }
+                    if (switchAuthorization != null){
+                        obj.setSwitchAuthorization(switchAuthorization);
                     }
                 }
                 List<LoginServiceDTO> child = new ArrayList<>();

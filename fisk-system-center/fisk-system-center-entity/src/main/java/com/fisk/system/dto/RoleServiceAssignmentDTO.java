@@ -24,5 +24,6 @@ public class RoleServiceAssignmentDTO {
     @ApiModelProperty(value = "是否启用删除")
     public int switchDelete;
 
-
+    @ApiModelProperty(value = "是否授权(指标管理用)")
+    public int switchAuthorization;
 }
