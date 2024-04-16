@@ -1623,6 +1623,9 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             case 5:
                 //调用封装的业务标识覆盖方式--删除插入(按照业务主键删除，再重新插入)拼接sql方法并返回
                 return sqlHelper.delAndInsert(tableName, tempTableName, fieldList, type, updateSql);
+            case 6:
+                //调用封装的业务标识覆盖方式--merge覆盖(业务标识可以作为业务主键)拼接sql方法并返回
+                return sqlHelper.mergeWithMark(tableName, tempTableName, fieldList, type, updateSql);
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

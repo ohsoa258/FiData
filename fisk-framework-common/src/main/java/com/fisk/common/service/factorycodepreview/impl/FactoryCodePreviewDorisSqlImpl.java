@@ -50,7 +50,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if ("DATE" .equalsIgnoreCase(f.fieldType)) {
+            if ("DATE".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -60,7 +60,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIME" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -70,7 +70,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIMESTAMP" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -80,7 +80,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("DATETIME" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -97,7 +97,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
-                if ("NVARCHAR" .equalsIgnoreCase(f.fieldType) || "VARCHAR" .equalsIgnoreCase(f.fieldType)) {
+                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
                     suffix.append("(")
                             .append(f.fieldLength)
                             .append("))");
@@ -112,8 +112,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
         }
 
-        if (!StringUtils.isEmpty(updateSql)){
-            sourceTableName = "("+updateSql+") as FNK";
+        if (!StringUtils.isEmpty(updateSql)) {
+            sourceTableName = "(" + updateSql + ") as FNK";
         }
         suffix.append("now(),")
                 .append("now(),")
@@ -122,7 +122,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append(tabNameWithoutPre)
                 .append("key` FROM ")
                 .append(sourceTableName);
-        if (StringUtils.isEmpty(updateSql)){
+        if (StringUtils.isEmpty(updateSql)) {
             suffix.append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
         }
         //拼接select完毕
@@ -170,7 +170,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 //fact那些表  业务标识覆盖字段用的是isPrimaryKey = 1
                 pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
             }
-        }else {
+        } else {
             pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
         }
 
@@ -184,7 +184,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 //fact那些表  主键标识用的是isBusinessKey = 1
                 pkFields1 = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
             }
-        }else {
+        } else {
             pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
         }
         //新建业务覆盖标识字段字符串，预装载所有业务覆盖标识字段字符串  为了替换delete前缀中预留的占位符 lishiji
@@ -269,7 +269,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if ("DATE" .equalsIgnoreCase(f.fieldType)) {
+            if ("DATE".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -279,7 +279,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIME" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -289,7 +289,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIMESTAMP" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -299,7 +299,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("DATETIME" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -316,7 +316,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
-                if ("NVARCHAR" .equalsIgnoreCase(f.fieldType) || "VARCHAR" .equalsIgnoreCase(f.fieldType)) {
+                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
                     suffix.append("(")
                             .append(f.fieldLength)
                             .append("))");
@@ -331,8 +331,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
         }
 
-        if (!StringUtils.isEmpty(updateSql)){
-            sourceTableName = "("+updateSql+") as FNK";
+        if (!StringUtils.isEmpty(updateSql)) {
+            sourceTableName = "(" + updateSql + ") as FNK";
         }
         suffix.append("now(),")
                 .append("now(),")
@@ -340,7 +340,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("md5(concat(\"\"lishiji))")
                 .append(" FROM ")
                 .append(sourceTableName);
-        if (StringUtils.isEmpty(updateSql)){
+        if (StringUtils.isEmpty(updateSql)) {
             suffix.append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
         }
         //替换lishiji为主键字段
@@ -376,7 +376,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 //fact那些表  主键标识用的是isBusinessKey = 1
                 pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
             }
-        }else {
+        } else {
             pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
         }
 
@@ -405,7 +405,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         StringBuilder suffix = new StringBuilder("SELECT ");
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-            if ("DATE" .equalsIgnoreCase(f.fieldType)) {
+            if ("DATE".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -415,7 +415,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIME" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -425,7 +425,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("TIMESTAMP" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -435,7 +435,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(f.fieldEnName)
                         .append("`")
                         .append(",");
-            } else if ("DATETIME" .equalsIgnoreCase(f.fieldType)) {
+            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
                 suffix.append(" FROM_UNIXTIME(")
                         .append("`")
                         .append(f.fieldEnName)
@@ -452,7 +452,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append("`")
                         .append(" AS ")
                         .append(f.fieldType);
-                if ("NVARCHAR" .equalsIgnoreCase(f.fieldType) || "VARCHAR" .equalsIgnoreCase(f.fieldType)) {
+                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
                     suffix.append("(")
                             .append(f.fieldLength)
                             .append("))");
@@ -466,8 +466,8 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                         .append(",");
             }
         }
-        if (!StringUtils.isEmpty(updateSql)){
-            sourceTableName = "("+updateSql+") as FNK";
+        if (!StringUtils.isEmpty(updateSql)) {
+            sourceTableName = "(" + updateSql + ") as FNK";
         }
         suffix.append("now(),")
                 .append("now(),")
@@ -475,7 +475,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
                 .append("md5(concat(\"\"lishiji))")
                 .append(" FROM ")
                 .append(sourceTableName);
-        if (StringUtils.isEmpty(updateSql)){
+        if (StringUtils.isEmpty(updateSql)) {
             suffix.append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
         }
         //替换lishiji为主键字段
@@ -489,8 +489,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         suffix = new StringBuilder(suffix.toString().replaceAll(regex, String.valueOf(pkSql)));
 
         //返回拼接完成的追加覆盖方式拼接的sql
-        String sql = prefix + "   " + suffix;
-        return String.valueOf(sql);
+        return prefix + "   " + suffix;
     }
 
     /**
@@ -543,7 +542,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         }
 
         if (otherLogic == 1) {
-            if ("TIME" .equalsIgnoreCase(field.fieldType)) {
+            if ("TIME".equalsIgnoreCase(field.fieldType)) {
                 //拼接所选择的字段，条件运算符，时间单位，运算时间范围...
                 startSQL.append("\"")
                         .append(businessTimeField)
@@ -597,9 +596,9 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             Long businessDate = previewTableBusinessDTO.businessDate;
             //每年 每月 每天
             String businessTimeFlag = previewTableBusinessDTO.businessTimeFlag;
-            if ("每年" .equals(businessTimeFlag)) {
+            if ("每年".equals(businessTimeFlag)) {
                 businessTimeFlag = "MONTH";
-            } else if ("每月" .equals(businessTimeFlag)) {
+            } else if ("每月".equals(businessTimeFlag)) {
                 businessTimeFlag = "DAY";
             } else {
                 businessTimeFlag = "HOUR";
@@ -616,7 +615,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
             }
 
 
-            if ("TIME" .equalsIgnoreCase(field.fieldType)) {
+            if ("TIME".equalsIgnoreCase(field.fieldType)) {
                 startSQL.append("\"")
                         .append(businessTimeField)
                         .append("\"")
@@ -723,6 +722,140 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
 
         //返回拼接完整的业务时间覆盖的sql
         return String.valueOf(endSql);
+    }
+
+    @Override
+    public String mergeWithMark(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql) {
+        //获取业务主键字段
+        List<PublishFieldDTO> pkFields = new ArrayList<>();
+        if (type != null) {
+            //维度表  主键标识用的是isPrimaryKey = 1
+            if (type == 1) {
+                pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+            } else {
+                //fact那些表  主键标识用的是isBusinessKey = 1
+                pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
+            }
+        } else {
+            pkFields = fieldList.stream().filter(f -> f.isPrimaryKey == 1).collect(Collectors.toList());
+        }
+
+        //去掉dim_ fact_ 类似前缀，用于系统主键key赋值  例如mr01key
+        String tabNameWithoutPre = tableName.substring(tableName.indexOf("_") + 1);
+        tabNameWithoutPre = tabNameWithoutPre.replace("`", "");
+
+        //拼接insert into...
+        StringBuilder prefix = new StringBuilder("INSERT INTO " + tableName + " (");
+        //遍历字段集合
+        for (PublishFieldDTO f : fieldList) {
+            prefix.append("`")
+                    .append(f.fieldEnName)
+                    .append("`")
+                    .append(",");
+
+        }
+        prefix.append("fi_createtime,")
+                .append("fi_updatetime,")
+                .append("fidata_batch_code,`")
+                .append(tabNameWithoutPre)
+                .append("key`,")
+                .append("fi_del_flag)");
+        //拼接insert into完毕
+
+        //拼接select...
+        StringBuilder suffix = new StringBuilder("SELECT ");
+        //遍历字段集合
+        for (PublishFieldDTO f : fieldList) {
+            if ("DATE".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else if ("TIME".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else if ("TIMESTAMP".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else if ("DATETIME".equalsIgnoreCase(f.fieldType)) {
+                suffix.append(" FROM_UNIXTIME(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`)")
+                        .append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            } else {
+                suffix.append("CAST(")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(" AS ")
+                        .append(f.fieldType);
+                if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
+                    suffix.append("(")
+                            .append(f.fieldLength)
+                            .append("))");
+                } else {
+                    suffix.append(")");
+                }
+                suffix.append(" AS ")
+                        .append("`")
+                        .append(f.fieldEnName)
+                        .append("`")
+                        .append(",");
+            }
+        }
+        if (!StringUtils.isEmpty(updateSql)) {
+            sourceTableName = "(" + updateSql + ") as FNK";
+        }
+        suffix.append("now(),")
+                .append("now(),")
+                .append("fidata_batch_code,")
+                .append("md5(concat(\"\"lishiji)),")
+                .append("1 as fi_del_flag")
+                .append(" FROM ")
+                .append(sourceTableName);
+
+        if (StringUtils.isEmpty(updateSql)) {
+            suffix.append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
+        }
+
+        //替换lishiji为主键字段
+        String regex = "lishiji";
+        StringBuilder pkSql = new StringBuilder();
+        for (PublishFieldDTO pkField : pkFields) {
+            pkSql.append(",`")
+                    .append(pkField.fieldEnName)
+                    .append("`");
+        }
+        suffix = new StringBuilder(suffix.toString().replaceAll(regex, String.valueOf(pkSql)));
+
+        String markSql = "Refresh table dim_cpbtest;" +
+                "UPDATE +" + tableName + " SET fi_del_flag = 0 WHERE fidata_batch_code <> '${fidata_batch_code}';";
+        //返回拼接完成的追加覆盖方式拼接的sql
+        return prefix + "   " + suffix + markSql;
     }
 
 }

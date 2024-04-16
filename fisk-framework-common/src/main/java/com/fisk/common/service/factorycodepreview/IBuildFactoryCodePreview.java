@@ -63,4 +63,15 @@ public interface IBuildFactoryCodePreview {
     String businessTimeOverLay(String tableName, String sourceTableName,
                                              List<PublishFieldDTO> fieldList, PreviewTableBusinessDTO previewTableBusinessDTO, String updateSql);
 
+    /**
+     * 标识覆盖拼接的sql代码
+     * 标识出在上游被物理删除的数据
+     * @param tableName
+     * @param sourceTableName
+     * @param fieldList
+     * @param type
+     * @param updateSql
+     * @return
+     */
+    String mergeWithMark(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql);
 }

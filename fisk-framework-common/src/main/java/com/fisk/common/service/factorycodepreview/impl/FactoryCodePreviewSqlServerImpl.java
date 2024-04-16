@@ -1186,4 +1186,9 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         return String.valueOf(endSql);
     }
 
+    @Override
+    public String mergeWithMark(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql) {
+        return "sqlserver 标识覆盖sql暂未开发";
+    }
+
 }

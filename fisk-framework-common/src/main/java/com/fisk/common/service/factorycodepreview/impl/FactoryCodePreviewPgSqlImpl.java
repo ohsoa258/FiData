@@ -740,4 +740,9 @@ public class FactoryCodePreviewPgSqlImpl implements IBuildFactoryCodePreview {
         return String.valueOf(endSql);
     }
 
+    @Override
+    public String mergeWithMark(String tableName, String sourceTableName, List<PublishFieldDTO> fieldList, Integer type, String updateSql) {
+        return "pg 标识覆盖sql暂未开发";
+    }
+
 }
