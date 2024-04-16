@@ -852,7 +852,7 @@ public class FactoryCodePreviewDorisSqlImpl implements IBuildFactoryCodePreview 
         }
         suffix = new StringBuilder(suffix.toString().replaceAll(regex, String.valueOf(pkSql)));
 
-        String markSql = "Refresh table dim_cpbtest;" +
+        String markSql = "REFRESH TABLE " + tableName + ";" +
                 "UPDATE +" + tableName + " SET fi_del_flag = 0 WHERE fidata_batch_code <> '${fidata_batch_code}';";
         //返回拼接完成的追加覆盖方式拼接的sql
         return prefix + "   " + suffix + markSql;
