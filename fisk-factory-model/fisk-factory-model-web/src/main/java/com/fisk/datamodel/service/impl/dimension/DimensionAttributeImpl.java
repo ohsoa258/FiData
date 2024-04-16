@@ -299,14 +299,16 @@ public class DimensionAttributeImpl
         List<DimensionAttributeDTO> dimensionAttributeDTOS = DimensionAttributeMap.INSTANCES.poListToDtoList(list);
 
         try {
+
+            //todo:维度表暂不展示指标粒度在字段页面
             /*
             2024 04 03 数仓贯标 字段回显新增贯标列 展示数仓的字段和哪些指标或数据元关联
             */
-            //1.1获取所有指标 -> 指标id 指标名称    维度表 = 指标粒度
-            List<BusinessTargetinfoDTO> dtos = dataManageClient.modelGetBusinessTargetInfoList();
-
-            //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    维度表 = 指标粒度
-            List<BusinessExtendedfieldsDTO> businessExtendedfieldsDTOS = dataManageClient.modelGetMetricMapList();
+//            //1.1获取所有指标 -> 指标id 指标名称    维度表 = 指标粒度
+//            List<BusinessTargetinfoDTO> dtos = dataManageClient.modelGetBusinessTargetInfoList();
+//
+//            //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    维度表 = 指标粒度
+//            List<BusinessExtendedfieldsDTO> businessExtendedfieldsDTOS = dataManageClient.modelGetMetricMapList();
 
             //2.1获取所有数据元 -> 数据元id 数据元名称
             List<StandardsDTO> standardsDTOS = dataManageClient.modelGetStandards();
@@ -327,25 +329,25 @@ public class DimensionAttributeImpl
                 //获取字段id
                 long filedId = dimensionAttributeDTO.getId();
 
-                //不为空则说明该维度表字段关联的有指标标准
-                if (!CollectionUtils.isEmpty(businessExtendedfieldsDTOS)) {
-                    //循环指标关联关系
-                    for (BusinessExtendedfieldsDTO d : businessExtendedfieldsDTOS) {
-                        if (d.getAttributeid().equals(String.valueOf(filedId))) {
-                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
-                            //循环指标 获取指标名称
-                            for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
-                                if (d.getIndexid().equals(String.valueOf(businessTargetinfoDTO.getId()))) {
-                                    dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
-                                    dto.setName(businessTargetinfoDTO.getIndicatorName());
-                                }
-                            }
-                            //类型 0指标 1数据元
-                            dto.setType(0);
-                            objDTOS.add(dto);
-                        }
-                    }
-                }
+//                //不为空则说明该维度表字段关联的有指标标准
+//                if (!CollectionUtils.isEmpty(businessExtendedfieldsDTOS)) {
+//                    //循环指标关联关系
+//                    for (BusinessExtendedfieldsDTO d : businessExtendedfieldsDTOS) {
+//                        if (d.getAttributeid().equals(String.valueOf(filedId))) {
+//                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
+//                            //循环指标 获取指标名称
+//                            for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
+//                                if (d.getIndexid().equals(String.valueOf(businessTargetinfoDTO.getId()))) {
+//                                    dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
+//                                    dto.setName(businessTargetinfoDTO.getIndicatorName());
+//                                }
+//                            }
+//                            //类型 0指标 1数据元
+//                            dto.setType(0);
+//                            objDTOS.add(dto);
+//                        }
+//                    }
+//                }
 
                 //不为空则说明该事实表字段关联的有数据元标准
                 if (!CollectionUtils.isEmpty(standardsBeCitedDTOS)) {
