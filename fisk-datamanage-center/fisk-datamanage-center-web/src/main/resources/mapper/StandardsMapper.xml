@@ -4,7 +4,7 @@
 <mapper namespace="com.fisk.datamanagement.mapper.StandardsMapper">
     <select id="standardsQuery" resultType="com.fisk.datamanagement.dto.standards.StandardsMenuDTO">
         SELECT
-            *
+        a.*
         FROM
             `tb_standards_menu` a
                 LEFT JOIN
@@ -14,9 +14,9 @@
             AND b.del_flag = 1
             AND a.pid = #{dto.menuId}
         <if test="dto.keyWord !=null and dto.keyWord.length()>0 ">
-            AND (chinese_name LIKE concat('%', #{dto.keyWord}, '%')
-            OR english_name LIKE concat('%', #{dto.keyWord}, '%')
-            OR datameta_code LIKE concat('%', #{dto.keyWord}, '%')
+            AND (b.chinese_name LIKE concat('%', #{dto.keyWord}, '%')
+            OR b.english_name LIKE concat('%', #{dto.keyWord}, '%')
+            OR b.datameta_code LIKE concat('%', #{dto.keyWord}, '%')
                 )
         </if>
     </select>

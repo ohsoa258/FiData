@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
@@ -99,6 +100,17 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(businessCategoryService.addCategory(dto));
     }
 
+    @ApiOperation("获取指标主题浏览权限数据")
+    @GetMapping("/getBusinessCategoryAssignment")
+    public ResultEntity<Object> getBusinessCategoryAssignment(@RequestParam("pid") String pid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,businessCategoryService.getBusinessCategoryAssignment(pid));
+    }
+    @ApiOperation("添加指标主题浏览权限数据")
+    @PostMapping("/addBusinessCategoryAssignment")
+    public ResultEntity<Object> addBusinessCategoryAssignment(@RequestBody BusinessCategoryAssignmentDTO dto) {
+        return ResultEntityBuild.build(businessCategoryService.addBusinessCategoryAssignment(dto));
+    }
+
 
     @ApiOperation("根据指标主题id删除")
     @DeleteMapping("/deleteCategory/{CategoryId}")
@@ -119,10 +131,16 @@ public class BusinessCategoryController {
     }
 
 
-    @ApiOperation("获取业务指标明细数据列表")
-    @GetMapping("/getBusinessMetaDataDetailList")
-    public ResultEntity<Object> getBusinessMetaDataDetailList(@RequestParam("pid") String pid) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassification(pid));
+    @ApiOperation("获取业务指标明细数据列表(目录)")
+    @GetMapping("/getBusinessMetaDataDetailMenuList")
+    public ResultEntity<Object> getBusinessMetaDataDetailMenuList(@RequestParam("pid") String pid) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessMetaDataDetailMenuList(pid));
+    }
+
+    @ApiOperation("获取业务指标明细数据")
+    @GetMapping("/getBusinessMetaDataDetail")
+    public ResultEntity<Object> getBusinessMetaDataDetailList(@RequestParam("id") String id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.SelectClassification(id));
     }
 
     @ApiOperation("根据属性表明和字段获取业务指标粒度明细数据列表")

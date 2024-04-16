@@ -95,6 +95,12 @@ public class PermissionController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getServiceList());
     }
 
+    @GetMapping("/getBusinessAssignment")
+    @ApiOperation("根据当前登录人,获取指标管理授权权限")
+    public ResultEntity<List<Integer>> getBusinessAssignment(@RequestParam("userId") Integer userId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, registerService.getBusinessAssignment(userId));
+    }
+
     @GetMapping("/getAllMenuList")
     @ApiOperation("获取服务列表")
     public ResultEntity<Object> getAllMenuList() {

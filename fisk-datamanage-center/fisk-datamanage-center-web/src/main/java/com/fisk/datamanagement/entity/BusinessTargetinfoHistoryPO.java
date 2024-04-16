@@ -14,7 +14,7 @@ import lombok.Data;
 public class BusinessTargetinfoHistoryPO extends BasePO {
 
     @ApiModelProperty(value = "指标分类id")
-    private String pid;
+    private Integer pid;
 
     @ApiModelProperty(value = "")
     private String historyId;

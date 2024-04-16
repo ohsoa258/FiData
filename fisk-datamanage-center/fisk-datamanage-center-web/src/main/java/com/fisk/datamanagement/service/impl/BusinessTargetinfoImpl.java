@@ -99,252 +99,265 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
     DataModelClient modelClient;
 
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
-            "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道","数据粒度"};
+            "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道", "数据粒度"};
 
+
+    @Override
+    public List<BusinessTargetinfoMenuDTO> getBusinessMetaDataDetailMenuList(String pid) {
+        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
+        List<BusinessTargetinfoMenuDTO> result = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(list)) {
+            result = list.stream().map(i -> {
+                BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
+                businessTargetinfoMenuDTO.setId((int) i.getId());
+                businessTargetinfoMenuDTO.setName(i.getIndicatorName());
+                businessTargetinfoMenuDTO.setType(i.getIndicatorType());
+                return businessTargetinfoMenuDTO;
+            }).collect(Collectors.toList());
+        }
+        return result;
+    }
 
     /**
      * 查询指标明细数据
      *
-     * @param pid
+     * @param id
      * @return
      */
     @Override
-        public JSONArray SelectClassification(String pid) {
+    public JSONObject SelectClassification(String id) {
 
-        JSONArray array1 =new JSONArray();
-        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
-        if(CollectionUtils.isEmpty(list)){
-            return array1;
-        }
-        String indexid= pid;
+//        JSONArray array1 =new JSONArray();
+//        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
+//        if(CollectionUtils.isEmpty(list)){
+//            return array1;
+//        }
+//        String indexid= pid;
         //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
-        List<Integer> ParentBusinessIds = list.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
-        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.in(BusinessTargetinfoPO::getId,ParentBusinessIds);
-        List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
-        for(int i=0;i<list.size();i++){
-            List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
-            List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(list.get(i).getId()+"");
-            List<Long> userIds = list2.stream()
-                    .filter(x -> org.apache.commons.lang.StringUtils.isNotEmpty(x.createUser))
-                    .map(x -> Long.valueOf(x.createUser))
-                    .distinct()
-                    .collect(Collectors.toList());
-            ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
-            if (userListByIds.code == ResultEnum.SUCCESS.getCode()
-                    && CollectionUtils.isNotEmpty(userListByIds.getData())) {
-                list2.forEach(e -> {
-                    userListByIds.getData()
-                            .stream()
-                            .filter(user -> user.getId().toString().equals(e.createUser))
-                            .findFirst()
-                            .ifPresent(user -> e.createUser = user.userAccount);
-                });
-            }
-            JSONObject jsonObject1 =  new JSONObject();
-            long id = list.get(i).getId();
-            jsonObject1.put("id",id);
-            jsonObject1.put("createTime",list.get(i).getCreateTime());
-            jsonObject1.put("createUser",list.get(i).getCreateUser());
-            jsonObject1.put("updateTime",list.get(i).getUpdateTime());
-            jsonObject1.put("updateUser",list.get(i).getUpdateUser());
-            jsonObject1.put("delFlag",list.get(i).getDelFlag());
-            jsonObject1.put("pid",list.get(i).getPid());
-            jsonObject1.put("responsibleDept",list.get(i).getResponsibleDept());
-            jsonObject1.put("indicatorCode",list.get(i).getIndicatorCode());
-            jsonObject1.put("indicatorName",list.get(i).getIndicatorName());
-            jsonObject1.put("indicatorDescription",list.get(i).getIndicatorDescription());
-            jsonObject1.put("indicatorLevel",list.get(i).getIndicatorLevel());
-            jsonObject1.put("largeScreenLink",list.get(i).getLargeScreenLink());
-            jsonObject1.put("unitMeasurement",list.get(i).getUnitMeasurement());
-            jsonObject1.put("statisticalCycle",list.get(i).getStatisticalCycle());
-            jsonObject1.put("indicatorformula",list.get(i).getIndicatorformula());
-            jsonObject1.put("indicatorStatus",list.get(i).getIndicatorStatus());
-            jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
-            jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
-            jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
-            jsonObject1.put("sourceSystem",list.get(i).getSourceSystem());
-            jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
-            jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
-            jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
-            jsonObject1.put("indicatorType",list.get(i).getIndicatorType());
-            jsonObject1.put("name",list.get(i).getName());
-            jsonObject1.put("sqlScript",list.get(i).getSqlScript());
-            if (CollectionUtils.isNotEmpty(list1)){
-                List<Integer> dimAttributeIds = list1.stream().map(q -> Integer.valueOf(q.getAttributeid())).collect(Collectors.toList());
-                ResultEntity<List<DimensionAttributeDTO>> dimensionAttributeByIds = modelClient.getDimensionAttributeByIds(dimAttributeIds);
-                List<DimensionAttributeDTO> dimAttributeDTOS = new ArrayList<>();
-                if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
-                    dimAttributeDTOS = dimensionAttributeByIds.data;
-                }
-                List<Integer> dimFolderIds = list1.stream().map(q -> Integer.valueOf(q.getDimdomainid())).collect(Collectors.toList());
-                ResultEntity<List<DimensionFolderDTO>> dimensionFolderByIds = modelClient.getDimensionFolderByIds(dimFolderIds);
-                List<DimensionFolderDTO> dimFolderDTOS = new ArrayList<>();
-                if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
-                    dimFolderDTOS = dimensionFolderByIds.data;
-                }
+//        List<Integer> ParentBusinessIds = list.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
+//        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper.eq(BusinessTargetinfoPO::getId,ParentBusinessIds);
+        BusinessTargetinfoPO businessTargetinfoPO = businessTargetinfoMapper.selectById(id);
 
-                List<Integer> dimTableIds = list1.stream().map(q -> Integer.valueOf(q.getDimtableid())).collect(Collectors.toList());
-                ResultEntity<List<DimensionDTO>> dimensionTableByIds = modelClient.getDimensionTableByIds(dimTableIds);
-                List<DimensionDTO> dimTableDTOS = new ArrayList<>();
-                if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
-                    dimTableDTOS = dimensionTableByIds.data;
-                }
-                Map<Integer, DimensionAttributeDTO> dimAttributeMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(dimAttributeDTOS)){
-                    dimAttributeMap = dimAttributeDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
-                }
-                Map<Integer, DimensionFolderDTO> dimFolderMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(dimFolderDTOS)){
-                    dimFolderMap = dimFolderDTOS.stream().collect(Collectors.toMap(e->(int)e.getBusinessId(), e -> e));
-                }
-                Map<Integer, DimensionDTO> dimTableMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(dimTableDTOS)){
-                    dimTableMap = dimTableDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
-                }
-                List<BusinessExtendedfieldsDTO> dimensionData = new ArrayList<>();
-                for (BusinessExtendedfieldsPO businessExtendedfieldsPO : list1) {
-                    DimensionAttributeDTO dimensionAttribute = dimAttributeMap.get(Integer.valueOf(businessExtendedfieldsPO.getAttributeid()));
-                    DimensionFolderDTO dimensionFolderDTO = dimFolderMap.get(Integer.valueOf(businessExtendedfieldsPO.getDimdomainid()));
-                    DimensionDTO dimensionDTO = dimTableMap.get(Integer.valueOf(businessExtendedfieldsPO.getDimtableid()));
-
-                    BusinessExtendedfieldsDTO businessExtendedfieldsDTO = new BusinessExtendedfieldsDTO();
-                    businessExtendedfieldsDTO.setId(businessExtendedfieldsPO.id);
-                    businessExtendedfieldsDTO.setDimdomainid(businessExtendedfieldsPO.dimdomainid);
-                    if (dimensionFolderDTO != null){
-                        businessExtendedfieldsDTO.setDimdomain(dimensionFolderDTO.getDimensionFolderCnName());
-                        businessExtendedfieldsDTO.setDimdomaintype(dimensionFolderDTO.dimensionFolderCnName);
-                    }
-                    businessExtendedfieldsDTO.setDimtableid(businessExtendedfieldsPO.dimtableid);
-                    if (dimensionDTO != null){
-                        businessExtendedfieldsDTO.setDimtable(dimensionDTO.getDimensionTabName());
-                    }
-                    businessExtendedfieldsDTO.setAttributeid(businessExtendedfieldsPO.attributeid);
-                    if (dimensionAttribute != null) {
-                        businessExtendedfieldsDTO.setAttribute(dimensionAttribute.getDimensionFieldCnName());
-                        businessExtendedfieldsDTO.setAttributeEnName(dimensionAttribute.getDimensionFieldEnName());
-                    }
-                    businessExtendedfieldsDTO.setIndexid(String.valueOf(id));
-                    businessExtendedfieldsDTO.setCreatedUser(businessExtendedfieldsPO.getCreatedUser());
-                    businessExtendedfieldsDTO.setCreatedTime(LocalDateTime.parse(businessExtendedfieldsPO.getCreatedTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))));
-                    businessExtendedfieldsDTO.setDelFlag(businessExtendedfieldsPO.getDelFlag());
-                    dimensionData.add(businessExtendedfieldsDTO);
-                }
-                jsonObject1.put("dimensionData",dimensionData);
-            }
-            List<FacttreeListDTO> facttreeList = new ArrayList<>();
-            if (CollectionUtils.isNotEmpty(list2)){
-                List<Integer> factAttributeIds = list2.stream().map(e->Integer.valueOf(e.getFactFieldEnNameId())).collect(Collectors.toList());
-                ResultEntity<List<FactAttributeDTO>> factAttributeByIds = modelClient.getFactAttributeByIds(factAttributeIds);
-                List<FactAttributeDTO> factAttributeDTOS = new ArrayList<>();
-                if (factAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
-                    factAttributeDTOS = factAttributeByIds.data;
-                }
-                Map<Integer, FactAttributeDTO> factAttributeMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(factAttributeDTOS)){
-                    factAttributeMap = factAttributeDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
-                }
-                List<Integer> businessAreaIds = list2.stream().map(e->Integer.valueOf(e.getBusinessNameId())).collect(Collectors.toList());
-                ResultEntity<List<BusinessAreaDTO>> businessAreaByIds = modelClient.getBusinessAreaByIds(businessAreaIds);
-                List<BusinessAreaDTO> businessAreaDTOS = new ArrayList<>();
-                if (businessAreaByIds.code == ResultEnum.SUCCESS.getCode()) {
-                    businessAreaDTOS = businessAreaByIds.data;
-                }
-                Map<Integer, BusinessAreaDTO> businessAreaMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(factAttributeDTOS)){
-                    businessAreaMap = businessAreaDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
-                }
-                List<Integer> factTableIds = list2.stream().map(e->Integer.valueOf(e.getFactTabNameId())).collect(Collectors.toList());
-                ResultEntity<List<FactDTO>> factTableByIds = modelClient.getFactTableByIds(factTableIds);
-                List<FactDTO> factTableDTOS = new ArrayList<>();
-                if (factTableByIds.code == ResultEnum.SUCCESS.getCode()) {
-                    factTableDTOS = factTableByIds.data;
-                }
-                Map<Integer, FactDTO> factTableMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(factAttributeDTOS)){
-                    factTableMap = factTableDTOS.stream().collect(Collectors.toMap(e->(int)e.getId(), e -> e));
-                }
-
-
-                for (FactTreePOs factTreePOs : list2) {
-                    FacttreeListDTO facttreeListDTO = new FacttreeListDTO();
-                    facttreeListDTO.setId((int)factTreePOs.getId());
-                    facttreeListDTO.setPid(String.valueOf(id));
-                    BusinessAreaDTO businessAreaDTO = businessAreaMap.get(Integer.valueOf(factTreePOs.getBusinessNameId()));
-                    if (businessAreaDTO != null){
-                        facttreeListDTO.setBusinessName(businessAreaDTO.getBusinessName());
-                    }
-                    facttreeListDTO.setBusinessNameId(factTreePOs.businessNameId);
-                    FactDTO factDTO = factTableMap.get(Integer.valueOf(factTreePOs.getFactTabNameId()));
-                    if(factDTO != null){
-                        facttreeListDTO.setFactTabName(factDTO.getFactTabName());
-                    }
-                    facttreeListDTO.setFactTabNameId(factTreePOs.factTabNameId);
-                    FactAttributeDTO factAttribute = factAttributeMap.get(Integer.valueOf(factTreePOs.getFactFieldEnNameId()));
-                    if (factAttribute != null){
-                        facttreeListDTO.setFactFieldCnName(factAttribute.getFactFieldCnName());
-                        facttreeListDTO.setFactFieldEnName(factAttribute.getFactFieldEnName());
-                    }
-                    facttreeListDTO.setFactFieldEnNameId(factTreePOs.factFieldEnNameId);
-                    facttreeListDTO.setCreateUser(factTreePOs.getCreateUser());
-                    facttreeListDTO.setCreateTime(factTreePOs.getCreateTime());
-                    facttreeListDTO.setDelFlag(factTreePOs.getDelFlag());
-                    facttreeList.add(facttreeListDTO);
-                }
-
-                jsonObject1.put("facttreeListData",facttreeList);
-            }
-            Integer parentBusinessId = list.get(i).getParentBusinessId();
-            if (parentBusinessId != null){
-                jsonObject1.put("parentBusinessId",parentBusinessId);
-                if (CollectionUtils.isNotEmpty(businessTargetinfoPOS)){
-                    Map<Integer, String> parentBusinessNameMap = businessTargetinfoPOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), BusinessTargetinfoPO::getIndicatorName));
-                    jsonObject1.put("parentBusinessName",parentBusinessNameMap.get(parentBusinessId));
-                }
-            }
-
-            BusinessTargetinfoPO businessTargetinfoPO = list.get(i);
-            if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(businessTargetinfoPO.getIndicatorType())){
-                LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
-                businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId,businessTargetinfoPO.id);
-                List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(businessTargetinfoWrapper);
-
-                Map<String, ChildBusinessTreeDTO> childBusinessMap = new HashMap<>();
-                if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
-                    childBusinessMap = businessTargetinfoPOList.stream().map(t -> {
-                        ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
-                        treeDTO.setId(String.valueOf(t.getId()));
-                        treeDTO.setPid(t.getPid());
-                        treeDTO.setType(2);
-                        treeDTO.setName(t.getIndicatorName());
-                        return treeDTO;
-                    }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId,t->t));
-                }
-
-                List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
-                List<ChildBusinessTreeDTO> allBusinessTree = data.stream().map(e -> {
-                    ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
-                    treeDTO.setId(String.valueOf(e.getId()));
-                    treeDTO.setPid(String.valueOf(e.getPid()));
-                    treeDTO.setType(1);
-                    treeDTO.setName(e.getName());
-                    return treeDTO;
-                }).collect(Collectors.toList());
-
-
-                List<ChildBusinessTreeDTO> parentTree = new ArrayList<>();
-                for (Map.Entry<String, ChildBusinessTreeDTO> entry : childBusinessMap.entrySet()) {
-                    ChildBusinessTreeDTO child = entry.getValue();
-                    child = findParentById(allBusinessTree, child.getPid(), child);
-                    parentTree.add(child);
-                }
-                jsonObject1.put("derivedMetric",parentTree);
-            }
-
-            array1.set(i,jsonObject1);
+//        String indexid = businessTargetinfoPO.getPid();
+//        for(int i=0;i<list.size();i++){
+        List<BusinessExtendedfieldsPO> list1 = businessExtendedfieldsMapper.selectParentpId(businessTargetinfoPO.getId() + "");
+        List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(businessTargetinfoPO.getId() + "");
+        List<Long> userIds = list2.stream()
+                .filter(x -> org.apache.commons.lang.StringUtils.isNotEmpty(x.createUser))
+                .map(x -> Long.valueOf(x.createUser))
+                .distinct()
+                .collect(Collectors.toList());
+        ResultEntity<List<UserDTO>> userListByIds = userClient.getUserListByIds(userIds);
+        if (userListByIds.code == ResultEnum.SUCCESS.getCode()
+                && CollectionUtils.isNotEmpty(userListByIds.getData())) {
+            list2.forEach(e -> {
+                userListByIds.getData()
+                        .stream()
+                        .filter(user -> user.getId().toString().equals(e.createUser))
+                        .findFirst()
+                        .ifPresent(user -> e.createUser = user.userAccount);
+            });
         }
-        
-        return array1;
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("id", id);
+        jsonObject1.put("createTime", businessTargetinfoPO.getCreateTime());
+        jsonObject1.put("createUser", businessTargetinfoPO.getCreateUser());
+        jsonObject1.put("updateTime", businessTargetinfoPO.getUpdateTime());
+        jsonObject1.put("updateUser", businessTargetinfoPO.getUpdateUser());
+        jsonObject1.put("delFlag", businessTargetinfoPO.getDelFlag());
+        jsonObject1.put("pid", businessTargetinfoPO.getPid());
+        jsonObject1.put("responsibleDept", businessTargetinfoPO.getResponsibleDept());
+        jsonObject1.put("indicatorCode", businessTargetinfoPO.getIndicatorCode());
+        jsonObject1.put("indicatorName", businessTargetinfoPO.getIndicatorName());
+        jsonObject1.put("indicatorDescription", businessTargetinfoPO.getIndicatorDescription());
+        jsonObject1.put("indicatorLevel", businessTargetinfoPO.getIndicatorLevel());
+        jsonObject1.put("largeScreenLink", businessTargetinfoPO.getLargeScreenLink());
+        jsonObject1.put("unitMeasurement", businessTargetinfoPO.getUnitMeasurement());
+        jsonObject1.put("statisticalCycle", businessTargetinfoPO.getStatisticalCycle());
+        jsonObject1.put("indicatorformula", businessTargetinfoPO.getIndicatorformula());
+        jsonObject1.put("indicatorStatus", businessTargetinfoPO.getIndicatorStatus());
+        jsonObject1.put("filteringCriteria", businessTargetinfoPO.getFilteringCriteria());
+        jsonObject1.put("dataGranularity", businessTargetinfoPO.getDataGranularity());
+        jsonObject1.put("operationalAttributes", businessTargetinfoPO.getOperationalAttributes());
+        jsonObject1.put("sourceSystem", businessTargetinfoPO.getSourceSystem());
+        jsonObject1.put("sourceDataTable", businessTargetinfoPO.getSourceDataTable());
+        jsonObject1.put("sourceIndicators", businessTargetinfoPO.getSourceIndicators());
+        jsonObject1.put("orderChannel", businessTargetinfoPO.getOrderChannel());
+        jsonObject1.put("indicatorType", businessTargetinfoPO.getIndicatorType());
+        jsonObject1.put("name", businessTargetinfoPO.getName());
+        jsonObject1.put("sqlScript", businessTargetinfoPO.getSqlScript());
+        if (CollectionUtils.isNotEmpty(list1)) {
+            List<Integer> dimAttributeIds = list1.stream().map(q -> Integer.valueOf(q.getAttributeid())).collect(Collectors.toList());
+            ResultEntity<List<DimensionAttributeDTO>> dimensionAttributeByIds = modelClient.getDimensionAttributeByIds(dimAttributeIds);
+            List<DimensionAttributeDTO> dimAttributeDTOS = new ArrayList<>();
+            if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                dimAttributeDTOS = dimensionAttributeByIds.data;
+            }
+            List<Integer> dimFolderIds = list1.stream().map(q -> Integer.valueOf(q.getDimdomainid())).collect(Collectors.toList());
+            ResultEntity<List<DimensionFolderDTO>> dimensionFolderByIds = modelClient.getDimensionFolderByIds(dimFolderIds);
+            List<DimensionFolderDTO> dimFolderDTOS = new ArrayList<>();
+            if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                dimFolderDTOS = dimensionFolderByIds.data;
+            }
+
+            List<Integer> dimTableIds = list1.stream().map(q -> Integer.valueOf(q.getDimtableid())).collect(Collectors.toList());
+            ResultEntity<List<DimensionDTO>> dimensionTableByIds = modelClient.getDimensionTableByIds(dimTableIds);
+            List<DimensionDTO> dimTableDTOS = new ArrayList<>();
+            if (dimensionAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                dimTableDTOS = dimensionTableByIds.data;
+            }
+            Map<Integer, DimensionAttributeDTO> dimAttributeMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(dimAttributeDTOS)) {
+                dimAttributeMap = dimAttributeDTOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), e -> e));
+            }
+            Map<Integer, DimensionFolderDTO> dimFolderMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(dimFolderDTOS)) {
+                dimFolderMap = dimFolderDTOS.stream().collect(Collectors.toMap(e -> (int) e.getBusinessId(), e -> e));
+            }
+            Map<Integer, DimensionDTO> dimTableMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(dimTableDTOS)) {
+                dimTableMap = dimTableDTOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), e -> e));
+            }
+            List<BusinessExtendedfieldsDTO> dimensionData = new ArrayList<>();
+            for (BusinessExtendedfieldsPO businessExtendedfieldsPO : list1) {
+                DimensionAttributeDTO dimensionAttribute = dimAttributeMap.get(Integer.valueOf(businessExtendedfieldsPO.getAttributeid()));
+                DimensionFolderDTO dimensionFolderDTO = dimFolderMap.get(Integer.valueOf(businessExtendedfieldsPO.getDimdomainid()));
+                DimensionDTO dimensionDTO = dimTableMap.get(Integer.valueOf(businessExtendedfieldsPO.getDimtableid()));
+
+                BusinessExtendedfieldsDTO businessExtendedfieldsDTO = new BusinessExtendedfieldsDTO();
+                businessExtendedfieldsDTO.setId(businessExtendedfieldsPO.id);
+                businessExtendedfieldsDTO.setDimdomainid(businessExtendedfieldsPO.dimdomainid);
+                if (dimensionFolderDTO != null) {
+                    businessExtendedfieldsDTO.setDimdomain(dimensionFolderDTO.getDimensionFolderCnName());
+                    businessExtendedfieldsDTO.setDimdomaintype(dimensionFolderDTO.dimensionFolderCnName);
+                }
+                businessExtendedfieldsDTO.setDimtableid(businessExtendedfieldsPO.dimtableid);
+                if (dimensionDTO != null) {
+                    businessExtendedfieldsDTO.setDimtable(dimensionDTO.getDimensionTabName());
+                }
+                businessExtendedfieldsDTO.setAttributeid(businessExtendedfieldsPO.attributeid);
+                if (dimensionAttribute != null) {
+                    businessExtendedfieldsDTO.setAttribute(dimensionAttribute.getDimensionFieldCnName());
+                    businessExtendedfieldsDTO.setAttributeEnName(dimensionAttribute.getDimensionFieldEnName());
+                }
+                businessExtendedfieldsDTO.setIndexid(String.valueOf(id));
+                businessExtendedfieldsDTO.setCreatedUser(businessExtendedfieldsPO.getCreatedUser());
+                businessExtendedfieldsDTO.setCreatedTime(LocalDateTime.parse(businessExtendedfieldsPO.getCreatedTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("UTC"))));
+                businessExtendedfieldsDTO.setDelFlag(businessExtendedfieldsPO.getDelFlag());
+                dimensionData.add(businessExtendedfieldsDTO);
+            }
+            jsonObject1.put("dimensionData", dimensionData);
+        }
+        List<FacttreeListDTO> facttreeList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(list2)) {
+            List<Integer> factAttributeIds = list2.stream().map(e -> Integer.valueOf(e.getFactFieldEnNameId())).collect(Collectors.toList());
+            ResultEntity<List<FactAttributeDTO>> factAttributeByIds = modelClient.getFactAttributeByIds(factAttributeIds);
+            List<FactAttributeDTO> factAttributeDTOS = new ArrayList<>();
+            if (factAttributeByIds.code == ResultEnum.SUCCESS.getCode()) {
+                factAttributeDTOS = factAttributeByIds.data;
+            }
+            Map<Integer, FactAttributeDTO> factAttributeMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(factAttributeDTOS)) {
+                factAttributeMap = factAttributeDTOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), e -> e));
+            }
+            List<Integer> businessAreaIds = list2.stream().map(e -> Integer.valueOf(e.getBusinessNameId())).collect(Collectors.toList());
+            ResultEntity<List<BusinessAreaDTO>> businessAreaByIds = modelClient.getBusinessAreaByIds(businessAreaIds);
+            List<BusinessAreaDTO> businessAreaDTOS = new ArrayList<>();
+            if (businessAreaByIds.code == ResultEnum.SUCCESS.getCode()) {
+                businessAreaDTOS = businessAreaByIds.data;
+            }
+            Map<Integer, BusinessAreaDTO> businessAreaMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(factAttributeDTOS)) {
+                businessAreaMap = businessAreaDTOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), e -> e));
+            }
+            List<Integer> factTableIds = list2.stream().map(e -> Integer.valueOf(e.getFactTabNameId())).collect(Collectors.toList());
+            ResultEntity<List<FactDTO>> factTableByIds = modelClient.getFactTableByIds(factTableIds);
+            List<FactDTO> factTableDTOS = new ArrayList<>();
+            if (factTableByIds.code == ResultEnum.SUCCESS.getCode()) {
+                factTableDTOS = factTableByIds.data;
+            }
+            Map<Integer, FactDTO> factTableMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(factAttributeDTOS)) {
+                factTableMap = factTableDTOS.stream().collect(Collectors.toMap(e -> (int) e.getId(), e -> e));
+            }
+
+
+            for (FactTreePOs factTreePOs : list2) {
+                FacttreeListDTO facttreeListDTO = new FacttreeListDTO();
+                facttreeListDTO.setId((int) factTreePOs.getId());
+                facttreeListDTO.setPid(String.valueOf(id));
+                BusinessAreaDTO businessAreaDTO = businessAreaMap.get(Integer.valueOf(factTreePOs.getBusinessNameId()));
+                if (businessAreaDTO != null) {
+                    facttreeListDTO.setBusinessName(businessAreaDTO.getBusinessName());
+                }
+                facttreeListDTO.setBusinessNameId(factTreePOs.businessNameId);
+                FactDTO factDTO = factTableMap.get(Integer.valueOf(factTreePOs.getFactTabNameId()));
+                if (factDTO != null) {
+                    facttreeListDTO.setFactTabName(factDTO.getFactTabName());
+                }
+                facttreeListDTO.setFactTabNameId(factTreePOs.factTabNameId);
+                FactAttributeDTO factAttribute = factAttributeMap.get(Integer.valueOf(factTreePOs.getFactFieldEnNameId()));
+                if (factAttribute != null) {
+                    facttreeListDTO.setFactFieldCnName(factAttribute.getFactFieldCnName());
+                    facttreeListDTO.setFactFieldEnName(factAttribute.getFactFieldEnName());
+                }
+                facttreeListDTO.setFactFieldEnNameId(factTreePOs.factFieldEnNameId);
+                facttreeListDTO.setCreateUser(factTreePOs.getCreateUser());
+                facttreeListDTO.setCreateTime(factTreePOs.getCreateTime());
+                facttreeListDTO.setDelFlag(factTreePOs.getDelFlag());
+                facttreeList.add(facttreeListDTO);
+            }
+
+            jsonObject1.put("facttreeListData", facttreeList);
+        }
+        Integer parentBusinessId = businessTargetinfoPO.getParentBusinessId();
+        if (parentBusinessId != null) {
+            jsonObject1.put("parentBusinessId", parentBusinessId);
+            BusinessTargetinfoPO parentBusiness = businessTargetinfoMapper.selectById(parentBusinessId);
+            jsonObject1.put("parentBusinessName",parentBusiness.getIndicatorName());
+        }
+        if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(businessTargetinfoPO.getIndicatorType())) {
+            LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
+            businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId, businessTargetinfoPO.id);
+            List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(businessTargetinfoWrapper);
+
+            Map<String, ChildBusinessTreeDTO> childBusinessMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)) {
+                childBusinessMap = businessTargetinfoPOList.stream().map(t -> {
+                    ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
+                    treeDTO.setId(String.valueOf(t.getId()));
+                    treeDTO.setPid(t.getPid());
+                    treeDTO.setType(2);
+                    treeDTO.setName(t.getIndicatorName());
+                    return treeDTO;
+                }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId, t -> t));
+            }
+
+            List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
+            List<ChildBusinessTreeDTO> allBusinessTree = data.stream().map(e -> {
+                ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
+                treeDTO.setId(String.valueOf(e.getId()));
+                treeDTO.setPid(String.valueOf(e.getPid()));
+                treeDTO.setType(1);
+                treeDTO.setName(e.getName());
+                return treeDTO;
+            }).collect(Collectors.toList());
+
+
+            List<ChildBusinessTreeDTO> parentTree = new ArrayList<>();
+            for (Map.Entry<String, ChildBusinessTreeDTO> entry : childBusinessMap.entrySet()) {
+                ChildBusinessTreeDTO child = entry.getValue();
+                child = findParentById(allBusinessTree, child.getPid(), child);
+                parentTree.add(child);
+            }
+            jsonObject1.put("derivedMetric", parentTree);
+        }
+//
+//            array1.set(i,jsonObject1);
+//        }
+
+        return jsonObject1;
     }
 
     private ChildBusinessTreeDTO findParentById(List<ChildBusinessTreeDTO> treeList, String pid, ChildBusinessTreeDTO child) {
@@ -356,9 +369,9 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             newChild.setSort(childBusinessTreeDTO.getSort());
             newChild.setPid(childBusinessTreeDTO.getPid());
             newChild.setName(childBusinessTreeDTO.getName());
-            if (newChild.id.equals(pid)){
+            if (newChild.id.equals(pid)) {
                 newChild.setChild(child);
-                tree = findParentById(treeList,newChild.pid,newChild);
+                tree = findParentById(treeList, newChild.pid, newChild);
             }
         }
         return tree;
@@ -368,50 +381,52 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
     @Override
     public JSONArray SelectClassifications(Integer fieldMetadataId) {
 
-        JSONArray array1 =new JSONArray();
+        JSONArray array1 = new JSONArray();
         DBTableFiledNameDto dbTableFiledNameDto = metadataEntity.getParentNameByFieldId(fieldMetadataId);
-        if (dbTableFiledNameDto==null){
-           return array1;
+        if (dbTableFiledNameDto == null) {
+            return array1;
         }
-        List<String> list2 = factTreeListMapper.selectsParentpIds(dbTableFiledNameDto.getTableName(),dbTableFiledNameDto.getFieldName());
-        for (int n = 0; n<list2.size(); n++){
-            String id= list2.get(n);
+        List<String> list2 = factTreeListMapper.selectsParentpIds(dbTableFiledNameDto.getTableName(), dbTableFiledNameDto.getFieldName());
+        for (int n = 0; n < list2.size(); n++) {
+            String id = list2.get(n);
             List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassificationss(id);
             //List<FactTreePOs> list2 = factTreeListMapper.selectParentpIds(pid);
-            for(int i=0;i<list.size();i++){
-                List<BusinessExtendedfieldsPO> list1= businessExtendedfieldsMapper.selectParentpId(list.get(i).getId()+"");
-                List<FactTreePOs> list3 = factTreeListMapper.selectParentpIds(list.get(i).getId()+"");
-                JSONObject jsonObject1 =  new JSONObject();
-                jsonObject1.put("id",list.get(i).getId());
-                jsonObject1.put("createTime",list.get(i).getCreateTime());
-                jsonObject1.put("createUser",list.get(i).getCreateUser());
-                jsonObject1.put("updateTime",list.get(i).getUpdateTime());
-                jsonObject1.put("updateUser",list.get(i).getUpdateUser());
-                jsonObject1.put("delFlag",list.get(i).getDelFlag());
-                jsonObject1.put("pid",list.get(i).getPid());
-                jsonObject1.put("responsibleDept",list.get(i).getResponsibleDept());
-                jsonObject1.put("indicatorCode",list.get(i).getIndicatorCode());
-                jsonObject1.put("indicatorName",list.get(i).getIndicatorName());
-                jsonObject1.put("indicatorDescription",list.get(i).getIndicatorDescription());
-                jsonObject1.put("indicatorLevel",list.get(i).getIndicatorLevel());
-                jsonObject1.put("unitMeasurement",list.get(i).getUnitMeasurement());
-                jsonObject1.put("statisticalCycle",list.get(i).getStatisticalCycle());
-                jsonObject1.put("indicatorformula",list.get(i).getIndicatorformula());
-                jsonObject1.put("indicatorStatus",list.get(i).getIndicatorStatus());
-                jsonObject1.put("filteringCriteria",list.get(i).getFilteringCriteria());
-                jsonObject1.put("dataGranularity",list.get(i).getDataGranularity());
-                jsonObject1.put("operationalAttributes",list.get(i).getOperationalAttributes());
-                jsonObject1.put("sourceSystem",list.get(i).getSourceSystem());
-                jsonObject1.put("sourceDataTable",list.get(i).getSourceDataTable());
-                jsonObject1.put("sourceIndicators",list.get(i).getSourceIndicators());
-                jsonObject1.put("orderChannel",list.get(i).getOrderChannel());
-                jsonObject1.put("indicatorType",list.get(i).getIndicatorType());
-                jsonObject1.put("name",list.get(i).getName());
-                jsonObject1.put("sqlScript",list.get(i).getSqlScript());
-                jsonObject1.put("dimensionData",list1);
+            for (int i = 0; i < list.size(); i++) {
+                List<BusinessExtendedfieldsPO> list1 = businessExtendedfieldsMapper.selectParentpId(list.get(i).getId() + "");
+                List<FactTreePOs> list3 = factTreeListMapper.selectParentpIds(list.get(i).getId() + "");
+                JSONObject jsonObject1 = new JSONObject();
+                jsonObject1.put("id", list.get(i).getId());
+                jsonObject1.put("createTime", list.get(i).getCreateTime());
+                jsonObject1.put("createUser", list.get(i).getCreateUser());
+                jsonObject1.put("updateTime", list.get(i).getUpdateTime());
+                jsonObject1.put("updateUser", list.get(i).getUpdateUser());
+                jsonObject1.put("delFlag", list.get(i).getDelFlag());
+                jsonObject1.put("pid", list.get(i).getPid());
+                jsonObject1.put("responsibleDept", list.get(i).getResponsibleDept());
+                jsonObject1.put("indicatorCode", list.get(i).getIndicatorCode());
+                jsonObject1.put("indicatorName", list.get(i).getIndicatorName());
+                jsonObject1.put("indicatorDescription", list.get(i).getIndicatorDescription());
+                jsonObject1.put("indicatorLevel", list.get(i).getIndicatorLevel());
+                jsonObject1.put("unitMeasurement", list.get(i).getUnitMeasurement());
+                jsonObject1.put("statisticalCycle", list.get(i).getStatisticalCycle());
+                jsonObject1.put("indicatorformula", list.get(i).getIndicatorformula());
+                jsonObject1.put("indicatorStatus", list.get(i).getIndicatorStatus());
+                jsonObject1.put("filteringCriteria", list.get(i).getFilteringCriteria());
+                jsonObject1.put("dataGranularity", list.get(i).getDataGranularity());
+                jsonObject1.put("operationalAttributes", list.get(i).getOperationalAttributes());
+                jsonObject1.put("sourceSystem", list.get(i).getSourceSystem());
+                jsonObject1.put("sourceDataTable", list.get(i).getSourceDataTable());
+                jsonObject1.put("sourceIndicators", list.get(i).getSourceIndicators());
+                jsonObject1.put("orderChannel", list.get(i).getOrderChannel());
+                jsonObject1.put("indicatorType", list.get(i).getIndicatorType());
+                jsonObject1.put("name", list.get(i).getName());
+                jsonObject1.put("sqlScript", list.get(i).getSqlScript());
+                jsonObject1.put("dimensionData", list1);
                 List<FacttreeListDTO> facttreeListData = list3.stream().map(FactTreeMap.INSTANCES::poToDto).collect(Collectors.toList());
-                jsonObject1.put("facttreeListData",facttreeListData);
-                if (jsonObject1 != null){array1.set(n,jsonObject1);}
+                jsonObject1.put("facttreeListData", facttreeListData);
+                if (jsonObject1 != null) {
+                    array1.set(n, jsonObject1);
+                }
 
             }
 
@@ -419,9 +434,6 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
         return array1;
     }
-
-
-
 
 
     /**
@@ -495,7 +507,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             model.setIndicatorType(item.indicatorType);
             model.setName(item.name);
             model.setSqlScript(item.sqlScript);
-            if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(item.indicatorType)){
+            if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(item.indicatorType)) {
                 model.setParentBusinessId(item.parentBusinessId);
             }
             int flag = businessTargetinfoMapper.insert(model);
@@ -505,31 +517,31 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             QueryWrapper<BusinessTargetinfoPO> qwnew = new QueryWrapper<>();
             qw.eq("indicator_name", item.indicatorName).eq("del_flag", 1).eq("pid", item.pid);
             BusinessTargetinfoPO bcPOnew = businessTargetinfoMapper.selectOne(qw);
-            for (int j=0;j<item.getDimensionData().size();j++){
-               BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
-               BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
+            for (int j = 0; j < item.getDimensionData().size(); j++) {
+                BusinessExtendedfieldsDTO model2 = item.getDimensionData().get(j);
+                BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
 //               model1.setAttribute(model2.attribute);
 //               model1.setAttributeEnName(model2.attributeEnName);
-               model1.setAttributeid(model2.attributeid);
+                model1.setAttributeid(model2.attributeid);
 //               model1.setDimdomain(model2.dimdomain);
-               model1.setDimdomainid(model2.dimdomainid);
+                model1.setDimdomainid(model2.dimdomainid);
 //               model1.setDimdomaintype(model2.dimdomaintype);
 //               model1.setDimtable(model2.dimtable);
-               model1.setDimtableid(model2.dimtableid);
-               model1.setIndexid(bcPOnew.id+"");
-               model1.setCreatedUser(userHelper.getLoginUserInfo().username);
-               DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-               model1.setCreatedTime(format.format(new Date()));
-               model1.setDelFlag(1);
-               int flag1 = businessExtendedfieldsMapper.insert(model1);
-               if (flag1 < 0) {
-                   throw new FkException(ResultEnum.ERROR, "保存失败");
-               }
-           }
-            for (int m=0;m<item.getFacttreeListData().size();m++){
-                FacttreeListDTO model4= item.getFacttreeListData().get(m);
+                model1.setDimtableid(model2.dimtableid);
+                model1.setIndexid(bcPOnew.id + "");
+                model1.setCreatedUser(userHelper.getLoginUserInfo().username);
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                model1.setCreatedTime(format.format(new Date()));
+                model1.setDelFlag(1);
+                int flag1 = businessExtendedfieldsMapper.insert(model1);
+                if (flag1 < 0) {
+                    throw new FkException(ResultEnum.ERROR, "保存失败");
+                }
+            }
+            for (int m = 0; m < item.getFacttreeListData().size(); m++) {
+                FacttreeListDTO model4 = item.getFacttreeListData().get(m);
                 FactTreePOs model3 = new FactTreePOs();
-                model3.setPid(bcPOnew.id+"");
+                model3.setPid(bcPOnew.id + "");
                 model3.setBusinessNameId(model4.businessNameId);
 //                model3.setBusinessName(model4.businessName);
                 model3.setFactTabNameId(model4.factTabNameId);
@@ -541,7 +553,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                 DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 model3.setCreateTime(LocalDateTime.now());
                 model3.setDelFlag(1);
-                int flag2= factTreeListMapper.insert(model3);
+                int flag2 = factTreeListMapper.insert(model3);
                 if (flag2 < 0) {
                     throw new FkException(ResultEnum.ERROR, "保存失败");
                 }
@@ -572,7 +584,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         qw.eq("id", po.getId());
         idList.add(po.getId());
         if (businessTargetinfoMapper.deleteBatchIds(idList) > 0) {
-            int flag1 = businessExtendedfieldsMapper.updateByName(po.getId()+"");
+            int flag1 = businessExtendedfieldsMapper.updateByName(po.getId() + "");
             return ResultEnum.SUCCESS;
         } else {
             throw new FkException(ResultEnum.ERROR, "删除指标数据失败");
@@ -614,14 +626,15 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
         String historyId = sdf.format(currentTime);
         BusinessTargetinfoHistoryPO targetinfoHistoryPO = BeanHelper.copyProperties(model, BusinessTargetinfoHistoryPO.class);
+        targetinfoHistoryPO.setPid(Integer.valueOf(model.pid));
         targetinfoHistoryPO.setHistoryId(historyId);
-        if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())){
+        if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
             LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
-            businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId,model.getId());
+            businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId, model.getId());
             List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(businessTargetinfoWrapper);
 
             Map<String, ChildBusinessTreeDTO> childBusinessMap = new HashMap<>();
-            if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+            if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)) {
                 childBusinessMap = businessTargetinfoPOList.stream().map(t -> {
                     ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
                     treeDTO.setId(String.valueOf(t.getId()));
@@ -629,7 +642,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                     treeDTO.setType(2);
                     treeDTO.setName(t.getIndicatorName());
                     return treeDTO;
-                }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId,t->t));
+                }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId, t -> t));
             }
 
             List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
@@ -646,21 +659,21 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             List<ChildBusinessTreeDTO> parentTree = new ArrayList<>();
             for (Map.Entry<String, ChildBusinessTreeDTO> entry : childBusinessMap.entrySet()) {
                 ChildBusinessTreeDTO child = entry.getValue();
-                parentTree.add(findParentById(allBusinessTree,child.getPid(),child));
+                parentTree.add(findParentById(allBusinessTree, child.getPid(), child));
             }
             ObjectMapper objectMapper = new ObjectMapper();
             try {
-                if (CollectionUtils.isNotEmpty(parentTree)){
+                if (CollectionUtils.isNotEmpty(parentTree)) {
                     targetinfoHistoryPO.setDerivedMetric(objectMapper.writeValueAsString(parentTree));
                 }
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
 
-        }else if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())){
-            if (model.parentBusinessId != null){
+        } else if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+            if (model.parentBusinessId != null) {
                 LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(BusinessTargetinfoPO::getId,model.parentBusinessId);
+                queryWrapper.eq(BusinessTargetinfoPO::getId, model.parentBusinessId);
                 BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
                 targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
                 targetinfoHistoryPO.setParentBusinessName(businessTargetinfoPOS.getIndicatorName());
@@ -668,7 +681,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         }
 
         boolean save = businessTargetinfoHistoryService.save(targetinfoHistoryPO);
-        if (!save){
+        if (!save) {
             throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
         }
         model.setIndicatorName(item.indicatorName);
@@ -693,9 +706,9 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         model.setIndicatorType(item.indicatorType);
         model.setName(item.name);
         model.setSqlScript(item.sqlScript);
-        if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(item.indicatorType)){
+        if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(item.indicatorType)) {
             model.setParentBusinessId(item.parentBusinessId);
-        }else {
+        } else {
             model.setParentBusinessId(null);
         }
         if (businessTargetinfoMapper.updateById(model) <= 0) {
@@ -707,20 +720,20 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
         //找出待删除的数据
         LambdaQueryWrapper<BusinessExtendedfieldsPO> extendedfieldsWrapper = new LambdaQueryWrapper<>();
-        extendedfieldsWrapper.eq(BusinessExtendedfieldsPO::getIndexid,model.id);
+        extendedfieldsWrapper.eq(BusinessExtendedfieldsPO::getIndexid, model.id);
         List<BusinessExtendedfieldsPO> businessExtendedfieldsPOS = businessExtendedfieldsMapper.selectList(extendedfieldsWrapper);
 
-        if (!CollectionUtils.isEmpty(businessExtendedfieldsPOS)){
+        if (!CollectionUtils.isEmpty(businessExtendedfieldsPOS)) {
             List<Integer> dimensionDataIds = dimensionData.stream().map(BusinessExtendedfieldsDTO::getId).collect(Collectors.toList());
             List<BusinessExtendedfieldsPO> delExtendedfields = businessExtendedfieldsPOS.stream().filter(i -> !dimensionDataIds.contains(i.getId())).collect(Collectors.toList());
             List<Integer> delIds = delExtendedfields.stream().map(BusinessExtendedfieldsPO::getId).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(delIds)){
+            if (CollectionUtils.isNotEmpty(delIds)) {
                 businessExtendedfieldsMapper.deleteBatchIds(delIds);
             }
         }
         List<BusinessExtendedfieldsPO> extendedfieldsPOS = dimensionData.stream().map(i -> {
             BusinessExtendedfieldsPO model1 = new BusinessExtendedfieldsPO();
-            if (i.getId() != null){
+            if (i.getId() != null) {
                 model1.setId(i.getId());
             }
 //            model1.setAttribute(i.getAttribute());
@@ -732,35 +745,35 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             model1.setDimtableid(i.getDimtableid());
             model1.setIndexid(String.valueOf(item.getId()));
 //            model1.setAttributeEnName(i.getAttributeEnName());
-            if (i.getCreatedUser() != null){
+            if (i.getCreatedUser() != null) {
                 model1.setCreatedUser(i.getCreatedUser());
-            }else {
+            } else {
                 model1.setCreatedUser(userHelper.getLoginUserInfo().username);
             }
 
-            if (i.getCreatedTime() != null){
+            if (i.getCreatedTime() != null) {
 //                DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 //                LocalDateTime localDateTime = LocalDateTime.parse(i.getCreatedTime().toString(), inputFormatter);
                 DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 // 格式化为指定格式的字符串
                 String outputDateTime = i.getCreatedTime().format(outputFormatter);
                 model1.setCreatedTime(outputDateTime);
-            }else {
+            } else {
                 DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 model1.setCreatedTime(format.format(new Date()));
             }
             model1.setDelFlag(1);
             return model1;
         }).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(extendedfieldsPOS)){
+        if (CollectionUtils.isNotEmpty(extendedfieldsPOS)) {
             //找出待添加数据
             List<BusinessExtendedfieldsPO> addExtendedfields = extendedfieldsPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
             //找出待修改数据
             List<BusinessExtendedfieldsPO> updateExtendedfields = extendedfieldsPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(addExtendedfields)){
+            if (CollectionUtils.isNotEmpty(addExtendedfields)) {
                 businessExtendedfieldsService.saveBatch(addExtendedfields);
             }
-            if (CollectionUtils.isNotEmpty(updateExtendedfields)){
+            if (CollectionUtils.isNotEmpty(updateExtendedfields)) {
                 businessExtendedfieldsService.updateBatchById(updateExtendedfields);
             }
         }
@@ -786,10 +799,10 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         List<FacttreeListDTO> facttreeListData = item.getFacttreeListData();
         List<FactTreePOs> facttreeListPOs = facttreeListData.stream().map(i -> {
             FactTreePOs model1 = new FactTreePOs();
-            if (i.getId() != null){
+            if (i.getId() != null) {
                 model1.setId(i.getId());
             }
-            model1.setPid(item.id+"");
+            model1.setPid(item.id + "");
             model1.setBusinessNameId(i.getBusinessNameId());
 //            model1.setBusinessName(i.getBusinessName());
             model1.setFactTabNameId(i.getFactTabNameId());
@@ -808,26 +821,26 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         }).collect(Collectors.toList());
         //找出待删除的数据
         LambdaQueryWrapper<FactTreePOs> factTreeWrapper = new LambdaQueryWrapper<>();
-        factTreeWrapper.eq(FactTreePOs::getPid,model.id);
+        factTreeWrapper.eq(FactTreePOs::getPid, model.id);
         List<FactTreePOs> factTreePOS = factTreeService.list(factTreeWrapper);
-        if (!CollectionUtils.isEmpty(factTreePOS)){
-            List<Integer> factTreeIds = facttreeListPOs.stream().map(i->(int)i.getId()).collect(Collectors.toList());
-            List<FactTreePOs> delFactTrees = factTreePOS.stream().filter(i -> !factTreeIds.contains((int)i.getId())).collect(Collectors.toList());
-            List<Integer> delIds = delFactTrees.stream().map(i->(int)i.getId()).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(delIds)){
+        if (!CollectionUtils.isEmpty(factTreePOS)) {
+            List<Integer> factTreeIds = facttreeListPOs.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+            List<FactTreePOs> delFactTrees = factTreePOS.stream().filter(i -> !factTreeIds.contains((int) i.getId())).collect(Collectors.toList());
+            List<Integer> delIds = delFactTrees.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(delIds)) {
                 factTreeListMapper.deleteBatchIds(delIds);
             }
         }
 
-        if(CollectionUtils.isNotEmpty(facttreeListPOs)){
+        if (CollectionUtils.isNotEmpty(facttreeListPOs)) {
             //找出待添加数据
-            List<FactTreePOs> addFactTrees = facttreeListPOs.stream().filter(i -> i.getId() == 0 ).collect(Collectors.toList());
+            List<FactTreePOs> addFactTrees = facttreeListPOs.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
             //找出待修改数据
             List<FactTreePOs> updateFactTrees = facttreeListPOs.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(addFactTrees)){
+            if (CollectionUtils.isNotEmpty(addFactTrees)) {
                 factTreeService.saveBatch(addFactTrees);
             }
-            if (CollectionUtils.isNotEmpty(updateFactTrees)){
+            if (CollectionUtils.isNotEmpty(updateFactTrees)) {
                 factTreeService.updateBatchById(updateFactTrees);
             }
         }
@@ -853,27 +866,28 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 //                throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
 //            }
 //        }
-//        BusinessHistoryPO businessHistoryPO = new BusinessHistoryPO();
-//        businessHistoryPO.setHistoryId(historyId);
-//        businessHistoryPO.setTargetinfoId((int)model.getId());
-//        boolean save1 = businessHistoryService.save(businessHistoryPO);
-//        if (!save1){
-//            throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
-//        }
+        BusinessHistoryPO businessHistoryPO = new BusinessHistoryPO();
+        businessHistoryPO.setHistoryId(historyId);
+        businessHistoryPO.setTargetinfoId((int)model.getId());
+        boolean save1 = businessHistoryService.save(businessHistoryPO);
+        if (!save1){
+            throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
+        }
         return ResultEnum.SUCCESS;
     }
+
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public void downLoad(String id,String indicatorname, HttpServletResponse response) {
+    public void downLoad(String id, String indicatorname, HttpServletResponse response) {
         // 查询数据
-        List<Map<String, Object>> list =null;
-        if(id ==null && indicatorname==null){
+        List<Map<String, Object>> list = null;
+        if (id == null && indicatorname == null) {
             list = businessTargetinfoMapper.selectClassification2();
         }
-        if(id !=null && indicatorname!=null){
-            list = businessTargetinfoMapper.selectClassification1(id,indicatorname);
+        if (id != null && indicatorname != null) {
+            list = businessTargetinfoMapper.selectClassification1(id, indicatorname);
         }
-        if(id !=null && indicatorname==null){
+        if (id != null && indicatorname == null) {
             list = businessTargetinfoMapper.selectClassification3(id);
         }
         uploadExcelAboutUser(response, "TargetinfoDetailData.xlsx", list);
@@ -969,107 +983,107 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             }
             for (Map<String, Object> stringObjectMap : dataList) {
                 LinkedHashMap<String, Object> datamap = new LinkedHashMap<>();
-                    if (!StringUtils.isEmpty(stringObjectMap.get("namepid"))){
-                        datamap.put("namepid", stringObjectMap.get("namepid"));
-                    }else {
-                        datamap.put("namepid", null);
-                    }
+                if (!StringUtils.isEmpty(stringObjectMap.get("namepid"))) {
+                    datamap.put("namepid", stringObjectMap.get("namepid"));
+                } else {
+                    datamap.put("namepid", null);
+                }
 
-                    if (!StringUtils.isEmpty(stringObjectMap.get("name"))){
-                        datamap.put("name", stringObjectMap.get("name"));
-                    }else {
-                        datamap.put("name", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("responsible_dept"))){
-                        datamap.put("responsible_dept", stringObjectMap.get("responsible_dept"));
-                    }else {
-                        datamap.put("responsible_dept", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_code"))){
-                        datamap.put("indicator_code", stringObjectMap.get("indicator_code"));
-                    }else {
-                        datamap.put("indicator_code", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_type"))){
-                        datamap.put("indicator_type", stringObjectMap.get("indicator_type"));
-                    }else {
-                        datamap.put("indicator_type", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_name"))){
-                        datamap.put("indicator_name", stringObjectMap.get("indicator_name"));
-                    }else {
-                        datamap.put("indicator_name", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_description"))){
-                        datamap.put("indicator_description", stringObjectMap.get("indicator_description"));
-                    }else {
-                        datamap.put("indicator_description", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_level"))){
-                        datamap.put("indicator_level", stringObjectMap.get("indicator_level"));
-                    }else {
-                        datamap.put("indicator_level", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("unit_measurement"))){
-                        datamap.put("unit_measurement", stringObjectMap.get("unit_measurement"));
-                    }else {
-                        datamap.put("unit_measurement", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("statistical_cycle"))){
-                        datamap.put("statistical_cycle", stringObjectMap.get("statistical_cycle"));
-                    }else {
-                        datamap.put("statistical_cycle", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicatorformula"))){
-                        datamap.put("indicatorformula", stringObjectMap.get("indicatorformula"));
-                    }else {
-                        datamap.put("indicatorformula", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("sql_script"))){
-                        datamap.put("sql_script", stringObjectMap.get("sql_script"));
-                    }else {
-                        datamap.put("sql_script", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("source_indicators"))){
-                        datamap.put("source_indicators", stringObjectMap.get("source_indicators"));
-                    }else {
-                        datamap.put("source_indicators", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("filtering_criteria"))){
-                        datamap.put("filtering_criteria", stringObjectMap.get("filtering_criteria"));
-                    }else {
-                        datamap.put("filtering_criteria", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("source_system"))){
-                        datamap.put("source_system", stringObjectMap.get("source_system"));
-                    }else {
-                        datamap.put("source_system", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("source_data_table"))){
-                        datamap.put("source_data_table", stringObjectMap.get("source_data_table"));
-                    }else {
-                        datamap.put("source_data_table", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("indicator_status"))){
-                        datamap.put("indicator_status", stringObjectMap.get("indicator_status"));
-                    }else {
-                        datamap.put("indicator_status", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("large_screen_link"))){
-                        datamap.put("large_screen_link", stringObjectMap.get("large_screen_link"));
-                    }else {
-                        datamap.put("large_screen_link", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("order_channel"))){
-                        datamap.put("order_channel", stringObjectMap.get("order_channel"));
-                    }else {
-                        datamap.put("order_channel", null);
-                    }
-                    if (!StringUtils.isEmpty(stringObjectMap.get("data_granularity"))){
-                        datamap.put("data_granularity", stringObjectMap.get("data_granularity"));
-                    }else {
-                        datamap.put("data_granularity", null);
-                    }
+                if (!StringUtils.isEmpty(stringObjectMap.get("name"))) {
+                    datamap.put("name", stringObjectMap.get("name"));
+                } else {
+                    datamap.put("name", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("responsible_dept"))) {
+                    datamap.put("responsible_dept", stringObjectMap.get("responsible_dept"));
+                } else {
+                    datamap.put("responsible_dept", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicator_code"))) {
+                    datamap.put("indicator_code", stringObjectMap.get("indicator_code"));
+                } else {
+                    datamap.put("indicator_code", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicator_type"))) {
+                    datamap.put("indicator_type", stringObjectMap.get("indicator_type"));
+                } else {
+                    datamap.put("indicator_type", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicator_name"))) {
+                    datamap.put("indicator_name", stringObjectMap.get("indicator_name"));
+                } else {
+                    datamap.put("indicator_name", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicator_description"))) {
+                    datamap.put("indicator_description", stringObjectMap.get("indicator_description"));
+                } else {
+                    datamap.put("indicator_description", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicator_level"))) {
+                    datamap.put("indicator_level", stringObjectMap.get("indicator_level"));
+                } else {
+                    datamap.put("indicator_level", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("unit_measurement"))) {
+                    datamap.put("unit_measurement", stringObjectMap.get("unit_measurement"));
+                } else {
+                    datamap.put("unit_measurement", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("statistical_cycle"))) {
+                    datamap.put("statistical_cycle", stringObjectMap.get("statistical_cycle"));
+                } else {
+                    datamap.put("statistical_cycle", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicatorformula"))) {
+                    datamap.put("indicatorformula", stringObjectMap.get("indicatorformula"));
+                } else {
+                    datamap.put("indicatorformula", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("sql_script"))) {
+                    datamap.put("sql_script", stringObjectMap.get("sql_script"));
+                } else {
+                    datamap.put("sql_script", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("source_indicators"))) {
+                    datamap.put("source_indicators", stringObjectMap.get("source_indicators"));
+                } else {
+                    datamap.put("source_indicators", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("filtering_criteria"))) {
+                    datamap.put("filtering_criteria", stringObjectMap.get("filtering_criteria"));
+                } else {
+                    datamap.put("filtering_criteria", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("source_system"))) {
+                    datamap.put("source_system", stringObjectMap.get("source_system"));
+                } else {
+                    datamap.put("source_system", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("source_data_table"))) {
+                    datamap.put("source_data_table", stringObjectMap.get("source_data_table"));
+                } else {
+                    datamap.put("source_data_table", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("indicator_status"))) {
+                    datamap.put("indicator_status", stringObjectMap.get("indicator_status"));
+                } else {
+                    datamap.put("indicator_status", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("large_screen_link"))) {
+                    datamap.put("large_screen_link", stringObjectMap.get("large_screen_link"));
+                } else {
+                    datamap.put("large_screen_link", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("order_channel"))) {
+                    datamap.put("order_channel", stringObjectMap.get("order_channel"));
+                } else {
+                    datamap.put("order_channel", null);
+                }
+                if (!StringUtils.isEmpty(stringObjectMap.get("data_granularity"))) {
+                    datamap.put("data_granularity", stringObjectMap.get("data_granularity"));
+                } else {
+                    datamap.put("data_granularity", null);
+                }
                 data.add(datamap);
             }
 
@@ -1084,7 +1098,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                     }
                 }
             }
-                //将整理好的excel数据写入流中
+            //将整理好的excel数据写入流中
             workbook.write(os);
 
         } catch (IOException e) {
@@ -1107,7 +1121,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
      */
     public static void setResponseHeader(HttpServletResponse response, String fileName) {
         try {
-            fileName = new String(fileName.getBytes(),"GBK");
+            fileName = new String(fileName.getBytes(), "GBK");
 //            response.setContentType("application/octet-stream;charset=UTF-8");
             response.setHeader("Content-Disposition", "attachment;filename=" + new String(fileName.getBytes(), "ISO8859-1"));
             response.addHeader("Pargam", "no-cache");
@@ -1119,8 +1133,8 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
 
     @Override
-    public List<BusinessTargetinfoPO> getDimensionList(String  name) {
-        String sql ="select * from tb_business_targetinfo where indicator_name like '%"+name+"%' and del_flag = 1 ";
+    public List<BusinessTargetinfoPO> getDimensionList(String name) {
+        String sql = "select * from tb_business_targetinfo where indicator_name like '%" + name + "%' and del_flag = 1 ";
         List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectDimensionList(sql);
         return list;
     }
@@ -1147,56 +1161,56 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 //                        .ifPresent(user -> e.createUser = user.userAccount);
 //            });
 //        }
-            JSONObject jsonObject1 =  new JSONObject();
-            jsonObject1.put("id",targetinfoHistoryPO.getId());
-            jsonObject1.put("createTime",targetinfoHistoryPO.getCreateTime());
-            jsonObject1.put("createUser",targetinfoHistoryPO.getCreateUser());
-            jsonObject1.put("updateTime",targetinfoHistoryPO.getUpdateTime());
-            jsonObject1.put("updateUser",targetinfoHistoryPO.getUpdateUser());
-            jsonObject1.put("delFlag",targetinfoHistoryPO.getDelFlag());
-            jsonObject1.put("pid",targetinfoHistoryPO.getPid());
-            jsonObject1.put("responsibleDept",targetinfoHistoryPO.getResponsibleDept());
-            jsonObject1.put("indicatorCode",targetinfoHistoryPO.getIndicatorCode());
-            jsonObject1.put("indicatorName",targetinfoHistoryPO.getIndicatorName());
-            jsonObject1.put("indicatorDescription",targetinfoHistoryPO.getIndicatorDescription());
-            jsonObject1.put("largeScreenLink",targetinfoHistoryPO.getLargeScreenLink());
-            jsonObject1.put("indicatorLevel",targetinfoHistoryPO.getIndicatorLevel());
-            jsonObject1.put("unitMeasurement",targetinfoHistoryPO.getUnitMeasurement());
-            jsonObject1.put("statisticalCycle",targetinfoHistoryPO.getStatisticalCycle());
-            jsonObject1.put("indicatorformula",targetinfoHistoryPO.getIndicatorformula());
-            jsonObject1.put("indicatorStatus",targetinfoHistoryPO.getIndicatorStatus());
-            jsonObject1.put("filteringCriteria",targetinfoHistoryPO.getFilteringCriteria());
-            jsonObject1.put("dataGranularity",targetinfoHistoryPO.getDataGranularity());
-            jsonObject1.put("operationalAttributes",targetinfoHistoryPO.getOperationalAttributes());
-            jsonObject1.put("sourceSystem",targetinfoHistoryPO.getSourceSystem());
-            jsonObject1.put("sourceDataTable",targetinfoHistoryPO.getSourceDataTable());
-            jsonObject1.put("sourceIndicators",targetinfoHistoryPO.getSourceIndicators());
-            jsonObject1.put("orderChannel",targetinfoHistoryPO.getOrderChannel());
-            jsonObject1.put("indicatorType",targetinfoHistoryPO.getIndicatorType());
-            jsonObject1.put("name",targetinfoHistoryPO.getName());
-            jsonObject1.put("sqlScript",targetinfoHistoryPO.getSqlScript());
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("id", targetinfoHistoryPO.getId());
+        jsonObject1.put("createTime", targetinfoHistoryPO.getCreateTime());
+        jsonObject1.put("createUser", targetinfoHistoryPO.getCreateUser());
+        jsonObject1.put("updateTime", targetinfoHistoryPO.getUpdateTime());
+        jsonObject1.put("updateUser", targetinfoHistoryPO.getUpdateUser());
+        jsonObject1.put("delFlag", targetinfoHistoryPO.getDelFlag());
+        jsonObject1.put("pid", targetinfoHistoryPO.getPid());
+        jsonObject1.put("responsibleDept", targetinfoHistoryPO.getResponsibleDept());
+        jsonObject1.put("indicatorCode", targetinfoHistoryPO.getIndicatorCode());
+        jsonObject1.put("indicatorName", targetinfoHistoryPO.getIndicatorName());
+        jsonObject1.put("indicatorDescription", targetinfoHistoryPO.getIndicatorDescription());
+        jsonObject1.put("largeScreenLink", targetinfoHistoryPO.getLargeScreenLink());
+        jsonObject1.put("indicatorLevel", targetinfoHistoryPO.getIndicatorLevel());
+        jsonObject1.put("unitMeasurement", targetinfoHistoryPO.getUnitMeasurement());
+        jsonObject1.put("statisticalCycle", targetinfoHistoryPO.getStatisticalCycle());
+        jsonObject1.put("indicatorformula", targetinfoHistoryPO.getIndicatorformula());
+        jsonObject1.put("indicatorStatus", targetinfoHistoryPO.getIndicatorStatus());
+        jsonObject1.put("filteringCriteria", targetinfoHistoryPO.getFilteringCriteria());
+        jsonObject1.put("dataGranularity", targetinfoHistoryPO.getDataGranularity());
+        jsonObject1.put("operationalAttributes", targetinfoHistoryPO.getOperationalAttributes());
+        jsonObject1.put("sourceSystem", targetinfoHistoryPO.getSourceSystem());
+        jsonObject1.put("sourceDataTable", targetinfoHistoryPO.getSourceDataTable());
+        jsonObject1.put("sourceIndicators", targetinfoHistoryPO.getSourceIndicators());
+        jsonObject1.put("orderChannel", targetinfoHistoryPO.getOrderChannel());
+        jsonObject1.put("indicatorType", targetinfoHistoryPO.getIndicatorType());
+        jsonObject1.put("name", targetinfoHistoryPO.getName());
+        jsonObject1.put("sqlScript", targetinfoHistoryPO.getSqlScript());
 //            jsonObject1.put("dimensionData",list1);
 //            List<FacttreelistHistoryDTO> facttreeListData = list2.stream().map(FactTreeHistoryMap.INSTANCES::poToDto).collect(Collectors.toList());
 //            jsonObject1.put("facttreeListData",facttreeListData);
-            Integer parentBusinessId = targetinfoHistoryPO.getParentBusinessId();
+        Integer parentBusinessId = targetinfoHistoryPO.getParentBusinessId();
 
 
-            if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
-                jsonObject1.put("parentBusinessId",parentBusinessId);
-                jsonObject1.put("parentBusinessName",targetinfoHistoryPO.getParentBusinessName());
-            }else if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
-                String derivedMetric = targetinfoHistoryPO.getDerivedMetric();
-                if (derivedMetric != null){
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    try {
-                        List<ChildBusinessTreeDTO> childBusinessTreeDTOList = objectMapper.readValue(derivedMetric,ArrayList.class);
-                        jsonObject1.put("derivedMetric", childBusinessTreeDTOList);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
+        if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+            jsonObject1.put("parentBusinessId", parentBusinessId);
+            jsonObject1.put("parentBusinessName", targetinfoHistoryPO.getParentBusinessName());
+        } else if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+            String derivedMetric = targetinfoHistoryPO.getDerivedMetric();
+            if (derivedMetric != null) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    List<ChildBusinessTreeDTO> childBusinessTreeDTOList = objectMapper.readValue(derivedMetric, ArrayList.class);
+                    jsonObject1.put("derivedMetric", childBusinessTreeDTOList);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
                 }
-
             }
+
+        }
 
         return jsonObject1;
     }

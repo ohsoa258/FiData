@@ -6,22 +6,29 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
+import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.classification.*;
-import com.fisk.datamanagement.dto.standards.StandardsTreeDTO;
+import com.fisk.datamanagement.entity.BusinessCategoryAssignmentPO;
 import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
+import com.fisk.datamanagement.service.BusinessCategoryAssignmentService;
 import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -44,6 +51,15 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
     private DataModelClient dataModelClient;
     @Resource
     private BusinessTargetinfoMapper businessTargetinfoMapper;
+
+    @Resource
+    UserHelper userHelper;
+
+    @Resource
+    UserClient userClient;
+
+    @Resource
+    private BusinessCategoryAssignmentService businessCategoryAssignmentService;
     /**
      * 更改指标名称属性_
      *
@@ -182,6 +198,63 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             if (flag < 0) {
                 throw new FkException(ResultEnum.ERROR, "保存失败");
             }
+            if (model.getPid() == null || model.getPid() == 0){
+                UserInfo userInfo = userHelper.getLoginUserInfo();
+                ResultEntity<List<RoleInfoDTO>> businessAssignment = userClient.getRolebyUserId(userInfo.getId().intValue());
+                List<RoleInfoDTO> businessAssignmentIds = new ArrayList<>();
+                if (businessAssignment.code == ResultEnum.SUCCESS.getCode()){
+                    businessAssignmentIds = businessAssignment.data;
+                }else {
+                    throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                }
+                List<Integer> roleIds = businessAssignmentIds.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+                List<BusinessCategoryAssignmentPO> businessCategoryAssignmentPOList = new ArrayList<>();
+                for (Integer id : roleIds) {
+                    BusinessCategoryAssignmentPO businessCategoryAssignmentPO = new BusinessCategoryAssignmentPO();
+                    businessCategoryAssignmentPO.setCategoryId((int)model.id);
+                    businessCategoryAssignmentPO.setRoleId(id);
+                    businessCategoryAssignmentPOList.add(businessCategoryAssignmentPO);
+                }
+                if (CollectionUtils.isNotEmpty(businessCategoryAssignmentPOList)){
+                    businessCategoryAssignmentService.saveBatch(businessCategoryAssignmentPOList);
+                }
+            }
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<Integer> getBusinessCategoryAssignment(String pid) {
+        List<Integer> result = new ArrayList<>();
+        LambdaQueryWrapper<BusinessCategoryAssignmentPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BusinessCategoryAssignmentPO::getCategoryId, pid);
+        List<BusinessCategoryAssignmentPO> categoryAssignmentPOList = businessCategoryAssignmentService.list(queryWrapper);
+        if (CollectionUtils.isNotEmpty(categoryAssignmentPOList)){
+            result = categoryAssignmentPOList.stream().map(BusinessCategoryAssignmentPO::getRoleId).collect(Collectors.toList());
+        }
+        return result;
+    }
+
+    @Override
+    public ResultEnum addBusinessCategoryAssignment(BusinessCategoryAssignmentDTO dto) {
+        if (dto.menuId == null){
+            throw new FkException(ResultEnum.ERROR, "菜单id不能为空");
+        }
+        if (CollectionUtils.isEmpty(dto.roleIds)){
+            throw new FkException(ResultEnum.ERROR, "角色id不能为空");
+        }
+        List<BusinessCategoryAssignmentPO> businessCategoryAssignmentPOList = new ArrayList<>();
+        for (Integer roleId : dto.roleIds) {
+            BusinessCategoryAssignmentPO businessCategoryAssignmentPO = new BusinessCategoryAssignmentPO();
+            businessCategoryAssignmentPO.setCategoryId(dto.menuId);
+            businessCategoryAssignmentPO.setRoleId(roleId);
+            businessCategoryAssignmentPOList.add(businessCategoryAssignmentPO);
+        }
+        LambdaQueryWrapper<BusinessCategoryAssignmentPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(BusinessCategoryAssignmentPO::getCategoryId, dto.menuId);
+        businessCategoryAssignmentService.remove(queryWrapper);
+        if (CollectionUtils.isNotEmpty(businessCategoryAssignmentPOList)){
+            businessCategoryAssignmentService.saveBatch(businessCategoryAssignmentPOList);
         }
         return ResultEnum.SUCCESS;
     }
@@ -212,7 +285,25 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             return dto;
         }).collect(Collectors.toList());
 
-        List<BusinessCategoryTreeDTO> parentList = MallClassTree(allData, "0");
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
+        List<RoleInfoDTO> businessAssignment = new ArrayList<>();
+        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()){
+            businessAssignment = rolebyUserId.data;
+        }else {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(roleIds)){
+            return new ArrayList<>();
+        }
+        List<Integer> businessCategoryIds = businessCategoryAssignmentService.getCategoryIds(roleIds);
+        List<BusinessCategoryTreeDTO> parent = allData.stream().filter(i -> "0".equals(i.getPid()) && businessCategoryIds.contains(Integer.valueOf(i.getId()))).collect(Collectors.toList());
+        List<BusinessCategoryTreeDTO> child = allData.stream().filter(i -> !"0".equals(i.getPid())).collect(Collectors.toList());
+        List<BusinessCategoryTreeDTO> all = new ArrayList<>();
+        all.addAll(parent);
+        all.addAll(child);
+        List<BusinessCategoryTreeDTO> parentList = MallClassTree(all, "0");
 
         return parentList;
     }

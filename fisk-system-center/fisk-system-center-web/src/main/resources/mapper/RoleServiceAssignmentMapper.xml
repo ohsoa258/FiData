@@ -8,7 +8,8 @@
             role.service_id,
             role.switch_add,
             role.switch_update,
-            role.switch_delete
+            role.switch_delete,
+            role.switch_authorization
         FROM
             tb_role_service_assignment role
             LEFT JOIN tb_service_registry registry

@@ -53,6 +53,7 @@ import com.fisk.system.dto.datasource.DataSourceDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
@@ -107,26 +108,28 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         //处理值域范围回显
         if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()) {
             String DataSetIds = standardsPO.getValueRange();
-            List<Long> ids = Stream.of(DataSetIds.split(","))
-                    .map(Long::valueOf)
-                    .collect(Collectors.toList());
-            //根据数据标准中存入的代码集id查询代码集内容
-            List<CodeSetPO> codeSetPOList = dataSetService.listByIds(ids);
-            if (!CollectionUtils.isEmpty(codeSetPOList)) {
-                List<CodeSetDTO> codeSetDTOS = CodeSetMap.INSTANCES.poListToDTOList(codeSetPOList);
-                standardsDTO.setCodeSetDTOList(codeSetDTOS);
-                //拼接code和name
-                List<String> codeSet = new ArrayList<>();
-                for (CodeSetDTO codeSetDTO : codeSetDTOS) {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    stringBuilder.append(codeSetDTO.getCode()).append(".").append(codeSetDTO.getName());
-                    codeSet.add(stringBuilder.toString());
+            if (!StringUtils.isEmpty(DataSetIds)){
+                List<Long> ids = Stream.of(DataSetIds.split(","))
+                        .map(Long::valueOf)
+                        .collect(Collectors.toList());
+                //根据数据标准中存入的代码集id查询代码集内容
+                List<CodeSetPO> codeSetPOList = dataSetService.listByIds(ids);
+                if (!CollectionUtils.isEmpty(codeSetPOList)) {
+                    List<CodeSetDTO> codeSetDTOS = CodeSetMap.INSTANCES.poListToDTOList(codeSetPOList);
+                    standardsDTO.setCodeSetDTOList(codeSetDTOS);
+                    //拼接code和name
+                    List<String> codeSet = new ArrayList<>();
+                    for (CodeSetDTO codeSetDTO : codeSetDTOS) {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append(codeSetDTO.getCode()).append(".").append(codeSetDTO.getName());
+                        codeSet.add(stringBuilder.toString());
+                    }
+                    //每个值用空格隔开
+                    String valueRange = codeSet.stream()
+                            .map(Object::toString)
+                            .collect(Collectors.joining(" "));
+                    standardsDTO.setValueRange(valueRange);
                 }
-                //每个值用空格隔开
-                String valueRange = codeSet.stream()
-                        .map(Object::toString)
-                        .collect(Collectors.joining(" "));
-                standardsDTO.setValueRange(valueRange);
             }
         }
         standardsDTO.setStandardsBeCitedDTOList(standardsBeCitedDTOList);

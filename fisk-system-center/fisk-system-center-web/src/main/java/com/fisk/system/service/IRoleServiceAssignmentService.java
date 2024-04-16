@@ -32,6 +32,12 @@ public interface IRoleServiceAssignmentService {
      * @return 保存结果
      */
     List<LoginServiceDTO> getServiceList();
+    /**
+     * 根据当前登录人,获取指标管理授权权限
+     *
+     * @return 保存结果
+     */
+    List<Integer> getBusinessAssignment(Integer userId);
 
     /**
      * 获取菜单列表

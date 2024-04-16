@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
+import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 
@@ -47,6 +48,16 @@ public interface BusinessCategoryService {
      * @return
      */
     ResultEnum addCategory(BusinessCategoryDTO dto);
+
+    List<Integer> getBusinessCategoryAssignment(String pid);
+
+    /**
+     * 添加指标主题数据
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum addBusinessCategoryAssignment(BusinessCategoryAssignmentDTO dto);
 
     /**
      * 获取树状指标主题数据

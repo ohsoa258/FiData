@@ -34,6 +34,12 @@ public class RoleInfoController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listRoleData(query));
     }
 
+    @PostMapping("/getAllRole")
+    @ApiOperation("获取所有角色信息")
+    public ResultEntity<Object> getAllRole() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllRole());
+    }
+
     @ApiOperation("添加角色")
     @PostMapping("/addRole")
     public ResultEntity<Object> addRole(@Validated @RequestBody RoleInfoDTO dto) {

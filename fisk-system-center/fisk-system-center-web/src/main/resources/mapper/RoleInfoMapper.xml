@@ -16,6 +16,16 @@
             ${query.where}
         </if>
     </select>
+    <select id="getAllRole" resultType="com.fisk.system.dto.roleinfo.RoleInfoDTO">
+        select a.id,
+        a.role_name as roleName,
+        a.role_desc as roleDesc,
+        b.username as createUser,
+        a.create_time as createTime
+        from tb_role_info a
+        left join tb_user_info b on a.create_user = b.id
+        where a.del_flag = 1
+    </select>
     <resultMap id="TreeRols" type="com.fisk.system.vo.roleinfo.RoleInfoVo">
         <result property="id" column="rid"/>
         <result property="roleName" column="role_name"/>
