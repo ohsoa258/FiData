@@ -82,7 +82,7 @@ public interface BusinessTargetinfoService {
      * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
      * @return
      */
-    List<FacttreeListDTO> modelGetFactTreeList();
+    List<FacttreeListDTO> modelGetFactTreeList(Integer tblId);
 
     /**
      * 获取数仓字段和指标粒度表里所有关联关系 只获取字段id 和指标id

@@ -108,8 +108,8 @@ public class BloodCompensationImpl
             TruncateBlood();
         }
         //为空则同步所有模块
-        if (moduleIds == null || moduleIds.stream().count() == 0) {
-            moduleIds = Arrays.stream(ClassificationTypeEnum.values()).map(e -> e.getValue()).collect(Collectors.toList());
+        if (moduleIds == null || (long) moduleIds.size() == 0) {
+            moduleIds = Arrays.stream(ClassificationTypeEnum.values()).map(ClassificationTypeEnum::getValue).collect(Collectors.toList());
         }
         String allBeginTime = DateTimeUtils.getNow();
         log.info("***************同步元数据开始时间：" + allBeginTime + "*********************");

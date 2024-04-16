@@ -383,7 +383,7 @@ public class FactAttributeImpl
             List<BusinessTargetinfoDTO> dtos = dataManageClient.modelGetBusinessTargetInfoList();
 
             //1.2获取数仓字段和指标所属表里所有关联关系  -> 字段id 指标id    事实表 = 指标所属
-            List<FacttreeListDTO> facttreeListDTOS = dataManageClient.modelGetFactTreeList();
+            List<FacttreeListDTO> facttreeListDTOS = dataManageClient.modelGetFactTreeList(factId);
 
             //2.1获取所有数据元 -> 数据元id 数据元名称
             List<StandardsDTO> standardsDTOS = dataManageClient.modelGetStandards();
@@ -409,18 +409,18 @@ public class FactAttributeImpl
                     //循环指标关联关系
                     for (FacttreeListDTO d : facttreeListDTOS) {
                         if (d.getFactFieldEnNameId().equals(String.valueOf(filedId))){
-                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
-
                             //循环指标 获取指标名称
                             for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
+                                FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                 if (d.getPid().equals(String.valueOf(businessTargetinfoDTO.getId()))){
                                     dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
                                     dto.setName(businessTargetinfoDTO.getIndicatorName());
+                                    //类型 0指标 1数据元
+                                    dto.setType(0);
+                                    objDTOS.add(dto);
                                 }
                             }
-                            //类型 0指标 1数据元
-                            dto.setType(0);
-                            objDTOS.add(dto);
+
                         }
                     }
                 }
@@ -434,22 +434,22 @@ public class FactAttributeImpl
                             continue;
                         }
                         if (s.getFieldId().equals(String.valueOf(filedId))){
-                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
-
                             //循环数据元标准集合 获取数据元标准名称
                             for (StandardsDTO standardsDTO : standardsDTOS) {
                                 if (s.getStandardsId().equals(standardsDTO.getId())){
+                                    FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                     //获取到数据元标准id关联的数据元标准menuid
                                     int menuId = standardsDTO.getMenuId();
                                     //获取menuId对应的菜单名称
                                     String menuName = standardsMenuMap.get(menuId);
                                     dto.setId(menuId);
                                     dto.setName(menuName);
+                                    //类型 0指标 1数据元
+                                    dto.setType(1);
+                                    objDTOS.add(dto);
                                 }
                             }
-                            //类型 0指标 1数据元
-                            dto.setType(1);
-                            objDTOS.add(dto);
+
                         }
 
                     }

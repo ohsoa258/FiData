@@ -248,8 +248,8 @@ public class BusinessCategoryController {
      */
     @ApiOperation("获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id")
     @GetMapping("/modelGetFactTreeList")
-    public List<FacttreeListDTO> modelGetFactTreeList() {
-        return businessTargetinfoService.modelGetFactTreeList();
+    public List<FacttreeListDTO> modelGetFactTreeList(@RequestParam("tblId")Integer tblId) {
+        return businessTargetinfoService.modelGetFactTreeList(tblId);
     }
 
     /**

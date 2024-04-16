@@ -1226,9 +1226,10 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
      * @return
      */
     @Override
-    public List<FacttreeListDTO> modelGetFactTreeList() {
+    public List<FacttreeListDTO> modelGetFactTreeList(Integer tblId) {
         LambdaQueryWrapper<FactTreePOs> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(FactTreePOs::getPid,FactTreePOs::getFactFieldEnNameId);
+        wrapper.select(FactTreePOs::getPid,FactTreePOs::getFactFieldEnNameId)
+                .eq(FactTreePOs::getFactTabNameId,tblId);
         List<FactTreePOs> list = factTreeService.list();
         List<FacttreeListDTO> dtos = new ArrayList<>();
         for (FactTreePOs po : list) {

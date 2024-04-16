@@ -334,17 +334,17 @@ public class DimensionAttributeImpl
 //                    //循环指标关联关系
 //                    for (BusinessExtendedfieldsDTO d : businessExtendedfieldsDTOS) {
 //                        if (d.getAttributeid().equals(String.valueOf(filedId))) {
-//                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
 //                            //循环指标 获取指标名称
 //                            for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
 //                                if (d.getIndexid().equals(String.valueOf(businessTargetinfoDTO.getId()))) {
+//                                    FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
 //                                    dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
 //                                    dto.setName(businessTargetinfoDTO.getIndicatorName());
+//                                    //类型 0指标 1数据元
+//                                    dto.setType(0);
+//                                    objDTOS.add(dto);
 //                                }
 //                            }
-//                            //类型 0指标 1数据元
-//                            dto.setType(0);
-//                            objDTOS.add(dto);
 //                        }
 //                    }
 //                }
@@ -359,24 +359,22 @@ public class DimensionAttributeImpl
                         }
 
                         if (s.getFieldId().equals(String.valueOf(filedId))) {
-                            FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
-
                             //循环数据元标准集合 获取数据元标准名称
                             for (StandardsDTO standardsDTO : standardsDTOS) {
                                 if (s.getStandardsId().equals(standardsDTO.getId())) {
+                                    FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                     //获取到数据元标准id关联的数据元标准menuid
                                     int menuId = standardsDTO.getMenuId();
                                     //获取menuId对应的菜单名称
                                     String menuName = standardsMenuMap.get(menuId);
                                     dto.setId(menuId);
                                     dto.setName(menuName);
+                                    //类型 0指标 1数据元
+                                    dto.setType(1);
+                                    objDTOS.add(dto);
                                 }
                             }
-                            //类型 0指标 1数据元
-                            dto.setType(1);
-                            objDTOS.add(dto);
                         }
-
                     }
                 }
                 dimensionAttributeDTO.setAssociatedDto(objDTOS);

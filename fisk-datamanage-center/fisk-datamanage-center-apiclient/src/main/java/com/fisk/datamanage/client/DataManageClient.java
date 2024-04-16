@@ -220,7 +220,7 @@ public interface DataManageClient {
      */
     @ApiOperation("获取数仓字段和指标关联表里所有关联关系 只获取字段id 和指标id")
     @GetMapping("/BusinessCategory/modelGetFactTreeList")
-    List<FacttreeListDTO> modelGetFactTreeList();
+    List<FacttreeListDTO> modelGetFactTreeList(@RequestParam("tblId")Integer tblId);
 
     /**
      * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名
