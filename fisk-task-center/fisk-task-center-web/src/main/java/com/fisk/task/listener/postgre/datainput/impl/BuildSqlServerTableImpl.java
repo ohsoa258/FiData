@@ -429,7 +429,7 @@ public class BuildSqlServerTableImpl implements IbuildTable {
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime DATETIME,fi_updatetime DATETIME";
-        sql2 += ",fidata_batch_code varchar(50)";
+        sql2 += ",fidata_batch_code varchar(50),fi_del_flag INT";
         String sql3 = "";
         if (Objects.equals("", sql3)) {
             sql1 += sql2;

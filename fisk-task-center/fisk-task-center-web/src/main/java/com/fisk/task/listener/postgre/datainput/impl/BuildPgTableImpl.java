@@ -464,7 +464,7 @@ public class BuildPgTableImpl implements IbuildTable {
         String associatedKey = "";
         String sql2 = sqlFileds.toString() + associatedKey;
         sql2 += "fi_createtime timestamp,fi_updatetime timestamp";
-        sql2 += ",fidata_batch_code varchar(50)";
+        sql2 += ",fidata_batch_code varchar(50),fi_del_flag int";
         String sql3 = sqlFileds1.toString();
         if (Objects.equals("", sql3)) {
             sql1 += sql2;

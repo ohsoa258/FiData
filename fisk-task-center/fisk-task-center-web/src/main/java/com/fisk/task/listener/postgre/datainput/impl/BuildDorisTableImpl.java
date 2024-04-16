@@ -551,13 +551,8 @@ public class BuildDorisTableImpl implements IbuildTable {
         String associatedKey = "";
         String sql2 = sqlFileds + associatedKey;
         sql2 += ("`" + tablePk + "` varchar(50),fi_createtime DATETIME,fi_updatetime DATETIME");
-        sql2 += ",fidata_batch_code varchar(50)";
-        String sql3 = "";
-        if (Objects.equals("", sql3)) {
-            sql1 += sql2;
-        } else {
-            sql1 += sql2 + sql3;
-        }
+        sql2 += ",fidata_batch_code varchar(50),fi_del_flag INT";
+        sql1 += sql2;
         sql1 += ") ";
 
         //doris分区列
@@ -566,7 +561,7 @@ public class BuildDorisTableImpl implements IbuildTable {
         //todo:如果前端没有选择分区列，则默认一个分区 如果选择了分区列则按分区列分区
         //doris建表语句中 没有指定分区列的话 默认就是一个分区
         if (partitionName.length() > 0) {
-            partition = " PARTITION BY " + partitionType.toString() + partitionName.toString() + " (" + partitionValues + ")";
+            partition = " PARTITION BY " + partitionType + partitionName + " (" + partitionValues + ")";
         }
 
         //todo：分桶列同理 如果前端选择了分桶列，则按前端选择的来 如果没有选择则按默认系统key分桶
@@ -806,13 +801,8 @@ public class BuildDorisTableImpl implements IbuildTable {
         String associatedKey = "";
         String sql2 = sqlFileds + associatedKey;
         sql2 += ("`" + tablePk + "` varchar(50),fi_createtime DATETIME,fi_updatetime DATETIME");
-        sql2 += ",fidata_batch_code varchar(50)";
-        String sql3 = "";
-        if (Objects.equals("", sql3)) {
-            sql1 += sql2;
-        } else {
-            sql1 += sql2 + sql3;
-        }
+        sql2 += ",fidata_batch_code varchar(50),fi_del_flag INT";
+        sql1 += sql2;
         sql1 += ") ";
 
 //        if (modelPublishTableDTO.synMode == 3
