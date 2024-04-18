@@ -254,12 +254,12 @@ public class UserAuthServiceImpl implements UserAuthService {
     public ResultEntity<String> qsLogin() {
         try {
             QsSSODTO qsSSODTO = new QsSSODTO();
-            qsSSODTO.setClientId("1212540386178895872");
-            qsSSODTO.setClientSecret("e50cf84e527843568215612c9275e989");
+            qsSSODTO.setClientId("e50cf84e527843568215612c9275e989");
+            qsSSODTO.setClientSecret("2c6c14311181b6aa4e6506cf45fa8522e1ac4c74d48feebe633b13bffd18ed51");
 
             String param = JSON.toJSONString(qsSSODTO);
             //强生交通获取accessToken的地址
-            String url = "http://172.26.1.13:8080/wicrenet-iams-api/authentication/accessToken";
+            String url = "http://192.168.1.253/pt-openapi/authentication/accessToken";
             log.info("*****强生交通获取accessToken的地址*****" + url);
             //获取
             String result = HttpUtils.HttpPost(url, param);
@@ -275,7 +275,7 @@ public class UserAuthServiceImpl implements UserAuthService {
             log.info("*****data:*****" + data);
             log.info("*****accessToken:*****" + accessToken);
 
-            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, accessToken);
+            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "Bearer "+accessToken);
         } catch (Exception e) {
             log.error("强生交通获取accessToken方法报错msg："+e.getMessage());
             log.error("强生交通获取accessToken方法报错stack："+e);
