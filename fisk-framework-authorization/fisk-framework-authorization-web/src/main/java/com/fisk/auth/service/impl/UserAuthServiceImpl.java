@@ -258,9 +258,9 @@ public class UserAuthServiceImpl implements UserAuthService {
 //            qsSSODTO.setClientSecret("2c6c14311181b6aa4e6506cf45fa8522e1ac4c74d48feebe633b13bffd18ed51");
 //            String param = JSON.toJSONString(qsSSODTO);
 
-            String param = "clientId=e50cf84e527843568215612c9275e989&clientSecret=2c6c14311181b6aa4e6506cf45fa8522e1ac4c74d48feebe633b13bffd18ed51";
+            String param = "";
             //强生交通获取accessToken的地址
-            String url = "http://192.168.1.253/pt-openapi/authentication/accessToken";
+            String url = "http://192.168.1.253/pt-openapi/authentication/accessToken?clientId=e50cf84e527843568215612c9275e989&clientSecret=2c6c14311181b6aa4e6506cf45fa8522e1ac4c74d48feebe633b13bffd18ed51";
             log.info("*****强生交通获取accessToken的地址*****" + url);
             //获取
             String result = HttpUtils.HttpPost(url, param);
