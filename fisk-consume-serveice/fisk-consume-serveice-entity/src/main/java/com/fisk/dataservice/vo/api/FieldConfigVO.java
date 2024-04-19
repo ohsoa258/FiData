@@ -47,4 +47,10 @@ public class FieldConfigVO
      */
     @ApiModelProperty(value = "字段描述")
     public String fieldDesc;
+
+    /**
+     * 加密
+     */
+    @ApiModelProperty(value = "加密")
+    public int encrypt;
 }

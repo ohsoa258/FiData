@@ -1068,6 +1068,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 if (fieldConfigPO != null && StringUtils.isNotEmpty(fieldConfigPO.fieldDesc)) {
                     fieldConfigVO.fieldDesc = fieldConfigPO.fieldDesc;
                 }
+                if (fieldConfigPO != null) {
+                    fieldConfigVO.encrypt = fieldConfigPO.encrypt;
+                }
             }
             fieldConfigVOS.add(fieldConfigVO);
         }
