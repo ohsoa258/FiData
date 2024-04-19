@@ -3805,7 +3805,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
 
         querySqlDto.dbConnectionId = targetDbPoolId;
         querySqlDto.positionDTO = NifiPositionHelper.buildYPositionDTO(8);
-        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcess(querySqlDto, new ArrayList<String>());
+        BusinessResult<ProcessorEntity> querySqlRes = componentsBuild.buildExecuteSqlProcessForDoris(querySqlDto, new ArrayList<String>());
         verifyProcessorResult(querySqlRes);
         return querySqlRes.data;
     }

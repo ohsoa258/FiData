@@ -537,6 +537,63 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     @Override
+    public BusinessResult<ProcessorEntity> buildExecuteSqlProcessForDoris(BuildExecuteSqlProcessorDTO data, List<String> autoEnd) {
+        //流程分支，是否自动结束
+        autoEnd.add(AutoEndBranchTypeEnum.FAILURE.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("Database Connection Pooling Service", data.dbConnectionId);
+        if (!StringUtils.isEmpty(data.preSql)) {
+            map.put("sql-pre-query", data.preSql);
+        }
+        map.put("SQL select query", data.querySql);
+        if (!StringUtils.isEmpty(data.postSql)) {
+            map.put("sql-post-query", data.postSql);
+        }
+        map.put("esql-max-rows", data.MaxRowsPerFlowFile);
+        //组件配置信息
+        MyProcessorConfigDTO config = new MyProcessorConfigDTO();
+        if (data.scheduleType != null) {
+            config.setSchedulingStrategy(data.scheduleType.getName());
+        }
+        if (StringUtils.isNotEmpty(data.scheduleExpression)) {
+            if (Objects.equals(data.scheduleType.getName(), SchedulingStrategyTypeEnum.TIMER.getName())) {
+                config.setSchedulingPeriod(data.scheduleExpression + " sec");
+            } else {
+                config.setSchedulingPeriod(data.scheduleExpression);
+            }
+        }
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(autoEnd);
+        config.setComments(data.details);
+
+        List<String> relationShips = new ArrayList<>();
+        //配置需要重试的结果 failure retry
+        relationShips.add("failure");
+        config.setRetriedRelationships(relationShips);
+        //重试最长回退期 默认10分钟
+        config.setMaxBackoffPeriod("10 mins");
+        //重试回退策略 礼让
+        config.setBackoffMechanism("YIELD_PROCESSOR");
+        //重试次数 5次
+        config.setRetryCount(5);
+
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(data.name);
+        dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
+        dto.setPosition(data.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(data.groupId, entity, dto, config);
+    }
+
+    @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
     public BusinessResult<ProcessorEntity> buildInvokeHTTPProcessor(BuildInvokeHttpProcessorDTO data, List<String> autoEnd) {
         //流程分支，是否自动结束
@@ -2519,7 +2576,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         String targetTableName = config.processorConfig.targetTableName;
         IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(config.getOdsSourceType());
         String stgTableName = dbCommand.getStgAndTableName(targetTableName).get(0);
-        String deleteSql = "TRUNCATE TABLE " + stgTableName +";";
+        String deleteSql = "TRUNCATE TABLE " + stgTableName + ";";
         SqlForPgOds.add(deleteSql);
         return JSON.parseArray(JSON.toJSONString(SqlForPgOds), String.class);
     }
