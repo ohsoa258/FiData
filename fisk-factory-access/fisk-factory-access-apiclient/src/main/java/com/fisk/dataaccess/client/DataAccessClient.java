@@ -30,6 +30,8 @@ import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
@@ -596,5 +598,19 @@ public interface DataAccessClient {
     @ApiOperation("获取数据接入字段结构")
     @PostMapping("/appRegistration/getFieldsDataStructure")
     ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto);
+
+    /**
+     * 获取元数据地图 数据湖（数据接入）
+     */
+    @ApiOperation("获取元数据地图 数据湖（数据接入）")
+    @GetMapping("/appRegistration/accessGetMetaMap")
+    List<MetaMapDTO> accessGetMetaMap();
+
+    /**
+     * 元数据地图 获取应用下的表
+     */
+    @ApiOperation("元数据地图 获取应用下的表")
+    @GetMapping("/appRegistration/accessGetMetaMapTableDetail")
+    List<MetaMapTblDTO> accessGetMetaMapTableDetail(@RequestParam("appId") Integer appId);
 
 }

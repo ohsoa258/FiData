@@ -5,6 +5,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 
 import java.util.List;
@@ -127,4 +129,21 @@ public interface IEntity {
      * @return
      */
     JSONObject getEntityV2(String guid, String appName);
+
+    /**
+     * 根据类型获取获取元数据地图 0数据湖 1数仓
+     *
+     * @param type 0数据湖 1数仓
+     * @return
+     */
+    List<MetaMapDTO> getMetaMapByType(Integer type);
+
+    /**
+     * 元数据地图根据应用id或业务过程id获取表 0数据湖 1数仓
+     *
+     * @param type 0数据湖 1数仓
+     * @param appId 应用id/业务过程id
+     * @return
+     */
+    List<MetaMapTblDTO> getMetaMapTableDetailByType(Integer type, Integer appId,Integer businessType);
 }

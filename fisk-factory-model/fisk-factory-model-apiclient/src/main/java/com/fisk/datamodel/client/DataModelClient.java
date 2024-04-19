@@ -21,6 +21,8 @@ import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
@@ -434,5 +436,22 @@ public interface DataModelClient {
     ResultEntity<List<FactDTO>> getFactTableByIds(@RequestBody List<Integer> ids);
     @PostMapping("/factAttribute/getFactAttributeByIds")
     ResultEntity<List<FactAttributeDTO>> getFactAttributeByIds(@RequestBody List<Integer> ids);
+
+    /**
+     * 获取元数据地图 数仓建模
+     */
+    @ApiOperation("获取元数据地图 数仓建模")
+    @GetMapping("/business/modelGetMetaMap")
+    List<MetaMapDTO> modelGetMetaMap();
+
+    /**
+     * 元数据地图 获取业务过程下的表
+     * @param processId 业务过程id或维度文件夹id
+     * @param processType 类型 1维度文件夹 2业务过程
+     * @return
+     */
+    @ApiOperation("元数据地图 获取业务过程下的表")
+    @GetMapping("/business/modelGetMetaMapTableDetail")
+    List<MetaMapTblDTO> modelGetMetaMapTableDetail(@RequestParam("processId") Integer processId, @RequestParam("processType") Integer processType);
 
 }

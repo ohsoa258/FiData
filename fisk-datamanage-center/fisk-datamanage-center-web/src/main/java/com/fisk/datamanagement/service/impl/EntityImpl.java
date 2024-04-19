@@ -8,16 +8,20 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
+import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
 import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
+import com.fisk.datamodel.client.DataModelClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -67,6 +71,12 @@ public class EntityImpl implements IEntity {
     @Resource
     MetadataEntityImpl metadataEntity;
 
+    @Resource
+    private DataAccessClient dataAccessClient;
+
+    @Resource
+    private DataModelClient dataModelClient;
+
     @Override
     public List<EntityTreeDTO> getEntityTreeList() {
         List<EntityTreeDTO> list;
@@ -102,6 +112,7 @@ public class EntityImpl implements IEntity {
 
     /**
      * 为业务术语获取元数据对象树形列表
+     *
      * @return
      */
     @Override
@@ -256,6 +267,43 @@ public class EntityImpl implements IEntity {
     @Override
     public JSONObject getEntityV2(String guid, String appName) {
         return metadataEntity.getMetadataEntityDetailsV2(guid, appName);
+    }
+
+    /**
+     * 根据类型获取获取元数据地图 0数据湖 1数仓
+     *
+     * @param type 0数据湖 1数仓
+     * @return
+     */
+    @Override
+    public List<MetaMapDTO> getMetaMapByType(Integer type) {
+        //0数据湖 1数仓
+        if (type == 0) {
+            return dataAccessClient.accessGetMetaMap();
+        } else if (type == 1) {
+            return dataModelClient.modelGetMetaMap();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 元数据地图根据应用id或业务过程id获取表 0数据湖 1数仓
+     *
+     * @param type 0数据湖 1数仓
+     * @param appId 应用id/业务过程id
+     * @return
+     */
+    @Override
+    public List<MetaMapTblDTO> getMetaMapTableDetailByType(Integer type, Integer appId,Integer businessType) {
+        //0数据湖 1数仓
+        if (type == 0) {
+            return dataAccessClient.accessGetMetaMapTableDetail(appId);
+        } else if (type == 1) {
+            return dataModelClient.modelGetMetaMapTableDetail(appId,businessType);
+        } else {
+            return null;
+        }
     }
 
     /**

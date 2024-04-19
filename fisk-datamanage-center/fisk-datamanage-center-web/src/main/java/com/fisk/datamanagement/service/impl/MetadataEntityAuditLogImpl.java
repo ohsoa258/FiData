@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.ObjectInfoUtils;
@@ -16,8 +17,6 @@ import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.map.MetadataEntityAuditLogMap;
 import com.fisk.datamanagement.mapper.MetadataEntityAuditLogMapper;
 import com.fisk.datamanagement.service.IMetadataEntityAuditLog;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -194,7 +193,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         //参数校验
         if (StringUtils.isEmpty(dto.getStartTime())
                 || StringUtils.isEmpty(dto.getEndTime())
-                || dto.getOperationType() == null
+                || dto.getEntityType() == null
         ) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
@@ -204,14 +203,9 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         //转换时间
         LocalDateTime startTime = getLocalDateTime(dto.getStartTime());
         LocalDateTime endTime = getLocalDateTime(dto.getEndTime());
-        /*
-        获取查询的类型：
-            ALL(0,"全部"),
-            ADD(1,"添加"),
-            EDIT(2,"编辑"),
-            DELETE(3,"删除"),
-         */
-        MetadataAuditOperationTypeEnum operationType = dto.getOperationType();
+
+        //获取类型
+        EntityTypeEnum entityType = dto.getEntityType();
 
         long betweenDays = startTime.until(endTime, ChronoUnit.DAYS);
 
@@ -239,33 +233,52 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         // 分类统计变更情况明细
         List<CategoryDetailChangesDTO> categoryDetailChanges = new ArrayList<>();
         // 目前只展示表和字段
-        for (EntityTypeEnum value : EntityTypeEnum.values()) {
-            if (value == EntityTypeEnum.RDBMS_TABLE) {
-                CategoryDetailChangesDTO tbl = new CategoryDetailChangesDTO();
-                tbl.setType(EntityTypeEnum.RDBMS_TABLE);
-                tbl.setTypeName("表");
-                tbl.setAddCount(0);
-                tbl.setUpdateCount(0);
-                tbl.setDelCount(0);
-                categoryDetailChanges.add(tbl);
-            } else if (value == EntityTypeEnum.RDBMS_COLUMN) {
-                CategoryDetailChangesDTO coolumn = new CategoryDetailChangesDTO();
-                coolumn.setType(EntityTypeEnum.RDBMS_COLUMN);
-                coolumn.setTypeName("字段");
-                coolumn.setAddCount(0);
-                coolumn.setUpdateCount(0);
-                coolumn.setDelCount(0);
-                categoryDetailChanges.add(coolumn);
+        if (entityType == EntityTypeEnum.ALL) {
+            for (EntityTypeEnum value : EntityTypeEnum.values()) {
+                if (value == entityType) {
+                    CategoryDetailChangesDTO tbl = new CategoryDetailChangesDTO();
+                    tbl.setType(EntityTypeEnum.RDBMS_TABLE);
+                    tbl.setTypeName("表");
+                    tbl.setAddCount(0);
+                    tbl.setUpdateCount(0);
+                    tbl.setDelCount(0);
+                    categoryDetailChanges.add(tbl);
+                } else if (value == EntityTypeEnum.RDBMS_COLUMN) {
+                    CategoryDetailChangesDTO coolumn = new CategoryDetailChangesDTO();
+                    coolumn.setType(EntityTypeEnum.RDBMS_COLUMN);
+                    coolumn.setTypeName("字段");
+                    coolumn.setAddCount(0);
+                    coolumn.setUpdateCount(0);
+                    coolumn.setDelCount(0);
+                    categoryDetailChanges.add(coolumn);
+                }
             }
+        } else {
+            CategoryDetailChangesDTO tbl = new CategoryDetailChangesDTO();
+            tbl.setType(entityType);
+            if (entityType == EntityTypeEnum.RDBMS_TABLE) {
+                tbl.setTypeName("表");
+            } else if (entityType == EntityTypeEnum.RDBMS_COLUMN) {
+                tbl.setTypeName("字段");
+            }
+            tbl.setAddCount(0);
+            tbl.setUpdateCount(0);
+            tbl.setDelCount(0);
+            categoryDetailChanges.add(tbl);
         }
 
+
         List<MetadataEntityAuditLogPOWithEntityType> list;
+        List<MetadataEntityAuditLogPOWithEntityType> list1;
         //获取时间区间内的所有元数据变更日志 左连接元数据表获取元数据类型
-        if (operationType.equals(MetadataAuditOperationTypeEnum.ALL)) {
+        if (entityType.equals(EntityTypeEnum.ALL)) {
             list = auditLogMapper.getMetaChangesCharts(startTime, endTime);
         } else {
-            list = auditLogMapper.getMetaChangesChartsByOpType(startTime, endTime, operationType.getValue());
+            list = auditLogMapper.getMetaChangesChartsByOpType(startTime, endTime, entityType.getValue());
         }
+
+        //该集合用来计算表和字段占比 原因：不论选全部和还是选表或字段 那个表和字段占比图不要发生变化
+        list1 = auditLogMapper.getMetaChangesCharts(startTime, endTime);
 
         for (int i = 0; i <= betweenDays; i++) {
             LineCountDTO lineCountDTO = new LineCountDTO();
@@ -286,39 +299,75 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             updateLine.add(lineCountDTO2);
         }
 
-        for (MetadataEntityAuditLogPOWithEntityType po : list) {
+        for (MetadataEntityAuditLogPOWithEntityType po : list1) {
             //统计表/字段个数
             switch (po.getTypeId()) {
                 //EntityTypeEnum
                 case 3:
                     tblCount++;
-                    if (po.getOperationType() == MetadataAuditOperationTypeEnum.ADD) {
-                        CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
-                        tblDist.setAddCount(tblDist.getAddCount() + 1);
-                    } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.DELETE) {
-                        CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
-                        tblDist.setDelCount(tblDist.getDelCount() + 1);
-                    } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.EDIT) {
-                        CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
-                        tblDist.setUpdateCount(tblDist.getUpdateCount() + 1);
-                    }
                     break;
                 case 6:
                     fieldCount++;
-                    if (po.getOperationType() == MetadataAuditOperationTypeEnum.ADD) {
-                        CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(1);
-                        tblDist.setAddCount(tblDist.getAddCount() + 1);
-                    } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.DELETE) {
-                        CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(1);
-                        tblDist.setDelCount(tblDist.getDelCount() + 1);
-                    } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.EDIT) {
-                        CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(1);
-                        tblDist.setUpdateCount(tblDist.getUpdateCount() + 1);
-                    }
                     break;
                 default:
                     break;
             }
+        }
+
+        for (MetadataEntityAuditLogPOWithEntityType po : list) {
+            if (entityType == EntityTypeEnum.ALL) {
+                //统计表/字段个数
+                switch (po.getTypeId()) {
+                    //EntityTypeEnum
+                    case 3:
+                        if (po.getOperationType() == MetadataAuditOperationTypeEnum.ADD) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
+                            tblDist.setAddCount(tblDist.getAddCount() + 1);
+                        } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.DELETE) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
+                            tblDist.setDelCount(tblDist.getDelCount() + 1);
+                        } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.EDIT) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
+                            tblDist.setUpdateCount(tblDist.getUpdateCount() + 1);
+                        }
+                        break;
+                    case 6:
+                        if (po.getOperationType() == MetadataAuditOperationTypeEnum.ADD) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(1);
+                            tblDist.setAddCount(tblDist.getAddCount() + 1);
+                        } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.DELETE) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(1);
+                            tblDist.setDelCount(tblDist.getDelCount() + 1);
+                        } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.EDIT) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(1);
+                            tblDist.setUpdateCount(tblDist.getUpdateCount() + 1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                //统计表/字段个数
+                switch (po.getTypeId()) {
+                    //EntityTypeEnum
+                    case 3:
+                    case 6:
+                        if (po.getOperationType() == MetadataAuditOperationTypeEnum.ADD) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
+                            tblDist.setAddCount(tblDist.getAddCount() + 1);
+                        } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.DELETE) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
+                            tblDist.setDelCount(tblDist.getDelCount() + 1);
+                        } else if (po.getOperationType() == MetadataAuditOperationTypeEnum.EDIT) {
+                            CategoryDetailChangesDTO tblDist = categoryDetailChanges.get(0);
+                            tblDist.setUpdateCount(tblDist.getUpdateCount() + 1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
 
             //计算新增线 删除线 更新线 以及时间区间内新增个数 删除个数 修改个数
             switch (po.getOperationType()) {
@@ -355,36 +404,16 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         }
 
         //根据查询变更类型的不同 返回值也不同 前端依据值渲染图表
-        if (operationType.equals(MetadataAuditOperationTypeEnum.ALL)) {
-            assetsChangeAnalysisDTO.setAddLine(addLine);
-            assetsChangeAnalysisDTO.setDelLine(delLine);
-            assetsChangeAnalysisDTO.setUpdateLine(updateLine);
-            assetsChangeAnalysisDTO.setAddPercent(addPercent);
-            assetsChangeAnalysisDTO.setDelPercent(delPercent);
-            assetsChangeAnalysisDTO.setUpdatePercent(updatePercent);
-            assetsChangeAnalysisDTO.setTblCount(tblCount);
-            assetsChangeAnalysisDTO.setFieldCount(fieldCount);
-            assetsChangeAnalysisDTO.setCategoryDetailChanges(categoryDetailChanges);
-        } else if (operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
-            assetsChangeAnalysisDTO.setAddLine(addLine);
-            assetsChangeAnalysisDTO.setAddPercent(addPercent);
-            assetsChangeAnalysisDTO.setTblCount(tblCount);
-            assetsChangeAnalysisDTO.setFieldCount(fieldCount);
-            assetsChangeAnalysisDTO.setCategoryDetailChanges(categoryDetailChanges);
-        } else if (operationType.equals(MetadataAuditOperationTypeEnum.DELETE)) {
-            assetsChangeAnalysisDTO.setDelLine(delLine);
-            assetsChangeAnalysisDTO.setDelPercent(delPercent);
-            assetsChangeAnalysisDTO.setTblCount(tblCount);
-            assetsChangeAnalysisDTO.setFieldCount(fieldCount);
-            assetsChangeAnalysisDTO.setCategoryDetailChanges(categoryDetailChanges);
-        } else if (operationType.equals(MetadataAuditOperationTypeEnum.EDIT)) {
-            assetsChangeAnalysisDTO.setUpdateLine(updateLine);
-            assetsChangeAnalysisDTO.setUpdatePercent(updatePercent);
-            assetsChangeAnalysisDTO.setTblCount(tblCount);
-            assetsChangeAnalysisDTO.setFieldCount(fieldCount);
-            assetsChangeAnalysisDTO.setCategoryDetailChanges(categoryDetailChanges);
-        }
 
+        assetsChangeAnalysisDTO.setAddLine(addLine);
+        assetsChangeAnalysisDTO.setDelLine(delLine);
+        assetsChangeAnalysisDTO.setUpdateLine(updateLine);
+        assetsChangeAnalysisDTO.setAddPercent(addPercent);
+        assetsChangeAnalysisDTO.setDelPercent(delPercent);
+        assetsChangeAnalysisDTO.setUpdatePercent(updatePercent);
+        assetsChangeAnalysisDTO.setTblCount(tblCount);
+        assetsChangeAnalysisDTO.setFieldCount(fieldCount);
+        assetsChangeAnalysisDTO.setCategoryDetailChanges(categoryDetailChanges);
         return assetsChangeAnalysisDTO;
     }
 
@@ -395,11 +424,10 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
      * @return
      */
     @Override
-    public PageInfo<AssetsChangeAnalysisDetailDTO> getMetaChangesChartsDetail(AssetsChangeAnalysisDetailQueryDTO dto) {
+    public Page<AssetsChangeAnalysisDetailDTO> getMetaChangesChartsDetail(AssetsChangeAnalysisDetailQueryDTO dto) {
         //参数校验
         if (StringUtils.isEmpty(dto.getStartTime())
                 || StringUtils.isEmpty(dto.getEndTime())
-                || dto.getOperationType() == null
                 || dto.getEntityType() == null
         ) {
             throw new FkException(ResultEnum.PARAMTER_ERROR);
@@ -416,20 +444,23 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             EDIT(2,"编辑"),
             DELETE(3,"删除"),
          */
-        MetadataAuditOperationTypeEnum operationType = dto.getOperationType();
         //获取元数据类型
         EntityTypeEnum entityType = dto.getEntityType();
 
         List<AuditLogWithEntityTypeAndDetailPO> auditLogs;
         //根据查询操作类型 决定查询的内容
-        if (operationType.equals(MetadataAuditOperationTypeEnum.ALL)) {
+        Long total;
+        if (entityType.equals(EntityTypeEnum.ALL)) {
             /*
              * 连表查询 tb_metadata_entity_audit_log 和 tb_metadata_entity 和 tb_metadata_entity_audit_atrribute_change
              */
-            auditLogs = auditLogMapper.getMetaChangesChartsDetail(startTime, endTime, entityType.getValue(),dto.getCurrentPage(),dto.getSize());
+            auditLogs = auditLogMapper.getMetaChangesChartsDetail(startTime, endTime, entityType.getValue(), dto.getCurrentPage(), dto.getSize());
+            total = auditLogMapper.countMetaChangesCharts(startTime, endTime, entityType.getValue());
         } else {
-            auditLogs = auditLogMapper.getMetaChangesChartsDetailByOpType(startTime, endTime, operationType.getValue(), entityType.getValue(),
-                    dto.getCurrentPage(),dto.getSize());
+            auditLogs = auditLogMapper.getMetaChangesChartsDetailByOpType(startTime, endTime, entityType.getValue(),
+                    dto.getCurrentPage(), dto.getSize());
+
+            total = auditLogMapper.countMetaChangesChartsByOpType(startTime, endTime, entityType.getValue());
         }
 
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
@@ -441,11 +472,11 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             detailDTO.setType(entityType);
 
             //切换类型名称
-            if (entityType.equals(EntityTypeEnum.RDBMS_TABLE)){
+            if (entityType.equals(EntityTypeEnum.RDBMS_TABLE)) {
                 detailDTO.setTypeName("表");
-            }else if (entityType.equals(EntityTypeEnum.RDBMS_COLUMN)){
+            } else if (entityType.equals(EntityTypeEnum.RDBMS_COLUMN)) {
                 detailDTO.setTypeName("字段");
-            }else {
+            } else {
                 detailDTO.setTypeName(entityType.getName());
             }
 
@@ -454,10 +485,10 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             if (po.operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
                 content = po.name;
             } else if (po.operationType.equals(MetadataAuditOperationTypeEnum.EDIT)) {
-                if (po.attribute.equals("dataType")){
+                if (po.attribute.equals("dataType")) {
                     content = po.beforeValue + " -> " + po.afterValue;
-                }else {
-                    content = "字符串("+po.beforeValue + ") -> " + "字符串("+po.afterValue+")";
+                } else {
+                    content = "字符串(" + po.beforeValue + ") -> " + "字符串(" + po.afterValue + ")";
                 }
 
             }
@@ -486,7 +517,12 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
             results.add(detailDTO);
         }
-        return new PageInfo<>(results);
+        Page<AssetsChangeAnalysisDetailDTO> page = new Page<>();
+        page.setCurrent(dto.getCurrentPage());
+        page.setSize(dto.getSize());
+        page.setTotal(total);
+        page.setRecords(results);
+        return page;
     }
 
     /**

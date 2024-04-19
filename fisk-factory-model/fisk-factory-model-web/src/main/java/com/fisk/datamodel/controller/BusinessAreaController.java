@@ -10,6 +10,8 @@ import com.fisk.common.service.accessAndModel.ModelAreaAndFolderDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -233,4 +235,29 @@ public class BusinessAreaController {
     public ResultEntity<List<BusinessAreaDTO>> getBusinessAreaByIds(@RequestBody List<Integer> ids) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAreaByIds(ids));
     }
+
+    /**
+     * 获取元数据地图 数仓建模
+     */
+    @ApiOperation("获取元数据地图 数仓建模")
+    @GetMapping("/modelGetMetaMap")
+    public List<MetaMapDTO> modelGetMetaMap() {
+        return service.modelGetMetaMap();
+    }
+
+    /**
+     * 元数据地图 获取业务过程下的表
+     * @param processId 业务过程id或维度文件夹id
+     * @param processType 类型 1维度文件夹 2业务过程
+     * @return
+     */
+    @ApiOperation("元数据地图 获取业务过程下的表")
+    @GetMapping("/modelGetMetaMapTableDetail")
+    public List<MetaMapTblDTO> modelGetMetaMapTableDetail(
+            @RequestParam("processId") Integer processId,
+            @RequestParam("processType") Integer processType
+    ) {
+        return service.modelGetMetaMapTableDetail(processId,processType);
+    }
+
 }

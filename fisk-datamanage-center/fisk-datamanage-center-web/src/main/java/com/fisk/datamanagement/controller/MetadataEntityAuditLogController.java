@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -9,13 +10,11 @@ import com.fisk.datamanagement.dto.assetschangeanalysis.AssetsChangeAnalysisDeta
 import com.fisk.datamanagement.dto.assetschangeanalysis.AssetsChangeAnalysisDetailQueryDTO;
 import com.fisk.datamanagement.dto.assetschangeanalysis.AssetsChangeAnalysisQueryDTO;
 import com.fisk.datamanagement.service.IMetadataEntityAuditLog;
-import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * @author JinXingWang
@@ -64,7 +63,7 @@ public class MetadataEntityAuditLogController {
      */
     @ApiOperation("获取元数据变更影响分析")
     @PostMapping("/getMetaChangesChartsDetail")
-    public ResultEntity<PageInfo<AssetsChangeAnalysisDetailDTO>> getMetaChangesChartsDetail(@RequestBody AssetsChangeAnalysisDetailQueryDTO dto) {
+    public ResultEntity<Page<AssetsChangeAnalysisDetailDTO>> getMetaChangesChartsDetail(@RequestBody AssetsChangeAnalysisDetailQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaChangesChartsDetail(dto));
     }
 

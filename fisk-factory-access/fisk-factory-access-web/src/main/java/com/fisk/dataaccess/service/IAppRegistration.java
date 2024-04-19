@@ -33,6 +33,8 @@ import com.fisk.dataaccess.vo.datafactory.SyncTableCountVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.table.CDCAppNameVO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -473,4 +475,15 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<TableColumnDTO> getFieldsDataStructure(ColumnQueryDTO dto);
+
+    /**
+     * 获取元数据地图 数据湖（数据接入）
+     */
+    List<MetaMapDTO> accessGetMetaMap();
+
+    /**
+     * 元数据地图 获取应用下的表
+     * @return
+     */
+    List<MetaMapTblDTO> accessGetMetaMapTableDetail(Integer appId);
 }

@@ -33,6 +33,8 @@ import com.fisk.dataaccess.vo.CDCAppDbNameVO;
 import com.fisk.dataaccess.vo.CDCAppNameAndTableVO;
 import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.table.CDCAppNameVO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.task.client.PublishTaskClient;
@@ -569,5 +571,25 @@ public class AppRegistrationController {
     public List<AppDataSourceDTO> getAppSources() {
         return service.getAppSources();
     }
+
+    /**
+     * 获取元数据地图 数据湖（数据接入）
+     */
+    @ApiOperation("获取元数据地图 数据湖（数据接入）")
+    @GetMapping("/accessGetMetaMap")
+    public List<MetaMapDTO> accessGetMetaMap() {
+        return service.accessGetMetaMap();
+    }
+
+    /**
+     * 元数据地图 获取应用下的表
+     */
+    @ApiOperation("元数据地图 获取应用下的表")
+    @GetMapping("/accessGetMetaMapTableDetail")
+    public List<MetaMapTblDTO> accessGetMetaMapTableDetail(@RequestParam("appId") Integer appId) {
+        return service.accessGetMetaMapTableDetail(appId);
+    }
+
+
 
 }

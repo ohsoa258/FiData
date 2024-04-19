@@ -30,10 +30,10 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
     List<MetadataEntityAuditLogPOWithEntityType> getMetaChangesCharts(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
     @Select("SELECT a.id,a.operation_type,a.create_time,b.type_id FROM tb_metadata_entity_audit_log a LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
-            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND a.operation_type=#{opType}  AND a.del_flag = 1 AND b.del_flag = 1;")
+            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType}  AND a.del_flag = 1 AND b.del_flag = 1;")
     List<MetadataEntityAuditLogPOWithEntityType> getMetaChangesChartsByOpType(@Param("startTime") LocalDateTime startTime,
                                                                               @Param("endTime") LocalDateTime endTime,
-                                                                              @Param("opType") Integer opType);
+                                                                              @Param("entityType") Integer entityType);
 
     @Select("SELECT " +
             "a.id," +
@@ -42,7 +42,7 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "a.create_time," +
             "b.type_id," +
             "b.name," +
-            "b.parent_id,"+
+            "b.parent_id," +
             "c.audit_id," +
             "c.attribute," +
             "c.before_value," +
@@ -52,11 +52,10 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
             "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
             "WHERE " +
-            "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND a.operation_type=#{opType}  AND b.type_id = #{entityType}" +
+            "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType}" +
             " AND a.del_flag = 1 AND b.del_flag = 1  LIMIT #{current},#{size};")
     List<AuditLogWithEntityTypeAndDetailPO> getMetaChangesChartsDetailByOpType(@Param("startTime") LocalDateTime startTime,
                                                                                @Param("endTime") LocalDateTime endTime,
-                                                                               @Param("opType") Integer opType,
                                                                                @Param("entityType") Integer entityType,
                                                                                @Param("current") Integer current,
                                                                                @Param("size") Integer size
@@ -69,7 +68,7 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "a.create_time," +
             "b.type_id," +
             "b.name," +
-            "b.parent_id,"+
+            "b.parent_id," +
             "c.audit_id," +
             "c.attribute," +
             "c.before_value," +
@@ -87,6 +86,24 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
                                                                        @Param("current") Integer current,
                                                                        @Param("size") Integer size
     );
+
+    @Select("SELECT COUNT(0) FROM tb_metadata_entity_audit_log a " +
+            "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
+            "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
+            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} " +
+            "AND b.type_id = #{entityType} AND a.del_flag = 1 AND b.del_flag = 1")
+    Long countMetaChangesCharts(@Param("startTime") LocalDateTime startTime,
+                                @Param("endTime") LocalDateTime endTime,
+                                @Param("entityType") Integer entityType);
+
+    @Select("SELECT COUNT(0) FROM tb_metadata_entity_audit_log a " +
+            "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
+            "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
+            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} " +
+            "AND b.type_id = #{entityType} AND a.del_flag = 1 AND b.del_flag = 1")
+    Long countMetaChangesChartsByOpType(@Param("startTime") LocalDateTime startTime,
+                                        @Param("endTime") LocalDateTime endTime,
+                                        @Param("entityType") Integer entityType);
 
 }
 

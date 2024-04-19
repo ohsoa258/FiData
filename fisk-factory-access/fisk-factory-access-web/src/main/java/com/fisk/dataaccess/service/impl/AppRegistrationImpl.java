@@ -92,6 +92,9 @@ import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.metamap.MetaMapAppDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -1011,6 +1014,69 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             fieldDtoTree.setFieldPrecision(field.fieldPrecision);
             return fieldDtoTree;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取元数据地图 数据湖（数据接入）
+     */
+    @Override
+    public List<MetaMapDTO> accessGetMetaMap() {
+        //首先获取所有外部数据源信息
+        ResultEntity<List<DataSourceDTO>> allExternalDataSource = userClient.getAllExternalDataSource();
+
+        if (allExternalDataSource.getCode() != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        List<DataSourceDTO> dataSourceDTOS = allExternalDataSource.getData();
+        List<AppDataSourcePO> list = appDataSourceImpl.list();
+
+        List<MetaMapDTO> metaMapDTOS = new ArrayList<>();
+
+        for (DataSourceDTO dto : dataSourceDTOS) {
+            MetaMapDTO metaMapDTO = new MetaMapDTO();
+            metaMapDTO.setDbOrAreaId(dto.getId());
+            metaMapDTO.setDbOrAreaName(dto.getName());
+            List<MetaMapAppDTO> appOrPorcessList = new ArrayList<>();
+            for (AppDataSourcePO po : list) {
+                if (Objects.equals(dto.getId(), po.getSystemDataSourceId())) {
+
+                    AppRegistrationPO one = this.getOne(new LambdaQueryWrapper<AppRegistrationPO>().eq(AppRegistrationPO::getId, po.getAppId()));
+
+                    MetaMapAppDTO metaMapAppDTO = new MetaMapAppDTO();
+                    metaMapAppDTO.setAppOrProcessId(Math.toIntExact(one.getId()));
+                    metaMapAppDTO.setAppOrProcessName(one.getAppName());
+                    metaMapAppDTO.setType(0);
+                    appOrPorcessList.add(metaMapAppDTO);
+
+                }
+
+            }
+            metaMapDTO.setAppOrPorcessList(appOrPorcessList);
+
+            //没有被数据接入的应用引用的系统数据源不展示
+            if (!CollectionUtils.isEmpty(appOrPorcessList)){
+                metaMapDTOS.add(metaMapDTO);
+            }
+        }
+        return metaMapDTOS;
+    }
+
+    /**
+     * 元数据地图 获取应用下的表
+     * @return
+     */
+    @Override
+    public List<MetaMapTblDTO> accessGetMetaMapTableDetail(Integer appId) {
+        List<MetaMapTblDTO> tblList = new ArrayList<>();
+        List<TableAccessDTO> tbls = tableAccessImpl.getTblByAppId(Math.toIntExact(appId));
+        for (TableAccessDTO tbl : tbls) {
+            MetaMapTblDTO metaMapTblDTO = new MetaMapTblDTO();
+            metaMapTblDTO.setTblId((int) tbl.getId());
+            metaMapTblDTO.setTblName(tbl.getTableName());
+            tblList.add(metaMapTblDTO);
+        }
+        return tblList;
     }
 
 

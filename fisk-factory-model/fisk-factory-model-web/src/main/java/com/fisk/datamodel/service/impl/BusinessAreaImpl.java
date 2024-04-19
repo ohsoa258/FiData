@@ -49,12 +49,17 @@ import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.metamap.MetaMapAppDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
+import com.fisk.datamodel.dto.businessprocess.BusinessProcessListDTO;
 import com.fisk.datamodel.dto.codepreview.CodePreviewDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
+import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDataDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -1439,19 +1444,20 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
     /**
      * 为数仓etl树获取数仓建模所有业务域和业务域下的所有表
+     *
      * @return
      */
     @Override
     public List<AccessAndModelAppDTO> getAllAreaAndTablesForEtlTree() {
         //查询所有维度表字段 id 英文名 类型
         LambdaQueryWrapper<DimensionAttributePO> dimW = new LambdaQueryWrapper<>();
-        dimW.select(DimensionAttributePO::getId,DimensionAttributePO::getDimensionFieldEnName,DimensionAttributePO::getDimensionFieldType,DimensionAttributePO::getDimensionId);
+        dimW.select(DimensionAttributePO::getId, DimensionAttributePO::getDimensionFieldEnName, DimensionAttributePO::getDimensionFieldType, DimensionAttributePO::getDimensionId);
         List<DimensionAttributePO> dimFields = dimensionAttribute.list(dimW);
         List<DimensionAttributeDTO> dimFieldList = DimensionAttributeMap.INSTANCES.poListToDtoList(dimFields);
 
         //查询所有事实表字段 id 英文名 类型
         LambdaQueryWrapper<FactAttributePO> factW = new LambdaQueryWrapper<>();
-        factW.select(FactAttributePO::getId,FactAttributePO::getFactFieldEnName,FactAttributePO::getFactFieldType,FactAttributePO::getFactId);
+        factW.select(FactAttributePO::getId, FactAttributePO::getFactFieldEnName, FactAttributePO::getFactFieldType, FactAttributePO::getFactId);
         List<FactAttributePO> factFields = factAttributeImpl.list(factW);
         List<FactAttributeDataDTO> factFieldList = FactAttributeMap.INSTANCES.poListToDtoList(factFields);
 
@@ -1673,7 +1679,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             LambdaQueryWrapper<DimensionPO> wrapper1 = new LambdaQueryWrapper<>();
             wrapper1.select(DimensionPO::getDimensionTabName)
                     .eq(DimensionPO::getBusinessId, areaId)
-                    .eq(DimensionPO::getIsPublish,1);
+                    .eq(DimensionPO::getIsPublish, 1);
             List<DimensionPO> dimList = dimensionImpl.list(wrapper1);
 
             //维度表个数
@@ -1801,7 +1807,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         List<TableNameDTO> tableNames = null;
         if ("1".equalsIgnoreCase(dto.dataSourceId)) {
             tableNames = buildTableNames(TableBusinessTypeEnum.DW_FACT);
-        }else if ("4".equalsIgnoreCase(dto.dataSourceId)){
+        } else if ("4".equalsIgnoreCase(dto.dataSourceId)) {
             tableNames = buildTableNames(TableBusinessTypeEnum.DORIS_FACT);
         }
         return tableNames;
@@ -1810,7 +1816,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     @Override
     public List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO dto) {
         List<TableColumnDTO> tableColumnDTOS = new ArrayList<>();
-        switch (dto.tableBusinessTypeEnum){
+        switch (dto.tableBusinessTypeEnum) {
             case DW_DIMENSION:
                 tableColumnDTOS = dimensionAttribute.query().eq("dimension_id", dto.tableId).list().stream().filter(Objects::nonNull).map(field -> {
                     TableColumnDTO tableColumnDTO = new TableColumnDTO();
@@ -1858,7 +1864,80 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return BusinessAreaMap.INSTANCES.poListToDtoList(baseMapper.selectBatchIds(ids));
     }
 
-    private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum){
+    /**
+     * 获取元数据地图 数仓建模
+     */
+    @Override
+    public List<MetaMapDTO> modelGetMetaMap() {
+        List<MetaMapDTO> metaMapDTOS = new ArrayList<>();
+
+        List<BusinessAreaPO> list = this.list();
+        for (BusinessAreaPO businessAreaPO : list) {
+            MetaMapDTO metaMapDTO = new MetaMapDTO();
+            metaMapDTO.setDbOrAreaId((int) businessAreaPO.getId());
+            metaMapDTO.setDbOrAreaName(businessAreaPO.getBusinessName());
+
+            List<MetaMapAppDTO> porcessList = new ArrayList<>();
+
+            //获取当前业务域下的维度文件夹
+            List<DimensionFolderDataDTO> dimensionFolderList = dimensionFolderImpl.getDimensionFolderList(Math.toIntExact(businessAreaPO.getId()));
+            for (DimensionFolderDataDTO dimensionFolderDataDTO : dimensionFolderList) {
+                MetaMapAppDTO metaMapAppDTO = new MetaMapAppDTO();
+                metaMapAppDTO.setAppOrProcessId((int) dimensionFolderDataDTO.getId());
+                metaMapAppDTO.setAppOrProcessName(dimensionFolderDataDTO.getDimensionFolderCnName());
+                metaMapAppDTO.setType(1);
+                porcessList.add(metaMapAppDTO);
+            }
+
+            //获取当前业务域下的业务过程
+            List<BusinessProcessListDTO> businessProcessList = businessProcessImpl.getBusinessProcessList((int) businessAreaPO.getId());
+            for (BusinessProcessListDTO businessProcessListDTO : businessProcessList) {
+                MetaMapAppDTO metaMapAppDTO = new MetaMapAppDTO();
+                metaMapAppDTO.setAppOrProcessId((int) businessProcessListDTO.getId());
+                metaMapAppDTO.setAppOrProcessName(businessProcessListDTO.getBusinessProcessCnName());
+                metaMapAppDTO.setType(2);
+                porcessList.add(metaMapAppDTO);
+            }
+            metaMapDTO.setAppOrPorcessList(porcessList);
+            metaMapDTOS.add(metaMapDTO);
+        }
+        return metaMapDTOS;
+    }
+
+    /**
+     * 元数据地图 获取业务过程下的表
+     *
+     * @param processId   业务过程id或维度文件夹id
+     * @param processType 类型 1维度文件夹 2业务过程
+     * @return
+     */
+    @Override
+    public List<MetaMapTblDTO> modelGetMetaMapTableDetail(Integer processId, Integer processType) {
+        List<MetaMapTblDTO> metaMapTblDTOS = new ArrayList<>();
+        if (processType == 1) {
+            List<DimensionPO> list = dimensionImpl.list(new LambdaQueryWrapper<DimensionPO>().eq(DimensionPO::getDimensionFolderId, processId));
+            for (DimensionPO dimensionPO : list) {
+                MetaMapTblDTO metaMapTblDTO = new MetaMapTblDTO();
+                metaMapTblDTO.setTblId((int) dimensionPO.getId());
+                metaMapTblDTO.setTblName(dimensionPO.getDimensionTabName());
+                metaMapTblDTOS.add(metaMapTblDTO);
+            }
+            return metaMapTblDTOS;
+        } else if (processType == 2) {
+            List<FactPO> list = factImpl.list(new LambdaQueryWrapper<FactPO>().eq(FactPO::getBusinessProcessId, processId));
+            for (FactPO FactPO : list) {
+                MetaMapTblDTO metaMapTblDTO = new MetaMapTblDTO();
+                metaMapTblDTO.setTblId((int) FactPO.getId());
+                metaMapTblDTO.setTblName(FactPO.getFactTabName());
+                metaMapTblDTOS.add(metaMapTblDTO);
+            }
+            return metaMapTblDTOS;
+        } else {
+            return null;
+        }
+    }
+
+    private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum) {
 
         // 建模暂时没有schema的设置
         List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();

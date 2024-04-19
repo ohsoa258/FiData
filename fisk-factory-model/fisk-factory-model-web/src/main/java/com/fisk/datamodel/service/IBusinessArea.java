@@ -14,6 +14,8 @@ import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
+import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -255,4 +257,17 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
     List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO dto);
 
     List<BusinessAreaDTO> getBusinessAreaByIds(List<Integer> ids);
+
+    /**
+     * 获取元数据地图 数仓建模
+     */
+    List<MetaMapDTO> modelGetMetaMap();
+
+    /**
+     * 元数据地图 获取业务过程下的表
+     * @param processId 业务过程id或维度文件夹id
+     * @param processType 类型 1维度文件夹 2业务过程
+     * @return
+     */
+    List<MetaMapTblDTO> modelGetMetaMapTableDetail(Integer processId,Integer processType);
 }
