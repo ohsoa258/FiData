@@ -15,6 +15,8 @@ public class PipelLineDetailDTO {
     public Integer lookday;
     @ApiModelProperty("管道名称")
     public String workflowName;
+    @ApiModelProperty("状态")
+    public String status;
     @ApiModelProperty(value = "page")
     public Page<PipelLineDetailVO> page;
 }
