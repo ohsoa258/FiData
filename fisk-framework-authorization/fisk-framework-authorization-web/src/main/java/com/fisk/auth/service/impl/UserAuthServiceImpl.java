@@ -270,11 +270,11 @@ public class UserAuthServiceImpl implements UserAuthService {
             String code = jsonObject.getString("code");
             String message = jsonObject.getString("message");
             JSONObject data = jsonObject.getObject("data", JSONObject.class);
-            String accessToken = data.getString("accessToken");
+            String accessToken = data.getString("access_token");
             log.info("*****code:*****" + code);
             log.info("*****message:*****" + message);
             log.info("*****data:*****" + data);
-            log.info("*****accessToken:*****" + accessToken);
+            log.info("*****access_token:*****" + accessToken);
 
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "Bearer "+accessToken);
         } catch (Exception e) {
