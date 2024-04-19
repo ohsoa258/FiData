@@ -48,4 +48,10 @@ public class FieldConfigDTO
      */
     @ApiModelProperty(value = "字段排序")
     public int fieldSort;
+
+    /**
+     * 加密
+     */
+    @ApiModelProperty(value = "加密")
+    public int encrypt;
 }

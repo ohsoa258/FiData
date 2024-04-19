@@ -335,6 +335,15 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
         statisticsVO.runningSum = runningSum - failureSum - successSum;
         statisticsVO.failureSum = failureSum;
         statisticsVO.successSum = successSum;
+        if (statisticsVO.runningSum < 0){
+            statisticsVO.runningSum = 0;
+        }
+        if (statisticsVO.failureSum < 0){
+            statisticsVO.failureSum = 0;
+        }
+        if (statisticsVO.successSum < 0){
+            statisticsVO.successSum = 0;
+        }
         return statisticsVO;
     }
 
