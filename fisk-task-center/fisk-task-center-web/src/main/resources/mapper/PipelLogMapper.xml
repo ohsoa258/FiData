@@ -223,7 +223,7 @@
              WHERE t1.del_flag = 1
             <choose>
                 <when test="dto.lookday != null and dto.lookday != 0">
-                    and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{dto.lookday} - 1 ) DAY )
+                    and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{dto.lookday} - 1 ) DAY  )
                 </when>
                 <when test="dto.lookday == null or dto.lookday == 0">
                     and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL 29 DAY )
@@ -232,10 +232,21 @@
              ) AS t1
                  LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
                  LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.type = 2
+                WHERE 1 = 1
                 <if test="dto.workflowName != null and dto.workflowName != '' ">
-                    WHERE
-                        t1.workflow_name = #{dto.workflowName}
+                    and t1.workflow_name = #{dto.workflowName}
                 </if>
+                <choose>
+                    <when test="dto.status == '运行'">
+                        and t3.msg is null
+                    </when>
+                    <when test="dto.status == '成功'">
+                        and t3.msg like '%运行成功%'
+                    </when>
+                    <when test="dto.status == '失败'">
+                        and t3.msg like '%运行失败%'
+                    </when>
+                </choose>
     </select>
     <select id="getDetailLog" resultType="com.fisk.task.vo.statistics.PipelLineDetailVO">
         SELECT
