@@ -1145,6 +1145,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 //判断表名是否包含ods_,如果包含就将ods_替换为stg_,因为我们操作的是临时表
                 if (tblName.contains("ods_")) {
                     tblName = tblName.replace("ods_", "stg_");
+                }else if (!tblName.contains("ods_")
+                        && !tblName.contains("stg_")
+                        && StringUtils.isNotEmpty(dto.getTablePrefix())) {
+                    //判断表名，如果不包含ods_和stg_,并且参数中tablePrefix不为空则表名拼接此前缀部分。同步中执行校验的一定是临时表。出现表名不带ods_前缀是因为在数接应用配置的时候勾选了使用简称作为架构
+                    tblName = dto.tablePrefix + tblName;
                 }
                 if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
                     tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
