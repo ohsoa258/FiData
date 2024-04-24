@@ -17,11 +17,11 @@ import com.fisk.datamanagement.dto.businessclassification.BusinessMetaDataTreeDT
 import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
 import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.classification.*;
-import com.fisk.datamanagement.entity.BusinessCategoryAssignmentPO;
-import com.fisk.datamanagement.entity.BusinessCategoryPO;
-import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
+import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
+import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
+import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.BusinessCategoryAssignmentService;
 import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamodel.client.DataModelClient;
@@ -50,7 +50,13 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
     @Resource
     private DataModelClient dataModelClient;
     @Resource
-    private BusinessTargetinfoMapper businessTargetinfoMapper;
+    BusinessTargetinfoMapper businessTargetinfoMapper;
+
+    @Resource
+    BusinessExtendedfieldsMapper businessExtendedfieldsMapper;
+
+    @Resource
+    FactTreeListMapper factTreeListMapper;
 
     @Resource
     UserHelper userHelper;
@@ -135,15 +141,25 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         }
 
         List<Long> idList = new ArrayList<>();
+        List<BusinessCategoryPO> businessCategoryPOS = businessCategoryMapper.selectList(new QueryWrapper<>());
+        List<BusinessCategoryPO> allCategory = findChildren(businessCategoryPOS, (int) po.getId());
+        allCategory.add(po);
+        idList = allCategory.stream().map(BusinessCategoryPO::getId).collect(Collectors.toList());
 
-        // 查询子集
-        qw = new QueryWrapper<>();
-        qw.eq("pid", po.getId());
-        List<BusinessCategoryPO> children = businessCategoryMapper.selectList(qw);
-        if (!CollectionUtils.isEmpty(children)) {
-            idList = children.stream().map(BusinessCategoryPO::getId).collect(Collectors.toList());
+        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(BusinessTargetinfoPO::getPid, idList);
+        List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(queryWrapper);
+        if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+            List<Long> ids = businessTargetinfoPOList.stream().map(BusinessTargetinfoPO::getId).collect(Collectors.toList());
+            businessTargetinfoMapper.deleteBatchIds(ids);
+            LambdaQueryWrapper<BusinessExtendedfieldsPO> deleteWrapper = new LambdaQueryWrapper<>();
+            deleteWrapper.in(BusinessExtendedfieldsPO::getIndexid,ids);
+            businessExtendedfieldsMapper.delete(deleteWrapper);
+
+            LambdaQueryWrapper<FactTreePOs> factDeleteWrapper = new LambdaQueryWrapper<>();
+            factDeleteWrapper.in(FactTreePOs::getPid,ids);
+            factTreeListMapper.delete(factDeleteWrapper);
         }
-        idList.add(po.getId());
         if (businessCategoryMapper.deleteBatchIds(idList) > 0) {
             return ResultEnum.SUCCESS;
         } else {
@@ -151,7 +167,16 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         }
     }
 
-
+    private List<BusinessCategoryPO> findChildren(List<BusinessCategoryPO> trees, Integer id) {
+        List<BusinessCategoryPO> children = new ArrayList<>();
+        for (BusinessCategoryPO tree : trees) {
+            if (id == tree.getPid()) {
+                children.add(tree);
+                children.addAll(findChildren(trees, (int)tree.getId()));
+            }
+        }
+        return children;
+    }
     /**
      * 向数据库中添加指标数据
      *

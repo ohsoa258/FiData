@@ -654,6 +654,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
         boolean isUpdate = false;
         // 第一步：编辑保存api信息部分信息
+        model.setApiName(dto.getApiName());
         model.setApiDesc(dto.getApiDesc());
         model.setExpirationType(dto.getExpirationType());
         model.setExpirationTime(dto.getExpirationTime());

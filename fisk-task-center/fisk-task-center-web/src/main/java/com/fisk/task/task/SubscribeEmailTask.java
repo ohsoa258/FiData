@@ -51,11 +51,23 @@ public class SubscribeEmailTask {
             //活动名称
             content.append("<td align=\"center\">").append(detailVO.workflowName).append("</td>");
             //执行开始时间
-            content.append("<td align=\"center\">").append(format.format(detailVO.startDateTime)).append("</td>");
+            if (detailVO.startDateTime != null){
+                content.append("<td align=\"center\">").append(format.format(detailVO.startDateTime)).append("</td>");
+            }else {
+                content.append("<td align=\"center\">").append("暂无").append("</td>");
+            }
             //执行结束时间
-            content.append("<td align=\"center\">").append(format.format(detailVO.endDateTime)).append("</td>");
+            if (detailVO.endDateTime != null){
+                content.append("<td align=\"center\">").append(format.format(detailVO.endDateTime)).append("</td>");
+            }else {
+                content.append("<td align=\"center\">").append("暂无").append("</td>");
+            }
             //执行持续时间
-            content.append("<td align=\"center\">").append(format(Integer.parseInt(detailVO.runningTime))).append("</td>");
+            if (detailVO.runningTime != null){
+                content.append("<td align=\"center\">").append(detailVO.runningTime).append("</td>");
+            }else {
+                content.append("<td align=\"center\">").append("暂无").append("</td>");
+            }
             //执行zhuangt
             content.append("<td align=\"center\">").append(detailVO.runningStatus).append("</td>");
             //执行结果
