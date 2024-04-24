@@ -113,6 +113,7 @@ import com.sap.conn.jco.JCoDestination;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -2958,6 +2959,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public AccessMainPageVO countTotal() {
         try {
+            if (redisUtil.hasKey(accessCountTotalKeyS1)) {
+                return (AccessMainPageVO) redisUtil.get(accessCountTotalKeyS1);
+            }
             AccessMainPageVO vo = new AccessMainPageVO();
             LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
             wrapper.isNull(TableAccessPO::getApiId);
@@ -3008,6 +3012,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             log.error("countTotal(),数据接入-首页展示查询失败!");
             throw new FkException(ResultEnum.ACCESS_MAINPAGE_SELECT_FAILURE, e);
         }
+    }
+
+    private static final String accessCountTotalKeyS1 = "accessCountTotalKeyS1";
+
+    @Scheduled(cron = "0 0/5 * * * ? ") //每五分钟
+    public void refreshCountTotalRedis() {
+        log.debug("*****数据接入 首页展示缓存刷新定时任务开始执行*****" + LocalDateTime.now());
+        AccessMainPageVO accessMainPageVO = countTotal();
+        if (redisUtil.hasKey(accessCountTotalKeyS1)) {
+            redisUtil.del(accessCountTotalKeyS1);
+        }
+        redisUtil.set(accessCountTotalKeyS1, accessMainPageVO, 300);
+        log.debug("*****数据接入 首页展示缓存刷新定时任务执行完毕*****" + LocalDateTime.now());
     }
 
     /**

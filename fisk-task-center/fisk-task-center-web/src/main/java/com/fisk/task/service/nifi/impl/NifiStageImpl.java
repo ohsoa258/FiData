@@ -341,7 +341,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
 //                                taskLogWrapper.eq(PipelTaskLogPO::getTaskTraceId, nifiStageMessageDTO.pipelTaskTraceId)
 //                                        .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue());
 //                                PipelTaskLogPO pipelTaskLogPO = iPipelTaskLog.getOne(taskLogWrapper);
-                                String json = (String)redisUtil.get(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId);
+                                String json = (String) redisUtil.get(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId);
                                 PipelTaskLogPO pipelTaskLogPO = JSON.parseObject(json, PipelTaskLogPO.class);
                                 if (pipelTaskLogPO != null) {
                                     pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
@@ -349,13 +349,13 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                     LocalDateTime localDateTime = new Date().toInstant().atZone(zoneId).toLocalDateTime();
                                     pipelTaskLogPO.setCreateTime(localDateTime);
                                     iPipelTaskLog.updateById(pipelTaskLogPO);
-                                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId,JSON.toJSONString(pipelTaskLogPO),Long.parseLong(maxTime));
-                                }else {
+                                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId, JSON.toJSONString(pipelTaskLogPO), Long.parseLong(maxTime));
+                                } else {
                                     LambdaQueryWrapper<PipelTaskLogPO> taskLogWrapper = new LambdaQueryWrapper<>();
                                     taskLogWrapper.eq(PipelTaskLogPO::getTaskTraceId, nifiStageMessageDTO.pipelTaskTraceId)
-                                    .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue());
+                                            .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue());
                                     pipelTaskLogPO = iPipelTaskLog.getOne(taskLogWrapper);
-                                    if (pipelTaskLogPO == null){
+                                    if (pipelTaskLogPO == null) {
                                         pipelTaskLogPO = new PipelTaskLogPO();
                                         pipelTaskLogPO.setTaskId(taskHierarchy.getId().toString());
                                         pipelTaskLogPO.setJobTraceId(nifiStageMessageDTO.pipelJobTraceId);
@@ -365,21 +365,21 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                                         pipelTaskLogPO.setTaskTraceId(nifiStageMessageDTO.pipelTaskTraceId);
                                         pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
                                         iPipelTaskLog.save(pipelTaskLogPO);
-                                    }else {
+                                    } else {
                                         iPipelTaskLog.updateById(pipelTaskLogPO);
                                     }
-                                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId,JSON.toJSONString(pipelTaskLogPO),Long.parseLong(maxTime));
+                                    redisUtil.set(RedisKeyEnum.PIPEL_END_TASK_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelTaskTraceId, JSON.toJSONString(pipelTaskLogPO), Long.parseLong(maxTime));
                                 }
-                                String pipelJobLogJson = (String)redisUtil.get(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelJobTraceId);
+                                String pipelJobLogJson = (String) redisUtil.get(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelJobTraceId);
                                 PipelJobLogPO pipelJobLogPO = JSON.parseObject(pipelJobLogJson, PipelJobLogPO.class);
-                                if (pipelJobLogPO != null){
+                                if (pipelJobLogPO != null) {
                                     String failedTime = simpleDateFormat.format(new Date());
                                     pipelJobLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + failedTime);
                                     ZoneId zoneId = ZoneId.systemDefault();
                                     LocalDateTime localDateTime = new Date().toInstant().atZone(zoneId).toLocalDateTime();
                                     pipelJobLogPO.setCreateTime(localDateTime);
                                     iPipelJobLog.updateById(pipelJobLogPO);
-                                    redisUtil.set(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelJobTraceId,JSON.toJSONString(pipelJobLogPO),Long.parseLong(maxTime));
+                                    redisUtil.set(RedisKeyEnum.PIPEL_END_JOB_TRACE_ID.getName() + ":" + nifiStageMessageDTO.pipelJobTraceId, JSON.toJSONString(pipelJobLogPO), Long.parseLong(maxTime));
 
                                 }
 
@@ -558,30 +558,42 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     @Override
     public Long accessDataTotalCount() {
         LambdaQueryWrapper<PipelineTableLogPO> wrapper = new LambdaQueryWrapper<>();
-        ArrayList<Integer> types = new ArrayList<>();
-        //3 物理表
+        List<Integer> types = new ArrayList<>();
+//        3 物理表
         types.add(3);
-        //11 RESTFULAPI
+//        11 RESTFULAPI
         types.add(11);
         //开始时间
         Date start = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 00:00:00");
         //结束时间
         Date end = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 23:59:59");
-        wrapper.in(PipelineTableLogPO::getTableType, types)
+        wrapper.select(PipelineTableLogPO::getCounts)
+                .in(PipelineTableLogPO::getTableType, types)
+//                .eq(PipelineTableLogPO::getTableType, 3)
+//                .eq(PipelineTableLogPO::getTableType, 11)
                 .between(PipelineTableLogPO::getCreateTime, start, end);
         List<PipelineTableLogPO> list = iPipelineTableLog.list(wrapper);
         long count = 0;
         for (PipelineTableLogPO po : list) {
-            count += po.getCounts();
+            if (po != null) {
+                if (po.getCounts() != null){
+                    count += po.getCounts();
+                }
+            }
         }
 
         //查询nifi同步的数据量
         LambdaQueryWrapper<TBETLlogPO> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.between(TBETLlogPO::getCreatetime, start, end);
+        wrapper1.select(TBETLlogPO::getDatarows)
+                .between(TBETLlogPO::getCreatetime, start, end);
         List<TBETLlogPO> list1 = etlLog.list(wrapper1);
         long count1 = 0;
         for (TBETLlogPO tbetLlogPO : list1) {
-            count1 += tbetLlogPO.getDatarows();
+            if (tbetLlogPO != null) {
+                if (tbetLlogPO.getDatarows() != null) {
+                    count1 += tbetLlogPO.getDatarows();
+                }
+            }
         }
 
         return count + count1;
@@ -605,37 +617,47 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         Date start = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 00:00:00");
         //结束时间
         Date end = LocalDateUtil.strToDateLong(LocalDateUtil.dateToStr(new Date(), Locale.CHINA) + " 23:59:59");
-        wrapper.in(PipelineTableLogPO::getTableType, types)
+        wrapper.select(PipelineTableLogPO::getId)
+                .in(PipelineTableLogPO::getTableType, types)
                 //3成功
                 .eq(PipelineTableLogPO::getState, 3)
                 .between(PipelineTableLogPO::getCreateTime, start, end);
-        List<PipelineTableLogPO> successList = iPipelineTableLog.list(wrapper);
+        int sCount = iPipelineTableLog.count(wrapper);
+//        List<PipelineTableLogPO> successList = iPipelineTableLog.list(wrapper);
 
         //查询失败的
         LambdaQueryWrapper<PipelineTableLogPO> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.in(PipelineTableLogPO::getTableType, types)
+        wrapper1.select(PipelineTableLogPO::getId)
+                .in(PipelineTableLogPO::getTableType, types)
                 //4失败
                 .eq(PipelineTableLogPO::getState, 4)
                 .between(PipelineTableLogPO::getCreateTime, start, end);
-        List<PipelineTableLogPO> failureList = iPipelineTableLog.list(wrapper1);
+        int fCount = iPipelineTableLog.count(wrapper1);
+//        List<PipelineTableLogPO> failureList = iPipelineTableLog.list(wrapper1);
 
         //查询nifi同步的数据 当天的成功次数和失败次数
         LambdaQueryWrapper<TBETLlogPO> wrapper2 = new LambdaQueryWrapper<>();
         //1成功的
-        wrapper2.eq(TBETLlogPO::getStatus, 1)
+        wrapper2.select(TBETLlogPO::getId)
+                .eq(TBETLlogPO::getStatus, 1)
                 .between(TBETLlogPO::getCreatetime, start, end)
                 .between(TBETLlogPO::getStartdate, start, end);
-        int successCount = etlLog.list(wrapper2).size();
+        int successCount = etlLog.count(wrapper2);
+//        int successCount = etlLog.list(wrapper2).size();
 
         LambdaQueryWrapper<TBETLlogPO> wrapper3 = new LambdaQueryWrapper<>();
         //2失败的
-        wrapper3.eq(TBETLlogPO::getStatus, 2)
+        wrapper3.select(TBETLlogPO::getId)
+                .eq(TBETLlogPO::getStatus, 2)
                 .between(TBETLlogPO::getCreatetime, start, end);
-        int failCount = etlLog.list(wrapper3).size();
+        int failCount = etlLog.count(wrapper3);
+//        int failCount = etlLog.list(wrapper3).size();
 
         AccessDataSuccessAndFailCountDTO dto = new AccessDataSuccessAndFailCountDTO();
-        dto.setSuccessCount(successList.size() + successCount);
-        dto.setFailCount(failureList.size() + failCount);
+        dto.setSuccessCount(sCount + successCount);
+//        dto.setSuccessCount(successList.size() + successCount);
+        dto.setFailCount(fCount + failCount);
+//        dto.setFailCount(failureList.size() + failCount);
         return dto;
     }
 

@@ -24,7 +24,7 @@ public class TBETLlogPO {
     public LocalDateTime startdate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime enddate;
-    public int datarows;
+    public Integer datarows;
     public int status;
     public String code;
     public String errordesc;
