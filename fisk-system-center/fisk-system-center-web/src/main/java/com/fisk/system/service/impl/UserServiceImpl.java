@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.FilterSqlConstants;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -50,7 +51,7 @@ import java.util.List;
  * @author Lock
  */
 @Service
-public class UserServiceImpl implements IUserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements IUserService {
 
     @Resource
     private BCryptPasswordEncoder passwordEncoder;
@@ -348,6 +349,31 @@ public class UserServiceImpl implements IUserService {
         return UserMap.INSTANCES.poToDto(po);
     }
 
+    /**
+     * 查询用户 系统内部使用
+     *
+     * @param userAccount
+     * @return 查询结果
+     */
+    @Override
+    public UserDTO queryUserNoPwd(String userAccount) {
+        // 1.根据用户名查询用户
+        QueryWrapper<UserPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getUserAccount, userAccount);
+        UserPO po = mapper.selectOne(queryWrapper);
+        // 2.判断是否存在
+        if (po == null) {
+            // 用户名错误
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+        if (!po.valid) {
+            throw new FkException(ResultEnum.LOGIN_ACCOUNT_DISABLED);
+        }
+        // 4.转换DTO
+        return UserMap.INSTANCES.poToDto(po);
+    }
+
     @Override
     public UserInfoCurrentDTO getCurrentUserInfo() {
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -421,6 +447,12 @@ public class UserServiceImpl implements IUserService {
     public ResultEntity<List<UserDTO>> getAllUserList() {
         List<UserDTO> userList = mapper.getUserListByIds(null);
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userList);
+    }
+
+    public ResultEntity<List<UserDTO>> getAllUserListWithPwd() {
+        List<UserPO> list = this.list();
+        List<UserDTO> userDTOS = UserMap.INSTANCES.poToDtos(list);
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, userDTOS);
     }
 
     @Override

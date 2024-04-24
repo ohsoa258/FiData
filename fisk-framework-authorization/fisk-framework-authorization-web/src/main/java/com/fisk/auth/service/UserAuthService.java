@@ -47,5 +47,5 @@ public interface UserAuthService {
      *
      * @return accessToken
      */
-    ResultEntity<String> qsLogin();
+    ResultEntity<String> qsLogin(String token);
 }

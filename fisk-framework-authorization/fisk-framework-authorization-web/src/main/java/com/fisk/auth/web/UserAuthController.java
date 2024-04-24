@@ -1,5 +1,6 @@
 package com.fisk.auth.web;
 
+import com.fisk.auth.config.SwaggerConfig;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.dto.ssologin.TicketInfoDTO;
 import com.fisk.auth.service.UserAuthService;
@@ -13,8 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-
-import com.fisk.auth.config.SwaggerConfig;
 
 /**
  * @author Lock
@@ -85,8 +84,8 @@ public class UserAuthController {
      */
     @ApiOperation(value = "强生交通--单点登录")
     @PostMapping("/qsLogin")
-    public ResultEntity<String> qsLogin() {
-        return userAuthService.qsLogin();
+    public ResultEntity<String> qsLogin(@RequestParam("token") String token) {
+        return userAuthService.qsLogin(token);
     }
 
 }

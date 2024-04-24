@@ -116,6 +116,7 @@ public enum ResultEnum {
     SSO_ASSIGNMENT_FAILURE(3009, "SSO单点登录为临时用户分配角色失败..."),
     SSO_GET_TEMPORARY_USER_FAILURE(3010, "SSO单点登录获取刚插入的临时用户失败..."),
     SSO_GET_ROLE_ID_FAILURE(3010, "SSO单点登录获取角色id失败..."),
+    SSO_LOGIN_FAILURE(3011, "单点登录失败"),
 
 
     /**

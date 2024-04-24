@@ -1,6 +1,7 @@
 package com.fisk.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -8,13 +9,15 @@ import com.fisk.system.dto.ChangePasswordDTO;
 import com.fisk.system.dto.QueryDTO;
 import com.fisk.system.dto.UserInfoCurrentDTO;
 import com.fisk.system.dto.userinfo.*;
+import com.fisk.system.entity.DataSourcePO;
+import com.fisk.system.entity.UserPO;
 
 import java.util.List;
 
 /**
  * @author Lock
  */
-public interface IUserService {
+public interface IUserService  extends IService<UserPO> {
 
     /**
      * 当前信息是否存在
@@ -65,6 +68,14 @@ public interface IUserService {
      * @return 查询结果
      */
     UserDTO queryUser(String userAccount, String password);
+
+    /**
+     * 查询用户 系统内部使用
+     *
+     * @param userAccount
+     * @return 查询结果
+     */
+    UserDTO queryUserNoPwd(String userAccount);
 
     /**
      * 用户列表
@@ -134,6 +145,13 @@ public interface IUserService {
      * @return 用户列表
      */
     ResultEntity<List<UserDTO>> getAllUserList();
+
+    /**
+     * 查询用户信息
+     *
+     * @return 用户列表
+     */
+    ResultEntity<List<UserDTO>> getAllUserListWithPwd();
 
     /**
      * 根据用户组筛选系统用户

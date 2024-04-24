@@ -46,6 +46,16 @@ public interface UserClient {
             @RequestParam("password") String password);
 
     /**
+     * 根据用户名和密码查询用户
+     *
+     * @param userAccount 用户名
+     * @return 前端json格式传来的,@RequestParam接对象
+     */
+    @GetMapping("/info/queryUserNoPwd")
+    ResultEntity<UserDTO> queryUserNoPwd(
+            @RequestParam("userAccount") String userAccount);
+
+    /**
      * 获取数据服务中文名称列表
      *
      * @return
@@ -174,6 +184,14 @@ public interface UserClient {
      */
     @GetMapping("/info/getAllUserList")
     ResultEntity<List<UserDTO>> getAllUserList();
+
+    /**
+     * 获取用户列表
+     *
+     * @return
+     */
+    @GetMapping("/info/getAllUserListWithPwd")
+    ResultEntity<List<UserDTO>> getAllUserListWithPwd();
 
     /**
      * 获取菜单列表

@@ -68,6 +68,19 @@ public class UserController {
     }
 
     /**
+     * 根据用户名查询用户 查询用户 系统内部使用
+     *
+     * @param userAccount userAccount
+     * @return 用户实体 为null说明不存在
+     */
+    @ApiOperation("根据用户名和密码查询用户")
+    @GetMapping("/queryUserNoPwd")
+    public ResultEntity<Object> queryUserNoPwd(
+            @RequestParam("userAccount") String userAccount) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.queryUserNoPwd(userAccount));
+    }
+
+    /**
      * 编辑用户保存
      *
      * @param dto
@@ -143,6 +156,12 @@ public class UserController {
     @ApiOperation("批量查询用户信息")
     public ResultEntity<List<UserDTO>> getAllUserList() {
         return service.getAllUserList();
+    }
+
+    @GetMapping("/getAllUserListWithPwd")
+    @ApiOperation("批量查询用户信息")
+    public ResultEntity<List<UserDTO>> getAllUserListWithPwd() {
+        return service.getAllUserListWithPwd();
     }
 
     @GetMapping("/getUserIdByUserName/{userName}")

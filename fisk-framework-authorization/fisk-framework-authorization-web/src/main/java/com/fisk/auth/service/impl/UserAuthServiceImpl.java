@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.auth.constants.JwtConstants;
 import com.fisk.auth.dto.UserAuthDTO;
-import com.fisk.auth.dto.ssologin.QsSSODTO;
 import com.fisk.auth.dto.ssologin.SSOResultEntityDTO;
 import com.fisk.auth.dto.ssologin.SSOUserInfoDTO;
 import com.fisk.auth.dto.ssologin.TicketInfoDTO;
@@ -29,6 +28,7 @@ import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.enums.ssologin.SSORoleInfoEnum;
+import io.jsonwebtoken.JwtParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +36,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
@@ -61,6 +63,11 @@ public class UserAuthServiceImpl implements UserAuthService {
 
     @Resource
     private SsoAccessRecordsService ssoAccessRecordsService;
+
+    /**
+     * JWT解析器
+     */
+    private JwtParser jwtParser;
 
     @Override
     public ResultEntity<String> login(UserAuthDTO userAuthDTO) {
@@ -251,38 +258,109 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    public ResultEntity<String> qsLogin() {
+    public ResultEntity<String> qsLogin(String token) {
         try {
-//            QsSSODTO qsSSODTO = new QsSSODTO();
-//            qsSSODTO.setClientId("e50cf84e527843568215612c9275e989");
-//            qsSSODTO.setClientSecret("2c6c14311181b6aa4e6506cf45fa8522e1ac4c74d48feebe633b13bffd18ed51");
-//            String param = JSON.toJSONString(qsSSODTO);
+            //1、解析前端传递的token
+            JSONObject userInfo;
+            try {
+                // JWT由三部分组成，使用"."分隔。我们只需要中间的载荷部分。
+                String[] tokenParts = token.split("\\.");
+                String encodedPayload = tokenParts[1];
+                // 使用Base64.Decoder进行解码
+                Base64.Decoder decoder = Base64.getUrlDecoder();
+                byte[] decodedPayloadBytes = decoder.decode(encodedPayload);
 
-            String param = "";
-            //强生交通获取accessToken的地址
-            String url = "http://192.168.1.253/pt-openapi/authentication/accessToken?clientId=e50cf84e527843568215612c9275e989&clientSecret=2c6c14311181b6aa4e6506cf45fa8522e1ac4c74d48feebe633b13bffd18ed51";
-            log.info("*****强生交通获取accessToken的地址*****" + url);
-            //获取
-            String result = HttpUtils.HttpPost(url, param);
-            log.info("*****强生交通获取accessToken方法的返回值*****" + result);
-            //解析返回的对象
-            JSONObject jsonObject = JSON.parseObject(result);
-            String code = jsonObject.getString("code");
-            String message = jsonObject.getString("message");
-            JSONObject data = jsonObject.getObject("data", JSONObject.class);
-            String accessToken = data.getString("access_token");
-            log.info("*****code:*****" + code);
-            log.info("*****message:*****" + message);
-            log.info("*****data:*****" + data);
-            log.info("*****access_token:*****" + accessToken);
+                // 将解码后的字节数组转换为UTF-8编码的字符串
+                String decodedPayload = new String(decodedPayloadBytes, StandardCharsets.UTF_8);
+                userInfo = JSON.parseObject(decodedPayload);
 
-            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "Bearer "+accessToken);
+                log.info("解析过的jwt payload:" + userInfo.toString());
+            } catch (Exception ex) {
+                log.error("解析jwt报错" + ex);
+                throw new FkException(ResultEnum.ERROR, "token格式不正确");
+            }
+            //2、通过解析token拿到用户账号
+            String account = (String) userInfo.get("account");
+            log.info("*****账户名：" + account);
+
+            //3、将获取到的用户账号和平台里的用户相比较 如果比较成功 则触发平台自己的登录  如果校验不通过，则不登录并告知前端用户信息不匹配，则登录失败
+            ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserListWithPwd();
+            if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.ERROR, "获取用户列表失败");
+            }
+
+            String fidataToken = null;
+
+            List<UserDTO> userDTOS = resultEntity.getData();
+            for (UserDTO userDTO : userDTOS) {
+                if (userDTO.getUserAccount().equals(account)) {
+                    //4、如果用户账号匹配成功 则触发平台自己的登录
+                    UserAuthDTO userAuthDTO = new UserAuthDTO();
+                    userAuthDTO.setUserAccount(userDTO.getUserAccount());
+                    String password = userDTO.getPassword();
+                    userAuthDTO.setPassword(password);
+                    ResultEntity<String> loginResult = insideLogin(userAuthDTO);
+                    if (loginResult.getCode() != ResultEnum.SUCCESS.getCode()) {
+                        throw new FkException(ResultEnum.ERROR, "登录失败");
+                    }
+                    fidataToken = loginResult.getData();
+                    break;
+                }
+
+            }
+
+            if (fidataToken != null) {
+                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, fidataToken);
+            } else {
+                return ResultEntityBuild.buildData(ResultEnum.SSO_LOGIN_FAILURE, "单点登录失败,用户信息不匹配。");
+            }
+
         } catch (Exception e) {
-            log.error("强生交通获取accessToken方法报错msg："+e.getMessage());
-            log.error("强生交通获取accessToken方法报错stack："+e);
-            throw new FkException(ResultEnum.ERROR, e);
+            log.error("强生交通单点登录方法报错msg：" + e.getMessage());
+            log.error("强生交通单点登录方法报错stack：" + e);
+            throw new FkException(ResultEnum.SSO_LOGIN_FAILURE, e);
         }
     }
+
+    /**
+     * 系统内部登录 不通过加密后的密码
+     *
+     * @param userAuthDTO
+     * @return
+     */
+    public ResultEntity<String> insideLogin(UserAuthDTO userAuthDTO) {
+
+        // 1.授权中心携带用户名，到用户中心(数据库)查询用户
+        // 请求user服务获取用户信息
+        UserDTO userDTO = null;
+
+        try {
+            ResultEntity<UserDTO> res = userClient.queryUserNoPwd(userAuthDTO.getUserAccount());
+            if (res.code == ResultEnum.SUCCESS.getCode()) {
+                userDTO = res.data;
+            } else {
+                return ResultEntityBuild.build(ResultEnum.getEnum(res.code));
+            }
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+
+        // 创建自定义荷载对象
+        UserDetail userDetail = UserDetail.of(userDTO.getId(), userDTO.getUserAccount());
+        // 生成jwt: token
+        String token = SystemConstants.AUTH_TOKEN_HEADER + jwtUtils.createJwt(userDetail);
+        UserInfo userInfo = UserInfo.of(userDTO.getId(), userDTO.getUserAccount(), token);
+
+        int permanentToken = 102;
+        if (userInfo.id == permanentToken) {
+            redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, -1);
+        } else {
+            boolean res = redis.set(RedisKeyBuild.buildLoginUserInfo(userInfo.id), userInfo, RedisKeyEnum.AUTH_USERINFO.getValue());
+        }
+
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, token);
+    }
+
 
     private void writeCookie(HttpServletResponse response, String token) {
         // cookie的作用域
