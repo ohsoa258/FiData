@@ -106,6 +106,7 @@ import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.DataSourceConfig;
@@ -1914,12 +1915,33 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     @Override
     public List<MetaMapTblDTO> modelGetMetaMapTableDetail(Integer processId, Integer processType) {
         List<MetaMapTblDTO> metaMapTblDTOS = new ArrayList<>();
+        ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserList();
+        List<Long> userIds = new ArrayList<>();
+        List<UserDTO> data = new ArrayList<>();
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            data = resultEntity.getData();
+            userIds = data.stream().map(UserDTO::getId).collect(Collectors.toList());
+        }
+
         if (processType == 1) {
             List<DimensionPO> list = dimensionImpl.list(new LambdaQueryWrapper<DimensionPO>().eq(DimensionPO::getDimensionFolderId, processId));
             for (DimensionPO dimensionPO : list) {
                 MetaMapTblDTO metaMapTblDTO = new MetaMapTblDTO();
                 metaMapTblDTO.setTblId((int) dimensionPO.getId());
                 metaMapTblDTO.setTblName(dimensionPO.getDimensionTabName());
+                //获取创建人id
+                String createUserId = dimensionPO.getCreateUser();
+                metaMapTblDTO.setCreateUser(createUserId);
+
+                //获取创建人名称
+                if (!CollectionUtils.isEmpty(userIds) && !CollectionUtils.isEmpty(data) && createUserId != null) {
+                    if (userIds.contains(Long.valueOf(createUserId))) {
+                        data.stream().filter(user -> user.getId().equals(Long.valueOf(createUserId)))
+                                .findFirst()
+                                .ifPresent(userDTO -> metaMapTblDTO.setCreateUserName(userDTO.getUsername()));
+                    }
+                }
+                metaMapTblDTO.setCreateTime(dimensionPO.getCreateTime());
                 metaMapTblDTOS.add(metaMapTblDTO);
             }
             return metaMapTblDTOS;
@@ -1929,6 +1951,18 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                 MetaMapTblDTO metaMapTblDTO = new MetaMapTblDTO();
                 metaMapTblDTO.setTblId((int) FactPO.getId());
                 metaMapTblDTO.setTblName(FactPO.getFactTabName());
+                //获取创建人id
+                String createUserId = FactPO.getCreateUser();
+                metaMapTblDTO.setCreateUser(createUserId);
+                //获取创建人名称
+                if (!CollectionUtils.isEmpty(userIds) && !CollectionUtils.isEmpty(data) && createUserId != null) {
+                    if (userIds.contains(Long.valueOf(createUserId))) {
+                        data.stream().filter(user -> user.getId().equals(Long.valueOf(createUserId)))
+                                .findFirst()
+                                .ifPresent(userDTO -> metaMapTblDTO.setCreateUserName(userDTO.getUsername()));
+                    }
+                }
+                metaMapTblDTO.setCreateTime(FactPO.getCreateTime());
                 metaMapTblDTOS.add(metaMapTblDTO);
             }
             return metaMapTblDTOS;

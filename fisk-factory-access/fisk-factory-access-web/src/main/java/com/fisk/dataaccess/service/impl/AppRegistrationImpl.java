@@ -100,6 +100,7 @@ import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
@@ -839,6 +840,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 获取数据接入表结构(数据标准用)
+     *
      * @param dto
      * @return
      */
@@ -851,7 +853,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         //处理实时应用
         List<AppRegistrationPO> realTimeAppPOS = appPoList.stream().filter(Objects::nonNull).filter(e -> e.appType == 0).collect(Collectors.toList());
         Map<Long, AppRegistrationPO> realTimeAppMap = realTimeAppPOS.stream().collect(Collectors.toMap(i -> i.id, i -> i));
-        if (!CollectionUtils.isEmpty(realTimeAppMap.keySet())){
+        if (!CollectionUtils.isEmpty(realTimeAppMap.keySet())) {
             QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
             appDataSourcePOQueryWrapper.lambda().in(AppDataSourcePO::getAppId, realTimeAppMap.keySet()).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
             List<AppDataSourcePO> realTimeDataSource = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
@@ -867,12 +869,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 }
             }
         }
-        if (!CollectionUtils.isEmpty(realTimeAppMap.keySet())){
+        if (!CollectionUtils.isEmpty(realTimeAppMap.keySet())) {
             // 当前app下的所有api
             List<ApiConfigPO> realTimeApiConfigPOList = this.apiConfigImpl.query().in("app_id", realTimeAppMap.keySet()).orderByDesc("create_time").list().stream().filter(Objects::nonNull).collect(Collectors.toList());
             List<Long> realTimeApiIds = realTimeApiConfigPOList.stream().map(BasePO::getId).collect(Collectors.toList());
             // 第二层: table层
-            if (!CollectionUtils.isEmpty(realTimeApiIds)){
+            if (!CollectionUtils.isEmpty(realTimeApiIds)) {
                 List<TableNameDTO> realTimeTables = this.tableAccessImpl.query().in("api_id", realTimeApiIds).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
                     AppRegistrationPO app = realTimeAppMap.get(table.appId);
                     TableNameDTO tableNameDTO = new TableNameDTO();
@@ -892,7 +894,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         //处理非实时应用
         List<AppRegistrationPO> noRealTimeAppPOS = appPoList.stream().filter(Objects::nonNull).filter(e -> e.appType == 1).collect(Collectors.toList());
         Map<Long, AppRegistrationPO> noRealTimeAppMap = noRealTimeAppPOS.stream().collect(Collectors.toMap(AppRegistrationPO::getId, i -> i));
-        if (!CollectionUtils.isEmpty(noRealTimeAppMap.keySet())){
+        if (!CollectionUtils.isEmpty(noRealTimeAppMap.keySet())) {
             QueryWrapper<AppDataSourcePO> appDataSourceQueryWrapper = new QueryWrapper<>();
             appDataSourceQueryWrapper.lambda().in(AppDataSourcePO::getAppId, noRealTimeAppMap.keySet()).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
             List<AppDataSourcePO> noRealTimeDataSource = appDataSourceMapper.selectList(appDataSourceQueryWrapper);
@@ -901,7 +903,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             while (noRealTimeIterator.hasNext()) {
                 Long key = (Long) noRealTimeIterator.next();
                 if (!noRealTimeDataSourceIds.contains(key)) {
-                    noRealTimeAppDataBaseMap.put(key,noRealTimeAppMap.get(key));
+                    noRealTimeAppDataBaseMap.put(key, noRealTimeAppMap.get(key));
                     noRealTimeIterator.remove();
                     realTimeAppMap.remove(key);
                 }
@@ -928,7 +930,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
         }
         //app下的所有数据表
-        if (!CollectionUtils.isEmpty(noRealTimeAppDataBaseMap.keySet())){
+        if (!CollectionUtils.isEmpty(noRealTimeAppDataBaseMap.keySet())) {
             List<TableNameDTO> tableAccessTables = this.tableAccessImpl.query().in("app_id", noRealTimeAppDataBaseMap.keySet()).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
                 AppRegistrationPO app = noRealTimeAppDataBaseMap.get(table.appId);
                 TableNameDTO tableNameDTO = new TableNameDTO();
@@ -1055,7 +1057,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             metaMapDTO.setAppOrPorcessList(appOrPorcessList);
 
             //没有被数据接入的应用引用的系统数据源不展示
-            if (!CollectionUtils.isEmpty(appOrPorcessList)){
+            if (!CollectionUtils.isEmpty(appOrPorcessList)) {
                 metaMapDTOS.add(metaMapDTO);
             }
         }
@@ -1064,16 +1066,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 元数据地图 获取应用下的表
+     *
      * @return
      */
     @Override
     public List<MetaMapTblDTO> accessGetMetaMapTableDetail(Integer appId) {
         List<MetaMapTblDTO> tblList = new ArrayList<>();
         List<TableAccessDTO> tbls = tableAccessImpl.getTblByAppId(Math.toIntExact(appId));
+        ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserList();
+        List<Long> userIds = new ArrayList<>();
+        List<UserDTO> data = new ArrayList<>();
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            data = resultEntity.getData();
+            userIds = data.stream().map(UserDTO::getId).collect(Collectors.toList());
+        }
+
         for (TableAccessDTO tbl : tbls) {
             MetaMapTblDTO metaMapTblDTO = new MetaMapTblDTO();
             metaMapTblDTO.setTblId((int) tbl.getId());
             metaMapTblDTO.setTblName(tbl.getTableName());
+            //获取创建人id
+            String createUserId = tbl.getCreateUser();
+            metaMapTblDTO.setCreateUser(createUserId);
+
+            //获取创建人名称
+            if (!CollectionUtils.isEmpty(userIds) && !CollectionUtils.isEmpty(data) && createUserId != null) {
+                if (userIds.contains(Long.valueOf(createUserId))) {
+                    data.stream().filter(user -> user.getId().equals(Long.valueOf(createUserId)))
+                            .findFirst()
+                            .ifPresent(userDTO -> metaMapTblDTO.setCreateUserName(userDTO.getUsername()));
+                }
+            }
+
+            metaMapTblDTO.setCreateTime(tbl.getCreateTime());
             tblList.add(metaMapTblDTO);
         }
         return tblList;
@@ -2510,7 +2535,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     log.info("注册HIVE驱动程序后...");
                     allDatabases.addAll(hiveUtils.getAllDatabases(conn));
                     break;
-                    // 达梦数据库
+                // 达梦数据库
                 case DM8:
                     log.info("注册达梦数据库驱动程序前...");
                     Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8.getDriverName());
@@ -2519,7 +2544,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     log.info("连接达梦数据库成功...");
                     allDatabases.addAll(dm8Utils.getAllDatabases(conn));
                     break;
-                    // todo:强生入仓配置 hudi的测试连接先不做
+                // todo:强生入仓配置 hudi的测试连接先不做
                 case HUDI:
                     allDatabases.addAll(new ArrayList<>());
                     break;
@@ -3365,14 +3390,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 获取CDC接入应用结构
-     *@param appTreeByCDCAccessGuid        guid
-     * @param id        id
-     * @param appPoList 所有的应用实体对象
+     *
+     * @param appTreeByCDCAccessGuid guid
+     * @param id                     id
+     * @param appPoList              所有的应用实体对象
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
      * @author Lock
      * @date 2022/6/16 15:21
      */
-    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByCDCAccess(String appTreeByCDCAccessGuid, String id, List<AppRegistrationPO> appPoList){
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByCDCAccess(String appTreeByCDCAccessGuid, String id, List<AppRegistrationPO> appPoList) {
         return null;
     }
 
@@ -3418,6 +3444,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
     /**
      * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     *
      * @return
      */
     @Override
@@ -3446,7 +3473,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             data.id = item.id;
             data.name = item.name;
             //因为前端的 数仓etl树是按conType区分的  dw虽然也可以是doris 但返回时改成别的类型 让前端能够区分树的结构的不同
-            if (SourceBusinessTypeEnum.DW.getName().equals(item.sourceBusinessType.getName())){
+            if (SourceBusinessTypeEnum.DW.getName().equals(item.sourceBusinessType.getName())) {
                 item.conType = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER;
             }
             data.dbType = item.conType.getName().toLowerCase();
@@ -3776,13 +3803,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<CDCAppNameAndTableVO> getCDCAppNameAndTables(Integer appId) {
         return baseMapper.getCDCAppNameAndTables(appId);
     }
+
     /**
      * 获取cdc类型所有应用的库名
      *
      * @return
      */
     @Override
-    public List<CDCAppDbNameVO> getCDCAppDbName(){
+    public List<CDCAppDbNameVO> getCDCAppDbName() {
         return baseMapper.getCDCAppDbName();
     }
 

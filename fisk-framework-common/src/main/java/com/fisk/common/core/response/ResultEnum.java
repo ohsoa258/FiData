@@ -80,6 +80,10 @@ public enum ResultEnum {
     RUN_ONCE_ERROR(1049,"RUN_ONCE执行失败请检查组件是否正常"),
 
     RUN_ONCE_LOCK(1050,"RUN_ONCE执行中，请勿重复执行"),
+    GET_SYSTEM_EMAIL_SERVER_ERROR(1051,"获取平台配置邮件服务器信息失败"),
+
+
+
 
     /**
      * 报表可视化服务，错误码从2000开始
@@ -94,6 +98,10 @@ public enum ResultEnum {
     VISUAL_CREATE_ERROR(2007, "创建表失败"),
 
     VISUAL_QUERY_ERROR_INVALID(2008, "数据无效"),
+
+
+
+
 
     /**
      * 授权中心
