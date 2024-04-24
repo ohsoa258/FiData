@@ -1012,7 +1012,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             fieldDtoTree.setFieldDes(field.fieldDes);
             fieldDtoTree.setFieldName(field.fieldName);
             fieldDtoTree.setFieldType(field.fieldType);
-            fieldDtoTree.setFieldLength(field.fieldLength.intValue());
+            if (field.fieldLength != null){
+                fieldDtoTree.setFieldLength(field.fieldLength.intValue());
+            }else {
+                fieldDtoTree.setFieldLength(0);
+            }
             fieldDtoTree.setFieldPrecision(field.fieldPrecision);
             return fieldDtoTree;
         }).collect(Collectors.toList());

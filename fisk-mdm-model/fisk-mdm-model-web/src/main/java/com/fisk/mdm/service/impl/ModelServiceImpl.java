@@ -485,7 +485,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         return attributeList.stream().map(i->{
             TableColumnDTO tableColumnDTO = new TableColumnDTO();
             tableColumnDTO.setFieldId(String.valueOf(i.getId()));
-            tableColumnDTO.setFieldLength(i.getDataTypeLength());
+            if (i.getDataTypeLength() == null){
+                tableColumnDTO.setFieldLength(0);
+            }else {
+                tableColumnDTO.setFieldLength(i.getDataTypeLength());
+            }
             tableColumnDTO.setFieldName(i.getColumnName());
             tableColumnDTO.setFieldDes(i.getDesc());
             tableColumnDTO.setFieldPrecision(i.getDataTypeDecimalLength());
