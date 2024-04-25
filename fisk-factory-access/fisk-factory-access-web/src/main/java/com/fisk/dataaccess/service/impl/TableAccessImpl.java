@@ -3019,10 +3019,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Scheduled(cron = "0 0/5 * * * ? ") //每五分钟
     public void refreshCountTotalRedis() {
         log.debug("*****数据接入 首页展示缓存刷新定时任务开始执行*****" + LocalDateTime.now());
-        AccessMainPageVO accessMainPageVO = countTotal();
         if (redisUtil.hasKey(accessCountTotalKeyS1)) {
             redisUtil.del(accessCountTotalKeyS1);
         }
+        AccessMainPageVO accessMainPageVO = countTotal();
         redisUtil.set(accessCountTotalKeyS1, accessMainPageVO, 300);
         log.debug("*****数据接入 首页展示缓存刷新定时任务执行完毕*****" + LocalDateTime.now());
     }
