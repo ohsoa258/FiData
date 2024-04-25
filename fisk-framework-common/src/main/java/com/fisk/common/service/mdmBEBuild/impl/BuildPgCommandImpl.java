@@ -199,6 +199,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("\"" + name + "\" as name ");
         str.append(" from \"" + tableName +"\"");
         str.append(" where fidata_version_id=" + versionId);
+        str.append(" and fidata_del_flag = 1");
         return str.toString();
     }
     @Override
@@ -208,6 +209,7 @@ public class BuildPgCommandImpl implements IBuildSqlCommand {
         str.append("\"fidata_lock_tag\" as lock ");
         str.append(" from \"" + tableName +"\"");
         str.append(" where fidata_version_id=" + versionId);
+        str.append(" and fidata_del_flag = 1");
         return str.toString();
     }
     @Override
