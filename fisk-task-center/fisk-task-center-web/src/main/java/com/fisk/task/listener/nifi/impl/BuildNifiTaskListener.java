@@ -2116,6 +2116,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 componentConnector(groupId, invokeHTTP.getId(), invokeHTTP.getId(), AutoEndBranchTypeEnum.RETRY2);
                 componentConnector(groupId, invokeHTTP.getId(), supervisionId, AutoEndBranchTypeEnum.FAILURE2);
                 componentConnector(groupId, invokeHTTP.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.RESPONSE);
+                componentConnector(groupId, invokeHTTP.getId(), processorEntity1.getId(), AutoEndBranchTypeEnum.NO_RETRY2);
             } else {
                 //如果doris关联外键的语句执行组件有多个  则将最后一个组件连线到执行sql预览sql的组件上
                 if (!CollectionUtils.isEmpty(entities)) {
