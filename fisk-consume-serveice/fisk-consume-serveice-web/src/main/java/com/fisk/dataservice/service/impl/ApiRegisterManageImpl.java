@@ -131,6 +131,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         allMenuId.add(query.menuId);
         List<String> ids = allMenuId.stream().map(String::valueOf).collect(Collectors.toList());
         query.setMenuIds(ids);
+        Map<Integer, String> apiMenuMap = list.stream().collect(Collectors.toMap(i->(int)i.getId(), ApiMenuConfigPO::getName));
         Page<ApiConfigVO> all = baseMapper.getAll(query.page, query);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Long> userIds = all.getRecords().stream()
@@ -150,6 +151,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                     e.setApiProxyCallUrl(proxyServiceApiAddress + "/" + e.getApiCode());
                 });
             }
+            all.getRecords().forEach(e -> {
+                e.setMenuName(apiMenuMap.get(e.getMenuId()));
+            });
         }
         return all;
     }
