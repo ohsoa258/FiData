@@ -16,4 +16,8 @@ public class BusinessTargetinfoMenuDTO {
     public String name;
     @ApiModelProperty(value = "类型")
     public String type;
+    @ApiModelProperty(value = "指标状态")
+    public String indicatorStatus;
+    @ApiModelProperty(value = "上级指标Id")
+    public Integer parentBusinessId;
 }

@@ -112,6 +112,8 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                 businessTargetinfoMenuDTO.setId((int) i.getId());
                 businessTargetinfoMenuDTO.setName(i.getIndicatorName());
                 businessTargetinfoMenuDTO.setType(i.getIndicatorType());
+                businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
+                businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
                 return businessTargetinfoMenuDTO;
             }).collect(Collectors.toList());
         }
