@@ -14,6 +14,8 @@ import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.core.utils.office.pdf.exception.PDFException;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.framework.redis.RedisKeyEnum;
+import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
@@ -115,6 +117,9 @@ public class AppRegisterManageImpl
     @Value("${open-metadata}")
     private Boolean openMetadata;
 
+    @Resource
+    private RedisUtil redisUtil;
+
 
     @Override
     public Integer getAppCount() {
@@ -197,6 +202,9 @@ public class AppRegisterManageImpl
             model.setAppPassword(new String(base64Encrypt));
         }
         int insert = baseMapper.insert(model);
+        byte[] base64Encrypt = EnCryptUtils.base64Encrypt(model.appPassword);
+        String pwd = new String(base64Encrypt);
+        redisUtil.set(RedisKeyEnum.DATA_SERVER_APP_ID +":"+ model.getAppAccount() + pwd,model.getId(), RedisKeyEnum.AUTH_USERINFO.getValue());
         if (insert > 0) {
             //同步元数据业务分类
             if (openMetadata) {

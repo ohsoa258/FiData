@@ -128,10 +128,18 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         // 第一步：验证账号密码是否有效
         byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
         String pwd = new String(base64Encrypt);
-        AppConfigPO byAppInfo = appRegisterMapper.getByAppInfo(dto.appAccount, pwd);
-        if (byAppInfo == null)
-            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS, token);
-        Long uniqueId = byAppInfo.id + RedisTokenKey.DATA_SERVICE_TOKEN;
+        Integer id = (Integer)redisUtil.get(RedisKeyEnum.DATA_SERVER_APP_ID  +":"+  dto.getAppAccount() + pwd);
+        Long uniqueId = null;
+        if (id != null){
+            Long appId = Long.valueOf(id);
+            uniqueId = appId + RedisTokenKey.DATA_SERVICE_TOKEN;
+        }else {
+            AppConfigPO byAppInfo = appRegisterMapper.getByAppInfo(dto.appAccount, pwd);
+            if (byAppInfo == null)
+                return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_APPINFO_EXISTS, token);
+            redisUtil.set(RedisKeyEnum.DATA_SERVER_APP_ID +":"+ dto.getAppAccount() + pwd,byAppInfo.id, RedisKeyEnum.AUTH_USERINFO.getValue());
+            uniqueId = byAppInfo.id + RedisTokenKey.DATA_SERVICE_TOKEN;
+        }
         // 第二步：获取缓存中的token，未过期则刷新过期时间
         UserInfo userInfo = (UserInfo) redisUtil.get(RedisKeyBuild.buildLoginUserInfo(uniqueId));
         if (userInfo != null && StringUtils.isNotEmpty(userInfo.getToken())) {
@@ -141,8 +149,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
         }
         // 第二步：调用授权接口，根据账号密码生成token
         UserAuthDTO userAuthDTO = new UserAuthDTO();
-        userAuthDTO.setUserAccount(byAppInfo.appAccount);
-        userAuthDTO.setPassword(byAppInfo.appPassword);
+        userAuthDTO.setUserAccount(dto.appAccount);
+        userAuthDTO.setPassword(dto.appPassword);
         userAuthDTO.setTemporaryId(uniqueId);
         ResultEntity<String> tokenEntity = authClient.getToken(userAuthDTO);
         if (tokenEntity.code == 0 && !tokenEntity.data.isEmpty())
