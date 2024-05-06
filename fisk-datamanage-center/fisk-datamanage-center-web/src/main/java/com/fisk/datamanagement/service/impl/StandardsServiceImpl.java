@@ -195,37 +195,35 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         updateById(standardsPO);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
 
-        if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)) {
-            //DTO数据类型转PO
-            List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedDTOList.stream().map(StandardsBeCitedMap.INSTANCES::dtoToPo).collect(Collectors.toList());
-            //查询未修改时详情数据
-            LambdaQueryWrapper<StandardsBeCitedPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(StandardsBeCitedPO::getStandardsId, standardsDTO.getId());
-            List<StandardsBeCitedPO> all = standardsBeCitedService.list(queryWrapper);
-            //找出待删除数据id
-            List<Integer> Ids = standardsBeCitedDTOList.stream().map(StandardsBeCitedDTO::getId).filter(Objects::nonNull).collect(Collectors.toList());
-            List<StandardsBeCitedPO> dels = new ArrayList<>();
-            if (!CollectionUtils.isEmpty(all)) {
-                if (!CollectionUtils.isEmpty(Ids)) {
-                    dels = all.stream().filter(i -> !Ids.contains((int) i.getId())).collect(Collectors.toList());
-                    List<Long> delIds = dels.stream().map(StandardsBeCitedPO::getId).collect(Collectors.toList());
-                    standardsBeCitedService.removeByIds(delIds);
-                } else {
-                    List<Long> delIds = all.stream().map(StandardsBeCitedPO::getId).collect(Collectors.toList());
-                    standardsBeCitedService.removeByIds(delIds);
-                }
+        //DTO数据类型转PO
+        List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedDTOList.stream().map(StandardsBeCitedMap.INSTANCES::dtoToPo).collect(Collectors.toList());
+        //查询未修改时详情数据
+        LambdaQueryWrapper<StandardsBeCitedPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(StandardsBeCitedPO::getStandardsId, standardsDTO.getId());
+        List<StandardsBeCitedPO> all = standardsBeCitedService.list(queryWrapper);
+        //找出待删除数据id
+        List<Integer> Ids = standardsBeCitedDTOList.stream().map(StandardsBeCitedDTO::getId).filter(Objects::nonNull).collect(Collectors.toList());
+        List<StandardsBeCitedPO> dels = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(all)) {
+            if (!CollectionUtils.isEmpty(Ids)) {
+                dels = all.stream().filter(i -> !Ids.contains((int) i.getId())).collect(Collectors.toList());
+                List<Long> delIds = dels.stream().map(StandardsBeCitedPO::getId).collect(Collectors.toList());
+                standardsBeCitedService.removeByIds(delIds);
+            } else {
+                List<Long> delIds = all.stream().map(StandardsBeCitedPO::getId).collect(Collectors.toList());
+                standardsBeCitedService.removeByIds(delIds);
             }
+        }
 
-            //找出待添加数据
-            List<StandardsBeCitedPO> adds = standardsBeCitedPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
-            //找出待修改数据
-            List<StandardsBeCitedPO> updates = standardsBeCitedPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(adds)) {
-                standardsBeCitedService.saveBatch(adds);
-            }
-            if (!CollectionUtils.isEmpty(updates)) {
-                standardsBeCitedService.updateBatchById(updates);
-            }
+        //找出待添加数据
+        List<StandardsBeCitedPO> adds = standardsBeCitedPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
+        //找出待修改数据
+        List<StandardsBeCitedPO> updates = standardsBeCitedPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(adds)) {
+            standardsBeCitedService.saveBatch(adds);
+        }
+        if (!CollectionUtils.isEmpty(updates)) {
+            standardsBeCitedService.updateBatchById(updates);
         }
         Integer menuId = standardsDTO.getMenuId();
         StandardsMenuPO standardsMenuPO = standardsMenuService.getById(menuId);
