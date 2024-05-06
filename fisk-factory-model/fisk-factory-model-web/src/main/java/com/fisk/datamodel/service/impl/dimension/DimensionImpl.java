@@ -1166,12 +1166,12 @@ public class DimensionImpl
         return DimensionMap.INSTANCES.listPoToListDto(dimension.getBaseMapper().selectBatchIds(ids));
     }
 
-    public List<MetaDataTableAttributeDTO> getDimensionMetaData(long businessId,
+    public List<MetaDataTableAttributeDTO> getDimensionMetaData(BusinessAreaPO area,
                                                                 String dbQualifiedName,
                                                                 Integer dataModelType,
                                                                 String businessAdmin) {
         List<DimensionPO> list = this.query()
-                .eq("business_id", businessId)
+                .eq("business_id", area.getId())
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
                 .list();
         if (CollectionUtils.isEmpty(list)) {
@@ -1197,6 +1197,7 @@ public class DimensionImpl
             table.isExistStg=true;
             table.isExistClassification=true;
             table.isShareDim=item.share;
+            table.AppName=area.getBusinessName();
             tableList.add(table);
         }
 

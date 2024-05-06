@@ -1158,8 +1158,8 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         MetaDataInstanceAttributeDTO instance = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
         instance.dbList.get(0).tableList = new ArrayList<>();
         for (BusinessAreaPO item : businessAreaPOList) {
-            instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser()));
-            instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaData(item.id, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser()));
+            instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaData(item, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser()));
+            instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaData(item, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser()));
         }
 
         List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();

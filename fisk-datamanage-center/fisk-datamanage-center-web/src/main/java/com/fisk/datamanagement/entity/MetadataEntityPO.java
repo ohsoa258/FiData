@@ -28,6 +28,8 @@ public class MetadataEntityPO extends BasePO {
 
     public LocalDateTime expiresTime;
 
+    public Integer emailGroupId;
+
     public Integer parentId;
 
     public String qualifiedName;

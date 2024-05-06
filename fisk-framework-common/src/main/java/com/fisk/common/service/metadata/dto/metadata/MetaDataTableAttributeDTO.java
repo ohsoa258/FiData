@@ -64,4 +64,12 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
      * 是否为公共维度
      */
     public Boolean isShareDim;
+
+    /**
+     * 是否将应用简称作为schema使用
+     * 否：0  false
+     * 是：1  true
+     */
+    public Boolean whetherSchema;
+
 }

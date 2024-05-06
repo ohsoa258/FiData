@@ -71,7 +71,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
 
         List<DataSourceDTO> result = new ArrayList<>();
         for (DataSourceDTO dataSource : dsList) {
-            if ("ftp".equalsIgnoreCase(dataSource.driveType) || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) || "api".equalsIgnoreCase(dataSource.driveType)) {
+            if ("ftp".equalsIgnoreCase(dataSource.driveType)
+                    || "RestfulAPI".equalsIgnoreCase(dataSource.driveType) ||
+                    "api".equalsIgnoreCase(dataSource.driveType)) {
                 return null;
             }
 
@@ -91,7 +93,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSource = dataSourceDTO;
                 }
             } catch (Exception e) {
-                log.error("redis中获取数据失败");
+                log.error("redis中获取数据失败"+e);
                 //在测试openedge数据库时发现，如果库内表过多，导致存不进redis里面时，会导致返回空数据
                 dataSource = dataSourceDTO;
             }

@@ -722,12 +722,12 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         return columnList;
     }
 
-    public List<MetaDataTableAttributeDTO> getFactMetaData(long businessId,
+    public List<MetaDataTableAttributeDTO> getFactMetaData(BusinessAreaPO item,
                                                            String dbQualifiedName,
                                                            Integer dataModelType,
                                                            String businessAdmin) {
         List<FactPO> factPOList = this.query()
-                .eq("business_id", businessId)
+                .eq("business_id", item.getId())
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
                 .list();
         if (CollectionUtils.isEmpty(factPOList)) {
@@ -752,6 +752,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.dataSourceId=fact.dataSourceId;
             table.isExistClassification=true;
             table.isExistStg=true;
+            table.AppName=item.getBusinessName();
 
             //字段
             table.columnList = getFactAttributeMetaData(fact.id, table);

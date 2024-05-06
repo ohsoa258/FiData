@@ -3531,7 +3531,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
             List<MetaDataTableAttributeDTO> metaDataTable = new ArrayList<>();
             for (TableAccessPO tableAccessPo : tableAccessPoList) {
-                metaDataTable.addAll(getAccessTableMetaData(appRegistrationPo, tableAccessPo.id, metaDataInstance.dbList.get(0).qualifiedName));
+                metaDataTable.addAll(getAccessTableMetaData(appRegistrationPo, tableAccessPo, metaDataInstance.dbList.get(0).qualifiedName));
             }
             metaDataInstance.dbList.get(0).tableList = metaDataTable;
             list.add(metaDataInstance);
@@ -3558,7 +3558,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("app_id", one.id).list();
         List<MetaDataTableAttributeDTO> metaDataTable = new ArrayList<>();
         for (TableAccessPO tableAccessPo : tableAccessPoList) {
-            metaDataTable.addAll(getAccessTableMetaData(one, tableAccessPo.id, metaDataInstance.dbList.get(0).qualifiedName));
+            metaDataTable.addAll(getAccessTableMetaData(one, tableAccessPo, metaDataInstance.dbList.get(0).qualifiedName));
         }
         metaDataInstance.dbList.get(0).tableList = metaDataTable;
         list.add(metaDataInstance);
@@ -3974,17 +3974,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * 获取应用下所有表元数据
      *
      * @param app
-     * @param accessId
+     * @param tableAccess
      * @param qualifiedName
      * @return
      */
-    public List<MetaDataTableAttributeDTO> getAccessTableMetaData(AppRegistrationPO app, long accessId, String qualifiedName) {
-
-        TableAccessPO tableAccess = tableAccessImpl.query().eq("id", accessId).one();
-        if (tableAccess == null) {
-            return new ArrayList<>();
-        }
-
+    public List<MetaDataTableAttributeDTO> getAccessTableMetaData(AppRegistrationPO app, TableAccessPO tableAccess, String qualifiedName) {
         // 表
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
 
@@ -4011,6 +4005,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setCoverScript(tableAccess.coverScript);
         table.setDataSourceId(tableAccess.getAppDataSourceId());
         table.setAppName(app.getAppName());
+        //应用是否使用简称 会影响到数据接入：非实时和实时表的名称
+        table.setWhetherSchema(app.getWhetherSchema());
         // 字段
         List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id).list().stream().filter(Objects::nonNull).map(e -> {
             MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();

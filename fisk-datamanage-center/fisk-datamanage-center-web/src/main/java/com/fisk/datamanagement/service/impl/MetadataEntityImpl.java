@@ -28,15 +28,13 @@ import com.fisk.datamanagement.dto.lineage.LineAgeRelationsDTO;
 import com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataEmailGroupDTO;
 import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataExpiresTimeDto;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.dto.search.SearchParametersDto;
-import com.fisk.datamanagement.entity.BusinessClassificationPO;
-import com.fisk.datamanagement.entity.GlossaryPO;
-import com.fisk.datamanagement.entity.LineageMapRelationPO;
-import com.fisk.datamanagement.entity.MetadataEntityPO;
+import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
 import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
@@ -60,7 +58,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -106,6 +103,8 @@ public class MetadataEntityImpl
 
     @Resource
     MetadataEntityAuditLogImpl metadataEntityAuditLog;
+    @Resource
+    private IEmailGroupServiceImpl emailGroupService;
 
     @Resource
     UserClient userClient;
@@ -327,7 +326,7 @@ public class MetadataEntityImpl
                 dto.type = EntityTypeEnum.CLASSIFICATION.getName();
                 dto.parentId = "-100";
                 dto.displayName = value.getName();
-                list.add(buildChildTree(dto, poList));
+                list.add(buildBetterChildTree(dto, poList));
             }
         }
 //获取实体关联业务分类数据
@@ -400,6 +399,7 @@ public class MetadataEntityImpl
 
     /**
      * 为即席查询获取元数据对象树形列表（ods dw mdm）
+     *
      * @return
      */
     public List<EntityTreeDTO> getTreeForAdHocQuery() {
@@ -457,6 +457,7 @@ public class MetadataEntityImpl
 
     /**
      * 为业务术语获取元数据对象树形列表
+     *
      * @return
      */
     public List<EntityTreeDTO> getTreeForBusinessTerm() {
@@ -605,13 +606,13 @@ public class MetadataEntityImpl
                 .select("id")
                 .lambda()
                 .eq(MetadataEntityPO::getParentId, Integer.parseInt(parentEntityId));
-        List<String> guidList = (List) metadataEntityMapper.selectObjs(queryWrapper);
+        List<Integer> guidList = (List) metadataEntityMapper.selectObjs(queryWrapper);
         if (CollectionUtils.isEmpty(guidList)) {
             return ResultEnum.SUCCESS;
         }
         //添加审计日志
         guidList.forEach(e -> {
-            metadataEntityAuditLog.setMetadataAuditLog(null, Integer.valueOf(e), MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName());
+            metadataEntityAuditLog.setMetadataAuditLog(null, e, MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName());
         });
         int delete = metadataEntityMapper.delete(queryWrapper);
         if (delete == 0) {
@@ -640,6 +641,18 @@ public class MetadataEntityImpl
         Map infoMap = metadataAttribute.setMedataAttribute(metadataEntityId, 0);
         infoMap.put("name", one.name);
         infoMap.put("expiresTime", one.expiresTime != null ? one.expiresTime.format(formatter) : "");
+
+        //获取邮箱组id
+        Integer emailGroupId = one.getEmailGroupId();
+        if (emailGroupId !=null){
+            EmailGroupPO emailGroupPO = emailGroupService.getById(emailGroupId);
+            if (emailGroupPO != null) {
+                infoMap.put("emailGroup", emailGroupPO.getGroupName());
+            }
+        }else {
+            infoMap.put("emailGroup", "");
+        }
+
         infoMap.put("description", one.description);
         infoMap.put("owner", one.owner);
         infoMap.put("qualifiedName", one.qualifiedName);
@@ -1622,6 +1635,20 @@ public class MetadataEntityImpl
     public ResultEnum setMetadataExpiresTime(UpdateMetadataExpiresTimeDto dto) {
         MetadataEntityPO po = this.getById(dto.entityId);
         po.expiresTime = dto.expiresTime;
+        updateById(po);
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 设置元数据邮箱组
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEnum setMetadataEmailGroup(UpdateMetadataEmailGroupDTO dto) {
+        MetadataEntityPO po = this.getById(dto.entityId);
+        po.emailGroupId = dto.emailGroupId;
         updateById(po);
         return ResultEnum.SUCCESS;
     }

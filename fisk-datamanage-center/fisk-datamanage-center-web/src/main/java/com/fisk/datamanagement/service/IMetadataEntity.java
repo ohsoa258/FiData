@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataEmailGroupDTO;
 import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataExpiresTimeDto;
 import com.fisk.datamanagement.dto.standards.StandardsSourceQueryDTO;
 
@@ -63,4 +64,12 @@ public interface IMetadataEntity {
     DBTableFiledNameDto getParentNameByFieldId(Integer fieldMetadataId);
 
     ResultEnum setMetadataExpiresTime(UpdateMetadataExpiresTimeDto dto);
+
+    /**
+     * 设置元数据邮箱组
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum setMetadataEmailGroup(UpdateMetadataEmailGroupDTO dto);
 }

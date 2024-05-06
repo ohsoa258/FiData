@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
-import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -35,7 +34,10 @@ import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
 import com.fisk.datamanagement.dto.classification.ClassificationAddEntityDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.classification.ClassificationDelAssociatedEntityDTO;
-import com.fisk.datamanagement.dto.entity.*;
+import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
+import com.fisk.datamanagement.dto.entity.EntityDTO;
+import com.fisk.datamanagement.dto.entity.EntityIdAndTypeDTO;
+import com.fisk.datamanagement.dto.entity.EntityTypeDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.EditMetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadatabusinessmetadatamap.MetadataBusinessMetadataMapDTO;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
@@ -45,7 +47,10 @@ import com.fisk.datamanagement.dto.process.ProcessAttributesPutDTO;
 import com.fisk.datamanagement.dto.process.ProcessUniqueAttributesDTO;
 import com.fisk.datamanagement.dto.relationship.RelationshipDTO;
 import com.fisk.datamanagement.entity.*;
-import com.fisk.datamanagement.enums.*;
+import com.fisk.datamanagement.enums.AtlasResultEnum;
+import com.fisk.datamanagement.enums.DataTypeEnum;
+import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
 import com.fisk.datamanagement.map.MetadataEntityExportTemplateAttributeMap;
 import com.fisk.datamanagement.map.MetadataMapAtlasMap;
 import com.fisk.datamanagement.mapper.BusinessMetadataConfigMapper;
@@ -57,7 +62,6 @@ import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
 import com.fisk.datamodel.client.DataModelClient;
-import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.tableconfig.SourceTableDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -67,13 +71,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -185,7 +191,7 @@ public class MetaDataImpl implements IMetaData {
      * @param currUserName 当前账号
      */
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName,ClassificationTypeEnum classificationTypeEnum) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum) {
         log.info("开始同步元数据***********");
         try {
             for (MetaDataInstanceAttributeDTO instance : data) {
@@ -203,7 +209,7 @@ public class MetaDataImpl implements IMetaData {
                     for (MetaDataTableAttributeDTO table : db.tableList) {
                         String tableName = table.name;
                         //元数据：数据表 新增/修改 , 并且添加业务分类和表元数据的关联
-                        String tableGuid = metaDataTable(table, dbGuid,classificationTypeEnum);
+                        String tableGuid = metaDataTable(table, dbGuid, classificationTypeEnum);
                         List<String> qualifiedNames = new ArrayList<>();
                         for (MetaDataColumnAttributeDTO field : table.columnList) {
                             //新增表字段
@@ -230,8 +236,15 @@ public class MetaDataImpl implements IMetaData {
                                     metaDataStgField(field, stgTableGuid);
 
                                 }
-                                //同步血缘
-                                synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid,table.sqlScript,table.coverScript,table.dataSourceId,table.tableConfigId);
+
+                                //血缘失败不要影响整个流程
+                                try {
+                                    //同步血缘
+                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId);
+                                } catch (Exception e) {
+                                    log.error("同步血缘失败：" + e);
+                                }
+
                             }
                         }
                     }
@@ -285,7 +298,7 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityId
      * @return
      */
-    private String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId,ClassificationTypeEnum classificationTypeEnum) {
+    private String metaDataTable(MetaDataTableAttributeDTO dto, String parentEntityId, ClassificationTypeEnum classificationTypeEnum) {
 
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
@@ -296,7 +309,7 @@ public class MetaDataImpl implements IMetaData {
 
         if (dto.isExistClassification) {
             //同步业务分类和元数据的关联
-            associatedClassification(metadataEntity.toString(),dto,classificationTypeEnum);
+            associatedClassification(metadataEntity.toString(), dto, classificationTypeEnum);
         }
 
         return metadataEntity.toString();
@@ -311,7 +324,7 @@ public class MetaDataImpl implements IMetaData {
      */
     private void associatedClassification(String tableGuid,
                                           MetaDataTableAttributeDTO metaDataTableAttributeDTO,
-                                            ClassificationTypeEnum classificationTypeEnum) {
+                                          ClassificationTypeEnum classificationTypeEnum) {
         try {
             ClassificationAddEntityDTO dto = new ClassificationAddEntityDTO();
             dto.entityGuids = new ArrayList<>();
@@ -447,7 +460,13 @@ public class MetaDataImpl implements IMetaData {
     private String metaDataStgTable(MetaDataTableAttributeDTO dto, String parentEntityId) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName + stg_suffix);
 
-        if (dto.name.contains(ods_prefix)) {
+        //如果数据接入的应用使用了schema作为简称
+        if (dto.whetherSchema) {
+            if (dto.name.contains(".")) {
+                int index = dto.name.indexOf(".");
+                dto.name =  dto.name.substring(0, index + 1) + "stg_" + dto.name.substring(index + 1);
+            }
+        } else if (dto.name.contains(ods_prefix)) {
             //数据接入ODS表
             dto.name = dto.name.replace(ods_prefix, "stg_");
         } else if (dto.name.contains(fact_prefix)) {
@@ -560,7 +579,7 @@ public class MetaDataImpl implements IMetaData {
                                              String coverScript,
                                              Integer dataSourceId,
                                              Integer tableConfigId) {
-        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid,sqlScript,coverScript,dataSourceId,tableConfigId);
+        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId);
         /*try {
 
             //获取实体详情
@@ -1012,7 +1031,7 @@ public class MetaDataImpl implements IMetaData {
     //region Controlor 调用方法
 
     @Override
-    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data,ClassificationTypeEnum classificationTypeEnum) {
+    public ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data, ClassificationTypeEnum classificationTypeEnum) {
         log.info("开始同步元数据***********");
         for (MetaDataInstanceAttributeDTO instance : data) {
             String instanceGuid = metaDataInstance(instance, "-1");
@@ -1026,7 +1045,7 @@ public class MetaDataImpl implements IMetaData {
                 }
                 for (MetaDataTableAttributeDTO table : db.tableList) {
                     String tableName = table.name;
-                    String tableGuid = metaDataTable(table, dbGuid,classificationTypeEnum);
+                    String tableGuid = metaDataTable(table, dbGuid, classificationTypeEnum);
                     //新增stg表
                     String stgTableGuid = null;
                     if (!stg.equals(table.getComment())) {

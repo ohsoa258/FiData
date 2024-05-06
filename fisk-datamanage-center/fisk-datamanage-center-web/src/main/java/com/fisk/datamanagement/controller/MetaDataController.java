@@ -12,6 +12,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
+import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataEmailGroupDTO;
 import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataExpiresTimeDto;
 import com.fisk.datamanagement.service.IMetadataEntity;
 import com.fisk.datamanagement.synchronization.pushmetadata.IMetaData;
@@ -109,6 +110,18 @@ public class MetaDataController {
     @PostMapping("/setMetadataExpiresTime")
     public ResultEntity<Object> setMetadataExpiresTime(@RequestBody UpdateMetadataExpiresTimeDto dto) {
         return ResultEntityBuild.build(iMetadataEntity.setMetadataExpiresTime(dto));
+    }
+
+    /**
+     * 设置元数据邮箱组
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("设置元数据邮箱组")
+    @PostMapping("/setMetadataEmailGroup")
+    public ResultEntity<Object> setMetadataEmailGroup(@RequestBody UpdateMetadataEmailGroupDTO dto) {
+        return ResultEntityBuild.build(iMetadataEntity.setMetadataEmailGroup(dto));
     }
 
 }

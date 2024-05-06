@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamanagement.mapper.EmailGroupPOMapper">
+
+    <resultMap id="BaseResultMap" type="com.fisk.datamanagement.entity.EmailGroupPO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="groupName" column="group_name" jdbcType="VARCHAR"/>
+            <result property="groupDesc" column="desc" jdbcType="VARCHAR"/>
+            <result property="emailServerId" column="email_server_id" jdbcType="TINYINT"/>
+            <result property="emailServerName" column="email_server_name" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,group_name,desc,
+        email_server_id,create_time,create_user,
+        update_time,update_user,del_flag
+    </sql>
+</mapper>

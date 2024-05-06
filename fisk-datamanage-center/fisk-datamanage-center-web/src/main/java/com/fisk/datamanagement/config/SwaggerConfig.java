@@ -64,6 +64,7 @@ public class SwaggerConfig {
     public static final String CODESET = "代码集";
     public static final String METADATA_AUDIT = "元数据审计日志";
     public static final String META_MAP = "元数据地图";
+    public static final String EMAIL_GROUP = "邮箱组";
 
     @Bean
     public Docket createRestApi() {
@@ -98,6 +99,7 @@ public class SwaggerConfig {
                 .tags(new Tag(CODESET, "代码集"))
                 .tags(new Tag(METADATA_AUDIT,"元数据审计日志"))
                 .tags(new Tag(META_MAP,"元数据地图"))
+                .tags(new Tag(EMAIL_GROUP,"邮箱组"))
                 .securityContexts(securityContexts());
     }
 
