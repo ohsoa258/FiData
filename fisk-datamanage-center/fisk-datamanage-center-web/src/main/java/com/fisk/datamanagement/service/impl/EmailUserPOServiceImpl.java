@@ -66,9 +66,9 @@ public class EmailUserPOServiceImpl extends ServiceImpl<EmailUserPOMapper, Email
         boolean b = removeByIds(ids);
 
         //删除用户和邮件组的关联关系
-        boolean remove = emailGroupUserMapService.remove(new LambdaQueryWrapper<EmailGroupUserMapPO>().in(EmailGroupUserMapPO::getUserId, ids));
+        emailGroupUserMapService.remove(new LambdaQueryWrapper<EmailGroupUserMapPO>().in(EmailGroupUserMapPO::getUserId, ids));
 
-        if (b && remove) {
+        if (b) {
             return true;
         } else {
             log.error("删除用户及用户-邮箱组关联关系失败");
