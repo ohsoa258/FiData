@@ -530,7 +530,7 @@ public enum ResultEnum {
      * 数据资产模块
      */
     GET_GLOSSARY_ASSIGN_METAS_ERROR(18001, "获取业务术语关联的元数据报错"),
-
+    CHECK_STANDARD_BE_CITED_EXITS(18002, "标准被引用"),
 
 
 

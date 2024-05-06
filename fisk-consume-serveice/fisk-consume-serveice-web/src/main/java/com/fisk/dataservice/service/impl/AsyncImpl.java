@@ -166,6 +166,7 @@ public class AsyncImpl {
         TableApiLogPO tableApiLogPo = null;
         if (StringUtils.isNotBlank(fidata_batch_code)) {
             LambdaQueryWrapper<TableApiLogPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(TableApiLogPO::getApiId,dto.apiId);
             queryWrapper.eq(TableApiLogPO::getFidataBatchCode, fidata_batch_code);
             queryWrapper.eq(TableApiLogPO::getDelFlag, 1);
             tableApiLogPo = tableApiLogService.getOne(queryWrapper);

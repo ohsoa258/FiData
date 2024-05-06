@@ -349,7 +349,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     public ResultEnum reloadDataSource(int id) {
         try {
             List<DataSourceConVO> allDataSource = getAllDataSource();
-            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == id).findFirst().orElse(null);
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == id).findFirst().orElse(null);
             if (dataSourceConVO == null) {
                 return ResultEnum.DS_DATASOURCE_NOTEXISTS;
             }

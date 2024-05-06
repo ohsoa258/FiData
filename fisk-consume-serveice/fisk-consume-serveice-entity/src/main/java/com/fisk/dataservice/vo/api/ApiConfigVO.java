@@ -162,6 +162,12 @@ public class ApiConfigVO {
     private Integer menuId;
 
     /**
+     * menuName
+     */
+    @ApiModelProperty(value = "目录名称")
+    private String menuName;
+
+    /**
      * menuId
      */
     @ApiModelProperty(value = "apiMenuId")
