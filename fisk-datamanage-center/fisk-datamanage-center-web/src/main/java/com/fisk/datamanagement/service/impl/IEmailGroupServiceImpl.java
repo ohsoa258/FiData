@@ -128,9 +128,9 @@ public class IEmailGroupServiceImpl extends ServiceImpl<EmailGroupPOMapper, Emai
         boolean b = this.removeById(dto.getId());
 
         //删除关联关系
-        boolean remove = emailGroupUserMapService.remove(new LambdaQueryWrapper<EmailGroupUserMapPO>().eq(EmailGroupUserMapPO::getGroupId, dto.getId()));
+        emailGroupUserMapService.remove(new LambdaQueryWrapper<EmailGroupUserMapPO>().eq(EmailGroupUserMapPO::getGroupId, dto.getId()));
 
-        if (!b || !remove) {
+        if (!b) {
             throw new FkException(ResultEnum.DELETE_ERROR);
         } else {
             return true;
@@ -184,11 +184,20 @@ public class IEmailGroupServiceImpl extends ServiceImpl<EmailGroupPOMapper, Emai
         return emailGroupDetailDTO;
     }
 
+    /**
+     * 设置邮箱组和用户的关联关系
+     *
+     * @param dto
+     * @return
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Object mapGroupWithUser(EmailGroupUserMapAddDTO dto) {
         //邮箱组id
         int groupId = dto.getGroupId();
+
+        //先删除原有关联关系
+        emailGroupUserMapService.remove(new LambdaQueryWrapper<EmailGroupUserMapPO>().eq(EmailGroupUserMapPO::getGroupId, groupId));
 
         //邮箱组要关联的用户id
         List<Integer> userIds = dto.getUserIds();
@@ -218,7 +227,7 @@ public class IEmailGroupServiceImpl extends ServiceImpl<EmailGroupPOMapper, Emai
                 .isNotNull(MetadataEntityPO::getEmailGroupId);
         List<MetadataEntityPO> list = metadataEntityImpl.list(wrapper);
         List<MetadataEntityPO> expiresEntities = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(list)){
+        if (!CollectionUtils.isEmpty(list)) {
             for (MetadataEntityPO po : list) {
                 LocalDateTime now = LocalDateTime.now();
                 LocalDateTime expiresTime = po.getExpiresTime();
@@ -227,7 +236,7 @@ public class IEmailGroupServiceImpl extends ServiceImpl<EmailGroupPOMapper, Emai
                     expiresEntities.add(po);
                 }
             }
-            if (!CollectionUtils.isEmpty(expiresEntities)){
+            if (!CollectionUtils.isEmpty(expiresEntities)) {
                 //找到过期实体们都配置了哪些邮件组
                 Set<Integer> collect = expiresEntities.stream().map(MetadataEntityPO::getEmailGroupId).collect(Collectors.toSet());
                 //邮箱组id : 待发送信息

@@ -283,6 +283,14 @@ public interface INiFiHelper {
     BusinessResult<ProcessorEntity> buildExecuteSQLRecordProcess(ExecuteSQLRecordDTO executeSQLRecordDTO);
 
     /**
+     * ExecuteSQLRecordProcess
+     *
+     * @param executeSQLRecordDTO executeSQLRecordDTO
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildExecuteSQLRecordProcessForDoris(ExecuteSQLRecordDTO executeSQLRecordDTO);
+
+    /**
      * buildPutDatabaseRecordProcess
      *
      * @param putDatabaseRecordDTO putDatabaseRecordDTO

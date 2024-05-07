@@ -1,6 +1,7 @@
 package com.fisk.task.service.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,10 +21,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -172,6 +172,31 @@ public class PipelineTableLogImpl extends ServiceImpl<PipelineTableLogMapper, Pi
             }
         }
         return pipelineTableLogVos.stream().sorted(Comparator.comparing(PipelineTableLogVO::getStartTime).reversed()).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取数据接入应用下的实时表最后同步时间
+     *
+     * @param tblIds
+     * @return
+     */
+    @Override
+    public LocalDateTime getRealTimeTblLastSyncTime(List<Long> tblIds) {
+        List<Date> times = new ArrayList<>();
+        for (Long tblId : tblIds) {
+            List<PipelineTableLogPO> pos = this.list(new LambdaQueryWrapper<PipelineTableLogPO>()
+                    .select(PipelineTableLogPO::getStartTime)
+                    .eq(PipelineTableLogPO::getTableId, tblId)
+                    .eq(PipelineTableLogPO::getTableType, OlapTableEnum.PHYSICS_RESTAPI.getValue())
+                    .isNotNull(PipelineTableLogPO::getStartTime)
+                    .orderByDesc(PipelineTableLogPO::getStartTime));
+
+            if (CollectionUtils.isNotEmpty(pos)){
+                times.add(pos.get(0).getStartTime());
+            }
+        }
+        Optional<Date> max = times.stream().max(Comparator.comparing(Date::getTime));
+        return max.map(date -> date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()).orElse(null);
     }
 
 

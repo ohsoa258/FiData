@@ -37,6 +37,8 @@ public class SwaggerConfig {
     public static final String TABLE_SERVER_STATISTICS = "表服务日志统计";
 
     public static final String SCHEDULE = "定时任务";
+    public static final String ETL_LOG = "etl同步日志";
+    public static final String PIPELINE_LOG = "管道日志";
 
     @Bean
     public Docket createRestApi() {
@@ -59,6 +61,8 @@ public class SwaggerConfig {
                 .tags(new Tag(PIPELINE_STATISTICS,"管道日志统计"))
                 .tags(new Tag(TABLE_SERVER_STATISTICS,"表服务日志统计"))
                 .tags(new Tag(SCHEDULE,"定时任务"))
+                .tags(new Tag(ETL_LOG,"etl同步日志"))
+                .tags(new Tag(PIPELINE_LOG,"管道日志"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());
 

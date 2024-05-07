@@ -1906,7 +1906,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                  * 如果是普通表（数接的物理表、数仓的事实表和维度表）的nifi流程，则创建这个执行查询的组件：ExecuteSQLRecord
                  */
             } else {
-                executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
+                if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
+                    executeSQLRecord = createExecuteSQLRecordForDoris(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
+                }else {
+                    executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
+                }
+
                 componentsConnector(groupId, executeSQLRecord.getId(), supervisionId, autoEndBranchTypeEnums);
             }
 
@@ -2832,6 +2837,78 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         executeSQLRecordDTO.recordwriter = id;
         executeSQLRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
         BusinessResult<ProcessorEntity> res = componentsBuild.buildExecuteSQLRecordProcess(executeSQLRecordDTO);
+        verifyProcessorResult(res);
+        return res.data;
+    }
+
+    private ProcessorEntity createExecuteSQLRecordForDoris(String appGroupId, DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto, String sourceDbPoolId, TableNifiSettingPO tableNifiSettingPO) {
+        BuildAvroRecordSetWriterServiceDTO data = new BuildAvroRecordSetWriterServiceDTO();
+        String groupStructureId = dto.groupStructureId;
+        data.details = "AvroRecordSetWriter";
+        data.name = "AvroRecordSetWriter";
+        if (groupStructureId != null) {
+            data.groupId = groupStructureId;
+        } else {
+            data.groupId = appGroupId;
+        }
+        String id = "";
+        List<String> sourceFieldName = new ArrayList<>();
+        //--------------------------------------------
+        if (Objects.equals(dto.type, OlapTableEnum.PHYSICS) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKPHYSICS) || Objects.equals(dto.type, OlapTableEnum.DATASERVICES)) {
+            sourceFieldName = config.targetDsConfig.tableFieldsList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        } else if (Objects.equals(dto.type, OlapTableEnum.FACT) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKFACT)
+                || Objects.equals(dto.type, OlapTableEnum.DIMENSION) || Objects.equals(dto.type, OlapTableEnum.CUSTOMWORKDIMENSION)) {
+            sourceFieldName = config.modelPublishFieldDTOList.stream().map(e -> e.sourceFieldName).collect(Collectors.toList());
+        }
+        String schemaArchitecture = buildSchemaArchitecture(sourceFieldName, config.processorConfig.targetTableName);
+        data.schemaArchitecture = schemaArchitecture;
+        data.schemaWriteStrategy = "avro-embedded";
+        data.schemaAccessStrategy = "schema-text-property";
+        //--------------------------------------------
+        //创建buildAvroRecordSetWriterService
+        BusinessResult<ControllerServiceEntity> controllerServiceEntityBusinessResult = componentsBuild.buildAvroRecordSetWriterService(data);
+        if (controllerServiceEntityBusinessResult.success) {
+            id = controllerServiceEntityBusinessResult.data.getId();
+        } else {
+            throw new FkException(ResultEnum.TASK_NIFI_BUILD_COMPONENTS_ERROR, controllerServiceEntityBusinessResult.msg);
+        }
+        tableNifiSettingPO.avroRecordSetWriterId = id;
+        ExecuteSQLRecordDTO executeSQLRecordDTO = new ExecuteSQLRecordDTO();
+        // 组件并发数量
+        executeSQLRecordDTO.concurrencyNums = dto.concurrencyNums;
+        executeSQLRecordDTO.name = "executeSQLRecordForDoris";
+        executeSQLRecordDTO.details = "query_phase";
+        executeSQLRecordDTO.groupId = groupId;
+        //拿接入配置,如果没有拿默认配置
+        if (dto.maxRowsPerFlowFile != 0) {
+            executeSQLRecordDTO.maxRowsPerFlowFile = String.valueOf(dto.maxRowsPerFlowFile);
+        } else {
+            executeSQLRecordDTO.maxRowsPerFlowFile = MaxRowsPerFlowFile;
+        }
+        if (dto.fetchSize != 0) {
+            executeSQLRecordDTO.FetchSize = String.valueOf(dto.fetchSize);
+        } else {
+            executeSQLRecordDTO.FetchSize = FetchSize;
+        }
+        ResultEntity<DataSourceDTO> fiDataDataSource = userClient.getFiDataDataSourceById(Integer.parseInt(dataSourceOdsId));
+        if (fiDataDataSource.code == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO dataSource = fiDataDataSource.data;
+            IbuildTable dbCommand = BuildFactoryHelper.getDBCommand(dataSource.conType);
+            executeSQLRecordDTO.esqlAutoCommit = dbCommand.getEsqlAutoCommit();
+        } else {
+            log.error("userclient无法查询到ods库的连接信息");
+        }
+
+        executeSQLRecordDTO.outputBatchSize = OutputBatchSize;
+        //executeSQLRecordDTO.databaseConnectionPoolingService=config.sourceDsConfig.componentId;
+        executeSQLRecordDTO.databaseConnectionPoolingService = sourceDbPoolId;
+        log.info("原始接入查询语句:{}", config.processorConfig.sourceExecSqlQuery);
+        String sql = config.processorConfig.sourceExecSqlQuery.replaceAll(SystemVariableTypeEnum.START_TIME.getValue(), "'\\${" + SystemVariableTypeEnum.START_TIME.getName() + "}'");
+        sql = sql.replaceAll(SystemVariableTypeEnum.END_TIME.getValue(), "'\\${" + SystemVariableTypeEnum.END_TIME.getName() + "}'");
+        executeSQLRecordDTO.sqlSelectQuery = sql;
+        executeSQLRecordDTO.recordwriter = id;
+        executeSQLRecordDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
+        BusinessResult<ProcessorEntity> res = componentsBuild.buildExecuteSQLRecordProcessForDoris(executeSQLRecordDTO);
         verifyProcessorResult(res);
         return res.data;
     }

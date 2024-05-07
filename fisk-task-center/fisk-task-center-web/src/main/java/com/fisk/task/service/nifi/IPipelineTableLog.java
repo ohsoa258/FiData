@@ -9,6 +9,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.entity.PipelineTableLogPO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -57,5 +58,13 @@ public interface IPipelineTableLog extends IService<PipelineTableLogPO> {
      */
     List<PipelineTableLogVO> getPipelineTableLogs(String data, String pipelineTableQuery);
 
+
+    /**
+     * 获取数据接入应用下的实时表最后同步时间
+     *
+     * @param tblIds
+     * @return
+     */
+    LocalDateTime getRealTimeTblLastSyncTime(List<Long> tblIds);
 
 }

@@ -2,7 +2,6 @@ package com.fisk.task.client;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.accessAndModel.LogPageQueryDTO;
 import com.fisk.common.service.accessAndModel.NifiLogResultDTO;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
@@ -42,6 +41,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -485,6 +485,7 @@ public interface PublishTaskClient {
 
     @PostMapping("/publishTask/deleteBackendTable")
     ResultEntity<Object> deleteBackendTable(@RequestBody TableDTO data);
+
     /**
      * @param data
      * @return
@@ -610,5 +611,25 @@ public interface PublishTaskClient {
     @ApiOperation("同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型")
     @PostMapping("/nifi/getDwAndAccessTblNifiLog")
     Page<NifiLogResultDTO> getDwAndAccessTblNifiLog(@RequestBody LogPageQueryDTO dto);
+
+    /**
+     * 获取数据接入表最后同步时间
+     *
+     * @param tblNames
+     * @return
+     */
+    @GetMapping("/etlLog/getAccessTblLastSyncTime")
+    @ApiOperation("获取数据接入表最后同步时间")
+    ResultEntity<LocalDateTime> getAccessTblLastSyncTime(@RequestParam("tblNames") List<String> tblNames);
+
+    /**
+     * 获取数据接入应用下的实时表最后同步时间
+     *
+     * @param tblIds
+     * @return
+     */
+    @GetMapping("/pipelineLog/getRealTimeTblLastSyncTime")
+    @ApiOperation("获取数据接入应用下的实时表最后同步时间")
+    ResultEntity<LocalDateTime> getRealTimeTblLastSyncTime(@RequestParam("tblIds") List<Long> tblIds);
 
 }

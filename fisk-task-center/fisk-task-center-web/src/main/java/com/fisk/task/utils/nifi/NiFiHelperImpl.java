@@ -1001,6 +1001,55 @@ public class NiFiHelperImpl implements INiFiHelper {
     }
 
     @Override
+    public BusinessResult<ProcessorEntity> buildExecuteSQLRecordProcessForDoris(ExecuteSQLRecordDTO executeSQLRecordDTO) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        Map<String, String> map = new HashMap<>();
+        map.put("Database Connection Pooling Service", executeSQLRecordDTO.databaseConnectionPoolingService);
+        map.put("esqlrecord-record-writer", executeSQLRecordDTO.recordwriter);
+        map.put("esql-max-rows", executeSQLRecordDTO.maxRowsPerFlowFile);
+        map.put("esql-output-batch-size", executeSQLRecordDTO.outputBatchSize);
+        map.put("esql-fetch-size", executeSQLRecordDTO.FetchSize);
+        map.put("SQL select query", executeSQLRecordDTO.sqlSelectQuery);
+        map.put("dbf-user-logical-types", "true");
+        if (StringUtils.isNotEmpty(executeSQLRecordDTO.esqlAutoCommit)) {
+            map.put("esql-auto-commit", executeSQLRecordDTO.esqlAutoCommit);
+        }
+        //组件配置信息
+        MyProcessorConfigDTO config = new MyProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(executeSQLRecordDTO.details);
+        if (executeSQLRecordDTO.concurrencyNums != null) {
+            // 组件并发数量
+            config.setConcurrentlySchedulableTaskCount(executeSQLRecordDTO.concurrencyNums);
+        }
+
+        List<String> relationShips = new ArrayList<>();
+        //配置需要重试的结果 failure retry
+        relationShips.add("failure");
+        config.setRetriedRelationships(relationShips);
+        //重试最长回退期 默认10分钟
+        config.setMaxBackoffPeriod("10 mins");
+        //重试回退策略 礼让
+        config.setBackoffMechanism("YIELD_PROCESSOR");
+        //重试次数 5次
+        config.setRetryCount(5);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(executeSQLRecordDTO.name);
+        dto.setType(ProcessorTypeEnum.ExecuteSQLRecord.getName());
+        dto.setPosition(executeSQLRecordDTO.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(executeSQLRecordDTO.groupId, entity, dto, config);
+    }
+
+    @Override
     public BusinessResult<ProcessorEntity> buildPutDatabaseRecordProcess(PutDatabaseRecordDTO putDatabaseRecordDTO) {
         //流程分支，是否自动结束
         List<String> autoRes = new ArrayList<>();

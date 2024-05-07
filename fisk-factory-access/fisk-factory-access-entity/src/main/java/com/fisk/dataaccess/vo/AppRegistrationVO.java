@@ -26,6 +26,13 @@ public class AppRegistrationVO{
 
     @ApiModelProperty(value = "应用简称")
     public String appAbbreviation;
+
+    /**
+     * 是否使用简称作为架构名
+     */
+    @ApiModelProperty(value = "是否使用简称作为架构名")
+    public int whetherSchema;
+
     /**
      * 应用描述
      */
@@ -46,6 +53,12 @@ public class AppRegistrationVO{
      */
     @ApiModelProperty(value = "创建时间", required = true)
     public LocalDateTime createTime;
+
+    /**
+     * 最近数据同步时间
+     */
+    @ApiModelProperty(value = "最近数据同步时间")
+    public LocalDateTime lastSyncTime;
 
     @ApiModelProperty(value = "驱动类型", required = true)
     public String driveType;

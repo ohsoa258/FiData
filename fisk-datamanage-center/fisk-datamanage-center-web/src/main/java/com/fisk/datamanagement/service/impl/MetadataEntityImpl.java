@@ -34,7 +34,10 @@ import com.fisk.datamanagement.dto.metadataglossarymap.MetaDataGlossaryMapDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
 import com.fisk.datamanagement.dto.search.SearchParametersDto;
-import com.fisk.datamanagement.entity.*;
+import com.fisk.datamanagement.entity.BusinessClassificationPO;
+import com.fisk.datamanagement.entity.GlossaryPO;
+import com.fisk.datamanagement.entity.LineageMapRelationPO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.MetaClassificationTypeEnum;
 import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
@@ -644,13 +647,10 @@ public class MetadataEntityImpl
 
         //获取邮箱组id
         Integer emailGroupId = one.getEmailGroupId();
-        if (emailGroupId !=null){
-            EmailGroupPO emailGroupPO = emailGroupService.getById(emailGroupId);
-            if (emailGroupPO != null) {
-                infoMap.put("emailGroup", emailGroupPO.getGroupName());
-            }
-        }else {
-            infoMap.put("emailGroup", "");
+        if (emailGroupId != null) {
+            infoMap.put("emailGroup", one.getEmailGroupId());
+        } else {
+            infoMap.put("emailGroup", -200);
         }
 
         infoMap.put("description", one.description);

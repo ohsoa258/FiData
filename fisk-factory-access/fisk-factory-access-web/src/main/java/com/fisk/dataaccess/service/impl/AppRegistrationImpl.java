@@ -1012,9 +1012,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             fieldDtoTree.setFieldDes(field.fieldDes);
             fieldDtoTree.setFieldName(field.fieldName);
             fieldDtoTree.setFieldType(field.fieldType);
-            if (field.fieldLength != null){
+            if (field.fieldLength != null) {
                 fieldDtoTree.setFieldLength(field.fieldLength.intValue());
-            }else {
+            } else {
                 fieldDtoTree.setFieldLength(0);
             }
             fieldDtoTree.setFieldPrecision(field.fieldPrecision);
@@ -2434,6 +2434,60 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
                     }
                 }
+            }
+
+            // 新增 获取应用下的表的最近同步时间
+            try {
+                for (AppRegistrationVO appRegistrationVO : appRegistrationVOList) {
+                    List<TableAccessPO> list = tableAccessImpl.list(new LambdaQueryWrapper<TableAccessPO>()
+                            .select(TableAccessPO::getTableName, TableAccessPO::getId,TableAccessPO::getApiId)
+                            .eq(TableAccessPO::getAppId, appRegistrationVO.getId())
+                            //pid为0意味着只查表
+                            .eq(TableAccessPO::getPid,0)
+                    );
+                    List<String> tblNames = new ArrayList<>();
+                    List<Long> tblIds = new ArrayList<>();
+
+
+                    //非实时应用
+                    if (appRegistrationVO.appType == 1) {
+
+                        //是否将应用简称作为schema使用 0否 1是
+                        if (appRegistrationVO.getWhetherSchema() == 1) {
+                            for (TableAccessPO tableAccessPO : list) {
+                                String tblName = tableAccessPO.getTableName();
+
+                                tblName = appRegistrationVO.getAppAbbreviation() + "." + tblName;
+                                tblNames.add(tblName);
+                            }
+                        } else {
+                            for (TableAccessPO tableAccessPO : list) {
+                                String tblName = tableAccessPO.getTableName();
+                                tblName = "ods_" + appRegistrationVO.getAppAbbreviation() + "_" + tblName;
+                                tblNames.add(tblName);
+
+                            }
+                        }
+                        ResultEntity<LocalDateTime> accessTblLastSyncTime = publishTaskClient.getAccessTblLastSyncTime(tblNames);
+                        if (accessTblLastSyncTime.getCode() == ResultEnum.SUCCESS.getCode() && accessTblLastSyncTime.getData() != null) {
+                            appRegistrationVO.setLastSyncTime(accessTblLastSyncTime.getData());
+                        }
+                    //实时应用 要查的日志表不同
+                    }else if(appRegistrationVO.appType == 0){
+                        for (TableAccessPO tableAccessPO : list) {
+                            tblIds.add(tableAccessPO.getApiId());
+                        }
+
+                        ResultEntity<LocalDateTime> realTimeTblLastSyncTime = publishTaskClient.getRealTimeTblLastSyncTime(tblIds);
+                        if (realTimeTblLastSyncTime.getCode() == ResultEnum.SUCCESS.getCode()  && realTimeTblLastSyncTime.getData() != null) {
+                            appRegistrationVO.setLastSyncTime(realTimeTblLastSyncTime.getData());
+                        }
+
+                    }
+                }
+            } catch (Exception e) {
+                log.error("***************获取该应用下的表的最近同步时间失败***************");
+                log.error("原因" + e);
             }
             filter.setRecords(appRegistrationVOList);
         }
