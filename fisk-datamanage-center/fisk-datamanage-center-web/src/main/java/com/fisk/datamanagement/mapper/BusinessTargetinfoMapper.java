@@ -49,5 +49,6 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     @Select({"<script> " + "${sql}" + "</script>"})
     List<BusinessTargetinfoPO> selectDimensionList(@Param("sql") String sql);
 
-
+    @Update("update tb_business_extendedfields set parent_business_id = NULL where parent_business_id = #{parentBusinessId} and del_flag = 1")
+    int updateParentBusinessId(@Param("parentBusinessId") Integer parentBusinessId);
 }

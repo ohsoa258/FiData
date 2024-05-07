@@ -586,7 +586,14 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         qw.eq("id", po.getId());
         idList.add(po.getId());
         if (businessTargetinfoMapper.deleteBatchIds(idList) > 0) {
+            businessTargetinfoMapper.updateParentBusinessId(po.getParentBusinessId());
             int flag1 = businessExtendedfieldsMapper.updateByName(po.getId() + "");
+
+            LambdaQueryWrapper<FactTreePOs> factDeleteWrapper = new LambdaQueryWrapper<>();
+            factDeleteWrapper.eq(FactTreePOs::getPid,po.getId());
+            factTreeListMapper.delete(factDeleteWrapper);
+
+
             return ResultEnum.SUCCESS;
         } else {
             throw new FkException(ResultEnum.ERROR, "删除指标数据失败");
