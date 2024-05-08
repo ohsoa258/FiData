@@ -135,7 +135,7 @@ public class DataAssetsImpl implements IDataAssets {
             data.pageSize = dto.pageSize;
             log.debug("end");
         } catch (Exception e) {
-            log.debug("失败" + e.getStackTrace());
+            log.debug("失败" + e);
             log.debug("数据资产,查询表数据失败:" + e.getMessage());
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR_INVALID, e);
         } finally {
