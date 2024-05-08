@@ -117,6 +117,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -2437,13 +2438,39 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             }
 
             // 新增 获取应用下的表的最近同步时间
-            try {
+            if (redisUtil.hasKey(accessAppLatestSyncTimeS1)) {
+                List<AppRegistrationVO> vos = (List<AppRegistrationVO>) redisUtil.get(accessAppLatestSyncTimeS1);
                 for (AppRegistrationVO appRegistrationVO : appRegistrationVOList) {
+                    for (AppRegistrationVO vo : vos) {
+                        if (appRegistrationVO.getId()==vo.getId()){
+                            appRegistrationVO.setLastSyncTime(vo.getLastSyncTime());
+                        }
+                    }
+                }
+            }
+
+
+            filter.setRecords(appRegistrationVOList);
+        }
+        return filter;
+    }
+
+    /**
+     * 获取应用下的表的最近同步时间
+     *
+     * @param vos
+     */
+    private void getLastSyncTimeForVos(List<AppRegistrationVO> vos) {
+        try {
+            if (redisUtil.hasKey(accessAppLatestSyncTimeS1)) {
+                redisUtil.get(accessAppLatestSyncTimeS1);
+            } else {
+                for (AppRegistrationVO appRegistrationVO : vos) {
                     List<TableAccessPO> list = tableAccessImpl.list(new LambdaQueryWrapper<TableAccessPO>()
-                            .select(TableAccessPO::getTableName, TableAccessPO::getId,TableAccessPO::getApiId)
+                            .select(TableAccessPO::getTableName, TableAccessPO::getId, TableAccessPO::getApiId)
                             .eq(TableAccessPO::getAppId, appRegistrationVO.getId())
                             //pid为0意味着只查表
-                            .eq(TableAccessPO::getPid,0)
+                            .eq(TableAccessPO::getPid, 0)
                     );
                     List<String> tblNames = new ArrayList<>();
                     List<Long> tblIds = new ArrayList<>();
@@ -2472,27 +2499,59 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         if (accessTblLastSyncTime.getCode() == ResultEnum.SUCCESS.getCode() && accessTblLastSyncTime.getData() != null) {
                             appRegistrationVO.setLastSyncTime(accessTblLastSyncTime.getData());
                         }
-                    //实时应用 要查的日志表不同
-                    }else if(appRegistrationVO.appType == 0){
+                        //实时应用 要查的日志表不同
+                    } else if (appRegistrationVO.appType == 0) {
                         for (TableAccessPO tableAccessPO : list) {
                             tblIds.add(tableAccessPO.getApiId());
                         }
 
                         ResultEntity<LocalDateTime> realTimeTblLastSyncTime = publishTaskClient.getRealTimeTblLastSyncTime(tblIds);
-                        if (realTimeTblLastSyncTime.getCode() == ResultEnum.SUCCESS.getCode()  && realTimeTblLastSyncTime.getData() != null) {
+                        if (realTimeTblLastSyncTime.getCode() == ResultEnum.SUCCESS.getCode() && realTimeTblLastSyncTime.getData() != null) {
                             appRegistrationVO.setLastSyncTime(realTimeTblLastSyncTime.getData());
                         }
 
                     }
                 }
-            } catch (Exception e) {
-                log.error("***************获取该应用下的表的最近同步时间失败***************");
-                log.error("原因" + e);
+                redisUtil.set(accessAppLatestSyncTimeS1, vos, 3600);
             }
-            filter.setRecords(appRegistrationVOList);
+        } catch (Exception e) {
+            log.error("***************获取该应用下的表的最近同步时间失败***************");
+            log.error("原因" + e);
         }
-        return filter;
+
     }
+
+    private static final String accessAppLatestSyncTimeS1 = "accessAppLatestSyncTimeS1";
+
+    //每一小时刷新一次
+    //获取数据接入每个应用下的表的最近同步时间
+    @Scheduled(cron = "0 0 0/1 * * ? ")
+    public void getLatestSyncTimeOfEveryApp() {
+        //获取所有应用
+        List<AppRegistrationPO> pos = list(new LambdaQueryWrapper<AppRegistrationPO>()
+                //不查cdc类型应用
+                .ne(AppRegistrationPO::getAppType, 2));
+
+        List<AppRegistrationVO> vos = new ArrayList<>();
+
+        for (AppRegistrationPO po : pos) {
+            AppRegistrationVO appRegistrationVO = new AppRegistrationVO();
+            appRegistrationVO.setId(po.getId());
+            appRegistrationVO.setAppName(po.getAppName());
+            appRegistrationVO.setAppAbbreviation(po.getAppAbbreviation());
+            int whetherSchema = po.getWhetherSchema() ? 1 : 0;
+            appRegistrationVO.setWhetherSchema(whetherSchema);
+            vos.add(appRegistrationVO);
+        }
+
+        log.debug("*****数据接入 获取数据接入每个应用下的表的最近同步时间定时任务开始执行*****" + LocalDateTime.now());
+        if (redisUtil.hasKey(accessAppLatestSyncTimeS1)) {
+            redisUtil.del(accessAppLatestSyncTimeS1);
+        }
+        getLastSyncTimeForVos(vos);
+        log.debug("*****数据接入 获取数据接入每个应用下的表的最近同步时间定时任务执行完毕*****" + LocalDateTime.now());
+    }
+
 
     @Override
     public List<FilterFieldDTO> getColumn() {

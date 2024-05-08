@@ -7,10 +7,12 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.service.impl.AppRegistrationImpl;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
 import org.olap4j.CellSet;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapStatement;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -139,6 +142,14 @@ public class TestController {
             AbstractCommonDbHelper.closeStatement(statement);
             AbstractCommonDbHelper.closeConnection(connection);
         }
+    }
+
+    @Resource
+    private AppRegistrationImpl ap;
+    @ApiOperation("测试同步时间redis")
+    @GetMapping("/testSyncTimeRedis")
+    public void testSyncTimeRedis(){
+        ap.getLatestSyncTimeOfEveryApp();
     }
 
 
