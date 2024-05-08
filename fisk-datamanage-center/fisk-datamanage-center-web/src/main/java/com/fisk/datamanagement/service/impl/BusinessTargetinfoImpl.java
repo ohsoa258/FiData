@@ -12,6 +12,7 @@ import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.BeanHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
@@ -35,6 +36,7 @@ import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -97,6 +99,9 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
     @Resource
     DataModelClient modelClient;
+
+    @Resource
+    BusinessCategoryAssignmentService businessCategoryAssignmentService;
 
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
             "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道", "数据粒度"};
@@ -1043,8 +1048,11 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                 } else {
                     datamap.put("statistical_cycle", null);
                 }
-                if (!StringUtils.isEmpty(stringObjectMap.get("indicatorformula"))) {
-                    datamap.put("indicatorformula", stringObjectMap.get("indicatorformula"));
+                String indicatorformula = (String)stringObjectMap.get("indicatorformula");
+                if (!StringUtils.isEmpty(indicatorformula)) {
+                    indicatorformula = indicatorformula.replaceAll("<span class=\"tribute-selected-item\">([\\s\\S]*?)<\\/span>", "$1")
+                            .replace("&nbsp;", " ");
+                    datamap.put("indicatorformula", indicatorformula);
                 } else {
                     datamap.put("indicatorformula", null);
                 }
@@ -1281,5 +1289,93 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             dtos.add(dto);
         }
         return dtos;
+    }
+
+    @Override
+    public List<BusinessMetaDataNameDTO> getBusinessMetaDataNameList(String key) {
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
+        List<RoleInfoDTO> businessAssignment = new ArrayList<>();
+        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()){
+            businessAssignment = rolebyUserId.data;
+        }else {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+
+        LambdaQueryWrapper<BusinessCategoryAssignmentPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(BusinessCategoryAssignmentPO::getRoleId,roleIds);
+        List<BusinessCategoryAssignmentPO> list = businessCategoryAssignmentService.list(wrapper);
+        List<Integer> menuId = list.stream().map(BusinessCategoryAssignmentPO::getCategoryId).distinct().collect(Collectors.toList());
+
+        List<BusinessCategoryPO> allMenuList = businessCategoryMapper.selectList(new QueryWrapper<>());
+        allMenuList = allMenuList.stream().map(i->{
+            if (i.getPid() == null){
+                i.setPid(0);
+            }
+            return i;
+        }).collect(Collectors.toList());
+        List<Integer> allChildIds = getAllChildIds(allMenuList, menuId);
+        allChildIds.addAll(menuId);
+        LambdaQueryWrapper<BusinessTargetinfoPO> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.in(BusinessTargetinfoPO::getPid,allChildIds);
+        if (!StringUtils.isEmpty(key)){
+            wrapper1.like(BusinessTargetinfoPO::getIndicatorName,key);
+        }
+        List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(wrapper1);
+        List<BusinessMetaDataNameDTO> result = businessTargetinfoPOList.stream().map(i -> {
+            BusinessMetaDataNameDTO businessMetaDataNameDTO = new BusinessMetaDataNameDTO();
+            businessMetaDataNameDTO.setId(String.valueOf(i.getId()));
+            businessMetaDataNameDTO.setPid(i.getPid());
+            businessMetaDataNameDTO.setName(i.getIndicatorName());
+            return businessMetaDataNameDTO;
+        }).collect(Collectors.toList());
+        return result;
+    }
+
+    // 递归获取多个根节点的子节点的方法
+//    public List<Integer> getAllChildIds(List<BusinessCategoryPO> allCategory, List<Integer> parentIds) {
+//        List<Integer> childIds = new ArrayList<>();
+//
+//        Map<Integer, BusinessCategoryPO> allMap = allCategory.stream().collect(Collectors.toMap(BusinessCategoryPO::getPid, i -> i));
+//
+//        // 遍历所有分类
+//        for (BusinessCategoryPO category : allCategory) {
+//            // 如果当前分类的父节点 ID 包含在指定的父节点 ID 集合中，则将其添加到子节点集合中
+//            if (parentIds.contains(category.pid)) {
+//                childIds.add((int)category.getId());
+//                // 递归调用，查找当前分类的子节点
+//                childIds.addAll(getAllChildIds(allCategory, Collections.singletonList((int)category.getId())));
+//            }
+//        }
+//        childIds.addAll(parentIds);
+//        return childIds;
+//    }
+
+    // 将分类列表按照 pid 分组
+    private Map<Integer, List<BusinessCategoryPO>> groupByPid(List<BusinessCategoryPO> allCategory) {
+        return allCategory.stream()
+                .collect(Collectors.groupingBy(category -> category.pid));
+    }
+
+    // 递归获取多个根节点的子节点的方法
+    public List<Integer> getAllChildIds(List<BusinessCategoryPO> allCategory, List<Integer> parentIds) {
+        Map<Integer, List<BusinessCategoryPO>> categoryMap = groupByPid(allCategory);
+        List<Integer> childIds = new ArrayList<>();
+        // 遍历父节点 ID 集合
+        for (Integer parentId : parentIds) {
+            // 如果当前父节点存在子节点，则递归添加子节点
+            if (categoryMap.containsKey(parentId)) {
+                List<BusinessCategoryPO> children = categoryMap.get(parentId);
+                List<Integer> ids = children.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+                // 递归调用，查找当前父节点的子节点
+                List<Integer> childrenIds = getAllChildIds(allCategory, ids);
+                childIds.addAll(ids);
+                childIds.addAll(childrenIds);
+            }
+        }
+        // 转换为 List 返回
+        return childIds;
     }
 }

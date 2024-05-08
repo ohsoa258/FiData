@@ -4,11 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDefsDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
-import com.fisk.datamanagement.dto.classification.FacttreeListDTO;
+import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -91,4 +87,7 @@ public interface BusinessTargetinfoService {
      * @return
      */
     List<BusinessExtendedfieldsDTO> modelGetMetricMapList();
+
+
+    List<BusinessMetaDataNameDTO> getBusinessMetaDataNameList(String key);
 }

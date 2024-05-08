@@ -136,7 +136,11 @@ public class BusinessCategoryController {
     public ResultEntity<Object> getBusinessMetaDataDetailMenuList(@RequestParam("pid") String pid) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessMetaDataDetailMenuList(pid));
     }
-
+    @ApiOperation("获取业务指标明细数据下拉列表(数据)")
+    @GetMapping("/getBusinessMetaDataNameList")
+    public ResultEntity<Object> getBusinessMetaDataNameList(@RequestParam(value = "key",required = false) String key) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessMetaDataNameList(key));
+    }
     @ApiOperation("获取业务指标明细数据")
     @GetMapping("/getBusinessMetaDataDetail")
     public ResultEntity<Object> getBusinessMetaDataDetailList(@RequestParam("id") String id) {
