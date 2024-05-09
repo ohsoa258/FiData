@@ -242,12 +242,13 @@ public class IEmailGroupServiceImpl extends ServiceImpl<EmailGroupPOMapper, Emai
                 //邮箱组id : 待发送信息
                 Map<Integer, String> map = new HashMap<>();
                 for (Integer integer : collect) {
-                    String msg = "以下是数据中台元数据实体生命周期已过期实体名单[ip_dbName_tblName]：<br/>";
+                    String msg = "以下是数据中台元数据实体生命周期已过期实体名单[ip_dbName_id_tblName]：<br/>";
                     StringBuilder entityName = new StringBuilder();
                     for (MetadataEntityPO entity : expiresEntities) {
                         if (integer.equals(entity.getEmailGroupId())) {
                             entityName.append("【")
                                     .append(entity.getQualifiedName())
+                                    .append(entity.getName())
                                     .append("】")
                                     .append("<br/>");
                         }
