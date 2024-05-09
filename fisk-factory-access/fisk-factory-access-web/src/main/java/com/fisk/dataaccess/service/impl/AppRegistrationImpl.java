@@ -3245,7 +3245,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                 // 第三层: table层
                                 List<FiDataMetaDataTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("api_id", api.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                    tableDtoTree.setId(table.getTableName());
+                                    tableDtoTree.setId(String.valueOf(table.id));
                                     tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
                                     tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
                                     tableDtoTree.setLabelAlias(table.tableName);
@@ -3267,7 +3267,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     List<FiDataMetaDataTreeDTO> fieldTreeList = this.tableFieldsImpl.query().eq("table_access_id", table.id).list().stream().filter(Objects::nonNull).map(field -> {
 
                                         FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
-                                        fieldDtoTree.setId(field.getFieldName());
+                                        fieldDtoTree.setId(String.valueOf(field.id));
                                         fieldDtoTree.setParentId(String.valueOf(table.id));
                                         fieldDtoTree.setLabel(field.fieldName);
                                         fieldDtoTree.setLabelAlias(field.fieldName);

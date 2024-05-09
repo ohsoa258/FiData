@@ -458,6 +458,8 @@ public enum ResultEnum {
     SMART_PUBLISH_GET_APPINFO_FALIURE(14017, "智能发布-获取应用信息失败"),
     DATA_OPS_GET_TABLE_SCHEMA_ERROR(14018, "数据库运维获取数据库表列信息失败"),
 
+    CHECK_STANDARDS_GROUP_ERROR(14019,"添加失败，该校验组名称已存在"),
+
     /**
      * mdm
      */
