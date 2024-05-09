@@ -1,5 +1,6 @@
 package com.fisk.dataaccess.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -7,11 +8,11 @@ import java.time.LocalDateTime;
 
 /**
  * @author Lock
- *
+ * <p>
  * 应用注册分页对象
  */
 @Data
-public class AppRegistrationVO{
+public class AppRegistrationVO {
 
     /**
      * id
@@ -58,6 +59,7 @@ public class AppRegistrationVO{
      * 最近数据同步时间
      */
     @ApiModelProperty(value = "最近数据同步时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     public LocalDateTime lastSyncTime;
 
     @ApiModelProperty(value = "驱动类型", required = true)

@@ -2439,10 +2439,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             // 新增 获取应用下的表的最近同步时间
             if (redisUtil.hasKey(accessAppLatestSyncTimeS1)) {
-                List<AppRegistrationVO> vos = (List<AppRegistrationVO>) redisUtil.get(accessAppLatestSyncTimeS1);
+                List<AppRegistrationVO> vos = JSON.parseArray(redisUtil.get(accessAppLatestSyncTimeS1).toString(), AppRegistrationVO.class);
                 for (AppRegistrationVO appRegistrationVO : appRegistrationVOList) {
                     for (AppRegistrationVO vo : vos) {
-                        if (appRegistrationVO.getId()==vo.getId()){
+                        if (appRegistrationVO.getId() == vo.getId()) {
                             appRegistrationVO.setLastSyncTime(vo.getLastSyncTime());
                         }
                     }
@@ -2512,7 +2512,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     }
                 }
-                redisUtil.set(accessAppLatestSyncTimeS1, vos, 3600);
+                redisUtil.set(accessAppLatestSyncTimeS1, JSON.toJSONString(vos), 3600);
             }
         } catch (Exception e) {
             log.error("***************获取该应用下的表的最近同步时间失败***************");
