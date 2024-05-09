@@ -14,7 +14,8 @@ public enum RuleCheckTypeEnum implements BaseEnum {
      */
     NONE(0,"空"),
     STRONG_RULE(1, "强规则"),
-    WEAK_RULE(2, "弱规则");
+    WEAK_RULE(2, "弱规则"),
+    MIDDLE_RULE(3, "中规则");
 
     RuleCheckTypeEnum(int value, String name) {
         this.name = name;
