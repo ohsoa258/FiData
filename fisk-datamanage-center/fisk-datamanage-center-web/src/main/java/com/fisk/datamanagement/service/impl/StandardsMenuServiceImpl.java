@@ -155,6 +155,41 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
         return StandardsMenuMap.INSTANCES.posToDtos(list);
     }
 
+    @Override
+    public List<Integer> getStandardByMenuId(Integer menuId) {
+        List<Integer> menuIds = new ArrayList<>();
+        List<Integer> result = new ArrayList<>();
+        if (menuId != null) {
+            List<StandardsMenuPO> all = this.list();
+            if (!CollectionUtils.isEmpty(all)){
+                menuIds = findAllChildrenIdsWithParent(all, menuId);
+                menuIds.add(menuId);
+            }
+            List<StandardsPO> standardsPOS = standardsService.list();
+            for (StandardsPO standardsPO : standardsPOS) {
+                if (menuIds.contains(standardsPO.getMenuId())){
+                    result.add((int)standardsPO.id);
+                }
+            }
+        }
+        return result;
+    }
+
+    // 递归查询所有子 ID（包含父 ID）
+    public List<Integer> findAllChildrenIdsWithParent(List<StandardsMenuPO> list, Integer parentId) {
+        List<Integer> childrenIds = new ArrayList<>();
+        List<StandardsMenuPO> children = list.stream()
+                .filter(item -> item.getPid().equals(parentId))
+                .collect(Collectors.toList());
+
+        for (StandardsMenuPO child : children) {
+            if (child.getType() == 2){
+                childrenIds.add((int)child.getId());
+            }
+            childrenIds.addAll(findAllChildrenIdsWithParent(list, (int)child.getId()));
+        }
+        return childrenIds;
+    }
     private void standardsTreeForAll(List<StandardsTreeDTO> allList, List<StandardsTreeDTO> parentList, List<StandardsPO> list) {
         Map<Integer, List<StandardsTreeDTO>> childrenMap = new HashMap<>();
         for (StandardsTreeDTO dto : allList) {

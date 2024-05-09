@@ -4,6 +4,7 @@ import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
@@ -172,7 +173,7 @@ public interface DataManageClient {
     ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList);
 
     @PostMapping("/Standards/getAllStandardsTree")
-    ResultEntity<Object> getAllStandardsTree(@RequestParam("id") String id);
+    ResultEntity<List<FiDataMetaDataTreeDTO>> getAllStandardsTree(@RequestParam("id") String id);
 
     /**
      * 数仓建模-关联字段和数据源标准
@@ -254,4 +255,12 @@ public interface DataManageClient {
     @GetMapping("/BusinessCategory/modelGetMetricMapList")
     List<BusinessExtendedfieldsDTO> modelGetMetricMapList();
 
+    /**
+     * 根据数据元标准menuId获取所有standardsId(数据校验用)
+     * @param menuId
+     * @return
+     */
+    @ApiOperation("根据数据元标准menuId获取所有standardsId(数据校验用)")
+    @GetMapping("/Standards/getStandardByMenuId")
+    List<Integer> getStandardByMenuId(@RequestParam("menuId")Integer menuId);
 }

@@ -2539,7 +2539,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                                     return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
                                 } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                     checkResultMsg.append(e.checkResultMsg).append("；");
-                                }else if (e.checkType.equals(RuleCheckTypeEnum.MIDDLE_RULE.getName())) {
+                                }else if (e.checkType.equals(RuleCheckTypeEnum.STRICT_RULE.getName())) {
                                     checkResultMsg.append(e.checkResultMsg).append("；");
                                     targetTable = targetTable.stream().map(i->{
                                         if (i.table.equals(e.getCheckDisplayTableName())){

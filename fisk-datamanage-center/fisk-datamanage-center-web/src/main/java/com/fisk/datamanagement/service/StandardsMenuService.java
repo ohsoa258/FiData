@@ -48,5 +48,12 @@ public interface StandardsMenuService extends IService<StandardsMenuPO> {
      * @return
      */
     List<StandardsMenuDTO> getStandardMenus();
+
+    /**
+     * 根据数据元标准menuId获取所有standardsId(数据校验用)
+     * @param menuId
+     * @return
+     */
+    List<Integer> getStandardByMenuId(Integer menuId);
 }
 

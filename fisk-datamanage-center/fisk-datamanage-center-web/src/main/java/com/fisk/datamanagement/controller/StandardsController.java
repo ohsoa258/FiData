@@ -5,8 +5,11 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.standards.*;
+import com.fisk.datamanagement.entity.StandardsBeCitedPO;
+import com.fisk.datamanagement.service.StandardsBeCitedService;
 import com.fisk.datamanagement.service.StandardsMenuService;
 import com.fisk.datamanagement.service.StandardsService;
 import io.swagger.annotations.Api;
@@ -31,6 +34,8 @@ public class StandardsController {
     StandardsMenuService standardsMenuService;
     @Resource
     StandardsService standardsService;
+    @Resource
+    StandardsBeCitedService standardsBeCitedService;
 
     @ApiOperation("查看数据标准树形标签")
     @GetMapping("/getStandardsTree")
@@ -131,7 +136,7 @@ public class StandardsController {
 
     @ApiOperation("获取所有数据标准树形结构(数据校验用)")
     @PostMapping("/getAllStandardsTree")
-    public ResultEntity<Object> getAllStandardsTree(@RequestParam("id") String id) {
+    public ResultEntity<List<FiDataMetaDataTreeDTO>> getAllStandardsTree(@RequestParam("id") String id) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.getAllStandardsTree(id));
     }
 
@@ -172,4 +177,19 @@ public class StandardsController {
         return standardsMenuService.getStandardMenus();
     }
 
+    @ApiOperation("校验数据元标准关联字段是否已经存在")
+    @GetMapping("/checkStandardBeCited")
+    public ResultEntity<Object> checkStandardBeCited(@RequestParam("standardsId") Integer standardsId,
+                                                     @RequestParam("dbId") Integer dbId,
+                                                     @RequestParam("tableId") Integer tableId,
+                                                     @RequestParam("fieldId") Integer fieldId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsBeCitedService.checkStandardBeCited(standardsId,dbId,tableId,fieldId));
+    }
+
+
+    @ApiOperation("根据数据元标准menuId获取所有standardsId(数据校验用)")
+    @GetMapping("/getStandardByMenuId")
+    public List<Integer> getStandardByMenuId(@RequestParam("menuId")Integer menuId) {
+        return standardsMenuService.getStandardByMenuId(menuId);
+    }
 }

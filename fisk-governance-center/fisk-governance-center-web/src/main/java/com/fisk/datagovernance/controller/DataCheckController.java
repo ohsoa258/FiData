@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
+import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
@@ -32,6 +33,9 @@ import java.util.List;
 public class DataCheckController {
     @Resource
     private IDataCheckManageService service;
+
+    @Resource
+    private IDatacheckStandardsGroupService datacheckStandardsGroupService;
 
     @ApiOperation("查询全部校验规则")
     @PostMapping("/getAllRule")
@@ -97,5 +101,30 @@ public class DataCheckController {
     @DeleteMapping("/deleteCheckResult")
     public ResultEntity<Object> deleteCheckResult() {
         return ResultEntityBuild.build(service.deleteCheckResult());
+    }
+
+
+    @ApiOperation("获取数据校验数据元标准组中数据")
+    @GetMapping("/getDataCheckStandardsGroup")
+    public ResultEntity<Object> getDataCheckStandardsGroup(@RequestParam("standardsId") Integer standardsId) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,datacheckStandardsGroupService.getDataCheckStandardsGroup(standardsId));
+    }
+
+    @ApiOperation("添加数据校验数据元标准组")
+    @PostMapping("/addDataCheckStandardsGroup")
+    public ResultEntity<Object> addDataCheckStandardsGroup(@RequestBody DatacheckStandardsGroupDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,datacheckStandardsGroupService.addDataCheckStandardsGroup(dto));
+    }
+
+    @ApiOperation("修改数据校验数据元标准组")
+    @PostMapping("/editDataCheckStandardsGroup")
+    public ResultEntity<Object> editDataCheckStandardsGroup(@RequestBody DatacheckStandardsGroupDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,datacheckStandardsGroupService.editDataCheckStandardsGroup(dto));
+    }
+
+    @ApiOperation("删除数据校验数据元标准组")
+    @GetMapping("/deleteDataCheckStandardsGroup")
+    public ResultEntity<Object> deleteDataCheckStandardsGroup(@RequestParam("id") Integer id) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,datacheckStandardsGroupService.deleteDataCheckStandardsGroup(id));
     }
 }

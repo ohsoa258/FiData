@@ -122,4 +122,11 @@ public class DataCheckDTO {
      */
     @ApiModelProperty(value = "数据校验规则扩展属性")
     public DataCheckExtendDTO dataCheckExtend;
+
+
+    /**
+     * 规则所属分组id(数据标准)
+     */
+    @ApiModelProperty(value = "规则所属分组id(数据标准)")
+    public Integer datacheckGroupId;
 }

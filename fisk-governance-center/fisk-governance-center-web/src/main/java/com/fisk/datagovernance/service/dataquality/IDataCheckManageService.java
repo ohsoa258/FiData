@@ -28,6 +28,13 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
     List<DataCheckVO> getAllRule(DataCheckQueryDTO query);
 
     /**
+     * 查询所有规则
+     *
+     * @return 规则列表
+     */
+    List<DataCheckVO> getRuleByIds(List<Integer> ids);
+
+    /**
      * 添加数据
      *
      * @param dto dto

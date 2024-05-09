@@ -92,6 +92,11 @@ public class DataCheckPO extends BasePO {
      * 规则说明
      */
     public String ruleIllustrate;
+
+    /**
+     * 规则所属分组id(数据标准)
+     */
+    public Integer datacheckGroupId;
 }
 
 

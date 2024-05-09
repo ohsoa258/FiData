@@ -29,12 +29,14 @@ import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataops.DataObsSqlPO;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
+import com.fisk.datagovernance.entity.dataquality.DatacheckStandardsGroupPO;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.map.dataops.DataObsSqlMap;
 import com.fisk.datagovernance.map.dataquality.DataSourceConMap;
 import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataops.DataObsSqlService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
+import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 import com.fisk.datamanage.client.DataManageClient;
@@ -107,6 +109,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Resource
     private DataManageClient dataManageClient;
+
+    @Resource
+    IDatacheckStandardsGroupService standardsGroupService;
 
     @Override
     public Page<DataSourceConVO> page(DataSourceConQuery query) {
@@ -255,13 +260,26 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         // 第二步：获取表规则
         List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
+        if (checkStandards){
+            List<DatacheckStandardsGroupPO> standardsGroupPOS = standardsGroupService.list();
+            if (CollectionUtils.isNotEmpty(standardsGroupPOS) && isComputeRuleCount) {
+                for (DatacheckStandardsGroupPO standardsGroupPO : standardsGroupPOS) {
+                    TableRuleCountDTO tableRuleCountDTO = new TableRuleCountDTO();
+                    tableRuleCountDTO.setSourceId(0);
+                    tableRuleCountDTO.setTableRuleCount(1);
+                    tableRuleCountDTO.setTableUnique(String.valueOf(standardsGroupPO.getStandardsMenuId()));
+                    tableRuleCountDTO.setTableRuleType("校验规则");
+                    tableRuleCountDTO.setTableBusinessType(9);
+                    tableRuleCountDTO.setTableType(3);
+                    tableRules.add(tableRuleCountDTO);
+                }
+            }
+            FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
+            fiDataMetaDataTreeBase.children.add(standardsTree);
+        }
         // 第三步：递归设置Tree-节点规则数量
         if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
             fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
-        }
-        if (checkStandards){
-            FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
-            fiDataMetaDataTreeBase.children.add(standardsTree);
         }
         return fiDataMetaDataTreeBase;
     }
@@ -274,7 +292,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         standardsTree.setLabel("数据标准");
         standardsTree.setLabelAlias("数据标准");
         standardsTree.setLabelDesc("数据标准");
-        standardsTree.setLevelType(LevelTypeEnum.DATABASE);
+        standardsTree.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+        standardsTree.setLevelType(LevelTypeEnum.STANDARD_DATABASE);
         standardsTree.setSourceId(Integer.parseInt(id));
         standardsTree.setSourceType(1);
         standardsTree.setChildren(getStandardsTreeChildren(standardsUuid));
@@ -282,11 +301,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
     }
 
     public List<FiDataMetaDataTreeDTO> getStandardsTreeChildren(String id){
-        ResultEntity<Object> allStandardsTree = dataManageClient.getAllStandardsTree(id);
+        ResultEntity<List<FiDataMetaDataTreeDTO>> allStandardsTree = dataManageClient.getAllStandardsTree(id);
         if (allStandardsTree.code != ResultEnum.SUCCESS.getCode()){
             return new ArrayList<>();
         }
-        return (List<FiDataMetaDataTreeDTO>)allStandardsTree.data;
+        return allStandardsTree.data;
     }
     @Override
     public FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount) {
@@ -668,7 +687,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (CollectionUtils.isNotEmpty(treeDTO.getChildren())) {
             TreeRuleTileDTO tileDTO = new TreeRuleTileDTO();
             if ((treeDTO.getLevelType() == LevelTypeEnum.DATABASE && sourceType == SourceTypeEnum.FiData) ||
-                    (treeDTO.getLevelType() == LevelTypeEnum.BASEFOLDER && sourceType == SourceTypeEnum.custom)) {
+                    (treeDTO.getLevelType() == LevelTypeEnum.BASEFOLDER && sourceType == SourceTypeEnum.custom)
+                    || (treeDTO.getLevelType() == LevelTypeEnum.STANDARD_DATABASE && sourceType == SourceTypeEnum.FiData)) {
                 tileDTO.setId(treeDTO.getId());
                 tileDTO.setName(treeDTO.getLabel());
                 tileDTO.setLabelBusinessType(treeDTO.getLabelBusinessType());
@@ -713,14 +733,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (CollectionUtils.isNotEmpty(dto.getChildren())) {
             for (int i = 0; i < dto.getChildren().size(); i++) {
                 FiDataMetaDataTreeDTO dataTreeDTO = dto.getChildren().get(i);
-                if (dataTreeDTO.getLevelType() != LevelTypeEnum.TABLE && dataTreeDTO.getLevelType() != LevelTypeEnum.VIEW) {
+                if (dataTreeDTO.getLevelType() != LevelTypeEnum.TABLE && dataTreeDTO.getLevelType() != LevelTypeEnum.VIEW && dataTreeDTO.getLevelType() != LevelTypeEnum.STANDARD) {
                     setTableRuleCount(sourceType, dataTreeDTO, tableRules, treeTiles);
                 } else {
                     int tableType = 0;
-                    if (dataTreeDTO.getLevelType() == LevelTypeEnum.TABLE) {
+                    if (dataTreeDTO.getLevelType() == LevelTypeEnum.TABLE ) {
                         tableType = 1;
                     } else if (dataTreeDTO.getLevelType() == LevelTypeEnum.VIEW) {
                         tableType = 2;
+                    }else if (dataTreeDTO.getLevelType() == LevelTypeEnum.STANDARD){
+                        tableType = 3;
                     }
                     int finalTableType = tableType;
                     // 通过数据源ID+表类型+表业务类型+表ID/表名称 定位到表的规则
@@ -731,11 +753,24 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         tableUnique = dataTreeDTO.getLabel();
                     }
                     String finalTableUnique = tableUnique;
-                    List<TableRuleCountDTO> ruleList = tableRules.stream().filter(
-                            t -> t.getSourceId() == dataTreeDTO.getSourceId()
-                                    && t.getTableType() == finalTableType
-                                    && t.getTableBusinessType() == dataTreeDTO.getLabelBusinessType()
-                                    && t.getTableUnique().equals(finalTableUnique)).collect(Collectors.toList());
+                    List<TableRuleCountDTO> ruleList = new ArrayList<>();
+                    if (finalTableType == 3){
+                        ruleList = tableRules.stream().filter(
+                                t -> t.getSourceId() == dataTreeDTO.getSourceId()
+                                        && t.getTableType() == finalTableType
+                                        && t.getTableUnique().equals(finalTableUnique)).collect(Collectors.toList());
+                        int totalRuleCount = ruleList.size();
+                        ruleList = ruleList.stream().map(y->{
+                            y.setTableRuleCount(totalRuleCount);
+                            return y;
+                        }).collect(Collectors.toList());
+                    }else {
+                        ruleList = tableRules.stream().filter(
+                                t -> t.getSourceId() == dataTreeDTO.getSourceId()
+                                        && t.getTableType() == finalTableType
+                                        && t.getTableBusinessType() == dataTreeDTO.getLabelBusinessType()
+                                        && t.getTableUnique().equals(finalTableUnique)).collect(Collectors.toList());
+                    }
                     if (CollectionUtils.isNotEmpty(ruleList)) {
                         // 获取校验规则数量
                         TableRuleCountDTO checkRule = ruleList.stream().filter(t -> t.getTableRuleType().equals("校验规则")).findFirst().orElse(null);
@@ -752,6 +787,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         // 设置表的父节点规则数量
                         if (CollectionUtils.isNotEmpty(treeTiles) &&
                                 (dataTreeDTO.getCheckRuleCount() > 0 || dataTreeDTO.getFilterRuleCount() > 0 || dataTreeDTO.getRecoveryRuleCount() > 0)) {
+                            if (dataTreeDTO.levelType == LevelTypeEnum.STANDARD){
+                                treeTiles = treeTiles.stream().map(v ->{
+                                    if (v.getLevelTypeEnum() == LevelTypeEnum.STANDARD){
+                                        if (v.getId().equals(dataTreeDTO.id)){
+                                            v.setCheckRuleCount(dataTreeDTO.checkRuleCount);
+                                            v.setFilterRuleCount(dataTreeDTO.filterRuleCount);
+                                            v.setRecoveryRuleCount(dataTreeDTO.recoveryRuleCount);
+                                        }
+                                    }
+                                    return v;
+                                }).collect(Collectors.toList());
+                            }
                             treeTiles = setFolderRuleCount(sourceType, dataTreeDTO.getParentId(), dataTreeDTO.getCheckRuleCount(), dataTreeDTO.getFilterRuleCount(), dataTreeDTO.getRecoveryRuleCount(), treeTiles);
                         }
                     }
@@ -815,7 +862,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (CollectionUtils.isNotEmpty(tree.getChildren()) && CollectionUtils.isNotEmpty(treeTile)) {
             TreeRuleTileDTO tileDTO = null;
             if ((tree.getLevelType() == LevelTypeEnum.DATABASE && sourceType == SourceTypeEnum.FiData)
-                    || (tree.getLevelType() == LevelTypeEnum.BASEFOLDER && sourceType == SourceTypeEnum.custom)) {
+                    || (tree.getLevelType() == LevelTypeEnum.BASEFOLDER && sourceType == SourceTypeEnum.custom)
+                    || (tree.getLevelType() == LevelTypeEnum.STANDARD_DATABASE && sourceType == SourceTypeEnum.FiData)) {
                 tileDTO = treeTile.stream().filter(t -> t.getId().equals(tree.getId())).findFirst().orElse(null);
                 if (tileDTO != null) {
                     tree.setCheckRuleCount(tileDTO.getCheckRuleCount());

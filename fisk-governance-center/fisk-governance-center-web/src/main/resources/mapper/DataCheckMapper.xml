@@ -26,12 +26,53 @@
                t2.template_type                                       AS templateType,
                t2.template_name,
                t3.datasource_id                                       AS fiDataSourceId,
-               t3.datasource_type                                     AS sourceType
+               t3.datasource_type                                     AS sourceType,
+               t1.datacheck_group_Id
         FROM tb_datacheck_rule t1
                  LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
                  LEFT JOIN tb_datasource_config t3 ON t1.datasource_id = t3.id
         WHERE t1.del_flag = 1
           AND t2.del_flag = 1
           AND t3.del_flag = 1
+    </select>
+
+    <select id="getRuleByIds" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO">
+        SELECT t1.id,
+               t1.template_id,
+               t1.datasource_id,
+               t1.rule_name,
+               t1.schema_name,
+               t1.table_unique,
+               t1.table_name,
+               t1.table_describe,
+               CONCAT(IFNULL(t1.schema_name, ''), '.', t1.table_name) AS tableAlias,
+               t1.table_type                                          AS tableType,
+               t1.table_business_type                                 AS tableBusinessType,
+               t1.rule_check_type                                     AS ruleCheckType,
+               t1.rule_execute_node                                   AS ruleExecuteNode,
+               t1.rule_execute_sort,
+               t1.rule_state                                          AS ruleState,
+               t1.rule_weight,
+               t1.rule_describe,
+               t1.rule_illustrate,
+               t1.create_time,
+               t1.create_user,
+               t2.template_type                                       AS templateType,
+               t2.template_name,
+               t3.datasource_id                                       AS fiDataSourceId,
+               t3.datasource_type                                     AS sourceType,
+               t1.datacheck_group_Id
+        FROM tb_datacheck_rule t1
+                 LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
+                 LEFT JOIN tb_datasource_config t3 ON t1.datasource_id = t3.id
+        WHERE t1.del_flag = 1
+          AND t2.del_flag = 1
+          AND t3.del_flag = 1
+        <if test="ids != null and ids.size() > 0">
+            AND t1.datacheck_group_Id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
     </select>
 </mapper>

@@ -724,25 +724,25 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 
         List<StandardsMenuPO> standardsDataMenus = standardsMenus.stream().filter(i -> i.getType() == 2).collect(Collectors.toList());
 
-        List<Long> standardsDataMenuIds = standardsDataMenus.stream().map(BasePO::getId).collect(Collectors.toList());
+//        List<Long> standardsDataMenuIds = standardsDataMenus.stream().map(BasePO::getId).collect(Collectors.toList());
 
-        LambdaQueryWrapper<StandardsPO> standardQueryWrapper = new LambdaQueryWrapper<>();
-        standardQueryWrapper.in(StandardsPO::getMenuId, standardsDataMenuIds);
-        List<StandardsPO> standardsPOS = this.list(standardQueryWrapper);
-        standardsPOS.stream().collect(Collectors.toMap(i -> i.getId(), i -> i));
-        Map<Integer, StandardsPO> standardMap = standardsPOS.stream().collect(Collectors.toMap(StandardsPO::getMenuId, i -> i));
-        List<Long> standardIds = standardsPOS.stream().map(BasePO::getId).collect(Collectors.toList());
+//        LambdaQueryWrapper<StandardsPO> standardQueryWrapper = new LambdaQueryWrapper<>();
+//        standardQueryWrapper.in(StandardsPO::getMenuId, standardsDataMenuIds);
+//        List<StandardsPO> standardsPOS = this.list(standardQueryWrapper);
+//        standardsPOS.stream().collect(Collectors.toMap(i -> i.getId(), i -> i));
+//        Map<Integer, StandardsPO> standardMap = standardsPOS.stream().collect(Collectors.toMap(StandardsPO::getMenuId, i -> i));
+//        List<Long> standardIds = standardsPOS.stream().map(BasePO::getId).collect(Collectors.toList());
 
-        LambdaQueryWrapper<StandardsBeCitedPO> beCitedQueryWrapper = new LambdaQueryWrapper<>();
-        beCitedQueryWrapper.in(StandardsBeCitedPO::getStandardsId, standardIds);
-        List<StandardsBeCitedPO> beCiteds = standardsBeCitedService.list(beCitedQueryWrapper);
-        Map<Integer, List<FiDataMetaDataTreeDTO>> dataMap = beCiteds.stream().collect(groupingBy(StandardsBeCitedPO::getStandardsId,
-                Collectors.mapping(i -> {
-                    FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
-                    Map<String, Object> data = JSON.parseObject(JSON.toJSONString(i), Map.class);
-                    fiDataMetaDataTreeDTO.setData(data);
-                    return fiDataMetaDataTreeDTO;
-                }, Collectors.toList())));
+//        LambdaQueryWrapper<StandardsBeCitedPO> beCitedQueryWrapper = new LambdaQueryWrapper<>();
+//        beCitedQueryWrapper.in(StandardsBeCitedPO::getStandardsId, standardIds);
+//        List<StandardsBeCitedPO> beCiteds = standardsBeCitedService.list(beCitedQueryWrapper);
+//        Map<Integer, List<FiDataMetaDataTreeDTO>> dataMap = beCiteds.stream().collect(groupingBy(StandardsBeCitedPO::getStandardsId,
+//                Collectors.mapping(i -> {
+//                    FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+//                    Map<String, Object> data = JSON.parseObject(JSON.toJSONString(i), Map.class);
+//                    fiDataMetaDataTreeDTO.setData(data);
+//                    return fiDataMetaDataTreeDTO;
+//                }, Collectors.toList())));
         List<FiDataMetaDataTreeDTO> allTree = standardsMenus.stream().map(i -> {
             FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
             if (i.getType() == 1) {
@@ -773,11 +773,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
 
-                StandardsPO standardsPO = standardMap.get((int) i.getId());
-                if (standardsPO != null) {
-                    List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeDTOS = dataMap.get((int) standardsPO.getId());
-                    fiDataMetaDataTreeDTO.setChildren(fiDataMetaDataTreeDTOS);
-                }
+//                StandardsPO standardsPO = standardMap.get((int) i.getId());
+//                if (standardsPO != null) {
+//                    List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeDTOS = dataMap.get((int) standardsPO.getId());
+//                    fiDataMetaDataTreeDTO.setChildren(fiDataMetaDataTreeDTOS);
+//                }
             }
             return fiDataMetaDataTreeDTO;
         }).collect(Collectors.toList());
