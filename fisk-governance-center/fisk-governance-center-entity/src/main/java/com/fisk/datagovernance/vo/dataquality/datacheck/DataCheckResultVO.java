@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
+import com.alibaba.fastjson.JSONArray;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -55,6 +56,12 @@ public class DataCheckResultVO
     public String checkTable;
 
     /**
+     * 检查的表显示名称
+     */
+    @ApiModelProperty(value = "检查的表显示名称")
+    public String checkDisplayTableName;
+
+    /**
      * 检查的表标识
      */
     @ApiModelProperty(value = "检查的表标识")
@@ -107,6 +114,12 @@ public class DataCheckResultVO
      */
     @ApiModelProperty(value = "检查的错误Json数据")
     public String checkErrorData;
+
+    /**
+     * 检查的成功son数据
+     */
+    @ApiModelProperty(value = "检查的成功son数据")
+    public JSONArray checkSuccessData;
 
     /**
      * 修改SQL语句
