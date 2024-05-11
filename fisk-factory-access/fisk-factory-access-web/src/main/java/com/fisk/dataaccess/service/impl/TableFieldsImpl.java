@@ -1400,6 +1400,7 @@ public class TableFieldsImpl
             fieldDTO.fieldLength = po.fieldLength == null ? 0 : Math.toIntExact(po.fieldLength);
             fieldDTO.isPrimaryKey = po.isPrimarykey;
             fieldDTO.fieldPrecision = po.fieldPrecision;
+            fieldDTO.fieldDes = po.fieldDes;
             fieldList.add(fieldDTO);
         });
 

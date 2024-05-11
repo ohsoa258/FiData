@@ -213,8 +213,15 @@ public class BuildDorisTableImpl implements IbuildTable {
                             .append("` ADD COLUMN `")
                             .append(newPo.fieldName)
                             .append("` ")
-                            .append(newPo.fieldType)
-                            .append("; ");
+                            .append(newPo.fieldType);
+
+                    if (StringUtils.isNotEmpty(newPo.fieldDes)) {
+                        sql.append(" COMMENT ")
+                                .append("'")
+                                .append(newPo.fieldDes)
+                                .append("'");
+                    }
+                    sql.append("; ");
                 }
             } else {
                 //如果存在，但属性有变化则是修改
