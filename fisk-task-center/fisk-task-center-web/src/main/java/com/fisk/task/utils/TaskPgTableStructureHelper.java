@@ -197,6 +197,8 @@ public class TaskPgTableStructureHelper
                 po.fieldName = item.fieldEnName;
                 //字段类型
                 po.fieldType = item.fieldType;
+                //字段描述
+                po.fieldDes = item.fieldDes;
                 //是否为主键
                 po.primaryKey = item.isBusinessKey != 0;
                 //默认为1
@@ -217,6 +219,7 @@ public class TaskPgTableStructureHelper
                     po2.fieldId = String.valueOf(item.associateDimensionId);
                     po2.fieldName = (item.associateDimensionName.substring(4) + "key");
                     po2.fieldType = "VARCHAR(255)";
+                    po.fieldDes = item.fieldDes;
                     //默认为1
                     po2.validVersion = 1;
                     poList.add(po2);

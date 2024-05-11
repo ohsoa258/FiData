@@ -2,6 +2,7 @@ package com.fisk.task.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -41,6 +42,11 @@ public class TaskPgTableStructurePO extends BasePO {
      * 字段类型
      */
     public String fieldType;
+
+    /**
+     * 字段描述
+     */
+    public String fieldDes;
 
     /**
      * 0：数据接入 1：事实表 2：维度表

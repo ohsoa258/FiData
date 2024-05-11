@@ -123,4 +123,10 @@ public class ModelPublishFieldDTO {
     @ApiModelProperty(value = "doris聚合模型，聚合函数类型：...")
     public String aggregateType;
 
+    /**
+     * 字段描述
+     */
+    @ApiModelProperty(value = "字段描述")
+    public String fieldDes;
+
 }
