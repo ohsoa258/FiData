@@ -1017,6 +1017,7 @@ public class TableServiceImpl
         data.enable = dto.tableService.enable;
 
         LambdaQueryWrapper<AppServiceConfigPO> configQueryWrapper = new LambdaQueryWrapper<>();
+        configQueryWrapper.eq(AppServiceConfigPO::getAppId, dto.tableService.tableAppId);
         configQueryWrapper.eq(AppServiceConfigPO::getServiceId, dto.tableService.id);
         AppServiceConfigPO appServiceConfigPO = appServiceConfigMapper.selectOne(configQueryWrapper);
 
