@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -23,19 +24,16 @@ import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
-import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
-
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -94,6 +92,13 @@ public class BloodCompensationImpl
 
 //endregion
 
+
+    @Scheduled(cron = "0 0 0 * * ? ")//每晚0点执行刷新元数据任务
+    public void syncBlood() {
+        //不初始化 刷新所有模块
+        this.systemSynchronousBlood("admin", false, null);
+    }
+
     /**
      * 血缘补偿
      *
@@ -122,7 +127,7 @@ public class BloodCompensationImpl
 
         }
 
-        StopWatch  dataAccessStopWatch = new StopWatch();
+        StopWatch dataAccessStopWatch = new StopWatch();
         if (moduleIds.contains(ClassificationTypeEnum.DATA_ACCESS.getValue())) {
 
             dataAccessStopWatch.start();
@@ -208,7 +213,7 @@ public class BloodCompensationImpl
             masterDataStopWatch.stop();
 
         }
-        log.info("***************元数据同步结束。开始时间：" + allBeginTime + ". 结束时间: "+DateTimeUtils.getNow()+"*********************");
+        log.info("***************元数据同步结束。开始时间：" + allBeginTime + ". 结束时间: " + DateTimeUtils.getNow() + "*********************");
         log.info("******同步外部数据源元数据同步耗时: " + externalDataStopWatch.getTotalTimeSeconds() + "秒 ******");
         log.info("******数据接入元数据同步耗时: " + dataAccessStopWatch.getTotalTimeSeconds() + "秒 ******");
         log.info("******数据建模元数据同步耗时: " + analyzeDataStopWatch.getTotalTimeSeconds() + "秒 ******");
