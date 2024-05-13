@@ -9,7 +9,7 @@ public enum EntityTypeEnum implements BaseEnum {
     /**
      * 实例
      */
-    ALL(1, "all"),
+    ALL(0, "all"),
     RDBMS_INSTANCE(1, "rdbms_instance"),
     RDBMS_DB(2, "rdbms_db"),
     RDBMS_TABLE(3, "rdbms_table"),

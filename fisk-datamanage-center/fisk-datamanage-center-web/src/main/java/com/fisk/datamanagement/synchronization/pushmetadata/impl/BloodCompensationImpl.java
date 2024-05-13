@@ -121,6 +121,7 @@ public class BloodCompensationImpl
             externalDataStopWatch.stop();
 
         }
+
         StopWatch  dataAccessStopWatch = new StopWatch();
         if (moduleIds.contains(ClassificationTypeEnum.DATA_ACCESS.getValue())) {
 
