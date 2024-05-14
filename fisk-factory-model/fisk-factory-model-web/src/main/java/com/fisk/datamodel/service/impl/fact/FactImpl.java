@@ -647,13 +647,13 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 //1数仓 2数接 3mdm
                 tableDataSyncDTO.setDatasourceId(1);
                 tableDataSyncDTO.setTableFullName(dimension.getDimensionTabName());
-                return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+                return dataGovernanceClient.tableDataSyncForModel(tableDataSyncDTO);
             //事实表
             case 1:
                 FactDTO fact = getFact(Math.toIntExact(dto.getTblId()));
                 tableDataSyncDTO.setDatasourceId(1);
                 tableDataSyncDTO.setTableFullName(fact.getFactTabName());
-                return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+                return dataGovernanceClient.tableDataSyncForModel(tableDataSyncDTO);
             default:
                 return ResultEntityBuild.build(ResultEnum.WRONG_TABLE_TYPE_ERROR);
         }

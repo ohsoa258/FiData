@@ -418,6 +418,78 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         return ResultEnum.TABLE_DATA_SYNC_FAIL;
     }
 
+    /**
+     * 数仓建模-表数据同步
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEnum tableDataSyncForModel(TableDataSyncDTO dto) {
+        if (dto == null || dto.getDatasourceId() == 0 || StringUtils.isEmpty(dto.getTableFullName())) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        try {
+            log.info("【tableDataSync】请求参数：" + JSON.toJSONString(dto));
+            TableInfoDTO tableInfoDTO = new TableInfoDTO();
+            if (dto.getDatasourceId() == 1) {
+                // 调用数据建模接口获取表信息
+                ResultEntity<DataModelTableInfoDTO> tableInfo = dataModelClient.getTableInfo(dto.getTableFullName());
+                if (tableInfo != null
+                        && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                        && tableInfo.getData() != null) {
+                    tableInfoDTO.setTableAccessId(tableInfo.getData().getTableId());
+                    tableInfoDTO.setAppId(tableInfo.getData().getBusinessAreaId());
+                    tableInfoDTO.setTableName(tableInfo.getData().getTableName());
+                    tableInfoDTO.setOlapTable(tableInfo.getData().getOlapTable());
+                }
+            } else if (dto.getDatasourceId() == 2) {
+                // 调用数据接入接口获取表信息
+                ResultEntity<TableInfoDTO> tableInfo = dataAccessClient.getTableInfo(dto.getTableFullName());
+                if (tableInfo != null
+                        && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                        && tableInfo.getData() != null) {
+                    tableInfoDTO = tableInfo.getData();
+                }
+            } else if (dto.getDatasourceId() == 3) {
+                // 调用数据接入接口获取表信息
+                ResultEntity<com.fisk.mdm.dto.dataops.TableInfoDTO> tableInfo = mdmClient.getTableInfo(dto.getTableFullName());
+                if (tableInfo != null
+                        && tableInfo.getCode() == ResultEnum.SUCCESS.getCode()
+                        && tableInfo.getData() != null) {
+                    com.fisk.mdm.dto.dataops.TableInfoDTO data = tableInfo.getData();
+                    tableInfoDTO.tableAccessId = data.tableAccessId;
+                    tableInfoDTO.appId = data.appId;
+                    tableInfoDTO.tableName = data.tableName;
+                    tableInfoDTO.olapTable = data.olapTable;
+                }
+            }
+            if (tableInfoDTO == null || StringUtils.isEmpty(tableInfoDTO.getTableName())) {
+                return ResultEnum.DATAACCESS_GETTABLE_ERROR;
+            }
+            log.info("【tableDataSync】查询表信息返回数据：" + JSON.toJSONString(tableInfoDTO));
+            BuildTableNifiSettingDTO buildTableNifiSetting = new BuildTableNifiSettingDTO();
+//            buildTableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
+            List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
+            TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
+            tableNifiSetting.setTableName(dto.getTableFullName());
+            tableNifiSetting.setTableAccessId(tableInfoDTO.getTableAccessId());
+            tableNifiSetting.setAppId(tableInfoDTO.getAppId());
+            tableNifiSetting.setType(tableInfoDTO.getOlapTable());
+            tableNifiSettings.add(tableNifiSetting);
+            buildTableNifiSetting.setTableNifiSettings(tableNifiSettings);
+            log.info("【tableDataSync】调用nifi同步表数据请求参数：" + JSON.toJSONString(buildTableNifiSetting));
+            ResultEntity<Object> result = publishTaskClient.immediatelyStart(buildTableNifiSetting);
+            if (result != null && result.getCode() == ResultEnum.SUCCESS.getCode()) {
+                return ResultEnum.SUCCESS;
+            }
+        } catch (Exception ex) {
+            log.error("【tableDataSync】执行异常：" + ex);
+            return ResultEnum.ERROR;
+        }
+        return ResultEnum.TABLE_DATA_SYNC_FAIL;
+    }
+
 
     public String createTableStructureTemplate(GetDataOpsFieldSourceDTO dto) {
         // 第一步：获取表字段
