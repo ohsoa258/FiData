@@ -93,4 +93,13 @@ public interface DataGovernanceClient {
     @PostMapping("/datasource/tableDataSync")
     ResultEntity<Object> tableDataSync(@RequestBody TableDataSyncDTO dto);
 
+    /**
+     * 数仓建模-表数据同步
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/datasource/tableDataSyncForModel")
+    ResultEntity<Object> tableDataSyncForModel(@RequestBody TableDataSyncDTO dto);
+
 }

@@ -126,6 +126,12 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.tableDataSync(dto));
     }
 
+    @PostMapping("/tableDataSyncForModel")
+    @ApiOperation("数仓建模-表数据同步")
+    public ResultEntity<Object> tableDataSyncForModel(@Validated @RequestBody TableDataSyncDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataOpsDataSourceManageService.tableDataSyncForModel(dto));
+    }
+
     @PostMapping("/exportData")
     @ApiOperation("导出查询结果")
     @ControllerAOPConfig(printParams = false)

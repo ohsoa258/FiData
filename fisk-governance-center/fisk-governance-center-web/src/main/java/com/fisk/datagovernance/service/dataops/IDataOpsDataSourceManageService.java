@@ -48,6 +48,14 @@ public interface IDataOpsDataSourceManageService {
     ResultEnum tableDataSync(TableDataSyncDTO dto);
 
     /**
+     * 数仓建模-表数据同步
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum tableDataSyncForModel(TableDataSyncDTO dto);
+
+    /**
      * 数据库信息同步到redis
      *
      * @return 查询结果

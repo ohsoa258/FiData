@@ -51,7 +51,6 @@ import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
-import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -463,7 +462,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     public Integer getFactCountByBid(Integer id) {
         LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FactPO::getBusinessId, id)
-                .likeRight(FactPO::getFactTabName,"fact_");
+                .likeRight(FactPO::getFactTabName, "fact_");
         return mapper.selectCount(wrapper);
     }
 
@@ -476,7 +475,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     public Integer getDwdCountByBid(Integer id) {
         LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FactPO::getBusinessId, id)
-                .likeRight(FactPO::getFactTabName,"dwd_");;
+                .likeRight(FactPO::getFactTabName, "dwd_");
+        ;
         return mapper.selectCount(wrapper);
     }
 
@@ -489,7 +489,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     public Integer getDwsCountByBid(Integer id) {
         LambdaQueryWrapper<FactPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FactPO::getBusinessId, id)
-                .likeRight(FactPO::getFactTabName,"dws_");;
+                .likeRight(FactPO::getFactTabName, "dws_");
+        ;
         return mapper.selectCount(wrapper);
     }
 
@@ -639,7 +640,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public ResultEntity<Object> modelSyncData(ModelSyncDataDTO dto) {
         TableDataSyncDTO tableDataSyncDTO = new TableDataSyncDTO();
-        switch (dto.getTblType()){
+        switch (dto.getTblType()) {
             //维度表
             case 0:
                 //获取维度表
@@ -647,13 +648,21 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 //1数仓 2数接 3mdm
                 tableDataSyncDTO.setDatasourceId(1);
                 tableDataSyncDTO.setTableFullName(dimension.getDimensionTabName());
-                return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+                ResultEntity<Object> result = dataGovernanceClient.tableDataSyncForModel(tableDataSyncDTO);
+                if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    throw new FkException(ResultEnum.TABLE_DATA_SYNC_FAIL);
+                }
+                return result;
             //事实表
             case 1:
                 FactDTO fact = getFact(Math.toIntExact(dto.getTblId()));
                 tableDataSyncDTO.setDatasourceId(1);
                 tableDataSyncDTO.setTableFullName(fact.getFactTabName());
-                return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+                ResultEntity<Object> result1 = dataGovernanceClient.tableDataSyncForModel(tableDataSyncDTO);
+                if (result1.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    throw new FkException(ResultEnum.TABLE_DATA_SYNC_FAIL);
+                }
+                return result1;
             default:
                 return ResultEntityBuild.build(ResultEnum.WRONG_TABLE_TYPE_ERROR);
         }
@@ -746,13 +755,13 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
             table.displayName = fact.factTableCnName;
             table.owner = businessAdmin;
-            table.sqlScript= fact.sqlScript;
-            table.coverScript=fact.coverScript;
+            table.sqlScript = fact.sqlScript;
+            table.coverScript = fact.coverScript;
             table.tableConfigId = Long.valueOf(fact.id).intValue();
-            table.dataSourceId=fact.dataSourceId;
-            table.isExistClassification=true;
-            table.isExistStg=true;
-            table.AppName=item.getBusinessName();
+            table.dataSourceId = fact.dataSourceId;
+            table.isExistClassification = true;
+            table.isExistStg = true;
+            table.AppName = item.getBusinessName();
 
             //字段
             table.columnList = getFactAttributeMetaData(fact.id, table);
