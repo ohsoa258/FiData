@@ -86,7 +86,7 @@ public class SqlParmUtils {
                 } else {
                     if (dataSourceType == DataSourceTypeEnum.DORIS) {
                         if (item.parmName.equals("start") || item.parmName.equals("end")) {
-                            paramValue_In = flag + item.parmValue;
+                            paramValue_In = item.parmValue;
                         } else {
                             paramValue_In = flag + "'" + item.parmValue + "'";
                         }
