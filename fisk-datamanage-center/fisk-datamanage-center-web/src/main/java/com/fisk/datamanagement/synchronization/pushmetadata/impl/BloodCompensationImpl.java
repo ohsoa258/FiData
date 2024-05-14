@@ -102,7 +102,7 @@ public class BloodCompensationImpl
         moduleIds.add(ClassificationTypeEnum.DATA_DISTRIBUTION.getValue());
         moduleIds.add(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue());
         moduleIds.add(ClassificationTypeEnum.MASTER_DATA.getValue());
-        moduleIds.add(ClassificationTypeEnum.EXTERNAL_DATA.getValue());
+//        moduleIds.add(ClassificationTypeEnum.EXTERNAL_DATA.getValue());
         //不初始化 刷新所有模块
         this.systemSynchronousBlood("admin", false, moduleIds);
     }
