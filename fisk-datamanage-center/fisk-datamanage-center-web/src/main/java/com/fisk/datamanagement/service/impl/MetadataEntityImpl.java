@@ -1648,7 +1648,6 @@ public class MetadataEntityImpl
         nameDto.setFieldName(field.getName());
         nameDto.setTableName(table.getName());
         nameDto.setDatabaseName(db.getName());
-        nameDto.setDbId(extractLastPart(db.getQualifiedName()));
         nameDto.setTbId(extractLastPart(table.getQualifiedName()));
         nameDto.setFieldId(extractLastPart(field.getQualifiedName()));
         return nameDto;
