@@ -92,8 +92,7 @@ public class BloodCompensationImpl
 
 //endregion
 
-
-    @Scheduled(cron = "0 0 0 * * ? ")//每晚0点执行刷新元数据任务
+    @Scheduled(cron = "0 0 20 * * ?")//每晚20点执行刷新元数据任务
     public void syncBlood() {
         List<Integer> moduleIds = new ArrayList<>();
         moduleIds.add(ClassificationTypeEnum.DATA_ACCESS.getValue());
@@ -102,6 +101,7 @@ public class BloodCompensationImpl
         moduleIds.add(ClassificationTypeEnum.DATA_DISTRIBUTION.getValue());
         moduleIds.add(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue());
         moduleIds.add(ClassificationTypeEnum.MASTER_DATA.getValue());
+        //外部数据源暂时不跑
 //        moduleIds.add(ClassificationTypeEnum.EXTERNAL_DATA.getValue());
         //不初始化 刷新所有模块
         this.systemSynchronousBlood("admin", false, moduleIds);
