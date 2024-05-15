@@ -1198,6 +1198,7 @@ public class DimensionImpl
             table.isExistClassification=true;
             table.isShareDim=item.share;
             table.AppName=area.getBusinessName();
+            table.whetherSchema = false;
             tableList.add(table);
         }
 

@@ -765,6 +765,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
 
             //字段
             table.columnList = getFactAttributeMetaData(fact.id, table);
+            table.whetherSchema = false;
 
             tableList.add(table);
         }

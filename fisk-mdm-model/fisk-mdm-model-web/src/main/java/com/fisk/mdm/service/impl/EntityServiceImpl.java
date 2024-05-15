@@ -657,6 +657,7 @@ public class EntityServiceImpl implements EntityService {
                 tableAttributeDTO.setOwner(entity.createUser);
                 tableAttributeDTO.setIsExistClassification(true);
                 tableAttributeDTO.setIsExistStg(true);
+                tableAttributeDTO.setWhetherSchema(false);
                 AccessDataPO accessDataPO = accessDataPOS.stream().filter(e -> e.getEntityId() == entity.getId()).findFirst().orElse(null);
                 if (accessDataPO!=null){
                     tableAttributeDTO.sqlScript=accessDataPO.getExtractionSql();
