@@ -21,6 +21,9 @@ public interface FactTreeListMapper extends FKBaseMapper<FactTreePOs> {
     @Select("select pid from tb_facttreelist where fact_tab_name=#{factTabName} and fact_field_en_name=#{factFieldEnName}")
     List<String> selectsParentpIds(@Param("factTabName") String factTabName ,@Param("factFieldEnName")String factFieldEnName );
 
+    @Select("select pid from tb_facttreelist where fact_tab_name_id=#{tbId} and fact_field_en_name_id=#{fieldId}")
+    List<String> selectsParentpIdsV2(@Param("tbId") Integer tbId ,@Param("fieldId")Integer fieldId );
+
 
 }
 

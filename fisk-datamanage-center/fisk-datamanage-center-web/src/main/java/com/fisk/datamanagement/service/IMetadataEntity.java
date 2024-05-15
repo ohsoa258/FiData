@@ -63,6 +63,8 @@ public interface IMetadataEntity {
      */
     DBTableFiledNameDto getParentNameByFieldId(Integer fieldMetadataId);
 
+    DBTableFiledNameDto getParentNameByFieldIdV2(Integer fieldMetadataId);
+
     ResultEnum setMetadataExpiresTime(UpdateMetadataExpiresTimeDto dto);
 
     /**

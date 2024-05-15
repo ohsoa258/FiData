@@ -1631,6 +1631,44 @@ public class MetadataEntityImpl
         return nameDto;
     }
 
+    /**
+     * 获取字段名称获取父级数据库和表名
+     *
+     * @return
+     */
+    @Override
+    public DBTableFiledNameDto getParentNameByFieldIdV2(Integer fieldMetadataId) {
+        MetadataEntityPO field = this.query().eq("id", fieldMetadataId).eq("type_id", EntityTypeEnum.RDBMS_COLUMN.getValue()).one();
+        if (field == null) {
+            return null;
+        }
+        MetadataEntityPO table = this.query().eq("id", field.getParentId()).one();
+        MetadataEntityPO db = this.query().eq("id", table.getParentId()).one();
+        DBTableFiledNameDto nameDto = new DBTableFiledNameDto();
+        nameDto.setFieldName(field.getName());
+        nameDto.setTableName(table.getName());
+        nameDto.setDatabaseName(db.getName());
+        nameDto.setDbId(extractLastPart(db.getQualifiedName()));
+        nameDto.setTbId(extractLastPart(table.getQualifiedName()));
+        nameDto.setFieldId(extractLastPart(field.getQualifiedName()));
+        return nameDto;
+    }
+
+    /**
+     * 192.168.0.61_dmp_dw_2_310  to    310
+     *
+     * @param str
+     * @return
+     */
+    private Integer extractLastPart(String str) {
+        int lastUnderscoreIndex = str.lastIndexOf("_");
+        if (lastUnderscoreIndex != -1) {
+            return Integer.valueOf(str.substring(lastUnderscoreIndex + 1));
+        } else {
+            return 0;
+        }
+    }
+
     @Override
     public ResultEnum setMetadataExpiresTime(UpdateMetadataExpiresTimeDto dto) {
         MetadataEntityPO po = this.getById(dto.entityId);

@@ -389,11 +389,11 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
     public JSONArray SelectClassifications(Integer fieldMetadataId) {
 
         JSONArray array1 = new JSONArray();
-        DBTableFiledNameDto dbTableFiledNameDto = metadataEntity.getParentNameByFieldId(fieldMetadataId);
+        DBTableFiledNameDto dbTableFiledNameDto = metadataEntity.getParentNameByFieldIdV2(fieldMetadataId);
         if (dbTableFiledNameDto == null) {
             return array1;
         }
-        List<String> list2 = factTreeListMapper.selectsParentpIds(dbTableFiledNameDto.getTableName(), dbTableFiledNameDto.getFieldName());
+        List<String> list2 = factTreeListMapper.selectsParentpIdsV2(dbTableFiledNameDto.getTbId(), dbTableFiledNameDto.getFieldId());
         for (int n = 0; n < list2.size(); n++) {
             String id = list2.get(n);
             List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassificationss(id);
