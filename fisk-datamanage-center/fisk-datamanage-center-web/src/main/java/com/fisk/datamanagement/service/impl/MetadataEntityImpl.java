@@ -1397,7 +1397,7 @@ public class MetadataEntityImpl
                     }
                     poList.addAll(list1);
                     ids.clear();
-                    ids.addAll(list1.stream().map(e -> e.fromEntityId).collect(Collectors.toList()));
+                    ids.addAll(list1.stream().map(e -> e.toEntityId).collect(Collectors.toList()));
                 }
             }
         }

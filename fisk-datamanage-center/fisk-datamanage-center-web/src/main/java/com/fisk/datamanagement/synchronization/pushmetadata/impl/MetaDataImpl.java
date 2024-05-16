@@ -474,19 +474,19 @@ public class MetaDataImpl implements IMetaData {
             dto.name = "temp_" + dto.name;
         } else if (dto.name.contains(dwd_prefix)) {
             //建模实时表
-            dto.name = dto.name.replace(dwd_prefix, "temp_");
+            dto.name = "temp_" + dto.name;
         } else if (dto.name.contains(dws_prefix)) {
             //建模维度表
-            dto.name = dto.name.replace(dws_prefix, "temp_");
+            dto.name = "temp_" + dto.name;
         } else if (dto.name.contains(config_prefix)) {
             //建模维度表
-            dto.name = dto.name.replace(config_prefix, "temp_");
+            dto.name = "temp_" + dto.name;
         } else if (dto.name.contains(help_prefix)) {
             //建模维度表
-            dto.name = dto.name.replace(help_prefix, "temp_");
+            dto.name = "temp_" + dto.name;
         } else if (dto.name.contains(dim_prefix)) {
             //建模维度表
-            dto.name = dto.name.replace(dim_prefix, "temp_");
+            dto.name = "temp_" + dto.name;
         } else if (dto.name.contains(mdm_prefix)) {
             //主数据表
             dto.name = dto.name.replace(mdm_prefix, "stg_");
