@@ -47,6 +47,7 @@ public class MysqlConUtils {
             }
         } catch (Exception e) {
             log.error("【getTableNameAndColumns】获取表名报错：", e);
+            log.error("数据库url信息：" + url);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }finally {
             try {

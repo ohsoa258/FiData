@@ -11,7 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 public class SqlServerPlusUtils {
@@ -143,6 +144,7 @@ public class SqlServerPlusUtils {
             }
         } catch (Exception e) {
             log.error("【getTableNameAndColumnsPlus】获取表详情(表信息+字段信息)异常", e);
+            log.error("数据库url信息：" + url);
             throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
         } finally {
             try {

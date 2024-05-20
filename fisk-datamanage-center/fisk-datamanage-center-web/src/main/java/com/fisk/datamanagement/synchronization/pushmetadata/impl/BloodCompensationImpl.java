@@ -702,7 +702,7 @@ public class BloodCompensationImpl
         ResultEntity<List<MetaDataInstanceAttributeDTO>> accessTable;
         if (lastSyncTime == null) {
             accessTable = dataAccessClient.synchronizationAccessTable();
-        }else {
+        } else {
             accessTable = dataAccessClient.synchronizationAccessTableByLastSyncTime(lastSyncTime);
         }
 
@@ -722,7 +722,7 @@ public class BloodCompensationImpl
         ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData;
         if (lastSyncTime == null) {
             dataModelMetaData = dataModelClient.getDataModelMetaData();
-        }else {
+        } else {
             dataModelMetaData = dataModelClient.getDataModelMetaDataByLastSyncTime(lastSyncTime);
         }
 
@@ -771,29 +771,38 @@ public class BloodCompensationImpl
                 }).distinct().collect(Collectors.toList());
         List<MetaDataInstanceAttributeDTO> instanceList = new ArrayList<>();
         for (AppDataSourceDTO appSource : appSources) {
-            //组装实例信息
-            MetaDataInstanceAttributeDTO instanceAttributeDTO = buildInstance(appSource);
-            instanceList.add(instanceAttributeDTO);
             List<TablePyhNameDTO> tableNameAndColumns = null;
-            switch (appSource.driveType) {
-                case "oracle":
-                    tableNameAndColumns = new OracleUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, DriverTypeEnum.ORACLE);
-                    break;
-                case "mysql":
-                    tableNameAndColumns = new MysqlConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
-                    break;
-                case "sqlserver":
-                    tableNameAndColumns = new SqlServerPlusUtils().getTableNameAndColumnsPlus(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-                    break;
-                case "postgresql":
-                    tableNameAndColumns = new PostgresConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
-                    break;
-                default:
-                    break;
-            }
-            String dbQualifiedName = instanceAttributeDTO.getDbList().get(0).getQualifiedName();
+            String dbQualifiedName = null;
+
             List<MetaDataTableAttributeDTO> tableAttributeDTOList = new ArrayList<>();
-            instanceAttributeDTO.getDbList().get(0).tableList = tableAttributeDTOList;
+            try {
+                //组装实例信息
+                MetaDataInstanceAttributeDTO instanceAttributeDTO = buildInstance(appSource);
+                instanceList.add(instanceAttributeDTO);
+                switch (appSource.driveType) {
+                    case "oracle":
+                        tableNameAndColumns = new OracleUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, DriverTypeEnum.ORACLE);
+                        break;
+                    case "mysql":
+                        tableNameAndColumns = new MysqlConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+                        break;
+                    case "sqlserver":
+                        tableNameAndColumns = new SqlServerPlusUtils().getTableNameAndColumnsPlus(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                        break;
+                    case "postgresql":
+                        tableNameAndColumns = new PostgresConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
+                        break;
+                    default:
+                        break;
+                }
+                dbQualifiedName = instanceAttributeDTO.getDbList().get(0).getQualifiedName();
+
+                instanceAttributeDTO.getDbList().get(0).tableList = tableAttributeDTOList;
+
+            } catch (Exception e) {
+                log.error("查询外部数据源元数据信息失败" + e);
+                continue;
+            }
             if (!CollectionUtils.isEmpty(tableNameAndColumns)) {
                 for (TablePyhNameDTO tableNameAndColumn : tableNameAndColumns) {
                     MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
@@ -819,6 +828,8 @@ public class BloodCompensationImpl
             }
         }
         metaData.consumeMetaData(instanceList, currUserName, ClassificationTypeEnum.EXTERNAL_DATA, null);
+
+
     }
 
     public MetaDataInstanceAttributeDTO buildInstance(AppDataSourceDTO appSource) {
