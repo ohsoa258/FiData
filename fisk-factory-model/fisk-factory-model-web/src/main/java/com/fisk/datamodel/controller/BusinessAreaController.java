@@ -26,6 +26,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -144,6 +145,7 @@ public class BusinessAreaController {
     public ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldDataStructure(dto));
     }
+
     @PostMapping("/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
@@ -166,6 +168,18 @@ public class BusinessAreaController {
     @ApiOperation(value = "获取数据建模所有元数据")
     public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelMetaData());
+    }
+
+    /**
+     * 根据上次更新元数据的时间获取数据建模所有元数据
+     *
+     * @param lastSyncTime
+     * @return
+     */
+    @GetMapping("/getDataModelMetaDataByLastSyncTime")
+    @ApiOperation(value = "根据上次更新元数据的时间获取数据建模的元数据")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaDataByLastSyncTime(@RequestParam("lastSyncTime") LocalDateTime lastSyncTime) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelMetaDataByLastSyncTime(lastSyncTime));
     }
 
     @PostMapping("/buildDimensionKeyScript")
@@ -247,7 +261,8 @@ public class BusinessAreaController {
 
     /**
      * 元数据地图 获取业务过程下的表
-     * @param processId 业务过程id或维度文件夹id
+     *
+     * @param processId   业务过程id或维度文件夹id
      * @param processType 类型 1维度文件夹 2业务过程
      * @return
      */
@@ -257,7 +272,7 @@ public class BusinessAreaController {
             @RequestParam("processId") Integer processId,
             @RequestParam("processType") Integer processType
     ) {
-        return service.modelGetMetaMapTableDetail(processId,processType);
+        return service.modelGetMetaMapTableDetail(processId, processType);
     }
 
 }

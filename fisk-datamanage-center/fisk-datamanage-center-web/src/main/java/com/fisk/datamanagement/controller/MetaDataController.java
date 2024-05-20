@@ -56,7 +56,7 @@ public class MetaDataController {
     @ApiOperation("添加元数据实体")
     @PostMapping("/consumeMetaData")
     public ResultEntity<Object> consumeMetaData(@Validated @RequestBody List<MetaDataInstanceAttributeDTO> dto, @RequestParam ClassificationTypeEnum classificationTypeEnum) {
-        return ResultEntityBuild.build(service.consumeMetaData(dto, dto.get(0).currUserName, classificationTypeEnum));
+        return ResultEntityBuild.build(service.consumeMetaData(dto, dto.get(0).currUserName, classificationTypeEnum,null));
     }
 
     @ApiOperation("元数据字段新增或修改字段")

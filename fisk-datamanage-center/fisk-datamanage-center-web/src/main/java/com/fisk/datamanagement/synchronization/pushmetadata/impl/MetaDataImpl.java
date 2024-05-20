@@ -136,6 +136,8 @@ public class MetaDataImpl implements IMetaData {
 
     @Resource
     MetadataEntityExportTemplateAttributeServiceImpl metadataEntityExportTemplateAttributeService;
+    @Resource
+    private BloodCompensationImpl bloodCompensation;
 
 
     @Resource
@@ -191,7 +193,7 @@ public class MetaDataImpl implements IMetaData {
      * @param currUserName 当前账号
      */
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum,Long syncTimeId) {
         log.info("开始同步元数据***********");
         try {
             for (MetaDataInstanceAttributeDTO instance : data) {
@@ -253,6 +255,10 @@ public class MetaDataImpl implements IMetaData {
             }
         } catch (Exception e) {
             log.error("实体同步失败，堆栈信息: ", e);
+            if (syncTimeId!=null){
+                //1成功 2失败 3同步中
+                bloodCompensation.updateLastSyncTime(syncTimeId,2);
+            }
         }
         log.info("结束同步元数据***********");
         //更新Redis

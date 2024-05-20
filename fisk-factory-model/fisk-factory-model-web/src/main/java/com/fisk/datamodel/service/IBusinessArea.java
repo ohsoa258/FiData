@@ -26,6 +26,7 @@ import com.fisk.datamodel.vo.DimAndFactCountVO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -186,6 +187,14 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
     List<MetaDataInstanceAttributeDTO> getDataModelMetaData();
 
     /**
+     * 根据上次更新元数据的时间获取数据建模所有元数据
+     *
+     * @param lastSyncTime
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> getDataModelMetaDataByLastSyncTime(LocalDateTime lastSyncTime);
+
+    /**
      * 获取数仓建模单个维度/事实表的元数据
      *
      * @return
@@ -270,4 +279,5 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     List<MetaMapTblDTO> modelGetMetaMapTableDetail(Integer processId,Integer processType);
+
 }

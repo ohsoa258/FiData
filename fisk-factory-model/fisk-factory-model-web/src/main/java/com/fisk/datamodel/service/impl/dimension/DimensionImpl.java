@@ -1189,15 +1189,57 @@ public class DimensionImpl
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
             table.displayName = item.dimensionCnName;
             table.owner = businessAdmin;
-            table.sqlScript= item.sqlScript;
-            table.coverScript=item.coverScript;
+            table.sqlScript = item.sqlScript;
+            table.coverScript = item.coverScript;
             table.tableConfigId = Long.valueOf(item.id).intValue();
-            table.dataSourceId=item.dataSourceId;
+            table.dataSourceId = item.dataSourceId;
             table.columnList = getDimensionAttributeMetaData(item.id, table);
-            table.isExistStg=true;
-            table.isExistClassification=true;
-            table.isShareDim=item.share;
-            table.AppName=area.getBusinessName();
+            table.isExistStg = true;
+            table.isExistClassification = true;
+            table.isShareDim = item.share;
+            table.AppName = area.getBusinessName();
+            table.whetherSchema = false;
+            tableList.add(table);
+        }
+
+        return tableList;
+
+    }
+
+    public List<MetaDataTableAttributeDTO> getDimensionMetaDataByLastSyncTime(BusinessAreaPO area,
+                                                                              String dbQualifiedName,
+                                                                              Integer dataModelType,
+                                                                              String businessAdmin,
+                                                                              List<Integer> dimIds) {
+        List<DimensionPO> list = this.query()
+                .eq("business_id", area.getId())
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .in("id", dimIds)
+                .list();
+        if (CollectionUtils.isEmpty(list)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (DimensionPO item : list) {
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = item.dimensionDesc;
+            table.name = item.dimensionTabName;
+            table.comment = String.valueOf(item.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
+            table.displayName = item.dimensionCnName;
+            table.owner = businessAdmin;
+            table.sqlScript = item.sqlScript;
+            table.coverScript = item.coverScript;
+            table.tableConfigId = Long.valueOf(item.id).intValue();
+            table.dataSourceId = item.dataSourceId;
+            table.columnList = getDimensionAttributeMetaData(item.id, table);
+            table.isExistStg = true;
+            table.isExistClassification = true;
+            table.isShareDim = item.share;
+            table.AppName = area.getBusinessName();
             table.whetherSchema = false;
             tableList.add(table);
         }
@@ -1210,7 +1252,7 @@ public class DimensionImpl
                                                                           List<Integer> tblIds,
                                                                           String dbQualifiedName,
                                                                           Integer dataModelType,
-                                                                           String businessAdmin) {
+                                                                          String businessAdmin) {
         List<DimensionPO> list = this.query()
                 .eq("business_id", businessId)
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())

@@ -218,6 +218,12 @@ public class MetadataEntityImpl
         po.qualifiedName = dto.qualifiedName;
         //父级
         po.parentId = Integer.parseInt(parentEntityId);
+
+        /*
+         * 该行代码无效 原因是MetadataEntityPO继承了BasePo
+         * BasePo的createUser属性使用了@TableField(value = "create_user", fill = FieldFill.INSERT)注解
+         * 会被Common类的 BaseMetaObjectHandler拦截器拦截掉 更换为执行同步血缘接口时 使用的token用户id
+         */
         po.createUser = dto.owner;
 
         boolean save = this.save(po);
@@ -536,6 +542,12 @@ public class MetadataEntityImpl
             dto.type = typeName;
             dto.parentId = parentId;
             dto.displayName = item.displayName;
+            //表级别 为了能和元数据地图的id匹配上 增加唯一查询名称给前端 用来匹配
+            if (item.typeId==EntityTypeEnum.RDBMS_TABLE.getValue()
+//                    ||item.typeId==EntityTypeEnum.RDBMS_COLUMN.getValue()
+            ){
+                dto.qualifiedName = item.qualifiedName;
+            }
 
             // 将当前节点添加到其父节点的子节点列表中
             childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
@@ -1533,9 +1545,7 @@ public class MetadataEntityImpl
 
             //用户名id替换名称
             Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
-            if (first.isPresent()) {
-                entitiesDto.attributes.owner = first.get().username;
-            }
+            first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
 
             //该实体关联的所有业务分类
             entitiesDto.classificationNames = new ArrayList<>();

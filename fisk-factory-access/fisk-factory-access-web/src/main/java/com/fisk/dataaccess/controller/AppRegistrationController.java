@@ -54,6 +54,7 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -132,7 +133,7 @@ public class AppRegistrationController {
         NifiVO nifiVO = result.data;
 
         //todo:hudi入仓配置暂时不去删底表和nifi 因为目前没有
-        if (nifiVO.ifSyncAllTables == null) {
+        if (nifiVO.ifSyncAllTables == null || nifiVO.appType != 2) {
             PgsqlDelTableDTO pgsqlDelTableDTO = new PgsqlDelTableDTO();
             pgsqlDelTableDTO.userId = nifiVO.userId;
             pgsqlDelTableDTO.appAtlasId = nifiVO.appAtlasId;
@@ -359,11 +360,13 @@ public class AppRegistrationController {
     public ResultEntity<Object> getTableDataStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableDataStructure(dto));
     }
+
     @ApiOperation("获取数据接入字段结构(数据标准用)")
     @PostMapping("/getFieldsDataStructure")
-    public ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto){
+    public ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldsDataStructure(dto));
     }
+
     @PostMapping("/buildTableRuleInfo")
     @ApiOperation(value = "构建业务元数据其他数据信息")
     public ResultEntity<TableRuleInfoDTO> buildTableRuleInfo(@RequestBody TableRuleParameterDTO dto) {
@@ -403,6 +406,7 @@ public class AppRegistrationController {
 
     /**
      * 数仓建模获取fidata数据源（ods & lake） 不包含HUDI
+     *
      * @return
      */
     @GetMapping("/getFiDataOdsAndLakeSource")
@@ -428,6 +432,18 @@ public class AppRegistrationController {
     @ApiOperation(value = "元数据同步所有接入表")
     public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAccessTable());
+    }
+
+    /**
+     * 元数据根据最近同步时间同步接入表
+     *
+     * @param lastSyncTime
+     * @return
+     */
+    @GetMapping("/synchronizationAccessTableByLastSyncTime")
+    @ApiOperation(value = "元数据根据最近同步时间同步接入表")
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTableByLastSyncTime(@RequestParam("lastSyncTime") LocalDateTime lastSyncTime) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAccessTableByLastSyncTime(lastSyncTime));
     }
 
     @PostMapping("/getBatchTargetDbIdByAppIds")
@@ -589,7 +605,6 @@ public class AppRegistrationController {
     public List<MetaMapTblDTO> accessGetMetaMapTableDetail(@RequestParam("appId") Integer appId) {
         return service.accessGetMetaMapTableDetail(appId);
     }
-
 
 
 }

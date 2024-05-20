@@ -43,6 +43,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -400,6 +401,15 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/synchronizationAccessTable")
     @ApiOperation(value = "元数据同步所有接入表")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTable();
+
+    /**
+     * 元数据同步所有接入表
+     *
+     * @return
+     */
+    @GetMapping("/appRegistration/synchronizationAccessTableByLastSyncTime")
+    @ApiOperation(value = "元数据同步所有接入表")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTableByLastSyncTime(@RequestParam("lastSyncTime")LocalDateTime lastSyncTime);
 
     /**
      * 依据应用id集合批量查询目标源id集合

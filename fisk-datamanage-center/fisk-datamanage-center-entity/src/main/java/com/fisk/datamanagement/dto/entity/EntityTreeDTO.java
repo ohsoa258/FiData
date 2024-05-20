@@ -21,6 +21,8 @@ public class EntityTreeDTO {
     public String parentId;
     @ApiModelProperty(value = "展示名称")
     public String displayName;
+    @ApiModelProperty(value = "唯一查询名称")
+    public String qualifiedName;
     @ApiModelProperty(value = "子类")
     public List<EntityTreeDTO> children;
 }

@@ -10,6 +10,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.datamanagement.dto.metadataentity.ExportMetaDataDto;
 
 import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -31,10 +32,10 @@ public interface IMetaData {
      * @param data
      * @return
      */
-    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum);
+    ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnumlong, Long syncTimeId);
 
 
-    ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data,ClassificationTypeEnum classificationTypeEnum);
+    ResultEnum addFiledAndUpdateFiled(List<MetaDataInstanceAttributeDTO> data, ClassificationTypeEnum classificationTypeEnum);
 
     /**
      * 删除元数据实体
@@ -54,9 +55,10 @@ public interface IMetaData {
 
     /**
      * 导出
+     *
      * @param dto
      */
-    void export(ExportMetaDataDto dto,HttpServletResponse response);
+    void export(ExportMetaDataDto dto, HttpServletResponse response);
 
 
     /**
@@ -66,6 +68,7 @@ public interface IMetaData {
 
     /**
      * 同步数据消费元数据
+     *
      * @param entityList
      * @param currUserName
      * @return
@@ -74,6 +77,7 @@ public interface IMetaData {
 
     /**
      * 删除数据消费元数据
+     *
      * @param entityList
      * @return
      */

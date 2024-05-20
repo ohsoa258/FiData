@@ -84,7 +84,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                     }
                 }
                 //判断属性是否被修改，若被修改怎添加审计记录
-                if (auditAttributeChangePOList.stream().count() > 0) {
+                if ((long) auditAttributeChangePOList.size() > 0) {
                     this.save(metadataEntityAuditLogPO);
                     Integer auditId = (int) metadataEntityAuditLogPO.getId();
                     auditAttributeChangePOList.forEach(e -> e.setAuditId(auditId));

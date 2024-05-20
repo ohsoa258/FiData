@@ -2168,6 +2168,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         NifiVO vo = new NifiVO();
         //hudi入仓配置 是否同步所有表
         vo.ifSyncAllTables = appById.ifSyncAllTables;
+        vo.appType = appById.appType;
         List<TableListVO> tableList = new ArrayList<>();
         List<String> qualifiedNames = new ArrayList<>();
 
@@ -3639,6 +3640,66 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             MetaDataInstanceAttributeDTO metaDataInstance = getMetaDataInstance(appRegistrationPo);
 
             List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("app_id", appRegistrationPo.id).list();
+            if (CollectionUtils.isEmpty(tableAccessPoList)) {
+                continue;
+            }
+            List<MetaDataTableAttributeDTO> metaDataTable = new ArrayList<>();
+            for (TableAccessPO tableAccessPo : tableAccessPoList) {
+                metaDataTable.addAll(getAccessTableMetaData(appRegistrationPo, tableAccessPo, metaDataInstance.dbList.get(0).qualifiedName));
+            }
+            metaDataInstance.dbList.get(0).tableList = metaDataTable;
+            list.add(metaDataInstance);
+        }
+        return list;
+    }
+
+    /**
+     * 元数据根据最近同步时间同步接入表
+     *
+     * @param lastSyncTime
+     * @return
+     */
+    @Override
+    public List<MetaDataInstanceAttributeDTO> synchronizationAccessTableByLastSyncTime(LocalDateTime lastSyncTime) {
+        //通过做过更新的字段 先找到有哪些表的字段做过更新
+        List<TableFieldsPO> tableFieldsPOS = tableFieldsImpl.list(new QueryWrapper<TableFieldsPO>()
+                .select("distinct table_access_id")
+                .lambda()
+                .ge(TableFieldsPO::getCreateTime, lastSyncTime)
+                .or()
+                .ge(TableFieldsPO::getUpdateTime, lastSyncTime)
+        );
+        List<Long> accessTblIds = tableFieldsPOS.stream().map(TableFieldsPO::getTableAccessId).collect(Collectors.toList());
+
+        //再找到表
+        List<TableAccessPO> tableAccessPOS = tableAccessImpl.list(new QueryWrapper<TableAccessPO>()
+                .select("distinct app_id")
+                .lambda()
+                .ge(TableAccessPO::getCreateTime, lastSyncTime)
+                .or()
+                .ge(TableAccessPO::getUpdateTime, lastSyncTime)
+        );
+        List<Long> appIds = tableAccessPOS.stream().map(TableAccessPO::getAppId).collect(Collectors.toList());
+
+        List<AppRegistrationPO> appRegistrationList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(appIds)) {
+            appRegistrationList = this.listByIds(appIds);
+        }
+
+        if (CollectionUtils.isEmpty(appRegistrationList)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+
+        for (AppRegistrationPO appRegistrationPo : appRegistrationList) {
+
+            MetaDataInstanceAttributeDTO metaDataInstance = getMetaDataInstance(appRegistrationPo);
+
+            List<TableAccessPO> tableAccessPoList = tableAccessImpl.query()
+                    .eq("app_id", appRegistrationPo.id)
+                    .in("id",accessTblIds)
+                    .list();
             if (CollectionUtils.isEmpty(tableAccessPoList)) {
                 continue;
             }

@@ -62,6 +62,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -738,6 +739,51 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         List<FactPO> factPOList = this.query()
                 .eq("business_id", item.getId())
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .list();
+        if (CollectionUtils.isEmpty(factPOList)) {
+            return new ArrayList<>();
+        }
+
+        List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+
+        for (FactPO fact : factPOList) {
+
+            MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
+            table.contact_info = "";
+            table.description = fact.factTableDesc;
+            table.name = fact.factTabName;
+            table.comment = String.valueOf(fact.businessId);
+            table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
+            table.displayName = fact.factTableCnName;
+            table.owner = businessAdmin;
+            table.sqlScript = fact.sqlScript;
+            table.coverScript = fact.coverScript;
+            table.tableConfigId = Long.valueOf(fact.id).intValue();
+            table.dataSourceId = fact.dataSourceId;
+            table.isExistClassification = true;
+            table.isExistStg = true;
+            table.AppName = item.getBusinessName();
+
+            //字段
+            table.columnList = getFactAttributeMetaData(fact.id, table);
+            table.whetherSchema = false;
+
+            tableList.add(table);
+        }
+
+        return tableList;
+    }
+
+    public List<MetaDataTableAttributeDTO> getFactMetaDataBySyncTime(BusinessAreaPO item,
+                                                                     String dbQualifiedName,
+                                                                     Integer dataModelType,
+                                                                     String businessAdmin,
+                                                                     List<Integer> factIds
+                                                                     ) {
+        List<FactPO> factPOList = this.query()
+                .eq("business_id", item.getId())
+                .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
+                .in("id",factIds)
                 .list();
         if (CollectionUtils.isEmpty(factPOList)) {
             return new ArrayList<>();

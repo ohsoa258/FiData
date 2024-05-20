@@ -17,6 +17,11 @@ public class NifiVO {
      * 应用注册id
      */
     public String appId;
+
+    /**
+     * 应用类型
+     */
+    public Integer appType;
     /**
      * nifi流程回写的应用组件id
      */

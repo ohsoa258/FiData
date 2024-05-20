@@ -48,6 +48,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -381,6 +382,15 @@ public interface DataModelClient {
     @GetMapping("/business/getDataModelMetaData")
     @ApiOperation(value = "获取数据建模所有元数据")
     ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaData();
+
+    /**
+     * 获取数据建模所有元数据
+     *
+     * @return
+     */
+    @GetMapping("/business/getDataModelMetaDataByLastSyncTime")
+    @ApiOperation(value = "获取数据建模所有元数据")
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaDataByLastSyncTime(@RequestParam("lastSyncTime") LocalDateTime lastSyncTime);
 
     /**
      * 根据表名获取事实或维度表

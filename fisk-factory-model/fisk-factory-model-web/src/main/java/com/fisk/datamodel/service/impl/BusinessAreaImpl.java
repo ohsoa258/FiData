@@ -1169,6 +1169,85 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     }
 
     /**
+     * 根据上次更新元数据的时间获取数据建模所有元数据
+     *
+     * @param lastSyncTime
+     * @return
+     */
+    @Override
+    public List<MetaDataInstanceAttributeDTO> getDataModelMetaDataByLastSyncTime(LocalDateTime lastSyncTime) {
+        //通过做过更新的字段 先找到有哪些表的字段做过更新
+        //事实表
+        List<FactAttributePO> factAttributePOS = factAttributeImpl.list(new QueryWrapper<FactAttributePO>()
+                .select("distinct fact_id")
+                .lambda()
+                .ge(FactAttributePO::getCreateTime, lastSyncTime)
+                .or()
+                .ge(FactAttributePO::getUpdateTime, lastSyncTime)
+        );
+        List<Integer> factIds = factAttributePOS.stream().map(FactAttributePO::getFactId).collect(Collectors.toList());
+
+        //再根据这些表找到这些业务域
+        List<FactPO> factPOS = factImpl.list(new QueryWrapper<FactPO>()
+                .select("distinct business_id")
+                .lambda()
+                .ge(FactPO::getCreateTime, lastSyncTime)
+                .or()
+                .ge(FactPO::getUpdateTime, lastSyncTime)
+        );
+        List<Integer> businessIds = factPOS.stream().map(FactPO::getBusinessId).collect(Collectors.toList());
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //维度表
+        List<DimensionAttributePO> dimensionAttributePOS = dimensionAttribute.list(new QueryWrapper<DimensionAttributePO>()
+                .select("distinct dimension_id")
+                .lambda()
+                .ge(DimensionAttributePO::getCreateTime, lastSyncTime)
+                .or()
+                .ge(DimensionAttributePO::getUpdateTime, lastSyncTime)
+        );
+        List<Integer> dimIds = dimensionAttributePOS.stream().map(DimensionAttributePO::getDimensionId).collect(Collectors.toList());
+
+        List<DimensionPO> dimensionPOS = dimensionImpl.list(new QueryWrapper<DimensionPO>()
+                .select("distinct business_id")
+                .lambda()
+                .ge(DimensionPO::getCreateTime, lastSyncTime)
+                .or()
+                .ge(DimensionPO::getUpdateTime, lastSyncTime)
+        );
+        List<Integer> dimBusinessIds = dimensionPOS.stream().map(DimensionPO::getBusinessId).collect(Collectors.toList());
+
+        businessIds.addAll(dimBusinessIds);
+        List<BusinessAreaPO> businessAreaPOList = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(businessIds)) {
+            businessAreaPOList = this.listByIds(businessIds);
+        }
+
+        if (CollectionUtils.isEmpty(businessAreaPOList)) {
+            return new ArrayList<>();
+        }
+
+        MetaDataInstanceAttributeDTO instance = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
+        instance.dbList.get(0).tableList = new ArrayList<>();
+        for (BusinessAreaPO item : businessAreaPOList) {
+            //事实表
+            if (!CollectionUtils.isEmpty(factIds)){
+                instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaDataBySyncTime(item, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser(), factIds));
+            }
+
+            //维度表
+            if (!CollectionUtils.isEmpty(dimIds)){
+                instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaDataByLastSyncTime(item, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser(), dimIds));
+            }
+        }
+
+        List<MetaDataInstanceAttributeDTO> list = new ArrayList<>();
+        list.add(instance);
+
+        return list;
+    }
+
+    /**
      * 获取数仓建模单个维度/事实表的元数据
      *
      * @return

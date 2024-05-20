@@ -39,6 +39,7 @@ import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -326,6 +327,14 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     List<MetaDataInstanceAttributeDTO> synchronizationAccessTable();
 
     /**
+     * 元数据根据最近同步时间同步接入表
+     *
+     * @param lastSyncTime
+     * @return
+     */
+    List<MetaDataInstanceAttributeDTO> synchronizationAccessTableByLastSyncTime(LocalDateTime lastSyncTime);
+
+    /**
      * 元数据同步单个接入表
      *
      * @return
@@ -486,4 +495,5 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<MetaMapTblDTO> accessGetMetaMapTableDetail(Integer appId);
+
 }
