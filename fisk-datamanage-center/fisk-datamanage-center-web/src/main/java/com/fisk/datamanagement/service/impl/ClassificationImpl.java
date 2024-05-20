@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -297,13 +298,20 @@ public class ClassificationImpl
 
         // 业务分类和实体id
         MetadataClassificationMapPO model = new MetadataClassificationMapPO();
-        model.setMetadataEntityId(Integer.parseInt(dto.entityGuids.get(0)));
+        int entityId = Integer.parseInt(dto.entityGuids.get(0));
+        model.setMetadataEntityId(entityId);
 
         // 查询分类id
         QueryWrapper<BusinessClassificationPO> qw = new QueryWrapper<>();
         qw.eq("name", dto.classification.typeName);
         BusinessClassificationPO bcPo = businessClassificationMapper.selectOne(qw);
         model.setBusinessClassificationId((int) bcPo.id);
+
+        //要先删除之前的分类 原因  其他模块更新元数据 你这里翻倍
+        metaDataClassificationMapMapper.delete(new LambdaQueryWrapper<MetadataClassificationMapPO>()
+                .eq(MetadataClassificationMapPO::getMetadataEntityId, entityId)
+        );
+
         if (metaDataClassificationMapMapper.insert(model) <= 0) {
             throw new FkException(ResultEnum.ERROR, "业务分类关联实体失败");
         }
