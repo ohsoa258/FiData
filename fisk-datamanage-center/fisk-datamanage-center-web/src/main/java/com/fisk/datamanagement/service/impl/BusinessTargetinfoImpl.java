@@ -320,9 +320,11 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         }
         Integer parentBusinessId = businessTargetinfoPO.getParentBusinessId();
         if (parentBusinessId != null) {
-            jsonObject1.put("parentBusinessId", parentBusinessId);
             BusinessTargetinfoPO parentBusiness = businessTargetinfoMapper.selectById(parentBusinessId);
-            jsonObject1.put("parentBusinessName",parentBusiness.getIndicatorName());
+            if(parentBusiness != null){
+                jsonObject1.put("parentBusinessId", parentBusinessId);
+                jsonObject1.put("parentBusinessName",parentBusiness.getIndicatorName());
+            }
         }
         if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(businessTargetinfoPO.getIndicatorType())) {
             LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
@@ -895,13 +897,13 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
     public void downLoad(String id, String indicatorname, HttpServletResponse response) {
         // 查询数据
         List<Map<String, Object>> list = null;
-        if (id == null && indicatorname == null) {
+        if (StringUtils.isEmpty(id) && StringUtils.isEmpty(indicatorname)) {
             list = businessTargetinfoMapper.selectClassification2();
         }
-        if (id != null && indicatorname != null) {
+        if (!StringUtils.isEmpty(id) && !StringUtils.isEmpty(indicatorname)) {
             list = businessTargetinfoMapper.selectClassification1(id, indicatorname);
         }
-        if (id != null && indicatorname == null) {
+        if (!StringUtils.isEmpty(id) && StringUtils.isEmpty(indicatorname)) {
             list = businessTargetinfoMapper.selectClassification3(id);
         }
         uploadExcelAboutUser(response, "TargetinfoDetailData.xlsx", list);
