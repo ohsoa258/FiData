@@ -463,6 +463,8 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             total = auditLogMapper.countMetaChangesChartsByOpType(startTime, endTime, entityType.getValue());
         }
 
+        //获取所有表级元数据
+        List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
             List<String> impactNames = new ArrayList<>();
             String content = "";
@@ -495,8 +497,6 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             }
             detailDTO.setChangeContent(content);
 
-            //获取所有表级元数据
-            List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (type.equals(EntityTypeEnum.RDBMS_COLUMN)) {
                 checkColumnChange(po, impactNames, metadataEntityPOS);
@@ -547,6 +547,8 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             auditLogs = auditLogMapper.getMetaChangesChartsDetailByOpTypeNoPage(startTime, endTime, entityType.getValue());
         }
 
+        //获取所有表级元数据
+        List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
             List<String> impactNames = new ArrayList<>();
             String content = "";
@@ -578,8 +580,6 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             }
             detailDTO.setChangeContent(content);
 
-            //获取所有表级元数据
-            List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {
                 checkColumnChange(po, impactNames, metadataEntityPOS);
@@ -607,14 +607,21 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
     /**
      * 检索该字段的影响性分析
      */
-    private List<String> checkColumnChange(AuditLogWithEntityTypeAndDetailPO po, List<String> impactNames, List<MetadataEntityPO> metadataEntityPOS) {
+    private void checkColumnChange(AuditLogWithEntityTypeAndDetailPO po, List<String> impactNames, List<MetadataEntityPO> metadataEntityPOS) {
         //获取该字段所属的表的元数据id
         int parentId = po.getParentId();
-        String name = Objects.requireNonNull(metadataEntityPOS.stream()
-                        .filter(metadataEntityPO -> metadataEntityPO.getId() == parentId)
-                        .findFirst()
-                        .orElse(null))
-                .getName();
+        String name = null;
+        try {
+            name = Objects.requireNonNull(metadataEntityPOS.stream()
+                            .filter(metadataEntityPO -> metadataEntityPO.getId() == parentId)
+                            .findFirst()
+                            .orElse(null))
+                    .getName();
+        }catch (Exception e){
+            log.error("空指针："+e);
+            return;
+        }
+
 
         //字段的父表
         if (!StringUtils.isEmpty(name)) {
@@ -633,7 +640,6 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                 impactNames.add(toName.getName());
             }
         }
-        return impactNames;
     }
 
     /**
