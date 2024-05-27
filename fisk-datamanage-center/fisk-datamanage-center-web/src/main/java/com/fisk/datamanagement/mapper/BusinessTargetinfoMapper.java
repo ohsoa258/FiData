@@ -31,8 +31,9 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     List<Map<String,Object>> selectClassification1(@Param("pid") String pid ,@Param("indicatorname") String indicatorname);
     @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  del_flag = 1 ")
     List<Map<String,Object>> selectClassification2();
-    @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid = #{pid} and del_flag = 1 ")
-    List<Map<String,Object>> selectClassification3(@Param("pid") String pid );
+    @Select("<script> select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid in <foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach> and del_flag = 1 ORDER BY pid</script>")
+//    @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid = #{pid} and del_flag = 1 ")
+    List<Map<String,Object>> selectClassification3(@Param("ids") List<Long> ids );
 
     @Select("select * from tb_business_synchronous")
     List<BusinessSynchronousPO> selecttypeClassification();

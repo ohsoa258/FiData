@@ -5,6 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.DataSourceInfoDTO;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
@@ -106,4 +109,18 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 操作结果
      */
     ResultEnum deleteCheckResult();
+
+    /**
+     * 查看数据源结构树
+     * @param dbId
+     * @return
+     */
+    List<DataSourceInfoDTO> getDataSourceTree(Integer dbId);
+
+    /**
+     * 获取表字段信息
+     * @param dto
+     * @return
+     */
+    List<TableColumnDTO> getColumn(ColumnQueryDTO dto);
 }
