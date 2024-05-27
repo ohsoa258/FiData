@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamanagement.mapper.MetaAnalysisEmailConfigMapper">
+
+    <resultMap id="BaseResultMap" type="com.fisk.datamanagement.entity.MetaAnalysisEmailConfigPO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="emailGroupId" column="email_group_id" jdbcType="INTEGER"/>
+            <result property="queryTime" column="query_time" jdbcType="INTEGER"/>
+            <result property="entityType" column="entity_type" jdbcType="INTEGER"/>
+            <result property="cronExp" column="cron_exp" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,email_group_id,query_time,
+        entity_type,cron_exp,create_time,
+        create_user,update_time,update_user,
+        del_flag
+    </sql>
+</mapper>

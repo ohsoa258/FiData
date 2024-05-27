@@ -129,8 +129,15 @@ public class BloodCompensationImpl
         StopWatch externalDataStopWatch = new StopWatch();
         if (moduleIds.contains(ClassificationTypeEnum.EXTERNAL_DATA.getValue())) {
             externalDataStopWatch.start();
+            //插入同步时间 获取返回的主键id
+            long syncTimeId = addLastSyncTime(ClassificationTypeEnum.EXTERNAL_DATA);
+
             log.info("******一.开始同步外部数据源元数据******");
             synchronousExternalData(null);
+
+            //同步完成后更新状态
+            //1成功 2失败 3同步中
+            updateLastSyncTime(syncTimeId, 1);
             externalDataStopWatch.stop();
         }
 
@@ -184,6 +191,9 @@ public class BloodCompensationImpl
         StopWatch apiGatewayServiceStopWatch = new StopWatch();
         if (moduleIds.contains(ClassificationTypeEnum.API_GATEWAY_SERVICE.getValue())) {
             apiGatewayServiceStopWatch.start();
+            //插入同步时间 获取返回的主键id
+            long syncTimeId = addLastSyncTime(ClassificationTypeEnum.API_GATEWAY_SERVICE);
+
             log.info("*******三.开始同步API网关服务相关元数据信息********");
             log.info("********1.开始API网关服务的业务分类******************");
             ResultEntity<List<AppBusinessInfoDTO>> apiAppList = serveiceClient.getApiService();
@@ -191,6 +201,10 @@ public class BloodCompensationImpl
             log.info("********2.开始API网关服务的元数据******************");
             synchronousAPIServiceMetaData(null);
             log.info("******3.API网关服务的元数据同步成功******");
+
+            //同步完成后更新状态
+            //1成功 2失败 3同步中
+            updateLastSyncTime(syncTimeId, 1);
             apiGatewayServiceStopWatch.stop();
 
         }
@@ -198,6 +212,9 @@ public class BloodCompensationImpl
         if (moduleIds.contains(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue())) {
 
             viewAnalyzeServiceStopWatch.start();
+            //插入同步时间 获取返回的主键id
+            long syncTimeId = addLastSyncTime(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
+
             log.info("*******四.开始同步视图服务相关元数据信息********");
             log.info("********1.开始视图服务的业务分类******************");
             ResultEntity<List<AppBusinessInfoDTO>> viewAppList = serveiceClient.getViewService();
@@ -205,6 +222,10 @@ public class BloodCompensationImpl
             log.info("********2.开始视图服务的元数据******************");
             synchronousViewServiceMetaData(null);
             log.info("******3.视图服务的元数据同步成功******");
+
+            //同步完成后更新状态
+            //1成功 2失败 3同步中
+            updateLastSyncTime(syncTimeId, 1);
             viewAnalyzeServiceStopWatch.stop();
 
         }
@@ -212,6 +233,9 @@ public class BloodCompensationImpl
         if (moduleIds.contains(ClassificationTypeEnum.DATA_DISTRIBUTION.getValue())) {
 
             dataDistributionStopWatch.start();
+            //插入同步时间 获取返回的主键id
+            long syncTimeId = addLastSyncTime(ClassificationTypeEnum.DATA_DISTRIBUTION);
+
             log.info("*******五.开始同步数据库同步服务相关元数据信息********");
             log.info("********1.开始数据库同步服务的业务分类******************");
             ResultEntity<List<AppBusinessInfoDTO>> tableAppList = serveiceClient.getTableService();
@@ -219,6 +243,10 @@ public class BloodCompensationImpl
             log.info("********2.开始数据库同步服务的元数据******************");
             synchronousDataBaseSyncMetaData(null);
             log.info("******3.数据库同步服务的元数据同步成功******");
+
+            //同步完成后更新状态
+            //1成功 2失败 3同步中
+            updateLastSyncTime(syncTimeId, 1);
             dataDistributionStopWatch.stop();
 
         }
@@ -226,6 +254,9 @@ public class BloodCompensationImpl
         if (moduleIds.contains(ClassificationTypeEnum.MASTER_DATA.getValue())) {
 
             masterDataStopWatch.start();
+            //插入同步时间 获取返回的主键id
+            long syncTimeId = addLastSyncTime(ClassificationTypeEnum.MASTER_DATA);
+
             log.info("*******六.开始主数据相关元数据信息********");
             log.info("********1.开始同步主数据业务分类******************");
             ResultEntity<List<AppBusinessInfoDTO>> masterDataModel = mdmClient.getMasterDataModel();
@@ -233,6 +264,10 @@ public class BloodCompensationImpl
             log.info("********2.开始主数据的元数据******************");
             synchronousMasterDataMetaData(null, null, null);
             log.info("********3.主数据的元数据同步成功******************");
+
+            //同步完成后更新状态
+            //1成功 2失败 3同步中
+            updateLastSyncTime(syncTimeId, 1);
             masterDataStopWatch.stop();
 
         }
@@ -460,7 +495,9 @@ public class BloodCompensationImpl
     public void updateLastSyncTime(long id, int status) {
         metaSyncTimePOService.update(new LambdaUpdateWrapper<MetaSyncTimePO>()
                 .eq(MetaSyncTimePO::getId, id)
-                .set(MetaSyncTimePO::getStatus, status));
+                .set(MetaSyncTimePO::getStatus, status)
+                .set(MetaSyncTimePO::getUpdateTime, LocalDateTime.now())
+        );
     }
 
     /**

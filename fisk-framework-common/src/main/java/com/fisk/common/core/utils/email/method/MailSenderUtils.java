@@ -80,18 +80,24 @@ public class MailSenderUtils {
             );
         }
         session.setDebug(serveiceDTO.openDebug);
+
         //构建邮件详情
+        log.info("*****开始构建邮件详情createMimeMessage*****");
         Message mimeMessage = createMimeMessage(session, senderDTO);
+
         //建立发送邮件的对象
         session.getTransport();
+        //发送邮件
         Transport.send(mimeMessage);
     }
 
     private static Message createMimeMessage(Session session, MailSenderDTO senderDTO) throws Exception {
         // 1. 创建邮件对象
         Message mimeMessage = new MimeMessage(session);
+
         // 2. 发件人
         mimeMessage.setFrom(new InternetAddress(senderDTO.getUser(), "fidata@fisksoft.com")); //senderDTO.getUser()
+
         // 3. 收件人
         if (senderDTO.getToAddress() != null && senderDTO.getToAddress() != "") {
             String to = senderDTO.getToAddress()
@@ -104,6 +110,7 @@ public class MailSenderUtils {
                 mimeMessage.setRecipients(MimeMessage.RecipientType.TO, InternetAddress.parse(param));
             }
         }
+
         // 4. 抄送人
         if (senderDTO.getToCc() != null && senderDTO.getToCc() != "") {
             String cc = senderDTO.getToCc()
@@ -116,6 +123,7 @@ public class MailSenderUtils {
                 mimeMessage.setRecipients(MimeMessage.RecipientType.CC, InternetAddress.parse(param));
             }
         }
+
         // 5. 密抄
         if (senderDTO.getToBcc() != null && senderDTO.getToBcc() != "") {
             String bcc = senderDTO.getToBcc()
@@ -128,12 +136,12 @@ public class MailSenderUtils {
                 mimeMessage.setRecipients(MimeMessage.RecipientType.BCC, InternetAddress.parse(param));
             }
         }
+
         // 6. 邮件主题
         mimeMessage.setSubject(senderDTO.getSubject());
 
         // 7. 设置邮件正文
         Multipart multipart = new MimeMultipart();
-
         MimeBodyPart image = new MimeBodyPart();
         if (StringUtils.isNotEmpty(senderDTO.getCompanyLogoPath())) {
             DataHandler logo = new DataHandler(new FileDataSource(new File(senderDTO.getCompanyLogoPath())));
@@ -141,7 +149,6 @@ public class MailSenderUtils {
             // 为"节点"设置一个唯一编号（在文本"节点"将引用该ID）
             image.setContentID("mailLogPic");
         }
-
         StringBuilder str = new StringBuilder();
         str.append("<html>");
         str.append("<head>");
@@ -150,7 +157,9 @@ public class MailSenderUtils {
         str.append("<body>");
         str.append("<div>");
         str.append("<span style='font-weight:600; font-size:16px';font-family: \"宋体\";>Dear User,</span><br/><br/>");
-        str.append("<span style='font-size:14px';font-family: \"宋体\";>&nbsp;&nbsp;&nbsp;&nbsp;" + senderDTO.getBody() + "</span>");
+        str.append("<span style='font-size:14px';font-family: \"宋体\";>&nbsp;&nbsp;&nbsp;&nbsp;")
+                .append(senderDTO.getBody())
+                .append("</span>");
         str.append("<br/><br/>");
         if (StringUtils.isNotEmpty(senderDTO.getCompanyLogoPath())) {
             str.append("<img src='cid:mailLogPic' height='29' width='80' /><br/>");
@@ -166,9 +175,11 @@ public class MailSenderUtils {
             multipart.addBodyPart(image);
         }
 
+        // 8. 添加附件
         if (senderDTO.sendAttachment
                 && senderDTO.getAttachmentName() != null && !senderDTO.getAttachmentName().isEmpty()
                 && senderDTO.getAttachmentPath() != null && !senderDTO.getAttachmentPath().isEmpty()) {
+            //获取附件存放的路径
             File tmpFile = new File(senderDTO.getAttachmentPath() + senderDTO.getAttachmentName());
             if (tmpFile.exists()) {
                 MimeBodyPart file1 = new MimeBodyPart();
@@ -182,9 +193,10 @@ public class MailSenderUtils {
         }
         mimeMessage.setContent(multipart);
 
-        // 8. 设置发件时间
+        // 9. 设置发件时间
         mimeMessage.setSentDate(new Date());
-        // 9. 保存上面的所有设置
+
+        // 10. 保存上面的所有设置
         mimeMessage.saveChanges();
         return mimeMessage;
     }

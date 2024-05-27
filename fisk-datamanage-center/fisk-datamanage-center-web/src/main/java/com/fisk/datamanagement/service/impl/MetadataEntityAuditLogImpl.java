@@ -454,7 +454,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             /*
              * 连表查询 tb_metadata_entity_audit_log 和 tb_metadata_entity 和 tb_metadata_entity_audit_atrribute_change
              */
-            auditLogs = auditLogMapper.getMetaChangesChartsDetail(startTime, endTime, entityType.getValue(), dto.getCurrentPage(), dto.getSize());
+            auditLogs = auditLogMapper.getMetaChangesChartsDetail(startTime, endTime, dto.getCurrentPage(), dto.getSize());
             total = auditLogMapper.countMetaChangesCharts(startTime, endTime, entityType.getValue());
         } else {
             auditLogs = auditLogMapper.getMetaChangesChartsDetailByOpType(startTime, endTime, entityType.getValue(),
@@ -464,17 +464,18 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         }
 
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
-            ArrayList<String> impactNames = new ArrayList<>();
+            List<String> impactNames = new ArrayList<>();
             String content = "";
             AssetsChangeAnalysisDetailDTO detailDTO = new AssetsChangeAnalysisDetailDTO();
             detailDTO.setEntityId(po.getEntityId());
             detailDTO.setAuditId(po.auditId);
-            detailDTO.setType(entityType);
+            EntityTypeEnum type = EntityTypeEnum.getValue(po.typeId);
+            detailDTO.setType(type);
 
             //切换类型名称
-            if (entityType.equals(EntityTypeEnum.RDBMS_TABLE)) {
+            if (type.equals(EntityTypeEnum.RDBMS_TABLE)) {
                 detailDTO.setTypeName("表");
-            } else if (entityType.equals(EntityTypeEnum.RDBMS_COLUMN)) {
+            } else if (type.equals(EntityTypeEnum.RDBMS_COLUMN)) {
                 detailDTO.setTypeName("字段");
             } else {
                 detailDTO.setTypeName(entityType.getName());
@@ -494,24 +495,11 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             }
             detailDTO.setChangeContent(content);
 
+            //获取所有表级元数据
+            List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
-            if (entityType.equals(EntityTypeEnum.RDBMS_COLUMN)) {
-                //获取该字段所属的表的元数据id
-                int parentId = po.getParentId();
-                //获取表的血缘对象
-                List<LineageMapRelationPO> list = lineageMapRelationImpl.list(new LambdaQueryWrapper<LineageMapRelationPO>().eq(LineageMapRelationPO::getMetadataEntityId, parentId));
-                if (!CollectionUtils.isEmpty(list)) {
-                    //获取该表的元数据id
-                    for (LineageMapRelationPO lineageMapRelationPO : list) {
-                        Integer fromEntityId = lineageMapRelationPO.getFromEntityId();
-                        Integer toEntityId = lineageMapRelationPO.getToEntityId();
-
-                        MetadataEntityPO fromName = metadataEntityImpl.getById(fromEntityId);
-                        MetadataEntityPO toName = metadataEntityImpl.getById(toEntityId);
-                        impactNames.add(fromName.getName());
-                        impactNames.add(toName.getName());
-                    }
-                }
+            if (type.equals(EntityTypeEnum.RDBMS_COLUMN)) {
+                checkColumnChange(po, impactNames, metadataEntityPOS);
             }
             detailDTO.setImpactAnalysis(impactNames);
 
@@ -523,6 +511,129 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         page.setTotal(total);
         page.setRecords(results);
         return page;
+    }
+
+    /**
+     * 获取元数据变更影响分析
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public List<AssetsChangeAnalysisDetailDTO> getMetaChangesChartsDetailWithoutPage(AssetsChangeAnalysisDetailQueryDTO dto) {
+
+        List<AssetsChangeAnalysisDetailDTO> results = new ArrayList<>();
+        //转换时间
+        LocalDateTime startTime = getLocalDateTime(dto.getStartTime());
+        LocalDateTime endTime = getLocalDateTime(dto.getEndTime());
+        /*
+        获取查询的类型：
+            ALL(0,"全部"),
+            ADD(1,"添加"),
+            EDIT(2,"编辑"),
+            DELETE(3,"删除"),
+         */
+        //获取元数据类型
+        EntityTypeEnum entityType = dto.getEntityType();
+
+        List<AuditLogWithEntityTypeAndDetailPO> auditLogs;
+        //根据查询操作类型 决定查询的内容
+        if (entityType.equals(EntityTypeEnum.ALL)) {
+            /*
+             * 连表查询 tb_metadata_entity_audit_log 和 tb_metadata_entity 和 tb_metadata_entity_audit_atrribute_change
+             */
+            auditLogs = auditLogMapper.getMetaChangesChartsDetailNoPage(startTime, endTime);
+        } else {
+            auditLogs = auditLogMapper.getMetaChangesChartsDetailByOpTypeNoPage(startTime, endTime, entityType.getValue());
+        }
+
+        for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
+            List<String> impactNames = new ArrayList<>();
+            String content = "";
+            AssetsChangeAnalysisDetailDTO detailDTO = new AssetsChangeAnalysisDetailDTO();
+            detailDTO.setEntityId(po.getEntityId());
+            detailDTO.setAuditId(po.auditId);
+            detailDTO.setType(EntityTypeEnum.getValue(po.typeId));
+
+            //切换类型名称
+            if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_TABLE)) {
+                detailDTO.setTypeName("表");
+            } else if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {
+                detailDTO.setTypeName("字段");
+            } else {
+                detailDTO.setTypeName(entityType.getName());
+            }
+
+            detailDTO.setEntityName(po.name);
+            detailDTO.setEntityType(po.operationType);
+            if (po.operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
+                content = po.name;
+            } else if (po.operationType.equals(MetadataAuditOperationTypeEnum.EDIT)) {
+                if (po.attribute.equals("dataType")) {
+                    content = po.beforeValue + " -> " + po.afterValue;
+                } else {
+                    content = "字符串(" + po.beforeValue + ") -> " + "字符串(" + po.afterValue + ")";
+                }
+
+            }
+            detailDTO.setChangeContent(content);
+
+            //获取所有表级元数据
+            List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
+            //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
+            if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {
+                checkColumnChange(po, impactNames, metadataEntityPOS);
+            }
+            detailDTO.setImpactAnalysis(impactNames);
+
+            results.add(detailDTO);
+        }
+        return results;
+    }
+
+    /**
+     * 获取所有表元数据
+     *
+     * @return
+     */
+    private List<MetadataEntityPO> getTableEntitys() {
+        return metadataEntityImpl.list(
+                new LambdaQueryWrapper<MetadataEntityPO>()
+                        .select(MetadataEntityPO::getId, MetadataEntityPO::getName)
+                        .eq(MetadataEntityPO::getTypeId, EntityTypeEnum.RDBMS_TABLE.getValue())
+        );
+    }
+
+    /**
+     * 检索该字段的影响性分析
+     */
+    private List<String> checkColumnChange(AuditLogWithEntityTypeAndDetailPO po, List<String> impactNames, List<MetadataEntityPO> metadataEntityPOS) {
+        //获取该字段所属的表的元数据id
+        int parentId = po.getParentId();
+        String name = Objects.requireNonNull(metadataEntityPOS.stream()
+                        .filter(metadataEntityPO -> metadataEntityPO.getId() == parentId)
+                        .findFirst()
+                        .orElse(null))
+                .getName();
+
+        //字段的父表
+        if (!StringUtils.isEmpty(name)) {
+            impactNames.add("【Parent:" + name + "】");
+        }
+        //获取表的血缘对象
+        List<LineageMapRelationPO> list = lineageMapRelationImpl.list(new LambdaQueryWrapper<LineageMapRelationPO>().eq(LineageMapRelationPO::getMetadataEntityId, parentId));
+        if (!CollectionUtils.isEmpty(list)) {
+            //获取该表的元数据id
+            for (LineageMapRelationPO lineageMapRelationPO : list) {
+                Integer fromEntityId = lineageMapRelationPO.getFromEntityId();
+                Integer toEntityId = lineageMapRelationPO.getToEntityId();
+                MetadataEntityPO fromName = metadataEntityImpl.getById(fromEntityId);
+                MetadataEntityPO toName = metadataEntityImpl.getById(toEntityId);
+                impactNames.add(fromName.getName());
+                impactNames.add(toName.getName());
+            }
+        }
+        return impactNames;
     }
 
     /**

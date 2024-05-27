@@ -39,11 +39,19 @@ public interface IMetadataEntityAuditLog extends IService<MetadataEntityAuditLog
     AssetsChangeAnalysisDTO getMetaChangesCharts(AssetsChangeAnalysisQueryDTO dto);
 
     /**
-     * 获取元数据变更影响分析
+     * 获取元数据变更影响分析 分页
      *
      * @param dto
      * @return
      */
     Page<AssetsChangeAnalysisDetailDTO> getMetaChangesChartsDetail(AssetsChangeAnalysisDetailQueryDTO dto);
+
+    /**
+     * 获取元数据变更影响分析 不分页
+     *
+     * @param dto
+     * @return
+     */
+    List<AssetsChangeAnalysisDetailDTO> getMetaChangesChartsDetailWithoutPage(AssetsChangeAnalysisDetailQueryDTO dto);
 
 }

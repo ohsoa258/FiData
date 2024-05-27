@@ -1944,7 +1944,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         if (!Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTODORIS)) {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
-            if (dto.excelFlow || dto.sapBwFlow || conType != null && Objects.equals(DataSourceTypeEnum.API, conType)) {
+
+            // 如果是数据接入excel || 数据接入sapbw || 数据接入api
+            if (dto.excelFlow
+                    || dto.sapBwFlow
+                    || (conType != null && Objects.equals(DataSourceTypeEnum.API, conType))
+            ) {
                 ProcessorEntity IHP = new ProcessorEntity();
                 //如果开启数据校验，则新建两个组件
                 if (dataValidation) {
