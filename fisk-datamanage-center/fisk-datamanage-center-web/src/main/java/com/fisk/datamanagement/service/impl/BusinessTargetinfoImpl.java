@@ -904,9 +904,32 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             list = businessTargetinfoMapper.selectClassification1(id, indicatorname);
         }
         if (!StringUtils.isEmpty(id) && StringUtils.isEmpty(indicatorname)) {
-            list = businessTargetinfoMapper.selectClassification3(id);
+
+            List<BusinessCategoryPO> businessCategoryPOS = businessCategoryMapper.selectList(new QueryWrapper<>());
+            List<BusinessCategoryPO> self = businessCategoryPOS.stream().filter(i -> (int) i.getId() == Integer.valueOf(id)).collect(Collectors.toList());
+            self = self.stream().map(i->{
+                if (i.getPid() == null){
+                    i.setPid(0);
+                }
+                return i;
+            }).collect(Collectors.toList());
+            List<BusinessCategoryPO> allChildrenCategories = getAllChildrenCategories(businessCategoryPOS, Integer.valueOf(id));
+            allChildrenCategories.addAll(self);
+            List<Long> ids = allChildrenCategories.stream().map(i -> i.getId()).collect(Collectors.toList());
+            list = businessTargetinfoMapper.selectClassification3(ids);
         }
         uploadExcelAboutUser(response, "TargetinfoDetailData.xlsx", list);
+    }
+
+    public static List<BusinessCategoryPO> getAllChildrenCategories(List<BusinessCategoryPO> allCategories, Integer pid) {
+        List<BusinessCategoryPO> children = new ArrayList<>();
+        for (BusinessCategoryPO category : allCategories) {
+            if (Objects.equals(category.getPid(), pid)) {
+                children.add(category);
+                children.addAll(getAllChildrenCategories(allCategories, (int)category.getId()));
+            }
+        }
+        return children;
     }
 
 
