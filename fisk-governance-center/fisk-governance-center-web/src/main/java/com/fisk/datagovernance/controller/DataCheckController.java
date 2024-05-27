@@ -5,8 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.dbutils.dto.DataSourceInfoDTO;
+import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
+import com.fisk.datagovernance.service.dataquality.DatacheckCodeService;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
@@ -36,6 +39,8 @@ public class DataCheckController {
 
     @Resource
     private IDatacheckStandardsGroupService datacheckStandardsGroupService;
+    @Resource
+    private DatacheckCodeService datacheckCodeService;
 
     @ApiOperation("查询全部校验规则")
     @PostMapping("/getAllRule")
@@ -53,6 +58,12 @@ public class DataCheckController {
     @PutMapping("/edit")
     public ResultEntity<Object> editData(@RequestBody DataCheckEditDTO dto) {
         return ResultEntityBuild.build(service.editData(dto));
+    }
+
+    @ApiOperation("获取关联值")
+    @GetMapping("/getCheckCodeList")
+    public ResultEntity<Object> getCheckCodeList() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS,datacheckCodeService.getCheckCodeList());
     }
 
     @ApiOperation("删除数据校验模板组件")
@@ -127,4 +138,17 @@ public class DataCheckController {
     public ResultEntity<Object> deleteDataCheckStandardsGroup(@RequestParam("id") Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,datacheckStandardsGroupService.deleteDataCheckStandardsGroup(id));
     }
+
+    @ApiOperation("查看数据源结构树")
+    @GetMapping("/getDataSourceTree")
+    public ResultEntity<List<DataSourceInfoDTO>> getDataSourceTree(@RequestParam("dbId") Integer dbId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceTree(dbId));
+    }
+
+    @ApiOperation("获取表字段信息")
+    @PostMapping("/getColumn")
+    public ResultEntity<Object> getColumn(@RequestBody ColumnQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn(dto));
+    }
+
 }

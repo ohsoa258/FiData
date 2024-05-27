@@ -1,5 +1,7 @@
 package com.fisk.datagovernance.entity.dataquality;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
@@ -40,6 +42,13 @@ public class DataCheckExtendPO extends BasePO {
      * 3、日期范围(2023-04-01 12:59:59~2023-05-01 12:00:00)
      */
     public int rangeCheckType;
+
+    /**
+     * 值域检查-参数类型：
+     * 1、值类型
+     * 2、表字段类型
+     */
+    public int rangeType;
 
     /**
      * 值域检查-对比值；
@@ -117,4 +126,16 @@ public class DataCheckExtendPO extends BasePO {
      * 错误数据保留时间：7天、14天、30天
      */
     public int errorDataRetentionTime;
+
+    public Integer checkDatabaseId;
+
+    public String checkDatabaseName;
+
+    public Integer checkTableId;
+
+    public String checkTableName;
+
+    public Integer checkFieldId;
+
+    public String checkFieldName;
 }

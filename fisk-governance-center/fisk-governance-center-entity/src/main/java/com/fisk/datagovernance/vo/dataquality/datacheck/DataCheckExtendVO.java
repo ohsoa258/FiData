@@ -54,6 +54,15 @@ public class DataCheckExtendVO {
     @ApiModelProperty(value = "值域检查-类型")
     public RangeCheckTypeEnum rangeCheckType;
 
+
+    /**
+     * 值域检查-参数类型：
+     * 1、值类型
+     * 2、表字段类型
+     */
+    @ApiModelProperty(value = "值域检查-参数类型")
+    public int rangeType;
+
     /**
      * 值域检查-对比值；
      */
@@ -144,4 +153,22 @@ public class DataCheckExtendVO {
      */
     @ApiModelProperty(value = "错误数据保留时间：7天、14天、30天")
     public int errorDataRetentionTime;
+
+    @ApiModelProperty(value = "校验数据源id")
+    public Integer checkDatabaseId;
+
+    @ApiModelProperty(value = "校验数据源名称")
+    public String checkDatabaseName;
+
+    @ApiModelProperty(value = "校验数据表id")
+    public Integer checkTableId;
+
+    @ApiModelProperty(value = "校验数据表名称")
+    public String checkTableName;
+
+    @ApiModelProperty(value = "校验字段id")
+    public Integer checkFieldId;
+
+    @ApiModelProperty(value = "校验字段名称")
+    public String checkFieldName;
 }

@@ -10,6 +10,7 @@
         field_name,
         field_type,
         range_check_type AS rangeCheckType,
+        range_type,
         range_check_value,
         standard_check_type AS standardCheckType,
         standard_check_type_date_value,
@@ -23,7 +24,13 @@
         regexp_check_value,
         sql_check_value,
         record_error_data,
-        error_data_retention_time
+        error_data_retention_time,
+        check_database_id,
+        check_database_name,
+        check_table_id,
+        check_table_name,
+        check_field_id,
+        check_field_name
         FROM
         tb_datacheck_rule_extend
         WHERE
