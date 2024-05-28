@@ -1403,7 +1403,7 @@ public class MetaDataImpl implements IMetaData {
                 if (entityDto.createApiType != 3) {
                     //同步实体数据源的元数据
                     List<String> fromEntityId = syncEntitySourceMetaData(entityDto, allDataSourceList);
-                    if (fromEntityId != null && fromEntityId.stream().count() > 0) {
+                    if (fromEntityId != null && (long) fromEntityId.size() > 0) {
                         //同步源到目标的血缘
                         metadataEntity.syncSourceToTargetKinShip(fromEntityId, entityGuid, entityDto.createSql);
                     }

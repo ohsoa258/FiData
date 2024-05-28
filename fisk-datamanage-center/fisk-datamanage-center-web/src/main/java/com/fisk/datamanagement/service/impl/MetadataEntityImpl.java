@@ -1253,7 +1253,7 @@ public class MetadataEntityImpl
         //判断是否已有血缘关系，存在则先删除
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(targetId), ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
-        addProcess(sqlScript, sourceId.stream().map(e -> Long.parseLong(e)).collect(Collectors.toList()), targetId, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
+        addProcess(sqlScript, sourceId.stream().map(Long::parseLong).collect(Collectors.toList()), targetId, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
 
     }
 
