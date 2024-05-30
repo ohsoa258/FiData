@@ -25,15 +25,15 @@ dataservice:
 # 是否同步元数据
 open-metadata: false
 spring:
-  hikari:
-    maximum-pool-size: 60
-    data-source-properties:
-      setIdleTimeout: 60000
-      setConnectionTimeout: 60000
-      setValidationTimeout: 3000
-      setLoginTimeout: 5
-      setMaxLifetime: 60000
   datasource:
+    hikari:
+      maximum-pool-size: 60
+      data-source-properties:
+        setIdleTimeout: 60000
+        setConnectionTimeout: 60000
+        setValidationTimeout: 3000
+        setLoginTimeout: 5
+        setMaxLifetime: 60000
     driver-class-name: com.mysql.jdbc.Driver
     password: root123
     url: jdbc:mysql://192.168.11.130:3306/dmp_dataservice_db?uuseUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
