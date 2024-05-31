@@ -106,6 +106,8 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
 
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
             "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道", "数据粒度"};
+    private static final String[] parentTargetinfoHeaders1 = {"负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
+            "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道", "数据粒度"};
 
 
     @Override
@@ -919,7 +921,18 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             List<Long> ids = allChildrenCategories.stream().map(i -> i.getId()).collect(Collectors.toList());
             list = businessTargetinfoMapper.selectClassification3(ids);
         }
-        uploadExcelAboutUser(response, "TargetinfoDetailData.xlsx", list);
+        List<Integer> pid = list.stream().map(i -> Integer.valueOf(i.get("pid").toString())).collect(Collectors.toList());
+        List<Map<String, Object>> menuTreeNames = businessTargetinfoMapper.getMenuTreeNames();
+        List<Map<String, Object>> level = menuTreeNames.stream()
+                .filter(v -> pid.contains(Integer.valueOf(v.get("id").toString()))).collect(Collectors.toList());
+        int maxLevel = level.stream()
+                .map(map -> Integer.valueOf(map.get("level").toString()))
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0);
+        Map<Integer, List<Map<String, Object>>> menus = menuTreeNames.stream().collect(Collectors.groupingBy(i -> Integer.valueOf(i.get("id").toString())));
+        uploadExcelAboutUser(response, "TargetinfoDetailData.xlsx", list,maxLevel,menus);
     }
 
     public static List<BusinessCategoryPO> getAllChildrenCategories(List<BusinessCategoryPO> allCategories, Integer pid) {
@@ -942,10 +955,16 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
      * @param dataList 导出的数据
      */
     public static void uploadExcelAboutUser(HttpServletResponse response, String fileName,
-                                            List<Map<String, Object>> dataList) {
+                                            List<Map<String, Object>> dataList,
+                                            int maxLevel,
+                                            Map<Integer, List<Map<String, Object>>> menus) {
         //声明输出流
         OutputStream os = null;
         try {
+            List<String> heardrs = Arrays.stream(parentTargetinfoHeaders1).collect(Collectors.toList());
+            for (int i = 0; i < maxLevel; i++) {
+                heardrs.add(i,i+1+"级分类");
+            }
             //设置响应头
             setResponseHeader(response, fileName);
             //获取输出流
@@ -954,18 +973,21 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             XSSFSheet sheet = workbook.createSheet("sheet1");
             XSSFRow row1 = sheet.createRow(0);
             //添加表头
-            for (int i = 0; i < parentTargetinfoHeaders.length; i++) {
-                row1.createCell(i).setCellValue(parentTargetinfoHeaders[i]);
+            for (int i = 0; i < heardrs.size(); i++) {
+                row1.createCell(i).setCellValue(heardrs.get(i));
             }
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             List<LinkedHashMap<String, Object>> data = new ArrayList<>();
             for (Map<String, Object> aa : dataList) {
-                if (!aa.containsKey("namepid")) {
-                    aa.put("namepid", "");
+                for (int i = 0; i < maxLevel; i++) {
+                    aa.put("menu"+(i+1),"");
                 }
-                if (!aa.containsKey("name")) {
-                    aa.put("name", "");
-                }
+//                if (!aa.containsKey("namepid")) {
+//                    aa.put("namepid", "");
+//                }
+//                if (!aa.containsKey("name")) {
+//                    aa.put("name", "");
+//                }
                 if (!aa.containsKey("large_screen_link")) {
                     aa.put("large_screen_link", "");
                 }
@@ -1023,17 +1045,36 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             }
             for (Map<String, Object> stringObjectMap : dataList) {
                 LinkedHashMap<String, Object> datamap = new LinkedHashMap<>();
-                if (!StringUtils.isEmpty(stringObjectMap.get("namepid"))) {
-                    datamap.put("namepid", stringObjectMap.get("namepid"));
-                } else {
-                    datamap.put("namepid", null);
-                }
 
-                if (!StringUtils.isEmpty(stringObjectMap.get("name"))) {
-                    datamap.put("name", stringObjectMap.get("name"));
-                } else {
-                    datamap.put("name", null);
+                Integer pid = Integer.valueOf(stringObjectMap.get("pid").toString());
+                List<Map<String, Object>> maps = menus.get(pid);
+                if (maps != null){
+                    Map<String, Object> map = maps.get(0);
+                    String menuName = map.get("full_path").toString();
+                    String[] split = menuName.split("->");
+                    for (int i = 0; i < maxLevel; i++) {
+                        if(i<split.length){
+                            datamap.put("menu"+(i+1), split[i]);
+                        }else {
+                            datamap.put("menu"+(i+1), null);
+                        }
+                    }
+                }else {
+                    for (int i = 0; i < maxLevel; i++) {
+                        datamap.put("menu"+(i+1), null);
+                    }
                 }
+//                if (!StringUtils.isEmpty(stringObjectMap.get("namepid"))) {
+//                    datamap.put("namepid", stringObjectMap.get("namepid"));
+//                } else {
+//                    datamap.put("namepid", null);
+//                }
+//
+//                if (!StringUtils.isEmpty(stringObjectMap.get("name"))) {
+//                    datamap.put("name", stringObjectMap.get("name"));
+//                } else {
+//                    datamap.put("name", null);
+//                }
                 if (!StringUtils.isEmpty(stringObjectMap.get("responsible_dept"))) {
                     datamap.put("responsible_dept", stringObjectMap.get("responsible_dept"));
                 } else {
