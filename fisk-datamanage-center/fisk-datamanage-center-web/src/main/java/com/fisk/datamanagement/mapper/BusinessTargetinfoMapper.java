@@ -34,6 +34,8 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     @Select("<script> select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid in <foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach> and del_flag = 1 ORDER BY pid</script>")
 //    @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid = #{pid} and del_flag = 1 ")
     List<Map<String,Object>> selectClassification3(@Param("ids") List<Long> ids );
+    @Select("WITH RECURSIVE MenuHierarchy AS ( SELECT id, name, pid, 1 AS level, CAST(name AS CHAR(200)) AS full_path FROM tb_business_category WHERE pid IS NULL UNION ALL SELECT m.id, m.name, m.pid, mh.level + 1, CONCAT(mh.full_path, '->', m.name) FROM tb_business_category m JOIN MenuHierarchy mh ON m.pid = mh.id ) SELECT id, name, level, full_path FROM MenuHierarchy ORDER BY full_path")
+    List<Map<String,Object>> getMenuTreeNames();
 
     @Select("select * from tb_business_synchronous")
     List<BusinessSynchronousPO> selecttypeClassification();
