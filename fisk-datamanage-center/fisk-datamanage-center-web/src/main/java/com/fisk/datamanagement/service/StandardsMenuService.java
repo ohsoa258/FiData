@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.standards.StandardsForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
 import com.fisk.datamanagement.dto.standards.StandardsTreeDTO;
 import com.fisk.datamanagement.entity.StandardsMenuPO;
@@ -55,5 +56,13 @@ public interface StandardsMenuService extends IService<StandardsMenuPO> {
      * @return
      */
     List<Integer> getStandardByMenuId(Integer menuId);
+
+    /**
+     * 数据资产 - 资产目录 按数据元标准分类
+     *
+     * @return
+     */
+    List<StandardsForAssetCatalogDTO> getStandardsForAssetCatalog();
+
 }
 

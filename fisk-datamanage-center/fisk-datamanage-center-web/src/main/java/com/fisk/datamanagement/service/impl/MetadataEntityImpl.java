@@ -1540,8 +1540,12 @@ public class MetadataEntityImpl
             entitiesDto.typeName = EntityTypeEnum.getValue(po.typeId).getName();
             entitiesDto.status = "ACTIVE";
             entitiesDto.attributes = new EntityAttributesDTO();
+            //表名
             entitiesDto.attributes.name = po.name;
+            //描述
             entitiesDto.attributes.description = po.description;
+            //显示名称
+            entitiesDto.attributes.displayName = po.displayName;
 
             //用户名id替换名称
             Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();

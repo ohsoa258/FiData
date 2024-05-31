@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.standards.StandardsForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
 import com.fisk.datamanagement.dto.standards.StandardsTreeDTO;
 import com.fisk.datamanagement.entity.StandardsMenuPO;
@@ -145,12 +146,13 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
 
     /**
      * 获取所有数据元标准menu-只要id和name
+     *
      * @return
      */
     @Override
     public List<StandardsMenuDTO> getStandardMenus() {
         LambdaQueryWrapper<StandardsMenuPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(StandardsMenuPO::getId,StandardsMenuPO::getName);
+        wrapper.select(StandardsMenuPO::getId, StandardsMenuPO::getName);
         List<StandardsMenuPO> list = list(wrapper);
         return StandardsMenuMap.INSTANCES.posToDtos(list);
     }
@@ -161,18 +163,81 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
         List<Integer> result = new ArrayList<>();
         if (menuId != null) {
             List<StandardsMenuPO> all = this.list();
-            if (!CollectionUtils.isEmpty(all)){
+            if (!CollectionUtils.isEmpty(all)) {
                 menuIds = findAllChildrenIdsWithParent(all, menuId);
                 menuIds.add(menuId);
             }
             List<StandardsPO> standardsPOS = standardsService.list();
             for (StandardsPO standardsPO : standardsPOS) {
-                if (menuIds.contains(standardsPO.getMenuId())){
-                    result.add((int)standardsPO.id);
+                if (menuIds.contains(standardsPO.getMenuId())) {
+                    result.add((int) standardsPO.id);
                 }
             }
         }
         return result;
+    }
+
+    /**
+     * 数据资产 - 资产目录 按数据元标准分类
+     *
+     * @return
+     */
+    @Override
+    public List<StandardsForAssetCatalogDTO> getStandardsForAssetCatalog() {
+        List<StandardsForAssetCatalogDTO> result = new ArrayList<>();
+
+        List<StandardsMenuPO> list = this.list(
+                new LambdaQueryWrapper<StandardsMenuPO>()
+                        .select(StandardsMenuPO::getId, StandardsMenuPO::getName, StandardsMenuPO::getPid ,StandardsMenuPO::getType)
+        );
+        List<StandardsPO> standardsPOS = standardsService.list(
+                new LambdaQueryWrapper<StandardsPO>()
+                        .select(StandardsPO::getMenuId, StandardsPO::getId)
+        );
+        List<Integer> existsStandardMenuids = standardsPOS.stream().map(StandardsPO::getMenuId).collect(Collectors.toList());
+
+        //获取所有根节点菜单
+        List<StandardsMenuPO> rootStandardMenus = list.stream().filter(standardsMenuPO -> standardsMenuPO.getPid() == 0).collect(Collectors.toList());
+
+        for (StandardsMenuPO standardsMenuPO : rootStandardMenus) {
+            StandardsForAssetCatalogDTO dto = new StandardsForAssetCatalogDTO();
+            long rootId = standardsMenuPO.getId();
+            dto.setStandardId(rootId);
+            dto.setStandardName(standardsMenuPO.getName());
+
+            //计算根节点下有多少数据元
+            //寻找根节点下有多少type为2的数据源标准数量
+            int standardCount = countStandardDatas(rootId, list, existsStandardMenuids);
+            dto.setStandardCount(standardCount);
+            dto.setStandardMetaCount(standardCount);
+            result.add(dto);
+        }
+        return result;
+    }
+
+    /**
+     * 递归寻找根节点下有多少type为2的数据源标准数量
+     *
+     * @param rootId 节点id
+     * @param list   菜单列表
+     * @return 标准数量
+     */
+    public int countStandardDatas(long rootId, List<StandardsMenuPO> list, List<Integer> existsStandardMenuids) {
+        int standardCount = 0;
+        List<StandardsMenuPO> collect = list.stream()
+                .filter(item -> item.getPid() == rootId)
+                .collect(Collectors.toList());
+
+        for (StandardsMenuPO standardsMenuPO : collect) {
+            if (standardsMenuPO.getType() == 2) {
+                if (existsStandardMenuids.contains((int) standardsMenuPO.getId())){
+                    standardCount++;
+                }
+            } else {
+                standardCount += countStandardDatas(standardsMenuPO.getId(), list, existsStandardMenuids);
+            }
+        }
+        return standardCount;
     }
 
     // 递归查询所有子 ID（包含父 ID）
@@ -183,20 +248,22 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
                 .collect(Collectors.toList());
 
         for (StandardsMenuPO child : children) {
-            if (child.getType() == 2){
-                childrenIds.add((int)child.getId());
+            if (child.getType() == 2) {
+                childrenIds.add((int) child.getId());
             }
-            childrenIds.addAll(findAllChildrenIdsWithParent(list, (int)child.getId()));
+            childrenIds.addAll(findAllChildrenIdsWithParent(list, (int) child.getId()));
         }
         return childrenIds;
     }
+
     private void standardsTreeForAll(List<StandardsTreeDTO> allList, List<StandardsTreeDTO> parentList, List<StandardsPO> list) {
         Map<Integer, List<StandardsTreeDTO>> childrenMap = new HashMap<>();
         for (StandardsTreeDTO dto : allList) {
             int parentId = dto.getPid() != null ? dto.getPid() : 0;
             childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
         }
-        List<StandardsTreeDTO> removeParentList = new ArrayList<>();;
+        List<StandardsTreeDTO> removeParentList = new ArrayList<>();
+        ;
         for (StandardsTreeDTO parent : parentList) {
             List<StandardsTreeDTO> children = childrenMap.get(parent.getId());
             if (children != null) {
@@ -215,7 +282,7 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
             }
         }
 
-        if (!CollectionUtils.isEmpty(removeParentList)){
+        if (!CollectionUtils.isEmpty(removeParentList)) {
             parentList.removeAll(removeParentList);
         }
     }

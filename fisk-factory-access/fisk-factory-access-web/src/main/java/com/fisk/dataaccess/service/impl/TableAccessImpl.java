@@ -1345,12 +1345,24 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO) {
         Map<Integer, String> map = new HashMap<>();
-        //查询宽表
+        //查询物理表
         QueryWrapper<TableAccessPO> tableAccessPOQueryWrapper = new QueryWrapper<>();
         tableAccessPOQueryWrapper.lambda().in(TableAccessPO::getId, tableQueryDTO.getIds());
         List<TableAccessPO> tableAccessPOList = baseMapper.selectList(tableAccessPOQueryWrapper);
+        List<AppRegistrationPO> appRegistrationPOS = appRegistrationImpl.list(
+                new LambdaQueryWrapper<AppRegistrationPO>()
+                        .select(AppRegistrationPO::getId, AppRegistrationPO::getAppName)
+        );
+
+        Map<Long, String> kvMap = appRegistrationPOS.stream().collect(Collectors.toMap(AppRegistrationPO::getId, AppRegistrationPO::getAppName));
+
         for (TableAccessPO tableAccessPO : tableAccessPOList) {
+            //表名
             map.put((int) tableAccessPO.getId(), tableAccessPO.getTableName());
+            //业务域id
+            map.put(-100, tableAccessPO.getAppId() + "");
+            //业务域名称
+            map.put(-200, kvMap.get(tableAccessPO.getAppId()));
         }
         return map;
     }

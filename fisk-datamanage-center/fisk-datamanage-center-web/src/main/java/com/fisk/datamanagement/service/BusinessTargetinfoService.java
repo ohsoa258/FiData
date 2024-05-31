@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
 
@@ -90,4 +91,11 @@ public interface BusinessTargetinfoService {
 
 
     List<BusinessMetaDataNameDTO> getBusinessMetaDataNameList(String key);
+
+    /**
+     * 数据资产 - 资产目录 按指标标准分类
+     *
+     * @return
+     */
+    List<IndexForAssetCatalogDTO> getIndexForAssetCatalog();
 }

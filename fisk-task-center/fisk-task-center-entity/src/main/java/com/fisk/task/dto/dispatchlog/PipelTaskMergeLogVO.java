@@ -33,4 +33,11 @@ public class PipelTaskMergeLogVO extends BasePO {
     public Date endTime;
     @ApiModelProperty(value = "持续时间/分钟")
     public String duration;
+
+    @ApiModelProperty(value = "业务域id/应用id")
+    public String areaId;
+
+    @ApiModelProperty(value = "业务域名称/应用名称")
+    public String areaName;
+
 }

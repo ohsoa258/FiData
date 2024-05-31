@@ -355,11 +355,28 @@ public class PipelTaskLogImpl extends ServiceImpl<PipelTaskLogMapper, PipelTaskL
             }
             for (PipelTaskMergeLogVO pipelTaskMergeLogVO : stringListEntry.getValue()) {
                 String tableName = resultMap.get(pipelTaskMergeLogVO.getTableId());
+
+                // -100 业务域id/应用id
+                String areaId = resultMap.get("-100");
+                // -200 业务域名称/应用名称
+                String areaName = resultMap.get("-200");
+
+                //表名
                 if (StringUtils.isEmpty(tableName)){
                     pipelTaskMergeLogVO.setTableName(resultMap.get(1));
                 }else {
                     pipelTaskMergeLogVO.setTableName(tableName);
                 }
+
+                // -100 业务域id/应用id
+                if (!StringUtils.isEmpty(areaId)){
+                    pipelTaskMergeLogVO.setAreaId(areaId);
+                }
+                // -200 业务域名称/应用名称
+                if (!StringUtils.isEmpty(areaName)){
+                    pipelTaskMergeLogVO.setAreaName(areaName);
+                }
+
                 result.add(pipelTaskMergeLogVO);
             }
         }

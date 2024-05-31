@@ -19,6 +19,7 @@ import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.ChildBusinessTreeDTO;
+import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.entity.*;
@@ -64,7 +65,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMapper, BusinessTargetinfoPO> implements BusinessTargetinfoService {
+public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper, BusinessTargetinfoPO> implements BusinessTargetinfoService {
     @Resource
     BusinessTargetinfoMapper businessTargetinfoMapper;
     @Resource
@@ -321,9 +322,9 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         Integer parentBusinessId = businessTargetinfoPO.getParentBusinessId();
         if (parentBusinessId != null) {
             BusinessTargetinfoPO parentBusiness = businessTargetinfoMapper.selectById(parentBusinessId);
-            if(parentBusiness != null){
+            if (parentBusiness != null) {
                 jsonObject1.put("parentBusinessId", parentBusinessId);
-                jsonObject1.put("parentBusinessName",parentBusiness.getIndicatorName());
+                jsonObject1.put("parentBusinessName", parentBusiness.getIndicatorName());
             }
         }
         if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(businessTargetinfoPO.getIndicatorType())) {
@@ -597,7 +598,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             int flag1 = businessExtendedfieldsMapper.updateByName(po.getId() + "");
 
             LambdaQueryWrapper<FactTreePOs> factDeleteWrapper = new LambdaQueryWrapper<>();
-            factDeleteWrapper.eq(FactTreePOs::getPid,po.getId());
+            factDeleteWrapper.eq(FactTreePOs::getPid, po.getId());
             factTreeListMapper.delete(factDeleteWrapper);
 
 
@@ -826,10 +827,10 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             model1.setFactFieldEnNameId(i.getFactFieldEnNameId());
 //            model1.setFactFieldEnName(i.getFactFieldEnName());
 //            model1.setFactFieldCnName(i.getFactFieldCnName());
-            if (i.getCreateUser() == null){
+            if (i.getCreateUser() == null) {
                 model1.setCreateUser(userHelper.getLoginUserInfo().id.toString());
             }
-            if (i.getCreateTime() == null){
+            if (i.getCreateTime() == null) {
                 model1.setCreateTime(LocalDateTime.now());
             }
             model1.setDelFlag(1);
@@ -884,9 +885,9 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 //        }
         BusinessHistoryPO businessHistoryPO = new BusinessHistoryPO();
         businessHistoryPO.setHistoryId(historyId);
-        businessHistoryPO.setTargetinfoId((int)model.getId());
+        businessHistoryPO.setTargetinfoId((int) model.getId());
         boolean save1 = businessHistoryService.save(businessHistoryPO);
-        if (!save1){
+        if (!save1) {
             throw new FkException(ResultEnum.ERROR, "保存历史数据失败");
         }
         return ResultEnum.SUCCESS;
@@ -907,8 +908,8 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
             List<BusinessCategoryPO> businessCategoryPOS = businessCategoryMapper.selectList(new QueryWrapper<>());
             List<BusinessCategoryPO> self = businessCategoryPOS.stream().filter(i -> (int) i.getId() == Integer.valueOf(id)).collect(Collectors.toList());
-            self = self.stream().map(i->{
-                if (i.getPid() == null){
+            self = self.stream().map(i -> {
+                if (i.getPid() == null) {
                     i.setPid(0);
                 }
                 return i;
@@ -926,7 +927,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         for (BusinessCategoryPO category : allCategories) {
             if (Objects.equals(category.getPid(), pid)) {
                 children.add(category);
-                children.addAll(getAllChildrenCategories(allCategories, (int)category.getId()));
+                children.addAll(getAllChildrenCategories(allCategories, (int) category.getId()));
             }
         }
         return children;
@@ -1073,7 +1074,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
                 } else {
                     datamap.put("statistical_cycle", null);
                 }
-                String indicatorformula = (String)stringObjectMap.get("indicatorformula");
+                String indicatorformula = (String) stringObjectMap.get("indicatorformula");
                 if (!StringUtils.isEmpty(indicatorformula)) {
                     indicatorformula = indicatorformula.replaceAll("<span class=\"tribute-selected-item\">([\\s\\S]*?)<\\/span>", "$1")
                             .replace("&nbsp;", " ");
@@ -1259,12 +1260,13 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
     /**
      * 数仓建模获取所有业务指标 只获取id 名称
+     *
      * @return
      */
     @Override
     public List<BusinessTargetinfoDTO> modelGetBusinessTargetInfoList() {
         LambdaQueryWrapper<BusinessTargetinfoPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(BusinessTargetinfoPO::getId,BusinessTargetinfoPO::getIndicatorName);
+        wrapper.select(BusinessTargetinfoPO::getId, BusinessTargetinfoPO::getIndicatorName);
         List<BusinessTargetinfoPO> list = this.list();
         List<BusinessTargetinfoDTO> dtos = new ArrayList<>();
         for (BusinessTargetinfoPO po : list) {
@@ -1279,13 +1281,14 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
     /**
      * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id
+     *
      * @return
      */
     @Override
     public List<FacttreeListDTO> modelGetFactTreeList(Integer tblId) {
         LambdaQueryWrapper<FactTreePOs> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(FactTreePOs::getPid,FactTreePOs::getFactFieldEnNameId)
-                .eq(FactTreePOs::getFactTabNameId,tblId);
+        wrapper.select(FactTreePOs::getPid, FactTreePOs::getFactFieldEnNameId)
+                .eq(FactTreePOs::getFactTabNameId, tblId);
         List<FactTreePOs> list = factTreeService.list();
         List<FacttreeListDTO> dtos = new ArrayList<>();
         for (FactTreePOs po : list) {
@@ -1299,12 +1302,13 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
 
     /**
      * 获取数仓字段和指标粒度表里所有关联关系 只获取字段id 和指标id
+     *
      * @return
      */
     @Override
     public List<BusinessExtendedfieldsDTO> modelGetMetricMapList() {
         LambdaQueryWrapper<BusinessExtendedfieldsPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(BusinessExtendedfieldsPO::getIndexid,BusinessExtendedfieldsPO::getAttributeid);
+        wrapper.select(BusinessExtendedfieldsPO::getIndexid, BusinessExtendedfieldsPO::getAttributeid);
         List<BusinessExtendedfieldsPO> list = businessExtendedfieldsService.list();
         List<BusinessExtendedfieldsDTO> dtos = new ArrayList<>();
         for (BusinessExtendedfieldsPO po : list) {
@@ -1322,21 +1326,21 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         UserInfo userInfo = userHelper.getLoginUserInfo();
         ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
         List<RoleInfoDTO> businessAssignment = new ArrayList<>();
-        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()){
+        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()) {
             businessAssignment = rolebyUserId.data;
-        }else {
+        } else {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
 
         LambdaQueryWrapper<BusinessCategoryAssignmentPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(BusinessCategoryAssignmentPO::getRoleId,roleIds);
+        wrapper.in(BusinessCategoryAssignmentPO::getRoleId, roleIds);
         List<BusinessCategoryAssignmentPO> list = businessCategoryAssignmentService.list(wrapper);
         List<Integer> menuId = list.stream().map(BusinessCategoryAssignmentPO::getCategoryId).distinct().collect(Collectors.toList());
 
         List<BusinessCategoryPO> allMenuList = businessCategoryMapper.selectList(new QueryWrapper<>());
-        allMenuList = allMenuList.stream().map(i->{
-            if (i.getPid() == null){
+        allMenuList = allMenuList.stream().map(i -> {
+            if (i.getPid() == null) {
                 i.setPid(0);
             }
             return i;
@@ -1344,9 +1348,9 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
         List<Integer> allChildIds = getAllChildIds(allMenuList, menuId);
         allChildIds.addAll(menuId);
         LambdaQueryWrapper<BusinessTargetinfoPO> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.in(BusinessTargetinfoPO::getPid,allChildIds);
-        if (!StringUtils.isEmpty(key)){
-            wrapper1.like(BusinessTargetinfoPO::getIndicatorName,key);
+        wrapper1.in(BusinessTargetinfoPO::getPid, allChildIds);
+        if (!StringUtils.isEmpty(key)) {
+            wrapper1.like(BusinessTargetinfoPO::getIndicatorName, key);
         }
         List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(wrapper1);
         List<BusinessMetaDataNameDTO> result = businessTargetinfoPOList.stream().map(i -> {
@@ -1357,6 +1361,77 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             return businessMetaDataNameDTO;
         }).collect(Collectors.toList());
         return result;
+    }
+
+    /**
+     * 数据资产 - 资产目录 按指标标准分类
+     *
+     * @return
+     */
+    @Override
+    public List<IndexForAssetCatalogDTO> getIndexForAssetCatalog() {
+        List<IndexForAssetCatalogDTO> result = new ArrayList<>();
+
+        //只查询指标目录根节点 pid为null
+        List<BusinessCategoryPO> data = businessCategoryMapper.selectList(
+                new LambdaQueryWrapper<BusinessCategoryPO>()
+                        .select(BusinessCategoryPO::getId, BusinessCategoryPO::getName, BusinessCategoryPO::getPid)
+                        .isNull(BusinessCategoryPO::getPid)
+        );
+
+        //查询所有指标目录
+        List<BusinessCategoryPO> allData = businessCategoryMapper.selectList(
+                new LambdaQueryWrapper<BusinessCategoryPO>()
+                        .select(BusinessCategoryPO::getId, BusinessCategoryPO::getName, BusinessCategoryPO::getPid)
+                        .isNotNull(BusinessCategoryPO::getPid)
+        );
+
+        //查询所有指标详情 只查询pid 只是为了计数
+        List<String> indexes = businessTargetinfoMapper.selectList(
+                new LambdaQueryWrapper<BusinessTargetinfoPO>()
+                        .select(BusinessTargetinfoPO::getPid)
+        ).stream().map(BusinessTargetinfoPO::getPid).collect(Collectors.toList());
+
+        //查询授权表 和指标目录对比 只获取授权表中存在的目录（为了与页面保持一致）
+        List<Long> collect = businessCategoryAssignmentService.list()
+                .stream()
+                .map(BusinessCategoryAssignmentPO::getCategoryId)
+                .map(Integer::longValue)
+                .distinct()
+                .collect(Collectors.toList());
+
+        //真正存在的指标根目录
+        List<BusinessCategoryPO> existsIndexes = data.stream()
+                .filter(businessCategoryPO -> collect.contains(businessCategoryPO.getId()))
+                .collect(Collectors.toList());
+
+        for (BusinessCategoryPO po : existsIndexes) {
+            IndexForAssetCatalogDTO dto = new IndexForAssetCatalogDTO();
+            dto.setIndexId(po.getId());
+            dto.setIndexName(po.getName());
+
+            //递归计算指标个数
+            int count = RecursivelyFetchMetrics(po.getId(), allData, indexes);
+            dto.setIndexCount(count);
+            dto.setIndexdMetaCount(count);
+            result.add(dto);
+        }
+
+        return result;
+    }
+
+    private int RecursivelyFetchMetrics(long id, List<BusinessCategoryPO> allData, List<String> indexes) {
+        int indexCount = 0;
+        List<BusinessCategoryPO> collect = allData.stream().filter(i -> i.getPid() == id).collect(Collectors.toList());
+        for (BusinessCategoryPO businessCategoryPO : collect) {
+            //如果指标目录的id在指标详情里面存在 就计算个数 相加
+            if (indexes.contains(businessCategoryPO.getId() + "")) {
+                indexCount = indexCount + (int) indexes.stream().filter(i -> i.equals(businessCategoryPO.getId() + "")).count();
+            } else {
+                indexCount += RecursivelyFetchMetrics(businessCategoryPO.getId(), allData, indexes);
+            }
+        }
+        return indexCount;
     }
 
     // 递归获取多个根节点的子节点的方法
@@ -1393,7 +1468,7 @@ public class BusinessTargetinfoImpl  extends ServiceImpl<BusinessTargetinfoMappe
             // 如果当前父节点存在子节点，则递归添加子节点
             if (categoryMap.containsKey(parentId)) {
                 List<BusinessCategoryPO> children = categoryMap.get(parentId);
-                List<Integer> ids = children.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+                List<Integer> ids = children.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
                 // 递归调用，查找当前父节点的子节点
                 List<Integer> childrenIds = getAllChildIds(allCategory, ids);
                 childIds.addAll(ids);

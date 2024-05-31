@@ -4160,8 +4160,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
         //cdc类型应用， 表名称为原名称
         if (app.appType == 2) {
-            String[] tableNames = tableAccess.getDisplayName().split("\\.");
-            table.setName(tableNames[tableNames.length - 1]);
+//            String[] tableNames = tableAccess.getDisplayName().split("\\.");
+
+            table.setName(tableAccess.getTableName());
             table.setIsExistStg(false);
 
         } else {

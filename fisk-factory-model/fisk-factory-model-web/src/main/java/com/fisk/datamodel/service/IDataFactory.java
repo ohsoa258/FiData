@@ -28,6 +28,7 @@ public interface IDataFactory {
      * @return
      */
     ResultEntity<ComponentIdDTO> getBusinessAreaNameAndTableName(DataAccessIdsDTO dto);
+
     Map<Integer,String> getTableNames(TableQueryDTO dto);
 
 

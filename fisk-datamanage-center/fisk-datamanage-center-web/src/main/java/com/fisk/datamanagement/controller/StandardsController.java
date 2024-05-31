@@ -8,7 +8,6 @@ import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.standards.*;
-import com.fisk.datamanagement.entity.StandardsBeCitedPO;
 import com.fisk.datamanagement.service.StandardsBeCitedService;
 import com.fisk.datamanagement.service.StandardsMenuService;
 import com.fisk.datamanagement.service.StandardsService;
@@ -121,38 +120,42 @@ public class StandardsController {
     public ResultEntity<Object> standardsQuery(@RequestBody StandardsQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.standardsQuery(dto));
     }
+
     @ApiOperation("根据数据源信息查询数据标准基本属性")
     @GetMapping("/getStandardsBySource")
     public ResultEntity<List<StandardsDTO>> getStandardsBySource(Integer fieldMetadataId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardsBySource(fieldMetadataId));
     }
+
     @ApiOperation("数据元导入基本属性")
     @PostMapping("/importExcelStandards")
     @ResponseBody
     @ControllerAOPConfig(printParams = false)
-    public ResultEntity<Object> importExcelStandards(long menuId, @RequestParam("file") MultipartFile file){
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.importExcelStandards(menuId,file));
+    public ResultEntity<Object> importExcelStandards(long menuId, @RequestParam("file") MultipartFile file) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.importExcelStandards(menuId, file));
     }
 
     @ApiOperation("获取所有数据标准树形结构(数据校验用)")
     @PostMapping("/getAllStandardsTree")
     public ResultEntity<List<FiDataMetaDataTreeDTO>> getAllStandardsTree(@RequestParam("id") String id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.getAllStandardsTree(id));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getAllStandardsTree(id));
     }
 
     /**
      * 数仓建模-关联字段和数据源标准
+     *
      * @param dtos
      * @return
      */
     @ApiOperation("数仓建模-关联字段和数据源标准")
     @PostMapping("/setStandardsByModelField")
     public ResultEntity<Object> setStandardsByModelField(@RequestBody List<StandardsBeCitedDTO> dtos) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsService.setStandardsByModelField(dtos));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.setStandardsByModelField(dtos));
     }
 
     /**
      * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid
+     *
      * @return
      */
     @ApiOperation("数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid")
@@ -163,6 +166,7 @@ public class StandardsController {
 
     /**
      * 数仓建模-获取所有数仓字段和数据元标准的关联关系 数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     *
      * @return
      */
     @ApiOperation("数仓建模-获取所有数仓字段和数据元标准的关联关系")
@@ -183,13 +187,26 @@ public class StandardsController {
                                                      @RequestParam("dbId") Integer dbId,
                                                      @RequestParam("tableId") Integer tableId,
                                                      @RequestParam("fieldId") Integer fieldId) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,standardsBeCitedService.checkStandardBeCited(standardsId,dbId,tableId,fieldId));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsBeCitedService.checkStandardBeCited(standardsId, dbId, tableId, fieldId));
     }
 
 
     @ApiOperation("根据数据元标准menuId获取所有standardsId(数据校验用)")
     @GetMapping("/getStandardByMenuId")
-    public List<Integer> getStandardByMenuId(@RequestParam("menuId")Integer menuId) {
+    public List<Integer> getStandardByMenuId(@RequestParam("menuId") Integer menuId) {
         return standardsMenuService.getStandardByMenuId(menuId);
     }
+
+    /**
+     * 数据资产 - 资产目录 按数据元标准分类
+     *
+     * @return
+     */
+    @ApiOperation("数据资产 - 资产目录 按数据元标准分类")
+    @GetMapping("/getStandardsForAssetCatalog")
+    public ResultEntity<List<StandardsForAssetCatalogDTO>> getStandardsForAssetCatalog() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsMenuService.getStandardsForAssetCatalog());
+    }
+
+
 }

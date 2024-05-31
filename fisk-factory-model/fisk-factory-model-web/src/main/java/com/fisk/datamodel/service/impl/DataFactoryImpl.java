@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -75,28 +76,28 @@ public class DataFactoryImpl implements IDataFactory {
                     List<DimensionPO> dimensionPo = dimensionPoList.stream()
                             .filter(e -> e.businessId == item.id && e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue())
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelDimensionData(dimensionPo,TableBusinessTypeEnum.DW_DIMENSION);
+                    dataDTO.list = getChannelDimensionData(dimensionPo, TableBusinessTypeEnum.DW_DIMENSION);
                     dataDTO.type = ChannelDataEnum.DW_DIMENSION_TASK.getName();
                     break;
                 case ANALYSIS_DIMENSION:
                     List<DimensionPO> dimensionPoStreamList = dimensionPoList.stream()
                             .filter(e -> e.businessId == item.id && e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue())
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelDimensionData(dimensionPoStreamList,TableBusinessTypeEnum.NONE);
+                    dataDTO.list = getChannelDimensionData(dimensionPoStreamList, TableBusinessTypeEnum.NONE);
                     dataDTO.type = ChannelDataEnum.OLAP_DIMENSION_TASK.getName();
                     break;
                 case NUMBER_FACT:
                     List<FactPO> factPo = factPoList.stream()
                             .filter(e -> e.businessId == item.id && (e.isPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.isPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelFactData(factPo,TableBusinessTypeEnum.DW_FACT);
+                    dataDTO.list = getChannelFactData(factPo, TableBusinessTypeEnum.DW_FACT);
                     dataDTO.type = ChannelDataEnum.DW_FACT_TASK.getName();
                     break;
                 case ANALYSIS_FACT:
                     List<FactPO> factPoStreamList = factPoList.stream()
                             .filter(e -> e.businessId == item.id && (e.dorisPublish == PublicStatusEnum.PUBLIC_SUCCESS.getValue() || e.dorisPublish == PublicStatusEnum.PUBLIC_ING.getValue()))
                             .collect(Collectors.toList());
-                    dataDTO.list = getChannelFactData(factPoStreamList,TableBusinessTypeEnum.NONE);
+                    dataDTO.list = getChannelFactData(factPoStreamList, TableBusinessTypeEnum.NONE);
                     dataDTO.type = ChannelDataEnum.OLAP_FACT_TASK.getName();
                     break;
                 case WIDE_TABLE:
@@ -121,7 +122,7 @@ public class DataFactoryImpl implements IDataFactory {
      * @param dimensionPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo,TableBusinessTypeEnum tableBusinessTypeEnum) {
+    private List<ChannelDataChildDTO> getChannelDimensionData(List<DimensionPO> dimensionPo, TableBusinessTypeEnum tableBusinessTypeEnum) {
         List<ChannelDataChildDTO> data = new ArrayList<>();
         if (!CollectionUtils.isEmpty(dimensionPo)) {
             for (DimensionPO dimPo : dimensionPo) {
@@ -141,7 +142,7 @@ public class DataFactoryImpl implements IDataFactory {
      * @param factPo
      * @return
      */
-    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo,TableBusinessTypeEnum tableBusinessTypeEnum) {
+    private List<ChannelDataChildDTO> getChannelFactData(List<FactPO> factPo, TableBusinessTypeEnum tableBusinessTypeEnum) {
         List<ChannelDataChildDTO> data = new ArrayList<>();
         if (!CollectionUtils.isEmpty(factPo)) {
             for (FactPO fact : factPo) {
@@ -191,34 +192,52 @@ public class DataFactoryImpl implements IDataFactory {
     }
 
     @Override
-    public Map<Integer,String> getTableNames(TableQueryDTO dto) {
-        Map<Integer,String> map = new HashMap<>();
-        switch (Objects.requireNonNull(OlapTableEnum.getNameByValue(dto.getType()))){
+    public Map<Integer, String> getTableNames(TableQueryDTO dto) {
+        Map<Integer, String> map = new HashMap<>();
+        List<BusinessAreaPO> businessAreaPOS = businessAreaMapper.selectList(
+                new LambdaQueryWrapper<BusinessAreaPO>()
+                        .select(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName)
+        );
+
+        Map<Long, String> kvMap = businessAreaPOS.stream().collect(Collectors.toMap(BusinessAreaPO::getId, BusinessAreaPO::getBusinessName));
+
+
+        switch (Objects.requireNonNull(OlapTableEnum.getNameByValue(dto.getType()))) {
             case DIMENSION:
                 //查询维度
                 QueryWrapper<DimensionPO> dimensionPoQueryWrapper = new QueryWrapper<>();
                 dimensionPoQueryWrapper.lambda().in(DimensionPO::getId, dto.getIds());
                 List<DimensionPO> dimensionPoList = dimensionMapper.selectList(dimensionPoQueryWrapper);
                 for (DimensionPO dimensionPO : dimensionPoList) {
-                    map.put((int) dimensionPO.getId(),dimensionPO.getDimensionTabName());
+                    //表名
+                    map.put((int) dimensionPO.getId(), dimensionPO.getDimensionTabName());
+                    //业务域id
+                    map.put(-100, dimensionPO.getBusinessId() + "");
+                    //业务域名称
+                    map.put(-200, kvMap.get((long) dimensionPO.getBusinessId()));
                 }
                 break;
             case FACT:
                 //查询事实
                 QueryWrapper<FactPO> factPoQueryWrapper = new QueryWrapper<>();
-                factPoQueryWrapper.lambda().in(FactPO::getId,dto.getIds());
+                factPoQueryWrapper.lambda().in(FactPO::getId, dto.getIds());
                 List<FactPO> factPoList = factMapper.selectList(factPoQueryWrapper);
                 for (FactPO factPO : factPoList) {
-                    map.put((int) factPO.getId(),factPO.getFactTabName());
+                    //表名
+                    map.put((int) factPO.getId(), factPO.getFactTabName());
+                    //业务域id
+                    map.put(-100, factPO.getBusinessId() + "");
+                    //业务域名称
+                    map.put(-200, kvMap.get((long)factPO.getBusinessId()));
                 }
                 break;
             case WIDETABLE:
                 //查询宽表
                 QueryWrapper<WideTableConfigPO> wideTableConfigPoQueryWrapper = new QueryWrapper<>();
-                wideTableConfigPoQueryWrapper.lambda().in(WideTableConfigPO::getId,dto.getIds());
+                wideTableConfigPoQueryWrapper.lambda().in(WideTableConfigPO::getId, dto.getIds());
                 List<WideTableConfigPO> wideTableConfigPoList = wideTableMapper.selectList(wideTableConfigPoQueryWrapper);
                 for (WideTableConfigPO wideTableConfigPO : wideTableConfigPoList) {
-                    map.put((int) wideTableConfigPO.getId(),wideTableConfigPO.getName());
+                    map.put((int) wideTableConfigPO.getId(), wideTableConfigPO.getName());
                 }
                 break;
             default:
