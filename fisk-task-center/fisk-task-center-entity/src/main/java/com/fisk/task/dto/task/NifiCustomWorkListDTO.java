@@ -34,7 +34,8 @@ public class NifiCustomWorkListDTO  extends MQBaseDTO {
     //userid
     public Long userId;
 
-
+    //管道运行状态1:运行中 2:停止运行
+    public int workStatus;
     /*
     * 数据结构
     * */

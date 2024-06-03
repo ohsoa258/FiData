@@ -124,19 +124,20 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
         createNotifyProcessor(groupStructure, dto.structure, 2);
         //4.连线--根据流程关系连线
         createConnectingLine(dto);*/
-
-            //启动
-            ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
-            scheduleComponentsEntity.setId(groupStructure);
-            scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
-            scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
-            dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
-            log.info("预备启动");
-            //启动两次,防止有的组件创建不及时导致没启动
-            for (int i = 3; i > 0; i--) {
-                Thread.sleep(200);
-                NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
-                log.info("开始启动,次数" + i);
+            if (dto.workStatus == 1){
+                //启动
+                ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
+                scheduleComponentsEntity.setId(groupStructure);
+                scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+                scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
+                dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
+                log.info("预备启动");
+                //启动两次,防止有的组件创建不及时导致没启动
+                for (int i = 3; i > 0; i--) {
+                    Thread.sleep(200);
+                    NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+                    log.info("开始启动,次数" + i);
+                }
             }
             return ResultEnum.SUCCESS;
         } catch (Exception e) {
@@ -775,10 +776,15 @@ public class BuildNifiCustomWorkFlow implements INifiCustomWorkFlow {
             ScheduleComponentsEntity scheduleComponentsEntity = new ScheduleComponentsEntity();
             scheduleComponentsEntity.setId(groupStructure);
             scheduleComponentsEntity.setDisconnectedNodeAcknowledged(false);
+
+
+
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.STOPPED);
             NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+        if (nifiCustomWorkList.workStatus == 1){
             scheduleComponentsEntity.setState(ScheduleComponentsEntity.StateEnum.RUNNING);
             NifiHelper.getFlowApi().scheduleComponents(groupStructure, scheduleComponentsEntity);
+        }
         } catch (Exception e) {
             log.error("组id:" + groupStructure + "停止失败" + StackTraceHelper.getStackTraceInfo(e));
             nifiCustomWorkflowDTO.status = PipelineStatuTypeEnum.failure_publish.getValue();

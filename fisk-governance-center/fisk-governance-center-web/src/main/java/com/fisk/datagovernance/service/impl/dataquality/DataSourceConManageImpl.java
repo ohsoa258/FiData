@@ -236,21 +236,19 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
 
         List<DataSourceConVO> dataSourceConVOList = getFiDataDataSource();
+        fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
+        fiDataMetaDataTreeBase.setId("-10");
+        fiDataMetaDataTreeBase.setParentId("-100");
+        fiDataMetaDataTreeBase.setLabel("FiData");
+        fiDataMetaDataTreeBase.setLabelAlias("FiData");
+        fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
+        fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.FiData.getValue());
+        fiDataMetaDataTreeBase.children = new ArrayList<>();
 
         if (CollectionUtils.isNotEmpty(dataSourceConVOList)) {
             dataSourceConVOList = dataSourceConVOList.stream()
                     .sorted(Comparator.comparing(DataSourceConVO::getDatasourceId))
                     .collect(Collectors.toList());
-
-            fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
-            fiDataMetaDataTreeBase.setId("-10");
-            fiDataMetaDataTreeBase.setParentId("-100");
-            fiDataMetaDataTreeBase.setLabel("FiData");
-            fiDataMetaDataTreeBase.setLabelAlias("FiData");
-            fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
-            fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.FiData.getValue());
-            fiDataMetaDataTreeBase.children = new ArrayList<>();
-
             for (DataSourceConVO dataSourceConVO : dataSourceConVOList) {
                 List<FiDataMetaDataDTO> fiDataMetaData = redisUtil.getFiDataMetaData(String.valueOf(dataSourceConVO.getDatasourceId()));
                 if (CollectionUtils.isNotEmpty(fiDataMetaData)) {
