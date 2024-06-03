@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
@@ -156,7 +158,7 @@ public class EntityImpl implements IEntity {
     }
 
     @Override
-    public void refreshEntityTreeForTerm() {
+    public ResultEntity<Object> refreshEntityTreeForTerm() {
         boolean exist = redisUtil.hasKey(redisKeyForTerm);
         List<EntityTreeDTO> metadataEntityTree = metadataEntity.getTreeForBusinessTerm();
         String jsonString = JSONObject.toJSONString(metadataEntityTree);
@@ -164,6 +166,7 @@ public class EntityImpl implements IEntity {
             redisUtil.del(redisKeyForTerm);
         }
         redisUtil.set(redisKeyForTerm, jsonString);
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
     }
 
     /**

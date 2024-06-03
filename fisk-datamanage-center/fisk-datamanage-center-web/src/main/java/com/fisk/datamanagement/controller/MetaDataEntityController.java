@@ -74,8 +74,8 @@ public class MetaDataEntityController {
      */
     @ApiOperation("刷新业务术语元数据对象树形列表")
     @GetMapping("/refreshEntityTreeForTerm")
-    public void refreshEntityTreeForTerm() {
-        service.refreshEntityTreeForTerm();
+    public ResultEntity<Object> refreshEntityTreeForTerm() {
+        return service.refreshEntityTreeForTerm();
     }
 
     @ApiOperation("添加元数据对象：实例、数据库、表、字段、血缘")

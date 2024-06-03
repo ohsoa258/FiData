@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.entity.*;
 import com.fisk.datamanagement.dto.lineage.LineAgeDTO;
@@ -48,7 +49,7 @@ public interface IEntity {
     /**
      * 刷新业务术语元数据对象树形列表
      */
-    void refreshEntityTreeForTerm();
+    ResultEntity<Object> refreshEntityTreeForTerm();
 
 
     /**
