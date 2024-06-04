@@ -110,6 +110,12 @@ public class UserController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUser(id));
     }
 
+    @ApiOperation("根据id获取用户详情")
+    @GetMapping("/getUserV2/{id}")
+    public ResultEntity<UserDTO> getUserV2(@PathVariable("id") int id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getUser(id));
+    }
+
     @ApiOperation("获取登录人信息")
     @GetMapping("/getCurrentUserInfo")
     public ResultEntity<Object> getCurrentUserInfo() {

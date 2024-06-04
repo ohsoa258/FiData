@@ -211,7 +211,11 @@ public class ApiListenerImpl implements IApiListener {
                         dispatchType = 1;
                     }
                     LocalDateTime start = etlLogPO.getStartdate();
-                    LocalDateTime end = start.plusHours(3);
+                    //最近3小时
+//                    LocalDateTime end = start.plusHours(3);
+
+                    //改为本次开始时间和结束时间内
+                    LocalDateTime end = etlLogPO.getEnddate();
                     LambdaQueryWrapper<PipelineTableLogPO> w = new LambdaQueryWrapper<>();
                     w.eq(PipelineTableLogPO::getTableId, dto.getTblId())
                             .eq(PipelineTableLogPO::getTableType, dto.getTableType())

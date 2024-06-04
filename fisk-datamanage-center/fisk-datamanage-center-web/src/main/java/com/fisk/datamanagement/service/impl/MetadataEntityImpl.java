@@ -543,9 +543,9 @@ public class MetadataEntityImpl
             dto.parentId = parentId;
             dto.displayName = item.displayName;
             //表级别 为了能和元数据地图的id匹配上 增加唯一查询名称给前端 用来匹配
-            if (item.typeId==EntityTypeEnum.RDBMS_TABLE.getValue()
+            if (item.typeId == EntityTypeEnum.RDBMS_TABLE.getValue()
 //                    ||item.typeId==EntityTypeEnum.RDBMS_COLUMN.getValue()
-            ){
+            ) {
                 dto.qualifiedName = item.qualifiedName;
             }
 
@@ -666,7 +666,22 @@ public class MetadataEntityImpl
         }
 
         infoMap.put("description", one.description);
-        infoMap.put("owner", one.owner);
+        //获取用户id
+        String owner = one.owner;
+        ResultEntity<UserDTO> resultEntity = null;
+        if (owner != null) {
+            //将属性中的用户id转为用户名称
+            resultEntity = userClient.getUserV2(Integer.parseInt(owner));
+            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                UserDTO userDTO = resultEntity.getData();
+                infoMap.put("owner", userDTO.getUsername());
+            } else {
+                infoMap.put("owner", owner);
+            }
+        } else {
+            infoMap.put("owner", owner);
+        }
+
         infoMap.put("qualifiedName", one.qualifiedName);
         infoMap.put("displayName", one.displayName);
 

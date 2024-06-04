@@ -73,6 +73,24 @@ public interface UserClient {
     ResultEntity<List<UserDTO>> getUserListByIds(@RequestBody List<Long> ids);
 
     /**
+     * 根据id获取用户详情
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/info/getUser/{id}")
+    ResultEntity<Object> getUser(@PathVariable("id") int id);
+
+    /**
+     * 根据id获取用户详情
+     *
+     * @param id
+     * @return
+     */
+    @GetMapping("/info/getUserV2/{id}")
+    ResultEntity<UserDTO> getUserV2(@PathVariable("id") int id);
+
+    /**
      * 用户组筛选系统用户
      *
      * @param dto
@@ -302,7 +320,7 @@ public interface UserClient {
      */
     @ApiOperation("根据角色名获取角色id")
     @GetMapping("/role/getRoleByRoleName")
-    ResultEntity<RoleInfoDTO> getRoleByRoleName(@RequestParam("roleName")String roleName);
+    ResultEntity<RoleInfoDTO> getRoleByRoleName(@RequestParam("roleName") String roleName);
 
     /**
      * 保存一条操作记录

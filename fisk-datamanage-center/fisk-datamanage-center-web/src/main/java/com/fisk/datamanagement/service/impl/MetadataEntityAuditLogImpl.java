@@ -235,7 +235,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         // 目前只展示表和字段
         if (entityType == EntityTypeEnum.ALL) {
             for (EntityTypeEnum value : EntityTypeEnum.values()) {
-                if (value == entityType) {
+                if (value == EntityTypeEnum.RDBMS_TABLE) {
                     CategoryDetailChangesDTO tbl = new CategoryDetailChangesDTO();
                     tbl.setType(EntityTypeEnum.RDBMS_TABLE);
                     tbl.setTypeName("表");
@@ -433,6 +433,11 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
+        //处理当前页
+        if (dto.getCurrentPage() != 0) {
+            dto.setCurrentPage(dto.getCurrentPage() - 1);
+        }
+
         List<AssetsChangeAnalysisDetailDTO> results = new ArrayList<>();
         //转换时间
         LocalDateTime startTime = getLocalDateTime(dto.getStartTime());
@@ -617,8 +622,8 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                             .findFirst()
                             .orElse(null))
                     .getName();
-        }catch (Exception e){
-            log.error("空指针："+e);
+        } catch (Exception e) {
+            log.error("空指针：" + e);
             return;
         }
 
