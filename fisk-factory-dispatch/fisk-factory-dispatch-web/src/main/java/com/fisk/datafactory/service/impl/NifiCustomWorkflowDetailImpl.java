@@ -329,7 +329,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
     private ResultEntity<NifiCustomWorkListDTO> getNifiCustomWorkListDTOResultEntity(NifiCustomWorkflowDetailVO dto, NifiCustomWorkflowDTO workflowDTO) {
         NifiCustomWorkListDTO workListDTO = new NifiCustomWorkListDTO();
-        workListDTO.workStatus = workflowDTO.workStatus;
+
         if (dto.flag) {
             // 前端有时会传入已经删除的组件,后端使用入库后的数据
             List<NifiCustomWorkflowDetailPO> originalWorkflowDetailPoList = this.query().eq("workflow_id", workflowDTO.workflowId).eq("del_flag", 1).list();
@@ -342,6 +342,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 List<NifiCustomWorkflowDetailDTO> workflowDetailDTOList = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(workflowDetailPoList);
                 // 调用组装nifi参数方法
                 workListDTO = getWorkListDTO(workflowDTO.id, workflowDTO.workflowId, workflowDTO.workflowName, workflowDetailDTOList);
+                workListDTO.workStatus = workflowDTO.workStatus;
             }
             // 将当前管道的task结构存入redis
             log.info("即将要存入redis的管道id" + workflowDTO.id);
