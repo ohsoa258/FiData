@@ -486,6 +486,8 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         NifiCustomWorkflowPO model = baseMapper.selectById(dto.id);
         if (model != null) {
             model.status = dto.status;
+            model.lastStatus = dto.lastStatus;
+            model.lastDateTime = dto.lastDateTime;
             baseMapper.updateById(model);
         }
     }

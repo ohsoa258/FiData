@@ -66,4 +66,10 @@ public class NifiCustomWorkflowVO {
      */
     @ApiModelProperty(value = "部门名称")
     public String departName;
+
+    @ApiModelProperty(value = "最后一次运行状态")
+    public String lastStatus;
+
+    @ApiModelProperty(value = "最后一次同步时间")
+    public String lastDateTime;
 }

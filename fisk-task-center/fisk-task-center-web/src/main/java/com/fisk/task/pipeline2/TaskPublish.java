@@ -13,6 +13,8 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.PipelApiDispatchDTO;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
@@ -79,6 +81,9 @@ public class TaskPublish {
     IPipelineTaskPublishCenter iPipelineTaskPublishCenter;
     @Resource
     ITableTopicService iTableTopicService;
+
+    @Resource
+    private DataFactoryClient dataFactoryClient;
     @Resource
     IPipelJobLog iPipelJobLog;
     @Resource
@@ -289,6 +294,12 @@ public class TaskPublish {
                             log.info("第一处调用保存job日志");
 //                            iPipelJobLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                             iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+
+                            NifiCustomWorkflowDTO dto = new NifiCustomWorkflowDTO();
+                            dto.setId(Long.parseLong(pipelineId));
+                            dto.setLastStatus(NifiStageTypeEnum.RUNNING.getName());
+                            dto.setLastDateTime(pipelstart);
+                            dataFactoryClient.updatePublishStatus(dto);
                             redisUtil.del("PipelLock:" + pipelTraceId);
                         } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
                             //卡夫卡的内容在发布时就定义好了
