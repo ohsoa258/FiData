@@ -662,7 +662,7 @@ public class MetadataEntityImpl
         if (emailGroupId != null) {
             infoMap.put("emailGroup", one.getEmailGroupId());
         } else {
-            infoMap.put("emailGroup", 0);
+            infoMap.put("emailGroup", "");
         }
 
         infoMap.put("description", one.description);

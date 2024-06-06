@@ -115,9 +115,10 @@ public class MetaDataEntityController {
     }
 
     @ApiOperation("根据guid获取实体审计列表")
-    @GetMapping("/getAuditsList/{guid}")
-    public ResultEntity<Object> getAuditsList(@PathVariable("guid") Integer guid) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, iMetaDataEntityOperationLog.selectLogList(guid, EntityTypeEnum.RDBMS_TABLE.getValue()));
+    @GetMapping("/getAuditsList/{guid}/{typeId}")
+    public ResultEntity<Object> getAuditsList(@PathVariable("guid") Integer guid,
+                                              @PathVariable("typeId")Integer typeId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iMetaDataEntityOperationLog.selectLogList(guid, typeId));
     }
 
     @ApiOperation("实体添加标签")

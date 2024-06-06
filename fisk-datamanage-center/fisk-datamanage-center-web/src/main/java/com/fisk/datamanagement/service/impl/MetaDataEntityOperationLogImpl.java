@@ -43,7 +43,6 @@ public class MetaDataEntityOperationLogImpl implements IMetaDataEntityOperationL
     @Override
     public List<MetaDataEntityOperationLogDTO> selectLogList(Integer entityId,Integer typeId) {
         List<MetaDataEntityOperationLogPO> operationLogPOS = logMapper.selectOperationLog(entityId,typeId);
-        List<MetaDataEntityOperationLogDTO> logDTOS = MetaDataEntityOperationLogMap.INSTANCES.logPoToDto(operationLogPOS);
-        return logDTOS;
+        return MetaDataEntityOperationLogMap.INSTANCES.logPoToDto(operationLogPOS);
     }
 }

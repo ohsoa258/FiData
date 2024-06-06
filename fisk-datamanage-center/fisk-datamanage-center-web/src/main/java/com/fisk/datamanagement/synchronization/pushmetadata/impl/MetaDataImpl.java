@@ -193,7 +193,7 @@ public class MetaDataImpl implements IMetaData {
      * @param currUserName 当前账号
      */
     @Override
-    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum,Long syncTimeId) {
+    public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum, Long syncTimeId) {
         log.info("开始同步元数据***********");
         try {
             for (MetaDataInstanceAttributeDTO instance : data) {
@@ -255,9 +255,9 @@ public class MetaDataImpl implements IMetaData {
             }
         } catch (Exception e) {
             log.error("实体同步失败，堆栈信息: ", e);
-            if (syncTimeId!=null){
+            if (syncTimeId != null) {
                 //1成功 2失败 3同步中
-                bloodCompensation.updateLastSyncTime(syncTimeId,2);
+                bloodCompensation.updateLastSyncTime(syncTimeId, 2);
             }
         }
         log.info("结束同步元数据***********");
@@ -470,7 +470,7 @@ public class MetaDataImpl implements IMetaData {
         if (dto.whetherSchema) {
             if (dto.name.contains(".")) {
                 int index = dto.name.indexOf(".");
-                dto.name =  dto.name.substring(0, index + 1) + "stg_" + dto.name.substring(index + 1);
+                dto.name = dto.name.substring(0, index + 1) + "stg_" + dto.name.substring(index + 1);
             }
         } else if (dto.name.contains(ods_prefix)) {
             //数据接入ODS表
@@ -516,29 +516,50 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     private String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId, String createUser) {
-        MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
-            operationLogDTO.setOperationType(MetaDataeLogEnum.INSERT_OPERATION.getName());
-            operationLogDTO.setBeforeChange("");
-            operationLogDTO.setAfterChange(dto.getName());
-            operationLogDTO.setCreateTime(LocalDateTime.now());
-            operationLogDTO.setCreateUser(createUser);
-            operationLogDTO.setMetadataEntityId(parentEntityId);
-            operationLog.addOperationLog(operationLogDTO);
-            return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
+            //将字段的新增操作日志添加为父级表的操作日志
+            addOperationLog("", dto.name, MetaDataeLogEnum.INSERT_OPERATION, createUser, parentEntityId);
+
+            //插入元数据
+            String fieldEntityId = this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
+
+            //添加字段自己的操作日志
+            addOperationLog("", dto.name, MetaDataeLogEnum.INSERT_OPERATION, createUser, fieldEntityId);
+            return fieldEntityId;
         }
+
         MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
         if (!entityPO.getName().equals(dto.getName())) {
-            operationLogDTO.setOperationType(MetaDataeLogEnum.UPDATE_OPERATION.getName());
-            operationLogDTO.setBeforeChange(entityPO.getName());
-            operationLogDTO.setAfterChange(dto.getName());
-            operationLogDTO.setCreateTime(LocalDateTime.now());
-            operationLogDTO.setCreateUser(createUser);
-            operationLogDTO.setMetadataEntityId(parentEntityId);
-            operationLog.addOperationLog(operationLogDTO);
+
+            //将字段的修改操作日志添加为父级表的操作日志
+            addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, createUser, parentEntityId);
+
+            //添加字段自己的操作日志
+            addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, createUser, String.valueOf(metadataEntity));
         }
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
+    }
+
+    /**
+     * 组装操作日志参数 并添加操作日志
+     *
+     * @param beforeChange
+     * @param afterChange
+     * @param opEnum
+     * @param createUser
+     * @param entityId
+     * @return
+     */
+    private void addOperationLog(String beforeChange, String afterChange, MetaDataeLogEnum opEnum, String createUser, String entityId) {
+        MetaDataEntityOperationLogDTO operationLogDTO = new MetaDataEntityOperationLogDTO();
+        operationLogDTO.setOperationType(opEnum.getName());
+        operationLogDTO.setBeforeChange(beforeChange);
+        operationLogDTO.setAfterChange(afterChange);
+        operationLogDTO.setCreateTime(LocalDateTime.now());
+        operationLogDTO.setCreateUser(createUser);
+        operationLogDTO.setMetadataEntityId(entityId);
+        operationLog.addOperationLog(operationLogDTO);
     }
 
 
