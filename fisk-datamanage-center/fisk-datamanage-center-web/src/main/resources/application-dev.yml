@@ -66,3 +66,20 @@ azure:
 redisKeyFroAdHocQuery: AdHoc1N
 # 数据资产 业务术语树 redis key
 redisKeyForTerm: Term2B
+
+## okhttp3配置
+#ok:
+# http:
+#  connect-timeout: 30
+#  read-timeout: 30
+#  write-timeout: 30
+#  # 连接池中整体的空闲连接的最大数量
+#  max-idle-connections: 200
+#  # 连接空闲时间最多为 300 秒
+#  keep-alive-duration: 300
+baidu:
+  wenxin:
+    apiKey: J7lBxFhhnMhCOIRVje8fBHWP
+    secretKey: awMpfc5P1VpxumglhZqDH19CRoNmF0ep
+    accessTokenUrl: https://aip.baidubce.com/oauth/2.0/token
+    ERNIE-SPEED: https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/ernie_speed
