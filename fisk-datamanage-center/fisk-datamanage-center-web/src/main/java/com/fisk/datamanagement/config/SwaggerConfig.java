@@ -67,6 +67,7 @@ public class SwaggerConfig {
     public static final String EMAIL_GROUP = "邮箱组";
     public static final String META_ANALYTICS_EMAIL = "元数据分析邮件配置";
 
+    public static final String ERNIE_SPEED = "文心一言";
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
@@ -102,6 +103,7 @@ public class SwaggerConfig {
                 .tags(new Tag(META_MAP,"元数据地图"))
                 .tags(new Tag(EMAIL_GROUP,"邮箱组"))
                 .tags(new Tag(META_ANALYTICS_EMAIL,"元数据分析邮件配置"))
+                .tags(new Tag(ERNIE_SPEED,"文心一言"))
                 .securityContexts(securityContexts());
     }
 
