@@ -10,6 +10,8 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisKeyEnum;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.consumeserveice.client.ConsumeServeiceClient;
+import com.fisk.datafactory.client.DataFactoryClient;
+import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.DispatchJobHierarchyDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.tasknifi.NifiGetPortHierarchyDTO;
@@ -85,6 +87,9 @@ public class MissionEndCenter {
     ConsumeServeiceClient consumeServeiceClient;
     @Resource
     UserClient userClient;
+
+    @Resource
+    private DataFactoryClient dataFactoryClient;
     @Resource
     ITableNifiSettingService iTableNifiSettingService;
     @Resource
@@ -229,10 +234,13 @@ public class MissionEndCenter {
                                     }
                                     if (ifNext) {
                                         log.info("开始记录管道结束");
+                                        String status = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName();
+                                        String endDateTime = simpleDateFormat.format(new Date());
                                         if (success) {
-                                            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                                            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + endDateTime);
                                         } else {
-                                            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                                            pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + endDateTime);
+                                            status = NifiStageTypeEnum.RUN_FAILED.getName();
                                         }
                                         log.info("consumerServerEnable参数，{}", consumerServerEnable);
                                         if (consumerServerEnable) {
@@ -280,6 +288,11 @@ public class MissionEndCenter {
                                             }
                                         }
                                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                        NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
+                                        nifiCustomWorkflowDTO.setId(Long.parseLong(pipelineId));
+                                        nifiCustomWorkflowDTO.setLastStatus(status);
+                                        nifiCustomWorkflowDTO.setLastDateTime(endDateTime);
+                                        dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
                                     } else {
                                         log.info("管道尚未结束:jobId:{}", jobId);
                                     }
@@ -350,10 +363,13 @@ public class MissionEndCenter {
                                 }
                                 if (ifNext) {
                                     log.info("开始记录管道结束");
+                                    String status =NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName();
+                                    String endDateTime = simpleDateFormat.format(new Date());
                                     if (success) {
-                                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + simpleDateFormat.format(new Date()));
+                                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + endDateTime);
                                     } else {
-                                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + simpleDateFormat.format(new Date()));
+                                        pipelMap.put(DispatchLogEnum.pipelend.getValue(), NifiStageTypeEnum.RUN_FAILED.getName() + " - " + endDateTime);
+                                        status = NifiStageTypeEnum.RUN_FAILED.getName();
                                     }
                                     log.info("consumerServerEnable参数，{}", consumerServerEnable);
                                     if (consumerServerEnable) {
@@ -401,6 +417,11 @@ public class MissionEndCenter {
                                         }
                                     }
                                     iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
+                                    NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
+                                    nifiCustomWorkflowDTO.setId(Long.parseLong(pipelineId));
+                                    nifiCustomWorkflowDTO.setLastStatus(status);
+                                    nifiCustomWorkflowDTO.setLastDateTime(endDateTime);
+                                    dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
                                 } else {
                                     log.info("管道尚未结束:jobId:{}", jobId);
                                 }
