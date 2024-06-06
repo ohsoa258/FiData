@@ -51,4 +51,7 @@ public class NifiCustomWorkflowPO extends BasePO {
      */
     public String departName;
 
+    public String lastStatus;
+
+    public String lastDateTime;
 }
