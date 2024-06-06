@@ -11,6 +11,7 @@ public enum MetadataAuditOperationTypeEnum implements BaseEnum {
     ADD(1,"添加"),
     EDIT(2,"编辑"),
     DELETE(3,"删除"),
+    ADD2(4,"删除"),
     ;
     private final int value;
     private final String name;

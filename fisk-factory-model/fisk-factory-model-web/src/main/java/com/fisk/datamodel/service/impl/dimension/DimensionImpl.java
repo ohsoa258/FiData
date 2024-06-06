@@ -1188,7 +1188,7 @@ public class DimensionImpl
             table.comment = String.valueOf(item.businessId);
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
             table.displayName = item.dimensionCnName;
-            table.owner = businessAdmin;
+            table.owner = item.createUser;
             table.sqlScript = item.sqlScript;
             table.coverScript = item.coverScript;
             table.tableConfigId = Long.valueOf(item.id).intValue();
@@ -1230,7 +1230,7 @@ public class DimensionImpl
             table.comment = String.valueOf(item.businessId);
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + item.id;
             table.displayName = item.dimensionCnName;
-            table.owner = businessAdmin;
+            table.owner = item.createUser;
             table.sqlScript = item.sqlScript;
             table.coverScript = item.coverScript;
             table.tableConfigId = Long.valueOf(item.id).intValue();
@@ -1291,7 +1291,7 @@ public class DimensionImpl
             column.description = field.dimensionFieldDes;
             column.name = field.dimensionFieldEnName;
             column.qualifiedName = table.qualifiedName + "_" + field.id;
-            column.owner = table.owner;
+            column.owner = field.createUser;
             column.displayName = field.dimensionFieldCnName;
             columnList.add(column);
         }

@@ -127,4 +127,6 @@ public class FactAttributeDTO {
     @ApiModelProperty(value = "数仓贯标关联对象（指标或数据元）")
     public List<FieldsAssociatedMetricsOrMetaObjDTO> associatedDto;
 
+    public String createUser;
+
 }

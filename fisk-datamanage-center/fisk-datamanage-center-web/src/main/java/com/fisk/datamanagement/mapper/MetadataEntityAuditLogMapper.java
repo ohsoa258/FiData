@@ -40,6 +40,7 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "a.entity_id," +
             "a.operation_type," +
             "a.create_time," +
+            "a.create_user," +
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
@@ -66,6 +67,7 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "a.entity_id," +
             "a.operation_type," +
             "a.create_time," +
+            "a.create_user," +
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
@@ -90,6 +92,7 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "a.entity_id," +
             "a.operation_type," +
             "a.create_time," +
+            "a.create_user," +
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
@@ -115,6 +118,7 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "a.entity_id," +
             "a.operation_type," +
             "a.create_time," +
+            "a.create_user," +
             "b.type_id," +
             "b.name," +
             "b.parent_id," +

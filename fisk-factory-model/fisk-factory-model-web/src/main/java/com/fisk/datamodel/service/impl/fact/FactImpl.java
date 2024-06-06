@@ -755,7 +755,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.comment = String.valueOf(fact.businessId);
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
             table.displayName = fact.factTableCnName;
-            table.owner = businessAdmin;
+            //表创建人
+            table.owner = fact.createUser;
             table.sqlScript = fact.sqlScript;
             table.coverScript = fact.coverScript;
             table.tableConfigId = Long.valueOf(fact.id).intValue();
@@ -800,7 +801,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.comment = String.valueOf(fact.businessId);
             table.qualifiedName = dbQualifiedName + "_" + dataModelType + "_" + fact.id;
             table.displayName = fact.factTableCnName;
-            table.owner = businessAdmin;
+            table.owner = fact.createUser;
             table.sqlScript = fact.sqlScript;
             table.coverScript = fact.coverScript;
             table.tableConfigId = Long.valueOf(fact.id).intValue();
@@ -869,7 +870,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             String fieldTypeLength = field.factFieldLength == 0 ? "" : "(" + field.factFieldLength + ")";
             column.dataType = field.factFieldType + fieldTypeLength;
             column.displayName = field.factFieldCnName;
-            column.owner = table.owner;
+            //字段创建人
+            column.owner = field.createUser;
             columnList.add(column);
         }
         return columnList;

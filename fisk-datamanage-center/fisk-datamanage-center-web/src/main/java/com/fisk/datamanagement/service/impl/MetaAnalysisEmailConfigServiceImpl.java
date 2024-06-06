@@ -158,12 +158,15 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
         RowDto rowDto = new RowDto();
         rowDto.setRowIndex(0);
         List<String> headerNames = new ArrayList<>();
+        headerNames.add("父元数据名称");
         headerNames.add("元数据名称");
+        headerNames.add("变更时间");
         headerNames.add("变更内容");
-        headerNames.add("变更类型");
         headerNames.add("影响到的元数据");
         headerNames.add("元数据类型名称");
+        headerNames.add("变更类型");
         headerNames.add("元数据id");
+        headerNames.add("创建人id/名称");
         headerNames.add("元数据类型编码");
 
 

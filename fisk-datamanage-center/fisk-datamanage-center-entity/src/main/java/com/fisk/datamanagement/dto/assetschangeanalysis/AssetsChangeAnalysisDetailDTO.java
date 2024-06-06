@@ -5,6 +5,7 @@ import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -43,6 +44,30 @@ public class AssetsChangeAnalysisDetailDTO {
     private MetadataAuditOperationTypeEnum entityType;
 
     /**
+     * 变更类型 名称
+     */
+    @ApiModelProperty(value = "变更类型 0全部 1 新增 2 修改 3 删除")
+    private String entityTypeName;
+
+    /**
+     * 父级别元数据名称
+     */
+    @ApiModelProperty(value = "父级别元数据名称")
+    private String parentName;
+
+    /**
+     * 变更人id
+     */
+    @ApiModelProperty(value = "变更人")
+    private String ownerId;
+
+    /**
+     * 变更时间
+     */
+    @ApiModelProperty(value = "变更时间")
+    private LocalDateTime createTime;
+
+    /**
      * 变更内容
      */
     @ApiModelProperty(value = "变更内容")
@@ -54,6 +79,5 @@ public class AssetsChangeAnalysisDetailDTO {
     @ApiModelProperty(value = "影响性分析 该字段变更影响到的元数据")
     private List<String> ImpactAnalysis;
 
-    
 
 }

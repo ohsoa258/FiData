@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.ObjectInfoUtils;
 import com.fisk.common.framework.exception.FkException;
@@ -17,6 +18,8 @@ import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.map.MetadataEntityAuditLogMap;
 import com.fisk.datamanagement.mapper.MetadataEntityAuditLogMapper;
 import com.fisk.datamanagement.service.IMetadataEntityAuditLog;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -28,6 +31,8 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author JinXingWang
@@ -47,6 +52,9 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
     MetadataEntityAuditLogMapper mapper;
 
     @Resource
+    private UserClient userClient;
+
+    @Resource
     private LineageMapRelationImpl lineageMapRelationImpl;
 
     @Resource
@@ -56,11 +64,12 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
     private MetadataEntityAuditLogMapper auditLogMapper;
 
     @Override
-    public ResultEnum setMetadataAuditLog(Object object, Integer entityId, MetadataAuditOperationTypeEnum operationType, String rdbmsType) {
+    public ResultEnum setMetadataAuditLog(Object object, Integer entityId, MetadataAuditOperationTypeEnum operationType, String rdbmsType, String createUser) {
 
         MetadataEntityAuditLogPO metadataEntityAuditLogPO = new MetadataEntityAuditLogPO();
         metadataEntityAuditLogPO.setEntityId(entityId);
         metadataEntityAuditLogPO.setOperationType(operationType);
+        metadataEntityAuditLogPO.setCreateUser(createUser);
 
         if (operationType.equals(MetadataAuditOperationTypeEnum.EDIT)) {
             if (rdbmsType.equals(EntityTypeEnum.RDBMS_COLUMN.getName())) {
@@ -470,6 +479,18 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
         //获取所有表级元数据
         List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
+
+        //获取用户
+        List<UserDTO> data = new ArrayList<>();
+        try {
+            ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserList();
+            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                data = resultEntity.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取所有用户信息失败" + e);
+        }
+
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
             List<String> impactNames = new ArrayList<>();
             String content = "";
@@ -501,6 +522,17 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
             }
             detailDTO.setChangeContent(content);
+            detailDTO.setCreateTime(po.createTime);
+
+            //替换用户id为用户名
+            if (!CollectionUtils.isEmpty(data)) {
+                data.stream().filter(userDTO -> userDTO.getId().toString().equals(po.createUser)).findFirst().ifPresent(userDTO -> {
+                    detailDTO.setOwnerId(userDTO.getUsername());
+                });
+
+            } else {
+                detailDTO.setOwnerId(po.createUser);
+            }
 
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (type.equals(EntityTypeEnum.RDBMS_COLUMN)) {
@@ -554,6 +586,24 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
         //获取所有表级元数据
         List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
+
+        //转为map
+        Map<Long, MetadataEntityPO> map = metadataEntityPOS.stream()
+                .collect(Collectors.toMap(MetadataEntityPO::getId, Function.identity()));
+
+
+        //获取用户
+        List<UserDTO> data = new ArrayList<>();
+        try {
+            ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserList();
+            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                data = resultEntity.getData();
+            }
+        } catch (Exception e) {
+            log.error("获取所有用户信息失败" + e);
+        }
+
+
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
             List<String> impactNames = new ArrayList<>();
             String content = "";
@@ -572,18 +622,41 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             }
 
             detailDTO.setEntityName(po.name);
-            detailDTO.setEntityType(po.operationType);
+            //父id
+            // 然后尝试从Map中获取值
+            MetadataEntityPO metadataEntityPO = map.getOrDefault(Long.valueOf(po.parentId), null);
+            if (metadataEntityPO != null) {
+                detailDTO.setParentName(metadataEntityPO.getName());
+            }else {
+                detailDTO.setParentName("");
+            }
+//            detailDTO.setEntityType(po.operationType);
             if (po.operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
+                detailDTO.setEntityTypeName("新增");
                 content = po.name;
             } else if (po.operationType.equals(MetadataAuditOperationTypeEnum.EDIT)) {
+                detailDTO.setEntityTypeName("修改");
                 if (po.attribute.equals("dataType")) {
                     content = po.beforeValue + " -> " + po.afterValue;
                 } else {
                     content = "字符串(" + po.beforeValue + ") -> " + "字符串(" + po.afterValue + ")";
                 }
-
+            } else {
+                detailDTO.setEntityTypeName(po.operationType.getName());
             }
             detailDTO.setChangeContent(content);
+            detailDTO.setCreateTime(po.createTime);
+
+            //替换用户id为用户名
+            if (!CollectionUtils.isEmpty(data)) {
+                data.stream().filter(userDTO -> userDTO.getId().toString().equals(po.createUser)).findFirst().ifPresent(userDTO -> {
+                    detailDTO.setOwnerId(userDTO.getUsername());
+                });
+
+            } else {
+                detailDTO.setOwnerId(po.createUser);
+            }
+
 
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {

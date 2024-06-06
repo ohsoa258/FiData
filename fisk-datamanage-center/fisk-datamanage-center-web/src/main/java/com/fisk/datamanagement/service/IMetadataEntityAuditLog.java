@@ -22,7 +22,7 @@ import java.util.List;
  */
 public interface IMetadataEntityAuditLog extends IService<MetadataEntityAuditLogPO> {
 
-    ResultEnum setMetadataAuditLog(Object object, Integer entityId, MetadataAuditOperationTypeEnum operationType, String rdbmsType);
+    ResultEnum setMetadataAuditLog(Object object, Integer entityId, MetadataAuditOperationTypeEnum operationType, String rdbmsType,String createUser);
 
     List<MetadataEntityAuditLogVO> getMetadataAuditLog(Integer entityId);
 

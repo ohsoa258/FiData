@@ -231,7 +231,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //添加审计日志
-        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType);
+        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType,po.owner);
         //添加技术属性
         metadataAttribute.addMetadataAttribute(dto, (int) po.id);
 
@@ -260,7 +260,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //添加审计日志
-        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType);
+        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType,po.owner);
         //添加技术属性
         metadataAttribute.operationMetadataAttribute(dto, entityId);
 
@@ -627,7 +627,7 @@ public class MetadataEntityImpl
         }
         //添加审计日志
         guidList.forEach(e -> {
-            metadataEntityAuditLog.setMetadataAuditLog(null, e, MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName());
+            metadataEntityAuditLog.setMetadataAuditLog(null, e, MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName(),null);
         });
         int delete = metadataEntityMapper.delete(queryWrapper);
         if (delete == 0) {
