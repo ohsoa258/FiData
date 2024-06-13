@@ -36,6 +36,12 @@ public interface IMetadataEntityExportTemplateService extends IService<MetadataE
      ResultEnum edit(EditMetadataExportTemplateDto dto);
 
      /**
+      * 删除模板
+      * @return
+      */
+     ResultEnum delete(Integer id);
+
+     /**
       * 获取所有的模板
       * @return
       */

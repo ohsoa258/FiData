@@ -79,6 +79,13 @@ public class MetadataEntityExportTemplateAttributeServiceImpl extends ServiceImp
         return ResultEnum.SUCCESS;
     }
 
+    public ResultEnum delete(Integer templateId){
+        LambdaQueryWrapper<MetadataEntityExportTemplateAttributePO> delete = new LambdaQueryWrapper<>();
+        delete.eq(MetadataEntityExportTemplateAttributePO::getTemplateId,templateId);
+        remove(delete);
+        return ResultEnum.SUCCESS;
+    }
+
 }
 
 

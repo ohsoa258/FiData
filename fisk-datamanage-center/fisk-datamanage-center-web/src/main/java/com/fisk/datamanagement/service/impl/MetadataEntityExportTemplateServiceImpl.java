@@ -7,6 +7,7 @@ import com.fisk.datamanagement.dto.metadataentityexporttemplate.EditMetadataExpo
 import com.fisk.datamanagement.dto.metadataentityexporttemplate.MetadataExportTemplateAttributeDto;
 import com.fisk.datamanagement.dto.metadataentityexporttemplate.MetadataExportTemplateDetailDto;
 import com.fisk.datamanagement.dto.metadataentityexporttemplate.MetadataExportTemplateDto;
+import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.entity.MetadataEntityExportTemplateAttributePO;
 import com.fisk.datamanagement.entity.MetadataEntityExportTemplatePO;
 import com.fisk.datamanagement.map.MetadataEntityExportTemplateMap;
@@ -68,6 +69,21 @@ public class MetadataEntityExportTemplateServiceImpl extends ServiceImpl<Metadat
             MetadataEntityExportTemplatePO metadataEntityExportTemplatePO = MetadataEntityExportTemplateMap.INSTANCES.editDtoToPo(dto);
             updateById(metadataEntityExportTemplatePO);
             metadataEntityExportTemplateAttributeService.editBatch(Long.valueOf(metadataEntityExportTemplatePO.getId()).intValue(),dto.getAttribute());
+            return ResultEnum.SUCCESS;
+        }
+    }
+
+    @Override
+    public ResultEnum delete(Integer id) {
+        if (id.equals(1)){
+            //不能删除默认模板
+            return ResultEnum.DETAULT_EDIT_ERROR;
+        }else {
+            LambdaQueryWrapper<MetadataEntityExportTemplatePO> del = new LambdaQueryWrapper<>();
+            del.eq(MetadataEntityExportTemplatePO::getId, id);
+            remove(del);
+
+            metadataEntityExportTemplateAttributeService.delete(id);
             return ResultEnum.SUCCESS;
         }
 
