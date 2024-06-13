@@ -28,4 +28,16 @@ public class AccessAndModelAppDTO {
      */
     private Integer serverType;
 
+    /**
+     * 是否将应用简称作为schema使用
+     * 否：0  false
+     * 是：1  true
+     */
+    public Boolean whetherSchema;
+
+    /**
+     * 应用简称
+     */
+    public String appAbbreviation;
+
 }

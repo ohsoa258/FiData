@@ -1,6 +1,8 @@
 package com.fisk.datagovernance.dto.dataops;
 
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -9,6 +11,7 @@ import javax.validation.constraints.NotNull;
  * @description 执行数据运维sql DTO
  * @date 2022/4/22 13:11
  */
+@Data
 public class ExecuteDataOpsSqlDTO {
     /**
      * 数据源id
@@ -35,4 +38,10 @@ public class ExecuteDataOpsSqlDTO {
      */
     @ApiModelProperty(value = "size")
     public Integer size;
+
+    /**
+     * 选中查询的表的全称
+     */
+    @ApiModelProperty(value = "选中查询的表的全称")
+    public String tblFullName;
 }

@@ -127,4 +127,13 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @return
      */
     Object accessOverlayCodePreview(OverlayCodePreviewAccessDTO dto);
+
+    /**
+     * 根据字段id集合获取字段详情集合
+     *
+     * @param fieldIds
+     * @return
+     */
+    List<TableFieldsDTO> getFieldInfosByIds(List<Integer> fieldIds);
+
 }

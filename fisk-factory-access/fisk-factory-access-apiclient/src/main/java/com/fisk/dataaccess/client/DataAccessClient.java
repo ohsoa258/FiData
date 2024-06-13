@@ -22,6 +22,7 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TableVersionDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.vo.CDCAppDbNameVO;
@@ -619,5 +620,28 @@ public interface DataAccessClient {
     @ApiOperation("元数据地图 获取应用下的表")
     @GetMapping("/appRegistration/accessGetMetaMapTableDetail")
     List<MetaMapTblDTO> accessGetMetaMapTableDetail(@RequestParam("appId") Integer appId);
+
+    /**
+     * 获取所有物理表
+     *
+     * @return
+     */
+    @PostMapping("/v3/tableAccess/getAllAccessTbls")
+    @ApiOperation(value = "获取所有物理表")
+    ResultEntity<List<TableAccessDTO>> getAllAccessTbls();
+
+    /**
+     * 根据字段id集合获取字段详情集合
+     *
+     * @param fieldIds
+     * @return
+     */
+    @GetMapping("/tableFields/getFieldInfosByIds")
+    @ApiOperation(value = "根据字段id集合获取字段详情集合")
+    ResultEntity<List<TableFieldsDTO>> getFieldInfosByIds(@RequestParam("fieldIds") List<Integer> fieldIds);
+
+    @ApiOperation(value = "获取所有应用以及表、字段数据")
+    @GetMapping("/appRegistration/getDataAppRegistrationMeta")
+    ResultEntity<Object> getDataAppRegistrationMeta();
 
 }

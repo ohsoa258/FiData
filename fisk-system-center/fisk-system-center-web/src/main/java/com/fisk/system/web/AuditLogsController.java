@@ -8,6 +8,7 @@ import com.fisk.system.dto.auditlogs.AuditLogsDTO;
 import com.fisk.system.dto.auditlogs.AuditLogsPageDTO;
 import com.fisk.system.service.IAuditLogsService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +36,7 @@ public class AuditLogsController {
      * @param dto
      * @return
      */
+    @ApiOperation("保存一条操作记录")
     @PostMapping("/saveAuditLog")
     public ResultEntity<Object> saveAuditLog(@RequestBody AuditLogsDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, auditLogsService.saveAuditLog(dto));
@@ -46,6 +48,7 @@ public class AuditLogsController {
      * @param dto
      * @return
      */
+    @ApiOperation("分页查询操作记录")
     @PostMapping("/pageFilterAudits")
     public ResultEntity<Object> pageFilterAudits(@RequestBody AuditLogsPageDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, auditLogsService.pageFilterAudits(dto));

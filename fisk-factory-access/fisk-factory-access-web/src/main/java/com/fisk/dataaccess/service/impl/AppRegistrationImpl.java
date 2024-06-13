@@ -1093,6 +1093,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             //获取创建人id
             String createUserId = tbl.getCreateUser();
             metaMapTblDTO.setCreateUser(createUserId);
+            metaMapTblDTO.setDisplayName(tbl.getDisplayName());
 
             //获取创建人名称
             if (!CollectionUtils.isEmpty(userIds) && !CollectionUtils.isEmpty(data) && createUserId != null) {
@@ -4013,7 +4014,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<AccessAndModelAppDTO> getAllAppAndTables() {
         //先查询所有非入仓配置的应用
         QueryWrapper<AppRegistrationPO> w = new QueryWrapper<>();
-        w.select("id", "app_name")
+        w.select("id", "app_name","app_abbreviation","whether_schema")
                 .lambda()
                 .isNull(AppRegistrationPO::getIfSyncAllTables);
         List<AppRegistrationPO> appPOS = this.list(w);
@@ -4024,6 +4025,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             accessAndModelAppDTO.setAppId((int) appRegistrationPO.getId());
             accessAndModelAppDTO.setAppName(appRegistrationPO.getAppName());
             accessAndModelAppDTO.setServerType(ServerTypeEnum.ACCESS.getValue());
+            accessAndModelAppDTO.setWhetherSchema(appRegistrationPO.getWhetherSchema());
+            accessAndModelAppDTO.setAppAbbreviation(appRegistrationPO.getAppAbbreviation());
 
             List<AccessAndModelTableDTO> accessAndModelTableDTOS = new ArrayList<>();
 

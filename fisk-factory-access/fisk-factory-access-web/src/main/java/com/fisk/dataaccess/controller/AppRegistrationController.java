@@ -250,7 +250,6 @@ public class AppRegistrationController {
         return service.getRepeatAppAbbreviation(appAbbreviation, whetherSchema);
     }
 
-    @ApiIgnore
     @ApiOperation(value = "获取所有应用以及表、字段数据")
     @GetMapping("/getDataAppRegistrationMeta")
     public ResultEntity<Object> getDataAppRegistrationMeta() {

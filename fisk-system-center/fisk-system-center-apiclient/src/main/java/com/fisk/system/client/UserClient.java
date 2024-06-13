@@ -5,6 +5,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.system.dto.AssignmentDTO;
 import com.fisk.system.dto.auditlogs.AuditLogsDTO;
+import com.fisk.system.dto.datasecurity.DataSecurityColumnsDTO;
+import com.fisk.system.dto.datasecurity.DataSecurityRowsDTO;
+import com.fisk.system.dto.datasecurity.DataSecurityTablesDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -332,6 +335,30 @@ public interface UserClient {
     ResultEntity<Object> saveAuditLog(@RequestBody AuditLogsDTO dto);
 
     @GetMapping("/auth/getBusinessAssignment")
-    @ApiOperation("根据当前登录人,获取指标管理授权权限")
     ResultEntity<List<Integer>> getBusinessAssignment(@RequestParam("userId") Integer userId);
+
+    /**
+     * 数据安全 表级安全 根据角色id获取该角色的表级安全权限
+     *
+     * @return
+     */
+    @GetMapping("/dataSecurity/getTablesByRoleId")
+    ResultEntity<List<DataSecurityTablesDTO>> getTablesByRoleId(@RequestParam("roleId")Integer roleId);
+
+    /**
+     * 数据安全 列级安全 根据角色id获取该角色的列级安全权限
+     *
+     * @return
+     */
+    @GetMapping("/dataSecurity/getColumnsByRoleId")
+    ResultEntity<List<DataSecurityColumnsDTO>> getColumnsByRoleId(@RequestParam("roleId") Integer roleId);
+
+    /**
+     * 数据安全 行级安全 根据角色id获取该角色的行级安全权限
+     *
+     * @return
+     */
+    @GetMapping("/dataSecurity/getRowsByRoleId")
+    ResultEntity<List<DataSecurityRowsDTO>> getRowsByRoleId(@RequestParam("roleId") Integer roleId);
+
 }

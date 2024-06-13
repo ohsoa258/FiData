@@ -69,6 +69,17 @@ public class TableAccessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTableAccessListData(dto));
     }
 
+    /**
+     * 获取所有物理表
+     *
+     * @return
+     */
+    @PostMapping("/getAllAccessTbls")
+    @ApiOperation(value = "获取所有物理表")
+    public ResultEntity<List<TableAccessDTO>> getAllAccessTbls() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllAccessTbls());
+    }
+
     @PostMapping("/getFieldList")
     @ApiOperation(value = "获取最新版sql脚本的表字段集合")
     public ResultEntity<Object> getFieldList(@RequestBody TableAccessNonDTO dto) {
