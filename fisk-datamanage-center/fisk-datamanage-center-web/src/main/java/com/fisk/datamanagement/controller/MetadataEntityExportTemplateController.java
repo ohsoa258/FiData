@@ -45,7 +45,14 @@ public class MetadataEntityExportTemplateController {
         return ResultEntityBuild.build(service.edit(dto));
     }
 
-    @ApiOperation("修改导出模板")
+    @ApiOperation("删除导出模板")
+    @DeleteMapping("/delete")
+    @ResponseBody
+    public ResultEntity<Object> delete(Integer id){
+        return ResultEntityBuild.build(service.delete(id));
+    }
+
+    @ApiOperation("获取导出模板")
     @GetMapping("/getAll")
     public ResultEntity<Object> edit(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAllTemplate());
