@@ -2011,6 +2011,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                 //获取创建人id
                 String createUserId = dimensionPO.getCreateUser();
                 metaMapTblDTO.setCreateUser(createUserId);
+                metaMapTblDTO.setDisplayName(dimensionPO.getDimensionCnName());
 
                 //获取创建人名称
                 if (!CollectionUtils.isEmpty(userIds) && !CollectionUtils.isEmpty(data) && createUserId != null) {
@@ -2033,6 +2034,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                 //获取创建人id
                 String createUserId = FactPO.getCreateUser();
                 metaMapTblDTO.setCreateUser(createUserId);
+                metaMapTblDTO.setDisplayName(FactPO.getFactTableCnName());
                 //获取创建人名称
                 if (!CollectionUtils.isEmpty(userIds) && !CollectionUtils.isEmpty(data) && createUserId != null) {
                     if (userIds.contains(Long.valueOf(createUserId))) {

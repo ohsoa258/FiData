@@ -12,12 +12,15 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
 import com.fisk.common.core.utils.Dto.Excel.RowDto;
 import com.fisk.common.core.utils.Dto.Excel.SheetDto;
 import com.fisk.common.core.utils.office.excel.ExcelReportUtil;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
+import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.governance.BuildGovernanceHelper;
 import com.fisk.common.service.dbBEBuild.governance.IBuildGovernanceSqlCommand;
@@ -28,6 +31,7 @@ import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
+import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.PostgreDTO;
@@ -42,7 +46,11 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasecurity.DataSecurityColumnsDTO;
+import com.fisk.system.dto.datasecurity.DataSecurityRowsDTO;
+import com.fisk.system.dto.datasecurity.DataSecurityTablesDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
 import com.fisk.task.dto.task.TableNifiSettingDTO;
@@ -58,6 +66,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author dick
@@ -106,6 +115,9 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
 
     @Resource
     private AttachmentInfoMapper attachmentInfoMapper;
+
+    @Value("${dataSecurity}")
+    private Boolean dataSecurity;
 
     @Override
     public ResultEntity<List<DataOpsSourceVO>> getDataOpsTableSource() {
@@ -164,15 +176,43 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
             }
 
-            columns.forEach(tableStructureDTO -> {
-                DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
-                dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
-                dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
-                dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
-                dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
-                dataOpsTableFieldVO.setDorisTblNames(tableStructureDTO.getDorisTblNames());
-                dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
-            });
+            //数据安全  根据角色的数据安全配置 筛选数据库运维可回显的表
+            if (dataSecurity) {
+                List<TableStructureDTO> columns1 = new ArrayList<>();
+
+                //筛选数据安全-列级别安全配置了该表的哪些可见字段
+                List<String> columnNames = filterColumnsBiDataSecurity(postgreDTO.getDataSourceTypeEnum(), dto.getTableFramework() + "." + dto.getTableName(), dto.datasourceId);
+                if (CollectionUtils.isEmpty(columnNames)) {
+                    columns1 = columns;
+                } else {
+                    for (TableStructureDTO column : columns) {
+                        if (columnNames.contains(column.getFieldName())) {
+                            columns1.add(column);
+                        }
+                    }
+                }
+
+                columns1.forEach(tableStructureDTO -> {
+                    DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
+                    dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
+                    dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
+                    dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
+                    dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
+                    dataOpsTableFieldVO.setDorisTblNames(tableStructureDTO.getDorisTblNames());
+                    dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
+                });
+            } else {
+                columns.forEach(tableStructureDTO -> {
+                    DataOpsTableFieldVO dataOpsTableFieldVO = new DataOpsTableFieldVO();
+                    dataOpsTableFieldVO.setFieldName(tableStructureDTO.getFieldName());
+                    dataOpsTableFieldVO.setFieldType(tableStructureDTO.getFieldType());
+                    dataOpsTableFieldVO.setFieldLength(tableStructureDTO.getFieldLength());
+                    dataOpsTableFieldVO.setFieldDes(tableStructureDTO.getFieldDes());
+                    dataOpsTableFieldVO.setDorisTblNames(tableStructureDTO.getDorisTblNames());
+                    dataOpsTableFieldVOS.add(dataOpsTableFieldVO);
+                });
+            }
+
             return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataOpsTableFieldVOS);
         } catch (Exception e) {
             log.error("数据库运维获取数据库表列信息失败：" + e);
@@ -180,6 +220,100 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         }
 
     }
+
+    /**
+     * 根据数据安全 筛选表名
+     *
+     * @return
+     */
+    private List<String> filterColumnsBiDataSecurity(DataSourceTypeEnum conType, String tableName, Integer datasourceId) {
+
+        Map<String, Integer> nameAndId = new HashMap<>();
+        List<String> colNames = new ArrayList<>();
+
+        List<AccessAndModelAppDTO> data1 = new ArrayList<>();
+        //获取数据接入 应用和应用下的表
+        ResultEntity<List<AccessAndModelAppDTO>> result1 = dataAccessClient.getAllAppAndTables();
+        if (result1.getCode() == ResultEnum.SUCCESS.getCode()) {
+            data1 = result1.getData();
+
+        }
+
+        //拿到用户角色
+        UserInfo user = userHelper.getLoginUserInfo();
+        int id = user.getId().intValue();
+
+        RoleInfoDTO roleInfoDTO = null;
+
+        ResultEntity<List<RoleInfoDTO>> resultEntity = userClient.getRolebyUserId(id);
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            List<RoleInfoDTO> roleInfos = resultEntity.getData();
+            if (CollectionUtils.isNotEmpty(roleInfos)) {
+                roleInfoDTO = roleInfos.get(0);
+            }
+
+        }
+
+        if (roleInfoDTO != null) {
+            //获取当前登录用户的角色id
+            int roleId = (int) roleInfoDTO.getId();
+            // 获取当前角色的列级安全权限
+            ResultEntity<List<DataSecurityColumnsDTO>> resultEntity1 = userClient.getColumnsByRoleId(roleId);
+
+            if (resultEntity1.getCode() == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(resultEntity1.getData())) {
+                List<DataSecurityColumnsDTO> dataSecurityColumnsDTOS = resultEntity1.getData();
+
+                List<Integer> tblIds = dataSecurityColumnsDTOS.stream().map(DataSecurityColumnsDTO::getTblId).collect(Collectors.toList());
+                for (AccessAndModelAppDTO accessAndModelAppDTO : data1) {
+                    for (AccessAndModelTableDTO table : accessAndModelAppDTO.getTables()) {
+                        if (tblIds.contains(table.getTblId())) {
+                            String tblName;
+                            if (accessAndModelAppDTO.whetherSchema) {
+                                tblName = accessAndModelAppDTO.getAppAbbreviation() + "." + table.getTableName();
+                            } else {
+                                String preNmae = "";
+                                if (conType == DataSourceTypeEnum.SQLSERVER) {
+                                    preNmae = "dbo.";
+                                } else if (conType == DataSourceTypeEnum.POSTGRESQL) {
+                                    preNmae = "public.";
+                                }
+                                tblName = preNmae + "ods_" + accessAndModelAppDTO.getAppAbbreviation() + "_" + table.getTableName();
+                            }
+                            nameAndId.put(tblName, table.getTblId());
+                        }
+                    }
+                }
+
+                //获取
+                if (CollectionUtils.isNotEmpty(nameAndId)) {
+                    //获取表id
+                    int tblId = nameAndId.get(tableName);
+
+                    //通过这个表id 获取对应列级安全权限hang行  从而获取hang行内配置的可查询字段id
+                    List<Integer> readableFieldIds = dataSecurityColumnsDTOS.stream()
+                            .filter(dto -> dto.getTblId() == tblId)
+                            .findFirst()
+                            .map(DataSecurityColumnsDTO::getReadableFieldIds)
+                            .orElse(Collections.emptyList());
+
+                    //将获取到的这些字段id转为字段名称 最终返回
+                    if (CollectionUtils.isNotEmpty(readableFieldIds)) {
+                        //2 意味着是dmp_ods
+                        if (datasourceId == 2) {
+                            ResultEntity<List<TableFieldsDTO>> resultEntity2 = dataAccessClient.getFieldInfosByIds(readableFieldIds);
+                            if (resultEntity2.getCode() == ResultEnum.SUCCESS.getCode()) {
+                                List<TableFieldsDTO> data = resultEntity2.getData();
+                                data.stream().map(TableFieldsDTO::getFieldName).forEach(colNames::add);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return colNames;
+    }
+
 
     @Override
     public ResultEntity<Object> reloadDataOpsDataSource() {
@@ -231,6 +365,26 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
            * */
             String sql = dto.executeSql;
             DataSourceTypeEnum dataSourceTypeEnum = postgreDTO.getDataSourceTypeEnum();
+
+            //如果开启数据安全 则查询该表是否有配置行级安全 如果有 则需要添加行级安全的where条件到sql里面
+            if (dataSecurity) {
+                String tblFullName = dto.getTblFullName();
+
+                //获取该表在数据安全配置的where条件
+                String whereSql = filterRowsBiDataSecurity(dataSourceTypeEnum, tblFullName).toLowerCase();
+                if (StringUtils.isNotEmpty(whereSql)) {
+                    //如果原生sql包含where条件 则去掉行级安全权限的过滤条件中的where并替换为and
+                    if (sql.toLowerCase().contains("where")) {
+                        whereSql = whereSql.replace("where", " and ");
+                        sql = sql + whereSql;
+                    } else {
+                        sql = sql + " " +whereSql;
+                    }
+                }
+                log.info("数据安全拼接的sql" + sql);
+            }
+
+
             //doris走mysql协议
             if (DataSourceTypeEnum.DORIS.getName().equals(dataSourceTypeEnum.getName())) {
                 postgreDTO.dataSourceTypeEnum = DataSourceTypeEnum.MYSQL;
@@ -247,7 +401,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                     }
                 }
                 // SQL 语句是查询操作
-                String tableName = String.format("(%s) AS tb_page", dto.executeSql);
+                String tableName = String.format("(%s) AS tb_page", sql);
                 IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(postgreDTO.getDataSourceTypeEnum());
                 dto.current = dto.current - 1;
                 String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", orderByClause, dto.current, dto.size);
@@ -350,6 +504,83 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             }
         }
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, executeResultVO);
+    }
+
+    /**
+     * 根据数据安全 筛选表名
+     *
+     * @return
+     */
+    private String filterRowsBiDataSecurity(DataSourceTypeEnum conType, String tblFullName) {
+
+        Map<String, Integer> nameAndId = new HashMap<>();
+        String whereCondition = "";
+
+        List<AccessAndModelAppDTO> data1 = new ArrayList<>();
+        //获取数据接入 应用和应用下的表
+        ResultEntity<List<AccessAndModelAppDTO>> result1 = dataAccessClient.getAllAppAndTables();
+        if (result1.getCode() == ResultEnum.SUCCESS.getCode()) {
+            data1 = result1.getData();
+
+        }
+
+        //拿到用户角色
+        UserInfo user = userHelper.getLoginUserInfo();
+        int id = user.getId().intValue();
+
+        RoleInfoDTO roleInfoDTO = null;
+
+        ResultEntity<List<RoleInfoDTO>> resultEntity = userClient.getRolebyUserId(id);
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            List<RoleInfoDTO> roleInfos = resultEntity.getData();
+            if (CollectionUtils.isNotEmpty(roleInfos)) {
+                roleInfoDTO = roleInfos.get(0);
+            }
+
+        }
+
+        if (roleInfoDTO != null) {
+            //获取当前登录用户的角色id
+            int roleId = (int) roleInfoDTO.getId();
+            // 获取当前角色的表级安全权限
+            ResultEntity<List<DataSecurityRowsDTO>> resultEntity1 = userClient.getRowsByRoleId(roleId);
+            if (resultEntity1.getCode() == ResultEnum.SUCCESS.getCode()) {
+                List<DataSecurityRowsDTO> dataSecurityRowsDTOS = resultEntity1.getData();
+
+                List<Integer> tblIds = dataSecurityRowsDTOS.stream().map(DataSecurityRowsDTO::getTblId).collect(Collectors.toList());
+                for (AccessAndModelAppDTO accessAndModelAppDTO : data1) {
+                    for (AccessAndModelTableDTO table : accessAndModelAppDTO.getTables()) {
+                        if (tblIds.contains(table.getTblId())) {
+                            String tblName;
+                            if (accessAndModelAppDTO.whetherSchema) {
+                                tblName = accessAndModelAppDTO.getAppAbbreviation() + "." + table.getTableName();
+                            } else {
+                                String preNmae = "";
+                                if (conType == DataSourceTypeEnum.SQLSERVER) {
+                                    preNmae = "dbo.";
+                                } else if (conType == DataSourceTypeEnum.POSTGRESQL) {
+                                    preNmae = "public.";
+                                }
+                                tblName = preNmae + "ods_" + accessAndModelAppDTO.getAppAbbreviation() + "_" + table.getTableName();
+                            }
+                            nameAndId.put(tblName, table.getTblId());
+                        }
+                    }
+                }
+
+                //获取where条件
+                if (CollectionUtils.isNotEmpty(nameAndId) && tblFullName != null) {
+                    //获取表id
+                    int tblId = nameAndId.get(tblFullName);
+                    whereCondition = dataSecurityRowsDTOS.stream()
+                            .filter(dto -> dto.getTblId() == tblId)
+                            .findFirst()
+                            .map(DataSecurityRowsDTO::getWhereCondition)
+                            .orElse(""); // 或者其它默认值
+                }
+            }
+        }
+        return whereCondition;
     }
 
     @Override
@@ -605,20 +836,55 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                     tablesPlus = sqlServerPlusUtils.getTablesPlus(connection);
                 } else if (postgreDTO.getDataSourceTypeEnum() == DataSourceTypeEnum.DORIS) {
                     ifDoris += 1;
-                    if (postgreDTO.getDbName().equals("dmp_ods")){
+                    if (postgreDTO.getDbName().equals("dmp_ods")) {
                         continue;
                     }
                     tablesPlus = dorisConUtils.getTablesPlusForOps(connection);
                 }
-                if (CollectionUtils.isNotEmpty(tablesPlus)) {
-                    tablesPlus.forEach(t -> {
-                        DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
-                        dataOpsDataTableVO.setTableFramework(t.getTableFramework());
-                        dataOpsDataTableVO.setTableName(t.getTableName());
-                        dataOpsDataTableVO.setTableFullName(t.getTableFullName());
-                        tableVOList.add(dataOpsDataTableVO);
-                    });
+
+
+                //数据安全  根据角色的数据安全配置 筛选数据库运维可回显的表
+                if (dataSecurity) {
+                    List<TablePyhNameDTO> tablesPlus1 = new ArrayList<>();
+                    //筛选数据安全配置了哪些可见表
+                    List<String> tblNames = filterTablesBiDataSecurity(data.conType);
+
+                    //数据安全 表级安全是反着来的  如果配的有 则只能看那些配的表 否则能看所有表
+                    if (CollectionUtils.isNotEmpty(tablesPlus)) {
+                        //如果没配置数据安全  则可以看所有表
+                        if (CollectionUtils.isEmpty(tblNames)) {
+                            tablesPlus1 = tablesPlus;
+                        } else {
+                            //如果配置的有 则只能看到那些配置的表
+                            for (TablePyhNameDTO plus : tablesPlus) {
+                                if (tblNames.contains(plus.getTableFullName())) {
+                                    tablesPlus1.add(plus);
+                                }
+                            }
+                        }
+                    }
+
+                    if (CollectionUtils.isNotEmpty(tablesPlus1)) {
+                        tablesPlus1.forEach(t -> {
+                            DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
+                            dataOpsDataTableVO.setTableFramework(t.getTableFramework());
+                            dataOpsDataTableVO.setTableName(t.getTableName());
+                            dataOpsDataTableVO.setTableFullName(t.getTableFullName());
+                            tableVOList.add(dataOpsDataTableVO);
+                        });
+                    }
+                } else {
+                    if (CollectionUtils.isNotEmpty(tablesPlus)) {
+                        tablesPlus.forEach(t -> {
+                            DataOpsDataTableVO dataOpsDataTableVO = new DataOpsDataTableVO();
+                            dataOpsDataTableVO.setTableFramework(t.getTableFramework());
+                            dataOpsDataTableVO.setTableName(t.getTableName());
+                            dataOpsDataTableVO.setTableFullName(t.getTableFullName());
+                            tableVOList.add(dataOpsDataTableVO);
+                        });
+                    }
                 }
+
 //                        if (CollectionUtils.isNotEmpty(tableVOList)) {
 //                            // 增加排序
 //                            tableVOList.sort(Comparator.comparing(DataOpsDataTableVO::getTableName));
@@ -662,6 +928,71 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         } finally {
             log.info("setMetaDataToRedis-ops 结束");
         }
+    }
+
+    /**
+     * 根据数据安全 筛选表名
+     *
+     * @return
+     */
+    private List<String> filterTablesBiDataSecurity(DataSourceTypeEnum conType) {
+
+        List<String> tblNames = new ArrayList<>();
+
+        List<AccessAndModelAppDTO> data1 = new ArrayList<>();
+        //获取数据接入 应用和应用下的表
+        ResultEntity<List<AccessAndModelAppDTO>> result1 = dataAccessClient.getAllAppAndTables();
+        if (result1.getCode() == ResultEnum.SUCCESS.getCode()) {
+            data1 = result1.getData();
+
+        }
+
+        //拿到用户角色
+        UserInfo user = userHelper.getLoginUserInfo();
+        int id = user.getId().intValue();
+
+        RoleInfoDTO roleInfoDTO = null;
+
+        ResultEntity<List<RoleInfoDTO>> resultEntity = userClient.getRolebyUserId(id);
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            List<RoleInfoDTO> roleInfos = resultEntity.getData();
+            if (CollectionUtils.isNotEmpty(roleInfos)) {
+                roleInfoDTO = roleInfos.get(0);
+            }
+
+        }
+
+        if (roleInfoDTO != null) {
+            //获取当前登录用户的角色id
+            int roleId = (int) roleInfoDTO.getId();
+            // 获取当前角色的表级安全权限
+            ResultEntity<List<DataSecurityTablesDTO>> resultEntity1 = userClient.getTablesByRoleId(roleId);
+            if (resultEntity1.getCode() == ResultEnum.SUCCESS.getCode()) {
+                List<DataSecurityTablesDTO> dataSecurityTablesDTOS = resultEntity1.getData();
+
+                List<Integer> tblIds = dataSecurityTablesDTOS.stream().map(DataSecurityTablesDTO::getTblId).collect(Collectors.toList());
+                for (AccessAndModelAppDTO accessAndModelAppDTO : data1) {
+                    for (AccessAndModelTableDTO table : accessAndModelAppDTO.getTables()) {
+                        if (tblIds.contains(table.getTblId())) {
+                            String tblName;
+                            if (accessAndModelAppDTO.whetherSchema) {
+                                tblName = accessAndModelAppDTO.getAppAbbreviation() + "." + table.getTableName();
+                            } else {
+                                String preNmae = "";
+                                if (conType == DataSourceTypeEnum.SQLSERVER) {
+                                    preNmae = "dbo.";
+                                } else if (conType == DataSourceTypeEnum.POSTGRESQL) {
+                                    preNmae = "public.";
+                                }
+                                tblName = preNmae + "ods_" + accessAndModelAppDTO.getAppAbbreviation() + "_" + table.getTableName();
+                            }
+                            tblNames.add(tblName);
+                        }
+                    }
+                }
+            }
+        }
+        return tblNames;
     }
 
     public List<PostgreDTO> removeDuplicates(List<PostgreDTO> list) {

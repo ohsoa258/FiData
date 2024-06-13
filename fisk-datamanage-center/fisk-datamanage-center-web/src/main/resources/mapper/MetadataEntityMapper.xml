@@ -41,16 +41,20 @@
         <id property="guid" column="guid"/>
         <result property="displayText" column="ename"/>
         <result property="typeName" column="tname"/>
+        <result property="parent1" column="parent1"/>
+        <result property="parent2" column="parent2"/>
         <association property="attributes"  javaType="com.fisk.datamanagement.dto.entity.EntityAttributesDTO">
             <result property="name" column="ename"/>
             <result property="qualifiedName" column="qname"/>
         </association>
     </resultMap>
     <select id="searchEntitys" resultMap="queryEntity">
-        SELECT  tme.id guid,tme.`name` ename,tme.qualified_name qname,tmp.type tname
+        SELECT  tme.id guid,tme.`name` ename,tme.qualified_name qname,tmp.type tname,tme1.name parent1,tme2.name parent2
         FROM tb_metadata_entity tme
         LEFT JOIN tb_metadata_entity_type tmp ON tme.type_id = tmp .id
-        WHERE tme.`name` LIKE CONCAT('%',#{query},'%') AND (tme.description != 'stg' or description is null) AND  tme.del_flag = 1
+        LEFT JOIN tb_metadata_entity tme1 ON tme.parent_id = tme1.id
+        LEFT JOIN tb_metadata_entity tme2 ON tme1.parent_id = tme2.id
+        WHERE tme.`name` LIKE CONCAT('%',#{query},'%') AND (tme.description != 'stg' or tme.description is null) AND  tme.del_flag = 1
         LIMIT #{offset},#{limit}
     </select>
 

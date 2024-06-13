@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.system.SourceBusinessTypeEnum;
@@ -1002,6 +1003,12 @@ public class MetadataEntityImpl
         /**************************************添加来源表到临时表血缘******************************************/
         //判断是否已有血缘关系，存在则先删除
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(stgTableGuid), ProcessTypeEnum.SQL_PROCESS);
+
+        //这一步是在同步血缘过程中 数仓temp过程的血缘来源  即查询sql解析出来的表和关联外键的那些维度表
+
+        //todo:将数仓建模-临时表维度关联的那些表查出来 作为血缘来源 加到fromEntityIdList中
+        //无需解析sql 从数仓建模查询事实表关联的维度表id  转换为元数据这边的元数据id 加到fromEntityIdList中即可
+
         addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取", ProcessTypeEnum.SQL_PROCESS);
 
         /*****************************************数仓建模关联维度血缘**********************************************************/
@@ -1110,7 +1117,7 @@ public class MetadataEntityImpl
      * @return
      */
     public List<Long> getTableListV2(List<String> tableNameList) {
-        if (tableNameList.stream().count() > 0) {
+        if (tableNameList.size() > 0) {
             List<String> tableName = new ArrayList<>();
             tableNameList.forEach(e -> {
                 String[] tableNames = e.split("\\.");
@@ -1120,7 +1127,7 @@ public class MetadataEntityImpl
             queryWrapper.in("name", tableName);
             queryWrapper.eq("type_id", 3);
             List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
-            return (List) poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+            return  poList.stream().map(BasePO::getId).collect(Collectors.toList());
         } else {
             return new ArrayList<>();
         }
@@ -1341,7 +1348,7 @@ public class MetadataEntityImpl
 
         sql = StringUtils.isEmpty(sql) ? "" : sql.replace("\n", "").toLowerCase();
 
-        //新增process
+        //新增process  新增抽取过程
         MetadataEntityPO po = new MetadataEntityPO();
         po.name = processName;
         po.description = sql;
@@ -1349,7 +1356,7 @@ public class MetadataEntityImpl
         po.typeId = EntityTypeEnum.PROCESS.getValue();
         po.qualifiedName = sql;
 
-        Integer flat = metadataEntityMapper.insert(po);
+        int flat = metadataEntityMapper.insert(po);
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
@@ -1359,6 +1366,7 @@ public class MetadataEntityImpl
             LineageMapRelationDTO data = new LineageMapRelationDTO();
             data.fromEntityId = item.intValue();
             data.toEntityId = Integer.valueOf(targetId);
+            //将新增的 【抽取】元数据id 作为连接上下血缘的桥梁
             data.metadataEntityId = (int) po.id;
             data.processType = processType.getValue();
             dtoList.add(data);

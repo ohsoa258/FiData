@@ -53,6 +53,7 @@ public class SwaggerConfig {
     public static final String SYSTEM_VERSION_CONTROLLER = "平台版本信息管理";
     public static final String SYSTEM_LOG_CONTROLLER = "平台服务日志管理";
     public static final String AUDIT_LOGS = "审计日志";
+    public static final String DATA_SECURITY = "数据安全";
     public static final String Tset = "测试";
 
     @Bean
@@ -79,6 +80,7 @@ public class SwaggerConfig {
                 .tags(new Tag(SYSTEM_VERSION_CONTROLLER,"平台版本信息管理"))
                 .tags(new Tag(SYSTEM_LOG_CONTROLLER,"平台服务日志管理"))
                 .tags(new Tag(AUDIT_LOGS,"审计日志"))
+                .tags(new Tag(DATA_SECURITY,"数据安全"))
                 .tags(new Tag(Tset,"测试"))
                 .securitySchemes(apiKey())
                 .securityContexts(securityContexts());

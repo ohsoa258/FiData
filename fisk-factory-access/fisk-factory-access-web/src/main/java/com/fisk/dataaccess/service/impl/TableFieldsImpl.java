@@ -2091,6 +2091,18 @@ public class TableFieldsImpl
     }
 
     /**
+     * 根据字段id集合获取字段详情集合
+     *
+     * @param fieldIds
+     * @return
+     */
+    @Override
+    public List<TableFieldsDTO> getFieldInfosByIds(List<Integer> fieldIds) {
+        List<TableFieldsPO> tableFieldsPOS = this.listByIds(fieldIds);
+        return TableFieldsMap.INSTANCES.listPoToDto(tableFieldsPOS);
+    }
+
+    /**
      * 获取全量覆盖方式，使用快照时的sql
      * 如果页面选择使用快照，则修改sql,如果没选择，则不修改
      *

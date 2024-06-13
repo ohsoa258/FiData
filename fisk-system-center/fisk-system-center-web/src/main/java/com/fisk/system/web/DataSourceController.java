@@ -37,9 +37,9 @@ public class DataSourceController {
         return service.getById(datasourceId);
     }
 
-    @GetMapping("/getById/{datasourceId}")
+    @GetMapping("/getDataSourceById")
     @ApiOperation("获取单条数据源连接信息")
-    public ResultEntity<DataSourceDTO> getByDataSourceId(@PathVariable("datasourceId") int datasourceId) {
+    public ResultEntity<DataSourceDTO> getByDataSourceId(@RequestParam("datasourceId") int datasourceId) {
         return service.getById(datasourceId);
     }
 

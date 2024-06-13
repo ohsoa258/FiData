@@ -21,6 +21,12 @@ public class MetaMapTblDTO {
     private String tblName;
 
     /**
+     * 表显示名称
+     */
+    @ApiModelProperty(value = "表显示名称")
+    private String displayName;
+
+    /**
      * 创建人id
      */
     @ApiModelProperty(value = "创建人id")

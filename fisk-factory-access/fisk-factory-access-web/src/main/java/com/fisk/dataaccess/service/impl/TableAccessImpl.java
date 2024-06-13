@@ -109,6 +109,7 @@ import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
+import com.fisk.task.enums.OlapTableEnum;
 import com.sap.conn.jco.JCoDestination;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -1596,12 +1597,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         QueryWrapper<TableFieldsPO> tableFieldsQueryWrapper = new QueryWrapper<>();
         List<TableFieldsPO> tableFieldsList = fieldsMapper.selectList(tableFieldsQueryWrapper);
         for (AppRegistrationDataDTO item : list) {
-            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream().filter(e -> e.appId == item.id).collect(Collectors.toList()));
+            item.tableDtoList = TableAccessMap.INSTANCES.poListToDtoList(tableAccessList.stream().filter(e1 -> e1.appId == item.id).collect(Collectors.toList()));
+
             item.tableDtoList.stream().map(e -> e.tableName = TableNameGenerateUtils.buildOdsTableName(e.tableName, item.appAbbreviation, item.whetherSchema)).collect(Collectors.toList());
             if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
             }
             item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
+            item.tableDtoList.stream().map(e -> e.tableType = OlapTableEnum.PHYSICS.getValue()).collect(Collectors.toList());
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
                 tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsList.stream().filter(e -> e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
@@ -1705,13 +1708,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
             }
-            item.tableDtoList.stream().map(e -> e.type = 1).collect(Collectors.toList());
+            //这个type = 1 表示 表
+            item.tableDtoList.stream().map(e -> e.type = 1);
             for (TableAccessDataDTO tableAccessDataDTO : item.tableDtoList) {
                 tableAccessDataDTO.fieldDtoList = TableFieldsMap.INSTANCES.poListToDtoList(tableFieldsList.stream().filter(e -> e.tableAccessId != null && e.tableAccessId == tableAccessDataDTO.id).collect(Collectors.toList()));
                 if (CollectionUtils.isEmpty(tableAccessDataDTO.fieldDtoList)) {
                     continue;
                 }
-                tableAccessDataDTO.fieldDtoList.stream().map(e -> e.type = 2).collect(Collectors.toList());
+                //这个type = 2 表示 、字段
+                tableAccessDataDTO.fieldDtoList.stream().map(e -> e.type = 2);
             }
         }
 
@@ -3274,6 +3279,17 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         tableDataSyncDTO.setDatasourceId(2);
         tableDataSyncDTO.setTableFullName(fullTblName);
         return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+    }
+
+    /**
+     * 获取所有物理表
+     *
+     * @return
+     */
+    @Override
+    public List<TableAccessDTO> getAllAccessTbls() {
+        List<TableAccessPO> list = this.list();
+        return TableAccessMap.INSTANCES.listPoToDto(list);
     }
 
 

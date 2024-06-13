@@ -459,4 +459,12 @@ public interface ITableAccess extends IService<TableAccessPO> {
      * @return
      */
     ResultEntity<Object> accessSyncData(AccessSyncDataDTO dto);
+
+    /**
+     * 获取所有物理表
+     *
+     * @return
+     */
+    List<TableAccessDTO> getAllAccessTbls();
+
 }

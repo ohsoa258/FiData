@@ -38,7 +38,6 @@ public class OverlayCodePreviewDTO {
    public Integer id;
 
    /**
-    * 0 维度 1 事实
     * 李世纪2023-04-24修改：  1、维度  2、事实
     */
    @ApiModelProperty(value = "1 维度 2 事实")

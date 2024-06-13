@@ -69,4 +69,10 @@ public class EntitiesDTO {
     @ApiModelProperty(value = "关联属性标签")
     public List<LabelDTO> labels;
 
+    @ApiModelProperty(value = "父级")
+    public String parent1;
+
+    @ApiModelProperty(value = "父级的父级")
+    public String parent2;
+
 }

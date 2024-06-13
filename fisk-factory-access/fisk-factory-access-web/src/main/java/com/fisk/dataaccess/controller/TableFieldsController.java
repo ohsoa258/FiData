@@ -15,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Lock
@@ -119,6 +120,18 @@ public class TableFieldsController {
     @ApiOperation(value = "覆盖方式预览代码")
     public ResultEntity<Object> overlayCodePreview(@RequestBody OverlayCodePreviewAccessDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.accessOverlayCodePreview(dto));
+    }
+
+    /**
+     * 根据字段id集合获取字段详情集合
+     *
+     * @param fieldIds
+     * @return
+     */
+    @GetMapping("/getFieldInfosByIds")
+    @ApiOperation(value = "根据字段id集合获取字段详情集合")
+    public ResultEntity<List<TableFieldsDTO>> getFieldInfosByIds(@RequestParam("fieldIds") List<Integer> fieldIds) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldInfosByIds(fieldIds));
     }
 
 }
