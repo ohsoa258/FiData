@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,8 +18,10 @@ import com.fisk.common.core.utils.BeanHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.mdc.TraceType;
 import com.fisk.common.framework.mdc.TraceTypeEnum;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.ChildBusinessTreeDTO;
+import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
@@ -36,6 +39,10 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
+import com.fisk.dataservice.dto.tableservice.TableAppPageDTO;
+import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
+import com.fisk.dataservice.vo.tableservice.TableAppDatasourceVO;
+import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -70,6 +77,9 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
     BusinessTargetinfoMapper businessTargetinfoMapper;
     @Resource
     MetadataEntityImpl metadataEntity;
+
+    @Resource
+    GenerateCondition generateCondition;
     @Resource
     UserHelper userHelper;
     @Resource
@@ -1460,6 +1470,17 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
 
         return result;
     }
+
+    @Override
+    public Integer getBusinessTargetinfoTotal() {
+        return baseMapper.getBusinessTargetinfoTotal();
+    }
+
+//    @Override
+//    public Page<TableAppVO> pageFilter(CategoryQueryDTO query) {
+////
+//        return null;
+//    }
 
     private int RecursivelyFetchMetrics(long id, List<BusinessCategoryPO> allData, List<String> indexes) {
         int indexCount = 0;

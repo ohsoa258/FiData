@@ -2052,6 +2052,19 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         }
     }
 
+    @Override
+    public Integer getBusinessTotal() {
+        return mapper.getBusinessTotal();
+    }
+
+    @Override
+    public Integer getBusinessTableTotal() {
+        int total = 0;
+        total += dimensionMapper.getTableTotal();
+        total += factMapper.getTableTotal();
+        return total;
+    }
+
     private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum) {
 
         // 建模暂时没有schema的设置

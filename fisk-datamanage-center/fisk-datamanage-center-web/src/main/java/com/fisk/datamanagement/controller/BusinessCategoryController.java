@@ -1,18 +1,21 @@
 package com.fisk.datamanagement.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
+import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.service.*;
+import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -303,4 +306,16 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getIndexForAssetCatalog());
     }
 
+
+    @ApiOperation("获指标标准数量")
+    @GetMapping("/getBusinessTargetinfoTotal")
+    public ResultEntity<Object> getBusinessTargetinfoTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessTargetinfoTotal());
+    }
+
+//    @ApiOperation(value = "筛选器")
+//    @PostMapping("/pageFilter")
+//    public ResultEntity<Page<TableAppVO>> pageFilter(@RequestBody CategoryQueryDTO dto) {
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.pageFilter(dto));
+//    }
 }

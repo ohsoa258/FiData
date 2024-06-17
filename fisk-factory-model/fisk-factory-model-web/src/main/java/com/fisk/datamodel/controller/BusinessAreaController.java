@@ -274,5 +274,15 @@ public class BusinessAreaController {
     ) {
         return service.modelGetMetaMapTableDetail(processId, processType);
     }
+    @ApiOperation("获取数仓业务域数量")
+    @GetMapping("/getBusinessTotal")
+    public ResultEntity<Object> getBusinessTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessTotal());
+    }
 
+    @ApiOperation("获取数仓数据表数量")
+    @GetMapping("/getBusinessTableTotal")
+    public ResultEntity<Object> getBusinessTableTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessTableTotal());
+    }
 }

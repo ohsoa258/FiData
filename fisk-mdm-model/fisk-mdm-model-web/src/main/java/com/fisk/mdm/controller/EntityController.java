@@ -105,4 +105,10 @@ public class EntityController {
     public ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getTableInfo(tableName));
     }
+
+    @ApiOperation("获取主数据所有实体数量")
+    @GetMapping("/getEntityTotal")
+    public ResultEntity<Object> getEntityTotal(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, entityService.getEntityTotal());
+    }
 }

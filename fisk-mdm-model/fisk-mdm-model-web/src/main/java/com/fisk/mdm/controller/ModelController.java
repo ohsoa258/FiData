@@ -119,4 +119,10 @@ public class ModelController {
     public ResultEntity<List<AccessAndModelAppDTO>> getAllModelAndEntitys() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAllModelAndEntitys());
     }
+
+    @ApiOperation("获取主数据所有模型数量")
+    @GetMapping("/getModelTotal")
+    public ResultEntity<Object> getModelTotal(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getModelTotal());
+    }
 }

@@ -263,4 +263,28 @@ public interface DataManageClient {
     @ApiOperation("根据数据元标准menuId获取所有standardsId(数据校验用)")
     @GetMapping("/Standards/getStandardByMenuId")
     List<Integer> getStandardByMenuId(@RequestParam("menuId")Integer menuId);
+
+    /**
+     * 获指标标准数量
+     * @return
+     */
+    @ApiOperation("获指标标准数量")
+    @GetMapping("/BusinessCategory/getBusinessTargetinfoTotal")
+    public ResultEntity<Object> getBusinessTargetinfoTotal();
+
+    /**
+     * 获取数据元标准数量
+     * @return
+     */
+    @ApiOperation("获取数据元标准数量")
+    @GetMapping("/Standards/getStandardTotal")
+    ResultEntity<Object> getStandardTotal();
+
+    /**
+     * 获取业务术语数量
+     * @return
+     */
+    @ApiOperation("获取业务术语数量")
+    @GetMapping("/Glossary/getGlossaryTotal")
+    ResultEntity<Object> getGlossaryTotal();
 }

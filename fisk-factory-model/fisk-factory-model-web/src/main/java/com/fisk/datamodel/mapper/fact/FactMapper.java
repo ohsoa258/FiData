@@ -21,4 +21,6 @@ public interface FactMapper extends FKBaseMapper<FactPO> {
     @Select("SELECT id,fact_table_cn_name FROM tb_fact where del_flag=1 ORDER BY id DESC;")
     List<FactTabDTO> getFactTabList();
 
+    @Select("select count(1) from tb_fact where del_flag = 1")
+    Integer getTableTotal();
 }

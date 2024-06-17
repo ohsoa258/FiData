@@ -13,4 +13,7 @@
             del_flag = 1
             and table_name = #{tableName}
     </select>
+    <select id="getEntityTotal" resultType="Integer">
+        select count(1) from tb_entity where del_flag = 1
+    </select>
 </mapper>

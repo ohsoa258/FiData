@@ -18,4 +18,6 @@ public interface EntityMapper extends BaseMapper<EntityPO> {
      * @return
      */
     TableQueryDTO getTableInfo(@Param("tableName") String tableName);
+
+    Integer getEntityTotal();
 }

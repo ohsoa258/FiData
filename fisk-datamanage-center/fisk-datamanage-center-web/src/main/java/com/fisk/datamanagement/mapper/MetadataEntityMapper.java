@@ -68,4 +68,7 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
 
     @Delete("truncate TABLE tb_metadata_entity")
     int truncateTable();
+
+    @Select("select count(1) from tb_metadata_entity where not (type_id = 7) and del_flag = 1")
+    Integer getTotalNum();
 }

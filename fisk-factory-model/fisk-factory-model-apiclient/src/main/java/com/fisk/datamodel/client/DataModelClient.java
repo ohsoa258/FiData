@@ -464,4 +464,11 @@ public interface DataModelClient {
     @GetMapping("/business/modelGetMetaMapTableDetail")
     List<MetaMapTblDTO> modelGetMetaMapTableDetail(@RequestParam("processId") Integer processId, @RequestParam("processType") Integer processType);
 
+    @ApiOperation("获取数仓业务域数量")
+    @GetMapping("/business/getBusinessTotal")
+    ResultEntity<Object> getBusinessTotal();
+
+    @ApiOperation("获取数仓数据表数量")
+    @GetMapping("/business/getBusinessTableTotal")
+    ResultEntity<Object> getBusinessTableTotal();
 }

@@ -32,4 +32,10 @@ public class DataLoggingController {
     public ResultEntity<Object> getDataTableRows() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataLoggingService.getDataTableRows());
     }
+
+    @ApiOperation("获取所有数据记录数")
+    @PostMapping("/getDataTotals")
+    public ResultEntity<Object> getDataTotals(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataLoggingService.getDataTotals());
+    }
 }

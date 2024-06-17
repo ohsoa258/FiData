@@ -93,4 +93,10 @@ public interface EntityService {
      */
     Map<Integer, String> getTableNames(TableQueryDTO tableQueryDTO);
     TableInfoDTO getTableInfo(String tableName);
+
+    /**
+     * 获取主数据所有实体数量
+     * @return
+     */
+    Integer getEntityTotal();
 }

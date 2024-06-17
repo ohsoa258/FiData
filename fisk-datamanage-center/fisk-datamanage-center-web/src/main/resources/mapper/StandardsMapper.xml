@@ -45,4 +45,8 @@
         </if>
         )
     </select>
+
+    <select id="getStandardTotal" resultType="Integer">
+        select count(1) from tb_standards where del_flag = 1
+    </select>
 </mapper>

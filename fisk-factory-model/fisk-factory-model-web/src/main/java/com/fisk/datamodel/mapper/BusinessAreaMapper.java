@@ -82,4 +82,6 @@ public interface BusinessAreaMapper extends FKBaseMapper<BusinessAreaPO> {
     DataModelQueryDTO getTableInfo(@Param("tableName") String tableName);
 
 
+    @Select("select count(1) from tb_area_business where del_flag = 1")
+    Integer getBusinessTotal();
 }

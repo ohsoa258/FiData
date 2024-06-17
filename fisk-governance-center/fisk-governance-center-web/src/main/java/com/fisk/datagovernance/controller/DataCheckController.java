@@ -151,4 +151,9 @@ public class DataCheckController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn(dto));
     }
 
+    @ApiOperation("获取所有数据校验规则数量")
+    @GetMapping("/getDataCheckRoleTotal")
+    public ResultEntity<Object> getDataCheckRoleTotal(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckRoleTotal());
+    }
 }

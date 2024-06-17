@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.service;
 
 import com.fisk.datamanagement.dto.datalogging.DataLoggingDTO;
+import com.fisk.datamanagement.dto.datalogging.DataTotalDTO;
 
 public interface DataLoggingService {
     /**
@@ -8,4 +9,10 @@ public interface DataLoggingService {
      * @return
      */
     DataLoggingDTO getDataTableRows();
+
+    /**
+     * 获取所有数据记录数
+     * @return
+     */
+    DataTotalDTO getDataTotals();
 }

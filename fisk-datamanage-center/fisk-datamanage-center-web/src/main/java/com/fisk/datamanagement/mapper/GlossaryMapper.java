@@ -3,6 +3,7 @@ package com.fisk.datamanagement.mapper;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datamanagement.entity.GlossaryPO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * @ClassName:
@@ -14,5 +15,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface GlossaryMapper extends FKBaseMapper<GlossaryPO> {
 
-
+    @Select("select count(1) from tb_glossary_library where del_flag = 1")
+    Integer getGlossaryTotal();
 }

@@ -23,4 +23,6 @@ public interface StandardsMapper extends BaseMapper<StandardsPO> {
 
     Page<StandardsMenuDTO> standardsQuery(Page<StandardsMenuDTO> page,@Param("dto") StandardsQueryDTO dto);
     List<StandardsDTO> getStandardsBySource(@Param("dto") StandardsSourceQueryDTO dto);
+
+    Integer getStandardTotal();
 }

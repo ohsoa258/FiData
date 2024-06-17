@@ -54,4 +54,7 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
 
     @Update("update tb_business_extendedfields set parent_business_id = NULL where parent_business_id = #{parentBusinessId} and del_flag = 1")
     int updateParentBusinessId(@Param("parentBusinessId") Integer parentBusinessId);
+
+    @Select("select count(1) from tb_business_targetinfo where del_flag = 1")
+    Integer getBusinessTargetinfoTotal();
 }

@@ -280,4 +280,15 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      */
     List<MetaMapTblDTO> modelGetMetaMapTableDetail(Integer processId,Integer processType);
 
+    /**
+     * 获取数仓业务域数量
+     * @return
+     */
+    Integer getBusinessTotal();
+
+    /**
+     * 获取数仓数据表数量
+     * @return
+     */
+    Integer getBusinessTableTotal();
 }

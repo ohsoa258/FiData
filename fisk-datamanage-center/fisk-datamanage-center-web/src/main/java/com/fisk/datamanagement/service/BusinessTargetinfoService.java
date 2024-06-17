@@ -2,11 +2,13 @@ package com.fisk.datamanagement.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
+import com.fisk.dataservice.vo.tableservice.TableAppVO;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -98,4 +100,14 @@ public interface BusinessTargetinfoService {
      * @return
      */
     List<IndexForAssetCatalogDTO> getIndexForAssetCatalog();
+
+    Integer getBusinessTargetinfoTotal();
+
+    /**
+     * 筛选器
+     *
+     * @param query 查询条件
+     * @return 筛选结果
+     */
+//    Page<TableAppVO> pageFilter(CategoryQueryDTO query);
 }
