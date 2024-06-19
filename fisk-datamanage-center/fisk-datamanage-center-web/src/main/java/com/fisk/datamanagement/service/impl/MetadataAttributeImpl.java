@@ -7,7 +7,6 @@ import com.fisk.common.core.utils.ObjectInfoUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.metadataattribute.MetadataAttributeDTO;
 import com.fisk.datamanagement.entity.MetadataAttributePO;
-import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.map.MetadataAttributeMap;
 import com.fisk.datamanagement.mapper.MetadataAttributeMapper;
 import com.fisk.datamanagement.service.IMetadataAttribute;
@@ -63,6 +62,9 @@ public class MetadataAttributeImpl
         Map<String, Object> map = new HashMap<>();
         for (String item : fieldNames) {
             if (StringUtils.isEmpty(item)) {
+                continue;
+            }
+            if ("isCDC".equals(item) || "cdcFromTableList".equals(item) || "dimQNames".equals(item)) {
                 continue;
             }
             Object value = ObjectInfoUtils.getFieldValueByName(item, object);
@@ -155,9 +157,9 @@ public class MetadataAttributeImpl
 
     @Override
     public List<MetadataAttributePO> getMetadataAttribute(Integer entityId) {
-        QueryWrapper<MetadataAttributePO> queryWrapper= new QueryWrapper<MetadataAttributePO>();
-        queryWrapper.lambda().eq(MetadataAttributePO::getMetadataEntityId,entityId);
-        return  mapper.selectList(queryWrapper);
+        QueryWrapper<MetadataAttributePO> queryWrapper = new QueryWrapper<MetadataAttributePO>();
+        queryWrapper.lambda().eq(MetadataAttributePO::getMetadataEntityId, entityId);
+        return mapper.selectList(queryWrapper);
     }
 
 }

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
@@ -15,6 +16,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
@@ -34,8 +36,10 @@ import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.BusinessAreaPO;
+import com.fisk.datamodel.entity.dimension.DimensionPO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import com.fisk.datamodel.entity.fact.FactPO;
 import com.fisk.datamodel.enums.*;
@@ -51,6 +55,7 @@ import com.fisk.datamodel.service.impl.dimension.DimensionImpl;
 import com.fisk.datamodel.vo.DataModelTableVO;
 import com.fisk.datamodel.vo.DataModelVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.pgsql.PgsqlDelTableDTO;
 import com.fisk.task.dto.pgsql.TableListDTO;
@@ -62,9 +67,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -107,6 +112,9 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
 
     @Value("${spring.open-metadata}")
     private Boolean openMetadata;
+
+    @Value("${fiData-data-dw-source}")
+    private Integer dateDwSourceId;
 
     @Override
     public ResultEnum addFact(FactDTO dto) {
@@ -769,10 +777,65 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             table.columnList = getFactAttributeMetaData(fact.id, table);
             table.whetherSchema = false;
 
+            //获取该事实表关联外键时关联了哪些维度表
+            List<String> dimsByFactId = new ArrayList<>();
+            try {
+                dimsByFactId = getDimsByFactId(fact.id);
+            } catch (Exception ex) {
+                log.error("获取事实表关联的维度失败" + ex);
+            }
+            table.setDimQNames(dimsByFactId);
+
             tableList.add(table);
         }
 
         return tableList;
+    }
+
+    /**
+     * 根据事实表id 获取事实表关联的维度外键
+     *
+     * @param factId
+     * @return
+     */
+    public List<String> getDimsByFactId(Long factId) {
+        List<String> dimNames = new ArrayList<>();
+
+        List<FactAttributeUpdateDTO> factAttribute = factAttributeImpl.getFactAttribute(Math.toIntExact(factId));
+
+        //获取所有维度表信息
+        List<DimensionPO> dimPos =  dimensionImpl.list(
+                new LambdaQueryWrapper<DimensionPO>().select(DimensionPO::getDimensionTabName, DimensionPO::getId)
+        );
+
+        //从system模块获取dmp_dw数仓的信息
+        ResultEntity<DataSourceDTO> resultEntity =  userClient.getFiDataDataSourceById(dateDwSourceId);
+        DataSourceDTO dataSourceDTO;
+        if (resultEntity.getCode()==ResultEnum.SUCCESS.getCode()){
+            dataSourceDTO = resultEntity.getData();
+        }else {
+            log.error("获取平台配置数据源dmp_dw信息失败");
+            return dimNames;
+        }
+
+        if (!CollectionUtils.isEmpty(factAttribute)){
+            String configDetails = factAttribute.get(0).getConfigDetails();
+            if (StringUtils.isNotBlank(configDetails)){
+                List<RelationDTO> relationDTOS = JSON.parseArray(configDetails, RelationDTO.class);
+                //获取到关联外键的维度表的名称
+                List<String> dimOriginalNames = relationDTOS.stream().map(RelationDTO::getTargetTable).collect(Collectors.toList());
+
+                //通过名称获取到这些维度表的id 因为维度表名在项目中是是唯一的  为了最终拼接元数据那边所需要的唯一限定表名称
+                //元数据唯一限定表名称格式为: 数据库地址_数据库名称_表类型(1是维度)_表id  192.168.0.61_dmp_dw_1_50
+
+                for (DimensionPO dimPo : dimPos) {
+                    if (dimOriginalNames.contains(dimPo.getDimensionTabName())){
+                        dimNames.add(dataSourceDTO.getConIp() + "_" + dataSourceDTO.getConDbname() + "_" + 1 + "_" + dimPo.getId());
+                    }
+                }
+            }
+        }
+        return dimNames;
     }
 
     public List<MetaDataTableAttributeDTO> getFactMetaDataBySyncTime(BusinessAreaPO item,
@@ -780,11 +843,11 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                                                                      Integer dataModelType,
                                                                      String businessAdmin,
                                                                      List<Integer> factIds
-                                                                     ) {
+    ) {
         List<FactPO> factPOList = this.query()
                 .eq("business_id", item.getId())
                 .eq("is_publish", PublicStatusEnum.PUBLIC_SUCCESS.getValue())
-                .in("id",factIds)
+                .in("id", factIds)
                 .list();
         if (CollectionUtils.isEmpty(factPOList)) {
             return new ArrayList<>();
@@ -813,6 +876,15 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             //字段
             table.columnList = getFactAttributeMetaData(fact.id, table);
             table.whetherSchema = false;
+
+            //获取该事实表关联外键时关联了哪些维度表
+            List<String> dimsByFactId = new ArrayList<>();
+            try {
+                dimsByFactId = getDimsByFactId(fact.id);
+            } catch (Exception ex) {
+                log.error("获取事实表关联的维度失败" + ex);
+            }
+            table.setDimQNames(dimsByFactId);
 
             tableList.add(table);
         }

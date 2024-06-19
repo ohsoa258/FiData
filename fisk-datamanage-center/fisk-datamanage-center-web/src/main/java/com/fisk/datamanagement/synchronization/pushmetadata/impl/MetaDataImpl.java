@@ -242,13 +242,18 @@ public class MetaDataImpl implements IMetaData {
                                 //血缘失败不要影响整个流程
                                 try {
                                     //同步血缘
-                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId);
+                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId, table.dimQNames);
                                 } catch (Exception e) {
                                     log.error("同步血缘失败：" + e);
                                 }
 
                             }
+                        } else if (table.isCDC != null && table.isCDC) {
+                            //数据接入 CDC类型的应用下的数据湖配置表也需要同步象征意义上的血缘
+                            //同步cdc表血缘
+                            synchronizationTableKinShipForCDC(db.name, tableGuid, table.sqlScript, table.dataSourceId, table.tableConfigId, table.cdcFromTableList);
                         }
+
                     }
 
                 }
@@ -605,8 +610,9 @@ public class MetaDataImpl implements IMetaData {
                                              String sqlScript,
                                              String coverScript,
                                              Integer dataSourceId,
-                                             Integer tableConfigId) {
-        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId);
+                                             Integer tableConfigId,
+                                             List<String> dimQNames) {
+        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId, dimQNames);
         /*try {
 
             //获取实体详情
@@ -781,6 +787,18 @@ public class MetaDataImpl implements IMetaData {
             log.error("同步表血缘失败,表guid" + tableGuid + " ex:", e);
             return;
         }*/
+    }
+
+    /**
+     * 同步表血缘 CDC
+     */
+    private void synchronizationTableKinShipForCDC(String dbName,
+                                                   String tableGuid,
+                                                   String sqlScript,
+                                                   Integer dataSourceId,
+                                                   Integer tableConfigId,
+                                                   List<String> cdcFromTableList) {
+        metadataEntity.synchronizationTableKinShipForCDC(dbName, tableGuid, sqlScript, dataSourceId, tableConfigId, cdcFromTableList);
     }
 
     /**

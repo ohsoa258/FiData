@@ -232,7 +232,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //添加审计日志
-        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType,po.owner);
+        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType, po.owner);
         //添加技术属性
         metadataAttribute.addMetadataAttribute(dto, (int) po.id);
 
@@ -261,7 +261,7 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
         //添加审计日志
-        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType,po.owner);
+        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType, po.owner);
         //添加技术属性
         metadataAttribute.operationMetadataAttribute(dto, entityId);
 
@@ -628,7 +628,7 @@ public class MetadataEntityImpl
         }
         //添加审计日志
         guidList.forEach(e -> {
-            metadataEntityAuditLog.setMetadataAuditLog(null, e, MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName(),null);
+            metadataEntityAuditLog.setMetadataAuditLog(null, e, MetadataAuditOperationTypeEnum.DELETE, EntityTypeEnum.RDBMS_COLUMN.getName(), null);
         });
         int delete = metadataEntityMapper.delete(queryWrapper);
         if (delete == 0) {
@@ -904,7 +904,8 @@ public class MetadataEntityImpl
                                             String sqlScript,
                                             String coverScript,
                                             Integer sourceDataSourceId,
-                                            Integer tableConfigId) {
+                                            Integer tableConfigId,
+                                            List<String> dimQNames) {
 
         List<Long> fromEntityIdList = new ArrayList<>();
 
@@ -957,13 +958,33 @@ public class MetadataEntityImpl
 
         } else if (targetDataSourceInfo.sourceBusinessType == SourceBusinessTypeEnum.DW) {
             /**************************************数仓建模血缘******************************************/
-            List<String> tableList = SqlParserUtils.getAllTableMeta(sqlScript);
-            if (CollectionUtils.isEmpty(tableList)) {
-                return;
+            List<String> tableList = new ArrayList<>();
+            try {
+                tableList = SqlParserUtils.getAllTableMeta(sqlScript);
+            } catch (Exception e) {
+                log.error("解析dwsql报错" + e);
             }
+
+//            if (CollectionUtils.isEmpty(tableList)) {
+//                return;
+//            }
+
             log.debug("DWSQL解析，解析表如下：" + JSONObject.toJSONString(tableList));
             // 获取源表的元数据ID
             fromEntityIdList = getTableListV2(tableList);
+
+            //如果数仓建模的事实表 关联外键的维度表限定名称集合不为空 则查询这些维度表限定名称对应的元数据id 然后放到fromEntityIdList里面
+            if (!CollectionUtils.isEmpty(dimQNames)) {
+                for (String dimQName : dimQNames) {
+                    Integer dimMetaId = getMetadataEntity(dimQName);
+                    if (dimMetaId != null) {
+                        long diEntityId = dimMetaId;
+                        fromEntityIdList.add(diEntityId);
+                    }
+                }
+            }
+            log.debug("=========dimQNames=========" + JSONObject.toJSONString(dimQNames));
+
             log.debug("fromEntityIdList ：" + JSONObject.toJSONString(fromEntityIdList));
             if (CollectionUtils.isEmpty(fromEntityIdList)) {
                 log.debug("==========fromEntityIdList等于空===========");
@@ -1005,10 +1026,6 @@ public class MetadataEntityImpl
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(stgTableGuid), ProcessTypeEnum.SQL_PROCESS);
 
         //这一步是在同步血缘过程中 数仓temp过程的血缘来源  即查询sql解析出来的表和关联外键的那些维度表
-
-        //todo:将数仓建模-临时表维度关联的那些表查出来 作为血缘来源 加到fromEntityIdList中
-        //无需解析sql 从数仓建模查询事实表关联的维度表id  转换为元数据这边的元数据id 加到fromEntityIdList中即可
-
         addProcess(sqlScript, fromEntityIdList, stgTableGuid, "抽取", ProcessTypeEnum.SQL_PROCESS);
 
         /*****************************************数仓建模关联维度血缘**********************************************************/
@@ -1021,6 +1038,54 @@ public class MetadataEntityImpl
             //新增自定义脚本
 //            synchronizationCustomScriptKinShip((int) first.get().id, first.get().tableName, list, stgTableGuid, dataSourceInfo.conType.getName().toLowerCase(), newDbQualifiedName, 1);
         }
+
+    }
+
+    /**
+     * 同步表血缘 CDC
+     *
+     * @param dbName 数据库名称
+     * @param tableGuid 表guid
+     * @param sqlScript sql脚本
+     * @param sourceDataSourceId 数据源id
+     * @param tableConfigId 表配置id
+     * @param cdcFromTableList CDC关联的表
+     */
+    public void synchronizationTableKinShipForCDC(String dbName,
+                                                  String tableGuid,
+                                                  String sqlScript,
+                                                  Integer sourceDataSourceId,
+                                                  Integer tableConfigId,
+                                                  List<String> cdcFromTableList) {
+        log.debug(" 参数：dbName：" + dbName + " ，tableGuid: " + tableGuid + "，sourceDataSourceId：" + sourceDataSourceId + ", tableConfigId: " + tableConfigId);
+        /**************************************数据接入血缘*********************************************************/
+        /**************************************获取应用配置的数据源信息******************************************/
+        ResultEntity<AppDataSourceDTO> accessDataSources = dataAccessClient.getAccessDataSources(Long.valueOf(sourceDataSourceId));
+        if (accessDataSources.code != ResultEnum.SUCCESS.getCode()) {
+            log.error("获取dataAccessClient.getAccessDataSource数据集失败");
+            return;
+        }
+        if (accessDataSources.data == null) {
+            log.error("找不到数据源，数据集ID：" + sourceDataSourceId);
+            return;
+        }
+        AppDataSourceDTO sourceDatasourceInfo = accessDataSources.data;
+        String dbQualifiedNames = sourceDatasourceInfo.getHost() + "_" + sourceDatasourceInfo.getDbName();
+        log.debug("=======CDC FROM TABLE NAMES========:" + JSON.toJSONString(cdcFromTableList));
+        //根据来源表表名获取来源表元数据ID
+        List<Long> fromEntityIdList = getOdsTableList(cdcFromTableList, dbQualifiedNames);
+        log.debug("========fromEntityIdList=========" + JSON.toJSONString(fromEntityIdList));
+        if (CollectionUtils.isEmpty(fromEntityIdList)) {
+            log.debug("==========fromEntityIdList等于空===========");
+            return;
+        }
+
+        /**************************************添加来源表到临时表血缘******************************************/
+        //判断是否已有血缘关系，存在则先删除
+        lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(tableGuid), ProcessTypeEnum.SQL_PROCESS);
+
+        //这一步是在同步血缘过程中 数仓temp过程的血缘来源  即查询sql解析出来的表和关联外键的那些维度表
+        addProcess(sqlScript, fromEntityIdList, tableGuid, "抽取", ProcessTypeEnum.SQL_PROCESS);
 
     }
 
@@ -1127,7 +1192,7 @@ public class MetadataEntityImpl
             queryWrapper.in("name", tableName);
             queryWrapper.eq("type_id", 3);
             List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
-            return  poList.stream().map(BasePO::getId).collect(Collectors.toList());
+            return poList.stream().map(BasePO::getId).collect(Collectors.toList());
         } else {
             return new ArrayList<>();
         }
