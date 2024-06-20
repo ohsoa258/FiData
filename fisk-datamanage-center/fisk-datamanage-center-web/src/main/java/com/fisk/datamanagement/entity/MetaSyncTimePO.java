@@ -3,12 +3,14 @@ package com.fisk.datamanagement.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
 /**
  * @TableName tb_meta_sync_time
  */
+@EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_meta_sync_time")
 @Data
 public class MetaSyncTimePO extends BasePO implements Serializable {
@@ -29,4 +31,5 @@ public class MetaSyncTimePO extends BasePO implements Serializable {
      * 完成状态（1成功，2失败）
      */
     private Integer status;
+
 }

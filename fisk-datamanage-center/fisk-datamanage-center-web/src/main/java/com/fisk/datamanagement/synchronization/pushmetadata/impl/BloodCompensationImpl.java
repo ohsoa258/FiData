@@ -98,6 +98,9 @@ public class BloodCompensationImpl
     private MetaSyncTimePOMapper metaSyncTimePOMapper;
     @Resource
     private MetaSyncTimePOServiceImpl metaSyncTimePOService;
+    @Resource
+    private BloodCompensationImpl bloodCompensation;
+
 
 //endregion
 
@@ -743,8 +746,11 @@ public class BloodCompensationImpl
             accessTable = dataAccessClient.synchronizationAccessTableByLastSyncTime(lastSyncTime);
         }
 
-
         if (accessTable.code != ResultEnum.SUCCESS.getCode()) {
+            if (syncTimeId != null) {
+                //1成功 2失败 3同步中
+                bloodCompensation.updateLastSyncTime(syncTimeId, 2);
+            }
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         metaData.consumeMetaData(accessTable.data, currUserName, ClassificationTypeEnum.DATA_ACCESS, syncTimeId);
@@ -764,6 +770,10 @@ public class BloodCompensationImpl
         }
 
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
+            if (syncTimeId != null) {
+                //1成功 2失败 3同步中
+                bloodCompensation.updateLastSyncTime(syncTimeId, 2);
+            }
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         metaData.consumeMetaData(dataModelMetaData.data, currUserName, ClassificationTypeEnum.ANALYZE_DATA, syncTimeId);
@@ -777,6 +787,10 @@ public class BloodCompensationImpl
     public void synchronousMasterDataMetaData(String currUserName, Long syncTimeId, LocalDateTime lastSyncTime) {
         ResultEntity<List<MetaDataInstanceAttributeDTO>> dataModelMetaData = mdmClient.getMasterDataMetaData(null);
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {
+            if (syncTimeId != null) {
+                //1成功 2失败 3同步中
+                bloodCompensation.updateLastSyncTime(syncTimeId, 2);
+            }
             throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
         }
         metaData.consumeMetaData(dataModelMetaData.data, currUserName, ClassificationTypeEnum.MASTER_DATA, syncTimeId);
