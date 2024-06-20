@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
 import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import com.fisk.datamanagement.entity.BusinessSynchronousPO;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
@@ -23,17 +24,18 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
 
     @Select("select * from tb_business_targetinfo where pid = #{pid} and del_flag = 1 ")
     List<BusinessTargetinfoPO> selectClassification(@Param("pid") String pid);
+
+    @Select("<script> select * from tb_business_targetinfo where pid in <foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach> and del_flag = 1 </script>")
+    List<BusinessTargetinfoPO> selectClassification(@Param("ids") List<Long> ids );
     @Select("select * from tb_business_targetinfo where id = #{id} and del_flag = 1 ")
     List<BusinessTargetinfoPO> selectClassificationss(@Param("id") String id);
 
 
-    @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid = #{pid} and indicator_name= #{indicatorname} and del_flag = 1 ")
-    List<Map<String,Object>> selectClassification1(@Param("pid") String pid ,@Param("indicatorname") String indicatorname);
+    @Select("<script> select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  id in<foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach>  and del_flag = 1 </script>")
+    List<Map<String,Object>> selectClassification1(@Param("ids") List<String> tableIds );
     @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  del_flag = 1 ")
     List<Map<String,Object>> selectClassification2();
-    @Select("<script> select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid in <foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach> and del_flag = 1 ORDER BY pid</script>")
-//    @Select("select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  pid = #{pid} and del_flag = 1 ")
-    List<Map<String,Object>> selectClassification3(@Param("ids") List<Long> ids );
+
     @Select("WITH RECURSIVE MenuHierarchy AS ( SELECT id, name, pid, 1 AS level, CAST(name AS CHAR(200)) AS full_path FROM tb_business_category WHERE pid IS NULL UNION ALL SELECT m.id, m.name, m.pid, mh.level + 1, CONCAT(mh.full_path, '->', m.name) FROM tb_business_category m JOIN MenuHierarchy mh ON m.pid = mh.id ) SELECT id, name, level, full_path FROM MenuHierarchy ORDER BY full_path")
     List<Map<String,Object>> getMenuTreeNames();
 
@@ -47,8 +49,6 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     int truncateTable();
 
 
-//    @Select("select * from tb_business_targetinfo where name like '%#{name}%' and del_flag = 1 ")
-//    List<BusinessTargetinfoPO> selectClassification1(@Param("name") String name);
     @Select({"<script> " + "${sql}" + "</script>"})
     List<BusinessTargetinfoPO> selectDimensionList(@Param("sql") String sql);
 
@@ -57,4 +57,6 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
 
     @Select("select count(1) from tb_business_targetinfo where del_flag = 1")
     Integer getBusinessTargetinfoTotal();
+
+    List<BusinessTargetinfoMenuDTO> filter(@Param("pids") List<Integer> pids,@Param("where")String where);
 }

@@ -1,7 +1,6 @@
 package com.fisk.datamanagement.controller;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -15,7 +14,6 @@ import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.service.*;
-import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -23,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -198,16 +197,16 @@ public class BusinessCategoryController {
     @PostMapping("/downloadTargetinfo")
     @ControllerAOPConfig(printParams = false)
     public void downloadApprovalApply(@RequestBody JSONObject json, HttpServletResponse response) {
-        String id = null;
-        String indicatorname = null;
+        String type = null;
+        List<String> ids = null;
 
-        if (!"".equals(json.getString("id"))) {
-            id = json.getString("id");
+        if (!"".equals(json.getString("type"))) {
+            type = json.getString("type");
         }
-        if (!"".equals(json.getString("indicatorname"))) {
-            indicatorname = json.getString("indicatorname");
+        if (!"".equals(json.getString("ids"))) {
+            ids = Arrays.asList(json.getString("ids").split(","));
         }
-        businessTargetinfoService.downLoad(id, indicatorname, response);
+        businessTargetinfoService.downLoad(type,ids, response);
     }
 
     @ApiOperation("查询历史指标主题historyId")
@@ -313,9 +312,9 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessTargetinfoTotal());
     }
 
-//    @ApiOperation(value = "筛选器")
-//    @PostMapping("/pageFilter")
-//    public ResultEntity<Page<TableAppVO>> pageFilter(@RequestBody CategoryQueryDTO dto) {
-//        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.pageFilter(dto));
-//    }
+    @ApiOperation(value = "筛选器")
+    @PostMapping("/pageFilter")
+    public ResultEntity<List<BusinessTargetinfoMenuDTO>> pageFilter(@RequestBody CategoryQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.pageFilter(dto));
+    }
 }

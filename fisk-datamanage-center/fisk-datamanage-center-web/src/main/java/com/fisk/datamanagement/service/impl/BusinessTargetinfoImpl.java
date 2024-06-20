@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +25,7 @@ import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.entity.*;
+import com.fisk.datamanagement.enums.DownLoadTypeEnum;
 import com.fisk.datamanagement.map.FactTreeMap;
 import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
 import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
@@ -39,10 +39,6 @@ import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
-import com.fisk.dataservice.dto.tableservice.TableAppPageDTO;
-import com.fisk.dataservice.vo.appcount.AppServiceCountVO;
-import com.fisk.dataservice.vo.tableservice.TableAppDatasourceVO;
-import com.fisk.dataservice.vo.tableservice.TableAppVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -122,7 +118,19 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
 
     @Override
     public List<BusinessTargetinfoMenuDTO> getBusinessMetaDataDetailMenuList(String pid) {
-        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(pid);
+        List<BusinessCategoryPO> businessCategoryPOS = businessCategoryMapper.selectList(new QueryWrapper<>());
+        List<BusinessCategoryPO> self = businessCategoryPOS.stream().filter(i -> (int) i.getId() == Integer.valueOf(pid)).collect(Collectors.toList());
+        self = self.stream().map(i -> {
+            if (i.getPid() == null) {
+                i.setPid(0);
+            }
+            return i;
+        }).collect(Collectors.toList());
+        List<BusinessCategoryPO> allChildrenCategories = getAllChildrenCategories(businessCategoryPOS, Integer.valueOf(pid));
+        self = self.stream().filter(i -> i.getPid() != 0).collect(Collectors.toList());
+        allChildrenCategories.addAll(self);
+        List<Long> ids = allChildrenCategories.stream().map(i -> i.getId()).collect(Collectors.toList());
+        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(ids);
         List<BusinessTargetinfoMenuDTO> result = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(list)) {
             result = list.stream().map(i -> {
@@ -132,6 +140,11 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 businessTargetinfoMenuDTO.setType(i.getIndicatorType());
                 businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
                 businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
+                businessTargetinfoMenuDTO.setIndicatorCcode(i.getIndicatorCode());
+                businessTargetinfoMenuDTO.setLargeScreenLink(i.getLargeScreenLink());
+                businessTargetinfoMenuDTO.setSourceSystem(i.getSourceSystem());
+                businessTargetinfoMenuDTO.setIndicatorDescription(i.getIndicatorDescription());
+                businessTargetinfoMenuDTO.setCreateTime(i.getCreateTime());
                 return businessTargetinfoMenuDTO;
             }).collect(Collectors.toList());
         }
@@ -907,29 +920,16 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
 
     @TraceType(type = TraceTypeEnum.CHARTVISUAL_QUERY)
     @Override
-    public void downLoad(String id, String indicatorname, HttpServletResponse response) {
+    public void downLoad(String type, List<String> tableIds, HttpServletResponse response) {
         // 查询数据
         List<Map<String, Object>> list = null;
-        if (StringUtils.isEmpty(id) && StringUtils.isEmpty(indicatorname)) {
+        if (DownLoadTypeEnum.ALL.getValue().equals(type)) {
             list = businessTargetinfoMapper.selectClassification2();
+        }else if (DownLoadTypeEnum.SECTION.getValue().equals(type)){
+            list = businessTargetinfoMapper.selectClassification1(tableIds);
         }
-        if (!StringUtils.isEmpty(id) && !StringUtils.isEmpty(indicatorname)) {
-            list = businessTargetinfoMapper.selectClassification1(id, indicatorname);
-        }
-        if (!StringUtils.isEmpty(id) && StringUtils.isEmpty(indicatorname)) {
-
-            List<BusinessCategoryPO> businessCategoryPOS = businessCategoryMapper.selectList(new QueryWrapper<>());
-            List<BusinessCategoryPO> self = businessCategoryPOS.stream().filter(i -> (int) i.getId() == Integer.valueOf(id)).collect(Collectors.toList());
-            self = self.stream().map(i -> {
-                if (i.getPid() == null) {
-                    i.setPid(0);
-                }
-                return i;
-            }).collect(Collectors.toList());
-            List<BusinessCategoryPO> allChildrenCategories = getAllChildrenCategories(businessCategoryPOS, Integer.valueOf(id));
-            allChildrenCategories.addAll(self);
-            List<Long> ids = allChildrenCategories.stream().map(i -> i.getId()).collect(Collectors.toList());
-            list = businessTargetinfoMapper.selectClassification3(ids);
+        if (CollectionUtils.isEmpty(list)){
+            throw new FkException(ResultEnum.ERROR, "没有数据");
         }
         List<Integer> pid = list.stream().map(i -> Integer.valueOf(i.get("pid").toString())).collect(Collectors.toList());
         List<Map<String, Object>> menuTreeNames = businessTargetinfoMapper.getMenuTreeNames();
@@ -1372,7 +1372,7 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
     }
 
     @Override
-    public List<BusinessMetaDataNameDTO> getBusinessMetaDataNameList(String key) {
+    public List<BusinessTargetinfoMenuDTO> getBusinessMetaDataNameList(String key) {
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
         ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
@@ -1401,15 +1401,32 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         LambdaQueryWrapper<BusinessTargetinfoPO> wrapper1 = new LambdaQueryWrapper<>();
         wrapper1.in(BusinessTargetinfoPO::getPid, allChildIds);
         if (!StringUtils.isEmpty(key)) {
-            wrapper1.like(BusinessTargetinfoPO::getIndicatorName, key);
+            wrapper1.and(i -> i
+                .like(BusinessTargetinfoPO::getIndicatorName, key)
+                .or()
+                .like(BusinessTargetinfoPO::getIndicatorCode, key)
+                .or()
+                .like(BusinessTargetinfoPO::getLargeScreenLink, key)
+                .or()
+                .like(BusinessTargetinfoPO::getSourceSystem, key)
+                .or()
+                .like(BusinessTargetinfoPO::getIndicatorDescription, key)
+            );
         }
         List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(wrapper1);
-        List<BusinessMetaDataNameDTO> result = businessTargetinfoPOList.stream().map(i -> {
-            BusinessMetaDataNameDTO businessMetaDataNameDTO = new BusinessMetaDataNameDTO();
-            businessMetaDataNameDTO.setId(String.valueOf(i.getId()));
-            businessMetaDataNameDTO.setPid(i.getPid());
-            businessMetaDataNameDTO.setName(i.getIndicatorName());
-            return businessMetaDataNameDTO;
+        List<BusinessTargetinfoMenuDTO> result = businessTargetinfoPOList.stream().map(i -> {
+            BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
+            businessTargetinfoMenuDTO.setId((int) i.getId());
+            businessTargetinfoMenuDTO.setName(i.getIndicatorName());
+            businessTargetinfoMenuDTO.setType(i.getIndicatorType());
+            businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
+            businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
+            businessTargetinfoMenuDTO.setIndicatorCcode(i.getIndicatorCode());
+            businessTargetinfoMenuDTO.setLargeScreenLink(i.getLargeScreenLink());
+            businessTargetinfoMenuDTO.setSourceSystem(i.getSourceSystem());
+            businessTargetinfoMenuDTO.setIndicatorDescription(i.getIndicatorDescription());
+            businessTargetinfoMenuDTO.setCreateTime(i.getCreateTime());
+            return businessTargetinfoMenuDTO;
         }).collect(Collectors.toList());
         return result;
     }
@@ -1476,11 +1493,40 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         return baseMapper.getBusinessTargetinfoTotal();
     }
 
-//    @Override
-//    public Page<TableAppVO> pageFilter(CategoryQueryDTO query) {
-////
-//        return null;
-//    }
+    @Override
+    public List<BusinessTargetinfoMenuDTO> pageFilter(CategoryQueryDTO query) {
+        StringBuilder querySql = new StringBuilder();
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
+
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
+        List<RoleInfoDTO> businessAssignment = new ArrayList<>();
+        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()) {
+            businessAssignment = rolebyUserId.data;
+        } else {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+
+        LambdaQueryWrapper<BusinessCategoryAssignmentPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(BusinessCategoryAssignmentPO::getRoleId, roleIds);
+        List<BusinessCategoryAssignmentPO> list = businessCategoryAssignmentService.list(wrapper);
+        List<Integer> menuId = list.stream().map(BusinessCategoryAssignmentPO::getCategoryId).distinct().collect(Collectors.toList());
+
+        List<BusinessCategoryPO> allMenuList = businessCategoryMapper.selectList(new QueryWrapper<>());
+        allMenuList = allMenuList.stream().map(i -> {
+            if (i.getPid() == null) {
+                i.setPid(0);
+            }
+            return i;
+        }).collect(Collectors.toList());
+        List<Integer> allChildIds = getAllChildIds(allMenuList, menuId);
+        allChildIds.addAll(menuId);
+
+        List<BusinessTargetinfoMenuDTO> filter = baseMapper.filter(allChildIds,querySql.toString());
+        return filter;
+    }
 
     private int RecursivelyFetchMetrics(long id, List<BusinessCategoryPO> allData, List<String> indexes) {
         int indexCount = 0;
