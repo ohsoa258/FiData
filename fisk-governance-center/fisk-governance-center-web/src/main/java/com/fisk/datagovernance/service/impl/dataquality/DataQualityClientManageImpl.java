@@ -207,6 +207,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         log.info("【创建质量报告-开始】质量报告开始执行");
         try {
             if (id == 0) {
+                log.info("【质量报告】id参数为空，报告创建失败");
                 return ResultEntityBuild.buildData(ResultEnum.PARAMTER_ERROR, "");
             }
             // 第一步：查询质量报告基础信息
@@ -291,11 +292,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     //参数：规则配置，数据源，以及将要新建的excel文件的信息
                     resultEnum = dataCheck_QualityReport_CreateExcel(noticeExtendPOS, allDataSource, attachmentInfoPO);
                     break;
-//                case 200:
-//                    // 生成业务清洗质量报告
-//                    attachmentInfoPO.setOriginalName(String.format("业务清洗质量报告%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
-//                    attachmentInfoPO.setCategory(200);
-//                    break;
             }
             if (qualityReportPO.getReportType() != 100 || qualityReportNoticePO.getReportNoticeType() != 1) {
                 log.info("质量报告类型暂不支持非质量校验报告的其他方式");
@@ -369,6 +365,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         List<DataCheckExtendPO> dataCheckExtendPOList = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
 
         List<DataTableFieldDTO> dtoList = new ArrayList<>();
+        // fiData平台数据源的id集合
         List<Integer> fiDataIds = allDataSource.stream().filter(t -> t.getDatasourceType() == SourceTypeEnum.FiData).map(DataSourceConVO::getId).collect(Collectors.toList());
         for (int j = 0; j < dataCheckPOList.size(); j++) {
             DataCheckPO dataCheckPO = dataCheckPOList.get(j);
@@ -475,6 +472,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataCheckSyncParamDTO.setFieldName(fieldName);
             dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
 
+            log.info("【dataCheck_QualityReport_CreateExcel】...dataCheckSyncParamDTO参数[{}]", JSONObject.toJSON(dataCheckSyncParamDTO));
+
             SheetDataDto sheetDataDto = null;
             try {
                 sheetDataDto = dataCheck_QualityReport_Create(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, dataCheckSyncParamDTO);
@@ -570,13 +569,22 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
         switch (rangeCheckTypeEnum) {
             case SEQUENCE_RANGE:
-                // 序列范围
-                List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
-                String sql_InString = list.stream()
-                        .map(item -> "N'" + item + "'")
-                        .collect(Collectors.joining(", "));
-                sql_QueryCheckData = String.format("SELECT %s FROM %s WHERE %s NOT IN (%s)", f_Name, t_Name, f_Name, sql_InString);
-                break;
+                if (dataCheckExtendPO.rangeType == 2) {
+                    String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
+
+                    sql_QueryCheckData = String.format("SELECT %s FROM %s WHERE %s NOT IN (%s)", f_Name, t_Name, f_Name, childrenQuery);
+                    break;
+                } else {
+                    // 序列范围
+                    List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                    // 将list里面的序列范围截取为'','',''格式的字符串
+                    String sql_InString = list.stream()
+                            .map(item -> "N'" + item + "'")
+                            .collect(Collectors.joining(", "));
+
+                    sql_QueryCheckData = String.format("SELECT %s FROM %s WHERE %s NOT IN (%s)", f_Name, t_Name, f_Name, sql_InString);
+                    break;
+                }
             case VALUE_RANGE:
                 // 取值范围
                 Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
@@ -899,36 +907,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 tName = dataCheckSyncParamDTO.getTableName(),
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName();
-        JSONArray jsonArray = QualityReport_QueryTableData_Array(dataSourceConVO, dataCheckExtendPO.getSqlCheckValue());
-        //相当于excel里的所有列的数据
-        List<List<String>> columnDatas = new ArrayList<>();
-        //列名
-        List<String> columns = new ArrayList<>();
-
-        // 固定返回checkstate，通过为1，未通过为0，取第一行的checkstate字段判断
-        boolean isValid = false;
-        String checkState = "0";
-        if (CollectionUtils.isNotEmpty(jsonArray)) {
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            if (jsonObject.containsKey("checkstate")) {
-                checkState = jsonObject.getString("checkstate");
-                if (StringUtils.isNotEmpty(checkState) && checkState.equals("1")) {
-                    isValid = true;
-                }
-            }
-        }
-
-        if (!isValid) {
-            //excel列名
-            columns.add("checkstate");
-            //相当于每行数据
-            List<String> columnData = new ArrayList<>();
-            columnData.add("0");
-            columnDatas.add(columnData);
-            sheetDataDto.setColumns(columns);
-            sheetDataDto.setColumnData(columnDatas);
+        sheetDataDto = QualityReport_QueryTableData_sheet(dataSourceConVO, dataCheckExtendPO.getSqlCheckValue());
+        if (sheetDataDto != null && sheetDataDto.getColumnData() != null && sheetDataDto.getColumnData().size() > 0) {
             return sheetDataDto;
         }
+        log.info("【dataCheck_QualityReport_SqlScriptCheck】Sql查询结果为空-校验通过！");
         return null;
     }
 
