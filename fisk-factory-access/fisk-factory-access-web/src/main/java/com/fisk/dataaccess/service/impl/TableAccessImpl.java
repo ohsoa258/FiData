@@ -3189,7 +3189,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 statement.executeQuery("SWITCH " + catalogName + ";");
             }
             statement.executeQuery("USE " + dbName + ";");
-            tblSchema = statement.executeQuery("DESC " + tblName);
+            tblSchema = statement.executeQuery("DESC " + "`" + tblName + "`;");
             while (tblSchema.next()) {
                 DorisTblSchemaDTO tblSchemaDTO = new DorisTblSchemaDTO();
                 tblSchemaDTO.setFieldName(tblSchema.getString("Field"));

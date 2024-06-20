@@ -317,7 +317,7 @@ public class SqlParserUtils {
             log.debug("=============SQL解析END=============");
         } catch (Exception e) {
             log.debug("sql解析失败==错误ID" + id + "===数据库类型:" + dbType + "===" + sqlScript);
-            log.debug("【sql解析失败】" + e.toString());
+            log.debug("【sql解析失败】" + e);
             log.debug("【sql解析失败】" + e.getMessage());
             throw new FkException(ResultEnum.SQL_PARSING);
         }
