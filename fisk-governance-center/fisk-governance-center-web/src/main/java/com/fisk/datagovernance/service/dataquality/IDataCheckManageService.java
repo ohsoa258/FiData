@@ -123,4 +123,10 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return
      */
     List<TableColumnDTO> getColumn(ColumnQueryDTO dto);
+
+    /**
+     * 获取所有数据校验规则数量
+     * @return
+     */
+    Integer getDataCheckRoleTotal();
 }

@@ -1,7 +1,11 @@
 package com.fisk.datamanagement.dto.classification;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 
 /**
  * @Author: wangjian
@@ -20,4 +24,16 @@ public class BusinessTargetinfoMenuDTO {
     public String indicatorStatus;
     @ApiModelProperty(value = "上级指标Id")
     public Integer parentBusinessId;
+    @ApiModelProperty(value = "指标编码")
+    public String indicatorCcode;
+    @ApiModelProperty(value = "指标描述/口径")
+    public String indicatorDescription;
+    @ApiModelProperty(value = "应用")
+    public String largeScreenLink;
+    @ApiModelProperty(value = "数据源系统")
+    public String sourceSystem;
+    @ApiModelProperty(value = "创建时间")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime createTime;
 }

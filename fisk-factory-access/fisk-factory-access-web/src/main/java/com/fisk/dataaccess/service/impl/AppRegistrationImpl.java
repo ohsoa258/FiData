@@ -3219,8 +3219,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
                     appDataSourcePOQueryWrapper.lambda().eq(AppDataSourcePO::getAppId, app.id).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.RestfulAPI.getName());
                     List<AppDataSourcePO> appDataSourcePOS = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
+
                     if (!CollectionUtils.isEmpty(appDataSourcePOS)) {
-                        type = "restfulapi";
+                        type = appDataSourcePOS.get(0).driveType;
                     }
                     // 根据驱动类型封装不同的子级
                     switch (type) {
@@ -3699,7 +3700,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             List<TableAccessPO> tableAccessPoList = tableAccessImpl.query()
                     .eq("app_id", appRegistrationPo.id)
-                    .in("id",accessTblIds)
+                    .in("id", accessTblIds)
                     .list();
             if (CollectionUtils.isEmpty(tableAccessPoList)) {
                 continue;
@@ -4014,7 +4015,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<AccessAndModelAppDTO> getAllAppAndTables() {
         //先查询所有非入仓配置的应用
         QueryWrapper<AppRegistrationPO> w = new QueryWrapper<>();
-        w.select("id", "app_name","app_abbreviation","whether_schema")
+        w.select("id", "app_name", "app_abbreviation", "whether_schema")
                 .lambda()
                 .isNull(AppRegistrationPO::getIfSyncAllTables);
         List<AppRegistrationPO> appPOS = this.list(w);
@@ -4158,6 +4159,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<MetaDataTableAttributeDTO> getAccessTableMetaData(AppRegistrationPO app, TableAccessPO tableAccess, String qualifiedName) {
         // 表
         List<MetaDataTableAttributeDTO> tableList = new ArrayList<>();
+        List<String> cdcFromTableList = new ArrayList<>();
 
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
@@ -4167,7 +4169,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             table.setName(tableAccess.getTableName());
             table.setIsExistStg(false);
-
+            table.setIsCDC(true);
         } else {
             table.setName(TableNameGenerateUtils.buildOdsTableName(tableAccess.getTableName(), app.appAbbreviation, app.whetherSchema));
             table.setIsExistStg(true);
@@ -4185,8 +4187,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setAppName(app.getAppName());
         //应用是否使用简称 会影响到数据接入：非实时和实时表的名称
         table.setWhetherSchema(app.getWhetherSchema());
+        List<TableFieldsPO> tableFieldsPOS = tableFieldsImpl.query().eq("table_access_id", tableAccess.id).list();
         // 字段
-        List<MetaDataColumnAttributeDTO> columnList = tableFieldsImpl.query().eq("table_access_id", tableAccess.id).list().stream().filter(Objects::nonNull).map(e -> {
+        List<MetaDataColumnAttributeDTO> columnList = tableFieldsPOS.stream().filter(Objects::nonNull).map(e -> {
             MetaDataColumnAttributeDTO field = new MetaDataColumnAttributeDTO();
             field.setQualifiedName(table.qualifiedName + "_" + e.getId());
             field.setName(e.getFieldName());
@@ -4200,7 +4203,20 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return field;
         }).collect(Collectors.toList());
 
+        if (app.appType == 2) {
+            if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
+                String sourceTblName = tableFieldsPOS.get(0).sourceTblName;
+                if (!StringUtils.isEmpty(sourceTblName)) {
+                    if (sourceTblName.contains(".")) {
+                        sourceTblName = sourceTblName.substring(sourceTblName.lastIndexOf(".") + 1);
+                    }
+                    cdcFromTableList.add(sourceTblName);
+                }
+            }
+        }
+
         table.setColumnList(columnList);
+        table.setCdcFromTableList(cdcFromTableList);
         tableList.add(table);
 
         return tableList;

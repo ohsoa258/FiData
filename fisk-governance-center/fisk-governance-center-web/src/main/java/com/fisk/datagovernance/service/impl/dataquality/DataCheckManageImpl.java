@@ -2748,6 +2748,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return tableColumnDTOS;
     }
 
+    @Override
+    public Integer getDataCheckRoleTotal() {
+        return this.baseMapper.getDataCheckRoleTotal();
+    }
+
     /**
      * 获取数据源所有表
      *

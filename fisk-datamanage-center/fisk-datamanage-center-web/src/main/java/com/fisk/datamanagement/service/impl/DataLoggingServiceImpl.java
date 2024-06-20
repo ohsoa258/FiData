@@ -6,9 +6,17 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
+import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datamanagement.dto.datalogging.DataLoggingDTO;
+import com.fisk.datamanagement.dto.datalogging.DataTotalDTO;
 import com.fisk.datamanagement.enums.DataLoggingEnum;
+import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
+import com.fisk.datamanagement.mapper.GlossaryMapper;
+import com.fisk.datamanagement.mapper.MetadataEntityMapper;
+import com.fisk.datamanagement.mapper.StandardsMapper;
 import com.fisk.datamanagement.service.DataLoggingService;
+import com.fisk.datamodel.client.DataModelClient;
+import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -35,22 +43,123 @@ public class DataLoggingServiceImpl implements DataLoggingService {
     @Resource
     UserClient userClient;
 
+    @Resource
+    DataModelClient dataModelClient;
+
+    @Resource
+    MdmClient mdmClient;
+
+    @Resource
+    DataGovernanceClient dataGovernanceClient;
+
+    @Resource
+    MetadataEntityMapper metadataEntityMapper;
+
+    @Resource
+    GlossaryMapper glossaryMapper;
+
+    @Resource
+    StandardsMapper standardsMapper;
+
+    @Resource
+    BusinessTargetinfoMapper businessTargetinfoMapper;
+//    @Override
+//    public DataLoggingDTO getDataTableRows() {
+//        DataLoggingDTO dataLoggingDTO = new DataLoggingDTO();
+//        if(redisUtil.hasKey(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName())){
+//            //拿到最新数据用来计算日增
+//            Integer todayTotal=getDataODSTableRows();
+//            //日增
+//            dataLoggingDTO.setDailyGain(todayTotal-(int)redisUtil.get(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName()));
+//            //总记录数
+//            dataLoggingDTO.setTotalNumberOfRecords(todayTotal);
+//            return dataLoggingDTO;
+//        }
+//        //获取ODS所有表的总记录数
+//        dataLoggingDTO.setTotalNumberOfRecords(getDataODSTableRows());
+//        redisUtil.set(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName(),dataLoggingDTO.getTotalNumberOfRecords());
+//        return dataLoggingDTO;
+//    }
+@Override
+public DataLoggingDTO getDataTableRows() {
+    DataLoggingDTO dataLoggingDTO = new DataLoggingDTO();
+//    if(redisUtil.hasKey(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName())){
+//        //拿到最新数据用来计算日增
+//        Integer todayTotal=getDataODSTableRows();
+//        //日增
+//        dataLoggingDTO.setDailyGain(todayTotal-(int)redisUtil.get(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName()));
+//        //总记录数
+//        dataLoggingDTO.setTotalNumberOfRecords(todayTotal);
+//        return dataLoggingDTO;
+//    }
+//    //获取ODS所有表的总记录数
+//    dataLoggingDTO.setTotalNumberOfRecords(getDataODSTableRows());
+//    redisUtil.set(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName(),dataLoggingDTO.getTotalNumberOfRecords());
+
+    Integer totalNum = metadataEntityMapper.getTotalNum();
+    dataLoggingDTO.setTotalNumberOfRecords(totalNum);
+    return dataLoggingDTO;
+}
+
+    /**
+     * 获取数据总量的DTO（数据传输对象）。
+     * 该方法用于聚合各种数据的总量，并返回一个包含这些总量的DTO对象。
+     * @return DataTotalDTO 包含各种数据总量的DTO。
+     */
     @Override
-    public DataLoggingDTO getDataTableRows() {
-        DataLoggingDTO dataLoggingDTO = new DataLoggingDTO();
-        if(redisUtil.hasKey(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName())){
-            //拿到最新数据用来计算日增
-            Integer todayTotal=getDataODSTableRows();
-            //日增
-            dataLoggingDTO.setDailyGain(todayTotal-(int)redisUtil.get(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName()));
-            //总记录数
-            dataLoggingDTO.setTotalNumberOfRecords(todayTotal);
-            return dataLoggingDTO;
+    public DataTotalDTO getDataTotals() {
+        // 初始化数据总量DTO对象
+        DataTotalDTO dataTotalDTO = new DataTotalDTO();
+
+        // 获取业务总量
+        ResultEntity<Object> businessTotal = dataModelClient.getBusinessTotal();
+        // 如果获取成功，则设置业务总量到DTO
+        if (businessTotal.code == ResultEnum.SUCCESS.getCode()){
+            dataTotalDTO.setBusinessTotal((int)businessTotal.data);
         }
-        //获取ODS所有表的总记录数
-        dataLoggingDTO.setTotalNumberOfRecords(getDataODSTableRows());
-        redisUtil.set(DataLoggingEnum.TOTAL_NUMBER_OF_RECORDS.getName(),dataLoggingDTO.getTotalNumberOfRecords());
-        return dataLoggingDTO;
+
+        // 获取业务表总量
+        ResultEntity<Object> businessTableTotal = dataModelClient.getBusinessTableTotal();
+        // 如果获取成功，则设置业务表总量到DTO
+        if (businessTableTotal.code == ResultEnum.SUCCESS.getCode()){
+            dataTotalDTO.setBusinessTableTotal((int)businessTableTotal.data);
+        }
+
+        // 获取MDM模型总量
+        ResultEntity<Object> mdmModelTotal = mdmClient.getModelTotal();
+        // 如果获取成功，则设置MDM模型总量到DTO
+        if (mdmModelTotal.code == ResultEnum.SUCCESS.getCode()){
+            dataTotalDTO.setMdmModelTotal((int)mdmModelTotal.data);
+        }
+
+        // 获取MDM实体总量
+        ResultEntity<Object> mdmEntityTotal = mdmClient.getEntityTotal();
+        // 如果获取成功，则设置MDM实体总量到DTO
+        if (mdmEntityTotal.code == ResultEnum.SUCCESS.getCode()){
+            dataTotalDTO.setMdmEntityTotal((int)mdmEntityTotal.data);
+        }
+
+        // 获取数据治理角色总量
+        ResultEntity<Object> dataCheckRoleTotal = dataGovernanceClient.getDataCheckRoleTotal();
+        // 如果获取成功，则设置数据治理角色总量到DTO
+        if (dataCheckRoleTotal.code == ResultEnum.SUCCESS.getCode()){
+            dataTotalDTO.setDataCheckTotal((int)dataCheckRoleTotal.data);
+        }
+
+        // 获取标准总量
+        Integer standardsTotal = standardsMapper.getStandardTotal();
+        dataTotalDTO.setStandardsTotal(standardsTotal);
+
+        // 获取业务目标总量
+        Integer businesstargetinfoTotal = businessTargetinfoMapper.getBusinessTargetinfoTotal();
+        dataTotalDTO.setBusinesstargetinfoTotal(businesstargetinfoTotal);
+
+        // 获取词汇表总量
+        Integer glossaryTotal = glossaryMapper.getGlossaryTotal();
+        dataTotalDTO.setGlossaryTotal(glossaryTotal);
+
+        // 返回包含所有数据总量的DTO
+        return dataTotalDTO;
     }
 
     //每天凌晨12点执行一次

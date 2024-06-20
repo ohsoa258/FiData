@@ -861,6 +861,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         return StandardsBeCitedMap.INSTANCES.poListToDTOList(list);
     }
 
+    @Override
+    public Integer getStandardTotal() {
+        return this.baseMapper.getStandardTotal();
+    }
+
     private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {
         Map<String, List<FiDataMetaDataTreeDTO>> childrenMap = new HashMap<>();
         for (FiDataMetaDataTreeDTO dto : allList) {

@@ -114,4 +114,10 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     List<AccessAndModelAppDTO> getAllModelAndEntitys();
+
+    /**
+     * 获取主数据所有模型数量
+     * @return
+     */
+    Integer getModelTotal();
 }

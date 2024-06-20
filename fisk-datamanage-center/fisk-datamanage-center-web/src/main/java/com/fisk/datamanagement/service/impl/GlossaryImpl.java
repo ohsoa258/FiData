@@ -334,4 +334,9 @@ public class GlossaryImpl
         //listPo=this.query().list();
         return GlossaryMap.INSTANCES.poToDtoList(listPo);
     }
+
+    @Override
+    public Integer getGlossaryTotal() {
+        return glossaryMapper.getGlossaryTotal();
+    }
 }

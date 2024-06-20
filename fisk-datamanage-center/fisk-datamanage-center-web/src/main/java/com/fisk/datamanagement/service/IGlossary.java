@@ -57,4 +57,10 @@ public interface IGlossary {
      */
     List<GlossaryDTO> queryGlossaryListById(GlobalSearchDto dto);
 
+    /**
+     * 获取业务术语数量
+     * @return
+     */
+    Integer getGlossaryTotal();
+
 }

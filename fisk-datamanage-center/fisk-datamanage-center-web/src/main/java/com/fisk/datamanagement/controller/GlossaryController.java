@@ -167,4 +167,9 @@ public class GlossaryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.getMetaEntitiesByGlossary(glossaryId));
     }
 
+    @ApiOperation("获取业务术语数量")
+    @GetMapping("/getGlossaryTotal")
+    public ResultEntity<Object> getGlossaryTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getGlossaryTotal());
+    }
 }

@@ -75,4 +75,8 @@
             </foreach>
         </if>
     </select>
+
+    <select id="getDataCheckRoleTotal" resultType="Integer">
+        select count(1) from tb_datacheck_rule where del_flag = 1
+    </select>
 </mapper>

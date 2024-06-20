@@ -35,4 +35,7 @@ public interface DimensionMapper extends FKBaseMapper<DimensionPO> {
      */
     @Select("SELECT id,dimension_cn_name FROM tb_dimension where del_flag=1 ORDER BY id DESC;")
     List<DimensionTabDTO> getDimensionTabList();
+
+    @Select("select count(1) from tb_dimension where del_flag = 1")
+    Integer getTableTotal();
 }

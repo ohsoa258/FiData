@@ -33,4 +33,11 @@ public class FactAttributeUpdateDTO {
      */
     @ApiModelProperty(value = "预览nifi调用SQL执行语句")
     public String execSql;
+
+    /**
+     * 配置详情(维度key的json配置详情)
+     */
+    @ApiModelProperty(value = "配置详情(维度key的json配置详情)")
+    public String configDetails;
+
 }

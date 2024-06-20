@@ -19,6 +19,12 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
      * 是否存在所属临时表 null true则存在 ，false不存在
      */
     public Boolean isExistStg;
+
+    /**
+     * 是否是数据接入CDC
+     */
+    public Boolean isCDC;
+
     /**
      * 是否关联存在业务分类 null true则存在 ，false不存在
      */
@@ -71,5 +77,15 @@ public class MetaDataTableAttributeDTO extends MetaDataBaseAttributeDTO {
      * 是：1  true
      */
     public Boolean whetherSchema;
+
+    /**
+     * 当是数仓建模时  这个集合代表数仓建模事实表关联外键时关联的那些维度表
+     */
+    public List<String> dimQNames;
+
+    /**
+     * 当是数据接入 CDC类型应用时 该集合里面装载是cdc配置表的上有来源表名称
+     */
+    public List<String> cdcFromTableList;
 
 }

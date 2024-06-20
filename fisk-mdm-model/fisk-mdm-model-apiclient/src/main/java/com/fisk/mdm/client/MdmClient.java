@@ -238,7 +238,20 @@ public interface MdmClient {
      * @param tableName
      * @return
      */
-    @ApiOperation("根据表名获取mdm表信息")
     @PostMapping("/entity/getTableInfo")
     ResultEntity<TableInfoDTO> getTableInfo(@Validated @RequestBody String tableName);
+
+    /**
+     * 获取主数据所有模型数量
+     * @return
+     */
+    @GetMapping("/model/getModelTotal")
+    ResultEntity<Object> getModelTotal();
+
+    /**
+     * 获取主数据所有实体数量
+     * @return
+     */
+    @GetMapping("/entity/getEntityTotal")
+    ResultEntity<Object> getEntityTotal();
 }

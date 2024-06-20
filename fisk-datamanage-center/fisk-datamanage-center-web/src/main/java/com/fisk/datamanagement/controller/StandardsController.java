@@ -208,5 +208,10 @@ public class StandardsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsMenuService.getStandardsForAssetCatalog());
     }
 
+    @ApiOperation("获取数据元标准数量")
+    @GetMapping("/getStandardTotal")
+    public ResultEntity<Object> getStandardTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardTotal());
+    }
 
 }

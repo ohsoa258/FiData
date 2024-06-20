@@ -23,5 +23,7 @@
         </if>
         order by create_time desc
     </select>
-
+    <select id="getModelTotal" resultType="Integer">
+        select count(1) from tb_model where del_flag = 1
+    </select>
 </mapper>

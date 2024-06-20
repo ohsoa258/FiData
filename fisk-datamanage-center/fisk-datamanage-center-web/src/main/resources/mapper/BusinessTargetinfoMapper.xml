@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datamanagement.mapper.BusinessTargetinfoMapper">
+    <select id="filter" resultType="com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO">
+    select id,
+           indicator_name as name,
+           indicator_type as type,
+           indicator_description as indicatorDescription,
+           source_system as sourceSystem,
+           create_time as createTime,
+           large_screen_link as largeScreenLink,
+           indicator_status as indicatorStatus,
+           indicator_code as indicatorCcode,
+           parent_business_id as parentBusinessId
+    from tb_business_targetinfo
+    where del_flag = 1
+      <if test="pids != null and pids.size() > 0">
+          and pid in
+          <foreach collection="pids" item="pid" open="(" separator="," close=")">
+              #{pid}
+          </foreach>
+      </if>
+      <if test="where !=null and where.length()>0 ">
+          ${where}
+      </if>
+    </select>
+</mapper>

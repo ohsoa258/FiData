@@ -52,4 +52,6 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
             "\tAND ruleExt.del_flag = 1 \n" +
             "\tAND ruleExt.error_data_retention_time > 0")
     List<DeleteCheckResultVO> getDeleteDataCheckResult();
+
+    Integer getDataCheckRoleTotal();
 }

@@ -88,5 +88,11 @@ public interface StandardsService extends IService<StandardsPO> {
      * @return
      */
     List<StandardsBeCitedDTO> modelGetStandardsMap();
+
+    /**
+     * 获取数据元标准数量
+     * @return
+     */
+    Integer getStandardTotal();
 }
 

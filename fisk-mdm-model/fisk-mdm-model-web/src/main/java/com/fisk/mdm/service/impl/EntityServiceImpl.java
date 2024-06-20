@@ -473,6 +473,11 @@ public class EntityServiceImpl implements EntityService {
         return dto;
     }
 
+    @Override
+    public Integer getEntityTotal() {
+        return entityMapper.getEntityTotal();
+    }
+
 
     /**
      * 获取所有发布成功实体

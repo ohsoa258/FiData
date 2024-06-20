@@ -569,6 +569,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         return list;
     }
 
+    @Override
+    public Integer getModelTotal() {
+        return baseMapper.getModelTotal();
+    }
+
 
     /**
      * 获取模型、实体、属性 数据结构Tree
