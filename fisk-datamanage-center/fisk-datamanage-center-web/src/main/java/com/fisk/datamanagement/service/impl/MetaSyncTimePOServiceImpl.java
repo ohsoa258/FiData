@@ -4,13 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
+import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.metasynctime.ClassificationTypeDTO;
 import com.fisk.datamanagement.dto.metasynctime.MetaSyncDTO;
 import com.fisk.datamanagement.entity.MetaSyncTimePO;
 import com.fisk.datamanagement.mapper.MetaSyncTimePOMapper;
 import com.fisk.datamanagement.service.MetaSyncTimePOService;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +27,9 @@ import java.util.List;
 @Service
 public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper, MetaSyncTimePO>
         implements MetaSyncTimePOService {
+
+    @Resource
+    private UserClient userClient;
 
     /**
      * 获取服务类型树
@@ -63,7 +71,17 @@ public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper,
             MetaSyncDTO dto = new MetaSyncDTO();
             dto.setId(po.getId());
             dto.setCreateTime(po.getCreateTime());
-            dto.setCreateUser(po.getCreateUser());
+
+            //将用户id切换为用户名
+            if (po.getCreateUser()!=null){
+                ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(po.getCreateUser()));
+                if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                    dto.setCreateUser(resultEntity.getData().getUsername());
+                }
+            }else {
+                dto.setCreateUser(po.getCreateUser());
+            }
+
             dto.setUpdateTime(po.getUpdateTime());
             String serviceType = ClassificationTypeEnum.getEnumByValue(po.getServiceType()) != null ?
                     ClassificationTypeEnum.getEnumByValue(po.getServiceType()).getName() : po.getServiceType().toString();
