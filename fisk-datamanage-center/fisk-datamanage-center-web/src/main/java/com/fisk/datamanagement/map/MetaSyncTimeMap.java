@@ -13,6 +13,7 @@ import java.util.List;
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface MetaSyncTimeMap {
 
+
     MetaSyncTimeMap INSTANCES = Mappers.getMapper(MetaSyncTimeMap.class);
 
     MetaSyncDTO poToDto(MetaSyncTimePO po);

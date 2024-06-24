@@ -16,6 +16,7 @@ import java.util.List;
 */
 public interface MetaSyncTimePOService extends IService<MetaSyncTimePO> {
 
+
     /**
      * 获取服务类型树
      *

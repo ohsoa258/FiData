@@ -28,6 +28,7 @@ import java.util.List;
 public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper, MetaSyncTimePO>
         implements MetaSyncTimePOService {
 
+
     @Resource
     private UserClient userClient;
 
