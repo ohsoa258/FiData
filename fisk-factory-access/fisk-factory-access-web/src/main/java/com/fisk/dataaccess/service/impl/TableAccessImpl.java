@@ -2160,7 +2160,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
-     * 回显实时表
+     * 回显物理表
      *
      * @param id 请求参数
      * @return 返回值

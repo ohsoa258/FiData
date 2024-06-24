@@ -17,6 +17,7 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
@@ -51,7 +52,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -605,5 +605,15 @@ public class AppRegistrationController {
         return service.accessGetMetaMapTableDetail(appId);
     }
 
+    /**
+     * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称
+     *
+     * @return
+     */
+    @ApiOperation("根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称")
+    @GetMapping("/getAppSourceAndTarget")
+    public ResultEntity<List<DataSourceInfoDTO>> getAppSourceAndTarget(Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppSourceAndTarget(appId));
+    }
 
 }

@@ -30,4 +30,9 @@ public class SystemVariablesPO extends BasePO {
      */
     public String variableValue;
 
+    /**
+     * 引用的系统数据源id
+     */
+    public Integer referencedSystemDataSourceId;
+
 }

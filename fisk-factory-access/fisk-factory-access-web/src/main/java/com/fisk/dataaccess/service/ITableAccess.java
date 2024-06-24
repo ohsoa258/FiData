@@ -93,7 +93,7 @@ public interface ITableAccess extends IService<TableAccessPO> {
     Page<Map<String, Object>> queryByPage(String key, Integer page, Integer rows);
 
     /**
-     * 根据id查询数据,回显实时表
+     * 根据id查询数据,回显物理表
      *
      * @param id 请求参数
      * @return 返回值
