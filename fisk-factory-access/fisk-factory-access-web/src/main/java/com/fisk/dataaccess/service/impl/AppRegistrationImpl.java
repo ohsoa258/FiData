@@ -53,6 +53,7 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
@@ -1112,6 +1113,48 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             tblList.add(metaMapTblDTO);
         }
         return tblList;
+    }
+
+
+    /**
+     * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称
+     *
+     * @return
+     */
+    @Override
+    public List<DataSourceInfoDTO> getAppSourceAndTarget(Integer appId) {
+        List<DataSourceInfoDTO> dtos = new ArrayList<>();
+
+        //先获取当前应用引用的系统数据源id
+        List<AppDataSourcePO> list = appDataSourceImpl.list(
+                new LambdaQueryWrapper<AppDataSourcePO>()
+                        .select(AppDataSourcePO::getSystemDataSourceId, AppDataSourcePO::getDbName)
+                        .eq(AppDataSourcePO::getAppId, appId)
+        );
+
+        if (!CollectionUtils.isEmpty(list)){
+            DataSourceInfoDTO sourceDto = new DataSourceInfoDTO();
+            sourceDto.setName(list.get(0).getDbName());
+            sourceDto.setId(list.get(0).getSystemDataSourceId());
+            dtos.add(sourceDto);
+        }
+
+        //获取目标库的系统数据源id和名称
+        AppRegistrationPO app = this.getOne(new LambdaQueryWrapper<AppRegistrationPO>()
+                .select(AppRegistrationPO::getTargetDbId)
+                .eq(AppRegistrationPO::getId, appId)
+        );
+
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(app.getTargetDbId());
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = resultEntity.getData();
+            DataSourceInfoDTO targetDto = new DataSourceInfoDTO();
+            targetDto.setName(data.getConDbname());
+            targetDto.setId(app.getTargetDbId());
+            dtos.add(targetDto);
+        }
+
+        return dtos;
     }
 
 

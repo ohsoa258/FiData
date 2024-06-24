@@ -32,4 +32,10 @@ public class SystemVariablesDTO {
     @ApiModelProperty(value = "变量值")
     public String variableValue;
 
+    /**
+     * 引用的系统数据源id
+     */
+    @ApiModelProperty(value = "引用的系统数据源id")
+    public Integer referencedSystemDataSourceId;
+
 }
