@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.BaseEnum;
  */
 
 public enum ClassificationTypeEnum implements BaseEnum {
+    ALL(0,"全部","全部"),
     DATA_ACCESS(1, "数据接入", "数据贴源，对接上游系统数据"),
     ANALYZE_DATA(2, "数仓建模", "数仓建模，数据仓库数据"),
     API_GATEWAY_SERVICE(3, "API网关服务", "通过API，向下游消费数据"),
