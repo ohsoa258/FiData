@@ -70,6 +70,8 @@ public class SwaggerConfig {
     public static final String ERNIE_SPEED = "文心一言";
 
     public static final String DATAVIEW = "视图过滤";
+    public static final String META_SYNC_TIME = "元数据同步时间";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
@@ -107,6 +109,7 @@ public class SwaggerConfig {
                 .tags(new Tag(META_ANALYTICS_EMAIL,"元数据分析邮件配置"))
                 .tags(new Tag(ERNIE_SPEED,"文心一言"))
                 .tags(new Tag(DATAVIEW,"视图过滤"))
+                .tags(new Tag(META_SYNC_TIME,"元数据同步时间"))
                 .securityContexts(securityContexts());
     }
 
