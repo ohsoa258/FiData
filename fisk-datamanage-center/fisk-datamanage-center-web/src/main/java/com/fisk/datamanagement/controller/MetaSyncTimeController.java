@@ -23,6 +23,7 @@ import java.util.List;
 @Api(tags = {SwaggerConfig.META_SYNC_TIME})
 public class MetaSyncTimeController {
 
+
     @Resource
     private MetaSyncTimePOService service;
 
