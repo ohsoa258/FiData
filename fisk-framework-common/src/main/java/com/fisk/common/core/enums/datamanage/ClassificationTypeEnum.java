@@ -15,6 +15,7 @@ public enum ClassificationTypeEnum implements BaseEnum {
     VIEW_ANALYZE_SERVICE(5, "数据分析试图服务", "提供数据查询视图"),
     MASTER_DATA(6, "主数据", "主数据"),
     EXTERNAL_DATA(7,"外部数据源","外部数据源")
+
     ;
 
     private final int value;
