@@ -71,6 +71,7 @@ public class SwaggerConfig {
 
     public static final String DATAVIEW = "视图过滤";
     public static final String META_SYNC_TIME = "元数据同步时间";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FKDataManagementApplication.class.getPackage().getName();
