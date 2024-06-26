@@ -74,4 +74,11 @@ public class AppRegisterDTO
      */
     @ApiModelProperty(value = "部门名称")
     public String departName;
+
+
+    /**
+     * 是否开启授权认证 1开启 0关闭
+     */
+    @ApiModelProperty(value = "是否开启授权认证 1开启 0关闭")
+    private int proxyAuthorizationSwitch;
 }

@@ -92,4 +92,11 @@ public class AppRegisterVO
      */
     @ApiModelProperty(value = "单个应用下服务个数")
     public int  itemCount;
+
+
+    /**
+     * 是否开启授权认证 1开启 0关闭
+     */
+    @ApiModelProperty(value = "是否开启授权认证 1开启 0关闭")
+    private int proxyAuthorizationSwitch;
 }
