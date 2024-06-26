@@ -1175,7 +1175,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
      * @return
      */
     @Override
-    public List<MetaDataInstanceAttributeDTO> getDataModelMetaDataByLastSyncTime(LocalDateTime lastSyncTime) {
+    public List<MetaDataInstanceAttributeDTO> getDataModelMetaDataByLastSyncTime(String lastSyncTime) {
         //通过做过更新的字段 先找到有哪些表的字段做过更新
         //事实表
         List<FactAttributePO> factAttributePOS = factAttributeImpl.list(new QueryWrapper<FactAttributePO>()

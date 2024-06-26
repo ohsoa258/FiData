@@ -46,9 +46,13 @@ import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobScriptDTO;
 import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
 import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
+import com.fisk.dataaccess.dto.tablefield.ClassificationsAndLevelsDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
+import com.fisk.dataaccess.enums.tablefield.DataClassificationEnum;
+import com.fisk.dataaccess.enums.tablefield.DataLevelEnum;
 import com.fisk.dataaccess.map.FlinkParameterMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
@@ -2071,7 +2075,7 @@ public class TableFieldsImpl
         //mysql 同理
         if (
                 (driverTypes.contains(RESTFULAPI.getName()) && conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.getName())) ||
-                (driverTypes.contains(RESTFULAPI.getName()) && conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getName()))
+                        (driverTypes.contains(RESTFULAPI.getName()) && conType.getName().equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL.getName()))
         ) {
             String regex = "WHERE fidata_batch_code='";
             int whereIndex = finalSql.lastIndexOf(regex);
@@ -2100,6 +2104,38 @@ public class TableFieldsImpl
     public List<TableFieldsDTO> getFieldInfosByIds(List<Integer> fieldIds) {
         List<TableFieldsPO> tableFieldsPOS = this.listByIds(fieldIds);
         return TableFieldsMap.INSTANCES.listPoToDto(tableFieldsPOS);
+    }
+
+    /**
+     * 获取数仓建模字段数据分类和数据级别
+     *
+     * @return
+     */
+    @Override
+    public CAndLDTO getDataClassificationsAndLevels() {
+        CAndLDTO cAndLDTO = new CAndLDTO();
+        List<ClassificationsAndLevelsDTO> classifications = new ArrayList<>();
+        List<ClassificationsAndLevelsDTO> levels = new ArrayList<>();
+
+        for (DataClassificationEnum value : DataClassificationEnum.values()) {
+            ClassificationsAndLevelsDTO dto = new ClassificationsAndLevelsDTO();
+            dto.setEnumName(value.getName());
+            dto.setEnumValue(value.getValue());
+            dto.setEnumLevel(value.getLevel());
+            classifications.add(dto);
+        }
+
+        for (DataLevelEnum value : DataLevelEnum.values()) {
+            ClassificationsAndLevelsDTO dto = new ClassificationsAndLevelsDTO();
+            dto.setEnumName(value.getName());
+            dto.setEnumValue(value.getValue());
+            dto.setEnumLevel(value.getLevel());
+            levels.add(dto);
+        }
+        cAndLDTO.setClassifications(classifications);
+        cAndLDTO.setLevels(levels);
+
+        return cAndLDTO;
     }
 
     /**

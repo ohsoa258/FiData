@@ -42,6 +42,7 @@ import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -764,7 +765,9 @@ public class BloodCompensationImpl
         if (lastSyncTime == null) {
             accessTable = dataAccessClient.synchronizationAccessTable();
         } else {
-            accessTable = dataAccessClient.synchronizationAccessTableByLastSyncTime(lastSyncTime);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedLastSyncTime = lastSyncTime.format(formatter);
+            accessTable = dataAccessClient.synchronizationAccessTableByLastSyncTime(formattedLastSyncTime);
         }
 
         if (accessTable.code != ResultEnum.SUCCESS.getCode()) {
@@ -787,7 +790,9 @@ public class BloodCompensationImpl
         if (lastSyncTime == null) {
             dataModelMetaData = dataModelClient.getDataModelMetaData();
         } else {
-            dataModelMetaData = dataModelClient.getDataModelMetaDataByLastSyncTime(lastSyncTime);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedLastSyncTime = lastSyncTime.format(formatter);
+            dataModelMetaData = dataModelClient.getDataModelMetaDataByLastSyncTime(formattedLastSyncTime);
         }
 
         if (dataModelMetaData.code != ResultEnum.SUCCESS.getCode()) {

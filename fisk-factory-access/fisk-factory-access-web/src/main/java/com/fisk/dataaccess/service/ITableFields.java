@@ -8,6 +8,7 @@ import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 
@@ -135,5 +136,12 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @return
      */
     List<TableFieldsDTO> getFieldInfosByIds(List<Integer> fieldIds);
+
+    /**
+     * 获取数仓建模字段数据分类和数据级别
+     *
+     * @return
+     */
+    CAndLDTO getDataClassificationsAndLevels();
 
 }

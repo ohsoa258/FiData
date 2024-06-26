@@ -178,7 +178,7 @@ public class BusinessAreaController {
      */
     @GetMapping("/getDataModelMetaDataByLastSyncTime")
     @ApiOperation(value = "根据上次更新元数据的时间获取数据建模的元数据")
-    public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaDataByLastSyncTime(@RequestParam("lastSyncTime") LocalDateTime lastSyncTime) {
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaDataByLastSyncTime(@RequestParam("lastSyncTime") String lastSyncTime) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataModelMetaDataByLastSyncTime(lastSyncTime));
     }
 

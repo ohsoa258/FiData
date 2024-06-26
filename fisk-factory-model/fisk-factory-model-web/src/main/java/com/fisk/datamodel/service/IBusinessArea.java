@@ -192,7 +192,7 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param lastSyncTime
      * @return
      */
-    List<MetaDataInstanceAttributeDTO> getDataModelMetaDataByLastSyncTime(LocalDateTime lastSyncTime);
+    List<MetaDataInstanceAttributeDTO> getDataModelMetaDataByLastSyncTime(String lastSyncTime);
 
     /**
      * 获取数仓建模单个维度/事实表的元数据

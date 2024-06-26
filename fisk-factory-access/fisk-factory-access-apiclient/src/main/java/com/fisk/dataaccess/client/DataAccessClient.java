@@ -410,7 +410,7 @@ public interface DataAccessClient {
      */
     @GetMapping("/appRegistration/synchronizationAccessTableByLastSyncTime")
     @ApiOperation(value = "元数据同步所有接入表")
-    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTableByLastSyncTime(@RequestParam("lastSyncTime")LocalDateTime lastSyncTime);
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTableByLastSyncTime(@RequestParam("lastSyncTime")String lastSyncTime);
 
     /**
      * 依据应用id集合批量查询目标源id集合

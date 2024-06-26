@@ -7,6 +7,7 @@ import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.access.OperateTableDTO;
 import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.table.*;
+import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
 import com.fisk.dataaccess.service.ITableFields;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -132,6 +133,17 @@ public class TableFieldsController {
     @ApiOperation(value = "根据字段id集合获取字段详情集合")
     public ResultEntity<List<TableFieldsDTO>> getFieldInfosByIds(@RequestParam("fieldIds") List<Integer> fieldIds) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldInfosByIds(fieldIds));
+    }
+
+    /**
+     * 获取数仓建模字段数据分类和数据级别
+     *
+     * @return
+     */
+    @GetMapping("/getDataClassificationsAndLevels")
+    @ApiOperation(value = "获取数仓建模字段数据分类和数据级别")
+    public ResultEntity<CAndLDTO> getDataClassificationsAndLevels() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataClassificationsAndLevels());
     }
 
 }
