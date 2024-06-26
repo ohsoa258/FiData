@@ -33,6 +33,9 @@ public class MetaDataEntityOperationLogDTO {
     @ApiModelProperty(value = "创建者")
     private String createUser;
 
+    @ApiModelProperty(value = "该元数据的真正原模块创建人")
+    private String owner;
+
     @ApiModelProperty(value = "创建时间")
     private LocalDateTime createTime;
 

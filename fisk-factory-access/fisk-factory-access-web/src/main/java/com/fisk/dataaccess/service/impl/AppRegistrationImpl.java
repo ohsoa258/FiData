@@ -4223,7 +4223,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setDescription(tableAccess.getTableDes());
         table.setComment(String.valueOf(app.getId()));
         table.setDisplayName(tableAccess.displayName);
-        table.setOwner(app.createUser);
+        table.setOwner(tableAccess.createUser);
         table.setSqlScript(tableAccess.sqlScript);
         table.setCoverScript(tableAccess.coverScript);
         table.setDataSourceId(tableAccess.getAppDataSourceId());
@@ -4241,7 +4241,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             field.setComment(e.getDisplayName());
             field.setDataType(e.fieldType);
             field.setDisplayName(e.displayName);
-            field.setOwner(table.owner);
+            field.setOwner(e.createUser);
             field.setLength(String.valueOf(e.fieldLength));
             return field;
         }).collect(Collectors.toList());

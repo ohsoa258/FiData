@@ -23,6 +23,7 @@ public class MetaDataEntityOperationLogPO {
     private String beforeChange;    //操作前
     private String afterChange;     //操作后
     private String createUser;
+    private String owner;
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 

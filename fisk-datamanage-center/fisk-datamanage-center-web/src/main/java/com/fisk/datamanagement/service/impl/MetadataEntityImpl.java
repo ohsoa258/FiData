@@ -669,16 +669,20 @@ public class MetadataEntityImpl
         infoMap.put("description", one.description);
         //获取用户id
         String owner = one.owner;
-        ResultEntity<UserDTO> resultEntity = null;
         if (owner != null) {
-            //将属性中的用户id转为用户名称
-            resultEntity = userClient.getUserV2(Integer.parseInt(owner));
-            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
-                UserDTO userDTO = resultEntity.getData();
-                infoMap.put("owner", userDTO.getUsername());
+            if (isInteger(owner)) {
+                //将属性中的用户id转为用户名称
+                ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(owner));
+                if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                    UserDTO userDTO = resultEntity.getData();
+                    infoMap.put("owner", userDTO.getUsername());
+                } else {
+                    infoMap.put("owner", owner);
+                }
             } else {
                 infoMap.put("owner", owner);
             }
+
         } else {
             infoMap.put("owner", owner);
         }
@@ -1044,12 +1048,12 @@ public class MetadataEntityImpl
     /**
      * 同步表血缘 CDC
      *
-     * @param dbName 数据库名称
-     * @param tableGuid 表guid
-     * @param sqlScript sql脚本
+     * @param dbName             数据库名称
+     * @param tableGuid          表guid
+     * @param sqlScript          sql脚本
      * @param sourceDataSourceId 数据源id
-     * @param tableConfigId 表配置id
-     * @param cdcFromTableList CDC关联的表
+     * @param tableConfigId      表配置id
+     * @param cdcFromTableList   CDC关联的表
      */
     public void synchronizationTableKinShipForCDC(String dbName,
                                                   String tableGuid,
@@ -1635,9 +1639,24 @@ public class MetadataEntityImpl
             //显示名称
             entitiesDto.attributes.displayName = po.displayName;
 
-            //用户名id替换名称
-            Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
-            first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
+            String owner = po.getOwner();
+            //获取用户id
+            if (owner != null) {
+                //将属性中的用户id转为用户名称
+                ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(owner));
+                if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                    UserDTO userDTO = resultEntity.getData();
+                    entitiesDto.attributes.owner = userDTO.username;
+                } else {
+                    //用户名id替换名称
+                    Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
+                    first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
+                }
+            } else {
+                //用户名id替换名称
+                Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
+                first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
+            }
 
             //该实体关联的所有业务分类
             entitiesDto.classificationNames = new ArrayList<>();
@@ -1692,6 +1711,21 @@ public class MetadataEntityImpl
                 .skip((dto.offset - 1) * dto.limit)
                 .limit(dto.limit).collect(Collectors.toList());
         return data;
+    }
+
+    /**
+     * 判断是否是整数
+     *
+     * @param str
+     * @return
+     */
+    public static boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**

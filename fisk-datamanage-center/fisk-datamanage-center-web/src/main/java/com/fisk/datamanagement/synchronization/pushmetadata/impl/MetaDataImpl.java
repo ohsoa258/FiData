@@ -215,7 +215,7 @@ public class MetaDataImpl implements IMetaData {
                         List<String> qualifiedNames = new ArrayList<>();
                         for (MetaDataColumnAttributeDTO field : table.columnList) {
                             //新增表字段
-                            metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName);
+                            metaDataField(field, tableGuid, ("").equals(currUserName) || currUserName == null ? instance.currUserName : currUserName, field.owner);
                             qualifiedNames.add(field.qualifiedName);
                         }
                         if (!qualifiedNames.isEmpty()) {
@@ -525,17 +525,17 @@ public class MetaDataImpl implements IMetaData {
      * @param parentEntityId
      * @return
      */
-    private String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId, String createUser) {
+    private String metaDataField(MetaDataColumnAttributeDTO dto, String parentEntityId, String createUser, String owner) {
         Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
         if (metadataEntity == null) {
             //将字段的新增操作日志添加为父级表的操作日志
-            addOperationLog("", dto.name, MetaDataeLogEnum.INSERT_OPERATION, createUser, parentEntityId);
+            addOperationLog("", dto.name, MetaDataeLogEnum.INSERT_OPERATION, owner, parentEntityId);
 
             //插入元数据
             String fieldEntityId = this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_COLUMN.getName(), parentEntityId).toString();
 
             //添加字段自己的操作日志
-            addOperationLog("", dto.name, MetaDataeLogEnum.INSERT_OPERATION, createUser, fieldEntityId);
+            addOperationLog("", dto.name, MetaDataeLogEnum.INSERT_OPERATION, owner, fieldEntityId);
             return fieldEntityId;
         }
 
@@ -543,10 +543,10 @@ public class MetaDataImpl implements IMetaData {
         if (!entityPO.getName().equals(dto.getName())) {
 
             //将字段的修改操作日志添加为父级表的操作日志
-            addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, createUser, parentEntityId);
+            addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, owner, parentEntityId);
 
             //添加字段自己的操作日志
-            addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, createUser, String.valueOf(metadataEntity));
+            addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, owner, String.valueOf(metadataEntity));
         }
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_COLUMN.getName()).toString();
     }
@@ -568,6 +568,7 @@ public class MetaDataImpl implements IMetaData {
         operationLogDTO.setAfterChange(afterChange);
         operationLogDTO.setCreateTime(LocalDateTime.now());
         operationLogDTO.setCreateUser(createUser);
+        operationLogDTO.setOwner(createUser);
         operationLogDTO.setMetadataEntityId(entityId);
         operationLog.addOperationLog(operationLogDTO);
     }
@@ -1106,7 +1107,7 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid, instance.owner);
+                        metaDataField(field, tableGuid, instance.owner,instance.owner);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段
@@ -1609,7 +1610,7 @@ public class MetaDataImpl implements IMetaData {
         if (entityDto.createApiType != 3) {
             List<String> qualifiedNames = new ArrayList<>();
             for (MetaDataColumnAttributeDTO field : entityDto.getAttributeDTOList()) {
-                metaDataField(field, targetEntityId, entityDto.getOwner());
+                metaDataField(field, targetEntityId, entityDto.getOwner(),entityDto.getOwner());
                 qualifiedNames.add(field.getQualifiedName());
             }
             if (qualifiedNames.stream().count() > 0) {

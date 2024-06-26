@@ -29,6 +29,7 @@ import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.entity.MetaSyncTimePO;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
+import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.service.impl.MetaSyncTimePOServiceImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
 import com.fisk.datamodel.client.DataModelClient;
@@ -100,6 +101,8 @@ public class BloodCompensationImpl
     private MetaSyncTimePOServiceImpl metaSyncTimePOService;
     @Resource
     private BloodCompensationImpl bloodCompensation;
+    @Resource
+    private EntityImpl entityImpl;
 
 
 //endregion
@@ -282,6 +285,15 @@ public class BloodCompensationImpl
         log.info("******视图服务元数据同步耗时: " + viewAnalyzeServiceStopWatch.getTotalTimeSeconds() + "秒 ******");
         log.info("******数据库同步服务元数据同步耗时: " + dataDistributionStopWatch.getTotalTimeSeconds() + "秒 ******");
         log.info("******主数据元数据同步耗时: " + masterDataStopWatch.getTotalTimeSeconds() + "秒 ******");
+
+        //开始刷新元数据树redis缓存
+        log.info("******开始刷新元数据树redis缓存******");
+        try {
+            entityImpl.refreshEntityTreeList();
+        }catch (Exception e){
+            log.error("******刷新元数据树redis缓存失败******"+e);
+        }
+
         return ResultEnum.SUCCESS;
     }
 
@@ -470,6 +482,15 @@ public class BloodCompensationImpl
         log.info("******视图服务元数据同步耗时: " + viewAnalyzeServiceStopWatch.getTotalTimeSeconds() + "秒 ******");
         log.info("******数据库同步服务元数据同步耗时: " + dataDistributionStopWatch.getTotalTimeSeconds() + "秒 ******");
         log.info("******主数据元数据同步耗时: " + masterDataStopWatch.getTotalTimeSeconds() + "秒 ******");
+
+        //开始刷新元数据树redis缓存
+        log.info("******开始刷新元数据树redis缓存******");
+        try {
+            entityImpl.refreshEntityTreeList();
+        }catch (Exception e){
+            log.error("******刷新元数据树redis缓存失败******"+e);
+        }
+
         return ResultEnum.SUCCESS;
     }
     //region 内置实现方法
@@ -861,6 +882,7 @@ public class BloodCompensationImpl
                     tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableName);
                     tableAttributeDTO.setDisplayName(tableNameAndColumn.tableFullName);
                     tableAttributeDTO.setIsExistStg(false);
+                    tableAttributeDTO.setOwner("外部数据源");
                     tableAttributeDTO.setIsExistClassification(false);
                     List<MetaDataColumnAttributeDTO> columnAttributeDTOList = new ArrayList<>();
                     for (TableStructureDTO field : tableNameAndColumn.getFields()) {
@@ -871,6 +893,7 @@ public class BloodCompensationImpl
                         metaDataColumnAttributeDTO.setDataType(field.fieldType);
                         metaDataColumnAttributeDTO.setLength(field.fieldLength + "");
                         metaDataColumnAttributeDTO.setDescription(field.fieldDes);
+                        metaDataColumnAttributeDTO.setOwner("外部数据源");
                         columnAttributeDTOList.add(metaDataColumnAttributeDTO);
                     }
                     tableAttributeDTO.columnList = columnAttributeDTOList;

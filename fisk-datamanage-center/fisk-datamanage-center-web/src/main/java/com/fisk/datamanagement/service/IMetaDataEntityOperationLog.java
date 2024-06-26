@@ -18,4 +18,5 @@ public interface IMetaDataEntityOperationLog {
      * @return
      */
     List<MetaDataEntityOperationLogDTO> selectLogList(Integer entityId,Integer typeId);
+
 }
