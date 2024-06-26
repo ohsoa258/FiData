@@ -45,7 +45,7 @@ public class NifiConstants {
     public static final class AttrConstants {
 
         public static final String INCREMENT_DB_TABLE_NAME = "tb_etl_Incremental";
-        public static final String INCREMENT_DB_FIELD_START = "incremental_objectiveScore_start";
+        public static final String INCREMENT_DB_FIELD_START = "incremental_objectivescore_start";
         public static final String FI_VERSION = "fi_version";
         public static final String INCREMENT_START = "IncrementStart";
         public static final String INCREMENT_DB_FIELD_END = "incremental_objectivescore_end";
