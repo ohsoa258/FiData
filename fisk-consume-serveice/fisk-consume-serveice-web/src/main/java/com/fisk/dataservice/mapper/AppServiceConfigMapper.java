@@ -117,6 +117,7 @@ public interface AppServiceConfigMapper extends FKBaseMapper<AppServiceConfigPO>
             "\tt1.api_state AS apiState,\n" +
             "\tt3.app_white_list AS appWhiteList,\n" +
             "\tt3.app_white_list_state AS appWhiteListState \n" +
+            "\tt3.proxy_authorization_switch AS proxyAuthorizationSwitch \n" +
             "FROM\n" +
             "\ttb_app_service_config t1\n" +
             "\tLEFT JOIN tb_api_config t2 ON t1.service_id = t2.id\n" +
