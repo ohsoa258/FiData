@@ -647,7 +647,7 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             //验证是否需要授权认证
             appWhiteList = appWhiteList.stream().filter(i->i.getProxyAuthorizationSwitch() == 1).collect(Collectors.toList());
 
-            if (CollectionUtils.isEmpty(appWhiteList)){
+            if (CollectionUtils.isNotEmpty(appWhiteList)){
                 //验证是否跳过授权认证
                 UserInfo userInfo = userHelper.getLoginUserInfo();
                 if (userInfo == null) {
