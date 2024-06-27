@@ -299,6 +299,7 @@ public class TaskPublish {
                             dto.setId(Long.parseLong(pipelineId));
                             dto.setLastStatus(NifiStageTypeEnum.RUNNING.getName());
                             dto.setLastDateTime(pipelstart);
+                            dto.setStatus(1);
                             dataFactoryClient.updatePublishStatus(dto);
                             redisUtil.del("PipelLock:" + pipelTraceId);
                         } else if (Objects.equals(kafkaReceiveDTO.topicType, TopicTypeEnum.DAILY_NIFI_FLOW.getValue())) {
