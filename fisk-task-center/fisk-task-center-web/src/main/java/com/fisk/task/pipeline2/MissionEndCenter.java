@@ -290,6 +290,7 @@ public class MissionEndCenter {
                                         iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                                         NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
                                         nifiCustomWorkflowDTO.setId(Long.parseLong(pipelineId));
+                                        nifiCustomWorkflowDTO.setStatus(1);
                                         nifiCustomWorkflowDTO.setLastStatus(status);
                                         nifiCustomWorkflowDTO.setLastDateTime(endDateTime);
                                         dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
@@ -419,6 +420,7 @@ public class MissionEndCenter {
                                     iPipelLog.savePipelLog(pipelTraceId, pipelMap, pipelineId);
                                     NifiCustomWorkflowDTO nifiCustomWorkflowDTO = new NifiCustomWorkflowDTO();
                                     nifiCustomWorkflowDTO.setId(Long.parseLong(pipelineId));
+                                    nifiCustomWorkflowDTO.setStatus(1);
                                     nifiCustomWorkflowDTO.setLastStatus(status);
                                     nifiCustomWorkflowDTO.setLastDateTime(endDateTime);
                                     dataFactoryClient.updatePublishStatus(nifiCustomWorkflowDTO);
