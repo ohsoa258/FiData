@@ -644,10 +644,11 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 doSetResponse(resultEnum, response);
                 return;
             }
+            List<AppWhiteListVO> auth = new ArrayList<>();
             //验证是否需要授权认证
-            appWhiteList = appWhiteList.stream().filter(i->i.getProxyAuthorizationSwitch() != 1).collect(Collectors.toList());
+            auth = appWhiteList.stream().filter(i->i.getProxyAuthorizationSwitch() == 1).collect(Collectors.toList());
 
-            if (CollectionUtils.isNotEmpty(appWhiteList)){
+            if (CollectionUtils.isNotEmpty(auth)){
                 //验证是否跳过授权认证
                 UserInfo userInfo = userHelper.getLoginUserInfo();
                 if (userInfo == null) {
