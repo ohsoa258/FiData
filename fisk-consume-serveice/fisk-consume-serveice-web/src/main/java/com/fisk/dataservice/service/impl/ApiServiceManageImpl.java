@@ -644,9 +644,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 doSetResponse(resultEnum, response);
                 return;
             }
-            List<AppWhiteListVO> auth = new ArrayList<>();
             //验证是否需要授权认证
-            auth = appWhiteList.stream().filter(i->i.getProxyAuthorizationSwitch() == 1).collect(Collectors.toList());
+            List<AppWhiteListVO> auth = appWhiteList.stream().filter(i->i.getProxyAuthorizationSwitch() == 1).collect(Collectors.toList());
 
             if (CollectionUtils.isNotEmpty(auth)){
                 //验证是否跳过授权认证
