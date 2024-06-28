@@ -1,18 +1,18 @@
 package com.fisk.datamanagement.service;
 
 import com.alibaba.fastjson.JSONArray;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamanagement.dto.businessclassification.BusinessCategorySortDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
 import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.classification.BusinessCategoryDTO;
-import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
-
-import javax.servlet.http.HttpServletResponse;
+import com.fisk.datamanagement.entity.BusinessCategoryPO;
 import java.util.List;
 
-public interface BusinessCategoryService {
+public interface BusinessCategoryService extends IService<BusinessCategoryPO> {
 
 
     /**
@@ -79,4 +79,6 @@ public interface BusinessCategoryService {
     List<ParentBusinessTreeDTO> getParentBusinessDataList();
 
     List<BusinessMetaDataTreeDTO> getAllBusinessMetaDataList();
+
+    ResultEnum businessCategorySort(BusinessCategorySortDTO dto);
 }

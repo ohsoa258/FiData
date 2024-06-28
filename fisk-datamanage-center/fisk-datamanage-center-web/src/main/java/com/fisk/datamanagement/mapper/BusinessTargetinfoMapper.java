@@ -22,14 +22,10 @@ public interface BusinessTargetinfoMapper extends FKBaseMapper<BusinessTargetinf
     @Update("update tb_business_targetinfo set description = #{model.description} where name = #{model.name} and del_flag = 1")
     int updateByName(@Param("model") BusinessCategoryPO model);
 
-    @Select("select * from tb_business_targetinfo where pid = #{pid} and del_flag = 1 ")
-    List<BusinessTargetinfoPO> selectClassification(@Param("pid") String pid);
-
     @Select("<script> select * from tb_business_targetinfo where pid in <foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach> and del_flag = 1 </script>")
     List<BusinessTargetinfoPO> selectClassification(@Param("ids") List<Long> ids );
     @Select("select * from tb_business_targetinfo where id = #{id} and del_flag = 1 ")
     List<BusinessTargetinfoPO> selectClassificationss(@Param("id") String id);
-
 
     @Select("<script> select  *  from  (select a.*,b.name as namepid  from  tb_business_targetinfo as a LEFT JOIN tb_business_category as b on a.pid=b.id ) as ab where  id in<foreach collection='ids' item='id' open='(' separator=',' close=')'> #{id} </foreach>  and del_flag = 1 </script>")
     List<Map<String,Object>> selectClassification1(@Param("ids") List<String> tableIds );

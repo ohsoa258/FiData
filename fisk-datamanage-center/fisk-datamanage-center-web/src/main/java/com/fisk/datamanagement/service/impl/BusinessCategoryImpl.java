@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
@@ -12,16 +13,14 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datafactory.enums.DelFlagEnum;
+import com.fisk.datamanagement.dto.businessclassification.BusinessCategorySortDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.businessclassification.ParentBusinessTreeDTO;
 import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.*;
-import com.fisk.datamanagement.mapper.BusinessCategoryMapper;
-import com.fisk.datamanagement.mapper.BusinessExtendedfieldsMapper;
-import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
-import com.fisk.datamanagement.mapper.FactTreeListMapper;
+import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.BusinessCategoryAssignmentService;
 import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamodel.client.DataModelClient;
@@ -42,7 +41,7 @@ import java.util.stream.Collectors;
  * @date 2023年11月20日 10:44
  */
 @Service
-public class BusinessCategoryImpl implements BusinessCategoryService {
+public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, BusinessCategoryPO> implements BusinessCategoryService {
 
 
     @Resource
@@ -66,6 +65,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
 
     @Resource
     private BusinessCategoryAssignmentService businessCategoryAssignmentService;
+
     /**
      * 更改指标名称属性_
      *
@@ -149,15 +149,15 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.in(BusinessTargetinfoPO::getPid, idList);
         List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(queryWrapper);
-        if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+        if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)) {
             List<Long> ids = businessTargetinfoPOList.stream().map(BusinessTargetinfoPO::getId).collect(Collectors.toList());
             businessTargetinfoMapper.deleteBatchIds(ids);
             LambdaQueryWrapper<BusinessExtendedfieldsPO> deleteWrapper = new LambdaQueryWrapper<>();
-            deleteWrapper.in(BusinessExtendedfieldsPO::getIndexid,ids);
+            deleteWrapper.in(BusinessExtendedfieldsPO::getIndexid, ids);
             businessExtendedfieldsMapper.delete(deleteWrapper);
 
             LambdaQueryWrapper<FactTreePOs> factDeleteWrapper = new LambdaQueryWrapper<>();
-            factDeleteWrapper.in(FactTreePOs::getPid,ids);
+            factDeleteWrapper.in(FactTreePOs::getPid, ids);
             factTreeListMapper.delete(factDeleteWrapper);
         }
         if (businessCategoryMapper.deleteBatchIds(idList) > 0) {
@@ -172,11 +172,12 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         for (BusinessCategoryPO tree : trees) {
             if (id == tree.getPid()) {
                 children.add(tree);
-                children.addAll(findChildren(trees, (int)tree.getId()));
+                children.addAll(findChildren(trees, (int) tree.getId()));
             }
         }
         return children;
     }
+
     /**
      * 向数据库中添加指标数据
      *
@@ -223,24 +224,24 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             if (flag < 0) {
                 throw new FkException(ResultEnum.ERROR, "保存失败");
             }
-            if (model.getPid() == null || model.getPid() == 0){
+            if (model.getPid() == null || model.getPid() == 0) {
                 UserInfo userInfo = userHelper.getLoginUserInfo();
                 ResultEntity<List<RoleInfoDTO>> businessAssignment = userClient.getRolebyUserId(userInfo.getId().intValue());
                 List<RoleInfoDTO> businessAssignmentIds = new ArrayList<>();
-                if (businessAssignment.code == ResultEnum.SUCCESS.getCode()){
+                if (businessAssignment.code == ResultEnum.SUCCESS.getCode()) {
                     businessAssignmentIds = businessAssignment.data;
-                }else {
+                } else {
                     throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
                 }
                 List<Integer> roleIds = businessAssignmentIds.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
                 List<BusinessCategoryAssignmentPO> businessCategoryAssignmentPOList = new ArrayList<>();
                 for (Integer id : roleIds) {
                     BusinessCategoryAssignmentPO businessCategoryAssignmentPO = new BusinessCategoryAssignmentPO();
-                    businessCategoryAssignmentPO.setCategoryId((int)model.id);
+                    businessCategoryAssignmentPO.setCategoryId((int) model.id);
                     businessCategoryAssignmentPO.setRoleId(id);
                     businessCategoryAssignmentPOList.add(businessCategoryAssignmentPO);
                 }
-                if (CollectionUtils.isNotEmpty(businessCategoryAssignmentPOList)){
+                if (CollectionUtils.isNotEmpty(businessCategoryAssignmentPOList)) {
                     businessCategoryAssignmentService.saveBatch(businessCategoryAssignmentPOList);
                 }
             }
@@ -254,7 +255,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         LambdaQueryWrapper<BusinessCategoryAssignmentPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(BusinessCategoryAssignmentPO::getCategoryId, pid);
         List<BusinessCategoryAssignmentPO> categoryAssignmentPOList = businessCategoryAssignmentService.list(queryWrapper);
-        if (CollectionUtils.isNotEmpty(categoryAssignmentPOList)){
+        if (CollectionUtils.isNotEmpty(categoryAssignmentPOList)) {
             result = categoryAssignmentPOList.stream().map(BusinessCategoryAssignmentPO::getRoleId).collect(Collectors.toList());
         }
         return result;
@@ -262,10 +263,10 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
 
     @Override
     public ResultEnum addBusinessCategoryAssignment(BusinessCategoryAssignmentDTO dto) {
-        if (dto.menuId == null){
+        if (dto.menuId == null) {
             throw new FkException(ResultEnum.ERROR, "菜单id不能为空");
         }
-        if (CollectionUtils.isEmpty(dto.roleIds)){
+        if (CollectionUtils.isEmpty(dto.roleIds)) {
             throw new FkException(ResultEnum.ERROR, "角色id不能为空");
         }
         List<BusinessCategoryAssignmentPO> businessCategoryAssignmentPOList = new ArrayList<>();
@@ -278,7 +279,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         LambdaQueryWrapper<BusinessCategoryAssignmentPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(BusinessCategoryAssignmentPO::getCategoryId, dto.menuId);
         businessCategoryAssignmentService.remove(queryWrapper);
-        if (CollectionUtils.isNotEmpty(businessCategoryAssignmentPOList)){
+        if (CollectionUtils.isNotEmpty(businessCategoryAssignmentPOList)) {
             businessCategoryAssignmentService.saveBatch(businessCategoryAssignmentPOList);
         }
         return ResultEnum.SUCCESS;
@@ -313,13 +314,13 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         UserInfo userInfo = userHelper.getLoginUserInfo();
         ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
         List<RoleInfoDTO> businessAssignment = new ArrayList<>();
-        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()){
+        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()) {
             businessAssignment = rolebyUserId.data;
-        }else {
+        } else {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(roleIds)){
+        if (CollectionUtils.isEmpty(roleIds)) {
             return new ArrayList<>();
         }
         List<Integer> businessCategoryIds = businessCategoryAssignmentService.getCategoryIds(roleIds);
@@ -391,79 +392,80 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                                 if (i == 1) {
                                     json.put("dimdomaintype", "其他域维度");
                                 }
-                                if(array1.size() > 0){
-                                    json.put("dimdomainid",array1.getString("id"));
-                                    json.put("dimdomain",array1.getString("businessName"));
+                                if (array1.size() > 0) {
+                                    json.put("dimdomainid", array1.getString("id"));
+                                    json.put("dimdomain", array1.getString("businessName"));
                                 }
-                                if(array3.size() > 0){
-                                    json.put("dimtableid",array3.getString("id"));
-                                    json.put("dimtable",array3.getString("dimensionCnName"));
-                                    json.put("dimtablename",array3.getString("dimensionTabName"));
+                                if (array3.size() > 0) {
+                                    json.put("dimtableid", array3.getString("id"));
+                                    json.put("dimtable", array3.getString("dimensionCnName"));
+                                    json.put("dimtablename", array3.getString("dimensionTabName"));
                                 }
-                                if(array6.size() > 0){
-                                    json.put("attributeid",array7.getString("id"));
-                                    json.put("attribute",array7.getString("dimensionFieldCnName"));
-                                    json.put("attributeEnName",array7.getString("dimensionFieldEnName"));
+                                if (array6.size() > 0) {
+                                    json.put("attributeid", array7.getString("id"));
+                                    json.put("attribute", array7.getString("dimensionFieldCnName"));
+                                    json.put("attributeEnName", array7.getString("dimensionFieldEnName"));
                                 }
-                                array7.put("extendedfields",json);
-                                array6.set(k,array7);
+                                array7.put("extendedfields", json);
+                                array6.set(k, array7);
                             }
                         }
-                        array2.set(j,array3);
+                        array2.set(j, array3);
                     }
                 }
-                arrays.set(o,array1);
+                arrays.set(o, array1);
             }
-            array.set(i,arrays);
+            array.set(i, arrays);
         }
         return array;
 
     }
+
     @Override
     public JSONArray getFactTreeList() {
         List<FactTreeDTO> aa = dataModelClient.getFactTree();
         JSONArray array = new JSONArray();
         array.add(aa.get(0).getFactByArea());
-        JSONArray jsonArray =array.getJSONArray(0);
-        JSONObject  json = new JSONObject();
-        JSONArray data  = new JSONArray();
-        for (int i=0; i<jsonArray.size();i++){
-            JSONObject data1= new JSONObject();
-            JSONObject jsonObject= jsonArray.getJSONObject(i);
-            data1.put("id",jsonObject.getString("id"));
-            data1.put("name",jsonObject.getString("businessName"));
-            JSONArray array1  = jsonObject.getJSONArray("factList");
+        JSONArray jsonArray = array.getJSONArray(0);
+        JSONObject json = new JSONObject();
+        JSONArray data = new JSONArray();
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JSONObject data1 = new JSONObject();
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            data1.put("id", jsonObject.getString("id"));
+            data1.put("name", jsonObject.getString("businessName"));
+            JSONArray array1 = jsonObject.getJSONArray("factList");
             JSONArray array4 = new JSONArray();
-            for (int j=0;j<array1.size();j++){
+            for (int j = 0; j < array1.size(); j++) {
                 JSONObject data2 = new JSONObject();
                 JSONObject jsonObject1 = array1.getJSONObject(j);
-                data2.put("id",jsonObject1.getString("id"));
-                data2.put("name",jsonObject1.getString("factTabName"));
-                data2.put("cnName",jsonObject1.getString("factTableCnName"));
-                JSONArray array2= jsonObject1.getJSONArray("attributeList");
-                JSONArray array3= new JSONArray();
-                for (int m=0; m<array2.size();m++){
+                data2.put("id", jsonObject1.getString("id"));
+                data2.put("name", jsonObject1.getString("factTabName"));
+                data2.put("cnName", jsonObject1.getString("factTableCnName"));
+                JSONArray array2 = jsonObject1.getJSONArray("attributeList");
+                JSONArray array3 = new JSONArray();
+                for (int m = 0; m < array2.size(); m++) {
                     JSONObject data3 = new JSONObject();
-                    JSONObject jsonObject2= array2.getJSONObject(m);
+                    JSONObject jsonObject2 = array2.getJSONObject(m);
                     JSONObject data4 = new JSONObject();
-                    data3.put("id",jsonObject2.getString("id"));
-                    data3.put("name",jsonObject2.getString("factFieldEnName"));
-                    data3.put("cnName",jsonObject2.getString("factFieldCnName"));
-                    data4.put("businessNameId",jsonObject.getString("id"));
-                    data4.put("businessName",jsonObject.getString("businessName"));
-                    data4.put("factTabNameId",jsonObject1.getString("id"));
-                    data4.put("factTabName",jsonObject1.getString("factTabName"));
-                    data4.put("factTableCnName",jsonObject1.getString("factTableCnName"));
-                    data4.put("factFieldEnNameId",jsonObject2.getString("id"));
-                    data4.put("factFieldEnName",jsonObject2.getString("factFieldEnName"));
-                    data4.put("factFieldCnName",jsonObject2.getString("factFieldCnName"));
-                    data3.put("other",data4);
+                    data3.put("id", jsonObject2.getString("id"));
+                    data3.put("name", jsonObject2.getString("factFieldEnName"));
+                    data3.put("cnName", jsonObject2.getString("factFieldCnName"));
+                    data4.put("businessNameId", jsonObject.getString("id"));
+                    data4.put("businessName", jsonObject.getString("businessName"));
+                    data4.put("factTabNameId", jsonObject1.getString("id"));
+                    data4.put("factTabName", jsonObject1.getString("factTabName"));
+                    data4.put("factTableCnName", jsonObject1.getString("factTableCnName"));
+                    data4.put("factFieldEnNameId", jsonObject2.getString("id"));
+                    data4.put("factFieldEnName", jsonObject2.getString("factFieldEnName"));
+                    data4.put("factFieldCnName", jsonObject2.getString("factFieldCnName"));
+                    data3.put("other", data4);
                     array3.add(data3);
                 }
-                data2.put("chidList",array3);
+                data2.put("chidList", array3);
                 array4.add(data2);
             }
-            data1.put("chidList",array4);
+            data1.put("chidList", array4);
             data.add(data1);
         }
         return data;
@@ -505,7 +507,25 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
             dto.setChild(parentBusinessTreeDTO);
             return dto;
         }).collect(Collectors.toList());
-        List<ParentBusinessTreeDTO> parentList = childClassTree(allData, "0");
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<List<RoleInfoDTO>> rolebyUserId = userClient.getRolebyUserId(userInfo.getId().intValue());
+        List<RoleInfoDTO> businessAssignment = new ArrayList<>();
+        if (rolebyUserId.code == ResultEnum.SUCCESS.getCode()) {
+            businessAssignment = rolebyUserId.data;
+        } else {
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(roleIds)) {
+            return new ArrayList<>();
+        }
+        List<Integer> businessCategoryIds = businessCategoryAssignmentService.getCategoryIds(roleIds);
+        List<ParentBusinessTreeDTO> parent = allData.stream().filter(i -> "0".equals(i.getPid()) && businessCategoryIds.contains(Integer.valueOf(i.getId()))).collect(Collectors.toList());
+        List<ParentBusinessTreeDTO> child = allData.stream().filter(i -> !"0".equals(i.getPid())).collect(Collectors.toList());
+        List<ParentBusinessTreeDTO> all = new ArrayList<>();
+        all.addAll(parent);
+        all.addAll(child);
+        List<ParentBusinessTreeDTO> parentList = childClassTree(all, "0");
         return parentList;
     }
 
@@ -514,15 +534,15 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         List<BusinessMetaDataTreeDTO> allList = new ArrayList<>();
         // 从数据库中查询所有BusinessCategoryPO对象
         List<BusinessCategoryPO> businessCategoryPOS = this.businessCategoryMapper.selectList(new QueryWrapper<>());
-        if (CollectionUtils.isNotEmpty(businessCategoryPOS)){
+        if (CollectionUtils.isNotEmpty(businessCategoryPOS)) {
             List<BusinessMetaDataTreeDTO> businessMetaDataTreeDTOS = businessCategoryPOS.stream().map(i -> {
 
                 // 将BusinessCategoryPO对象转换为BusinessMetaDataTreeDTO对象
                 BusinessMetaDataTreeDTO businessMetaDataTreeDTO = new BusinessMetaDataTreeDTO();
-                businessMetaDataTreeDTO.setId(~(int) i.getId()+1);
+                businessMetaDataTreeDTO.setId(~(int) i.getId() + 1);
                 businessMetaDataTreeDTO.setName(i.getName());
                 // 处理可能的空指针异常，如果pid为null或0，设置为0
-                businessMetaDataTreeDTO.setPid(i.getPid() != null && i.getPid() != 0 ? ~i.getPid()+1 : 0);
+                businessMetaDataTreeDTO.setPid(i.getPid() != null && i.getPid() != 0 ? ~i.getPid() + 1 : 0);
                 businessMetaDataTreeDTO.setType(1);
                 businessMetaDataTreeDTO.setSort(i.getSort());
                 return businessMetaDataTreeDTO;
@@ -531,7 +551,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         }
         // 从数据库中查询所有BusinessTargetinfoPO对象
         List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(new QueryWrapper<>());
-        if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)){
+        if (CollectionUtils.isNotEmpty(businessTargetinfoPOList)) {
             List<BusinessMetaDataTreeDTO> businessMetaDataTreeDTOS = businessTargetinfoPOList.stream().map(i -> {
                 // 将BusinessTargetinfoPO对象转换为BusinessMetaDataTreeDTO对象
                 BusinessMetaDataTreeDTO businessMetaDataTreeDTO = new BusinessMetaDataTreeDTO();
@@ -547,14 +567,138 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
         // 从allList中筛选出pid为0的元素，作为根节点列表
         List<BusinessMetaDataTreeDTO> parentList = allList.stream().filter(item -> item.getPid() == 0).collect(Collectors.toList());
         // 若根节点列表为空，返回一个空列表
-        if (CollectionUtils.isEmpty(parentList)){
+        if (CollectionUtils.isEmpty(parentList)) {
             return new ArrayList<>();
-        }else {
+        } else {
             parentList.sort(Comparator.comparing(BusinessMetaDataTreeDTO::getSort).reversed());
         }
         // 递归处理子集
         bussinessCategoryTree(allList, parentList);
         return parentList;
+    }
+
+    @Override
+    public ResultEnum businessCategorySort(BusinessCategorySortDTO dto) {
+        Integer tragetId = dto.getTragetId();
+        BusinessCategoryPO businessCategoryPO = this.getById(dto.getMenuId());
+        BusinessCategoryPO tragetMenuPO = this.getById(tragetId);
+        if (dto.getCrossLevel()) {
+            if (tragetId == null || tragetId == 0) {
+                Integer pid = businessCategoryPO.getPid();
+                Integer sort = businessCategoryPO.getSort();
+
+                LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(BusinessCategoryPO::getPid, dto.getPid());
+                List<BusinessCategoryPO> all = this.list(queryWrapper);
+                if (!org.springframework.util.CollectionUtils.isEmpty(all)) {
+                    List<BusinessCategoryPO> menus = new ArrayList<>();
+                    for (BusinessCategoryPO menuPO : all) {
+                        menuPO.setSort(menuPO.getSort() + 1);
+                        menus.add(menuPO);
+                    }
+                    this.updateBatchById(menus);
+                }
+                businessCategoryPO.setPid(dto.getPid());
+                businessCategoryPO.setSort(1);
+                this.updateById(businessCategoryPO);
+
+                LambdaQueryWrapper<BusinessCategoryPO> selectMenus = new LambdaQueryWrapper<>();
+                selectMenus.eq(BusinessCategoryPO::getPid, pid);
+                selectMenus.gt(BusinessCategoryPO::getSort, sort);
+                List<BusinessCategoryPO> lastMenus = this.list(selectMenus);
+                List<BusinessCategoryPO> menus = new ArrayList<>();
+                for (BusinessCategoryPO menuPO : lastMenus) {
+                    menuPO.setSort(menuPO.getSort() - 1);
+                    menus.add(menuPO);
+                }
+                if (!org.springframework.util.CollectionUtils.isEmpty(menus)) {
+                    this.updateBatchById(menus);
+                }
+            } else {
+                Integer pid = businessCategoryPO.getPid();
+                Integer sort = businessCategoryPO.getSort();
+                LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(BusinessCategoryPO::getPid, dto.getPid());
+                queryWrapper.ge(BusinessCategoryPO::getSort, tragetMenuPO.getSort() + 1);
+                List<BusinessCategoryPO> lastMenus = this.list(queryWrapper);
+                List<BusinessCategoryPO> menus = new ArrayList<>();
+                for (BusinessCategoryPO menuPO : lastMenus) {
+                    menuPO.setSort(menuPO.getSort() + 1);
+                    menus.add(menuPO);
+                }
+                if (!org.springframework.util.CollectionUtils.isEmpty(menus)) {
+                    this.updateBatchById(menus);
+                }
+                businessCategoryPO.setPid(dto.getPid());
+                businessCategoryPO.setSort(tragetMenuPO.getSort() + 1);
+                this.updateById(businessCategoryPO);
+
+                LambdaQueryWrapper<BusinessCategoryPO> selectMenus = new LambdaQueryWrapper<>();
+                selectMenus.eq(BusinessCategoryPO::getPid, pid);
+                selectMenus.gt(BusinessCategoryPO::getSort, sort);
+                List<BusinessCategoryPO> Menus = this.list(selectMenus);
+                menus = new ArrayList<>();
+                for (BusinessCategoryPO menuPO : Menus) {
+                    menuPO.setSort(menuPO.getSort() - 1);
+                    menus.add(menuPO);
+                }
+                if (!org.springframework.util.CollectionUtils.isEmpty(menus)) {
+                    this.updateBatchById(menus);
+                }
+            }
+        } else {
+            if (tragetId == null || tragetId == 0) {
+                LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                queryWrapper.lt(BusinessCategoryPO::getSort, businessCategoryPO.getSort());
+                List<BusinessCategoryPO> list = this.list(queryWrapper);
+                List<BusinessCategoryPO> menus = new ArrayList<>();
+                for (BusinessCategoryPO menuPO : list) {
+                    menuPO.setSort(menuPO.getSort() + 1);
+                    menus.add(menuPO);
+                }
+                if (!org.springframework.util.CollectionUtils.isEmpty(menus)) {
+                    this.updateBatchById(menus);
+                }
+                businessCategoryPO.setSort(1);
+                this.updateById(businessCategoryPO);
+            } else {
+                if (tragetMenuPO.getSort() > businessCategoryPO.getSort()) {
+                    LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                    queryWrapper.gt(BusinessCategoryPO::getSort, businessCategoryPO.getSort());
+                    queryWrapper.le(BusinessCategoryPO::getSort, tragetMenuPO.getSort());
+                    List<BusinessCategoryPO> list = this.list(queryWrapper);
+                    List<BusinessCategoryPO> menus = new ArrayList<>();
+                    for (BusinessCategoryPO menuPO : list) {
+                        menuPO.setSort(menuPO.getSort() - 1);
+                        menus.add(menuPO);
+                    }
+                    if (!org.springframework.util.CollectionUtils.isEmpty(menus)) {
+                        this.updateBatchById(menus);
+                    }
+                    businessCategoryPO.setSort(tragetMenuPO.getSort());
+                    this.updateById(businessCategoryPO);
+                } else if (tragetMenuPO.getSort() < businessCategoryPO.getSort()) {
+                    LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
+                    queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                    queryWrapper.gt(BusinessCategoryPO::getSort, tragetMenuPO.getSort());
+                    queryWrapper.lt(BusinessCategoryPO::getSort, businessCategoryPO.getSort());
+                    List<BusinessCategoryPO> list = this.list(queryWrapper);
+                    List<BusinessCategoryPO> menus = new ArrayList<>();
+                    for (BusinessCategoryPO menuPO : list) {
+                        menuPO.setSort(menuPO.getSort() + 1);
+                        menus.add(menuPO);
+                    }
+                    if (!org.springframework.util.CollectionUtils.isEmpty(menus)) {
+                        this.updateBatchById(menus);
+                    }
+                    businessCategoryPO.setSort(tragetMenuPO.getSort() + 1);
+                    this.updateById(businessCategoryPO);
+                }
+            }
+        }
+        return ResultEnum.SUCCESS;
     }
 
     // 递归处理子节点，构建树形结构
@@ -586,14 +730,7 @@ public class BusinessCategoryImpl implements BusinessCategoryService {
                     }
                 }
                 // 递归处理
-                List<ParentBusinessTreeDTO> child = parentList.get(i).getChild();
-                if (CollectionUtils.isEmpty(child)){
-                    parentList.get(i).setChild(children);
-                }else {
-                    child.addAll(children);
-                    parentList.get(i).setChild(child);
-                }
-
+                parentList.get(i).setChild(children);
                 ResultList.add(parentList.get(i));
             }
             ResultList.sort(Comparator.comparing(ParentBusinessTreeDTO::getSort));
