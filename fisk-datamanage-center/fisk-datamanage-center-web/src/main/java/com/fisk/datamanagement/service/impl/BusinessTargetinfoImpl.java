@@ -128,7 +128,6 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             return i;
         }).collect(Collectors.toList());
         List<BusinessCategoryPO> allChildrenCategories = getAllChildrenCategories(businessCategoryPOS, Integer.valueOf(pid));
-        self = self.stream().filter(i -> i.getPid() != 0).collect(Collectors.toList());
         allChildrenCategories.addAll(self);
         List<Long> ids = allChildrenCategories.stream().map(i -> i.getId()).collect(Collectors.toList());
         List<BusinessTargetinfoMenuDTO> result = new ArrayList<>();
