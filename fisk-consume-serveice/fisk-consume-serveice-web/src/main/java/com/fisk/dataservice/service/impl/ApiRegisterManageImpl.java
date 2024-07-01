@@ -684,6 +684,12 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             return ResultEnum.DS_API_EXISTS;
         }
         int i = baseMapper.deleteByIdWithFill(model);
+
+        LambdaQueryWrapper<AppServiceConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(AppServiceConfigPO::getServiceId,apiId);
+        queryWrapper.eq(AppServiceConfigPO::getType, 1);
+        appServiceConfigMapper.delete(queryWrapper);
+
         if (i > 0) {
             //同步元数据
             if (openMetadata) {
