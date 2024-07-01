@@ -58,4 +58,15 @@ public enum DataLevelEnum implements BaseEnum {
         return null;
     }
 
+    public static DataLevelEnum getValue(int value) {
+        DataLevelEnum[] enums = values();
+        for (DataLevelEnum typeEnum : enums) {
+            int qValue = typeEnum.value;
+            if (qValue == value) {
+                return typeEnum;
+            }
+        }
+        return null;
+    }
+
 }

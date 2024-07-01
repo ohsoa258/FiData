@@ -4249,6 +4249,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             field.setDisplayName(e.displayName);
             field.setOwner(e.createUser);
             field.setLength(String.valueOf(e.fieldLength));
+            //数据分类
+            field.setDataClassification(e.dataClassification);
+            //数据分级
+            field.setDataLevel(e.dataLevel);
             return field;
         }).collect(Collectors.toList());
 

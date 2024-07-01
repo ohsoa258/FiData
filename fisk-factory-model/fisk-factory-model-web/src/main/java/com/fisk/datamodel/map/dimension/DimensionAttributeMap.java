@@ -3,6 +3,7 @@ package com.fisk.datamodel.map.dimension;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.datamodel.entity.dimension.DimensionAttributePO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -20,6 +21,11 @@ public interface DimensionAttributeMap {
      * @param dto
      * @return
      */
+    @Mapping(target = "updateUser", ignore = true)
+    @Mapping(target = "updateTime", ignore = true)
+    @Mapping(target = "isDimDateField", ignore = true)
+    @Mapping(target = "delFlag", ignore = true)
+    @Mapping(target = "createTime", ignore = true)
     DimensionAttributePO dtoToPo(DimensionAttributeDTO dto);
 
     /**
@@ -69,6 +75,8 @@ public interface DimensionAttributeMap {
      * @param po
      * @return
      */
+    @Mapping(target = "execSql", ignore = true)
+    @Mapping(target = "deltaTimes", ignore = true)
     DimensionAttributeUpdateDTO poToDetailDto(DimensionAttributePO po);
 
     /**

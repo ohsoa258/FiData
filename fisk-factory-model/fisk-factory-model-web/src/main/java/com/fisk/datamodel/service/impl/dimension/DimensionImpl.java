@@ -1293,6 +1293,10 @@ public class DimensionImpl
             column.qualifiedName = table.qualifiedName + "_" + field.id;
             column.owner = field.createUser;
             column.displayName = field.dimensionFieldCnName;
+            //数据分类
+            column.dataClassification = field.dataClassification;
+            //数据分级
+            column.dataLevel = field.dataLevel;
             columnList.add(column);
         }
         return columnList;

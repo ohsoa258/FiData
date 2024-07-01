@@ -445,6 +445,10 @@ public class DimensionAttributeImpl
         po.dimensionFieldLength = dto.dimensionFieldLength;
         po.dimensionFieldEnName = dto.dimensionFieldEnName;
         po.dimensionFieldType = dto.dimensionFieldType;
+        //数据分类
+        po.dataClassification = dto.dataClassification;
+        //数据分级
+        po.dataLevel = dto.dataLevel;
         ////po=DimensionAttributeMap.INSTANCES.updateDtoToPo(dto);
 
         //系统变量

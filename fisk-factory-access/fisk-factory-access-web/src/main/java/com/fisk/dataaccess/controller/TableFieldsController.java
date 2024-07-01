@@ -141,7 +141,7 @@ public class TableFieldsController {
      * @return
      */
     @GetMapping("/getDataClassificationsAndLevels")
-    @ApiOperation(value = "获取数仓建模字段数据分类和数据级别")
+    @ApiOperation(value = "获取数接数仓字段数据分类和数据级别")
     public ResultEntity<CAndLDTO> getDataClassificationsAndLevels() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataClassificationsAndLevels());
     }

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.metadataentitylog.MetaDataeLogEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -196,6 +197,16 @@ public class MetaDataImpl implements IMetaData {
     public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum, Long syncTimeId) {
         log.info("开始同步元数据***********");
         try {
+
+            //获取当前dmp_dw 数仓的类型 doris和其他不一样
+            DataSourceTypeEnum conType = null;
+            try {
+                ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(1);
+                conType = resultEntity.getData().getConType();
+            } catch (Exception e) {
+                log.error("获取dmp_dw 数仓数据库类型失败：" + e);
+            }
+
             for (MetaDataInstanceAttributeDTO instance : data) {
                 String instanceGuid = metaDataInstance(instance, "-1");
                 if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
@@ -242,7 +253,7 @@ public class MetaDataImpl implements IMetaData {
                                 //血缘失败不要影响整个流程
                                 try {
                                     //同步血缘
-                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId, table.dimQNames);
+                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId, table.dimQNames,conType);
                                 } catch (Exception e) {
                                     log.error("同步血缘失败：" + e);
                                 }
@@ -540,7 +551,7 @@ public class MetaDataImpl implements IMetaData {
         }
 
         MetadataEntityPO entityPO = this.metadataEntity.query().eq("id", metadataEntity).one();
-        if (!entityPO.getName().equals(dto.getName())) {
+        if (entityPO.getName().equals(dto.getName())) {
 
             //将字段的修改操作日志添加为父级表的操作日志
             addOperationLog(entityPO.getName(), dto.name, MetaDataeLogEnum.UPDATE_OPERATION, owner, parentEntityId);
@@ -617,8 +628,10 @@ public class MetaDataImpl implements IMetaData {
                                              String coverScript,
                                              Integer dataSourceId,
                                              Integer tableConfigId,
-                                             List<String> dimQNames) {
-        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId, dimQNames);
+                                             List<String> dimQNames,
+                                             DataSourceTypeEnum conType
+    ) {
+        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId, dimQNames,conType);
         /*try {
 
             //获取实体详情

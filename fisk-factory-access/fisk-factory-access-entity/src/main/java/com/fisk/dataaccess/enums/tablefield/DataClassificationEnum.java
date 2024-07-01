@@ -58,4 +58,15 @@ public enum DataClassificationEnum implements BaseEnum {
         return null;
     }
 
+    public static DataClassificationEnum getValue(int value) {
+        DataClassificationEnum[] enums = values();
+        for (DataClassificationEnum typeEnum : enums) {
+            int qValue = typeEnum.value;
+            if (qValue == value) {
+                return typeEnum;
+            }
+        }
+        return null;
+    }
+
 }

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -110,13 +109,29 @@ public class TableFieldsPO extends BasePO {
     /**
      * 源库名称
      */
-    @ApiModelProperty(value = "源库名称", required = true)
     public String sourceDbName;
 
     /**
      * 源表名称
      */
-    @ApiModelProperty(value = "源表名称", required = true)
     public String sourceTblName;
+
+    /**
+     * 数据分类：DataClassificationEnum
+     * PUBLIC_DATA(1, "公开数据", "green"),
+     * INTERNAL_DATA(2, "内部数据", "blue"),
+     * MAX(3, "敏感数据", "orange"),
+     * MIN(4, "高度敏感数据", "red"),
+     */
+    public Integer dataClassification;
+
+    /**
+     * 数据分级：DataLevelEnum
+     * LEVEL1(1, "一级（一般数据）", "green"),
+     * LEVEL2(2, "二级（重要数据）", "blue"),
+     * LEVEL3(3, "三级（敏感数据）", "orange"),
+     * LEVEL4(4, "四级（核心数据）", "red"),
+     */
+    public Integer dataLevel;
 
 }

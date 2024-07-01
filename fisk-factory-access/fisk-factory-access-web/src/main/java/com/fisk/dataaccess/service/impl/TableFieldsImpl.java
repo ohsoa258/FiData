@@ -1868,6 +1868,8 @@ public class TableFieldsImpl
         po.sourceDbName = dto.sourceDbName;
         po.sourceFieldName = dto.sourceFieldName;
         po.sourceTblName = dto.sourceTblName;
+        po.dataClassification = dto.dataClassification;
+        po.dataLevel = dto.dataLevel;
 
         int flat = baseMapper.updateById(po);
         if (flat == 0) {
