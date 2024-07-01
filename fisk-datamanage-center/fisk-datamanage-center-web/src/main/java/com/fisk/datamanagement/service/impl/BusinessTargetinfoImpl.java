@@ -137,8 +137,8 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             List<BusinessTargetinfoPO> parentBusinessIdIds = list.stream().filter(i -> i.getParentBusinessId() != null && i.getParentBusinessId() != 0).collect(Collectors.toList());
             Map<String,String> parentBusinessMap = new HashMap<>();
             if (CollectionUtils.isNotEmpty(parentBusinessIdIds)){
-                List<Long> parentIds = parentBusinessIdIds.stream().map(BasePO::getId).collect(Collectors.toList());
-                List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectClassification(parentIds);
+                List<Integer> parentIds = parentBusinessIdIds.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
+                List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectBatchIds(parentIds);
                 parentBusinessMap = businessTargetinfoPOList.stream().collect(Collectors.toMap(i->String.valueOf(i.getId()), BusinessTargetinfoPO::getIndicatorName));
             }
             Map<String, String> finalParentBusinessMap = parentBusinessMap;
@@ -719,6 +719,8 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         BusinessTargetinfoHistoryPO targetinfoHistoryPO = BeanHelper.copyProperties(model, BusinessTargetinfoHistoryPO.class);
         targetinfoHistoryPO.setPid(Integer.valueOf(model.pid));
         targetinfoHistoryPO.setHistoryId(historyId);
+        BusinessCategoryPO businessCategoryPO = businessCategoryMapper.selectById(model.name);
+        targetinfoHistoryPO.setName(businessCategoryPO.getName());
         if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
             LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
             businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId, model.getId());
@@ -762,12 +764,14 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             }
 
         } else if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+            List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
             if (model.parentBusinessId != null) {
                 LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(BusinessTargetinfoPO::getId, model.parentBusinessId);
                 BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
                 targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
-                targetinfoHistoryPO.setParentBusinessName(businessTargetinfoPOS.getIndicatorName());
+                String hierarchyPath = getHierarchyPath(data, Integer.parseInt(businessTargetinfoPOS.getPid()));
+                targetinfoHistoryPO.setParentBusinessName(hierarchyPath+"/"+businessTargetinfoPOS.getIndicatorName());
             }
         }
 

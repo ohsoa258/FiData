@@ -482,14 +482,15 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
         LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(BusinessTargetinfoPO::getIndicatorType, IndicatorTypeEnum.ATOMIC_INDICATORS.getName());
         List<BusinessTargetinfoPO> businessTargetinfoPOS = businessTargetinfoMapper.selectList(queryWrapper);
-        Map<String, List<ParentBusinessTreeDTO>> parentBusinessTreeDTOMap = businessTargetinfoPOS.stream().map(i -> {
+        List<ParentBusinessTreeDTO> parentBusinessTreeDTOList = businessTargetinfoPOS.stream().map(i -> {
             ParentBusinessTreeDTO parentBusinessTreeDTO = new ParentBusinessTreeDTO();
             parentBusinessTreeDTO.setId(String.valueOf(i.getId()));
             parentBusinessTreeDTO.setPid(i.getPid());
             parentBusinessTreeDTO.setType(2);
+            parentBusinessTreeDTO.setSort(0);
             parentBusinessTreeDTO.setName(i.getIndicatorName());
             return parentBusinessTreeDTO;
-        }).collect(Collectors.groupingBy(ParentBusinessTreeDTO::getPid));
+        }).collect(Collectors.toList());
 
         // 数据转换
         List<ParentBusinessTreeDTO> allData = data.stream().map(item -> {
@@ -503,8 +504,8 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
             dto.setName(item.name);
             dto.setSort(item.sort);
             dto.setType(1);
-            List<ParentBusinessTreeDTO> parentBusinessTreeDTO = parentBusinessTreeDTOMap.get(String.valueOf(item.getId()));
-            dto.setChild(parentBusinessTreeDTO);
+//            List<ParentBusinessTreeDTO> parentBusinessTreeDTO = parentBusinessTreeDTOMap.get(String.valueOf(item.getId()));
+//            dto.setChild(parentBusinessTreeDTO);
             return dto;
         }).collect(Collectors.toList());
         UserInfo userInfo = userHelper.getLoginUserInfo();
@@ -525,6 +526,7 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
         List<ParentBusinessTreeDTO> all = new ArrayList<>();
         all.addAll(parent);
         all.addAll(child);
+        all.addAll(parentBusinessTreeDTOList);
         List<ParentBusinessTreeDTO> parentList = childClassTree(all, "0");
         return parentList;
     }
