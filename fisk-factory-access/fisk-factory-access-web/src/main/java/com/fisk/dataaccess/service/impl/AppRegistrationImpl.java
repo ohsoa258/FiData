@@ -3355,7 +3355,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                                     .collect(Collectors.toList());
 
                             //获取目录下的所有表信息
-                            List<FiDataMetaDataTreeDTO> cataLogTreeList = catalogTreeList(trueCataLogNames, uuid_appId, appDataSourcePO, id, app.targetDbId);
+                            List<FiDataMetaDataTreeDTO> cataLogTreeList = catalogTreeList(trueCataLogNames, uuid_appId, appDataSourcePO, id, app.targetDbId, key);
                             appDtoTree.setChildren(cataLogTreeList);
                             break;
                         default:
@@ -3377,7 +3377,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param targetDbId       应用的目标数据源id
      * @return
      */
-    private List<FiDataMetaDataTreeDTO> catalogTreeList(List<String> trueCataLogNames, String uuid_appId, AppDataSourcePO appDataSourcePO, String id, Integer targetDbId) {
+    private List<FiDataMetaDataTreeDTO> catalogTreeList(List<String> trueCataLogNames, String uuid_appId, AppDataSourcePO appDataSourcePO, String id, Integer targetDbId, List<FiDataMetaDataTreeDTO> key) {
         List<FiDataMetaDataTreeDTO> cataLogTreeList = new ArrayList<>();
         for (String trueCataLogName : trueCataLogNames) {
             //第二层 目录层
@@ -3486,6 +3486,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 } finally {
                     AbstractCommonDbHelper.closeConnection(connection);
                 }
+
+                // 表字段信息单独再保存一份
+                if (!CollectionUtils.isEmpty(tbTreeList)) {
+                    key.addAll(tbTreeList);
+                }
+
                 //如果库下面没有表 那这个库不要显示
                 if (CollectionUtils.isEmpty(tbTreeList)) {
                     continue;
