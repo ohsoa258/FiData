@@ -515,7 +515,7 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
         } else {
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
-        List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+        List<Integer> roleIds = businessAssignment.stream().map(i -> (int) i.getId())  .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(roleIds)) {
             return new ArrayList<>();
         }

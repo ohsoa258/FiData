@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -133,15 +134,24 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         List<BusinessTargetinfoMenuDTO> result = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(ids)) {
             List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(ids);
+            List<BusinessTargetinfoPO> parentBusinessIdIds = list.stream().filter(i -> i.getParentBusinessId() != null && i.getParentBusinessId() != 0).collect(Collectors.toList());
+            Map<String,String> parentBusinessMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(parentBusinessIdIds)){
+                List<Long> parentIds = parentBusinessIdIds.stream().map(BasePO::getId).collect(Collectors.toList());
+                List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectClassification(parentIds);
+                parentBusinessMap = businessTargetinfoPOList.stream().collect(Collectors.toMap(i->String.valueOf(i.getId()), BusinessTargetinfoPO::getIndicatorName));
+            }
+            Map<String, String> finalParentBusinessMap = parentBusinessMap;
             result = list.stream().map(i -> {
                 BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
                 businessTargetinfoMenuDTO.setId((int) i.getId());
                 businessTargetinfoMenuDTO.setName(i.getIndicatorName());
                 businessTargetinfoMenuDTO.setType(i.getIndicatorType());
-                Map<String, String> categoryNameMaps = businessCategoryPOS.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), v -> v.getName()));
+                Map<String, String> categoryNameMaps = businessCategoryPOS.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), BusinessCategoryPO::getName));
                 businessTargetinfoMenuDTO.setCategoryId(i.getName());
                 businessTargetinfoMenuDTO.setCategoryName(categoryNameMaps.get(i.getName()));
                 businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
+                businessTargetinfoMenuDTO.setParentBusinessName(finalParentBusinessMap.get(String.valueOf(i.getParentBusinessId())));
                 businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
                 businessTargetinfoMenuDTO.setIndicatorCcode(i.getIndicatorCode());
                 businessTargetinfoMenuDTO.setLargeScreenLink(i.getLargeScreenLink());
@@ -1456,16 +1466,25 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             );
         }
         List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(wrapper1);
+        List<BusinessTargetinfoPO> parentBusinessIdIds = businessTargetinfoPOList.stream().filter(i -> i.getParentBusinessId() != null && i.getParentBusinessId() != 0).collect(Collectors.toList());
+        Map<String,String> parentBusinessMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(parentBusinessIdIds)){
+            List<Long> parentIds = parentBusinessIdIds.stream().map(BasePO::getId).collect(Collectors.toList());
+            List<BusinessTargetinfoPO> targetinfoPOList = businessTargetinfoMapper.selectClassification(parentIds);
+            parentBusinessMap = targetinfoPOList.stream().collect(Collectors.toMap(i->String.valueOf(i.getId()), BusinessTargetinfoPO::getIndicatorName));
+        }
+        Map<String, String> finalParentBusinessMap = parentBusinessMap;
         List<BusinessCategoryPO> finalAllMenuList = allMenuList;
         List<BusinessTargetinfoMenuDTO> result = businessTargetinfoPOList.stream().map(i -> {
             BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
             businessTargetinfoMenuDTO.setId((int) i.getId());
             businessTargetinfoMenuDTO.setName(i.getIndicatorName());
             businessTargetinfoMenuDTO.setType(i.getIndicatorType());
-            Map<String, String> categoryNameMaps = finalAllMenuList.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), v -> v.getName()));
+            Map<String, String> categoryNameMaps = finalAllMenuList.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), BusinessCategoryPO::getName));
             businessTargetinfoMenuDTO.setCategoryId(i.getName());
             businessTargetinfoMenuDTO.setCategoryName(categoryNameMaps.get(i.getName()));
             businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
+            businessTargetinfoMenuDTO.setParentBusinessName(finalParentBusinessMap.get(String.valueOf(i.getParentBusinessId())));
             businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
             businessTargetinfoMenuDTO.setIndicatorCcode(i.getIndicatorCode());
             businessTargetinfoMenuDTO.setLargeScreenLink(i.getLargeScreenLink());
