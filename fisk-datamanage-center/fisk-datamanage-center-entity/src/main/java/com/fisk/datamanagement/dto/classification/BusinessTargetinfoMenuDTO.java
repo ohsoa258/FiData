@@ -28,6 +28,8 @@ public class BusinessTargetinfoMenuDTO {
     public String indicatorStatus;
     @ApiModelProperty(value = "上级指标Id")
     public Integer parentBusinessId;
+    @ApiModelProperty(value = "上级指标目录节点Id")
+    public String parentBusinessCategoryId;
     @ApiModelProperty(value = "上级指标名称")
     public String parentBusinessName;
     @ApiModelProperty(value = "指标编码")
