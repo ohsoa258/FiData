@@ -244,6 +244,10 @@ public class AppRegisterManageImpl
             }
         }
         AppRegisterMap.INSTANCES.editDtoToPo(dto, model);
+        if (dto.getProxyAuthorizationSwitch() != 1) {
+            model.setAppAccount("");
+            model.setAppPassword("");
+        }
         int i = baseMapper.updateById(model);
         if (i > 0) {
             //同步元数据业务分类
