@@ -774,9 +774,11 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(BusinessTargetinfoPO::getId, model.parentBusinessId);
                 BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
-                targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
-                String hierarchyPath = getHierarchyPath(data, Integer.parseInt(businessTargetinfoPOS.getPid()));
-                targetinfoHistoryPO.setParentBusinessName(hierarchyPath+"/"+businessTargetinfoPOS.getIndicatorName());
+                if (businessTargetinfoPOS != null){
+                    targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
+                    String hierarchyPath = getHierarchyPath(data, Integer.parseInt(businessTargetinfoPOS.getPid()));
+                    targetinfoHistoryPO.setParentBusinessName(hierarchyPath+"/"+businessTargetinfoPOS.getIndicatorName());
+                }
             }
         }
 
