@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
 import com.fisk.common.core.baseObject.entity.BasePO;
@@ -1353,8 +1354,9 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             String derivedMetric = targetinfoHistoryPO.getDerivedMetric();
             if (derivedMetric != null) {
                 ObjectMapper objectMapper = new ObjectMapper();
+                List<ChildBusinessTreeDTO> childBusinessTreeDTOList;
                 try {
-                    List<ChildBusinessTreeDTO> childBusinessTreeDTOList = objectMapper.readValue(derivedMetric, ArrayList.class);
+                    childBusinessTreeDTOList = objectMapper.readValue(derivedMetric, new TypeReference<List<ChildBusinessTreeDTO>>() {});
                     if (CollectionUtils.isNotEmpty(childBusinessTreeDTOList)){
                         childBusinessTreeDTOList.sort(Comparator.comparing(ChildBusinessTreeDTO::getName, Collator.getInstance(Locale.CHINA)));
                     }
