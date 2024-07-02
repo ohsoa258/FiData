@@ -205,8 +205,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 2.再按照执行节点排正序，并处理ruleExecuteNode为空的情况
                             .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 3.再按照检查类型排正序，并处理templateType为空的情况
-                            .thenComparing(DataCheckVO::getTemplateType, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 3.再按照创建时间排倒叙，并处理创建时间为空的情况
+                            .thenComparing(DataCheckVO::getCreateTime, Comparator.nullsFirst(Comparator.reverseOrder()))
             ).collect(Collectors.toList());
         } catch (Exception ex) {
             log.error("【getAllRule】查询校验规则列表异常：" + ex);
@@ -1897,6 +1897,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                         sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                        sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
                     }
                     sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
                     if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
@@ -1910,6 +1912,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                         sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                        sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
                     sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
                     if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
