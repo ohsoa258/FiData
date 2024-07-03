@@ -419,7 +419,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 continue;
             }
 
-            String tblName = "";
+            //String tblName = "";
             HashMap<String, String> fields = new HashMap<>();
             if (dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData) {
                 FiDataMetaDataDTO fiDataMetaDataDTO = fiDataMetaDataList.stream().filter(t -> t.getDataSourceId() == dataSourceConVO.getDatasourceId()).findFirst().orElse(null);
@@ -428,7 +428,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 }
                 FiDataMetaDataTreeDTO fiDataMetaDataTree_Table = fiDataMetaDataDTO.getChildren().stream().filter(t -> t.getId().equals(dataCheckPO.getTableUnique()) && t.getLabelBusinessType() == dataCheckPO.getTableBusinessType()).findFirst().orElse(null);
                 if (fiDataMetaDataTree_Table != null) {
-                    tblName = fiDataMetaDataTree_Table.getLabel();
+                    //tblName = fiDataMetaDataTree_Table.getLabel();
                     if (CollectionUtils.isNotEmpty(fiDataMetaDataTree_Table.getChildren())) {
                         for (int k = 0; k < dataCheckExtendPOs.size(); k++) {
                             DataCheckExtendPO dataCheckExtendPO1 = dataCheckExtendPOs.get(k);
@@ -443,7 +443,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     }
                 }
             } else {
-                tblName = dataCheckPO.getTableUnique();
+                //tblName = dataCheckPO.getTableUnique();
                 List<String> collect = dataCheckExtendPOs.stream().map(DataCheckExtendPO::getFieldUnique).collect(Collectors.toList());
                 collect.forEach(t -> {
                     fields.put(t, "");
