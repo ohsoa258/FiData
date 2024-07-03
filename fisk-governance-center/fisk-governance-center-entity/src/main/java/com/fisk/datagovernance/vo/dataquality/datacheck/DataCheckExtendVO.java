@@ -1,6 +1,9 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
-import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.enums.dataquality.FluctuateCheckTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.ParentageCheckTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.RangeCheckTypeEnum;
+import com.fisk.datagovernance.enums.dataquality.StandardCheckTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -47,10 +50,10 @@ public class DataCheckExtendVO {
      * 1、序列范围(枚举)
      * 2、取值范围(1~10)
      * 3、日期范围(2023-04-01 12:59:59~2023-05-01 12:00:00)
-     * 4、关键字包含
      */
     @ApiModelProperty(value = "值域检查-类型")
     public RangeCheckTypeEnum rangeCheckType;
+
 
     /**
      * 值域检查-参数类型：
@@ -61,24 +64,6 @@ public class DataCheckExtendVO {
     public int rangeType;
 
     /**
-     * 值域检查-取值范围类型：1、单向取值 2、区间取值
-     */
-    @ApiModelProperty(value = "值域检查-取值范围类型")
-    public RangeCheckValueRangeTypeEnum rangeCheckValueRangeType;
-
-    /**
-     * 值域检查-关键字包含类型：1、包含关键字 2、前包含关键字 3、后包含关键字
-     */
-    @ApiModelProperty(value = "值域检查-关键字包含类型")
-    public RangeCheckKeywordIncludeTypeEnum rangeCheckKeywordIncludeType;
-
-    /**
-     * 值域检查-取值范围-单向取值-运算符
-     */
-    @ApiModelProperty(value = "值域检查-取值范围-单向取值-运算符")
-    public String rangeCheckOneWayOperator;
-
-    /**
      * 值域检查-对比值；
      */
     @ApiModelProperty(value = "值域检查-对比值")
@@ -87,18 +72,12 @@ public class DataCheckExtendVO {
     /**
      * 规范检查-类型：
      * 1、日期格式
-     * 2、字符范围
+     * 2、字符精度长度范围(1~10)
      * 3、URL地址(http或https或ftp或file开头)
      * 4、Base64字节流
      */
     @ApiModelProperty(value = "规范检查-类型")
     public StandardCheckTypeEnum standardCheckType;
-
-    /**
-     * 规范检查-字符范围类型：1、字符精度范围 2、字符长度范围
-     */
-    @ApiModelProperty(value = "规范检查-字符范围类型")
-    public StandardCheckCharRangeTypeEnum standardCheckCharRangeType;
 
     /**
      * 规范检查-日期格式值，多个日期格式逗号分隔
@@ -107,21 +86,15 @@ public class DataCheckExtendVO {
     public String standardCheckTypeDateValue;
 
     /**
-     * 规范检查-浮点长度范围分隔符
+     * 规范检查-字符和浮点长度范围分隔符(.)
      */
-    @ApiModelProperty(value = "规范检查-浮点长度范围分隔符")
+    @ApiModelProperty(value = "规范检查-字符和浮点长度范围分隔符(.)")
     public String standardCheckTypeLengthSeparator;
 
     /**
-     * 规范检查-字符长度范围运算符
+     * 规范检查-字符和浮点长度范围(1,10)
      */
-    @ApiModelProperty(value = "规范检查-字符长度范围运算符")
-    public String standardCheckTypeLengthOperator;
-
-    /**
-     * 规范检查-字符长度值/浮点长度范围
-     */
-    @ApiModelProperty(value = "规范检查-字符长度值/浮点长度范围")
+    @ApiModelProperty(value = "规范检查-字符和浮点长度范围(1,10)")
     public String standardCheckTypeLengthValue;
 
     /**

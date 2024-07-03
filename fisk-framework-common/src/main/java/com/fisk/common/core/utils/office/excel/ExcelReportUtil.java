@@ -213,11 +213,6 @@ public class ExcelReportUtil {
         dataFont.setFontName("宋体");
         dataFont.setFontHeightInPoints((short) 11);
         style_data.setFont(dataFont);
-        // 设置边框
-        style_data.setBorderBottom((short) 1);
-        style_data.setBorderLeft((short) 1);
-        style_data.setBorderRight((short) 1);
-        style_data.setBorderTop((short) 1);
         // 设置左对齐
         style_data.setAlignment(HSSFCellStyle.ALIGN_LEFT);
         style_data.setVerticalAlignment(HSSFCellStyle.VERTICAL_CENTER);

@@ -256,7 +256,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 }
             }
         }
-
         // 第二步：获取表规则
         List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
         if (checkStandards){

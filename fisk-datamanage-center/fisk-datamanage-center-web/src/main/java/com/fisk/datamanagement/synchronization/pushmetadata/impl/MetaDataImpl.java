@@ -262,7 +262,12 @@ public class MetaDataImpl implements IMetaData {
                         } else if (table.isCDC != null && table.isCDC) {
                             //数据接入 CDC类型的应用下的数据湖配置表也需要同步象征意义上的血缘
                             //同步cdc表血缘
-                            synchronizationTableKinShipForCDC(db.name, tableGuid, table.sqlScript, table.dataSourceId, table.tableConfigId, table.cdcFromTableList);
+                            //血缘失败不要影响整个流程
+                            try {
+                                synchronizationTableKinShipForCDC(db.name, tableGuid, table.sqlScript, table.dataSourceId, table.tableConfigId, table.cdcFromTableList);
+                            } catch (Exception e) {
+                                log.error("同步血缘失败：" + e);
+                            }
                         }
 
                     }

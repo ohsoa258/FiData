@@ -449,7 +449,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     serverAddresses.add(serverAddress);
 
                     //账号 验证数据库名 密码
-                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr,dto.conPassword.toCharArray());
                     List<MongoCredential> mongoCredentials = new ArrayList<>();
                     mongoCredentials.add(scramSha1Credential);
 
@@ -560,23 +560,6 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         DataSourceResultDTO result = new DataSourceResultDTO();
         result.id = (int) model.id;
         return result;
-    }
-
-
-    /**
-     * 获取所有内部数据源（数据工厂）- ODS数据源连接信息
-     *
-     * @return
-     */
-    @Override
-    public List<DataSourceMyDTO> getAllODSDataSource() {
-        List<DataSourcePO> list = this.list(
-                new LambdaQueryWrapper<DataSourcePO>()
-                        .eq(DataSourcePO::getSourceType, 1) //1代表数据工厂 2代表外部数据源
-                        .eq(DataSourcePO::getSourceBusinessType, SourceBusinessTypeEnum.ODS.getValue()) //只查询ODSS类型的
-        );
-
-        return DataSourceMap.INSTANCES.posToDtos(list);
     }
 
     public DataSourcePO updateDataSourceByAccess(DataSourcePO po, DataSourceSaveDTO dto) {

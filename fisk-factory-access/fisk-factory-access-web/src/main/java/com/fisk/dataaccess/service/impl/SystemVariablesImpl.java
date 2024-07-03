@@ -42,6 +42,7 @@ public class SystemVariablesImpl extends ServiceImpl<SystemVariablesMapper, Syst
             po.deltaTimeParameterType = item.deltaTimeParameterTypeEnum.name();
             po.systemVariableType = item.systemVariableTypeEnum.name();
             po.variableValue = item.variableValue;
+            po.referencedSystemDataSourceId = item.referencedSystemDataSourceId;
             systemVariablesPoList.add(po);
         }
 
@@ -60,6 +61,7 @@ public class SystemVariablesImpl extends ServiceImpl<SystemVariablesMapper, Syst
             dto.variableValue = po.variableValue;
             dto.systemVariableTypeEnum = SystemVariableTypeEnum.getName(po.systemVariableType);
             dto.deltaTimeParameterTypeEnum = DeltaTimeParameterTypeEnum.getName(po.deltaTimeParameterType);
+            dto.referencedSystemDataSourceId = po.referencedSystemDataSourceId;
             data.add(dto);
         }
         return data;

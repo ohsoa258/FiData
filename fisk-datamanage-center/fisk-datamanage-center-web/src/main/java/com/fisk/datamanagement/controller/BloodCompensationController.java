@@ -9,10 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -43,10 +40,10 @@ public class BloodCompensationController {
     }
 
     @ApiOperation("新版本增量同步元数据")
-    @GetMapping("/systemSynchronousBloodV2")
+    @PostMapping("/systemSynchronousBloodV2")
     public ResultEntity<Object> systemSynchronousBloodV2(
             @ApiParam(value = "可同步单个模块，空则同步所有模块。 1, 数据接入 2,数仓建模 3,API网关 4, 数据库分发服务 5, 数据分析试图服务 6, 主数据 7, 外部数据源")
-            @RequestParam("moduleIds") List<Integer> moduleIds) {
+            @RequestBody List<Integer> moduleIds) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.systemSynchronousBloodV2(moduleIds));
     }
 

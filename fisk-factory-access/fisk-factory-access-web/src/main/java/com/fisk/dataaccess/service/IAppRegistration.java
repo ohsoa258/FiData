@@ -19,6 +19,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
@@ -495,5 +496,12 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<MetaMapTblDTO> accessGetMetaMapTableDetail(Integer appId);
+
+    /**
+     * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称
+     *
+     * @return
+     */
+    List<DataSourceInfoDTO> getAppSourceAndTarget(Integer appId);
 
 }

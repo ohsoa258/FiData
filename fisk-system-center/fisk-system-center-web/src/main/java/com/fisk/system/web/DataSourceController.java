@@ -5,7 +5,10 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.system.config.SwaggerConfig;
-import com.fisk.system.dto.datasource.*;
+import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceQueryDTO;
+import com.fisk.system.dto.datasource.DataSourceResultDTO;
+import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.service.IDataSourceManageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -70,17 +73,6 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSource(dto));
     }
 
-    /**
-     * 获取所有内部数据源（数据工厂）- ODS数据源连接信息
-     *
-     * @return
-     */
-    @PostMapping("/getAllODSDataSource")
-    @ApiOperation("获取所有内部数据源（数据工厂）- ODS数据源连接信息")
-    public ResultEntity<List<DataSourceMyDTO>> getAllODSDataSource() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllODSDataSource());
-    }
-
     @PostMapping("/add")
     @ApiOperation("添加数据源")
     public ResultEntity<Object> addDate(@RequestBody DataSourceSaveDTO dto) {
@@ -110,7 +102,5 @@ public class DataSourceController {
     public ResultEntity<DataSourceResultDTO> insertDataSourceByAccess(@RequestBody DataSourceSaveDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.insertDataSourceByAccess(dto));
     }
-
-
 
 }

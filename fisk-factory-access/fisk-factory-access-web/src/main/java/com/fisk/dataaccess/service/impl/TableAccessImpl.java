@@ -2164,7 +2164,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
-     * 回显实时表
+     * 回显物理表
      *
      * @param id 请求参数
      * @return 返回值
@@ -3193,7 +3193,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 statement.executeQuery("SWITCH " + catalogName + ";");
             }
             statement.executeQuery("USE " + dbName + ";");
-            tblSchema = statement.executeQuery("DESC " + "`" + tblName + "`;");
+            tblSchema = statement.executeQuery("DESC " + tblName);
             while (tblSchema.next()) {
                 DorisTblSchemaDTO tblSchemaDTO = new DorisTblSchemaDTO();
                 tblSchemaDTO.setFieldName(tblSchema.getString("Field"));
@@ -3309,11 +3309,6 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
         DataSourceDTO data = result.getData();
         com.fisk.common.core.enums.dataservice.DataSourceTypeEnum conType = data.getConType();
-        //doris暂时排除 因为首页计数功能只有浦东应急局有
-        if (conType.equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS)) {
-            return "";
-        }
-
         IBuildFactoryDbDataSizeCount helper = DbDataSizeCountHelper.getDbDataSizeCountHelperByConType(conType);
 
         //去掉GB 交给前端显示
