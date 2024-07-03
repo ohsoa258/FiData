@@ -116,9 +116,9 @@ public class DataCheckResultVO
     public String checkErrorData;
 
     /**
-     * 检查的成功son数据
+     * 检查的成功Json数据
      */
-    @ApiModelProperty(value = "检查的成功son数据")
+    @ApiModelProperty(value = "检查的成功Json数据")
     public JSONArray checkSuccessData;
 
     /**

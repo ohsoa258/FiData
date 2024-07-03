@@ -13,7 +13,8 @@ public enum RangeCheckTypeEnum implements BaseEnum {
     NONE(0, "空"),
     SEQUENCE_RANGE(1, "序列范围"),
     VALUE_RANGE(2, "取值范围"),
-    DATE_RANGE(3, "日期范围");
+    DATE_RANGE(3, "日期范围"),
+    KEYWORDS_INCLUDE(4, "关键字包含");
 
     RangeCheckTypeEnum(int value, String name) {
         this.name = name;

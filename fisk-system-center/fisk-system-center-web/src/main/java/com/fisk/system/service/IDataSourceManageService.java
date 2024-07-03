@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.datasource.DataSourceQueryDTO;
-import com.fisk.system.dto.datasource.DataSourceResultDTO;
-import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.fisk.system.dto.datasource.*;
 import com.fisk.system.entity.DataSourcePO;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -102,4 +99,10 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      */
     DataSourceResultDTO insertDataSourceByAccess(DataSourceSaveDTO dto);
 
+    /**
+     * 获取所有内部数据源（数据工厂）- ODS数据源连接信息
+     *
+     * @return
+     */
+    List<DataSourceMyDTO> getAllODSDataSource();
 }

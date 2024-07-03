@@ -9,6 +9,7 @@ import com.fisk.system.dto.datasecurity.DataSecurityColumnsDTO;
 import com.fisk.system.dto.datasecurity.DataSecurityRowsDTO;
 import com.fisk.system.dto.datasecurity.DataSecurityTablesDTO;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.datasource.DataSourceMyDTO;
 import com.fisk.system.dto.datasource.DataSourceResultDTO;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
@@ -360,5 +361,13 @@ public interface UserClient {
      */
     @GetMapping("/dataSecurity/getRowsByRoleId")
     ResultEntity<List<DataSecurityRowsDTO>> getRowsByRoleId(@RequestParam("roleId") Integer roleId);
+
+    /**
+     * 获取所有内部数据源（数据工厂）- ODS数据源连接信息
+     *
+     * @return
+     */
+    @PostMapping("/datasource/getAllODSDataSource")
+    ResultEntity<List<DataSourceMyDTO>> getAllODSDataSource();
 
 }

@@ -562,6 +562,23 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         return result;
     }
 
+
+    /**
+     * 获取所有内部数据源（数据工厂）- ODS数据源连接信息
+     *
+     * @return
+     */
+    @Override
+    public List<DataSourceMyDTO> getAllODSDataSource() {
+        List<DataSourcePO> list = this.list(
+                new LambdaQueryWrapper<DataSourcePO>()
+                        .eq(DataSourcePO::getSourceType, 1) //1代表数据工厂 2代表外部数据源
+                        .eq(DataSourcePO::getSourceBusinessType, SourceBusinessTypeEnum.ODS.getValue()) //只查询ODSS类型的
+        );
+
+        return DataSourceMap.INSTANCES.posToDtos(list);
+    }
+
     public DataSourcePO updateDataSourceByAccess(DataSourcePO po, DataSourceSaveDTO dto) {
         po.conAccount = dto.conAccount;
         po.conDbname = dto.conDbname;

@@ -12,7 +12,7 @@ public enum StandardCheckTypeEnum implements BaseEnum {
 
     NONE(0, "空"),
     DATE_FORMAT(1, "日期格式"),
-    CHARACTER_PRECISION_LENGTH_RANGE(2, "字符精度长度范围"),
+    CHARACTER_PRECISION_LENGTH_RANGE(2, "字符范围"),
     URL_ADDRESS(3, "URL地址"),
     BASE64_BYTE_STREAM(4, "BASE64字节流");
 

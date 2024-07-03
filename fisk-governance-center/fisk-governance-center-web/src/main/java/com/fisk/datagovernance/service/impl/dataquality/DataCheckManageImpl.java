@@ -28,6 +28,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.flinkupload.IFlinkCommand;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
@@ -204,8 +205,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 2.再按照执行节点排正序，并处理ruleExecuteNode为空的情况
                             .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 3.再按照检查类型排正序，并处理templateType为空的情况
-                            .thenComparing(DataCheckVO::getTemplateType, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 3.再按照创建时间排倒叙，并处理创建时间为空的情况
+                            .thenComparing(DataCheckVO::getCreateTime, Comparator.nullsFirst(Comparator.reverseOrder()))
             ).collect(Collectors.toList());
         } catch (Exception ex) {
             log.error("【getAllRule】查询校验规则列表异常：" + ex);
@@ -451,7 +452,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             dataCheckResult = interface_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
                             break;
                     }
-                    dto.body.put(dataCheckPO.getTableUnique(),dataCheckResult.checkSuccessData);
+                    dto.body.put(dataCheckPO.getTableUnique(), dataCheckResult.checkSuccessData);
                 } catch (Exception ruleEx) {
                     if (dataCheckResult == null) {
                         dataCheckResult = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
@@ -492,7 +493,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     dataCheckResults.add(dataCheckResult);
                 }
             }
-            dataCheckResults = dataCheckResults.stream().map(i->{
+            dataCheckResults = dataCheckResults.stream().map(i -> {
                 JSONArray data = dto.body.get(i.getCheckTableUnique());
                 i.setCheckSuccessData(data);
                 return i;
@@ -526,7 +527,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 String value = jsonObject.getString(fName);
                 if (StringUtils.isEmpty(value)) {
                     errorDataList.add(jsonObject);
-                }else {
+                } else {
                     successDataList.add(jsonObject);
                 }
             } else {
@@ -542,11 +543,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(successDataList);
@@ -586,8 +587,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 switch (rangeCheckTypeEnum) {
                     case SEQUENCE_RANGE:
                         // 序列范围
-                        if (dataCheckExtendPO.rangeType == 2){
-                            String childrenQuery = String.format("SELECT %s FROM %s",dataCheckExtendPO.getCheckFieldName(),dataCheckExtendPO.getCheckTableName());
+                        if (dataCheckExtendPO.rangeType == 2) {
+                            String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
                             Connection conn = null;
                             Statement st = null;
                             try {
@@ -603,13 +604,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                 List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
                                 if (CollectionUtils.isNotEmpty(valid)) {
                                     errorDataList.add(jsonObject);
-                                }else {
+                                } else {
                                     successDataList.add(jsonObject);
                                 }
                             } catch (Exception e) {
                                 errorDataList.add(jsonObject);
                                 dataCheckResultVO.setCheckResult(FAIL);
-                                dataCheckResultVO.setCheckResultMsg("查询关联表"+dataCheckExtendPO.getCheckTableName()+"异常,请检查连接是否正常");
+                                dataCheckResultVO.setCheckResultMsg("查询关联表" + dataCheckExtendPO.getCheckTableName() + "异常,请检查连接是否正常");
                             } finally {
                                 try {
                                     assert st != null;
@@ -623,31 +624,75 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                 }
                             }
                             break;
-                        }else {
+                        } else {
                             List<String> fieldValues = new ArrayList<>();
                             fieldValues.add(checkValue);
                             List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
                             List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
                             if (CollectionUtils.isNotEmpty(valid)) {
                                 errorDataList.add(jsonObject);
-                            }else {
+                            } else {
                                 successDataList.add(jsonObject);
                             }
                             break;
                         }
                     case VALUE_RANGE:
-                        // 取值范围
-                        Double lowerBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                        Double upperBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                        if (StringUtils.isNotEmpty(checkValue)) {
-                            Double value = Double.valueOf(checkValue);
-                            if (value < lowerBound_Int || value > upperBound_Int) {
+                        RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
+                        if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
+                            // 取值范围-区间取值
+                            Double lowerBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                            Double upperBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                            if (StringUtils.isNotEmpty(checkValue)) {
+                                Double value = Double.valueOf(checkValue);
+                                if (value < lowerBound_Int || value > upperBound_Int) {
+                                    errorDataList.add(jsonObject);
+                                } else {
+                                    successDataList.add(jsonObject);
+                                }
+                            } else {
                                 errorDataList.add(jsonObject);
-                            }else {
-                                successDataList.add(jsonObject);
+                            }
+                        } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
+                            Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                            String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+
+                            if (StringUtils.isEmpty(checkValue)) {
+                                errorDataList.add(jsonObject);
+                            } else {
+                                Double value = Double.valueOf(checkValue);
+                                boolean isValid = false;
+
+                                switch (rangeCheckOneWayOperator) {
+                                    case ">":
+                                        isValid = value > rangeCheckValue;
+                                        break;
+                                    case ">=":
+                                        isValid = value >= rangeCheckValue;
+                                        break;
+                                    case "=":
+                                        isValid = value.equals(rangeCheckValue); // Use equals for Double comparison
+                                        break;
+                                    case "!=":
+                                        isValid = !value.equals(rangeCheckValue);
+                                        break;
+                                    case "<":
+                                        isValid = value < rangeCheckValue;
+                                        break;
+                                    case "<=":
+                                        isValid = value <= rangeCheckValue;
+                                        break;
+                                    default:
+                                        log.info("值域检查-取值范围-单向取值-未匹配到有效的运算符：" + rangeCheckOneWayOperator);
+                                        break;
+                                }
+                                if (isValid) {
+                                    successDataList.add(jsonObject);
+                                } else {
+                                    errorDataList.add(jsonObject);
+                                }
                             }
                         } else {
-                            errorDataList.add(jsonObject);
+                            log.info("同步前-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
                         }
                         break;
                     case DATE_RANGE:
@@ -685,13 +730,39 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
                                 if (dateTime.isBefore(startTime) || dateTime.isAfter(endTime)) {
                                     errorDataList.add(jsonObject);
-                                }else {
+                                } else {
                                     successDataList.add(jsonObject);
                                 }
                             } else {
                                 errorDataList.add(jsonObject);
                             }
                         } catch (DateTimeParseException e) {
+                            errorDataList.add(jsonObject);
+                        }
+                        break;
+                    case KEYWORDS_INCLUDE:
+                        // 关键字包含
+                        RangeCheckKeywordIncludeTypeEnum rangeCheckKeywordIncludeTypeEnum = RangeCheckKeywordIncludeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckKeywordIncludeType());
+                        String rangeCheckValue = dataCheckExtendPO.getRangeCheckValue();
+
+                        boolean isValid = false;
+                        switch (rangeCheckKeywordIncludeTypeEnum) {
+                            case CONTAINS_KEYWORDS:
+                                isValid = checkValue.contains(rangeCheckValue);
+                                break;
+                            case INCLUDE_KEYWORDS_BEFORE:
+                                isValid = checkValue.startsWith(rangeCheckValue);
+                                break;
+                            case INCLUDE_KEYWORDS_AFTER:
+                                isValid = checkValue.endsWith(rangeCheckValue);
+                                break;
+                            default:
+                                log.info("同步前-值域检查-关键字包含-未匹配到有效的枚举: " + rangeCheckKeywordIncludeTypeEnum.getName());
+                                break;
+                        }
+                        if (isValid) {
+                            successDataList.add(jsonObject);
+                        } else {
                             errorDataList.add(jsonObject);
                         }
                         break;
@@ -708,11 +779,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(successDataList);
@@ -726,7 +797,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
             dataCheckResultVO.setCheckSuccessData(successDataList);
         }
-        // 设置具体的校验类型
+        // 设置具体校验类型
         dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
         return dataCheckResultVO;
     }
@@ -772,34 +843,78 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         // 日期格式
                         List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
                         boolean validDateFormat = false;
-                        if (checkValue.length() > 10) {
-                            validDateFormat = DateTimeUtils.isValidDateTimeFormat(checkValue, list);
-                        } else {
-                            validDateFormat = DateTimeUtils.isValidDateFormat(checkValue, list);
-                        }
+//                        if (checkValue.length() > 10) {
+//                            validDateFormat = DateTimeUtils.isValidDateTimeFormat(checkValue, list);
+//                        } else {
+//                            validDateFormat = DateTimeUtils.isValidDateFormat(checkValue, list);
+//                        }
+                        validDateFormat = DateTimeUtils.isValidDateOrTimeFormat(checkValue, list);
                         if (!validDateFormat) {
                             errorDataList.add(jsonObject);
-                        }else {
+                        } else {
                             successDataList.add(jsonObject);
                         }
                         break;
                     case CHARACTER_PRECISION_LENGTH_RANGE:
-                        // 字符精度长度范围
-                        int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
-                        int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
-                        if (StringUtils.isNotEmpty(checkValue)) {
-                            String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
-                            List<String> values = Arrays.asList(checkValue.split(regex));
-                            if (values.stream().count() >= 2) {
-                                String value = values.get(Math.toIntExact(values.stream().count() - 1));
-                                if (value.length() < minFieldLength || value.length() > maxFieldLength) {
-                                    errorDataList.add(jsonObject);
-                                }else {
+                        // 字符范围
+                        StandardCheckCharRangeTypeEnum standardCheckCharRangeTypeEnum = StandardCheckCharRangeTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckCharRangeType());
+                        if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_PRECISION_RANGE) {
+                            int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
+                            int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
+                            if (StringUtils.isNotEmpty(checkValue)) {
+                                String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                                List<String> values = Arrays.asList(checkValue.split(regex));
+                                if (values.stream().count() >= 2) {
+                                    String value = values.get(Math.toIntExact(values.stream().count() - 1));
+                                    if (value.length() < minFieldLength || value.length() > maxFieldLength) {
+                                        errorDataList.add(jsonObject);
+                                    } else {
+                                        successDataList.add(jsonObject);
+                                    }
+                                }
+                            } else {
+                                errorDataList.add(jsonObject);
+                            }
+                        } else if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_LENGTH_RANGE) {
+                            String standardCheckTypeLengthOperator = dataCheckExtendPO.getStandardCheckTypeLengthOperator();
+                            int standardCheckTypeLengthValue = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue());
+                            if (StringUtils.isEmpty(checkValue)) {
+                                errorDataList.add(jsonObject);
+                            } else {
+                                int checkValueLength = checkValue.length();
+                                boolean isValid = false;
+                                switch (standardCheckTypeLengthOperator) {
+                                    case ">":
+                                        isValid = checkValueLength > standardCheckTypeLengthValue;
+                                        break;
+                                    case ">=":
+                                        isValid = checkValueLength >= standardCheckTypeLengthValue;
+                                        break;
+                                    case "<":
+                                        isValid = checkValueLength < standardCheckTypeLengthValue;
+                                        break;
+                                    case "<=":
+                                        isValid = checkValueLength <= standardCheckTypeLengthValue;
+                                        break;
+                                    case "=":
+                                        isValid = checkValueLength == standardCheckTypeLengthValue;
+                                        break;
+                                    case "!=":
+                                        isValid = checkValueLength != standardCheckTypeLengthValue;
+                                        break;
+                                    default:
+                                        log.info("同步前-规范检查-字符范围-字符长度范围-未匹配到有效的运算符：" + standardCheckTypeLengthOperator);
+                                        break;
+                                }
+
+                                if (isValid) {
                                     successDataList.add(jsonObject);
+                                } else {
+                                    errorDataList.add(jsonObject);
                                 }
                             }
                         } else {
-                            errorDataList.add(jsonObject);
+                            log.info("同步前-规范检查-字符范围-未匹配到有效的枚举：" + standardCheckCharRangeTypeEnum.getName());
                         }
                         break;
                     case URL_ADDRESS:
@@ -808,7 +923,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         boolean validURL = RegexUtils.isValidPattern(checkValue, standardCheckTypeRegexpValue, false);
                         if (!validURL) {
                             errorDataList.add(jsonObject);
-                        }else {
+                        } else {
                             successDataList.add(jsonObject);
                         }
                         break;
@@ -817,7 +932,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         boolean validBase64String = RegexUtils.isBase64String(checkValue, false);
                         if (!validBase64String) {
                             errorDataList.add(jsonObject);
-                        }else {
+                        } else {
                             successDataList.add(jsonObject);
                         }
                         break;
@@ -834,11 +949,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(successDataList);
@@ -852,7 +967,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s-%s检查通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
             dataCheckResultVO.setCheckSuccessData(successDataList);
         }
-        // 设置具体的校验类型
+        // 设置具体校验类型
         dataCheckResultVO.setCheckTemplateName(String.format("%s-%s", TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
         return dataCheckResultVO;
     }
@@ -883,7 +998,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
             if (fieldValues.contains(value.toLowerCase())) {
                 errorDataList.add(jsonObject);
-            }else {
+            } else {
                 successDataList.add(jsonObject);
             }
             fieldValues.add(value.toLowerCase());
@@ -895,11 +1010,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, dataCheckExtendPO.getFieldName(), dataCheckPO.ruleName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(successDataList);
@@ -1112,7 +1227,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 boolean isValid = RegexUtils.isValidPattern(checkValue, dataCheckExtendPO.getRegexpCheckValue(), false);
                 if (!isValid) {
                     errorDataList.add(jsonObject);
-                }else {
+                } else {
                     successDataList.add(jsonObject);
                 }
             } else {
@@ -1128,11 +1243,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，正则表达式为：%s", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
                 dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.REGEX_CHECK.getName()));
                 dataCheckResultVO.setCheckSuccessData(successDataList);
@@ -1157,17 +1272,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         // 第二步：建立数据库连接执行SQL查询语句
         Connection conn = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         JSONArray jsonArray = AbstractCommonDbHelper.execQueryResultArrays(dataCheckExtendPO.getSqlCheckValue(), conn);
-        // 固定返回checkstate，通过为1，未通过为0，取第一行的checkstate字段判断
+        // 执行Sql脚本，查询结果是否为空，不为空则校验不通过，为空则校验通过
         boolean isValid = false;
-        String checkState = "";
-        if (CollectionUtils.isNotEmpty(jsonArray)) {
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            if (jsonObject.containsKey("checkstate")) {
-                checkState = jsonObject.getString("checkstate");
-                if (checkState != null && checkState.equals("1")) {
-                    isValid = true;
-                }
-            }
+        if (CollectionUtils.isEmpty(jsonArray)) {
+            isValid = true;
         }
 
         String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
@@ -1208,7 +1316,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         dataCheckResultVO.setCheckTemplateName(templatePO.getTemplateName());
         dataCheckResultVO.setCheckTemplateDesc(templatePO.getTemplateDesc());
         dataCheckResultVO.setCheckTotalCount(String.valueOf(data.size()));
-        String tableName = dataCheckPO.getTableName().substring(dataCheckPO.getTableName().lastIndexOf("_")+1);
+        String tableName = dataCheckPO.getTableName().substring(dataCheckPO.getTableName().lastIndexOf("_") + 1);
         dataCheckResultVO.setCheckDisplayTableName(tableName);
         return dataCheckResultVO;
     }
@@ -1310,7 +1418,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 //判断表名是否包含ods_,如果包含就将ods_替换为stg_,因为我们操作的是临时表
                 if (tblName.contains("ods_")) {
                     tblName = tblName.replace("ods_", "stg_");
-                }else if (!tblName.contains("ods_")
+                } else if (!tblName.contains("ods_")
                         && !tblName.contains("stg_")
                         && StringUtils.isNotEmpty(dto.getTablePrefix())) {
                     //判断表名，如果不包含ods_和stg_,并且参数中tablePrefix不为空则表名拼接此前缀部分。同步中执行校验的一定是临时表。出现表名不带ods_前缀是因为在数接应用配置的时候勾选了使用简称作为架构
@@ -1540,10 +1648,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
                         ? "[%s]" + "=" + "'%s'" :
                         dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
-                                ? "\"%s\"" + "=" + "'%s'" : "";
+                                ? "\"%s\"" + "=" + "'%s'" :
+                                dataSourceTypeEnum == DataSourceTypeEnum.DORIS
+                                        ? "`%s`" + "=" + "'%s'" : "";
         return sqlWhereStr;
     }
 
+    /**
+     * @return java.lang.String
+     * @description 拼语法关键字
+     * @author dick
+     * @date 2024/6/19 11:04
+     * @version v1.0
+     * @params dataSourceTypeEnum
+     * @params fieldName 可以是字段名称、表名称、架构名称
+     */
     public String nifiSync_GetSqlFieldFormat(DataSourceTypeEnum dataSourceTypeEnum, String fieldName) {
         String sqlFieldStr = dataSourceTypeEnum == DataSourceTypeEnum.MYSQL
                 ? "`%s`" :
@@ -1551,9 +1670,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         ? "[%s]" :
                         dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
                                 ? "\"%s\"" :
-                                "";
+                                dataSourceTypeEnum == DataSourceTypeEnum.DORIS
+                                        ? "" : "";
         if (StringUtils.isNotEmpty(sqlFieldStr)) {
             sqlFieldStr = String.format(sqlFieldStr, fieldName);
+        } else {
+            sqlFieldStr = fieldName;
         }
         return sqlFieldStr;
     }
@@ -1644,14 +1766,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 fType = dataCheckExtendPO.getFieldType(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
-                f_where_1=f_where.substring(f_where.lastIndexOf("AND")),
+                f_where_1 = f_where.substring(f_where.lastIndexOf("AND")),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
         String sql_QueryTotalCount = String.format("SELECT COUNT(*) FROM %s WHERE 1=1 %s", t_Name, f_where);
         String sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '' OR %s = 'null')", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name, f_Name);
-        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
             sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '' OR %s = 'null')", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, f_Name, f_Name);
         }
 
@@ -1661,7 +1783,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         boolean charValid = RegexUtils.isCharValid(fType);
         if (!charValid) {
             sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND %s IS NULL", f_uniqueIdName, f_Name, t_Name, f_where, f_Name);
-            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                 sql_QueryCheckData = String.format("SELECT %s,%s FROM %s WHERE 1=1 %s AND %s IS NULL", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name);
             }
             sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s IS NULL", f_uniqueIdName, t_Name, f_where, f_Name);
@@ -1693,7 +1815,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql += String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where_1);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.NULL_CHECK.getName()));
-            }else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.NULL_CHECK.getName()));
@@ -1730,7 +1852,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
-                f_where_1=f_where.substring(f_where.lastIndexOf("AND")),
+                f_where_1 = f_where.substring(f_where.lastIndexOf("AND")),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
@@ -1742,8 +1864,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
         switch (rangeCheckTypeEnum) {
             case SEQUENCE_RANGE:
-                if (dataCheckExtendPO.rangeType == 2){
-                    String childrenQuery = String.format("SELECT %s FROM %s",dataCheckExtendPO.getCheckFieldName(),dataCheckExtendPO.getCheckTableName());
+                if (dataCheckExtendPO.rangeType == 2) {
+                    String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
 
                     sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, childrenQuery);
                     if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
@@ -1751,7 +1873,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     }
                     sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, childrenQuery);
                     break;
-                }else {
+                } else {
                     // 序列范围
                     List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
                     // 将list里面的序列范围截取为'','',''格式的字符串
@@ -1768,17 +1890,40 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             case VALUE_RANGE:
                 // 取值范围
-                Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
-                if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                    sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
+                if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
+                    Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                    Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                    String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                        sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                        sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
+                    }
+                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                    if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                    }
+                    sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
+                    break;
+                } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
+                    Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                    String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+                    String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                        sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                        sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    }
+                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                    if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                    }
+                    sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
+                    break;
+                } else {
+                    log.info("同步中-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
                 }
-                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
-                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
-                }
-                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
                 break;
             case DATE_RANGE:
                 // 日期范围
@@ -1789,12 +1934,37 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
                 sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))",
                         f_uniqueIdName, f_Name, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                     sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))",
                             f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, f_Name, f_Name, startTime, endTime);
                 }
                 sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND ((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))",
                         f_uniqueIdName, t_Name, f_where, f_Name, f_Name, f_Name, startTime, endTime);
+                break;
+            case KEYWORDS_INCLUDE:
+                // 关键字包含
+                RangeCheckKeywordIncludeTypeEnum rangeCheckKeywordIncludeTypeEnum = RangeCheckKeywordIncludeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckKeywordIncludeType());
+                String rangeCheckValue = dataCheckExtendPO.getRangeCheckValue();
+                String likeValue = "";
+                switch (rangeCheckKeywordIncludeTypeEnum) {
+                    case CONTAINS_KEYWORDS:
+                        likeValue = "'%" + rangeCheckValue + "%'";
+                        break;
+                    case INCLUDE_KEYWORDS_BEFORE:
+                        likeValue = "'" + rangeCheckValue + "%'";
+                        break;
+                    case INCLUDE_KEYWORDS_AFTER:
+                        likeValue = "'%" + rangeCheckValue + "'";
+                        break;
+                    default:
+                        log.info("同步中-值域检查-关键字包含-未匹配到有效的枚举: " + rangeCheckKeywordIncludeTypeEnum.getName());
+                        break;
+                }
+                sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s not like %s", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, likeValue);
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s not like %s", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, likeValue);
+                }
+                sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s not like %s", f_uniqueIdName, t_Name, f_where, f_Name, likeValue);
                 break;
         }
 
@@ -1827,12 +1997,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql += String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where_1);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
-            }else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
 
-            }else {
+            } else {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_UpdateErrorData);
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过，但检查规则未设置强规则将继续放行数据", dataCheckSyncParamDTO.getTableName(), dataCheckSyncParamDTO.getFieldName(), TemplateTypeEnum.RANGE_CHECK.getName(), rangeCheckTypeEnum.getName()));
@@ -1868,7 +2038,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
-                f_where_1=f_where.substring(f_where.lastIndexOf("AND")),
+                f_where_1 = f_where.substring(f_where.lastIndexOf("AND")),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 f_uniqueIdNameUnFormat = dataCheckSyncParamDTO.getUniqueIdNameUnFormat(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
@@ -1876,11 +2046,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
         String sql_QueryTotalCount = String.format("SELECT COUNT(*) FROM %s WHERE 1=1 %s", t_Name, f_where);
         String sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s", f_uniqueIdName, f_Name, t_Name, f_where);
-        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
             sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s", f_uniqueIdName, f_Name, t_Name, f_where_1);
         }
-        // 第三步：查询待校验的数据
 
+        // 第三步：查询待校验的数据
         List<Map<String, Object>> maps = nifiSync_CheckTableData(dataSourceConVO, sql_QueryTotalCount);
         if (CollectionUtils.isNotEmpty(maps)) {
             Set<Map.Entry<String, Object>> entries = maps.get(0).entrySet();
@@ -1908,31 +2078,71 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             errorDataList.add(jsonObject);
                         } else {
                             boolean validDateFormat = false;
-                            if (fieldValue.toString().length() > 10) {
-                                validDateFormat = DateTimeUtils.isValidDateTimeFormat(fieldValue.toString(), list);
-                            } else {
-                                validDateFormat = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
-                            }
+//                            if (fieldValue.toString().length() > 10) {
+//                                validDateFormat = DateTimeUtils.isValidDateTimeFormat(fieldValue.toString(), list);
+//                            } else {
+//                                validDateFormat = DateTimeUtils.isValidDateFormat(fieldValue.toString(), list);
+//                            }
+                            validDateFormat = DateTimeUtils.isValidDateOrTimeFormat(fieldValue.toString(), list);
                             if (!validDateFormat) {
                                 errorDataList.add(jsonObject);
                             }
                         }
                         break;
                     case CHARACTER_PRECISION_LENGTH_RANGE:
-                        // 字符精度长度范围
-                        int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
-                        int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
-                        if (fieldValue == null || fieldValue.toString().equals("")) {
-                            errorDataList.add(jsonObject);
-                        } else {
-                            String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
-                            List<String> values = Arrays.asList(fieldValue.toString().split(regex));
-                            if (values.stream().count() >= 2) {
-                                String value = values.get(Math.toIntExact(values.stream().count() - 1));
-                                if (value.length() < minFieldLength || value.length() > maxFieldLength) {
-                                    errorDataList.add(jsonObject);
+                        // 字符范围
+                        StandardCheckCharRangeTypeEnum standardCheckCharRangeTypeEnum = StandardCheckCharRangeTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckCharRangeType());
+                        if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_PRECISION_RANGE) {
+                            // 字符精度长度范围
+                            int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
+                            int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
+                            if (fieldValue == null || fieldValue.toString().equals("")) {
+                                errorDataList.add(jsonObject);
+                            } else {
+                                String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                                List<String> values = Arrays.asList(fieldValue.toString().split(regex));
+                                if (values.stream().count() >= 2) {
+                                    String value = values.get(Math.toIntExact(values.stream().count() - 1));
+                                    if (value.length() < minFieldLength || value.length() > maxFieldLength) {
+                                        errorDataList.add(jsonObject);
+                                    }
                                 }
                             }
+                        } else if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_LENGTH_RANGE) {
+                            String standardCheckTypeLengthOperator = dataCheckExtendPO.getStandardCheckTypeLengthOperator();
+                            int standardCheckTypeLengthValue = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue());
+                            int checkValueLength = fieldValue == null || fieldValue.toString().equals("") ? 0 : fieldValue.toString().length();
+
+                            boolean isValid = false;
+                            switch (standardCheckTypeLengthOperator) {
+                                case ">":
+                                    isValid = checkValueLength > standardCheckTypeLengthValue;
+                                    break;
+                                case ">=":
+                                    isValid = checkValueLength >= standardCheckTypeLengthValue;
+                                    break;
+                                case "<":
+                                    isValid = checkValueLength < standardCheckTypeLengthValue;
+                                    break;
+                                case "<=":
+                                    isValid = checkValueLength <= standardCheckTypeLengthValue;
+                                    break;
+                                case "=":
+                                    isValid = checkValueLength == standardCheckTypeLengthValue;
+                                    break;
+                                case "!=":
+                                    isValid = checkValueLength != standardCheckTypeLengthValue;
+                                    break;
+                                default:
+                                    log.info("同步中-规范检查-字符范围-字符长度范围-未匹配到有效的运算符：" + standardCheckTypeLengthOperator);
+                                    break;
+                            }
+
+                            if (!isValid) {
+                                errorDataList.add(jsonObject);
+                            }
+                        } else {
+                            log.info("同步中-规范检查-字符范围-未匹配到有效的枚举：" + standardCheckCharRangeTypeEnum.getName());
                         }
                         break;
                     case URL_ADDRESS:
@@ -1987,7 +2197,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql += String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where_1);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
-            }else if(dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.STANDARD_CHECK.getName(), standardCheckTypeEnum.getName()));
@@ -2027,7 +2237,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 f_Name = "",
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
-                f_where_1=f_where.substring(f_where.lastIndexOf("AND")),
+                f_where_1 = f_where.substring(f_where.lastIndexOf("AND")),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
@@ -2052,7 +2262,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String sql_QueryCheckData = String.format("SELECT %s COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
                 "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_where, f_Name.replaceAll(",+$", ""));
 
-        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
             sql_QueryCheckData = String.format("SELECT %s COUNT(*) AS repetitionCount FROM %s WHERE 1=1 %s \n" +
                     "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, f_where_1, f_Name.replaceAll(",+$", ""));
         }
@@ -2088,7 +2298,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql += String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where_1);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过", tName, fName, TemplateTypeEnum.DUPLICATE_DATA_CHECK.getName()));
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s\n" +
                         "SET %s\n" +
                         "FROM (\n" +
@@ -2138,7 +2348,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
-                f_where_1=f_where.substring(f_where.lastIndexOf("AND")),
+                f_where_1 = f_where.substring(f_where.lastIndexOf("AND")),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
@@ -2153,31 +2363,31 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         switch (fluctuateCheckTypeEnum) {
             case AVG:
                 sql_QueryCheckData = String.format("SELECT AVG(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                     sql_QueryCheckData = String.format("SELECT AVG(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where_1);
                 }
                 break;
             case MIN:
                 sql_QueryCheckData = String.format("SELECT MIN(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                     sql_QueryCheckData = String.format("SELECT MIN(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where_1);
                 }
                 break;
             case MAX:
                 sql_QueryCheckData = String.format("SELECT MAX(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                     sql_QueryCheckData = String.format("SELECT MAX(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where_1);
                 }
                 break;
             case SUM:
                 sql_QueryCheckData = String.format("SELECT SUM(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                     sql_QueryCheckData = String.format("SELECT SUM(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where_1);
                 }
                 break;
             case COUNT:
                 sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where);
-                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+                if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
                     sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, f_where_1);
                 }
                 break;
@@ -2239,7 +2449,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql += String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where_1);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
-            }else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s-%s检查未通过", tName, fName, TemplateTypeEnum.FLUCTUATION_CHECK.getName(), fluctuateCheckTypeEnum.getName()));
@@ -2324,14 +2534,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
                 fName = dataCheckSyncParamDTO.getFieldName(),
                 f_where = dataCheckSyncParamDTO.getWhereFieldSql(),
-                f_where_1=f_where.substring(f_where.lastIndexOf("AND")),
+                f_where_1 = f_where.substring(f_where.lastIndexOf("AND")),
                 f_uniqueIdName = dataCheckSyncParamDTO.getUniqueField(),
                 f_uniqueIdNameUnFormat = dataCheckSyncParamDTO.getUniqueIdNameUnFormat(),
                 sql_Y = dataCheckSyncParamDTO.getSuccessFieldSql(),
                 sql_N = dataCheckSyncParamDTO.getFailFieldSql(),
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
         String sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s", f_uniqueIdName, f_Name, t_Name, f_where);
-        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()){
+        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
             sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s", f_uniqueIdName, f_Name, t_Name, f_where_1);
         }
         // 第三步：查询待校验的数据
@@ -2373,11 +2583,11 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql += String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N, f_where_1);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
-            }else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_N + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
-            }else {
+            } else {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s AND %s IN (%s);", t_Name, sql_W + updateMsgFieldSql, f_where, f_uniqueIdName, sql_InString);
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据，正则表达式为：%s", tName, fName, TemplateTypeEnum.REGEX_CHECK.getName(), dataCheckExtendPO.getRegexpCheckValue()));
@@ -2417,17 +2627,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 sql_W = dataCheckSyncParamDTO.getWarnFieldSql();
         JSONArray jsonArray = nifiSync_QueryTableData(dataSourceConVO, dataCheckExtendPO.getSqlCheckValue());
 
-        // 固定返回checkstate，通过为1，未通过为0，取第一行的checkstate字段判断
+        // 执行Sql脚本，查询结果是否为空，不为空则校验不通过，为空则校验通过
         boolean isValid = false;
-        String checkState = "0";
-        if (CollectionUtils.isNotEmpty(jsonArray)) {
-            JSONObject jsonObject = jsonArray.getJSONObject(0);
-            if (jsonObject.containsKey("checkstate")) {
-                checkState = jsonObject.getString("checkstate");
-                if (StringUtils.isNotEmpty(checkState) && checkState.equals("1")) {
-                    isValid = true;
-                }
-            }
+        if (CollectionUtils.isEmpty(jsonArray)) {
+            isValid = true;
         }
 
         // 第三步：判断是否通过SQL检查，通过或者未通过都需要更新表状态
@@ -2441,7 +2644,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_N + updateMsgFieldSql, f_where);
                 dataCheckResultVO.setCheckResult(FAIL);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，%s未通过", tName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()){
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
                 updateSql = String.format("UPDATE %s SET %s WHERE 1=1 %s;", t_Name, sql_W + updateMsgFieldSql, f_where);
                 dataCheckResultVO.setCheckResult(WARN);
                 dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, TemplateTypeEnum.SQL_SCRIPT_CHECK.getName()));
@@ -2755,6 +2958,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     /**
      * 获取数据源所有表
+     *
      * @param dto
      * @return
      */

@@ -40,15 +40,31 @@ public class DataCheckExtendPO extends BasePO {
      * 1、序列范围(枚举)
      * 2、取值范围(1~10)
      * 3、日期范围(2023-04-01 12:59:59~2023-05-01 12:00:00)
+     * 4、关键字包含
      */
     public int rangeCheckType;
 
     /**
-     * 值域检查-参数类型：
+     * 值域检查-序列范围类型：
      * 1、值类型
      * 2、表字段类型
      */
     public int rangeType;
+
+    /**
+     * 值域检查-取值范围类型：1、单向取值 2、区间取值
+     */
+    public int rangeCheckValueRangeType;
+
+    /**
+     * 值域检查-关键字包含类型：1、包含关键字 2、前包含关键字 3、后包含关键字
+     */
+    public int rangeCheckKeywordIncludeType;
+
+    /**
+     * 值域检查-取值范围-单向取值-运算符
+     */
+    public String rangeCheckOneWayOperator;
 
     /**
      * 值域检查-对比值；
@@ -58,11 +74,16 @@ public class DataCheckExtendPO extends BasePO {
     /**
      * 规范检查-类型：
      * 1、日期格式
-     * 2、字符精度长度范围(1~10)
+     * 2、字符范围
      * 3、URL地址(http或https或ftp或file开头)
      * 4、Base64字节流
      */
     public int standardCheckType;
+
+    /**
+     * 规范检查-字符范围类型：1、字符精度范围 2、字符长度范围
+     */
+    public int standardCheckCharRangeType;
 
     /**
      * 规范检查-日期格式值，多个日期格式逗号分隔
@@ -70,12 +91,17 @@ public class DataCheckExtendPO extends BasePO {
     public String standardCheckTypeDateValue;
 
     /**
-     * 规范检查-字符和浮点长度范围分隔符(.)
+     * 规范检查-浮点长度范围分隔符
      */
     public String standardCheckTypeLengthSeparator;
 
     /**
-     * 规范检查-字符和浮点长度范围(1,10)
+     * 规范检查-字符长度范围运算符
+     */
+    public String standardCheckTypeLengthOperator;
+
+    /**
+     * 规范检查-字符长度值/浮点长度范围
      */
     public String standardCheckTypeLengthValue;
 

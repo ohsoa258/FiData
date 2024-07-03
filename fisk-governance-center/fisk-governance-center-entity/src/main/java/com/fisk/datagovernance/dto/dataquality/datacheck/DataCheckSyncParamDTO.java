@@ -13,6 +13,7 @@ import lombok.Data;
 public class DataCheckSyncParamDTO {
     /**
      * 修改条件字段-SQL
+     * 批次号一定有
      */
     @ApiModelProperty(value = "条件字段-SQL")
     public String whereFieldSql;

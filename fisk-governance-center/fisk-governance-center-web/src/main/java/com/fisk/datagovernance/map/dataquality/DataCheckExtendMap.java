@@ -30,8 +30,11 @@ public interface DataCheckExtendMap {
     @Mappings({
             @Mapping(source = "rangeCheckType.value", target = "rangeCheckType"),
             @Mapping(source = "standardCheckType.value", target = "standardCheckType"),
+            @Mapping(source = "rangeCheckValueRangeType.value", target = "rangeCheckValueRangeType"),
+            @Mapping(source = "rangeCheckKeywordIncludeType.value", target = "rangeCheckKeywordIncludeType"),
+            @Mapping(source = "standardCheckCharRangeType.value", target = "standardCheckCharRangeType"),
             @Mapping(source = "fluctuateCheckType.value", target = "fluctuateCheckType"),
-            @Mapping(source = "parentageCheckType.value", target = "parentageCheckType")
+            @Mapping(source = "parentageCheckType.value", target = "parentageCheckType"),
     })
     DataCheckExtendPO dtoToPo(DataCheckExtendDTO dto);
 }
