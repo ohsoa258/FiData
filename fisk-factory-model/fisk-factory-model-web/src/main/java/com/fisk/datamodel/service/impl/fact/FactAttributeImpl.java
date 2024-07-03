@@ -301,6 +301,10 @@ public class FactAttributeImpl
         po.factFieldLength = dto.factFieldLength;
         po.factFieldEnName = dto.factFieldEnName;
         po.factFieldType = dto.factFieldType;
+        //数据分类
+        po.dataClassification = dto.dataClassification;
+        //数据分级
+        po.dataLevel = dto.dataLevel;
 
         //系统变量
         if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {

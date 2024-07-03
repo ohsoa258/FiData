@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.businessclassification.BusinessCategorySortDTO;
 import com.fisk.datamanagement.dto.category.BusinessCategoryAssignmentDTO;
 import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
@@ -57,7 +58,6 @@ public class BusinessCategoryController {
 
     /**
      * 获取维度tree
-     *
      * @return
      */
     @ApiOperation("获取业务指标数据列表")
@@ -316,5 +316,11 @@ public class BusinessCategoryController {
     @PostMapping("/pageFilter")
     public ResultEntity<List<BusinessTargetinfoMenuDTO>> pageFilter(@RequestBody CategoryQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.pageFilter(dto));
+    }
+
+    @ApiOperation("指标管理排序更新")
+    @PostMapping("/businessCategorySort")
+    public ResultEntity<Object> businessCategorySort(@RequestBody BusinessCategorySortDTO dto) {
+        return ResultEntityBuild.build(businessCategoryService.businessCategorySort(dto));
     }
 }

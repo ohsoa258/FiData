@@ -390,7 +390,7 @@ public interface DataModelClient {
      */
     @GetMapping("/business/getDataModelMetaDataByLastSyncTime")
     @ApiOperation(value = "获取数据建模所有元数据")
-    ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaDataByLastSyncTime(@RequestParam("lastSyncTime") LocalDateTime lastSyncTime);
+    ResultEntity<List<MetaDataInstanceAttributeDTO>> getDataModelMetaDataByLastSyncTime(@RequestParam("lastSyncTime") String lastSyncTime);
 
     /**
      * 根据表名获取事实或维度表

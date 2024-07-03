@@ -4,35 +4,47 @@
 <mapper namespace="com.fisk.datamanagement.mapper.MetadataEntityMapper">
 
     <select id="selectMetadataEntity" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
-        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1  ORDER BY name
+        SELECT *
+        FROM tb_metadata_entity
+        WHERE type_id != #{type}
+          and del_flag=1
+        ORDER BY name
     </select>
 
     <!-- 排除数仓的temp_表 -->
     <select id="selectMetadataEntityWithoutTemp" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
-        SELECT * FROM tb_metadata_entity WHERE type_id != #{type} and del_flag=1 and LEFT(name,5) != "temp_" ORDER BY name
+        SELECT *
+        FROM tb_metadata_entity
+        WHERE type_id != #{type}
+          and del_flag=1
+          and LEFT (name
+            , 5) != "temp_"
+        ORDER BY name
     </select>
 
     <!--查询抽取详情，和输入输出源-->
     <resultMap id="processMap" type="com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO">
-        <id property="id" column="id" />
+        <id property="id" column="id"/>
         <result property="name" column="tbname"/>
         <result property="description" column="tbdes"/>
-        <collection property="relationDTOList" ofType="com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO">
+        <collection property="relationDTOList"
+                    ofType="com.fisk.datamanagement.dto.lineagemaprelation.LineageMapRelationDTO">
             <id property="id" column="lmid"/>
-            <result property="fromEntityId" column="fromid" />
+            <result property="fromEntityId" column="fromid"/>
             <result property="toEntityId" column="toid"/>
         </collection>
     </resultMap>
     <select id="getProcess" resultMap="processMap">
         SELECT tb1.id,
-               tb1.name tbname,
-               tb1.description tbdes,
+               tb1.name           tbname,
+               tb1.description    tbdes,
                lmr.from_entity_id fromid,
-               lmr.to_entity_id toid,
-               lmr.id lmid
+               lmr.to_entity_id   toid,
+               lmr.id             lmid
         FROM tb_metadata_entity tb1
-        LEFT JOIN tb_lineage_map_relation lmr on tb1.id = lmr.metadata_entity_id
-        WHERE tb1.id=#{guid} AND tb1.del_flag=1
+                 LEFT JOIN tb_lineage_map_relation lmr on tb1.id = lmr.metadata_entity_id
+        WHERE tb1.id = #{guid}
+          AND tb1.del_flag = 1
     </select>
 
 
@@ -43,20 +55,29 @@
         <result property="typeName" column="tname"/>
         <result property="parent1" column="parent1"/>
         <result property="parent2" column="parent2"/>
-        <association property="attributes"  javaType="com.fisk.datamanagement.dto.entity.EntityAttributesDTO">
+        <association property="attributes" javaType="com.fisk.datamanagement.dto.entity.EntityAttributesDTO">
             <result property="name" column="ename"/>
             <result property="qualifiedName" column="qname"/>
+            <result property="displayName" column="display_name"/>
         </association>
     </resultMap>
     <select id="searchEntitys" resultMap="queryEntity">
-        SELECT  tme.id guid,tme.`name` ename,tme.qualified_name qname,tmp.type tname,tme1.name parent1,tme2.name parent2
+        SELECT tme.id             guid,
+               tme.`name`         ename,
+               tme.display_name   display_name,
+               tme.qualified_name qname,
+               tmp.type           tname,
+               tme1.name          parent1,
+               tme2.name          parent2
         FROM tb_metadata_entity tme
-        LEFT JOIN tb_metadata_entity_type tmp ON tme.type_id = tmp .id
-        LEFT JOIN tb_metadata_entity tme1 ON tme.parent_id = tme1.id
-        LEFT JOIN tb_metadata_entity tme2 ON tme1.parent_id = tme2.id
-        WHERE tme.`name` LIKE CONCAT('%',#{query},'%') AND (tme.description != 'stg' or tme.description is null) AND  tme.del_flag = 1
-        LIMIT #{offset},#{limit}
+                 LEFT JOIN tb_metadata_entity_type tmp ON tme.type_id = tmp.id
+                 LEFT JOIN tb_metadata_entity tme1 ON tme.parent_id = tme1.id
+                 LEFT JOIN tb_metadata_entity tme2 ON tme1.parent_id = tme2.id
+        WHERE (tme.`name` LIKE CONCAT('%',#{query},'%') OR tme.display_name LIKE CONCAT('%',#{query},'%'))
+          AND (tme.description != 'stg' or tme.description is null)
+          AND tme.del_flag = 1
+            LIMIT #{offset}
+            , #{limit}
     </select>
-
 
 </mapper>

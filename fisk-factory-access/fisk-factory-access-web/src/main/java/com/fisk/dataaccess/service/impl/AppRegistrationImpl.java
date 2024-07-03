@@ -3890,7 +3890,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @return
      */
     @Override
-    public List<MetaDataInstanceAttributeDTO> synchronizationAccessTableByLastSyncTime(LocalDateTime lastSyncTime) {
+    public List<MetaDataInstanceAttributeDTO> synchronizationAccessTableByLastSyncTime(String lastSyncTime) {
         //通过做过更新的字段 先找到有哪些表的字段做过更新
         List<TableFieldsPO> tableFieldsPOS = tableFieldsImpl.list(new QueryWrapper<TableFieldsPO>()
                 .select("distinct table_access_id")
@@ -3926,13 +3926,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             MetaDataInstanceAttributeDTO metaDataInstance = getMetaDataInstance(appRegistrationPo);
 
+            if (CollectionUtils.isEmpty(accessTblIds)){
+                continue;
+            }
+
             List<TableAccessPO> tableAccessPoList = tableAccessImpl.query()
                     .eq("app_id", appRegistrationPo.id)
                     .in("id", accessTblIds)
                     .list();
+
             if (CollectionUtils.isEmpty(tableAccessPoList)) {
                 continue;
             }
+
             List<MetaDataTableAttributeDTO> metaDataTable = new ArrayList<>();
             for (TableAccessPO tableAccessPo : tableAccessPoList) {
                 metaDataTable.addAll(getAccessTableMetaData(appRegistrationPo, tableAccessPo, metaDataInstance.dbList.get(0).qualifiedName));
@@ -4408,7 +4414,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         table.setDescription(tableAccess.getTableDes());
         table.setComment(String.valueOf(app.getId()));
         table.setDisplayName(tableAccess.displayName);
-        table.setOwner(app.createUser);
+        table.setOwner(tableAccess.createUser);
         table.setSqlScript(tableAccess.sqlScript);
         table.setCoverScript(tableAccess.coverScript);
         table.setDataSourceId(tableAccess.getAppDataSourceId());
@@ -4426,8 +4432,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             field.setComment(e.getDisplayName());
             field.setDataType(e.fieldType);
             field.setDisplayName(e.displayName);
-            field.setOwner(table.owner);
+            field.setOwner(e.createUser);
             field.setLength(String.valueOf(e.fieldLength));
+            //数据分类
+            field.setDataClassification(e.dataClassification);
+            //数据分级
+            field.setDataLevel(e.dataLevel);
             return field;
         }).collect(Collectors.toList());
 

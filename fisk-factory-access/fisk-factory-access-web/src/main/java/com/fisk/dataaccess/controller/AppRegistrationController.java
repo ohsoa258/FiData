@@ -441,7 +441,7 @@ public class AppRegistrationController {
      */
     @GetMapping("/synchronizationAccessTableByLastSyncTime")
     @ApiOperation(value = "元数据根据最近同步时间同步接入表")
-    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTableByLastSyncTime(@RequestParam("lastSyncTime") LocalDateTime lastSyncTime) {
+    public ResultEntity<List<MetaDataInstanceAttributeDTO>> synchronizationAccessTableByLastSyncTime(@RequestParam("lastSyncTime") String lastSyncTime) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.synchronizationAccessTableByLastSyncTime(lastSyncTime));
     }
 

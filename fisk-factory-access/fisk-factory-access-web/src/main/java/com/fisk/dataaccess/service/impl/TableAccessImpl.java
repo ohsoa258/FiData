@@ -675,6 +675,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.fieldDes = e.fieldDes;
             dto.fieldType = e.fieldType;
             dto.fieldLength = e.fieldLength;
+            dto.dataClassification = e.dataClassification;
+            dto.dataLevel = e.dataLevel;
             dtoList.add(dto);
         });
         // 组装执行sql后的字段属性
@@ -689,6 +691,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             e.fieldDes = f.fieldDes;
             e.fieldType = f.fieldType;
             e.fieldLength = String.valueOf(f.fieldLength);
+            e.dataClassification = f.dataClassification;
+            e.dataLevel = f.dataLevel;
         }));
         return fieldNameDTOList;
     }

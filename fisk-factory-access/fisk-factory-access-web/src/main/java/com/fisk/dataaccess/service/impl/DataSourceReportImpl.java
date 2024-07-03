@@ -12,6 +12,7 @@ import com.fisk.dataaccess.service.ITableFields;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,6 +75,17 @@ public class DataSourceReportImpl implements IDataSourceReport {
      * @return
      */
     public double computerPercentage(double appTableAccessCount,double tableAccessCount){
-        return (appTableAccessCount/tableAccessCount)*100d;
+        BigDecimal appCount = BigDecimal.valueOf(appTableAccessCount);
+        BigDecimal totalCount = BigDecimal.valueOf(tableAccessCount);
+
+        if (totalCount.compareTo(BigDecimal.ZERO) == 0) {
+            return 0;
+        }
+        if (appCount.compareTo(BigDecimal.ZERO) == 0) {
+            return 0;
+        }
+
+        BigDecimal result = appCount.divide(totalCount, 5, BigDecimal.ROUND_HALF_UP).multiply(BigDecimal.valueOf(100));
+        return result.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 }

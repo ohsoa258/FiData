@@ -34,4 +34,12 @@ public class AppWhiteListVO {
      */
     @ApiModelProperty(value = "应用白名单状态：1启用、2禁用")
     public int appWhiteListState;
+
+
+
+    /**
+     * 是否开启授权认证 1开启 0关闭
+     */
+    @ApiModelProperty(value = "是否开启授权认证 1开启 0关闭")
+    private int proxyAuthorizationSwitch;
 }

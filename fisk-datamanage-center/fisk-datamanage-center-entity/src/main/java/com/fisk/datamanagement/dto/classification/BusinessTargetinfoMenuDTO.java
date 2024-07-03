@@ -20,10 +20,18 @@ public class BusinessTargetinfoMenuDTO {
     public String name;
     @ApiModelProperty(value = "类型")
     public String type;
+    @ApiModelProperty(value = "所属分类id")
+    public String categoryId;
+    @ApiModelProperty(value = "所属分类")
+    public String categoryName;
     @ApiModelProperty(value = "指标状态")
     public String indicatorStatus;
     @ApiModelProperty(value = "上级指标Id")
     public Integer parentBusinessId;
+    @ApiModelProperty(value = "上级指标目录节点Id")
+    public String parentBusinessCategoryId;
+    @ApiModelProperty(value = "上级指标名称")
+    public String parentBusinessName;
     @ApiModelProperty(value = "指标编码")
     public String indicatorCcode;
     @ApiModelProperty(value = "指标描述/口径")

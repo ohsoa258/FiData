@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.chartvisual.enums.IndicatorTypeEnum;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
@@ -54,6 +56,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.Collator;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -127,18 +130,33 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             return i;
         }).collect(Collectors.toList());
         List<BusinessCategoryPO> allChildrenCategories = getAllChildrenCategories(businessCategoryPOS, Integer.valueOf(pid));
-        self = self.stream().filter(i -> i.getPid() != 0).collect(Collectors.toList());
         allChildrenCategories.addAll(self);
         List<Long> ids = allChildrenCategories.stream().map(i -> i.getId()).collect(Collectors.toList());
-        List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(ids);
         List<BusinessTargetinfoMenuDTO> result = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(list)) {
+        if (CollectionUtils.isNotEmpty(ids)) {
+            List<BusinessTargetinfoPO> list = businessTargetinfoMapper.selectClassification(ids);
+            List<BusinessTargetinfoPO> parentBusinessIdIds = list.stream().filter(i -> i.getParentBusinessId() != null && i.getParentBusinessId() != 0).collect(Collectors.toList());
+            Map<String,BusinessTargetinfoPO> parentBusinessMap = new HashMap<>();
+            if (CollectionUtils.isNotEmpty(parentBusinessIdIds)){
+                List<Integer> parentIds = parentBusinessIdIds.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
+                List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectBatchIds(parentIds);
+                parentBusinessMap = businessTargetinfoPOList.stream().collect(Collectors.toMap(i->String.valueOf(i.getId()), i->i));
+            }
+            Map<String, BusinessTargetinfoPO> finalParentBusinessMap = parentBusinessMap;
             result = list.stream().map(i -> {
                 BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
                 businessTargetinfoMenuDTO.setId((int) i.getId());
                 businessTargetinfoMenuDTO.setName(i.getIndicatorName());
                 businessTargetinfoMenuDTO.setType(i.getIndicatorType());
+                Map<String, String> categoryNameMaps = businessCategoryPOS.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), BusinessCategoryPO::getName));
+                businessTargetinfoMenuDTO.setCategoryId(i.getName());
+                businessTargetinfoMenuDTO.setCategoryName(categoryNameMaps.get(i.getName()));
                 businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
+                BusinessTargetinfoPO businessTargetinfoPO = finalParentBusinessMap.get(String.valueOf(i.getParentBusinessId()));
+                if(businessTargetinfoPO != null){
+                    businessTargetinfoMenuDTO.setParentBusinessCategoryId(businessTargetinfoPO.getPid());
+                    businessTargetinfoMenuDTO.setParentBusinessName(businessTargetinfoPO.getIndicatorName());
+                }
                 businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
                 businessTargetinfoMenuDTO.setIndicatorCcode(i.getIndicatorCode());
                 businessTargetinfoMenuDTO.setLargeScreenLink(i.getLargeScreenLink());
@@ -148,6 +166,23 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 return businessTargetinfoMenuDTO;
             }).collect(Collectors.toList());
         }
+        result.sort(Comparator.comparing(BusinessTargetinfoMenuDTO::getType,
+                (type1, type2) -> {
+                    if (StringUtils.isEmpty(type1) && StringUtils.isEmpty(type2)) {
+                        return 0;
+                    } else if (StringUtils.isEmpty(type1)) {
+                        return 1;
+                    } else if (StringUtils.isEmpty(type2)) {
+                        return -1;
+                    } else {
+                        Map<String, Integer> order = new HashMap<>();
+                        order.put("原子指标", 1);
+                        order.put("派生指标", 2);
+                        order.put("衍生指标", 3);
+
+                        return order.get(type1) - order.get(type2);
+                    }
+                }).thenComparing(BusinessTargetinfoMenuDTO::getName, Collator.getInstance(Locale.CHINA)));
         return result;
     }
 
@@ -171,7 +206,7 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
 //        LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
 //        queryWrapper.eq(BusinessTargetinfoPO::getId,ParentBusinessIds);
         BusinessTargetinfoPO businessTargetinfoPO = businessTargetinfoMapper.selectById(id);
-
+        BusinessCategoryPO businessCategoryPO = businessCategoryMapper.selectById(businessTargetinfoPO.getName());
 //        String indexid = businessTargetinfoPO.getPid();
 //        for(int i=0;i<list.size();i++){
         List<BusinessExtendedfieldsPO> list1 = businessExtendedfieldsMapper.selectParentpId(businessTargetinfoPO.getId() + "");
@@ -218,7 +253,8 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         jsonObject1.put("sourceIndicators", businessTargetinfoPO.getSourceIndicators());
         jsonObject1.put("orderChannel", businessTargetinfoPO.getOrderChannel());
         jsonObject1.put("indicatorType", businessTargetinfoPO.getIndicatorType());
-        jsonObject1.put("name", businessTargetinfoPO.getName());
+        jsonObject1.put("nameId", businessTargetinfoPO.getName());
+        jsonObject1.put("name", businessCategoryPO.getName());
         jsonObject1.put("sqlScript", businessTargetinfoPO.getSqlScript());
         if (CollectionUtils.isNotEmpty(list1)) {
             List<Integer> dimAttributeIds = list1.stream().map(q -> Integer.valueOf(q.getAttributeid())).collect(Collectors.toList());
@@ -345,11 +381,13 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             jsonObject1.put("facttreeListData", facttreeList);
         }
         Integer parentBusinessId = businessTargetinfoPO.getParentBusinessId();
+        List<BusinessCategoryPO> businessCategoryPOS = businessCategoryMapper.selectList(new QueryWrapper<>());
         if (parentBusinessId != null) {
             BusinessTargetinfoPO parentBusiness = businessTargetinfoMapper.selectById(parentBusinessId);
             if (parentBusiness != null) {
                 jsonObject1.put("parentBusinessId", parentBusinessId);
-                jsonObject1.put("parentBusinessName", parentBusiness.getIndicatorName());
+                String hierarchyPath = getHierarchyPath(businessCategoryPOS, Integer.parseInt(parentBusiness.getPid()));
+                jsonObject1.put("parentBusinessName", hierarchyPath+"/"+parentBusiness.getIndicatorName());
             }
         }
         if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(businessTargetinfoPO.getIndicatorType())) {
@@ -369,7 +407,7 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 }).collect(Collectors.toMap(ChildBusinessTreeDTO::getId, t -> t));
             }
 
-            List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
+            List<BusinessCategoryPO> data = businessCategoryPOS;
             List<ChildBusinessTreeDTO> allBusinessTree = data.stream().map(e -> {
                 ChildBusinessTreeDTO treeDTO = new ChildBusinessTreeDTO();
                 treeDTO.setId(String.valueOf(e.getId()));
@@ -386,6 +424,9 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 child = findParentById(allBusinessTree, child.getPid(), child);
                 parentTree.add(child);
             }
+            if (CollectionUtils.isNotEmpty(parentTree)){
+                parentTree.sort(Comparator.comparing(ChildBusinessTreeDTO::getName, Collator.getInstance(Locale.CHINA)));
+            }
             jsonObject1.put("derivedMetric", parentTree);
         }
 //
@@ -395,6 +436,19 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         return jsonObject1;
     }
 
+    private String getHierarchyPath(List<BusinessCategoryPO> nodes, int pid) {
+        for (BusinessCategoryPO node : nodes) {
+            if (node.id == pid) {
+                if (node.pid == null || node.pid == 0) {
+                    return node.name;
+                } else {
+                    String parentPath = getHierarchyPath(nodes, node.pid);
+                    return parentPath + "/" + node.name;
+                }
+            }
+        }
+        return ""; // 如果未找到匹配的 pid，返回空字符串
+    }
     private ChildBusinessTreeDTO findParentById(List<ChildBusinessTreeDTO> treeList, String pid, ChildBusinessTreeDTO child) {
         ChildBusinessTreeDTO tree = child;
         for (ChildBusinessTreeDTO childBusinessTreeDTO : treeList) {
@@ -670,6 +724,8 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
         BusinessTargetinfoHistoryPO targetinfoHistoryPO = BeanHelper.copyProperties(model, BusinessTargetinfoHistoryPO.class);
         targetinfoHistoryPO.setPid(Integer.valueOf(model.pid));
         targetinfoHistoryPO.setHistoryId(historyId);
+        BusinessCategoryPO businessCategoryPO = businessCategoryMapper.selectById(model.name);
+        targetinfoHistoryPO.setName(businessCategoryPO.getName());
         if (IndicatorTypeEnum.ATOMIC_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
             LambdaQueryWrapper<BusinessTargetinfoPO> businessTargetinfoWrapper = new LambdaQueryWrapper<>();
             businessTargetinfoWrapper.eq(BusinessTargetinfoPO::getParentBusinessId, model.getId());
@@ -713,12 +769,16 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             }
 
         } else if (IndicatorTypeEnum.DERIVED_INDICATORS.getName().equals(targetinfoHistoryPO.getIndicatorType())) {
+            List<BusinessCategoryPO> data = businessCategoryMapper.selectList(new QueryWrapper<>());
             if (model.parentBusinessId != null) {
                 LambdaQueryWrapper<BusinessTargetinfoPO> queryWrapper = new LambdaQueryWrapper<>();
                 queryWrapper.eq(BusinessTargetinfoPO::getId, model.parentBusinessId);
                 BusinessTargetinfoPO businessTargetinfoPOS = businessTargetinfoMapper.selectOne(queryWrapper);
-                targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
-                targetinfoHistoryPO.setParentBusinessName(businessTargetinfoPOS.getIndicatorName());
+                if (businessTargetinfoPOS != null){
+                    targetinfoHistoryPO.setParentBusinessId(businessTargetinfoPOS.parentBusinessId);
+                    String hierarchyPath = getHierarchyPath(data, Integer.parseInt(businessTargetinfoPOS.getPid()));
+                    targetinfoHistoryPO.setParentBusinessName(hierarchyPath+"/"+businessTargetinfoPOS.getIndicatorName());
+                }
             }
         }
 
@@ -1296,8 +1356,12 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             String derivedMetric = targetinfoHistoryPO.getDerivedMetric();
             if (derivedMetric != null) {
                 ObjectMapper objectMapper = new ObjectMapper();
+                List<ChildBusinessTreeDTO> childBusinessTreeDTOList;
                 try {
-                    List<ChildBusinessTreeDTO> childBusinessTreeDTOList = objectMapper.readValue(derivedMetric, ArrayList.class);
+                    childBusinessTreeDTOList = objectMapper.readValue(derivedMetric, new TypeReference<List<ChildBusinessTreeDTO>>() {});
+                    if (CollectionUtils.isNotEmpty(childBusinessTreeDTOList)){
+                        childBusinessTreeDTOList.sort(Comparator.comparing(ChildBusinessTreeDTO::getName, Collator.getInstance(Locale.CHINA)));
+                    }
                     jsonObject1.put("derivedMetric", childBusinessTreeDTOList);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
@@ -1414,12 +1478,29 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             );
         }
         List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectList(wrapper1);
+        List<BusinessTargetinfoPO> parentBusinessIdIds = businessTargetinfoPOList.stream().filter(i -> i.getParentBusinessId() != null && i.getParentBusinessId() != 0).collect(Collectors.toList());
+        Map<String,BusinessTargetinfoPO> parentBusinessMap = new HashMap<>();
+        if (CollectionUtils.isNotEmpty(parentBusinessIdIds)){
+            List<Integer> parentIds = parentBusinessIdIds.stream().map(BusinessTargetinfoPO::getParentBusinessId).collect(Collectors.toList());
+            List<BusinessTargetinfoPO> targetinfoPOList = businessTargetinfoMapper.selectBatchIds(parentIds);
+            parentBusinessMap = targetinfoPOList.stream().collect(Collectors.toMap(i->String.valueOf(i.getId()), i->i));
+        }
+        Map<String, BusinessTargetinfoPO> finalParentBusinessMap = parentBusinessMap;
+        List<BusinessCategoryPO> finalAllMenuList = allMenuList;
         List<BusinessTargetinfoMenuDTO> result = businessTargetinfoPOList.stream().map(i -> {
             BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
             businessTargetinfoMenuDTO.setId((int) i.getId());
             businessTargetinfoMenuDTO.setName(i.getIndicatorName());
             businessTargetinfoMenuDTO.setType(i.getIndicatorType());
+            Map<String, String> categoryNameMaps = finalAllMenuList.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), BusinessCategoryPO::getName));
+            businessTargetinfoMenuDTO.setCategoryId(i.getName());
+            businessTargetinfoMenuDTO.setCategoryName(categoryNameMaps.get(i.getName()));
             businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
+            BusinessTargetinfoPO businessTargetinfoPO = finalParentBusinessMap.get(String.valueOf(i.getParentBusinessId()));
+            if(businessTargetinfoPO != null){
+                businessTargetinfoMenuDTO.setParentBusinessCategoryId(businessTargetinfoPO.getPid());
+                businessTargetinfoMenuDTO.setParentBusinessName(businessTargetinfoPO.getIndicatorName());
+            }
             businessTargetinfoMenuDTO.setIndicatorStatus(i.getIndicatorStatus());
             businessTargetinfoMenuDTO.setIndicatorCcode(i.getIndicatorCode());
             businessTargetinfoMenuDTO.setLargeScreenLink(i.getLargeScreenLink());
@@ -1428,6 +1509,24 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
             businessTargetinfoMenuDTO.setCreateTime(i.getCreateTime());
             return businessTargetinfoMenuDTO;
         }).collect(Collectors.toList());
+
+        result.sort(Comparator.comparing(BusinessTargetinfoMenuDTO::getType,
+                (type1, type2) -> {
+                    if (StringUtils.isEmpty(type1) && StringUtils.isEmpty(type2)) {
+                        return 0;
+                    } else if (StringUtils.isEmpty(type1)) {
+                        return 1;
+                    } else if (StringUtils.isEmpty(type2)) {
+                        return -1;
+                    } else {
+                        Map<String, Integer> order = new HashMap<>();
+                        order.put("原子指标", 1);
+                        order.put("派生指标", 2);
+                        order.put("衍生指标", 3);
+
+                        return order.get(type1) - order.get(type2);
+                    }
+                }).thenComparing(BusinessTargetinfoMenuDTO::getName, Collator.getInstance(Locale.CHINA)));
         return result;
     }
 

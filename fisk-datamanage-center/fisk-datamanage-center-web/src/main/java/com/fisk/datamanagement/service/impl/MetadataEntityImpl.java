@@ -18,6 +18,8 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.enums.tablefield.DataClassificationEnum;
+import com.fisk.dataaccess.enums.tablefield.DataLevelEnum;
 import com.fisk.datamanagement.dto.classification.ClassificationDTO;
 import com.fisk.datamanagement.dto.entity.EntityAttributesDTO;
 import com.fisk.datamanagement.dto.entity.EntityFilterDTO;
@@ -219,6 +221,10 @@ public class MetadataEntityImpl
         po.qualifiedName = dto.qualifiedName;
         //父级
         po.parentId = Integer.parseInt(parentEntityId);
+        //字段数据分类
+        po.dataClassification = dto.dataClassification;
+        //字段数据分级
+        po.dataLevel = dto.dataLevel;
 
         /*
          * 该行代码无效 原因是MetadataEntityPO继承了BasePo
@@ -251,6 +257,10 @@ public class MetadataEntityImpl
         po.displayName = dto.displayName;
         po.name = dto.name;
         po.description = dto.description;
+        //字段数据分类
+        po.dataClassification = dto.dataClassification;
+        //字段数据分级
+        po.dataLevel = dto.dataLevel;
         if (parentId != null) {
             po.parentId = Integer.valueOf(parentId);
         }
@@ -669,22 +679,43 @@ public class MetadataEntityImpl
         infoMap.put("description", one.description);
         //获取用户id
         String owner = one.owner;
-        ResultEntity<UserDTO> resultEntity = null;
         if (owner != null) {
-            //将属性中的用户id转为用户名称
-            resultEntity = userClient.getUserV2(Integer.parseInt(owner));
-            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
-                UserDTO userDTO = resultEntity.getData();
-                infoMap.put("owner", userDTO.getUsername());
+            if (isInteger(owner)) {
+                //将属性中的用户id转为用户名称
+                ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(owner));
+                if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                    UserDTO userDTO = resultEntity.getData();
+                    infoMap.put("owner", userDTO.getUsername());
+                } else {
+                    infoMap.put("owner", owner);
+                }
             } else {
                 infoMap.put("owner", owner);
             }
+
         } else {
             infoMap.put("owner", owner);
         }
 
         infoMap.put("qualifiedName", one.qualifiedName);
         infoMap.put("displayName", one.displayName);
+
+        //数据分类
+        if (one.dataClassification != null) {
+            DataClassificationEnum value = DataClassificationEnum.getValue(one.dataClassification);
+            if (value != null) {
+                infoMap.put("dataClassification", value.getName());
+            }
+        }
+
+        //数据分级
+        if (one.dataLevel != null) {
+            DataLevelEnum value = DataLevelEnum.getValue(one.dataLevel);
+            if (value != null) {
+                infoMap.put("dataLevel", value.getName());
+            }
+        }
+
 
         //获取实体关联实体信息
         getEntityRelation(one, infoMap);
@@ -905,7 +936,9 @@ public class MetadataEntityImpl
                                             String coverScript,
                                             Integer sourceDataSourceId,
                                             Integer tableConfigId,
-                                            List<String> dimQNames) {
+                                            List<String> dimQNames,
+                                            DataSourceTypeEnum conType
+    ) {
 
         List<Long> fromEntityIdList = new ArrayList<>();
 
@@ -965,13 +998,19 @@ public class MetadataEntityImpl
                 log.error("解析dwsql报错" + e);
             }
 
-//            if (CollectionUtils.isEmpty(tableList)) {
-//                return;
-//            }
-
             log.debug("DWSQL解析，解析表如下：" + JSONObject.toJSONString(tableList));
             // 获取源表的元数据ID
-            fromEntityIdList = getTableListV2(tableList);
+            if (conType != null) {
+                //多这一步是因为 强生环境在解析数仓事实表的血缘时 临时表的血缘会多查出来 外部数据源元数据的表名 实际展示血缘时会很乱 因此需要去掉这些外部数据源元数据实体的血缘
+                if (DataSourceTypeEnum.DORIS.equals(conType)) {
+                    fromEntityIdList = getTableListV2ForDorisCDC(tableList);
+                } else {
+                    fromEntityIdList = getTableListV2(tableList);
+                }
+            } else {
+                fromEntityIdList = getTableListV2(tableList);
+            }
+
 
             //如果数仓建模的事实表 关联外键的维度表限定名称集合不为空 则查询这些维度表限定名称对应的元数据id 然后放到fromEntityIdList里面
             if (!CollectionUtils.isEmpty(dimQNames)) {
@@ -1001,7 +1040,9 @@ public class MetadataEntityImpl
             }
             stgQualifiedName = stgQualifiedName + "_" + tableConfigId + stg_prefix;
             String newDbQualifiedName1 = targetDataSourceInfo.conIp + "_" + targetDataSourceInfo.conDbname;
+
             /**************************************添加临时表到目标表血缘******************************************/
+            log.debug("*****添加临时表到目标表血缘*****");
             synchronizationStgAndCustomScriptTableKinShip(stgQualifiedName,
                     tableGuid,
                     coverScript,
@@ -1044,12 +1085,12 @@ public class MetadataEntityImpl
     /**
      * 同步表血缘 CDC
      *
-     * @param dbName 数据库名称
-     * @param tableGuid 表guid
-     * @param sqlScript sql脚本
+     * @param dbName             数据库名称
+     * @param tableGuid          表guid
+     * @param sqlScript          sql脚本
      * @param sourceDataSourceId 数据源id
-     * @param tableConfigId 表配置id
-     * @param cdcFromTableList CDC关联的表
+     * @param tableConfigId      表配置id
+     * @param cdcFromTableList   CDC关联的表
      */
     public void synchronizationTableKinShipForCDC(String dbName,
                                                   String tableGuid,
@@ -1198,6 +1239,42 @@ public class MetadataEntityImpl
         }
     }
 
+    /**
+     * 获取ods与dw表血缘输入参数  去除错误血缘连线
+     *
+     * @param tableNameList
+     * @return
+     */
+    public List<Long> getTableListV2ForDorisCDC(List<String> tableNameList) {
+        if (tableNameList.size() > 0) {
+            List<String> tableName = new ArrayList<>();
+            tableNameList.forEach(e -> {
+                String[] tableNames = e.split("\\.");
+                tableName.add(tableNames[tableNames.length - 1]);
+            });
+            QueryWrapper<MetadataEntityPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("name", tableName);
+            queryWrapper.eq("type_id", 3)
+                    .lambda()
+                    .select(MetadataEntityPO::getId, MetadataEntityPO::getName, MetadataEntityPO::getDescription);
+            List<MetadataEntityPO> poList = metadataEntityMapper.selectList(queryWrapper);
+
+            // 2024/06/28
+            // 提取出所有描述为fidata - hudi入仓配置表的元数据对象
+            Map<String, List<MetadataEntityPO>> nameToDesiredDescMap = poList.stream()
+                    .filter(po -> "fidata - hudi入仓配置表".equals(po.getDescription()))
+                    .collect(Collectors.groupingBy(MetadataEntityPO::getName));
+
+            // 移除那些名字与已知需要保留的对象相同，但描述不是"fidata - hudi入仓配置表"的对象
+            poList.removeIf(po -> nameToDesiredDescMap.containsKey(po.getName())
+                    && !"fidata - hudi入仓配置表".equals(po.getDescription()));
+
+            return poList.stream().map(MetadataEntityPO::getId).collect(Collectors.toList());
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
 
     /**
      * 获取ods与dw表血缘输入参数
@@ -1271,12 +1348,14 @@ public class MetadataEntityImpl
             return;
         }
 
-        List<Long> collect = poList.stream().map(e -> e.getId()).collect(Collectors.toList());
+        List<Long> collect = poList.stream().map(BasePO::getId).collect(Collectors.toList());
+
+        //todo：删除临时表血缘
 
         //判断是否已有血缘关系，存在则先删除
         lineageMapRelation.delLineageMapRelationProcess(Integer.parseInt(tableGuid), ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
-        addProcess(sqlScript, collect, tableGuid, processName, ProcessTypeEnum.CUSTOM_SCRIPT_PROCESS);
+        addProcess(sqlScript, collect, tableGuid, processName, ProcessTypeEnum.TEMP_TABLE_PROCESS);
 
         //       synchronizationCustomScriptKinShip(tableId, tableName, sourceTableDTOList, tableGuid, conType, newDbQualifiedName, 2);
     }
@@ -1635,9 +1714,24 @@ public class MetadataEntityImpl
             //显示名称
             entitiesDto.attributes.displayName = po.displayName;
 
-            //用户名id替换名称
-            Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
-            first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
+            String owner = po.getOwner();
+            //获取用户id
+            if (owner != null) {
+                //将属性中的用户id转为用户名称
+                ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(owner));
+                if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                    UserDTO userDTO = resultEntity.getData();
+                    entitiesDto.attributes.owner = userDTO.username;
+                } else {
+                    //用户名id替换名称
+                    Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
+                    first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
+                }
+            } else {
+                //用户名id替换名称
+                Optional<UserDTO> first = userListByIds.data.stream().filter(e -> e.id.toString().equals(po.createUser)).findFirst();
+                first.ifPresent(userDTO -> entitiesDto.attributes.owner = userDTO.username);
+            }
 
             //该实体关联的所有业务分类
             entitiesDto.classificationNames = new ArrayList<>();
@@ -1692,6 +1786,21 @@ public class MetadataEntityImpl
                 .skip((dto.offset - 1) * dto.limit)
                 .limit(dto.limit).collect(Collectors.toList());
         return data;
+    }
+
+    /**
+     * 判断是否是整数
+     *
+     * @param str
+     * @return
+     */
+    public static boolean isInteger(String str) {
+        try {
+            Integer.parseInt(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     /**

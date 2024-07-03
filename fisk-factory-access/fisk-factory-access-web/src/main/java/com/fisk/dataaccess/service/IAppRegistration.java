@@ -332,7 +332,7 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @param lastSyncTime
      * @return
      */
-    List<MetaDataInstanceAttributeDTO> synchronizationAccessTableByLastSyncTime(LocalDateTime lastSyncTime);
+    List<MetaDataInstanceAttributeDTO> synchronizationAccessTableByLastSyncTime(String lastSyncTime);
 
     /**
      * 元数据同步单个接入表

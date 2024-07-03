@@ -1,6 +1,7 @@
 package com.fisk.task.listener.nifi.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.davis.client.ApiException;
 import com.davis.client.model.ProcessorRunStatusEntity;
 import com.davis.client.model.*;
@@ -1727,6 +1728,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             componentConnector(groupId, dispatchProcessor.getId(), publishKafkaProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         }*/
         //原变量字段
+        /**
+         * Set Increment Field
+         */
         ProcessorEntity evaluateJsonPathProcessor = evaluateJsonPathProcessor(groupId, 3);
         tableNifiSettingPO.setIncrementProcessorId = evaluateJsonPathProcessor.getId();
 
@@ -1761,10 +1765,16 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             //PortComponentEnum.COMPONENT_INPUT_PORT_COMPONENT);
         }
         //读取增量字段组件
+        /**
+         * Query Increment Field
+         */
         ProcessorEntity queryField = queryIncrementFieldProcessor(config, groupId, cfgDbPoolId, dto);
         componentConnector(groupId, evaluateJsonPathProcessor.getId(), queryField.getId(), AutoEndBranchTypeEnum.MATCHED);
         tableNifiSettingPO.queryIncrementProcessorId = queryField.getId();
         //创建数据转换json组件
+        /**
+         * Convert Data To Json
+         */
         ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
         tableNifiSettingPO.convertDataToJsonProcessorId = jsonRes.getId();
         //连接器
@@ -1787,7 +1797,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
         //连接器
         //这里要换,上面是evaluateJson,下面是logProcessor.接下来的组件赋予的变量值会覆盖上面的
-        List<ProcessorEntity> processorEntities1 = buildDeltaTimeProcessorEntity(dto.deltaTimes, groupId, sourceDbPoolId, res, tableNifiSettingPO);
+        /**
+         * 数据接入 数仓建模 ：数据开始时间 数据结束时间的组件
+         */
+        List<ProcessorEntity> processorEntities1 = buildDeltaTimeProcessorEntity(dto.deltaTimes, groupId, sourceDbPoolId, res, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums);
         if (CollectionUtils.isEmpty(processorEntities1)) {
             componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         } else {
@@ -1908,7 +1921,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             } else {
                 if (DataSourceTypeEnum.DORIS.getName().equals(conType1.getName())) {
                     executeSQLRecord = createExecuteSQLRecordForDoris(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
-                }else {
+                } else {
                     executeSQLRecord = createExecuteSQLRecord(appGroupId, config, groupId, dto, sourceDbPoolId, tableNifiSettingPO);
                 }
 
@@ -2355,7 +2368,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         tableNifiSettingPO.putLogToConfigDbProcessorId = logProcessor.getId();
         //连接器
         // 这里要换,上面是evaluateJson,下面是logProcessor.接下来的组件赋予的变量值会覆盖上面的
-        List<ProcessorEntity> processorEntities1 = buildDeltaTimeProcessorEntity(dto.deltaTimes, groupId, sourceDbPoolId, res, tableNifiSettingPO);
+        List<ProcessorEntity> processorEntities1 = buildDeltaTimeProcessorEntity(dto.deltaTimes, groupId, sourceDbPoolId, res, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums);
         if (CollectionUtils.isEmpty(processorEntities1)) {
             componentConnector(groupId, evaluateJson.getId(), logProcessor.getId(), AutoEndBranchTypeEnum.MATCHED);
         } else {
@@ -5174,7 +5187,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         return null;
     }
 
-    public List<ProcessorEntity> buildDeltaTimeProcessorEntity(List<DeltaTimeDTO> deltaTimes, String groupId, String sourceId, List<ProcessorEntity> res, TableNifiSettingPO tableNifiSettingPO) {
+    public List<ProcessorEntity> buildDeltaTimeProcessorEntity(List<DeltaTimeDTO> deltaTimes, String groupId, String sourceId, List<ProcessorEntity> res, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums) {
         List<ProcessorEntity> processorEntities = new ArrayList<>();
         String connectId = "";
         if (!CollectionUtils.isEmpty(deltaTimes)) {
@@ -5192,7 +5205,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                             tableNifiSettingPO.setStratTimeProcessorId = null;
 
                         } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
-                            //该变量的值为表达式,需要去数据源查,需要加三个组件
+                            // 该变量的值为表达式,需要去数据源查,需要加三个组件
+                            // todo:2024/06/24 针对数据接入发布表 增量时间组件的数据源id  改为页面可配置 即可从应用使用的数据源读取 也可以从我们dmp_ods中读取
+                            // todo:如果增量时间里 引用的系统数据源id不为空(考虑历史数据)
+                            // todo:则将sourceId替换为引用的系统数据源id对应的tb_nifi_config表里的component_id
+                            if (dto.referencedSystemDataSourceId != null) {
+                                NifiConfigPO one = nifiConfigService.getOne(new LambdaQueryWrapper<NifiConfigPO>()
+                                        .eq(NifiConfigPO::getDatasourceConfigId, dto.referencedSystemDataSourceId)
+                                );
+                                if (one != null) {
+                                    sourceId = one.getComponentId();
+                                }
+                            }
+
                             ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
                             ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
                             List<String> strings = new ArrayList<>();
@@ -5205,6 +5230,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                             tableNifiSettingPO.convertStratTimeToJsonProcessorId = jsonRes.getId();
                             tableNifiSettingPO.setStratTimeProcessorId = evaluateJson.getId();
                             componentConnector(groupId, processorEntity.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                            componentsConnector(groupId, processorEntity.getId(), supervisionId, autoEndBranchTypeEnums);
                             componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
                             connectId = evaluateJson.getId();
                         } else {
@@ -5221,6 +5247,17 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                             tableNifiSettingPO.setStratTimeProcessorId = null;
                         } else if (Objects.equals(dto.deltaTimeParameterTypeEnum, DeltaTimeParameterTypeEnum.VARIABLE)) {
                             //该变量的值为表达式,需要去数据源查,需要加三个组件
+                            // todo:2024/06/24 针对数据接入发布表 增量时间组件的数据源id  改为页面可配置 即可从应用使用的数据源读取 也可以从我们dmp_ods中读取
+                            // todo:如果增量时间里 引用的系统数据源id不为空(考虑历史数据)
+                            // todo:则将sourceId替换为引用的系统数据源id对应的tb_nifi_config表里的component_id
+                            if (dto.referencedSystemDataSourceId != null) {
+                                NifiConfigPO one = nifiConfigService.getOne(new LambdaQueryWrapper<NifiConfigPO>()
+                                        .eq(NifiConfigPO::getDatasourceConfigId, dto.referencedSystemDataSourceId)
+                                );
+                                if (one != null) {
+                                    sourceId = one.getComponentId();
+                                }
+                            }
                             ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
                             ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
                             List<String> strings = new ArrayList<>();
@@ -5236,6 +5273,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                                 componentConnector(groupId, connectId, processorEntity.getId(), AutoEndBranchTypeEnum.MATCHED);
                             }
                             componentConnector(groupId, processorEntity.getId(), jsonRes.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                            componentsConnector(groupId, processorEntity.getId(), supervisionId, autoEndBranchTypeEnums);
                             componentConnector(groupId, jsonRes.getId(), evaluateJson.getId(), AutoEndBranchTypeEnum.SUCCESS);
                         } else {
                             //该变量的值未定义,未定义的话用前面情况5查出来的值,此时不用加组件

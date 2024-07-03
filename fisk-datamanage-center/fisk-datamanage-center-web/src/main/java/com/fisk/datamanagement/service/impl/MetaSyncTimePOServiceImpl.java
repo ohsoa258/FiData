@@ -60,10 +60,16 @@ public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper,
     public Page<MetaSyncDTO> getMetaSyncLogByType(ClassificationTypeEnum type, Integer current, Integer size) {
         Page<MetaSyncTimePO> page = new Page<>(current, size);
         if (!type.equals(ClassificationTypeEnum.ALL)) {
-            page = this.page(page, new LambdaQueryWrapper<MetaSyncTimePO>()
-                    .eq(MetaSyncTimePO::getServiceType, type.getValue()));
+            page = this.page(page,
+                    new LambdaQueryWrapper<MetaSyncTimePO>()
+                            .eq(MetaSyncTimePO::getServiceType, type.getValue())
+                            .orderByDesc(MetaSyncTimePO::getCreateTime)
+            );
         } else {
-            page = this.page(page);
+            page = this.page(page,
+                    new LambdaQueryWrapper<MetaSyncTimePO>()
+                            .orderByDesc(MetaSyncTimePO::getCreateTime)
+            );
         }
         Page<MetaSyncDTO> page1 = new Page<>(current, size);
 
@@ -74,13 +80,13 @@ public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper,
             dto.setCreateTime(po.getCreateTime());
 
             //将用户id切换为用户名
-            if (po.getCreateUser()!=null){
+            if (po.getCreateUser() != null) {
                 ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(po.getCreateUser()));
                 if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
                     dto.setCreateUser(resultEntity.getData().getUsername());
                 }
-            }else {
-                dto.setCreateUser(po.getCreateUser());
+            } else {
+                dto.setCreateUser("定时任务");
             }
 
             dto.setUpdateTime(po.getUpdateTime());

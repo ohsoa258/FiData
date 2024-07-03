@@ -1512,7 +1512,7 @@ public class BuildAccessMdmNifiTaskListener implements IAccessMdmNifiTaskListene
                             ProcessorEntity processorEntity = queryIncrementTimeProcessor(dto.variableValue, groupId, sourceId);
                             ProcessorEntity jsonRes = convertJsonProcessor(groupId, 0, 5);
                             List<String> strings = new ArrayList<>();
-                            strings.add(NifiConstants.AttrConstants.INCREMENT_DB_FIELD_START);
+                            strings.add(NifiConstants.AttrConstants.INCREMENTAL_OBJECTIVESCORE_START);
                             ProcessorEntity evaluateJson = evaluateTimeVariablesProcessor(groupId, strings);
                             processorEntities.add(processorEntity);
                             processorEntities.add(jsonRes);

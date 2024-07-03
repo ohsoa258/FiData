@@ -34,4 +34,26 @@ public class DimensionAttributeUpdateDTO {
      */
     @ApiModelProperty(value = "预览nifi调用SQL执行语句")
     public String execSql;
+
+
+    /**
+     * 数据分类：DataClassificationEnum
+     * PUBLIC_DATA(1, "公开数据", "green"),
+     * INTERNAL_DATA(2, "内部数据", "blue"),
+     * MAX(3, "敏感数据", "orange"),
+     * MIN(4, "高度敏感数据", "red"),
+     */
+    @ApiModelProperty(value = "数据分类：DataClassificationEnum")
+    public Integer dataClassification;
+
+    /**
+     * 数据分级：DataLevelEnum
+     * LEVEL1(1, "一级（一般数据）", "green"),
+     * LEVEL2(2, "二级（重要数据）", "blue"),
+     * LEVEL3(3, "三级（敏感数据）", "orange"),
+     * LEVEL4(4, "四级（核心数据）", "red"),
+     */
+    @ApiModelProperty(value = "数据分级：DataLevelEnum")
+    public Integer dataLevel;
+
 }

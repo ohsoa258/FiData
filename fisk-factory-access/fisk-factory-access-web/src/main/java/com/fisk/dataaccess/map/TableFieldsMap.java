@@ -7,6 +7,7 @@ import com.fisk.dataaccess.dto.table.TableBusinessDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -26,6 +27,12 @@ public interface TableFieldsMap {
      * @param po source
      * @return target
      */
+    @Mapping(target = "updateUser", ignore = true)
+    @Mapping(target = "updateTime", ignore = true)
+    @Mapping(target = "isSensitive", ignore = true)
+    @Mapping(target = "delFlag", ignore = true)
+    @Mapping(target = "createUser", ignore = true)
+    @Mapping(target = "createTime", ignore = true)
     TableFieldsPO dtoToPo(TableFieldsDTO po);
 
     /**
@@ -34,6 +41,10 @@ public interface TableFieldsMap {
      * @param po po
      * @return dto
      */
+    @Mapping(target = "originalTableName", ignore = true)
+    @Mapping(target = "isSenstive", ignore = true)
+    @Mapping(target = "funcType", ignore = true)
+    @Mapping(target = "appbAbreviation", ignore = true)
     TableFieldsDTO poToDto(TableFieldsPO po);
 
     /**

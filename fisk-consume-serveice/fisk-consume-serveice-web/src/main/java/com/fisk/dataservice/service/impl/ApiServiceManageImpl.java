@@ -644,30 +644,34 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                 doSetResponse(resultEnum, response);
                 return;
             }
+            //验证是否需要授权认证
+            List<AppWhiteListVO> auth = appWhiteList.stream().filter(i->i.getProxyAuthorizationSwitch() == 1).collect(Collectors.toList());
 
-            UserInfo userInfo = userHelper.getLoginUserInfo();
-            if (userInfo == null) {
-                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
-                doSetResponse(resultEnum, response);
-                return;
-            }
+            if (CollectionUtils.isNotEmpty(auth)){
+                //验证是否跳过授权认证
+                UserInfo userInfo = userHelper.getLoginUserInfo();
+                if (userInfo == null) {
+                    resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                    doSetResponse(resultEnum, response);
+                    return;
+                }
 
-            // 验证是否已进行授权认证
-            String appAccount = userInfo.getUsername();
-            if (appAccount == null || appAccount.isEmpty()) {
-                resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
-                doSetResponse(resultEnum, response);
-                return;
-            }
-
-            // 验证当前应用（下游系统）是否有效
-            AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
-            if (appInfo == null) {
-                resultEnum = ResultEnum.DS_APISERVICE_APP_EXISTS;
-                doSetResponse(resultEnum, response);
-                return;
-            } else {
-                logPO.setAppId(Math.toIntExact(appInfo.getId()));
+                // 验证是否已进行授权认证
+                String appAccount = userInfo.getUsername();
+                if (appAccount == null || appAccount.isEmpty()) {
+                    resultEnum = ResultEnum.AUTH_LOGIN_INFO_INVALID;
+                    doSetResponse(resultEnum, response);
+                    return;
+                }
+                // 验证当前应用（下游系统）是否有效
+                AppConfigPO appInfo = appRegisterMapper.getByAppAccount(appAccount);
+                if (appInfo == null) {
+                    resultEnum = ResultEnum.DS_APISERVICE_APP_EXISTS;
+                    doSetResponse(resultEnum, response);
+                    return;
+                } else {
+                    logPO.setAppId(Math.toIntExact(appInfo.getId()));
+                }
             }
             //验证api是否
             List<Integer> appIds = appWhiteList.stream().map(AppWhiteListVO::getAppId).collect(Collectors.toList());

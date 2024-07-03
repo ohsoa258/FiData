@@ -7,6 +7,7 @@ import com.fisk.datamodel.dto.factattribute.FactAttributeDropDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeUpdateDTO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
@@ -24,6 +25,10 @@ public interface FactAttributeMap {
      * @param dto
      * @return
      */
+    @Mapping(target = "updateUser", ignore = true)
+    @Mapping(target = "updateTime", ignore = true)
+    @Mapping(target = "delFlag", ignore = true)
+    @Mapping(target = "createTime", ignore = true)
     FactAttributePO dtoToPo(FactAttributeDTO dto);
 
     /**
@@ -32,6 +37,7 @@ public interface FactAttributeMap {
      * @param po source
      * @return target
      */
+    @Mapping(target = "associatedDto", ignore = true)
     FactAttributeDTO poToDto(FactAttributePO po);
 
     /**
@@ -67,6 +73,8 @@ public interface FactAttributeMap {
      * @param po
      * @return
      */
+    @Mapping(target = "execSql", ignore = true)
+    @Mapping(target = "deltaTimes", ignore = true)
     FactAttributeUpdateDTO poDetailToDto(FactAttributePO po);
 
     /**

@@ -944,6 +944,8 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             column.displayName = field.factFieldCnName;
             //字段创建人
             column.owner = field.createUser;
+            column.dataClassification = field.dataClassification;
+            column.dataLevel = field.dataLevel;
             columnList.add(column);
         }
         return columnList;
