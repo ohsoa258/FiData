@@ -378,7 +378,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                         whereSql = whereSql.replace("where", " and ");
                         sql = sql + whereSql;
                     } else {
-                        sql = sql + " " +whereSql;
+                        sql = sql + " " + whereSql;
                     }
                 }
                 log.info("数据安全拼接的sql" + sql);
@@ -393,6 +393,29 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
             SQLStatementParser parser = SQLParserUtils.createSQLStatementParser(
                     sql, postgreDTO.dataSourceTypeEnum.getName().toLowerCase());
             if (Token.SELECT.equals(parser.getExprParser().getLexer().token())) {
+                IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(postgreDTO.getDataSourceTypeEnum());
+
+                //前端需要返回一个数据总数 count sql
+                String countSqlName = String.format("(%s) AS tb_count", sql);
+                String countSql = dbCommand.buildCountSql(countSqlName);
+
+                //先执行count sql 查询此次查询语句的数据总数
+                try {
+                    log.info("数据库运维查询原sql语句数据总数执行的sql:" + countSql);
+                    boolean execute = st.execute(countSql);
+                    if (execute) {
+                        ResultSet rs = st.getResultSet();
+                        while (rs.next()) {
+                            int dataCount = rs.getInt("dataCount");
+                            log.info("原sql语句数据总数：" + dataCount);
+                            executeResultVO.setTotal(dataCount);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("数据库运维查询原sql语句数据总数报错，原因：" + e);
+                }
+
+                //分页sql
                 String orderByClause = "";
                 if (sql.contains("order by")) {
                     int orderByIndex = sql.indexOf("order by");
@@ -402,7 +425,6 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
                 }
                 // SQL 语句是查询操作
                 String tableName = String.format("(%s) AS tb_page", sql);
-                IBuildGovernanceSqlCommand dbCommand = BuildGovernanceHelper.getDBCommand(postgreDTO.getDataSourceTypeEnum());
                 dto.current = dto.current - 1;
                 String buildQuerySchemaSql = dbCommand.buildPagingSql(tableName, "*", orderByClause, dto.current, dto.size);
                 dto.executeSql = buildQuerySchemaSql;

@@ -23,6 +23,14 @@ public interface IBuildGovernanceSqlCommand {
     String buildPagingSql(String tableName, String fields, String orderBy, Integer pageIndex, Integer pageSize);
 
     /**
+     * 计数SQL
+     *
+     * @param tableNameSql
+     * @return sql
+     */
+    String buildCountSql(String tableNameSql);
+
+    /**
      * 分页SQL
      *
      * @param tableName 表名称

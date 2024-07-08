@@ -29,6 +29,15 @@ public class BuildGovernancePgCommandImpl implements IBuildGovernanceSqlCommand 
     }
 
     @Override
+    public String buildCountSql(String tableNameSql) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT count(1) as dataCount");
+        str.append(" FROM ");
+        str.append(tableNameSql);
+        return str.toString();
+    }
+
+    @Override
     public String buildPagingSql(String tableName, List<String> fields, String orderBy, Integer pageIndex, Integer pageSize) {
         StringBuilder str = new StringBuilder();
         str.append("SELECT ");
