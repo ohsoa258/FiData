@@ -30,6 +30,8 @@ public class TypeConversionUtils extends EnumTypeConversionUtils {
         }
 
         switch (number){
+            case 0 :
+                return ValueRangeTypeEnum.NONE;
             case 1 :
                 return ValueRangeTypeEnum.DATASET;
             case 2:

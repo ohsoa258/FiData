@@ -8,9 +8,11 @@ import com.fisk.common.core.enums.BaseEnum;
  * @Description:
  */
 public enum ValueRangeTypeEnum implements BaseEnum {
+    NONE(0,"无"),
     DATASET(1,"代码集"),
     VALUE(2,"数值"),
-    VALUE_RANGE(3,"数值范围");
+    VALUE_RANGE(3,"数值范围"),
+    ;
     ValueRangeTypeEnum(int value, String name) {
         this.name = name;
         this.value = value;
