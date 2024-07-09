@@ -274,7 +274,7 @@ public class BuildDorisTableImpl implements IbuildTable {
             for (TaskPgTableStructurePO oldPo : oldVersionTbl) {
                 TaskPgTableStructurePO field = null;
                 //将老版本字段和新版本里面相同字段id的字段对比
-                Optional<TaskPgTableStructurePO> first = oldVersionTbl.stream().filter(dto ->
+                Optional<TaskPgTableStructurePO> first = newVersionTbl.stream().filter(dto ->
                         Objects.equals(dto.getFieldId(), oldPo.fieldId)).findFirst();
                 if (first.isPresent()) {
                     field = first.get();
