@@ -667,7 +667,11 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
             } else {
                 if (tragetMenuPO.getSort() > businessCategoryPO.getSort()) {
                     LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
-                    queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                    if (businessCategoryPO.getPid() == null || businessCategoryPO.getPid() == 0){
+                        queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid()).or().isNull(BusinessCategoryPO::getPid);
+                    }else{
+                        queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                    }
                     queryWrapper.gt(BusinessCategoryPO::getSort, businessCategoryPO.getSort());
                     queryWrapper.le(BusinessCategoryPO::getSort, tragetMenuPO.getSort());
                     List<BusinessCategoryPO> list = this.list(queryWrapper);
@@ -683,7 +687,11 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
                     this.updateById(businessCategoryPO);
                 } else if (tragetMenuPO.getSort() < businessCategoryPO.getSort()) {
                     LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
-                    queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                    if (businessCategoryPO.getPid() == null || businessCategoryPO.getPid() == 0){
+                        queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid()).or().isNull(BusinessCategoryPO::getPid);
+                    }else{
+                        queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                    }
                     queryWrapper.gt(BusinessCategoryPO::getSort, tragetMenuPO.getSort());
                     queryWrapper.lt(BusinessCategoryPO::getSort, businessCategoryPO.getSort());
                     List<BusinessCategoryPO> list = this.list(queryWrapper);
