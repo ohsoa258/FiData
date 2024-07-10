@@ -65,6 +65,8 @@ public class MetaDataEntityOperationLogImpl implements IMetaDataEntityOperationL
                     ResultEntity<UserDTO> resultEntity = userClient.getUserV2(Integer.parseInt(po.getOwner()));
                     if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
                         dto.setCreateUser(resultEntity.getData().getUsername());
+                    }else {
+                        dto.setCreateUser(po.getOwner());
                     }
                 } else {
                     dto.setCreateUser(po.getOwner());
