@@ -1132,7 +1132,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         .eq(AppDataSourcePO::getAppId, appId)
         );
 
-        if (!CollectionUtils.isEmpty(list)){
+        if (!CollectionUtils.isEmpty(list)) {
             DataSourceInfoDTO sourceDto = new DataSourceInfoDTO();
             sourceDto.setName(list.get(0).getDbName());
             sourceDto.setId(list.get(0).getSystemDataSourceId());
@@ -3778,6 +3778,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
         return tblSchemas;
     }
+
     /**
      * 获取CDC接入应用结构
      *
@@ -3944,13 +3945,19 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         List<Long> accessTblIds = tableFieldsPOS.stream().map(TableFieldsPO::getTableAccessId).collect(Collectors.toList());
 
         //再找到表
-        List<TableAccessPO> tableAccessPOS = tableAccessImpl.list(new QueryWrapper<TableAccessPO>()
+        LambdaQueryWrapper<TableAccessPO> wrapper = new QueryWrapper<TableAccessPO>()
                 .select("distinct app_id")
                 .lambda()
                 .ge(TableAccessPO::getCreateTime, lastSyncTime)
                 .or()
-                .ge(TableAccessPO::getUpdateTime, lastSyncTime)
-        );
+                .ge(TableAccessPO::getUpdateTime, lastSyncTime);
+
+        if (!CollectionUtils.isEmpty(accessTblIds)) {
+            wrapper.or()
+                    .in(TableAccessPO::getId, accessTblIds);
+        }
+
+        List<TableAccessPO> tableAccessPOS = tableAccessImpl.list(wrapper);
         List<Long> appIds = tableAccessPOS.stream().map(TableAccessPO::getAppId).collect(Collectors.toList());
 
         List<AppRegistrationPO> appRegistrationList = new ArrayList<>();
@@ -3968,7 +3975,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
             MetaDataInstanceAttributeDTO metaDataInstance = getMetaDataInstance(appRegistrationPo);
 
-            if (CollectionUtils.isEmpty(accessTblIds)){
+            if (CollectionUtils.isEmpty(accessTblIds)) {
                 continue;
             }
 

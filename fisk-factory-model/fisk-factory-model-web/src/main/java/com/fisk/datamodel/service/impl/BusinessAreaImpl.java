@@ -1188,13 +1188,19 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         List<Integer> factIds = factAttributePOS.stream().map(FactAttributePO::getFactId).collect(Collectors.toList());
 
         //再根据这些表找到这些业务域
-        List<FactPO> factPOS = factImpl.list(new QueryWrapper<FactPO>()
+        LambdaQueryWrapper<FactPO> wrapper = new QueryWrapper<FactPO>()
                 .select("distinct business_id")
                 .lambda()
                 .ge(FactPO::getCreateTime, lastSyncTime)
                 .or()
-                .ge(FactPO::getUpdateTime, lastSyncTime)
-        );
+                .ge(FactPO::getUpdateTime, lastSyncTime);
+
+        if (!CollectionUtils.isEmpty(factIds)) {
+            wrapper.or()
+                    .in(FactPO::getId, factIds);
+        }
+
+        List<FactPO> factPOS = factImpl.list(wrapper);
         List<Integer> businessIds = factPOS.stream().map(FactPO::getBusinessId).collect(Collectors.toList());
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1208,13 +1214,19 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         );
         List<Integer> dimIds = dimensionAttributePOS.stream().map(DimensionAttributePO::getDimensionId).collect(Collectors.toList());
 
-        List<DimensionPO> dimensionPOS = dimensionImpl.list(new QueryWrapper<DimensionPO>()
+        LambdaQueryWrapper<DimensionPO> wrapper2 = new QueryWrapper<DimensionPO>()
                 .select("distinct business_id")
                 .lambda()
                 .ge(DimensionPO::getCreateTime, lastSyncTime)
                 .or()
-                .ge(DimensionPO::getUpdateTime, lastSyncTime)
-        );
+                .ge(DimensionPO::getUpdateTime, lastSyncTime);
+
+        if (!CollectionUtils.isEmpty(dimIds)) {
+            wrapper2.or()
+                    .in(DimensionPO::getId, dimIds);
+        }
+
+        List<DimensionPO> dimensionPOS = dimensionImpl.list(wrapper2);
         List<Integer> dimBusinessIds = dimensionPOS.stream().map(DimensionPO::getBusinessId).collect(Collectors.toList());
 
         businessIds.addAll(dimBusinessIds);
@@ -1231,12 +1243,12 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         instance.dbList.get(0).tableList = new ArrayList<>();
         for (BusinessAreaPO item : businessAreaPOList) {
             //维度表
-            if (!CollectionUtils.isEmpty(dimIds)){
+            if (!CollectionUtils.isEmpty(dimIds)) {
                 instance.dbList.get(0).tableList.addAll(dimensionImpl.getDimensionMetaDataByLastSyncTime(item, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_DIMENSION.getValue(), item.getCreateUser(), dimIds));
             }
 
             //事实表
-            if (!CollectionUtils.isEmpty(factIds)){
+            if (!CollectionUtils.isEmpty(factIds)) {
                 instance.dbList.get(0).tableList.addAll(factImpl.getFactMetaDataBySyncTime(item, instance.dbList.get(0).qualifiedName, DataModelTableTypeEnum.DW_FACT.getValue(), item.getCreateUser(), factIds));
             }
         }
