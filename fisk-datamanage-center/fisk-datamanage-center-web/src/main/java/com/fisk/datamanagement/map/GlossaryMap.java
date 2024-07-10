@@ -38,6 +38,7 @@ public interface GlossaryMap {
      * @param po
      * @return
      */
+    @Mapping(source = "id",target = "guid")
     GlossaryDTO poToDto(GlossaryPO po);
 
     /**

@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -50,7 +51,7 @@ public class GlossaryImpl
     public List<GlossaryAttributeDTO> getGlossaryList() {
         // 查询术语术语库数据
         List<GlossaryLibraryPO> gAllData = glossaryLibraryMapper.selectList(new QueryWrapper<>());
-        if (CollectionUtils.isEmpty(gAllData)){
+        if (CollectionUtils.isEmpty(gAllData)) {
             return null;
         }
 
@@ -58,9 +59,9 @@ public class GlossaryImpl
         List<GlossaryAttributeDTO> data = gAllData.stream().map(item -> {
             GlossaryAttributeDTO dto = new GlossaryAttributeDTO();
             dto.setGuid(String.valueOf(item.id));
-            if (item.pid == null){
+            if (item.pid == null) {
                 dto.setPid(null);
-            }else{
+            } else {
                 dto.setPid(item.pid.toString());
             }
             dto.setQualifiedName(item.name);
@@ -74,22 +75,22 @@ public class GlossaryImpl
         List<GlossaryAttributeDTO> parent = data.stream().filter(item -> StringUtils.isEmpty(item.pid)).collect(Collectors.toList());
 
         // 设置所有子集、术语列表
-        for (GlossaryAttributeDTO item : parent){
+        for (GlossaryAttributeDTO item : parent) {
             List<GlossaryCategoryAttributeDTO> c = new ArrayList<>();
             item.setCategories(recursionChildren(data, item.getGuid(), c));
         }
 
         // 设置所有术语
         List<GlossaryPO> termData = glossaryMapper.selectList(new QueryWrapper<>());
-        if (CollectionUtils.isEmpty(termData)){
+        if (CollectionUtils.isEmpty(termData)) {
             return parent;
         }
-        for (GlossaryAttributeDTO item : parent){
+        for (GlossaryAttributeDTO item : parent) {
             List<String> idList = item.getCategories().stream().map(GlossaryCategoryAttributeDTO::getCategoryGuid).collect(Collectors.toList());
 
             List<GlossaryTermAttributeDTO> tList = new ArrayList<>();
             termData.stream().filter(t -> {
-                if (idList.contains(t.getGlossaryLibraryId().toString())){
+                if (idList.contains(t.getGlossaryLibraryId().toString())) {
                     GlossaryTermAttributeDTO dto = new GlossaryTermAttributeDTO();
                     dto.setTermGuid(String.valueOf(t.id));
                     dto.setDisplayText(t.name);
@@ -103,9 +104,9 @@ public class GlossaryImpl
         return parent;
     }
 
-    private List<GlossaryCategoryAttributeDTO> recursionChildren(List<GlossaryAttributeDTO> allData, String pid, List<GlossaryCategoryAttributeDTO> data){
-        for (GlossaryAttributeDTO item : allData){
-            if (!StringUtils.isEmpty(item.pid) && item.getPid().equals(pid)){
+    private List<GlossaryCategoryAttributeDTO> recursionChildren(List<GlossaryAttributeDTO> allData, String pid, List<GlossaryCategoryAttributeDTO> data) {
+        for (GlossaryAttributeDTO item : allData) {
+            if (!StringUtils.isEmpty(item.pid) && item.getPid().equals(pid)) {
                 GlossaryCategoryAttributeDTO dto = new GlossaryCategoryAttributeDTO();
                 dto.setDisplayText(item.name);
                 dto.setCategoryGuid(item.guid);
@@ -118,16 +119,15 @@ public class GlossaryImpl
     }
 
     @Override
-    public ResultEnum addGlossary(GlossaryDTO dto)
-    {
-        if (StringUtils.isEmpty(dto.getName())){
+    public ResultEnum addGlossary(GlossaryDTO dto) {
+        if (StringUtils.isEmpty(dto.getName())) {
             throw new FkException(ResultEnum.ERROR, "术语库名称不能为空");
         }
         // 查询是否存在
         QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
         qw.eq("name", dto.getName()).eq("del_flag", 1).isNull("pid");
         GlossaryLibraryPO preModel = glossaryLibraryMapper.selectOne(qw);
-        if (preModel != null){
+        if (preModel != null) {
             throw new FkException(ResultEnum.ERROR, "术语库名称不能重复");
         }
         // 新增术语库
@@ -140,19 +140,18 @@ public class GlossaryImpl
     }
 
     @Override
-    public ResultEnum deleteGlossary(String guid)
-    {
+    public ResultEnum deleteGlossary(String guid) {
         // 查询是否存在
         QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
         qw.eq("id", guid).isNull("pid");
         GlossaryLibraryPO model = glossaryLibraryMapper.selectOne(qw);
-        if (model == null){
+        if (model == null) {
             throw new FkException(ResultEnum.ERROR, "术语库不存在");
         }
 
-        if (glossaryLibraryMapper.deleteById(guid) > 0){
+        if (glossaryLibraryMapper.deleteById(guid) > 0) {
             return ResultEnum.SUCCESS;
-        }else{
+        } else {
             throw new FkException(ResultEnum.ERROR, "删除失败");
         }
     }
@@ -160,7 +159,7 @@ public class GlossaryImpl
     @Override
     public ResultEnum updateGlossary(GlossaryDTO dto) {
         // 校验数据
-        if (StringUtils.isEmpty(dto.name)){
+        if (StringUtils.isEmpty(dto.name)) {
             throw new FkException(ResultEnum.ERROR, "术语库名称不能为空");
         }
 
@@ -168,7 +167,7 @@ public class GlossaryImpl
         QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
         qw.eq("id", dto.guid).eq("del_flag", 1).isNull("pid");
         GlossaryLibraryPO model = glossaryLibraryMapper.selectOne(qw);
-        if (model == null){
+        if (model == null) {
             throw new FkException(ResultEnum.ERROR, "术语库不存在");
         }
 
@@ -176,7 +175,7 @@ public class GlossaryImpl
         qw = new QueryWrapper<>();
         qw.eq("name", dto.name).eq("del_flag", 1).isNull("pid");
         GlossaryLibraryPO preModel = glossaryLibraryMapper.selectOne(qw);
-        if (preModel != null && !String.valueOf(preModel.getId()).equals(dto.getGuid())){
+        if (preModel != null && !String.valueOf(preModel.getId()).equals(dto.getGuid())) {
             throw new FkException(ResultEnum.ERROR, "术语库名称不能重复");
         }
 
@@ -201,12 +200,12 @@ public class GlossaryImpl
         QueryWrapper<GlossaryPO> qw = new QueryWrapper<>();
         qw.eq("glossary_library_id", guid);
         List<GlossaryPO> termList = glossaryMapper.selectList(qw);
-        if (CollectionUtils.isEmpty(termList)){
+        if (CollectionUtils.isEmpty(termList)) {
             return new ArrayList<>();
         }
 
         List<TermDTO> list = new ArrayList<>();
-        for (GlossaryPO model : termList){
+        for (GlossaryPO model : termList) {
             TermDTO dto = new TermDTO();
             dto.setGuid(String.valueOf(model.id));
             dto.setGlossaryLibraryId(Integer.parseInt(guid));
@@ -220,8 +219,8 @@ public class GlossaryImpl
         // 加载所有数据
         List<GlossaryLibraryPO> allData = glossaryLibraryMapper.selectList(new QueryWrapper<>());
 
-        if (!CollectionUtils.isEmpty(allData)){
-            for (TermDTO model : list){
+        if (!CollectionUtils.isEmpty(allData)) {
+            for (TermDTO model : list) {
                 // 查询术语所在术语库中的术语类别
                 GlossaryLibraryPO category = allData.stream().filter(item -> item.id == model.glossaryLibraryId).findFirst().orElse(null);
                 if (category != null) {
@@ -231,7 +230,7 @@ public class GlossaryImpl
                     model.setCategories(Collections.singletonList(cdDto));
                     // 查询所在术语库
                     GlossaryLibraryPO libraryPO = recursionData(allData, category.getPid().toString());
-                    if (libraryPO != null){
+                    if (libraryPO != null) {
                         // 设置全限定名
                         model.setQualifiedName(model.name + "@" + libraryPO.name);
                         GlossaryAnchorDTO gaDto = new GlossaryAnchorDTO();
@@ -312,22 +311,23 @@ public class GlossaryImpl
 
     /**
      * 模糊查询术语
+     *
      * @param keyword
      * @return
      */
-    public List<GlossaryPO> queryLikeGlossaryList(String keyword){
-        return this.query().like(org.apache.commons.lang.StringUtils.isNotEmpty(keyword),"name", keyword).list();
+    public List<GlossaryPO> queryLikeGlossaryList(String keyword) {
+        return this.query().like(org.apache.commons.lang.StringUtils.isNotEmpty(keyword), "name", keyword).list();
     }
 
     @Override
-    public List<GlossaryDTO> queryGlossaryListById(GlobalSearchDto dto){
-        List<GlossaryPO> listPo=new ArrayList<>();
-        switch (dto.type){
+    public List<GlossaryDTO> queryGlossaryListById(GlobalSearchDto dto) {
+        List<GlossaryPO> listPo = new ArrayList<>();
+        switch (dto.type) {
             case GLOSSARY:
-                listPo= this.query().eq("del_flag",1).eq("id",dto.id).list();
+                listPo = this.query().eq("del_flag", 1).eq("id", dto.id).list();
                 break;
             case GLOSSARY_CATEGORY:
-                listPo= this.query().eq("del_flag",1).eq("glossary_library_id",dto.id).list();
+                listPo = this.query().eq("del_flag", 1).eq("glossary_library_id", dto.id).list();
             default:
                 break;
         }
@@ -338,5 +338,31 @@ public class GlossaryImpl
     @Override
     public Integer getGlossaryTotal() {
         return glossaryMapper.getGlossaryTotal();
+    }
+
+    /**
+     * 业务术语全局搜索
+     *
+     * @param keyword
+     * @return
+     */
+    @Override
+    public List<GlossaryDTO> glossaryGlobalSearch(String keyword) {
+        List<GlossaryPO> list = this.list(
+                new LambdaQueryWrapper<GlossaryPO>()
+                        .like(org.apache.commons.lang.StringUtils.isNotEmpty(keyword), GlossaryPO::getName, keyword)
+        );
+
+        List<GlossaryPO> list1 = this.list(
+                new LambdaQueryWrapper<GlossaryPO>()
+                        .like(org.apache.commons.lang.StringUtils.isNotEmpty(keyword), GlossaryPO::getLongDescription, keyword)
+        );
+
+        list.addAll(list1);
+        List<GlossaryDTO> glossaryDTOS = GlossaryMap.INSTANCES.poToDtoList(list);
+
+        //去重
+        Map<String, GlossaryDTO> collect = glossaryDTOS.stream().collect(Collectors.toMap(GlossaryDTO::getGuid, glossaryDTO -> glossaryDTO, (k1, k2) -> k1));
+        return new ArrayList<>(collect.values());
     }
 }

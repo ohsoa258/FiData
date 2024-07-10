@@ -21,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author JianWenYang
@@ -172,4 +173,16 @@ public class GlossaryController {
     public ResultEntity<Object> getGlossaryTotal() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getGlossaryTotal());
     }
+
+    /**
+     * 业务术语全局搜索
+     *
+     * @return
+     */
+    @ApiOperation("业务术语全局搜索")
+    @GetMapping("/glossaryGlobalSearch")
+    public ResultEntity<List<GlossaryDTO>> glossaryGlobalSearch(@RequestParam("keyWord") String keyword) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.glossaryGlobalSearch(keyword));
+    }
+
 }

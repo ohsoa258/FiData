@@ -63,4 +63,12 @@ public interface IGlossary {
      */
     Integer getGlossaryTotal();
 
+    /**
+     * 业务术语全局搜索
+     *
+     * @param keyword
+     * @return
+     */
+    List<GlossaryDTO>  glossaryGlobalSearch(String keyword);
+
 }
