@@ -232,7 +232,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public FiDataMetaDataTreeDTO getFiDataConfigMetaData(boolean isComputeRuleCount) {
-        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -开始");
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -开始：" + uuid);
         // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
         List<DataSourceConVO> dataSourceConVOList = getFiDataDataSource();
@@ -257,9 +258,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         // 第二步：获取表规则
         List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
-        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -结束");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -结束：" + uuid);
 
-        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -开始");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -开始：" + uuid);
         // 第三步：获取数据标准
         if (checkStandards) {
             List<DatacheckStandardsGroupPO> standardsGroupPOS = standardsGroupService.list();
@@ -278,14 +279,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
             fiDataMetaDataTreeBase.children.add(standardsTree);
         }
-        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -结束");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -结束：" + uuid);
 
-        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -开始");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -开始：" + uuid);
         // 第四步：递归设置Tree-节点规则数量
         if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
             fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
         }
-        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -结束");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -结束：" + uuid);
         return fiDataMetaDataTreeBase;
     }
 
