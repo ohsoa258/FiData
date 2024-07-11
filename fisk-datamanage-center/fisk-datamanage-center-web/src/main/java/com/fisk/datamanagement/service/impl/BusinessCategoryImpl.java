@@ -651,7 +651,11 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
         } else {
             if (tragetId == null || tragetId == 0) {
                 LambdaQueryWrapper<BusinessCategoryPO> queryWrapper = new LambdaQueryWrapper<>();
-                queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                if (businessCategoryPO.getPid() == null || businessCategoryPO.getPid() == 0){
+                    queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid()).or().isNull(BusinessCategoryPO::getPid);
+                }else{
+                    queryWrapper.eq(BusinessCategoryPO::getPid, businessCategoryPO.getPid());
+                }
                 queryWrapper.lt(BusinessCategoryPO::getSort, businessCategoryPO.getSort());
                 List<BusinessCategoryPO> list = this.list(queryWrapper);
                 List<BusinessCategoryPO> menus = new ArrayList<>();
