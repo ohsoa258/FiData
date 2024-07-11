@@ -1032,13 +1032,22 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
             }
             array.add(jsonObj);
         }
-
+        String tablePath = pvDTO.apiDTO.getTablePath();
+        String tableRelName = null;
+        if (StringUtils.isNotEmpty(tablePath)){
+            // 找到第一个左括号和右括号的位置
+            int startIndex = tablePath.indexOf('(');
+            int endIndex = tablePath.indexOf(')');
+            if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+                tableRelName = tablePath.substring(startIndex + 1, endIndex);
+            }
+        }
         // 获取描述信息
         List<FieldInfoVO> tableFieldList = null;
         if (pvDTO.apiDTO.getApiType() == ApiTypeEnum.SQL.getValue()
-                && StringUtils.isNotEmpty(pvDTO.apiDTO.getTableRelName())) {
+                && StringUtils.isNotEmpty(tableRelName)) {
             if (conType == DataSourceTypeEnum.DORIS) {
-                tableFieldList = getTableFieldByDorisList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
+                tableFieldList = getTableFieldByDorisList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), tableRelName);
             } else {
                 tableFieldList = getTableFieldList(conn, dbCommand, pvDTO.apiDTO.getTableFramework(), pvDTO.apiDTO.getTableRelName());
             }
@@ -1140,7 +1149,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
      */
     private static List<FieldInfoVO> getTableFieldByDorisList(Connection conn, IBuildDataServiceSqlCommand dbCommand,
                                                               String tableFramework, String tableRelName) {
-        String[] split = tableRelName.split(".");
+        String[] split = tableRelName.split("\\.");
         String tableName = split[split.length - 1];
         List<FieldInfoVO> fieldList = new ArrayList<>();
         if (StringUtils.isEmpty(tableRelName))
@@ -1156,7 +1165,14 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
                 FieldInfoVO fieldInfoVO = new FieldInfoVO();
                 fieldInfoVO.tableName = tableName;
                 fieldInfoVO.fieldName = resultSet.getString("Field");
-                fieldInfoVO.fieldDesc = resultSet.getString("Extar");
+                try {
+                    String desc = resultSet.getString("Extar");
+                    if ("NONE".equals(desc)){
+                        fieldInfoVO.fieldDesc = null;
+                    }
+                }catch (Exception e){
+                    fieldInfoVO.fieldDesc = null;
+                }
                 if (StringUtils.isNotEmpty(fieldInfoVO.tableName) && StringUtils.isNotEmpty(fieldInfoVO.fieldName)
                         && StringUtils.isNotEmpty(fieldInfoVO.fieldDesc)) {
                     fieldList.add(fieldInfoVO);
