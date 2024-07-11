@@ -98,7 +98,7 @@ hystrix:
           strategy: THREAD
           thread:
             # 超时时间
-            timeoutInMilliseconds: 15500
+            timeoutInMilliseconds: 120000
             # 超时时是否应中断执行（默认true）
             interruptOnTimeout: true
       circuitBreaker:
