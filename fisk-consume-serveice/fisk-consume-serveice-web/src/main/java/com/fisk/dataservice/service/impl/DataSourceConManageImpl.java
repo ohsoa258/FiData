@@ -265,24 +265,20 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 FiDataMetaDataReqDTO reqDTO = new FiDataMetaDataReqDTO();
                 reqDTO.setDataSourceId(String.valueOf(fiDataSourceDTO.id));
                 reqDTO.setDataSourceName(fiDataSourceDTO.getConDbname());
-                if (fiDataSourceDTO.conType == DataSourceTypeEnum.DORIS){
-                    setDataDorisStructure(dataSourceConPO);
-                }else {
-                    switch (fiDataSourceDTO.id) {
-                        case 1:
-                        case 4:
-                            // dw olap
-                            dataModelClient.setDataModelStructure(reqDTO);
-                            break;
-                        case 2:
-                            // ods
-                            dataAccessClient.setDataAccessStructure(reqDTO);
-                            break;
-                        case 3:
-                            // mdm
-                            mdmClient.setMDMDataStructure(reqDTO);
-                            break;
-                    }
+                switch (fiDataSourceDTO.id) {
+                    case 1:
+                    case 4:
+                        // dw olap
+                        dataModelClient.setDataModelStructure(reqDTO);
+                        break;
+                    case 2:
+                        // ods
+                        dataAccessClient.setDataAccessStructure(reqDTO);
+                        break;
+                    case 3:
+                        // mdm
+                        mdmClient.setMDMDataStructure(reqDTO);
+                        break;
                 }
             }
         } else {
@@ -525,7 +521,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         try {
             DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[conPo.conType];
             // 表结构
-            List<DorisCatalogDTO> cataLogNames = dorisConUtils.getCataLogNames(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
+            List<DorisCatalogDTO> cataLogNames = dorisConUtils.getCataLogNames(conPo.conStr, conPo.conAccount, conPo.conPassword, dataSourceTypeEnum);
 
             if (CollectionUtils.isNotEmpty(cataLogNames)) {
                 for (DorisCatalogDTO catalogDTO : cataLogNames) {

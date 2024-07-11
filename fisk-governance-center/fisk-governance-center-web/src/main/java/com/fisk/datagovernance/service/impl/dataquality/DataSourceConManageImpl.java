@@ -232,9 +232,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
     @Override
     public FiDataMetaDataTreeDTO getFiDataConfigMetaData(boolean isComputeRuleCount) {
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -开始：" + uuid);
         // 第一步：获取Tree
         FiDataMetaDataTreeDTO fiDataMetaDataTreeBase = null;
-
         List<DataSourceConVO> dataSourceConVOList = getFiDataDataSource();
         fiDataMetaDataTreeBase = new FiDataMetaDataTreeDTO();
         fiDataMetaDataTreeBase.setId("-10");
@@ -244,7 +245,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         fiDataMetaDataTreeBase.setLevelType(LevelTypeEnum.BASEFOLDER);
         fiDataMetaDataTreeBase.setSourceType(SourceTypeEnum.FiData.getValue());
         fiDataMetaDataTreeBase.children = new ArrayList<>();
-
         if (CollectionUtils.isNotEmpty(dataSourceConVOList)) {
             dataSourceConVOList = dataSourceConVOList.stream()
                     .sorted(Comparator.comparing(DataSourceConVO::getDatasourceId))
@@ -258,7 +258,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         }
         // 第二步：获取表规则
         List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
-        if (checkStandards){
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -结束：" + uuid);
+
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -开始：" + uuid);
+        // 第三步：获取数据标准
+        if (checkStandards) {
             List<DatacheckStandardsGroupPO> standardsGroupPOS = standardsGroupService.list();
             if (CollectionUtils.isNotEmpty(standardsGroupPOS) && isComputeRuleCount) {
                 for (DatacheckStandardsGroupPO standardsGroupPO : standardsGroupPOS) {
@@ -275,14 +279,18 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
             fiDataMetaDataTreeBase.children.add(standardsTree);
         }
-        // 第三步：递归设置Tree-节点规则数量
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -结束：" + uuid);
+
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -开始：" + uuid);
+        // 第四步：递归设置Tree-节点规则数量
         if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
             fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
         }
+        log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -结束：" + uuid);
         return fiDataMetaDataTreeBase;
     }
 
-    public FiDataMetaDataTreeDTO getStandardsTree(String id){
+    public FiDataMetaDataTreeDTO getStandardsTree(String id) {
         FiDataMetaDataTreeDTO standardsTree = new FiDataMetaDataTreeDTO();
         String standardsUuid = UUID.randomUUID().toString().replace("-", "");
         standardsTree.setId(standardsUuid);
@@ -298,13 +306,14 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return standardsTree;
     }
 
-    public List<FiDataMetaDataTreeDTO> getStandardsTreeChildren(String id){
+    public List<FiDataMetaDataTreeDTO> getStandardsTreeChildren(String id) {
         ResultEntity<List<FiDataMetaDataTreeDTO>> allStandardsTree = dataManageClient.getAllStandardsTree(id);
-        if (allStandardsTree.code != ResultEnum.SUCCESS.getCode()){
+        if (allStandardsTree.code != ResultEnum.SUCCESS.getCode()) {
             return new ArrayList<>();
         }
         return allStandardsTree.data;
     }
+
     @Override
     public FiDataMetaDataTreeDTO getCustomizeMetaData(boolean isComputeRuleCount) {
         // 第一步：获取Tree
@@ -468,8 +477,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         Long userId = loginUserInfo.getId();
         LambdaQueryWrapper<DataObsSqlPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(DataObsSqlPO::getDelFlag,1);
-        queryWrapper.eq(DataObsSqlPO::getCreateUser,userId);
+        queryWrapper.eq(DataObsSqlPO::getDelFlag, 1);
+        queryWrapper.eq(DataObsSqlPO::getCreateUser, userId);
         List<DataObsSqlPO> list = dataObsSqlService.list(queryWrapper);
         List<DataObsSqlDTO> dataObsSqlDTOS = DataObsSqlMap.INSTANCES.poListToDtoList(list);
         return dataObsSqlDTOS;
@@ -480,7 +489,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         Long userId = loginUserInfo.getId();
         LambdaQueryWrapper<DataObsSqlPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(DataObsSqlPO::getCreateUser,userId);
+        queryWrapper.eq(DataObsSqlPO::getCreateUser, userId);
         List<DataObsSqlPO> poList = dataObsSqlService.list(queryWrapper);
         List<Long> ObsSqlPoId = poList.stream().map(BasePO::getId).collect(Collectors.toList());
         List<DataObsSqlPO> dataObsSqlPOS = DataObsSqlMap.INSTANCES.dtoListToPoList(list);
@@ -488,17 +497,17 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         //找出待删除数据id
         List<Long> Ids = dataObsSqlPOS.stream().map(DataObsSqlPO::getId).collect(Collectors.toList());
         List<Long> dels = ObsSqlPoId.stream().filter(i -> !Ids.contains(i)).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(dels)){
+        if (CollectionUtils.isNotEmpty(dels)) {
             dataObsSqlService.removeByIds(dels);
         }
         //找出待添加数据
         List<DataObsSqlPO> adds = dataObsSqlPOS.stream().filter(i -> i.getId() == 0).collect(Collectors.toList());
         //找出待修改数据
         List<DataObsSqlPO> updates = dataObsSqlPOS.stream().filter(i -> i.getId() != 0).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(adds)){
+        if (CollectionUtils.isNotEmpty(adds)) {
             dataObsSqlService.saveBatch(adds);
         }
-        if (CollectionUtils.isNotEmpty(updates)){
+        if (CollectionUtils.isNotEmpty(updates)) {
             dataObsSqlService.updateBatchById(updates);
         }
         return ResultEnum.SUCCESS;
@@ -735,11 +744,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     setTableRuleCount(sourceType, dataTreeDTO, tableRules, treeTiles);
                 } else {
                     int tableType = 0;
-                    if (dataTreeDTO.getLevelType() == LevelTypeEnum.TABLE ) {
+                    if (dataTreeDTO.getLevelType() == LevelTypeEnum.TABLE) {
                         tableType = 1;
                     } else if (dataTreeDTO.getLevelType() == LevelTypeEnum.VIEW) {
                         tableType = 2;
-                    }else if (dataTreeDTO.getLevelType() == LevelTypeEnum.STANDARD){
+                    } else if (dataTreeDTO.getLevelType() == LevelTypeEnum.STANDARD) {
                         tableType = 3;
                     }
                     int finalTableType = tableType;
@@ -752,17 +761,17 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     }
                     String finalTableUnique = tableUnique;
                     List<TableRuleCountDTO> ruleList = new ArrayList<>();
-                    if (finalTableType == 3){
+                    if (finalTableType == 3) {
                         ruleList = tableRules.stream().filter(
                                 t -> t.getSourceId() == dataTreeDTO.getSourceId()
                                         && t.getTableType() == finalTableType
                                         && t.getTableUnique().equals(finalTableUnique)).collect(Collectors.toList());
                         int totalRuleCount = ruleList.size();
-                        ruleList = ruleList.stream().map(y->{
+                        ruleList = ruleList.stream().map(y -> {
                             y.setTableRuleCount(totalRuleCount);
                             return y;
                         }).collect(Collectors.toList());
-                    }else {
+                    } else {
                         ruleList = tableRules.stream().filter(
                                 t -> t.getSourceId() == dataTreeDTO.getSourceId()
                                         && t.getTableType() == finalTableType
@@ -785,10 +794,10 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                         // 设置表的父节点规则数量
                         if (CollectionUtils.isNotEmpty(treeTiles) &&
                                 (dataTreeDTO.getCheckRuleCount() > 0 || dataTreeDTO.getFilterRuleCount() > 0 || dataTreeDTO.getRecoveryRuleCount() > 0)) {
-                            if (dataTreeDTO.levelType == LevelTypeEnum.STANDARD){
-                                treeTiles = treeTiles.stream().map(v ->{
-                                    if (v.getLevelTypeEnum() == LevelTypeEnum.STANDARD){
-                                        if (v.getId().equals(dataTreeDTO.id)){
+                            if (dataTreeDTO.levelType == LevelTypeEnum.STANDARD) {
+                                treeTiles = treeTiles.stream().map(v -> {
+                                    if (v.getLevelTypeEnum() == LevelTypeEnum.STANDARD) {
+                                        if (v.getId().equals(dataTreeDTO.id)) {
                                             v.setCheckRuleCount(dataTreeDTO.checkRuleCount);
                                             v.setFilterRuleCount(dataTreeDTO.filterRuleCount);
                                             v.setRecoveryRuleCount(dataTreeDTO.recoveryRuleCount);
@@ -904,22 +913,22 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         tree.children = new ArrayList<>();
         if (sourceType == SourceTypeEnum.FiData) {
             FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
-            if (fiDataConfigMetaData != null){
+            if (fiDataConfigMetaData != null) {
                 tree.children.add(getFiDataConfigMetaData(false));
             }
         } else if (sourceType == SourceTypeEnum.custom) {
             FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
-            if (customizeMetaData != null){
+            if (customizeMetaData != null) {
                 tree.children.add(customizeMetaData);
             }
         } else {
             FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
 
-            if (fiDataConfigMetaData != null){
+            if (fiDataConfigMetaData != null) {
                 tree.children.add(getFiDataConfigMetaData(false));
             }
             FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
-            if (customizeMetaData != null){
+            if (customizeMetaData != null) {
                 tree.children.add(customizeMetaData);
             }
         }
