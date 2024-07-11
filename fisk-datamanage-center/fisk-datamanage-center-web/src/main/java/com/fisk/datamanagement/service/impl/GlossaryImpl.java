@@ -286,27 +286,43 @@ public class GlossaryImpl
         return list;
     }
 
-    public List<Integer> getClassificationByEntityId(Integer glossaryId, Integer offset, Integer pageSize) {
-        QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
-        List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
-        if (CollectionUtils.isEmpty(list)) {
+    public List<Map> getEntityGlossDataByName(String qualifiedName) {
+        List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossaryByQName(qualifiedName);
+        if (CollectionUtils.isEmpty(entityGlossary)) {
             return new ArrayList<>();
         }
-        return list.stream()
-                .skip(offset)
-                .limit(pageSize)
-                .map(e -> e.metadataEntityId).collect(Collectors.toList());
+        List<Map> list = new ArrayList<>();
+        for (MetaDataGlossaryMapDTO item : entityGlossary) {
+            Map map = new HashMap();
+            map.put("displayText", item.glossaryName);
+            map.put("guid", item.glossaryId);
+            list.add(map);
+        }
+
+        return list;
     }
 
-    public List<Integer> getClassificationByEntityId(Integer glossaryId) {
+//    public List<Integer> getClassificationByEntityId(Integer glossaryId, Integer offset, Integer pageSize) {
+//        QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
+//        queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+//        List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
+//        if (CollectionUtils.isEmpty(list)) {
+//            return new ArrayList<>();
+//        }
+//        return list.stream()
+//                .skip(offset)
+//                .limit(pageSize)
+//                .map(e -> e.metadataEntityId).collect(Collectors.toList());
+//    }
+
+    public List<String> getClassificationByEntityId(Integer glossaryId) {
         QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("metadata_entity_id").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+        queryWrapper.select("metadata_qualified_name").lambda().eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
         List<MetaDataGlossaryMapPO> list = metaDataGlossaryMapMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(list)) {
             return new ArrayList<>();
         }
-        return list.stream().map(e -> e.metadataEntityId).collect(Collectors.toList());
+        return list.stream().map(e -> e.metadataQualifiedName).collect(Collectors.toList());
     }
 
     /**

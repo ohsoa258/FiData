@@ -10,8 +10,7 @@ import lombok.Data;
 @Data
 public class MetaDataGlossaryMapDTO {
 
-    @ApiModelProperty(value = "元数据实体ID")
-    public Integer metadataEntityId;
+    public String metadataQualifiedName;
 
     @ApiModelProperty(value = "术语ID")
     public Integer glossaryId;

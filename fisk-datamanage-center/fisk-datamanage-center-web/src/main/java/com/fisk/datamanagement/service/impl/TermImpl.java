@@ -235,7 +235,7 @@ public class TermImpl implements ITerm {
         // 存储关联实体
         MetaDataGlossaryMapPO model = new MetaDataGlossaryMapPO();
         model.setGlossaryId(Integer.parseInt(dto.termGuid));
-        model.setMetadataEntityId(Integer.parseInt(dto.dto.get(0).guid));
+        model.setMetadataQualifiedName(dto.dto.get(0).qualifiedName);
         if (metaDataGlossaryMapMapper.insert(model) <= 0){
             throw new FkException(ResultEnum.ERROR, "术语关联实体失败");
         }

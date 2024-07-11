@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
 @TableName(value = "tb_metadata_glossary_map")
 public class MetaDataGlossaryMapPO extends BasePO {
 
-    public Integer metadataEntityId;
+    public String metadataQualifiedName;
 
     public Integer glossaryId;
 

@@ -8,6 +8,7 @@ import com.fisk.datamanagement.dto.category.CategoryDTO;
 import com.fisk.datamanagement.dto.glossary.GlossaryDTO;
 import com.fisk.datamanagement.dto.label.GlobalSearchDto;
 import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryAndMetaDatasMapDTO;
+import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryMapDelDTO;
 import com.fisk.datamanagement.dto.term.TermAssignedEntities;
 import com.fisk.datamanagement.dto.term.TermDTO;
 import com.fisk.datamanagement.service.IGlossary;
@@ -154,6 +155,30 @@ public class GlossaryController {
     @PostMapping("/mapGlossaryWithMetaEntity")
     public ResultEntity<Object> mapGlossaryWithMetaEntity(@RequestBody GlossaryAndMetaDatasMapDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.mapGlossaryWithMetaEntity(dto));
+    }
+
+    /**
+     * 业务术语-根据术语id和元数据限定名称 删除关联关系
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("业务术语-根据术语id和元数据限定名称 删除关联关系")
+    @PostMapping("/delGlossaryMapByGIDAndQName")
+    public ResultEntity<Object> delGlossaryMapByGIDAndQName(@RequestBody GlossaryMapDelDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.delGlossaryMapByGIDAndQName(dto));
+    }
+
+    /**
+     * 业务术语-根据术语id批量删除和元数据的关联关系
+     *
+     * @param glossaryId
+     * @return
+     */
+    @ApiOperation("业务术语-根据术语id批量删除和元数据的关联关系")
+    @PostMapping("/delAllGlossaryMaps")
+    public ResultEntity<Object> delAllGlossaryMaps(@RequestParam("glossaryId") Integer glossaryId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, metadataGlossaryMap.delAllGlossaryMaps(glossaryId));
     }
 
     /**

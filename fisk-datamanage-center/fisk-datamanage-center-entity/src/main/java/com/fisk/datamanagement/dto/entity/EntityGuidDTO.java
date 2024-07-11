@@ -12,6 +12,9 @@ public class EntityGuidDTO {
     @ApiModelProperty(value = "guid")
     public String guid;
 
+    @ApiModelProperty(value = "qualifiedName")
+    public String qualifiedName;
+
     @ApiModelProperty(value = "关联guid")
     public String relationshipGuid;
 }

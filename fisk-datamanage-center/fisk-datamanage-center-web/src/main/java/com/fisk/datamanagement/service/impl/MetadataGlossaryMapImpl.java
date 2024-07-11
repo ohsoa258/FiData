@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryAndMetaDatasMapDTO;
+import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryMapDelDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetadataEntitySimpleDTO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
@@ -53,7 +54,8 @@ public class MetadataGlossaryMapImpl
         for (MetadataEntitySimpleDTO simDto : metadataEntityIds) {
             MetaDataGlossaryMapPO metaDataGlossaryMapPO = new MetaDataGlossaryMapPO();
 
-            metaDataGlossaryMapPO.setMetadataEntityId((int) simDto.getId());
+            //改为关联限定名称
+            metaDataGlossaryMapPO.setMetadataQualifiedName(simDto.getMetadataQualifiedName());
             metaDataGlossaryMapPO.setGlossaryId(glossaryId);
             metaDataGlossaryMapPO.setTypeId(simDto.getType());
             metaDataGlossaryMapPOS.add(metaDataGlossaryMapPO);
@@ -77,27 +79,66 @@ public class MetadataGlossaryMapImpl
             LambdaQueryWrapper<MetaDataGlossaryMapPO> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
             List<MetaDataGlossaryMapPO> list = list(wrapper);
-            //筛选出元数据id集合
-            List<Integer> collect = list.stream().map(MetaDataGlossaryMapPO::getMetadataEntityId).collect(Collectors.toList());
+            //筛选出元数据限定名称集合
+            List<String> collect = list.stream().map(MetaDataGlossaryMapPO::getMetadataQualifiedName).collect(Collectors.toList());
             //若是没绑定任何元数据则返回空集合
-            if (CollectionUtils.isEmpty(collect)){
+            if (CollectionUtils.isEmpty(collect)) {
                 return metadataEntitySimpleDTOS;
             }
 
-            List<MetadataEntityPO> metadataEntityPOS = metadataEntityImpl.listByIds(collect);
+            List<MetadataEntityPO> metadataEntityPOS = metadataEntityImpl.list(
+                    new LambdaQueryWrapper<MetadataEntityPO>()
+                            .select(MetadataEntityPO::getId, MetadataEntityPO::getQualifiedName, MetadataEntityPO::getName, MetadataEntityPO::getTypeId)
+                            .in(MetadataEntityPO::getQualifiedName, collect)
+            );
             for (MetadataEntityPO metadataEntityPO : metadataEntityPOS) {
                 MetadataEntitySimpleDTO dto = new MetadataEntitySimpleDTO();
                 dto.setId(metadataEntityPO.getId());
+                dto.setMetadataQualifiedName(metadataEntityPO.getQualifiedName());
                 dto.setEntityName(metadataEntityPO.getName());
                 dto.setType(metadataEntityPO.getTypeId());
                 metadataEntitySimpleDTOS.add(dto);
             }
             return metadataEntitySimpleDTOS;
-        }catch (Exception e){
-            log.error("获取术语绑定的元数据失败："+e.getMessage());
-            log.error("获取术语绑定的元数据失败堆栈："+e);
+        } catch (Exception e) {
+            log.error("获取术语绑定的元数据失败：" + e.getMessage());
+            log.error("获取术语绑定的元数据失败堆栈：" + e);
             throw new FkException(ResultEnum.GET_GLOSSARY_ASSIGN_METAS_ERROR);
         }
+    }
+
+    /**
+     * 业务术语-根据术语id和元数据限定名称 删除关联关系
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public Object delGlossaryMapByGIDAndQName(GlossaryMapDelDTO dto) {
+        int glossaryId = dto.getGlossaryId();
+        if (dto.getMetadataQualifiedName() == null) {
+            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+        }
+
+        return this.remove(
+                new LambdaQueryWrapper<MetaDataGlossaryMapPO>()
+                        .eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId)
+                        .eq(MetaDataGlossaryMapPO::getMetadataQualifiedName, dto.getMetadataQualifiedName())
+        );
+    }
+
+    /**
+     * 业务术语-根据术语id批量删除和元数据的关联关系
+     *
+     * @param glossaryId
+     * @return
+     */
+    @Override
+    public Object delAllGlossaryMaps(Integer glossaryId) {
+        return this.remove(
+                new LambdaQueryWrapper<MetaDataGlossaryMapPO>()
+                        .eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId)
+        );
     }
 
 }

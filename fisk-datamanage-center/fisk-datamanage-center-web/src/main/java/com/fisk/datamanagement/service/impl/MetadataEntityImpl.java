@@ -555,7 +555,7 @@ public class MetadataEntityImpl
             dto.displayName = item.displayName;
             //表级别 为了能和元数据地图的id匹配上 增加唯一查询名称给前端 用来匹配
             if (item.typeId == EntityTypeEnum.RDBMS_TABLE.getValue()
-//                    ||item.typeId==EntityTypeEnum.RDBMS_COLUMN.getValue()
+                    ||item.typeId==EntityTypeEnum.RDBMS_COLUMN.getValue()
             ) {
                 dto.qualifiedName = item.qualifiedName;
             }
@@ -860,7 +860,7 @@ public class MetadataEntityImpl
         }
 
         //实体关联术语
-        attributeMap.put("meanings", glossary.getEntityGlossData((int) po.id));
+        attributeMap.put("meanings", glossary.getEntityGlossDataByName(po.qualifiedName));
 
         return attributeMap;
     }
@@ -1674,7 +1674,14 @@ public class MetadataEntityImpl
             //String[] split = dto.termName.split("@");
             GlossaryPO infoByName = glossary.getInfoByName(dto.termName);
             // metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
-            metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id);
+            //获取和术语关联的元数据限定名称
+            List<String> metaQNames = glossary.getClassificationByEntityId((int) infoByName.id);
+            //通过限定名称获取元数据id
+            List<MetadataEntityPO> mIds = this.list(
+                    new QueryWrapper<MetadataEntityPO>()
+                            .select("id")
+                            .in("qualified_name", metaQNames));
+            metadataEntity = mIds.stream().map(e -> (int) e.id).collect(Collectors.toList());
         }
         //搜索属性标签
         else if (!StringUtils.isEmpty(dto.label)) {
@@ -1754,7 +1761,7 @@ public class MetadataEntityImpl
             //获取术语库
             entitiesDto.meaningNames = new ArrayList<>();
 
-            List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossary((int) po.id);
+            List<MetaDataGlossaryMapDTO> entityGlossary = metaDataGlossaryMapMapper.getEntityGlossaryByQName(po.qualifiedName);
             entitiesDto.meaningNames = entityGlossary.stream().map(e -> e.glossaryName).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(entitiesDto.meaningNames)) {
                 entitiesDto.meanings = new ArrayList<>();

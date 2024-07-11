@@ -2,6 +2,7 @@ package com.fisk.datamanagement.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryAndMetaDatasMapDTO;
+import com.fisk.datamanagement.dto.metadataglossarymap.GlossaryMapDelDTO;
 import com.fisk.datamanagement.dto.metadataglossarymap.MetadataEntitySimpleDTO;
 import com.fisk.datamanagement.entity.MetaDataGlossaryMapPO;
 
@@ -25,4 +26,20 @@ public interface IMetadataGlossaryMap  extends IService<MetaDataGlossaryMapPO> {
      * @return
      */
     List<MetadataEntitySimpleDTO> getMetaEntitiesByGlossary(Integer glossaryId);
+
+    /**
+     * 业务术语-根据术语id和元数据限定名称 删除关联关系
+     *
+     * @param dto
+     * @return
+     */
+    Object delGlossaryMapByGIDAndQName(GlossaryMapDelDTO dto);
+
+    /**
+     * 业务术语-根据术语id批量删除和元数据的关联关系
+     *
+     * @param glossaryId
+     * @return
+     */
+    Object delAllGlossaryMaps(Integer glossaryId);
 }

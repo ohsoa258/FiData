@@ -40,6 +40,24 @@ public interface MetaDataGlossaryMapMapper extends FKBaseMapper<MetaDataGlossary
             "\ta.metadata_entity_id = #{entityId} and a.del_flag = 1 and b.del_flag = 1")
     List<MetaDataGlossaryMapDTO> getEntityGlossary(@Param("entityId") Integer entityId);
 
+    /**
+     * 获取实体关联术语
+     *
+     * @param qName
+     * @return
+     */
+    @Select("SELECT\n" +
+            "\ta.metadata_qualified_name,\n" +
+            "\ta.glossary_id,\n" +
+            "\tb.`name` as glossary_name\n" +
+            "FROM\n" +
+            "\ttb_metadata_glossary_map a\n" +
+            "\tLEFT JOIN tb_glossary b ON a.glossary_id = b.id \n" +
+            "WHERE\n" +
+            "\ta.metadata_qualified_name = #{qName} and a.del_flag = 1 and b.del_flag = 1")
+    List<MetaDataGlossaryMapDTO> getEntityGlossaryByQName(@Param("qName") String qName);
+
+
     @Delete("truncate TABLE tb_metadata_glossary_map ")
     int truncateTable();
 
