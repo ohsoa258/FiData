@@ -1676,12 +1676,18 @@ public class MetadataEntityImpl
             // metadataEntity = glossary.getClassificationByEntityId((int) infoByName.id, dto.offset, dto.limit);
             //获取和术语关联的元数据限定名称
             List<String> metaQNames = glossary.getClassificationByEntityId((int) infoByName.id);
+
             //通过限定名称获取元数据id
-            List<MetadataEntityPO> mIds = this.list(
-                    new QueryWrapper<MetadataEntityPO>()
-                            .select("id")
-                            .in("qualified_name", metaQNames));
-            metadataEntity = mIds.stream().map(e -> (int) e.id).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(metaQNames)){
+                List<MetadataEntityPO> mIds = this.list(
+                        new QueryWrapper<MetadataEntityPO>()
+                                .select("id")
+                                .in("qualified_name", metaQNames));
+                metadataEntity = mIds.stream().map(e -> (int) e.id).collect(Collectors.toList());
+            }else {
+                metadataEntity = new ArrayList<>();
+            }
+
         }
         //搜索属性标签
         else if (!StringUtils.isEmpty(dto.label)) {
