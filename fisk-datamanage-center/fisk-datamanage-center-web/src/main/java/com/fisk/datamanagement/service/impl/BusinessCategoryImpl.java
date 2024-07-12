@@ -79,9 +79,17 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
             throw new FkException(ResultEnum.ERROR, "修改业务分类参数错误");
         }
         BusinessCategoryDefsDTO param = dto.getClassificationDefs().get(0);
+        BusinessCategoryPO businessCategoryPO = businessCategoryMapper.selectById(param.guid);
+        List<String> nameList = new ArrayList<>();
+        if (StringUtils.isEmpty(businessCategoryPO.pid)){
 
-        // 查询是否存在重复数据
-        List<String> nameList = businessCategoryMapper.selectNameList(param.getGuid(), DelFlagEnum.NORMAL_FLAG.getValue());
+            // 查询是否存在重复数据
+            nameList = businessCategoryMapper.selectNames();
+        }else {
+            // 查询是否存在重复数据
+            nameList = businessCategoryMapper.selectNameList(String.valueOf(businessCategoryPO.pid));
+        }
+
         if (nameList.contains(param.name)) {
             throw new FkException(ResultEnum.ERROR, "业务分类名称已存在");
         }

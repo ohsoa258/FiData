@@ -28,8 +28,11 @@ public interface BusinessCategoryMapper   extends FKBaseMapper<BusinessCategoryP
     @Select("select * from tb_business_category ")
     List<BusinessCategoryPO> selectClassification();
 
-    @Select("select `name` from tb_business_classification where id != #{guid} and del_flag = #{flag}")
-    List<String> selectNameList(@Param("guid") String guid, @Param("flag") int flag);
+    @Select("select `name` from tb_business_category where pid = #{guid} and del_flag = 1")
+    List<String> selectNameList(@Param("guid") String guid);
+
+    @Select("select `name` from tb_business_category where pid is null and del_flag = 1")
+    List<String> selectNames();
 
     @Delete("truncate TABLE tb_business_classification")
     int truncateTable();
