@@ -303,7 +303,7 @@ public class GlossaryCategoryImpl
             List<MetaDataGlossaryMapPO> metaEntityIdlist = new ArrayList<>();
             if(glossaryIdList.stream().count()>0){
                 QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
-                queryWrapper.select("metadata_entity_id").lambda().in(MetaDataGlossaryMapPO::getGlossaryId, glossaryIdList);
+                queryWrapper.select("metadata_qualified_name").lambda().in(MetaDataGlossaryMapPO::getGlossaryId, glossaryIdList);
                 metaEntityIdlist= metaDataGlossaryMapMapper.selectList(queryWrapper);
             }
             firstGlossaryCategorySummaryDto.setMetaDataSummary(metaEntityIdlist.stream().count());
