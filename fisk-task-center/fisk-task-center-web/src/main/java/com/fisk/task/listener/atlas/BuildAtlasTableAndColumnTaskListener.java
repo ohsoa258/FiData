@@ -193,6 +193,8 @@ public class BuildAtlasTableAndColumnTaskListener
                 bfd.traceId = buildPhysicalTableDTO.traceId;
                 if (bfd.openTransmission) {
                     bfd.popout = true;
+                }else{
+                    bfd.popout = false;
                 }
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");

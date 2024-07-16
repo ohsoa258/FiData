@@ -1094,7 +1094,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                  * 就会调用pc.taskPublish(kafkaRkeceiveDTO)在nifi中进行数据的同步
                  *
                  */
-                //7. 如果是接入,同步一次,然后把调度组件停掉
+                //7. 同步一次,然后把调度组件停掉
                 if (dto.groupStructureId == null && dto.openTransmission) {
                     String topicName = MqConstants.TopicPrefix.TOPIC_PREFIX + dto.type.getValue() + "." + dto.appId + "." + dto.id;
                     int value = TopicTypeEnum.DAILY_NIFI_FLOW.getValue();
@@ -1116,6 +1116,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                     pc.taskPublish(kafkaRkeceiveDTO);
                     //kafkaTemplateHelper.sendMessageAsync(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW, JSON.toJSONString(kafkaRkeceiveDTO));
                 }
+
                 if (Objects.equals(dto.synchronousTypeEnum, SynchronousTypeEnum.TOPGODS)) {
                     modelPublishStatusDTO.subRunId = subRunId;
                     modelPublishStatusDTO.tableHistoryId = dto.tableHistoryId;
