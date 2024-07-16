@@ -188,6 +188,7 @@ public class MQConsumerLogAspect {
                 if (sendMsg && Objects.nonNull(data) && Objects.nonNull(data.userId)) {
                     //失败不管是什么类型都发失败通知
                     if (isSuccess) {
+                        log.info("是否要后置弹框：" + data.popout);
                         if (!data.popout) {
                             if (notificationType == 1) {
                                 //默认1环绕,2前置,3后置

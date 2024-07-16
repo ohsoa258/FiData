@@ -404,7 +404,10 @@ public class BuildDataModelDorisTableListener
                 //执行保存或更新
                 tableNifiSettingService.saveOrUpdate(tableNifiSettingPO);
                 //弹框
-                bfd.popout = true;
+                //如何弹框和发布表时是否勾选立即同步数据有关
+                //如果勾选 则会在发送立即同步的消息之后发送弹框
+                //如果不勾选 则在建完nifi流程后发送弹框
+                bfd.popout = inpData.openTransmission;
                 //调用方法，创建同步数据nifi流程
                 pc.publishBuildNifiFlowTask(bfd);
                 log.info("执行完成");
