@@ -3316,7 +3316,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         }
 
         //去掉GB 交给前端显示
-        return helper.DbDataStoredSize(data).replace("GB", "");
+        return helper.DbDataStoredSize(data);
     }
 
 }
