@@ -5,6 +5,9 @@ import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataservice.dto.api.ApiRegisterQueryDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
+import com.fisk.dataservice.vo.tableapi.ApiTrafficLastWeekVO;
+import com.fisk.dataservice.vo.tableapi.DataTotalVO;
+import com.fisk.dataservice.vo.tableapi.RecentApiGatewayCallsVO;
 import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
 import org.apache.ibatis.annotations.*;
 
@@ -73,4 +76,16 @@ public interface ApiRegisterMapper extends FKBaseMapper<ApiConfigPO> {
     @Select("SELECT t1.frequency,t2.api_name as apiName from (SELECT api_id,count(1) as frequency FROM `tb_logs` WHERE create_time >= CURDATE() and business_state = '成功' and del_flag = 1 GROUP BY api_id ORDER BY frequency DESC limit 5) as t1\n" +
             "LEFT JOIN tb_api_config t2 on t1.api_id = t2.id")
     List<TopFrequencyVO> getTopFrequency();
+
+    @Select("SELECT (SELECT COUNT(1) FROM tb_app_config WHERE del_flag = 1) AS appTotal,(SELECT COUNT(1) FROM tb_api_config WHERE del_flag = 1) AS apiTotal")
+    DataTotalVO getApiDataTotal();
+
+    @Select("select ( SELECT count(1) FROM `tb_table_app` WHERE del_flag = 1) as appTotal, (SELECT SUM(cnt) AS total_count FROM ( SELECT COUNT(1) AS cnt FROM tb_table_service WHERE del_flag = 1 UNION ALL SELECT COUNT(1) AS cnt FROM tb_table_api_service WHERE del_flag = 1 ) AS counts) as apiTotal")
+    DataTotalVO getTableDataTotal();
+
+    @Select("SELECT DATE(create_time) AS date, COUNT(1) AS totalCount FROM tb_logs WHERE create_time >= CURDATE() - INTERVAL 6 DAY GROUP BY DATE(create_time) ORDER BY date")
+    List<ApiTrafficLastWeekVO> getApiTrafficLastWeek();
+
+    @Select("SELECT api.api_code,api.api_name,log.create_time as date FROM (SELECT api_id,create_time FROM tb_logs ORDER BY id DESC LIMIT 5) as log LEFT JOIN  tb_api_config as api on api.id = log.api_id")
+    List<RecentApiGatewayCallsVO> getRecentApiGatewayCalls();
 }

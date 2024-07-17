@@ -21,4 +21,10 @@
     </if>
     ORDER BY create_time DESC
 </select>
+    <select id="getGenerateCode" resultType="Integer">
+        select code from tb_generate_code where type = 'codeSet'
+    </select>
+    <update id="setGenerateCode">
+        update tb_generate_code set code = #{code} where type = 'codeSet'
+    </update>
 </mapper>

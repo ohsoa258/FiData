@@ -1,6 +1,8 @@
 package com.fisk.task.controller;
 
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.task.dto.dispatchlog.*;
 import com.fisk.task.dto.query.DataServiceTableLogQueryDTO;
 import com.fisk.task.service.dispatchLog.IPipelJobLog;
@@ -179,7 +181,16 @@ public class DispatchLogController {
         return objectResultEntity;
     }
 
+    @ApiOperation("获取管道当天运行成功失败记录数")
+    @PostMapping("/getPipelTotals")
+    public ResultEntity<Object> getPipelTotals(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelLog.getPipelTotals());
+    }
 
-
+    @ApiOperation("获取管道过去7天每天的运行次数")
+    @PostMapping("/getPipelWeek")
+    public ResultEntity<Object> getPipelWeek(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, iPipelLog.getPipelWeek());
+    }
 
 }

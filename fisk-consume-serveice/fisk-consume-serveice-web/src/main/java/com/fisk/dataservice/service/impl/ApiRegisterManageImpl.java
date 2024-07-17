@@ -35,8 +35,7 @@ import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
-import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
-import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
+import com.fisk.dataservice.vo.tableapi.*;
 import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -399,6 +398,26 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     @Override
     public List<TopFrequencyVO> getTopFrequency() {
         return this.baseMapper.getTopFrequency();
+    }
+
+    @Override
+    public DataTotalVO getApiDataTotal() {
+        return this.baseMapper.getApiDataTotal();
+    }
+
+    @Override
+    public DataTotalVO getTableDataTotal() {
+        return this.baseMapper.getTableDataTotal();
+    }
+
+    @Override
+    public List<ApiTrafficLastWeekVO> getApiTrafficLastWeek() {
+        return this.baseMapper.getApiTrafficLastWeek();
+    }
+
+    @Override
+    public List<RecentApiGatewayCallsVO> getRecentApiGatewayCalls() {
+        return this.baseMapper.getRecentApiGatewayCalls();
     }
 
     @Override
@@ -783,6 +802,7 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         ApiEncryptConfigPO apiEncryptConfigPO = apiEncryptConfigService.getOne(queryWrapper);
         if (apiEncryptConfigPO != null){
             encryptConfigDTO.setEncryptKey(apiEncryptConfigPO.getEncryptKey());
+            encryptConfigDTO.setType(apiEncryptConfigPO.getType());
         }
         return encryptConfigDTO;
     }
@@ -1150,7 +1170,14 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
     private static List<FieldInfoVO> getTableFieldByDorisList(Connection conn, IBuildDataServiceSqlCommand dbCommand,
                                                               String tableFramework, String tableRelName) {
         String[] split = tableRelName.split("\\.");
-        String tableName = split[split.length - 1];
+        String tableName = null;
+        if (split.length>2){
+            int commaIndex = tableRelName.indexOf('.');
+            tableRelName = tableRelName.substring(commaIndex + 1);
+            tableName = split[split.length - 1];
+        }else {
+            tableRelName = split[split.length - 1];
+        }
         List<FieldInfoVO> fieldList = new ArrayList<>();
         if (StringUtils.isEmpty(tableRelName))
             return fieldList;

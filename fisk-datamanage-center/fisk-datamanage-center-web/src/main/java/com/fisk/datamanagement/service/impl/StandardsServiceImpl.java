@@ -303,11 +303,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             conn = getConnection(dataSourceConfig.data);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
-            query.setQuerySql("select * from " + query.tableName);
+            query.setQuerySql("select "+query.column+" from " + query.tableName);
             rs = st.executeQuery(query.getQuerySql());
             // 获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
-            array.sql = "select * from " + query.tableName;
+            array.sql = "select "+query.column+" from " + query.tableName;
             array.total = array.dataArray.size();
         } catch (SQLException e) {
             log.error("preview ex:", e);

@@ -61,6 +61,13 @@ public class CodeSetServiceImpl extends ServiceImpl<CodeSetMapper, CodeSetPO> im
     }
 
     @Override
+    public synchronized Integer getGenerateCode() {
+        Integer generateCode = this.baseMapper.getGenerateCode();
+        this.baseMapper.setGenerateCode(generateCode+1);
+        return generateCode;
+    }
+
+    @Override
     public ResultEnum updateCodeSet(CodeSetDTO dto) {
         if (dto.id ==null || dto.id == 0){
             return ResultEnum.UPDATE_DATA_ERROR;

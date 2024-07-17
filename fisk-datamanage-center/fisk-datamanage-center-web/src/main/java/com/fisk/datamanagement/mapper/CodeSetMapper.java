@@ -18,4 +18,8 @@ import org.apache.ibatis.annotations.Param;
 public interface CodeSetMapper extends BaseMapper<CodeSetPO> {
 
     Page<CodeSetVO> getAll(Page<CodeSetVO> page, @Param("query") CodeSetQueryDTO query);
+
+    Integer getGenerateCode();
+
+    void setGenerateCode(@Param("code")Integer code);
 }

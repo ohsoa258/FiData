@@ -2,6 +2,8 @@ package com.fisk.task.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.datamanagement.dto.datalogging.PipelTotalDTO;
+import com.fisk.datamanagement.dto.datalogging.PipelWeekDTO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
 import com.fisk.task.dto.dispatchlog.PipelMergeLog;
@@ -53,4 +55,7 @@ public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
 
     List<PipelMergeLog> getPipelLogVos(@Param("dto") PipelLogVO dto);
     PipelMergeLog getLastPipelLog(@Param("pipelId")String pipelId);
+
+    PipelTotalDTO getPipelTotals();
+    List<PipelWeekDTO> getPipelWeek();
 }

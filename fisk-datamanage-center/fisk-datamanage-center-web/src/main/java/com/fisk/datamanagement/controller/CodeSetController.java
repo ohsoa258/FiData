@@ -34,6 +34,12 @@ public class CodeSetController {
         return ResultEntityBuild.build(codeSetService.addCodeSet(dto));
     }
 
+    @ApiOperation("获取代码集自增编号")
+    @GetMapping("/getGenerateCode")
+    public ResultEntity<Object> getGenerateCode() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,codeSetService.getGenerateCode());
+    }
+
     @ApiOperation("修改代码集")
     @PostMapping("/updateCodeSet")
     public ResultEntity<Object> updateCodeSet(@RequestBody CodeSetDTO dto) {

@@ -2,6 +2,8 @@ package com.fisk.task.client;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.accessAndModel.LogPageQueryDTO;
 import com.fisk.common.service.accessAndModel.NifiLogResultDTO;
 import com.fisk.common.service.accessAndTask.DataTranDTO;
@@ -631,5 +633,13 @@ public interface PublishTaskClient {
     @GetMapping("/pipelineLog/getRealTimeTblLastSyncTime")
     @ApiOperation("获取数据接入应用下的实时表最后同步时间")
     ResultEntity<LocalDateTime> getRealTimeTblLastSyncTime(@RequestParam("tblIds") List<Long> tblIds);
+
+    @ApiOperation("获取管道当天运行成功失败记录数")
+    @PostMapping("/dispatchLog/getPipelTotals")
+    ResultEntity<Object> getPipelTotals();
+
+    @ApiOperation("获取管道过去7天每天的运行次数")
+    @PostMapping("/dispatchLog/getPipelWeek")
+    ResultEntity<Object> getPipelWeek();
 
 }

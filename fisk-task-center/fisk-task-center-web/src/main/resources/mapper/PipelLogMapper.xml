@@ -379,4 +379,28 @@
             IFNULL( result, '' ) != '取消'
 	LIMIT 1
     </select>
+    <select id="getPipelTotals" resultType="com.fisk.datamanagement.dto.datalogging.PipelTotalDTO">
+        SELECT
+            SUM(CASE WHEN msg LIKE '%开始运行%' THEN 1 ELSE 0 END) AS total,
+            SUM(CASE WHEN msg LIKE '%运行成功%' THEN 1 ELSE 0 END) AS successTotal,
+            SUM(CASE WHEN msg LIKE '%开始运行%' THEN 1 ELSE 0 END) - SUM(CASE WHEN msg LIKE '%运行成功%' THEN 1 ELSE 0 END) AS failTotal
+        FROM
+            tb_pipel_log
+        WHERE
+            DATE(create_time) = CURDATE();
+    </select>
+    <select id="getPipelWeek" resultType="com.fisk.datamanagement.dto.datalogging.PipelWeekDTO">
+        SELECT
+            DATE(create_time) AS date,
+            SUM(CASE WHEN msg LIKE '%开始运行%' THEN 1 ELSE 0 END) AS totalCount
+        FROM
+            tb_pipel_log
+        WHERE
+            create_time >= CURDATE() - INTERVAL 7 DAY
+          AND msg LIKE '%开始运行%'
+        GROUP BY
+            date
+        ORDER BY
+            date DESC;
+    </select>
 </mapper>

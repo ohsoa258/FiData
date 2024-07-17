@@ -23,4 +23,6 @@ public class ApiEncryptConfigPO extends BasePO {
     @ApiModelProperty(value = "密钥值")
     private String encryptKey;
 
+    @ApiModelProperty(value = "1：数据加密 2：数据脱敏")
+    private Integer type;
 }

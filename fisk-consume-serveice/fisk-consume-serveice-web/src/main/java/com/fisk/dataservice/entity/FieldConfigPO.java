@@ -1,5 +1,6 @@
 package com.fisk.dataservice.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
@@ -43,4 +44,7 @@ public class FieldConfigPO extends BasePO
      * 加密
      */
     public int encrypt;
+
+    @TableField
+    public Integer desensitization;
 }

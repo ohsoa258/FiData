@@ -38,4 +38,16 @@ public class DataLoggingController {
     public ResultEntity<Object> getDataTotals(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, dataLoggingService.getDataTotals());
     }
+
+    @ApiOperation("获取管道当天运行成功失败记录数")
+    @PostMapping("/getPipelTotals")
+    public ResultEntity<Object> getPipelTotals(){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataLoggingService.getPipelTotals());
+    }
+
+    @ApiOperation("获取管道过去7天每天的运行次数")
+    @PostMapping("/getPipelWeek")
+    public ResultEntity<Object> getPipelWeek() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataLoggingService.getPipelWeek());
+    }
 }

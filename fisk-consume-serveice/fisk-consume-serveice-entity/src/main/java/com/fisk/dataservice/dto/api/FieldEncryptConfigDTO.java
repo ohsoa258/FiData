@@ -1,5 +1,6 @@
 package com.fisk.dataservice.dto.api;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -19,6 +20,8 @@ public class FieldEncryptConfigDTO {
      * 加密key
      */
     public String encryptKey;
+
+    private Integer type;
 
     public List<FieldEncryptDTO> fieldEncryptDTOS;
 }
