@@ -10,8 +10,7 @@ import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
-import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
-import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
+import com.fisk.dataservice.vo.tableapi.*;
 import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 
 import java.util.List;
@@ -160,6 +159,14 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
      * @return
      */
     List<TopFrequencyVO> getTopFrequency();
+
+    DataTotalVO getApiDataTotal();
+
+    DataTotalVO getTableDataTotal();
+
+    List<ApiTrafficLastWeekVO> getApiTrafficLastWeek();
+
+    List<RecentApiGatewayCallsVO> getRecentApiGatewayCalls();
 
     /**
      * 通过API获取

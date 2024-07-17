@@ -1,6 +1,8 @@
 package com.fisk.datamanagement.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
@@ -9,6 +11,8 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datamanagement.dto.datalogging.DataLoggingDTO;
 import com.fisk.datamanagement.dto.datalogging.DataTotalDTO;
+import com.fisk.datamanagement.dto.datalogging.PipelTotalDTO;
+import com.fisk.datamanagement.dto.datalogging.PipelWeekDTO;
 import com.fisk.datamanagement.enums.DataLoggingEnum;
 import com.fisk.datamanagement.mapper.BusinessTargetinfoMapper;
 import com.fisk.datamanagement.mapper.GlossaryMapper;
@@ -19,14 +23,21 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.task.client.PublishTaskClient;
+import com.fisk.task.dto.dispatchlog.PipelTaskLogVO;
+import com.fisk.task.enums.DispatchLogEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author zjy
@@ -63,6 +74,9 @@ public class DataLoggingServiceImpl implements DataLoggingService {
 
     @Resource
     BusinessTargetinfoMapper businessTargetinfoMapper;
+
+    @Resource
+    PublishTaskClient taskClient;
 //    @Override
 //    public DataLoggingDTO getDataTableRows() {
 //        DataLoggingDTO dataLoggingDTO = new DataLoggingDTO();
@@ -160,6 +174,34 @@ public DataLoggingDTO getDataTableRows() {
 
         // 返回包含所有数据总量的DTO
         return dataTotalDTO;
+    }
+
+    @Override
+    public PipelTotalDTO getPipelTotals() {
+        PipelTotalDTO pipelTotalDTO;
+        ResultEntity<Object> pipelTotals = taskClient.getPipelTotals();
+        if (pipelTotals.code == ResultEnum.SUCCESS.getCode() && pipelTotals.data != null) {
+            String json = JSONObject.toJSONString(pipelTotals.data);
+            pipelTotalDTO = JSONObject.parseObject(json,PipelTotalDTO.class);
+        } else {
+            log.error("远程调用失败，方法名：【data-service:sendEmail】");
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return pipelTotalDTO;
+    }
+
+    @Override
+    public List<PipelWeekDTO> getPipelWeek() {
+        List<PipelWeekDTO> pipelWeekDTO;
+        ResultEntity<Object> pipelWeek = taskClient.getPipelWeek();
+        if (pipelWeek.code == ResultEnum.SUCCESS.getCode() && pipelWeek.data != null) {
+            String json = JSONObject.toJSONString(pipelWeek.data);
+            pipelWeekDTO = JSONObject.parseArray(json,PipelWeekDTO.class);
+        } else {
+            log.error("远程调用失败，方法名：【data-service:sendEmail】");
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        }
+        return pipelWeekDTO;
     }
 
     //每天凌晨12点执行一次

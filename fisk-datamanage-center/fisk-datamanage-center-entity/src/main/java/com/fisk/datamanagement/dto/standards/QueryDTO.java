@@ -18,6 +18,8 @@ public class QueryDTO {
     public int pageSize;
     @ApiModelProperty(value = "数据源id", required = true)
     public Integer dataSourceId;
+    @ApiModelProperty(value = "当前表字段", required = true)
+    public String column;
     @ApiModelProperty(value = "当前库名称", required = true)
     public String dataBaseName;
     @ApiModelProperty(value = "当前表名称", required = true)

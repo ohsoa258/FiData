@@ -37,10 +37,7 @@ import com.fisk.dataservice.dto.apiservice.RequestEncryptDTO;
 import com.fisk.dataservice.dto.apiservice.RequstDTO;
 import com.fisk.dataservice.dto.apiservice.TokenDTO;
 import com.fisk.dataservice.entity.*;
-import com.fisk.dataservice.enums.ApiStateTypeEnum;
-import com.fisk.dataservice.enums.ApiTypeEnum;
-import com.fisk.dataservice.enums.LogLevelTypeEnum;
-import com.fisk.dataservice.enums.LogTypeEnum;
+import com.fisk.dataservice.enums.*;
 import com.fisk.dataservice.map.ApiParmMap;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.redisdata.RedisData;
@@ -386,20 +383,37 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
 
             //判断是否需要加密字段
             Boolean encrypt = false;
+            Boolean desensitization = false;
             List<String> fieldName = new ArrayList<>();
+
+            Map<String, FieldEncryptDTO> fieldDesensitization = new HashMap<>();
             String encryptKey = null;
             String[] encryptedFields = null;
             FieldEncryptConfigDTO fieldEncryptAll = apiRegisterManageService.getFieldEncryptAll((int) apiInfo.id);
             if (fieldEncryptAll != null){
-                if (StringUtils.isNotEmpty(fieldEncryptAll.getEncryptKey())){
-                    encrypt = true;
-                    encryptKey = fieldEncryptAll.getEncryptKey();
+                Integer type = fieldEncryptAll.getType();
+                if (type !=null){
+                    if (type == 1){
+                        if (StringUtils.isNotEmpty(fieldEncryptAll.getEncryptKey())){
+                            encrypt = true;
+                            encryptKey = fieldEncryptAll.getEncryptKey();
+                        }
+                        List<FieldEncryptDTO> fieldEncryptDTOS = fieldEncryptAll.getFieldEncryptDTOS();
+                        if (CollectionUtils.isNotEmpty(fieldEncryptDTOS)){
+                            fieldName = fieldEncryptDTOS.stream().filter(i->i.getEncrypt() == 1).map(FieldEncryptDTO::getFieldName).collect(Collectors.toList());
+                            encryptedFields = fieldName.toArray(new String[0]);
+                        }
+                    }else if (type == 2){
+                        desensitization = true;
+                        List<FieldEncryptDTO> fieldEncryptDTOS = fieldEncryptAll.getFieldEncryptDTOS();
+                        if (CollectionUtils.isNotEmpty(fieldEncryptDTOS)){
+                            fieldDesensitization = fieldEncryptDTOS.stream().filter(i -> i.getDesensitization() != 0).collect(Collectors.toMap(FieldEncryptDTO::getFieldName, i -> i));
+                            List<String> names = fieldDesensitization.values().stream().map(FieldEncryptDTO::getFieldName).collect(Collectors.toList());
+                            encryptedFields = names.toArray(new String[0]);
+                        }
+                    }
                 }
-                List<FieldEncryptDTO> fieldEncryptDTOS = fieldEncryptAll.getFieldEncryptDTOS();
-                if (CollectionUtils.isNotEmpty(fieldEncryptDTOS)){
-                    fieldName = fieldEncryptDTOS.stream().filter(i->i.getEncrypt() == 1).map(FieldEncryptDTO::getFieldName).collect(Collectors.toList());
-                    encryptedFields = fieldName.toArray(new String[0]);
-                }
+
             }
             responseVO.setEncryptedFields(encryptedFields);
             // 第十步：判断数据源类型，加载数据库驱动，执行SQL
@@ -424,6 +438,49 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                         if (fieldName.contains(columnName)){
                             if (!ObjectUtils.isEmpty(value)) {
                                 value = encryptField(value.toString(), encryptKey);
+                            }
+                        }
+                    }else if (desensitization){
+                        if (fieldDesensitization.containsKey(columnName)){
+                            if (!ObjectUtils.isEmpty(value)) {
+                                FieldEncryptDTO fieldEncryptDTO = fieldDesensitization.get(columnName);
+                                String val = value.toString();
+                                switch (fieldEncryptDTO.getDesensitization()){
+                                    case 1:
+                                        if (val.length() > 1) {
+                                            // 取出第一个字符
+                                            char firstChar = val.charAt(0);
+                                            // 拼接结果
+                                            value = firstChar + maskString(val.length()-1);
+                                        }
+                                        break;
+                                    case 2:
+                                        if (val.length() >= 7) {
+                                            // 保留前三位和后四位，中间的内容用星号展示
+                                            String firstThree = val.substring(0, 3);
+                                            String lastFour = val.substring(val.length() - 4);
+                                            value = firstThree + maskString(val.length() - 7) + lastFour;
+                                        }else {
+                                            value = maskString(val.length());
+                                        }
+                                        break;
+                                    case 3:
+                                        if (val.length() >= 6) {
+                                            // 保留前三位和后四位，中间的内容用星号展示
+                                            String firstThree = val.substring(0, 3);
+                                            String lastFour = val.substring(val.length() - 3);
+                                            value = firstThree + maskString(val.length() - 6) + lastFour;
+                                        }else {
+                                            value = maskString(val.length());
+                                        }
+                                        break;
+                                    case 4:
+                                        // 全部用星号展示补全
+                                        value = maskString(val.length());
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
                     }
@@ -494,6 +551,14 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             // System.gc();
         }
         return ResultEntityBuild.buildData(resultEnum, responseVO);
+    }
+    // 封装生成星号部分的方法
+    public static String maskString(Integer number) {
+        StringBuilder stars = new StringBuilder();
+        for (int i = 0; i < number; i++) {
+            stars.append('*');
+        }
+        return stars.toString();
     }
 
     @Override

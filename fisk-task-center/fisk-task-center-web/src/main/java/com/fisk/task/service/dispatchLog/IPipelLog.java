@@ -3,6 +3,8 @@ package com.fisk.task.service.dispatchLog;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.datamanagement.dto.datalogging.PipelTotalDTO;
+import com.fisk.datamanagement.dto.datalogging.PipelWeekDTO;
 import com.fisk.task.dto.statistics.PipelLineDetailDTO;
 import com.fisk.task.vo.statistics.*;
 import com.fisk.task.dto.dispatchlog.LogStatisticsForChartVO;
@@ -98,4 +100,8 @@ public interface IPipelLog extends IService<PipelLogPO> {
     List<PipelMergeLog> getPipelLogVos(PipelLogVO pipelLog);
 
     PipelMergeLog getLastPipelLog(String pipelId);
+
+    PipelTotalDTO getPipelTotals();
+
+    List<PipelWeekDTO> getPipelWeek();
 }

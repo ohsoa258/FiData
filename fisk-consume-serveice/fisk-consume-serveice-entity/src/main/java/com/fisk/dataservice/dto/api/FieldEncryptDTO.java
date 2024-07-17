@@ -45,4 +45,7 @@ public class FieldEncryptDTO {
      */
     @ApiModelProperty(value = "加密")
     public int encrypt;
+
+    @ApiModelProperty(value = "脱敏类型")
+    public Integer desensitization;
 }

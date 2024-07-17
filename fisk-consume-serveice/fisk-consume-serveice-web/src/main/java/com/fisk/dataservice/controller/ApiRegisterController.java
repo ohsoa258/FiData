@@ -15,8 +15,7 @@ import com.fisk.dataservice.service.IApiMenuConfigService;
 import com.fisk.dataservice.service.IApiRegisterManageService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
-import com.fisk.dataservice.vo.tableapi.ConsumeServerVO;
-import com.fisk.dataservice.vo.tableapi.TopFrequencyVO;
+import com.fisk.dataservice.vo.tableapi.*;
 import com.fisk.dataservice.vo.tableservice.TableServiceVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -150,6 +149,28 @@ public class ApiRegisterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getTopFrequency());
     }
 
+    @ApiOperation("获取接口服务数量信息")
+    @GetMapping("/getApiDataTotal")
+    public ResultEntity<DataTotalVO> getApiDataTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getApiDataTotal());
+    }
+    @ApiOperation("获取表服务数量信息")
+    @GetMapping("/getTableDataTotal")
+    public ResultEntity<DataTotalVO> getTableDataTotal() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getTableDataTotal());
+    }
+
+    @ApiOperation("获取api网关接口7天调用量")
+    @GetMapping("/getApiTrafficLastWeek")
+    public ResultEntity<List<ApiTrafficLastWeekVO>> getApiTrafficLastWeek() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getApiTrafficLastWeek());
+    }
+
+    @ApiOperation("获取api网关最近5次调用数据")
+    @GetMapping("/getRecentApiGatewayCalls")
+    public ResultEntity<List<RecentApiGatewayCallsVO>> getRecentApiGatewayCalls() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getRecentApiGatewayCalls());
+    }
     @ApiOperation("查看api树形标签")
     @GetMapping("/getApiTree")
     public ResultEntity<List<ApiTreeDTO>> getApiTree(@RequestParam("serverType") Integer serverType) {

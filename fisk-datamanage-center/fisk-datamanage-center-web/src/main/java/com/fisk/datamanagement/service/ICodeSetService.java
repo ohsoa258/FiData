@@ -22,6 +22,8 @@ public interface ICodeSetService extends IService<CodeSetPO> {
 
     ResultEnum addCodeSet(CodeSetDTO dto);
 
+    Integer getGenerateCode();
+
     ResultEnum updateCodeSet(CodeSetDTO dto);
 
     ResultEnum delCodeSet(Integer id);

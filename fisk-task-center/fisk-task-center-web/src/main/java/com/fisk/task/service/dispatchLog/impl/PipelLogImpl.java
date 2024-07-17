@@ -9,6 +9,8 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
+import com.fisk.datamanagement.dto.datalogging.PipelTotalDTO;
+import com.fisk.datamanagement.dto.datalogging.PipelWeekDTO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsForChartVO;
 import com.fisk.task.dto.dispatchlog.LogStatisticsVO;
 import com.fisk.task.dto.dispatchlog.PipelLogVO;
@@ -23,7 +25,6 @@ import com.fisk.task.vo.statistics.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -229,6 +230,16 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     public PipelMergeLog getLastPipelLog(String pipelId) {
         PipelMergeLog lastPipelLog = baseMapper.getLastPipelLog(pipelId);
         return lastPipelLog;
+    }
+
+    @Override
+    public PipelTotalDTO getPipelTotals() {
+        return baseMapper.getPipelTotals();
+    }
+
+    @Override
+    public List<PipelWeekDTO> getPipelWeek() {
+        return baseMapper.getPipelWeek();
     }
 
     /**
