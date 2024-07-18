@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.constants.NifiConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -300,7 +301,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
-            conn = getConnection(dataSourceConfig.data);
+            DataSourceDTO data = dataSourceConfig.data;
+            if (DataSourceTypeEnum.POSTGRESQL == data.conType){
+                query.tableName = "\""+query.tableName+"\"";
+            }
+            conn = getConnection(data);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
             query.setQuerySql("select "+query.column+" from " + query.tableName);
