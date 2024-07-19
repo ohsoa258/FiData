@@ -1913,7 +1913,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                 tableColumnDTOS = dimensionAttribute.query().eq("dimension_id", dto.tableId).list().stream().filter(Objects::nonNull).map(field -> {
                     TableColumnDTO tableColumnDTO = new TableColumnDTO();
                     tableColumnDTO.setFieldId(String.valueOf(field.id));
-                    tableColumnDTO.setFieldName(field.sourceFieldName);
+                    tableColumnDTO.setFieldName(field.dimensionFieldEnName);
                     tableColumnDTO.setFieldType(field.dimensionFieldType);
                     tableColumnDTO.setFieldLength(field.dimensionFieldLength);
                     tableColumnDTO.setFieldDes(field.dimensionFieldDes);
@@ -1926,7 +1926,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                     TableColumnDTO tableColumnDTO = new TableColumnDTO();
                     tableColumnDTO.setFieldId(String.valueOf(field.id));
                     tableColumnDTO.setFieldName(field.sourceFieldName);
-                    tableColumnDTO.setFieldType(field.factFieldType);
+                    tableColumnDTO.setFieldType(field.factFieldEnName);
                     tableColumnDTO.setFieldLength(field.factFieldLength);
                     tableColumnDTO.setFieldDes(field.factFieldDes);
                     return tableColumnDTO;
