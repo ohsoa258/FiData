@@ -122,7 +122,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Value("${pgsql-mdm.type}")
     private DataSourceTypeEnum type;
-    @Value("${pgsql-mdm.url1}")
+    @Value("${pgsql-mdm.url}")
     private String url;
     @Value("${pgsql-mdm.username}")
     private String username;
