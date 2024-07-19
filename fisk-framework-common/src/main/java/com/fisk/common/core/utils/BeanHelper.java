@@ -80,16 +80,25 @@ public class BeanHelper {
         try {
             ResultSetMetaData md = rs.getMetaData();
             int columnCount = md.getColumnCount();
+            String[] columnLabels = new String[columnCount];
+            for (int i = 1; i <= columnCount; i++) {
+                columnLabels[i-1] = md.getColumnLabel(i);
+            }
+
             while (rs.next()) {
-                Map<String, Object> rowData = new LinkedHashMap<>();
-                for (int i = 1; i <= columnCount; i++) {
-                    rowData.put(md.getColumnLabel(i), rs.getString(i));
+                Map<String, Object> rowData = new LinkedHashMap<>(columnCount);
+                for (int i = 0; i < columnCount; i++) {
+                    // 根据字段的实际类型使用对应的getObject方法
+                    rowData.put(columnLabels[i], rs.getObject(i + 1));
                 }
                 list.add(rowData);
             }
+
+            // 设置批处理大小
+            rs.setFetchSize(1000);
+
         } catch (SQLException e) {
-            log.error("【resultSetToMaps】转换bean报错, ex", e);
-            return null;
+            throw new RuntimeException("Error converting ResultSet to list of maps", e);
         }
         return list;
     }

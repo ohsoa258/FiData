@@ -58,9 +58,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -124,7 +122,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Value("${pgsql-mdm.type}")
     private DataSourceTypeEnum type;
-    @Value("${pgsql-mdm.url}")
+    @Value("${pgsql-mdm.url1}")
     private String url;
     @Value("${pgsql-mdm.username}")
     private String username;
@@ -1229,9 +1227,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @return
      */
     public ResultEnum exportExcel(ExportResultVO vo, HttpServletResponse response) {
-        XSSFWorkbook workbook = new XSSFWorkbook();
-        XSSFSheet sheet = workbook.createSheet("sheet1");
-        XSSFRow row1 = sheet.createRow(0);
+        Workbook workbook = new SXSSFWorkbook();
+        Sheet sheet = workbook.createSheet("sheet1");
+        Row  row1 = sheet.createRow(0);
         if (CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
             ResultEntityBuild.build(ResultEnum.CODE_NOT_EXIST);
         }
@@ -1241,10 +1239,16 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         if (!CollectionUtils.isEmpty(vo.getDataArray())) {
             for (int i = 0; i < vo.getDataArray().size(); i++) {
-                XSSFRow row = sheet.createRow(i + 1);
+                Row  row =  sheet.createRow(i + 1);
                 Map<String, Object> jsonObject = vo.getDataArray().get(i);
                 for (int j = 0; j < vo.getHeaderList().size(); j++) {
-                    row.createCell(j).setCellValue(jsonObject.get(vo.getHeaderList().get(j)) == null ? "" : jsonObject.get(vo.getHeaderList().get(j)).toString());
+                    Cell cell =  row.createCell(j);
+                    Object value = jsonObject.get(vo.getHeaderList().get(j));
+                    if (value instanceof Number) {
+                        cell.setCellValue(((Number) value).doubleValue()); // 或者使用其他Number类型
+                    } else {
+                        cell.setCellValue(value == null ? "" : value.toString());
+                    }
                 }
             }
         }
