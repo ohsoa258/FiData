@@ -330,9 +330,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
             qualityReportDTO.setCompanyLogoPath("");
             qualityReportDTO.setQualityReportNotice(qualityReportNoticeDTO);
-            //sendResultObj = qualityReportManage.sendEmailReport(qualityReportDTO);
-            //String sendResult = sendResultObj != null && sendResultObj.getCode() == ResultEnum.SUCCESS.getCode() ? "已发送" : "发送失败";
-            String sendResult = "已发送";
+            sendResultObj = qualityReportManage.sendEmailReport(qualityReportDTO);
+            String sendResult = sendResultObj != null && sendResultObj.getCode() == ResultEnum.SUCCESS.getCode() ? "已发送" : "发送失败";
 
             // 创建质量报告结束计时
             String createReportEndTime = DateTimeUtils.getNow();
