@@ -79,6 +79,12 @@ public class DataCheckSyncParamDTO {
     public String fieldNameFormat;
 
     /**
+     * 字段检查条件
+     */
+    @ApiModelProperty(value = "字段检查条件")
+    public String fieldCheckWhereSql;
+
+    /**
      * 批次号
      */
     @ApiModelProperty(value = "批次号")

@@ -62,6 +62,12 @@ public class QualityReportVO {
     public String runTimeCron;
 
     /**
+     * 报告评估标准，优良中差的标准，例如100,70,50,50
+     */
+    @ApiModelProperty(value = "报告评估标准，优良中差的标准，例如100,70,50,50")
+    public String reportEvaluationCriteria;
+
+    /**
      * 下次执行时间
      */
     @ApiModelProperty(value = "下次执行时间")

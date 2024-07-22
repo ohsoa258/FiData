@@ -46,4 +46,16 @@ public class DataCheckQueryDTO {
      */
     @ApiModelProperty(value = "表业务类型，选中表/视图节点必填")
     public TableBusinessTypeEnum tableBusinessType;
+
+    /**
+     * 每页条数
+     */
+    @ApiModelProperty(value = "每页条数")
+    public int size;
+
+    /**
+     * 页码
+     */
+    @ApiModelProperty(value = "页码")
+    public int current;
 }

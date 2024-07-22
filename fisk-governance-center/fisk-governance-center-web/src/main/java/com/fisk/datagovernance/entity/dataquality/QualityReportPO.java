@@ -47,4 +47,9 @@ public class QualityReportPO extends BasePO {
      * 发送频率
      */
     public String runTimeCron;
+
+    /**
+     * 报告评估标准，优良中差的标准，例如100,70,50,50
+     */
+    public String reportEvaluationCriteria;
 }

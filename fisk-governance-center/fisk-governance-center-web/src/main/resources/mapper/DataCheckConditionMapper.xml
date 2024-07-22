@@ -1,0 +1,26 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.DataCheckConditionMapper">
+    <select id="getDataCheckExtendByRuleIdList" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckConditionVO">
+        SELECT
+        id,
+        rule_id,
+        field_unique,
+        field_name,
+        field_type,
+        field_operator,
+        field_value,
+        field_relation_condition
+        FROM
+        tb_datacheck_rule_condition
+        WHERE
+        del_flag =1
+        <if test="null != ruleIdList and ruleIdList.size > 0">
+            AND rule_id IN
+            <foreach item="item" index="index" collection="ruleIdList" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

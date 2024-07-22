@@ -77,4 +77,54 @@ public class QualityReportLogPO extends BasePO {
      * 发送结果
      */
     public String sendResult;
+
+    /**
+     * 报告质量评级：优良中差
+     */
+    public String reportQualityGrade;
+
+    /**
+     * 报告批次号
+     */
+    public String reportBatchNumber;
+
+    /**
+     * 报告下检查的规则数
+     */
+    public String reportRuleCheckCount;
+
+    /**
+     * 报告下检查不通过的规则数
+     */
+    public String reportRuleCheckErrorCount;
+
+    /**
+     * 报告下检查规则的正确率
+     */
+    public String reportRuleCheckAccuracy;
+
+    /**
+     * 报告规则检查结果
+     */
+    public String reportRuleCheckResult;
+
+    /**
+     * 报告规则检查结语
+     */
+    public String reportRuleCheckEpilogue;
+
+    /**
+     * 创建报告开始时间
+     */
+    public String createReportStartTime;
+
+    /**
+     * 创建报告结束时间
+     */
+    public String createReportEndTime;
+
+    /**
+     * 创建报告所需时长，单位：秒
+     */
+    public String createReportDuration;
 }

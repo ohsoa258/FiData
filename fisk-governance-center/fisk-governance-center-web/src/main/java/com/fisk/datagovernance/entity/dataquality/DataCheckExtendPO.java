@@ -1,7 +1,5 @@
 package com.fisk.datagovernance.entity.dataquality;
 
-import com.baomidou.mybatisplus.annotation.FieldStrategy;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import lombok.Data;
@@ -139,7 +137,7 @@ public class DataCheckExtendPO extends BasePO {
     public String regexpCheckValue;
 
     /**
-     * SQL检查-脚本值(固定返回checkstate，通过为1，未通过为0)
+     * SQL检查-脚本值
      */
     public String sqlCheckValue;
 
@@ -164,4 +162,9 @@ public class DataCheckExtendPO extends BasePO {
     public Integer checkFieldId;
 
     public String checkFieldName;
+
+    /**
+     * 指定查询的字段名称，多个字段逗号分隔
+     */
+    public String allocateFieldNames;
 }

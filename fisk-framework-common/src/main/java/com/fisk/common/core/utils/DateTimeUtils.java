@@ -36,6 +36,10 @@ public class DateTimeUtils {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
+    public static String getNowToShortDate_v1() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    }
+
     public static String getNowToShortDate(String format) {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern(format));
     }

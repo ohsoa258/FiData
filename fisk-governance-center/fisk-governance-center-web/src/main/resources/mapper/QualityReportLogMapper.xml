@@ -17,15 +17,38 @@
         body,
         recipient,
         send_time,
-        send_result
+        send_result,
+        report_quality_grade,
+        report_batch_number,
+        report_rule_check_count,
+        report_rule_check_error_count,
+        report_rule_check_accuracy,
+        report_rule_check_result,
+        report_rule_check_epilogue,
+        create_report_start_time,
+        create_report_end_time,
+        create_report_duration
         FROM
         tb_quality_report_log
         WHERE
         del_flag = 1 AND report_id=#{reportId}
-        <if test="keyword != null and keyword != '' ">
-            AND report_name LIKE concat('%', #{keyword}, '%')
-            OR send_time LIKE concat('%', #{keyword}, '%')
-            OR send_result LIKE concat('%', #{keyword}, '%')
+        <if test="reportId > 0 ">
+            AND report_id = #{reportId}
         </if>
+        <if test="keyword != null and keyword != '' ">
+            AND (report_name LIKE concat('%', #{keyword}, '%')
+            OR send_time LIKE concat('%', #{keyword}, '%')
+            OR send_result LIKE concat('%', #{keyword}, '%'))
+        </if>
+        <if test="reportBatchNumber != null and reportBatchNumber != '' ">
+            AND report_batch_number = #{reportBatchNumber}
+        </if>
+        <if test="createReportStartTime != null and createReportStartTime != '' ">
+            AND create_report_start_time &gt;= #{createReportStartTime}
+        </if>
+        <if test="createReportEndTime != null and createReportEndTime != '' ">
+            AND create_report_end_time &lt;= #{createReportEndTime}
+        </if>
+        ORDER BY IFNULL(create_report_start_time,create_time) DESC
     </select>
 </mapper>

@@ -157,6 +157,12 @@ public class DataCheckVO {
     public DataCheckExtendVO dataCheckExtend;
 
     /**
+     * 数据校验规则检查条件
+     */
+    @ApiModelProperty(value = "数据校验规则检查条件")
+    List<DataCheckConditionVO> dataCheckCondition;
+
+    /**
      * 模板类型
      */
     @ApiModelProperty(value = "模板类型")

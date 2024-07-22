@@ -85,10 +85,10 @@ public class QualityReportController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getReportExt());
     }
 
-    @ApiOperation("质量报告日志分页")
-    @PostMapping("/getAllReportLog")
-    public ResultEntity<Page<QualityReportLogVO>> getAllReportLog(@RequestBody QualityReportLogQueryDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllReportLog(dto));
+    @ApiOperation("数据校验质量报告日志分页")
+    @PostMapping("/getDataCheckQualityReportLog")
+    public ResultEntity<Page<QualityReportLogVO>> getDataCheckQualityReportLog(@RequestBody QualityReportLogQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckQualityReportLog(dto));
     }
 
     @ApiOperation("下载报告记录")

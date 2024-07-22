@@ -38,6 +38,7 @@ import com.fisk.datagovernance.dto.dataops.PostgreDTO;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
 import com.fisk.datagovernance.entity.dataops.DataOpsLogPO;
 import com.fisk.datagovernance.entity.dataquality.AttachmentInfoPO;
+import com.fisk.datagovernance.enums.dataquality.AttachmentCateGoryEnum;
 import com.fisk.datagovernance.mapper.dataquality.AttachmentInfoMapper;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.impl.dataquality.DataSourceConManageImpl;
@@ -785,7 +786,7 @@ public class DataOpsDataSourceManageImpl implements IDataOpsDataSourceManageServ
         attachmentInfoPO.setExtensionName(".xlsx");
         attachmentInfoPO.setAbsolutePath(uploadUrl);
         attachmentInfoPO.setOriginalName(String.format("%s上传模板%s.xlsx", dto.getTableName(), DateTimeUtils.getNowToShortDate().replace("-", "")));
-        attachmentInfoPO.setCategory(500);
+        attachmentInfoPO.setCategory(AttachmentCateGoryEnum.DATA_OPERATION_AND_MAINTENANCE_GENERATE_IMPORT_TEMPLATES.getValue());
         attachmentInfoMapper.insertOne(attachmentInfoPO);
 
         return attachmentInfoPO.getOriginalName() + "," + attachmentInfoPO.getId();

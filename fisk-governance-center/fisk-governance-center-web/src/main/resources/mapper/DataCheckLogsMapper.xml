@@ -5,6 +5,7 @@
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO">
         SELECT
         log.id,
+        log.id_uuid,
         log.rule_id,
         log.rule_name,
         log.template_id,
@@ -21,6 +22,12 @@
         log.check_result,
         log.check_msg,
         log.check_rule_illustrate,
+        log.check_data_accuracy,
+        log.check_data_start_time,
+        log.check_data_end_time,
+        log.check_data_duration,
+        log.check_data_sql,
+        log.check_data_count_sql,
         log.create_time
         FROM
         tb_datacheck_rule_logs log

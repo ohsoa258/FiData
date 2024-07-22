@@ -3,11 +3,11 @@ package com.fisk.datagovernance.service.impl.dataquality;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -28,13 +28,13 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.flinkupload.IFlinkCommand;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
+import com.fisk.datagovernance.map.dataquality.DataCheckConditionMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
@@ -82,6 +82,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckExtendMapper dataCheckExtendMapper;
 
     @Resource
+    private DataCheckConditionMapper dataCheckConditionMapper;
+
+    @Resource
+    private DataCheckConditionManageImpl dataCheckConditionManageImpl;
+
+    @Resource
     private DatacheckCodeService datacheckCodeService;
 
     @Resource
@@ -127,11 +133,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private static final String SUCCESS = "success";
 
     @Override
-    public List<DataCheckVO> getAllRule(DataCheckQueryDTO query) {
+    public PageDTO<DataCheckVO> getAllRule(DataCheckQueryDTO query) {
         // 第一步：参数验证
+        PageDTO<DataCheckVO> page = new PageDTO<>();
         List<DataCheckVO> filterRule = new ArrayList<>();
         if (query == null) {
-            return filterRule;
+            return page;
         }
         try {
             // 第二步：查询某个节点下的表信息，没选择节点默认查询所有规则
@@ -155,7 +162,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             // 第三步：获取所有表校验规则
             List<DataCheckVO> allRule = baseMapper.getAllRule();
             if (CollectionUtils.isEmpty(allRule)) {
-                return filterRule;
+                return page;
             }
             // 第四步：筛选满足条件的表/视图的规则
             if (CollectionUtils.isNotEmpty(queryTableParams)) {
@@ -189,7 +196,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 filterRule = allRule;
             }
             if (CollectionUtils.isEmpty(filterRule)) {
-                return filterRule;
+                return page;
             }
             List<Integer> ruleIds = filterRule.stream().map(DataCheckVO::getId).distinct().collect(Collectors.toList());
             List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
@@ -199,7 +206,17 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     t.setDataCheckExtend(dataCheckExtendVO);
                 });
             }
-            // 第五步：排序设置
+            List<DataCheckConditionVO> dataCheckConditionVOList = dataCheckConditionMapper.getDataCheckExtendByRuleIdList(ruleIds);
+            if (CollectionUtils.isNotEmpty(dataCheckConditionVOList)) {
+                filterRule.forEach(t -> {
+                    List<DataCheckConditionVO> dataCheckConditionVOS = dataCheckConditionVOList.stream().filter(k -> k.getRuleId() == t.getId()).collect(Collectors.toList());
+                    t.setDataCheckCondition(dataCheckConditionVOS);
+                });
+            }
+            // 第五步：排序分页设置
+            query.current = query.current - 1;
+            page.setTotal(Long.valueOf(filterRule.size()));
+            page.setTotalPage((long) Math.ceil(1.0 * filterRule.size() / query.getSize()));
             filterRule = filterRule.stream().sorted(
                     // 1.先按照表名称排正序，并处理tableAlias为空的情况
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
@@ -207,12 +224,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
                             // 3.再按照创建时间排倒叙，并处理创建时间为空的情况
                             .thenComparing(DataCheckVO::getCreateTime, Comparator.nullsFirst(Comparator.reverseOrder()))
-            ).collect(Collectors.toList());
+            ).skip((query.current - 1 + 1) * query.size).limit(query.size).collect(Collectors.toList());
+            page.setItems(filterRule);
         } catch (Exception ex) {
             log.error("【getAllRule】查询校验规则列表异常：" + ex);
             throw new FkException(ResultEnum.ERROR, ex);
         }
-        return filterRule;
+        return page;
     }
 
     @Override
@@ -262,6 +280,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckExtendPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
             dataCheckExtendMapper.insert(dataCheckExtendPO);
         }
+        //第五步：保存数据校验的检查条件
+        if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
+            List<DataCheckConditionPO> dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
+            if (CollectionUtils.isNotEmpty(dataCheckExtendPOs)) {
+                dataCheckExtendPOs.forEach(t -> {
+                    t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+                });
+                dataCheckConditionManageImpl.saveBatch(dataCheckExtendPOs);
+            }
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -301,6 +329,17 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckExtendPO.setRuleId(dto.getId());
             dataCheckExtendMapper.updateById(dataCheckExtendPO);
         }
+        //第五步：保存数据校验的检查条件
+        dataCheckConditionMapper.updateByRuleId(dto.getId());
+        if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
+            List<DataCheckConditionPO> dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
+            if (CollectionUtils.isNotEmpty(dataCheckExtendPOs)) {
+                dataCheckExtendPOs.forEach(t -> {
+                    t.setRuleId(Math.toIntExact(dto.getId()));
+                });
+                dataCheckConditionManageImpl.saveBatch(dataCheckExtendPOs);
+            }
+        }
         return ResultEnum.SUCCESS;
     }
 
@@ -313,6 +352,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         // 删除数据校验扩展属性
         dataCheckExtendMapper.updateByRuleId(id);
+        // 删除数据校验的检查条件
+        dataCheckConditionMapper.updateByRuleId(id);
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -2789,7 +2830,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         attachmentInfoPO.setExtensionName(".xlsx");
         attachmentInfoPO.setAbsolutePath(uploadUrl);
         attachmentInfoPO.setOriginalName(String.format("数据检查日志%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
-        attachmentInfoPO.setCategory(400);
+        attachmentInfoPO.setCategory(AttachmentCateGoryEnum.DATA_INSPECTION_LOG_REPORT.getValue());
         attachmentInfoMapper.insertOne(attachmentInfoPO);
 
         return attachmentInfoPO.getOriginalName() + "," + attachmentInfoPO.getId();

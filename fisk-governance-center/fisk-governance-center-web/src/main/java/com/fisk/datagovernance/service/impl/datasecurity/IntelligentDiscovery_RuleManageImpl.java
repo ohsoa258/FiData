@@ -34,6 +34,7 @@ import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.datagovernance.dto.datasecurity.intelligentdiscovery.*;
 import com.fisk.datagovernance.entity.dataquality.AttachmentInfoPO;
 import com.fisk.datagovernance.entity.datasecurity.*;
+import com.fisk.datagovernance.enums.dataquality.AttachmentCateGoryEnum;
 import com.fisk.datagovernance.enums.dataquality.RuleStateEnum;
 import com.fisk.datagovernance.enums.datasecurity.ScanReceptionTypeEnum;
 import com.fisk.datagovernance.map.datasecurity.*;
@@ -424,7 +425,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             List<String> uniqueIdList = ruleLogsVOPage.getRecords().stream().map(IntelligentDiscovery_LogsVO::getUniqueId).collect(Collectors.toList());
             QueryWrapper<AttachmentInfoPO> attachmentInfoPOQueryWrapper = new QueryWrapper<>();
             attachmentInfoPOQueryWrapper.lambda().eq(AttachmentInfoPO::getDelFlag, 1)
-                    .eq(AttachmentInfoPO::getCategory, 300)
+                    .eq(AttachmentInfoPO::getCategory, AttachmentCateGoryEnum.INTELLIGENT_DISCOVERY_REPORT.getValue())
                     .in(AttachmentInfoPO::getObjectId, uniqueIdList);
             List<AttachmentInfoPO> attachmentInfoPOList = attachmentInfoMapper.selectList(attachmentInfoPOQueryWrapper);
             if (CollectionUtils.isNotEmpty(attachmentInfoPOList)) {
@@ -456,7 +457,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             }
             QueryWrapper<AttachmentInfoPO> attachmentInfoPOQueryWrapper = new QueryWrapper<>();
             attachmentInfoPOQueryWrapper.lambda().eq(AttachmentInfoPO::getDelFlag, 1)
-                    .eq(AttachmentInfoPO::getCategory, 300)
+                    .eq(AttachmentInfoPO::getCategory, AttachmentCateGoryEnum.INTELLIGENT_DISCOVERY_REPORT.getValue())
                     .eq(AttachmentInfoPO::getObjectId, uniqueId);
             AttachmentInfoPO attachmentInfoPO = attachmentInfoMapper.selectOne(attachmentInfoPOQueryWrapper);
             if (attachmentInfoPO == null) {
@@ -732,7 +733,7 @@ public class IntelligentDiscovery_RuleManageImpl extends ServiceImpl<Intelligent
             attachmentInfoPO.setAbsolutePath(uploadUrl);
             attachmentInfoPO.setRelativePath(echoPath);
             attachmentInfoPO.setOriginalName(String.format("数据安全智能发现报告%s.xlsx", DateTimeUtils.getNowToShortDate().replace("-", "")));
-            attachmentInfoPO.setCategory(300);
+            attachmentInfoPO.setCategory(AttachmentCateGoryEnum.INTELLIGENT_DISCOVERY_REPORT.getValue());
 
             ExcelDto excelDto = new ExcelDto();
             excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());

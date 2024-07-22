@@ -13,7 +13,7 @@ public enum DataCheckLogTypeEnum implements BaseEnum {
     NONE(0, "空"),
     INTERFACE_DATA_CHECK_LOG(1, "接口同步数据校验日志（同步前）"),
     NIFI_SYNCHRONIZATION_DATA_CHECK_LOG(2, "NIFI同步数据校验日志（同步中）"),
-    SUBSCRIPTION_REPORT_DATA_CHECK_LOG(3, "订阅报告数据校验日志（同步后）");
+    SUBSCRIPTION_REPORT_RULE_CHECK_LOG(3, "订阅报告规则校验日志（同步后）");
 
     DataCheckLogTypeEnum(int value, String name) {
         this.name = name;

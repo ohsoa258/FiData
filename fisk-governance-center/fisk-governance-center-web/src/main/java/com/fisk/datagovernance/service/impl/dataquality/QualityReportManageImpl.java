@@ -554,24 +554,34 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     }
 
     @Override
-    public Page<QualityReportLogVO> getAllReportLog(QualityReportLogQueryDTO dto) {
-        Page<QualityReportLogVO> all = qualityReportLogMapper.getAll(dto.getPage(), dto.getReportId(), dto.getKeyword());
+    public Page<QualityReportLogVO> getDataCheckQualityReportLog(QualityReportLogQueryDTO dto) {
+        // 第一步：查询数据校验Summary报告日志
+        Page<QualityReportLogVO> all = qualityReportLogMapper.getAll(dto.getPage(), dto.getReportId(), dto.getKeyword(),
+                dto.getReportBatchNumber(), dto.getCreateReportStartTime(), dto.getCreateReportEndTime());
+
+        // 第二步：查询数据校验Summary报告的附件ID
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
             List<Integer> categoryList = new ArrayList<>();
-            categoryList.add(100); // 质量校验报告
-            categoryList.add(200); // 数据清洗报告
+            categoryList.add(AttachmentCateGoryEnum.QUALITY_VERIFICATION_SUMMARY_REPORT.getValue());
             List<String> reportLogIdList = all.getRecords().stream().map(QualityReportLogVO::getId).collect(Collectors.toList());
             QueryWrapper<AttachmentInfoPO> attachmentInfoPOQueryWrapper = new QueryWrapper<>();
             attachmentInfoPOQueryWrapper.lambda().eq(AttachmentInfoPO::getDelFlag, 1)
                     .in(AttachmentInfoPO::getCategory, categoryList)
                     .in(AttachmentInfoPO::getObjectId, reportLogIdList);
+            // 查询附件信息
             List<AttachmentInfoPO> attachmentInfoPOS = attachmentInfoMapper.selectList(attachmentInfoPOQueryWrapper);
-            if (CollectionUtils.isNotEmpty(attachmentInfoPOS)) {
-                for (QualityReportLogVO qualityReportLogVO : all.getRecords()) {
+
+            for (QualityReportLogVO qualityReportLogVO : all.getRecords()) {
+                // 设置附件ID
+                if (CollectionUtils.isNotEmpty(attachmentInfoPOS)) {
                     AttachmentInfoPO attachmentInfoPO = attachmentInfoPOS.stream().filter(t -> t.getObjectId().equals(qualityReportLogVO.getId())).findFirst().orElse(null);
                     if (attachmentInfoPO != null && StringUtils.isNotEmpty(attachmentInfoPO.getAbsolutePath())) {
-                        String filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
-                        log.info("【getAllReportLog】文件路径：" + filePath);
+                        String filePath = "";
+                        if (attachmentInfoPO.getAbsolutePath().endsWith("/")) {
+                            filePath = attachmentInfoPO.getAbsolutePath() + attachmentInfoPO.getCurrentFileName();
+                        } else {
+                            filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
+                        }
                         File file = new File(filePath);
                         if (file.exists()) {
                             qualityReportLogVO.setExistReport(true);
@@ -579,7 +589,14 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         }
                     }
                 }
+                // 秒转分
+                if (StringUtils.isNotEmpty(qualityReportLogVO.getCreateReportDuration())) {
+                    int minutes = Integer.parseInt(qualityReportLogVO.getCreateReportDuration()) / 60;
+                    int seconds = Integer.parseInt(qualityReportLogVO.getCreateReportDuration()) % 60;
+                    qualityReportLogVO.setCreateReportDuration(minutes + "分" + seconds + "秒");
+                }
             }
+
         }
         return all;
     }
@@ -601,8 +618,12 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             if (attachmentInfoPO == null) {
                 return;
             }
-            String filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
-            log.info("【downloadReportRecord】文件路径：" + filePath);
+            String filePath = "";
+            if (attachmentInfoPO.getAbsolutePath().endsWith("/")) {
+                filePath = attachmentInfoPO.getAbsolutePath() + attachmentInfoPO.getCurrentFileName();
+            } else {
+                filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
+            }
             File file = new File(filePath);
             // 取得文件名
             String filename = attachmentInfoPO.getOriginalName();
@@ -638,12 +659,16 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             if (attachmentInfoPO == null) {
                 return;
             }
-            String filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
-            log.info("【downloadExcelReport】文件路径：" + filePath);
+            String filePath = "";
+            if (attachmentInfoPO.getAbsolutePath().endsWith("/")) {
+                filePath = attachmentInfoPO.getAbsolutePath() + attachmentInfoPO.getCurrentFileName();
+            } else {
+                filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
+            }
             File file = new File(filePath);
             // 取得文件名
             String filename = attachmentInfoPO.getOriginalName();
-            // 以流的形式下载文件。
+            // 以流的形式下载文件
             InputStream fis = new BufferedInputStream(new FileInputStream(filePath));
             byte[] buffer = new byte[fis.available()];
             fis.read(buffer);
