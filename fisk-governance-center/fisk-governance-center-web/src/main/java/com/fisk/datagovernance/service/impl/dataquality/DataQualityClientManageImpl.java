@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -379,13 +380,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String reportRuleCheckResult = "";
 
         // 报告下的检查规则总条数
-        int reportRuleCount = qualityReportRules.size();
+        Integer reportRuleCount = qualityReportRules.size();
         // 报告下的检查规则-检查通过的规则条数
-        int checkRulePassCount = 0;
+        Integer checkRulePassCount = 0;
         // 报告下的检查规则-检查不通过的规则条数
-        int checkRuleNoPassCount = 0;
+        Integer checkRuleNoPassCount = 0;
         // 报告下的检查规则-表结果集为空，跳过检查的规则条数
-        int checkRuleSkipCount = 0;
+        Integer checkRuleSkipCount = 0;
 
         for (DataCheckLogsPO dataCheckLogsPO : dataCheckLogs) {
             String checkResult = dataCheckLogsPO.getCheckResult();
@@ -400,7 +401,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         reportRuleCheckResult = checkRuleNoPassCount == 0 ? "通过" : "不通过";
 
         // 检查规则通过率：(报告下的检查规则总条数-检查不通过的规则条数)/报告下的检查规则总条数*100
-        double checkRuleAccuracy = Math.ceil(Math.ceil(reportRuleCount - checkRuleNoPassCount) / reportRuleCount * 100);
+        double proportion = 100;
+        double checkRuleAccuracy = (Double.parseDouble(reportRuleCount.toString())
+                - Double.parseDouble(checkRuleNoPassCount.toString()))
+                / Double.parseDouble(reportRuleCount.toString()) * proportion;
+        // 保留两位小数，不进行四舍五入
+        BigDecimal bigDecimal_CheckDataAccuracy = new BigDecimal(checkRuleAccuracy).setScale(2, BigDecimal.ROUND_DOWN);
+
         // 报告评估标准-优良中差
         String reportEvaluationCriteria = "";
         if (StringUtils.isNotEmpty(qualityReportPO.getReportEvaluationCriteria())) {
@@ -417,7 +424,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         // 总结报告结语
         String epilogue = "结语：当前报告下共配置" + reportRuleCount + "条检查规则，其中" + checkRulePassCount + "条检查通过，" + checkRuleNoPassCount + "条检查不通过，" +
-                checkRuleSkipCount + "条跳过检查，通过率为" + checkRuleAccuracy + "%。" +
+                checkRuleSkipCount + "条跳过检查，通过率为" + bigDecimal_CheckDataAccuracy.toString() + "%。" +
                 "根据配置的评估标准当前得分为：" + reportEvaluationCriteria + "，详情见下方表格。";
 
         // 总结报告内容
@@ -464,7 +471,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         qualityReportLogPO.setReportBatchNumber(reportBatchNumber);
         qualityReportLogPO.setReportRuleCheckCount(String.valueOf(reportRuleCount));
         qualityReportLogPO.setReportRuleCheckErrorCount(String.valueOf(checkRuleNoPassCount));
-        qualityReportLogPO.setReportRuleCheckAccuracy(checkRuleAccuracy + "%");
+        qualityReportLogPO.setReportRuleCheckAccuracy(bigDecimal_CheckDataAccuracy + "%");
         qualityReportLogPO.setReportRuleCheckResult(reportRuleCheckResult);
         qualityReportLogPO.setReportRuleCheckEpilogue(epilogue);
         return ResultEnum.SUCCESS;
@@ -1804,24 +1811,30 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         qualityReportSummary_ruleDTO.setRuleTemplate(templateTypeEnum.getName());
         qualityReportSummary_ruleDTO.setRuleIllustrate(dataCheckPO.getRuleIllustrate());
-        int errorDataTotalCount = sheetDataDto.getColumnData().size();
-        String checkDataAccuracy = "";
+        Integer errorDataTotalCount = sheetDataDto.getColumnData().size();
+        double checkDataAccuracy = 0.00;
         String checkStatus = errorDataTotalCount == 0 ? "通过" : "不通过";
         if (checkDataTotalCount == 0) {
             if (templatePO.getTemplateType() == TemplateTypeEnum.SQL_SCRIPT_CHECK.getValue()) {
                 // SQL脚本检查，检查的数据总条数为0也就表示检查出来的错误数据为0条，设置为检查通过
-                checkDataAccuracy = "100%";
+                checkDataAccuracy = 100.00;
                 checkStatus = "通过";
             } else {
-                checkDataAccuracy = "/";
+                checkDataAccuracy = 100.00;
                 checkStatus = "表结果集为空，跳过检查";
             }
         } else {
-            checkDataAccuracy = Math.ceil(Math.ceil(checkDataTotalCount - errorDataTotalCount) / checkDataTotalCount * 100) + "%";
+            double proportion = 100;
+            checkDataAccuracy = (Double.parseDouble(checkDataTotalCount.toString())
+                    - Double.parseDouble(errorDataTotalCount.toString()))
+                    / Double.parseDouble(checkDataTotalCount.toString()) * proportion;
         }
+        // 保留两位小数，不进行四舍五入
+        BigDecimal bigDecimal_CheckDataAccuracy = new BigDecimal(checkDataAccuracy).setScale(2, BigDecimal.ROUND_DOWN);
+
         qualityReportSummary_ruleDTO.setCheckDataCount(checkDataTotalCount);
         qualityReportSummary_ruleDTO.setCheckErrorDataCount(errorDataTotalCount);
-        qualityReportSummary_ruleDTO.setDataAccuracy(checkDataAccuracy);
+        qualityReportSummary_ruleDTO.setDataAccuracy(bigDecimal_CheckDataAccuracy.toString() + "%");
         qualityReportSummary_ruleDTO.setCheckStatus(checkStatus);
         qualityReportSummary_ruleDTO.setSheetData(sheetDataDto);
         qualityReportSummary_ruleDTO.setCheckSql(sql_QueryCheckData);
