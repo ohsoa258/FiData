@@ -1,3 +1,10 @@
 spring:
   redis:
     host: 192.168.11.130
+
+#通过配置启用GZIP压缩，无需手动处理压缩逻辑
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml,application/javascript,application/x-javascript
+    min-response-size: 1024
