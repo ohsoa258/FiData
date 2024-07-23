@@ -1925,8 +1925,8 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
                     TableColumnDTO tableColumnDTO = new TableColumnDTO();
                     tableColumnDTO.setFieldId(String.valueOf(field.id));
-                    tableColumnDTO.setFieldName(field.sourceFieldName);
-                    tableColumnDTO.setFieldType(field.factFieldEnName);
+                    tableColumnDTO.setFieldName(field.factFieldEnName);
+                    tableColumnDTO.setFieldType(field.factFieldType);
                     tableColumnDTO.setFieldLength(field.factFieldLength);
                     tableColumnDTO.setFieldDes(field.factFieldDes);
                     return tableColumnDTO;
