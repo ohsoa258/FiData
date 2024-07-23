@@ -227,7 +227,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 报告批次号
             String reportBatchNumber = UUID.randomUUID().toString().replace("-", "");
 
-            // 第二步：查询质量报告下的规则配置
+            // 第二步：查询质量报告下的规则配置，并按照执行顺序排序
             QueryWrapper<QualityReportRulePO> qualityReportRulePOQueryWrapper = new QueryWrapper<>();
             qualityReportRulePOQueryWrapper.lambda()
                     .eq(QualityReportRulePO::getReportId, reportId)
@@ -332,6 +332,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportDTO.setQualityReportNotice(qualityReportNoticeDTO);
             sendResultObj = qualityReportManage.sendEmailReport(qualityReportDTO);
             String sendResult = sendResultObj != null && sendResultObj.getCode() == ResultEnum.SUCCESS.getCode() ? "已发送" : "发送失败";
+            // String sendResult = "已发送";
 
             // 创建质量报告结束计时
             String createReportEndTime = DateTimeUtils.getNow();
@@ -484,9 +485,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         dataCheckPOQueryWrapper.lambda()
                 .eq(DataCheckPO::getDelFlag, 1)
                 .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
-                .in(DataCheckPO::getId, ruleIds)
-                .orderByAsc(DataCheckPO::getTableName)
-                .orderByAsc(DataCheckPO::getRuleExecuteSort);
+                .in(DataCheckPO::getId, ruleIds);
         List<DataCheckPO> dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
         if (!CollectionUtils.isNotEmpty(dataCheckPOList)) {
             return ResultEnum.DATA_QUALITY_RULE_NOTEXISTS;
@@ -1896,7 +1895,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sqlWhere = "";
         if (CollectionUtils.isNotEmpty(dataCheckConditionPOS)) {
             for (DataCheckConditionPO dataCheckConditionPO : dataCheckConditionPOS) {
-                if (StringUtils.isNotEmpty(dataCheckConditionPO.getFieldName())) {
+                if (StringUtils.isEmpty(dataCheckConditionPO.getFieldName())) {
                     continue;
                 }
                 String sqlWhereStr = qualityReport_GetSqlFieldWhereFormat(dataSourceTypeEnum, dataCheckConditionPO.getFieldOperator());

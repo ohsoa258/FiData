@@ -143,13 +143,14 @@ public class SummaryReportUtils {
             for (QualityReportSummaryDTO qualityReportSummaryDTO : qualityReportSummaryList) {
                 int tableRuleCount = qualityReportSummaryDTO.getQualityReportSummary_body().size();
                 lastRow += tableRuleCount;
-                setSheetCellRangeMerge(workbook, sheet, firstRow, lastRow, 0, 0); // 合并报告名称
-                setSheetCellRangeMerge(workbook, sheet, firstRow, lastRow, 1, 1); // 合并报告负责人
-                setSheetCellRangeMerge(workbook, sheet, firstRow, lastRow, 2, 2); // 合并报告批次号
                 setSheetCellRangeMerge(workbook, sheet, firstRow, lastRow, 3, 3); // 合并表名称
                 firstRow = lastRow + 1;
             }
         }
+        // 合并报告名称、报告负责人、报告批次号
+        setSheetCellRangeMerge(workbook, sheet, 4, lastRow, 0, 0); // 合并报告名称
+        setSheetCellRangeMerge(workbook, sheet, 4, lastRow, 1, 1); // 合并报告负责人
+        setSheetCellRangeMerge(workbook, sheet, 4, lastRow, 2, 2); // 合并报告批次号
     }
 
     /**

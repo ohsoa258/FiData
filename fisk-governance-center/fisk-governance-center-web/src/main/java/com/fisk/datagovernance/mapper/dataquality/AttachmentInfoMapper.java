@@ -21,7 +21,7 @@ public interface AttachmentInfoMapper extends FKBaseMapper<AttachmentInfoPO> {
      * @return 执行结果
      */
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
-    @Insert("INSERT INTO tb_attachmentInfo(`original_name`, `current_file_name`, `extension_name`, `relative_path`, `absolute_path`, `category`, `object_id`, `create_time`, `create_user`, `del_flag`) VALUES (#{originalName}, #{currentFileName}, #{extensionName}, #{relativePath}, #{absolutePath}, #{category}, #{objectId},  #{createTime}, #{createUser}, 1);")
+    @Insert("INSERT INTO tb_attachment_info(`original_name`, `current_file_name`, `extension_name`, `relative_path`, `absolute_path`, `category`, `object_id`, `create_time`, `create_user`, `del_flag`) VALUES (#{originalName}, #{currentFileName}, #{extensionName}, #{relativePath}, #{absolutePath}, #{category}, #{objectId},  #{createTime}, #{createUser}, 1);")
     int insertOne(AttachmentInfoPO po);
 
 }
