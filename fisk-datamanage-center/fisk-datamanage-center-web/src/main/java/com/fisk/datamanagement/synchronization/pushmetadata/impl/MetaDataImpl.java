@@ -253,7 +253,7 @@ public class MetaDataImpl implements IMetaData {
                                 //血缘失败不要影响整个流程
                                 try {
                                     //同步血缘
-                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId, table.dimQNames,conType);
+                                    synchronizationTableKinShip(db.name, tableGuid, tableName, stgTableGuid, table.sqlScript, table.coverScript, table.dataSourceId, table.tableConfigId, table.dimQNames, conType);
                                 } catch (Exception e) {
                                     log.error("同步血缘失败：" + e);
                                 }
@@ -631,7 +631,7 @@ public class MetaDataImpl implements IMetaData {
                                              List<String> dimQNames,
                                              DataSourceTypeEnum conType
     ) {
-        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId, dimQNames,conType);
+        metadataEntity.synchronizationTableKinShip(dbName, tableGuid, tableName, stgTableGuid, sqlScript, coverScript, dataSourceId, tableConfigId, dimQNames, conType);
         /*try {
 
             //获取实体详情
@@ -1120,7 +1120,7 @@ public class MetaDataImpl implements IMetaData {
                     }
                     List<String> qualifiedNames = new ArrayList<>();
                     for (MetaDataColumnAttributeDTO field : table.columnList) {
-                        metaDataField(field, tableGuid, instance.owner,instance.owner);
+                        metaDataField(field, tableGuid, instance.owner, instance.owner);
                         qualifiedNames.add(field.qualifiedName);
                         if (!stg.equals(table.getComment())) {
                             //新增stg表字段
@@ -1623,7 +1623,7 @@ public class MetaDataImpl implements IMetaData {
         if (entityDto.createApiType != 3) {
             List<String> qualifiedNames = new ArrayList<>();
             for (MetaDataColumnAttributeDTO field : entityDto.getAttributeDTOList()) {
-                metaDataField(field, targetEntityId, entityDto.getOwner(),entityDto.getOwner());
+                metaDataField(field, targetEntityId, entityDto.getOwner(), entityDto.getOwner());
                 qualifiedNames.add(field.getQualifiedName());
             }
             if (qualifiedNames.stream().count() > 0) {
@@ -1663,6 +1663,7 @@ public class MetaDataImpl implements IMetaData {
             //解析自定义脚本
             log.debug("accessTable信息:表脚本" + metaDataEntityDTO.createSql);
             res = SqlParserUtils.sqlDriveConversionName(0, dataSourceDTO.conType.getName().toLowerCase(), metaDataEntityDTO.createSql);
+            log.info("api网关的sql解析出来的表信息:" + JSON.toJSONString(res));
         }
         //来源表的MetaDataId
         List<String> sourceEntityIdList = new ArrayList<>();
@@ -1699,7 +1700,12 @@ public class MetaDataImpl implements IMetaData {
                             continue;
                         }
 
-                        ResultEntity<Long> dwTableIdResult = dataModelClient.getFactOrDimTable(tableMetaDataObjectItem.getName().replace("dbo.", ""));
+                        log.info("解析出来的数仓表名称：" + tableMetaDataObjectItem.getName());
+                        //数仓表名称
+                        String dwTblName = tableMetaDataObjectItem.getName().replace("dbo.", "");
+                        dwTblName = removeBeforeLastDot(dwTblName);
+
+                        ResultEntity<Long> dwTableIdResult = dataModelClient.getFactOrDimTable(dwTblName);
                         if (dwTableIdResult.data == null) {
                             log.error("在数据建模没有查询到相关表 表名: " + tableMetaDataObjectItem.getName());
                             continue;
@@ -1721,6 +1727,24 @@ public class MetaDataImpl implements IMetaData {
         }
         return sourceEntityIdList;
     }
+
+    /**
+     * 移除字符串中最后一个"."之前的全部内容。
+     *
+     * @param str 要处理的字符串
+     * @return 处理后的字符串
+     */
+    public static String removeBeforeLastDot(String str) {
+        int lastDotIndex = str.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            // 如果字符串中没有".", 可以选择返回原字符串或者抛出异常
+            return str;
+        } else {
+            // 从最后一个"."之后开始截取
+            return str.substring(lastDotIndex + 1);
+        }
+    }
+
 
     /**
      * 同步外部数据源表元数据
