@@ -7,4 +7,5 @@ server:
   compression:
     enabled: true
     mime-types: application/json,text/html,text/xml,application/javascript,application/x-javascript
-    min-response-size: 1024
+    #单位：字节  可根据客户带宽 CPU性能等来调整大小
+    min-response-size: 2048
