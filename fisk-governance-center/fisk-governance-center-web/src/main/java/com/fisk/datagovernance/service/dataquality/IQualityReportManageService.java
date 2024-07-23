@@ -81,11 +81,11 @@ public interface IQualityReportManageService extends IService<QualityReportPO> {
     QualityReportExtVO getReportExt();
 
     /**
-     * 报告日志
+     * 数据校验质量报告日志
      *
      * @return 执行结果
      */
-    Page<QualityReportLogVO> getAllReportLog(QualityReportLogQueryDTO dto);
+    Page<QualityReportLogVO> getDataCheckQualityReportLog(QualityReportLogQueryDTO dto);
 
     /**
      * 下载报告记录

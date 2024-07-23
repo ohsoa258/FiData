@@ -143,7 +143,7 @@ public class ExcelReportUtil {
         }
         if (isMergeRow) {
             // 合并标识行
-            RowDto rowDto = headers.stream().filter(t -> t.getRowIndex() == 4).findFirst().orElse(null);
+            RowDto rowDto = headers.stream().filter(t -> t.getRowIndex() == 5).findFirst().orElse(null);
             if (rowDto != null) {
                 int lastCol = rowDto.getColumns().size();
                 setSheetCellRangeAddress(workbook, sheet, lastCol);
@@ -239,7 +239,7 @@ public class ExcelReportUtil {
      */
     public static void setSheetCellRangeAddress(Workbook workbook, Sheet sheet, int lastCol) {
         // 起始行号，终止行号， 起始列号，终止列号
-        CellRangeAddress region = new CellRangeAddress(3, 3, (short) 0, (short) lastCol - 1);
+        CellRangeAddress region = new CellRangeAddress(4, 4, (short) 0, (short) lastCol - 1);
         // 使用RegionUtil类为合并后的单元格添加边框
         RegionUtil.setBorderBottom(HSSFCellStyle.BORDER_THIN, region, sheet, workbook); // 下边框
         RegionUtil.setBorderLeft(HSSFCellStyle.BORDER_THIN, region, sheet, workbook); // 左边框

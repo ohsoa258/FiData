@@ -257,25 +257,25 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             }
         }
         // 第二步：获取表规则
-        List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
+        //List<TableRuleCountDTO> tableRules = baseMapper.getFiDataTableRuleList();
         log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 1 -结束：" + uuid);
 
         log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -开始：" + uuid);
         // 第三步：获取数据标准
         if (checkStandards) {
-            List<DatacheckStandardsGroupPO> standardsGroupPOS = standardsGroupService.list();
-            if (CollectionUtils.isNotEmpty(standardsGroupPOS) && isComputeRuleCount) {
-                for (DatacheckStandardsGroupPO standardsGroupPO : standardsGroupPOS) {
-                    TableRuleCountDTO tableRuleCountDTO = new TableRuleCountDTO();
-                    tableRuleCountDTO.setSourceId(0);
-                    tableRuleCountDTO.setTableRuleCount(1);
-                    tableRuleCountDTO.setTableUnique(String.valueOf(standardsGroupPO.getStandardsMenuId()));
-                    tableRuleCountDTO.setTableRuleType("校验规则");
-                    tableRuleCountDTO.setTableBusinessType(9);
-                    tableRuleCountDTO.setTableType(3);
-                    tableRules.add(tableRuleCountDTO);
-                }
-            }
+//            List<DatacheckStandardsGroupPO> standardsGroupPOS = standardsGroupService.list();
+//            if (CollectionUtils.isNotEmpty(standardsGroupPOS) && isComputeRuleCount) {
+//                for (DatacheckStandardsGroupPO standardsGroupPO : standardsGroupPOS) {
+//                    TableRuleCountDTO tableRuleCountDTO = new TableRuleCountDTO();
+//                    tableRuleCountDTO.setSourceId(0);
+//                    tableRuleCountDTO.setTableRuleCount(1);
+//                    tableRuleCountDTO.setTableUnique(String.valueOf(standardsGroupPO.getStandardsMenuId()));
+//                    tableRuleCountDTO.setTableRuleType("校验规则");
+//                    tableRuleCountDTO.setTableBusinessType(9);
+//                    tableRuleCountDTO.setTableType(3);
+//                    tableRules.add(tableRuleCountDTO);
+//                }
+//            }
             FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
             fiDataMetaDataTreeBase.children.add(standardsTree);
         }
@@ -283,9 +283,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 
         log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -开始：" + uuid);
         // 第四步：递归设置Tree-节点规则数量
-        if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
-            fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
-        }
+//        if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
+//            fiDataMetaDataTreeBase = setFiDataRuleTree(SourceTypeEnum.FiData, fiDataMetaDataTreeBase, tableRules);
+//        }
         log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 3 -结束：" + uuid);
         return fiDataMetaDataTreeBase;
     }
@@ -363,11 +363,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             fiDataMetaDataTreeBase.children.addAll(fiDataMetaDataTree_Ips);
         }
         // 第二步：获取表规则
-        List<TableRuleCountDTO> tableRules = baseMapper.getCustomizeTableRuleList();
+        //List<TableRuleCountDTO> tableRules = baseMapper.getCustomizeTableRuleList();
         // 第三步：递归设置Tree-节点规则数量
-        if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
-            fiDataMetaDataTreeBase = setCustomizeRuleTree(SourceTypeEnum.custom, fiDataMetaDataTreeBase, tableRules);
-        }
+        //if (CollectionUtils.isNotEmpty(tableRules) && isComputeRuleCount) {
+        //fiDataMetaDataTreeBase = setCustomizeRuleTree(SourceTypeEnum.custom, fiDataMetaDataTreeBase, tableRules);
+        //}
         return fiDataMetaDataTreeBase;
     }
 

@@ -43,6 +43,12 @@ public class DataCheckExtendVO {
     public String fieldType;
 
     /**
+     * 指定查询的字段名称，多个字段逗号分隔
+     */
+    @ApiModelProperty(value = "指定展示的字段名称，多个字段逗号分隔")
+    public String allocateFieldNames;
+
+    /**
      * 值域检查-类型：
      * 1、序列范围(枚举)
      * 2、取值范围(1~10)
@@ -164,9 +170,9 @@ public class DataCheckExtendVO {
     public String regexpCheckValue;
 
     /**
-     * SQL检查-脚本值(固定返回checkstate，通过为1，未通过为0)
+     * SQL检查-脚本值
      */
-    @ApiModelProperty(value = "SQL检查-脚本值(固定返回checkstate，通过为1，未通过为0)")
+    @ApiModelProperty(value = "SQL检查-脚本值")
     public String sqlCheckValue;
 
     /**

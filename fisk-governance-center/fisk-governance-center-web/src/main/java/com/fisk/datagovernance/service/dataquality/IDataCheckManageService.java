@@ -3,6 +3,7 @@ package com.fisk.datagovernance.service.dataquality;
 import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.DataSourceInfoDTO;
@@ -28,7 +29,7 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      *
      * @return 规则列表
      */
-    List<DataCheckVO> getAllRule(DataCheckQueryDTO query);
+    PageDTO<DataCheckVO> getAllRule(DataCheckQueryDTO query);
 
     /**
      * 查询所有规则

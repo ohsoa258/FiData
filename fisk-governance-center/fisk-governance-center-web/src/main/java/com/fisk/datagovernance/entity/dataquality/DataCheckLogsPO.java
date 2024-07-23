@@ -19,6 +19,11 @@ public class DataCheckLogsPO extends BasePO {
     public int ruleId;
 
     /**
+     * uuid,用于关联附件表的object_id
+     */
+    public String idUuid;
+
+    /**
      * 数据校验规则名称
      */
     public String ruleName;
@@ -42,7 +47,7 @@ public class DataCheckLogsPO extends BasePO {
      * 日志类型：
      * 1 接口同步数据校验日志（同步前）
      * 2 nifi同步数据校验日志（同步中）
-     * 3 订阅报告数据校验日志（同步后）
+     * 3 订阅报告规则校验日志（同步后）
      */
     public int logType;
 
@@ -100,4 +105,34 @@ public class DataCheckLogsPO extends BasePO {
      * 错误Json数据
      */
     public String errorData;
+
+    /**
+     * 检查数据的正确率
+     */
+    public String checkDataAccuracy;
+
+    /**
+     * 检查数据开始时间
+     */
+    public String checkDataStartTime;
+
+    /**
+     * 检查数据结束时间
+     */
+    public String checkDataEndTime;
+
+    /**
+     * 检查数据所需时长，单位：秒
+     */
+    public String checkDataDuration;
+
+    /**
+     * 检查数据的SQL语句
+     */
+    public String checkDataSql;
+
+    /**
+     * 检查数据总条数的SQL语句
+     */
+    public String checkDataCountSql;
 }

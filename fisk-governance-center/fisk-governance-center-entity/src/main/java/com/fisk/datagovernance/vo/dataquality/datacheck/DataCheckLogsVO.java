@@ -19,6 +19,12 @@ public class DataCheckLogsVO {
     public int id;
 
     /**
+     * uuid,用于关联附件表的object_id
+     */
+    @ApiModelProperty(value = "uuid,用于关联附件表的object_id")
+    public String idUuid;
+
+    /**
      * 数据校验规则id
      */
     @ApiModelProperty(value = "数据校验规则id")
@@ -52,9 +58,9 @@ public class DataCheckLogsVO {
      * 日志类型：
      * 1 接口同步数据校验日志（同步前）
      * 2 nifi同步数据校验日志（同步中）
-     * 3 订阅报告数据校验日志（同步后）
+     * 3 订阅报告规则校验日志（同步后）
      */
-    @ApiModelProperty(value = "日志类型：1 接口同步数据校验日志（同步前）、2 nifi同步数据校验日志（同步中）、3 订阅报告数据校验日志（同步后）")
+    @ApiModelProperty(value = "日志类型：1 接口同步数据校验日志（同步前）、2 nifi同步数据校验日志（同步中）、3 订阅报告规则校验日志（同步后）")
     public int logType;
 
     /**
@@ -116,6 +122,42 @@ public class DataCheckLogsVO {
      */
     @ApiModelProperty(value = "检查规则说明")
     public String checkRuleIllustrate;
+
+    /**
+     * 检查数据的正确率
+     */
+    @ApiModelProperty(value = "检查数据的正确率")
+    public String checkDataAccuracy;
+
+    /**
+     * 检查数据开始时间
+     */
+    @ApiModelProperty(value = "检查数据开始时间")
+    public String checkDataStartTime;
+
+    /**
+     * 检查数据结束时间
+     */
+    @ApiModelProperty(value = "检查数据结束时间")
+    public String checkDataEndTime;
+
+    /**
+     * 检查数据所需时长，单位：秒
+     */
+    @ApiModelProperty(value = "检查数据所需时长，单位：秒")
+    public String checkDataDuration;
+
+    /**
+     * 检查数据的SQL语句
+     */
+    @ApiModelProperty(value = "检查数据的SQL语句")
+    public String checkDataSql;
+
+    /**
+     * 检查数据总条数的SQL语句
+     */
+    @ApiModelProperty(value = "检查数据总条数的SQL语句")
+    public String checkDataCountSql;
 
     /**
      * 创建时间

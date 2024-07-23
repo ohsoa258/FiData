@@ -18,7 +18,7 @@ public class SheetDto {
     // 标识行
     public List<RowDto> singRows;
 
-    // 标识字段
+    // 会加黄色的底色列头
     public List<String> singFields;
 
     // 数据行

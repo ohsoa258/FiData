@@ -26,6 +26,24 @@ public class QualityReportLogQueryDTO {
     public int reportId;
 
     /**
+     * 报告批次号
+     */
+    @ApiModelProperty(value = "报告批次号")
+    public String reportBatchNumber;
+
+    /**
+     * 检查时间-开始时间
+     */
+    @ApiModelProperty(value = "检查时间-开始时间")
+    public String createReportStartTime;
+
+    /**
+     * 检查时间-结束时间
+     */
+    @ApiModelProperty(value = "检查时间-结束时间")
+    public String createReportEndTime;
+
+    /**
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")

@@ -11,7 +11,8 @@
         report_desc,
         report_principal,
         report_state,
-        run_time_cron
+        run_time_cron,
+        report_evaluation_criteria
         FROM
         tb_quality_report
         WHERE

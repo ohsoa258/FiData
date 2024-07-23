@@ -77,12 +77,10 @@ public enum ResultEnum {
     DISPATCH_REMOTE_ERROR(1047, "删除表时-远程调用管道模块失败"),
     ACCESS_PHYTABLE_EXISTS_IN_DISPATCH(1048, "禁止删除该表-该表存在于以下管道:"),
 
-    RUN_ONCE_ERROR(1049,"RUN_ONCE执行失败请检查组件是否正常"),
+    RUN_ONCE_ERROR(1049, "RUN_ONCE执行失败请检查组件是否正常"),
 
-    RUN_ONCE_LOCK(1050,"RUN_ONCE执行中，请勿重复执行"),
-    GET_SYSTEM_EMAIL_SERVER_ERROR(1051,"获取平台配置邮件服务器信息失败"),
-
-
+    RUN_ONCE_LOCK(1050, "RUN_ONCE执行中，请勿重复执行"),
+    GET_SYSTEM_EMAIL_SERVER_ERROR(1051, "获取平台配置邮件服务器信息失败"),
 
 
     /**
@@ -98,9 +96,6 @@ public enum ResultEnum {
     VISUAL_CREATE_ERROR(2007, "创建表失败"),
 
     VISUAL_QUERY_ERROR_INVALID(2008, "数据无效"),
-
-
-
 
 
     /**
@@ -365,13 +360,13 @@ public enum ResultEnum {
     DS_PROXY_FORWARDING_ERROR(10043, "代理转发错误"),
     DS_THE_MESSAGE_NOTIFICATION_METHOD_DOES_NOT_EXIST(10044, "消息通知方式配置不存在"),
     LOAD_FIDATA_DATA_SERVICE_DATA_ERROR(10045, "加载DataServiceData报错"),
-    DS_APISERVICE__EXPIRATION(10046,"api已过期"),
+    DS_APISERVICE__EXPIRATION(10046, "api已过期"),
 
-    DS_APISERVICE_MENUID_NOT_EXIST(10047,"数据menuId未填写"),
+    DS_APISERVICE_MENUID_NOT_EXIST(10047, "数据menuId未填写"),
 
-    SERVICE_ENCRYPT_NOT_EXIST(10048,"未设置密钥"),
-    SERVICE_ENCRYPT_ONLY_ONE(10049,"密钥只能有一个"),
-    DS_APISERVICE_PARAMLIST_IS_NULL(10050,"请求参数中缺少必填参数"),
+    SERVICE_ENCRYPT_NOT_EXIST(10048, "未设置密钥"),
+    SERVICE_ENCRYPT_ONLY_ONE(10049, "密钥只能有一个"),
+    DS_APISERVICE_PARAMLIST_IS_NULL(10050, "请求参数中缺少必填参数"),
 
     /**
      * 数据质量
@@ -406,9 +401,10 @@ public enum ResultEnum {
     DATA_QUALITY_TO_OBTAIN_TABLE_INFORMATION(11028, "未获取到表信息"),
     DATA_QUALITY_DATASOURCE_NOT_EXISTS_STOP(11029, "数据源不存在，表状态字段变更操作终止"),
     DATA_QUALITY_CURRENTLY_ONLY_NON_INSPECTION_QUALITY_REPORTS_ARE_SUPPORTED(11029, "暂只支持非检查质量报告"),
-    DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS(11030, "检查代号已存在"),
+    DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS(11030, "规则名称已存在"),
     DATA_QUALITY_BUSINESS_RULE_ALREADY_EXISTS(11031, "清洗规则已存在"),
     DATA_SERVER_CACHE_TIME_ERROR(11032, "缓存时间只能是5~300内数字"),
+    DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT(11033, "质量报告下规则数量与产生的规则检查日志数量不一致"),
 
     /**
      * 数据安全
@@ -458,7 +454,7 @@ public enum ResultEnum {
     SMART_PUBLISH_GET_APPINFO_FALIURE(14017, "智能发布-获取应用信息失败"),
     DATA_OPS_GET_TABLE_SCHEMA_ERROR(14018, "数据库运维获取数据库表列信息失败"),
 
-    CHECK_STANDARDS_GROUP_ERROR(14019,"添加失败，该校验组名称已存在"),
+    CHECK_STANDARDS_GROUP_ERROR(14019, "添加失败，该校验组名称已存在"),
 
     /**
      * mdm
@@ -518,10 +514,10 @@ public enum ResultEnum {
     LICENCE_EXPIRED(160002, "licence已过期"),
     CUSTOMER_ALREADY_EXISTS(160003, "客户已存在"),
     CUSTOMER_NOT_EXISTS(160004, "客户不存在"),
-    NAME_IS_NULL(160005,"属性名称为空"),
-    ENGLISHNAME_IS_NULL(160006,"属性英文名称为空"),
-    FIELDTYPE_IS_NULL(160007,"字段类型为空"),
-    DATAMETACODE_IS_NULL(160008,"数据元编号为空"),
+    NAME_IS_NULL(160005, "属性名称为空"),
+    ENGLISHNAME_IS_NULL(160006, "属性英文名称为空"),
+    FIELDTYPE_IS_NULL(160007, "字段类型为空"),
+    DATAMETACODE_IS_NULL(160008, "数据元编号为空"),
 
     /**
      * 数据库类型 dmp_ods
@@ -533,7 +529,6 @@ public enum ResultEnum {
      */
     GET_GLOSSARY_ASSIGN_METAS_ERROR(18001, "获取业务术语关联的元数据报错"),
     CHECK_STANDARD_BE_CITED_EXITS(18002, "标准被引用"),
-
 
 
     ;
