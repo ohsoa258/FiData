@@ -11,7 +11,7 @@ import lombok.Data;
  * @date 2022/3/22 14:51
  */
 @Data
-@TableName("tb_attachmentinfo")
+@TableName("tb_attachment_info")
 public class AttachmentInfoPO extends BasePO {
     /**
      * 原名称
