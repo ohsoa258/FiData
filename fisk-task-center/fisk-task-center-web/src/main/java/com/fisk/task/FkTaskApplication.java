@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         "com.fisk.common.framework.mdc",
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
+        "com.fisk.common.framework.jwt",
+        "com.fisk.common.framework.properties",
         "com.fisk.common.core.user",
         "com.fisk.common.framework.advice",
         "com.fisk.common.framework.feign",

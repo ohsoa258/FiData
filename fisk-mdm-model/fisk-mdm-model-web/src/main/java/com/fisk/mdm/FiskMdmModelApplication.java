@@ -14,6 +14,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.fisk.common.framework.mdc",
         "com.fisk.common.framework.mybatis",
         "com.fisk.common.framework.redis",
+        "com.fisk.common.framework.jwt",
+        "com.fisk.common.framework.properties",
         "com.fisk.common.framework.feign",
         "com.fisk.common.framework.hystrix",
         "com.fisk.common.core.user",
