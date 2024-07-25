@@ -35,10 +35,12 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.model.ModelDTO;
 import com.fisk.mdm.dto.model.ModelQueryDTO;
@@ -74,9 +76,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
@@ -572,6 +572,29 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Override
     public Integer getModelTotal() {
         return baseMapper.getModelTotal();
+    }
+
+    @Override
+    public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
+        List<TableFieldDTO> tableColumnDTOS = this.attributeService.searchColumn(key);
+        if (CollectionUtils.isNotEmpty(tableColumnDTOS)){
+            Map<String, List<TableFieldDTO>> filedMap = tableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Set<String> strings = filedMap.keySet();
+            LambdaQueryWrapper<EntityPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.in(EntityPO::getId, strings);
+            List<EntityPO> entityPOList = entityMapper.selectList(queryWrapper);
+            return entityPOList.stream().map(i -> {
+                SearchColumnDTO searchColumnDTO = new SearchColumnDTO();
+                String tableId = String.valueOf(i.getId());
+                searchColumnDTO.setTableId(tableId);
+                searchColumnDTO.setTableName(i.getTableName());
+                searchColumnDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.ENTITY_TABLR);
+                searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
+                return searchColumnDTO;
+            }).collect(Collectors.toList());
+        }else {
+            return new ArrayList<>();
+        }
     }
 
 

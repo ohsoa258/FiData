@@ -1,6 +1,7 @@
 package com.fisk.datamodel.mapper.fact;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeListDTO;
 import com.fisk.datamodel.entity.fact.FactAttributePO;
 import org.apache.ibatis.annotations.Mapper;
@@ -21,4 +22,10 @@ public interface FactAttributeMapper extends FKBaseMapper<FactAttributePO> {
      */
     List<FactAttributeListDTO> getFactAttributeList(@Param("factId") int factId);
 
+    /**
+     * 根据关键字搜索字段列表
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(@Param("key") String key);
 }

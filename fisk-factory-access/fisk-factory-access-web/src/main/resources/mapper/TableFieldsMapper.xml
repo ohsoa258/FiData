@@ -17,4 +17,17 @@
             ${query.where}
         </if>
     </select>
+    <select id="searchColumn" resultType="com.fisk.dataaccess.dto.tablefield.TableFieldDTO">
+        select
+        id as fieldId,
+        table_access_id as tableId,
+        field_name,
+        field_des,
+        field_type,
+        IFNULL(field_length, 0) as field_length,
+        field_precision
+        from tb_table_fields
+        where instr(field_name,#{key,jdbcType=VARCHAR})>0
+        and del_flag = 1;
+    </select>
 </mapper>

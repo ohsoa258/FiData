@@ -214,4 +214,9 @@ public class StandardsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardTotal());
     }
 
+    @ApiOperation("搜索数据元关联字段")
+    @GetMapping("/searchStandardBeCitedField")
+    public ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.searchStandardBeCitedField(key));
+    }
 }

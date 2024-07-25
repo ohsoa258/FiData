@@ -44,6 +44,7 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.table.TableBusinessDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datafactory.client.DataFactoryClient;
 import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
@@ -52,6 +53,7 @@ import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.metamap.MetaMapAppDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
+import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
 import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -2075,6 +2077,52 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         total += dimensionMapper.getTableTotal();
         total += factMapper.getTableTotal();
         return total;
+    }
+
+    @Override
+    public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
+        List<SearchColumnDTO> result = new ArrayList<>();
+        List<TableFieldDTO> dimensionTableColumnDTOS = this.dimensionAttribute.searchColumn(key);
+        if (!CollectionUtils.isEmpty(dimensionTableColumnDTOS)){
+            Map<String, List<TableFieldDTO>> filedMap = dimensionTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Set<String> strings = filedMap.keySet();
+            LambdaQueryWrapper<DimensionPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.in(DimensionPO::getId, strings);
+            List<DimensionPO> dimensionPOList = dimensionImpl.list(queryWrapper);
+            List<SearchColumnDTO> dimensionData = dimensionPOList.stream().map(i -> {
+                SearchColumnDTO searchColumnDTO = new SearchColumnDTO();
+                String tableId = String.valueOf(i.getId());
+                searchColumnDTO.setTableId(tableId);
+                searchColumnDTO.setTableName(i.getDimensionTabName());
+                searchColumnDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.DW_DIMENSION);
+                searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
+                return searchColumnDTO;
+            }).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(dimensionData)){
+                result.addAll(dimensionData);
+            }
+        }
+        List<TableFieldDTO> factTableColumnDTOS = this.factAttributeImpl.searchColumn(key);
+        if (!CollectionUtils.isEmpty(factTableColumnDTOS)){
+            Map<String, List<TableFieldDTO>> filedMap = factTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Set<String> strings = filedMap.keySet();
+            LambdaQueryWrapper<FactAttributePO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.in(FactAttributePO::getId, strings);
+            List<FactAttributePO> factPOList = factAttributeImpl.list(queryWrapper);
+            List<SearchColumnDTO> factData = factPOList.stream().map(i -> {
+                SearchColumnDTO searchColumnDTO = new SearchColumnDTO();
+                String tableId = String.valueOf(i.getId());
+                searchColumnDTO.setTableId(tableId);
+                searchColumnDTO.setTableName(i.getFactFieldEnName());
+                searchColumnDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.DW_FACT);
+                searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
+                return searchColumnDTO;
+            }).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(factData)){
+                result.addAll(factData);
+            }
+        }
+        return result;
     }
 
     private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum) {

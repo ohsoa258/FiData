@@ -185,6 +185,15 @@ public interface MdmClient {
     ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto);
 
     /**
+     * 搜索主数据数据元关联字段(数据标准用)
+     * @param key
+     * @return
+     */
+    @ApiOperation("搜索主数据数据元关联字段")
+    @GetMapping("/model/searchStandardBeCitedField")
+    ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key);
+
+    /**
      * 数据访问配置
      * @param entityId
      * @param modelId

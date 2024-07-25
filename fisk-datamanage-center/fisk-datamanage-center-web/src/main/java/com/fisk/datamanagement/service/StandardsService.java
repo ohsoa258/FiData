@@ -6,6 +6,8 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.entity.StandardsPO;
 import org.springframework.web.multipart.MultipartFile;
@@ -88,6 +90,8 @@ public interface StandardsService extends IService<StandardsPO> {
      * @return
      */
     List<StandardsBeCitedDTO> modelGetStandardsMap();
+
+    List<SearchColumnDTO> searchStandardBeCitedField(String key);
 
     /**
      * 获取数据元标准数量

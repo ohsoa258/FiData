@@ -608,6 +608,15 @@ public interface DataAccessClient {
     ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto);
 
     /**
+     * 搜索数据元关联字段(数据标准用)
+     * @param key
+     * @return
+     */
+    @ApiOperation("搜索数据元关联字段")
+    @GetMapping("/appRegistration/searchStandardBeCitedField")
+    ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key);
+
+    /**
      * 获取元数据地图 数据湖（数据接入）
      */
     @ApiOperation("获取元数据地图 数据湖（数据接入）")

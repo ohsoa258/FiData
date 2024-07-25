@@ -9,6 +9,7 @@ import com.fisk.dataaccess.dto.access.OverlayCodePreviewAccessDTO;
 import com.fisk.dataaccess.dto.datareview.DataReviewQueryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 
@@ -144,4 +145,10 @@ public interface ITableFields extends IService<TableFieldsPO> {
      */
     CAndLDTO getDataClassificationsAndLevels();
 
+    /**
+     * 搜索表字段
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(String key);
 }

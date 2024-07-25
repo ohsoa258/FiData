@@ -72,4 +72,16 @@
         update tb_attribute set status = 3 , sync_status = 2  where del_flag=1 and id = #{id}
     </update>
 
+    <select id="searchColumn" resultType="com.fisk.dataaccess.dto.tablefield.TableFieldDTO">
+        select
+        id as fieldId,
+        entity_id as tableId,
+        column_name as fieldName,
+        `desc` as fieldDes,
+        data_type_decimal_length as fieldPrecision,
+        IFNULL(data_type_length, 0) as field_length
+        from tb_attribute
+        where instr(column_name,#{key,jdbcType=VARCHAR})>0
+        and del_flag = 1;
+    </select>
 </mapper>

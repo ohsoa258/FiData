@@ -145,7 +145,11 @@ public class BusinessAreaController {
     public ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldDataStructure(dto));
     }
-
+    @GetMapping("/searchStandardBeCitedField")
+    @ApiOperation(value = "搜数据建模数据元关联字段(数据标准用)")
+    public ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key")String key){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchStandardBeCitedField(key));
+    }
     @PostMapping("/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     public ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {

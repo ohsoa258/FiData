@@ -14,6 +14,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
+import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
 import com.fisk.mdm.dto.model.ModelUpdateDTO;
 import com.fisk.mdm.entity.ModelPO;
 import com.fisk.mdm.dto.model.ModelDTO;
@@ -120,4 +121,11 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     Integer getModelTotal();
+
+    /**
+     * 搜索主数据数据元关联字段
+     * @param key
+     * @return
+     */
+    List<SearchColumnDTO> searchStandardBeCitedField(String key);
 }

@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamodel.dto.atomicindicator.*;
 import com.fisk.datamodel.entity.IndicatorsPO;
 import com.fisk.datamodel.entity.businesslimited.BusinessLimitedAttributePO;
@@ -388,6 +389,11 @@ public class AtomicIndicatorsImpl
         // 第二步：查询
 
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, stringBuilder.toString());
+    }
+
+    @Override
+    public List<TableFieldDTO> searchColumn(String key) {
+        return baseMapper.searchColumn(key);
     }
 
     /**

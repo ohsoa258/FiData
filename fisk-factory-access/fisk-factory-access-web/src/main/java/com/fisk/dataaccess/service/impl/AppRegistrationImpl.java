@@ -65,6 +65,7 @@ import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.table.TableAccessNonDTO;
 import com.fisk.dataaccess.dto.table.TableFieldsDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.TbTableAccessDTO;
 import com.fisk.dataaccess.entity.*;
@@ -97,6 +98,7 @@ import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.metamap.MetaMapAppDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
+import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
 import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
@@ -1026,6 +1028,29 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             fieldDtoTree.setFieldPrecision(field.fieldPrecision);
             return fieldDtoTree;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
+        List<TableFieldDTO> tableColumnDTOS = this.tableFieldsImpl.searchColumn(key);
+        if (!CollectionUtils.isEmpty(tableColumnDTOS)){
+            Map<String, List<TableFieldDTO>> filedMap = tableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Set<String> strings = filedMap.keySet();
+            LambdaQueryWrapper<TableAccessPO> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.in(TableAccessPO::getId, strings);
+            List<TableAccessPO> tableAccessPOList = tableAccessImpl.list(queryWrapper);
+            return tableAccessPOList.stream().map(i -> {
+                SearchColumnDTO searchColumnDTO = new SearchColumnDTO();
+                String tableId = String.valueOf(i.getId());
+                searchColumnDTO.setTableId(tableId);
+                searchColumnDTO.setTableName(i.getTableName());
+                searchColumnDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.NONE);
+                searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
+                return searchColumnDTO;
+            }).collect(Collectors.toList());
+        }else {
+            return new ArrayList<>();
+        }
     }
 
     /**

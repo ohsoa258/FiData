@@ -1,9 +1,11 @@
 package com.fisk.dataaccess.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.dataaccess.dto.datareview.DataReviewPageDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.entity.TableFieldsPO;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -33,4 +35,11 @@ public interface TableFieldsMapper extends FKBaseMapper<TableFieldsPO> {
      * @return 查询结果
      */
     Page<DataReviewVO> filter(Page<DataReviewVO> page, @Param("query") DataReviewPageDTO query);
+
+    /**
+     * 根据关键字搜索字段列表
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(@Param("key") String key);
 }

@@ -322,6 +322,14 @@ public interface DataModelClient {
      */
     @PostMapping("/business/getFieldDataStructure")
     ResultEntity<Object> getFieldDataStructure(@RequestBody ColumnQueryDTO dto);
+
+    /**
+     * 搜数据建模数据元关联字段(数据标准用)
+     * @param key
+     * @return
+     */
+    @GetMapping("/business/searchStandardBeCitedField")
+    ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key")String key);
     @PostMapping("/business/getFiDataTableMetaData")
     @ApiOperation(value = "根据表信息/字段ID,获取表/字段基本信息")
     ResultEntity<List<FiDataTableMetaDataDTO>> getFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto);

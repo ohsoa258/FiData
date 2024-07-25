@@ -3,6 +3,7 @@ package com.fisk.mdm.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.mdm.dto.attribute.AttributeQueryDTO;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -42,4 +43,10 @@ public interface AttributeMapper extends BaseMapper<AttributePO> {
      */
     int deleteAttribute(Integer id);
 
+    /**
+     * 搜索表字段
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(String key);
 }
