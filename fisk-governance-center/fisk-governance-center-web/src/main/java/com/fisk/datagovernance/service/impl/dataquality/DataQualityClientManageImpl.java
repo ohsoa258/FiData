@@ -589,6 +589,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
             } catch (Exception ex) {
                 log.error("【dataCheck_QualityReport_Check】质量报告检查时出现异常：" + ex);
+                log.error(String.format("【dataCheck_QualityReport_Check】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
                 continue;
             }
 
@@ -673,6 +674,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         // 报告下规则数量与检查规则日志数量不一致时，检查不通过
         if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
+            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
+            List<Integer> diff = new ArrayList<>(ruleIdList);
+            diff.removeAll(ruleIdList_log);
+            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
             return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
         }
         return ResultEnum.SUCCESS;
@@ -762,11 +768,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
 
         SheetDataDto sheetDataDto = new SheetDataDto();
-        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount");
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
@@ -918,11 +924,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s;", t_Name, fieldCheckWhereSql);
 
         SheetDataDto sheetDataDto = new SheetDataDto();
-        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount");
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
@@ -999,11 +1005,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         sql_QueryCheckErrorDataCount += sqlWhere;
 
         SheetDataDto sheetDataDto = new SheetDataDto();
-        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount");
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
@@ -1644,11 +1650,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM ( %s ) t", sql_QueryCheckData);
 
         SheetDataDto sheetDataDto = new SheetDataDto();
-        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount");
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
@@ -1701,7 +1707,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 break;
         }
 
-        List<Map<String, Object>> maps = qualityReport_QueryTableData_Maps(dataSourceConVO, sql_QueryCheckData);
+        List<Map<String, Object>> maps = qualityReport_QueryTableData_Maps(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (CollectionUtils.isNotEmpty(maps)) {
             realityValue = Double.parseDouble(maps.get(0).get("realityValue").toString());
         }
@@ -1741,13 +1747,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
             sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
 
-            errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+            errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
             if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-                sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+                sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
             }
         }
         sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount");
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
@@ -1816,11 +1822,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         sql_QueryCheckErrorDataCount += sqlWhere;
 
         SheetDataDto sheetDataDto = new SheetDataDto();
-        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount");
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
@@ -1852,7 +1858,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Integer checkDataTotalCount = 0;
 
         try {
-            errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount");
+            errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
             checkDataTotalCount = errorDataTotalCount;
         } catch (Exception ex) {
             log.error("【dataCheck_QualityReport_SqlScriptCheck】-嵌套查询错误数据总条数SQL执行异常，查询SQL：" + sql_QueryCheckData);
@@ -1864,7 +1870,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         // 错误数据条数小于5000，查询具体的错误明细数据
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
 
         // 因为SQL脚本可能连表多条件查询，因此此处查询表数据条数也用检查的SQL
@@ -2029,17 +2035,21 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     }
 
     /**
-     * @return com.alibaba.fastjson.JSONArray
+     * @return java.lang.Integer
      * @description 执行SQL返回数据总条数
      * @author dick
-     * @date 2024/7/17 14:13
+     * @date 2024/7/25 14:36
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params fieldName
+     * @params ruleId
+     * @params ruleName
      */
-    public Integer qualityReport_QueryTableTotalCount(DataSourceConVO dataSourceConVO, String sql, String fieldName) {
+    public Integer qualityReport_QueryTableTotalCount(DataSourceConVO dataSourceConVO, String sql, String fieldName,
+                                                      long ruleId, String ruleName) {
         String totalCount = "0";
-        List<Map<String, Object>> mapList = qualityReport_QueryTableData_Maps(dataSourceConVO, sql);
+        List<Map<String, Object>> mapList = qualityReport_QueryTableData_Maps(dataSourceConVO, sql, ruleId, ruleName);
         if (CollectionUtils.isNotEmpty(mapList)) {
             totalCount = mapList.get(0).get(fieldName).toString();
         }
@@ -2108,14 +2118,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return java.util.List<java.util.Map < java.lang.String, java.lang.Object>>
      * @description 执行SQL返回Maps
      * @author dick
-     * @date 2024/7/17 14:12
+     * @date 2024/7/25 14:40
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params ruleId
+     * @params ruleName
      */
-    public List<Map<String, Object>> qualityReport_QueryTableData_Maps(DataSourceConVO dataSourceConVO, String sql) {
+    public List<Map<String, Object>> qualityReport_QueryTableData_Maps(DataSourceConVO dataSourceConVO, String sql,
+                                                                       long ruleId, String ruleName) {
+        log.info(String.format("【qualityReport_QueryTableData_Maps】执行SQL返回Maps，规则id：%s、规则名称：%s、SQL语句：%s：", ruleId, ruleName, sql));
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
-        log.info("【nifiSync_UpdateTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         List<Map<String, Object>> mapList = AbstractCommonDbHelper.execQueryResultMaps(sql, connection);
         return mapList;
@@ -2125,14 +2138,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return com.fisk.common.core.utils.Dto.Excel.SheetDataDto
      * @description 执行SQL返回Sheet
      * @author dick
-     * @date 2024/7/17 14:12
+     * @date 2024/7/25 14:39
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params ruleId
+     * @params ruleName
      */
-    public SheetDataDto qualityReport_QueryTableData_Sheet(DataSourceConVO dataSourceConVO, String sql) {
+    public SheetDataDto qualityReport_QueryTableData_Sheet(DataSourceConVO dataSourceConVO, String sql,
+                                                           long ruleId, String ruleName) {
+        log.info(String.format("【qualityReport_QueryTableData_Sheet】执行SQL返回Sheet，规则id：%s、规则名称：%s、SQL语句：%s：", ruleId, ruleName, sql));
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
-        log.info("【dataCheck_QualityReport_QueryTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         SheetDataDto sheetDataDto = AbstractCommonDbHelper.execQueryResultSheet(sql, connection);
         return sheetDataDto;
@@ -2142,14 +2158,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return com.alibaba.fastjson.JSONArray
      * @description 执行SQL返回JSONArray
      * @author dick
-     * @date 2024/7/17 14:13
+     * @date 2024/7/25 14:39
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params ruleId
+     * @params ruleName
      */
-    public JSONArray qualityReport_QueryTableData_Array(DataSourceConVO dataSourceConVO, String sql) {
+    public JSONArray qualityReport_QueryTableData_Array(DataSourceConVO dataSourceConVO, String sql,
+                                                        long ruleId, String ruleName) {
+        log.info(String.format("【qualityReport_QueryTableData_Array】执行SQL返回JSONArray，规则id：%s、规则名称：%s、SQL语句：%s：", ruleId, ruleName, sql));
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
-        log.info("【dataCheck_QualityReport_QueryTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         JSONArray jsonArray = AbstractCommonDbHelper.execQueryResultArrays(sql, connection);
         return jsonArray;
