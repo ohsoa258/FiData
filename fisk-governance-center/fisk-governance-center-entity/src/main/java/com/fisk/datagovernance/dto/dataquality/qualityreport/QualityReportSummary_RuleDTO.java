@@ -73,16 +73,22 @@ public class QualityReportSummary_RuleDTO {
     public String checkStatus;
 
     /**
-     * 检查数据的SQL语句
+     * 检查错误数据的SQL语句
      */
-    @ApiModelProperty(value = "检查数据的SQL语句")
-    public String checkSql;
+    @ApiModelProperty(value = "检查错误数据的SQL语句")
+    public String checkDataSql;
 
     /**
      * 检查数据总条数的SQL语句
      */
     @ApiModelProperty(value = "检查数据总条数的SQL语句")
     public String checkTotalCountSql;
+
+    /**
+     * 检查错误数据条数的SQL语句
+     */
+    @ApiModelProperty(value = "检查错误数据条数的SQL语句")
+    public String checkErrorDataCountSql;
 
     /**
      * 检查出来的错误数据

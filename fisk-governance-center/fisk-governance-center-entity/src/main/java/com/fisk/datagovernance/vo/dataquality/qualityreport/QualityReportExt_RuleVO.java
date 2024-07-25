@@ -58,4 +58,10 @@ public class QualityReportExt_RuleVO {
      */
     @ApiModelProperty(value = "表名称，携带架构名")
     public String tableName;
+
+    /**
+     * 引用状态：1：已引用 2：未引用
+     */
+    @ApiModelProperty(value = "引用状态：1：已引用 2：未引用")
+    public int referenceStatus;
 }

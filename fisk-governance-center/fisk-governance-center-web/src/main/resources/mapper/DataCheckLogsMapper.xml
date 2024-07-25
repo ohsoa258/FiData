@@ -4,6 +4,7 @@
 <mapper namespace="com.fisk.datagovernance.mapper.dataquality.DataCheckLogsMapper">
     <select id="getAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO">
         SELECT
+        replog.report_name,
         log.id,
         log.id_uuid,
         log.rule_id,
@@ -28,13 +29,18 @@
         log.check_data_duration,
         log.check_data_sql,
         log.check_data_count_sql,
+        log.check_error_data_count_sql,
         log.create_time
         FROM
         tb_datacheck_rule_logs log
+        LEFT JOIN tb_quality_report_log replog ON log.check_batch_number = replog.report_batch_number
         WHERE
-        log.del_flag =1
+        log.del_flag =1 AND replog.del_flag =1
         <if test="query.logType !=0 ">
             and log.log_type = #{query.logType}
+        </if>
+        <if test="query.reportBatchNumber !=null and query.reportBatchNumber != '' ">
+            and log.check_batch_number = #{query.reportBatchNumber}
         </if>
         <if test="query.ruleId !=0 ">
             and log.rule_id = #{query.ruleId}
@@ -42,8 +48,15 @@
         <if test="query.templateId !=0 ">
             and log.template_id = #{query.templateId}
         </if>
-        <if test="query.ruleName !=null and query.ruleName.length()>0 ">
+        <if test="query.ruleName !=null and query.ruleName !='' ">
             and log.rule_name like concat('%', #{query.ruleName}, '%')
+        </if>
+        <if test="query.tableFullName != null and query.tableFullName != '' ">
+            AND (
+            CASE
+            WHEN IFNULL( log.schema_name, '' )= '' THEN
+            log.table_name ELSE CONCAT( log.schema_name, '.', log.table_name )
+            END = #{query.tableFullName})
         </if>
     </select>
 </mapper>

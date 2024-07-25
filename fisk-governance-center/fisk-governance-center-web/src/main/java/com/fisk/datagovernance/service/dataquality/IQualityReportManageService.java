@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportEditDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportLogQueryDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportQueryDTO;
+import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.entity.dataquality.QualityReportPO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.PreviewQualityReportVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportExtVO;
@@ -78,7 +75,7 @@ public interface IQualityReportManageService extends IService<QualityReportPO> {
      *
      * @return 执行结果
      */
-    QualityReportExtVO getReportExt();
+    QualityReportExtVO getReportExt(QualityReportRuleQueryDTO queryDTO);
 
     /**
      * 数据校验质量报告日志

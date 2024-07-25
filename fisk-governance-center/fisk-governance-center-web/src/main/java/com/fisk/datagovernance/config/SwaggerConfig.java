@@ -64,6 +64,8 @@ public class SwaggerConfig {
     public static final String ACCESS_LAKE_MONITOR = "数据湖入湖监控";
     public static final String NIFI_LOGS = "nifi同步日志";
 
+    public static final String ATTACHMENT_INFO = "附件信息";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataGovernanceApplication.class.getPackage().getName();

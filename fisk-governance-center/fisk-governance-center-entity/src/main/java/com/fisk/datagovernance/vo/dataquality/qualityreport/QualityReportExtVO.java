@@ -26,8 +26,20 @@ public class QualityReportExtVO {
     public List<QualityReportExt_EmailVO> emails;
 
     /**
+     * 质量校验规则总条数
+     */
+    @ApiModelProperty(value = "质量校验规则总条数")
+    public Long total;
+
+    /**
+     * 质量校验规则总页数
+     */
+    @ApiModelProperty(value = "质量校验规则总页数")
+    public Long totalPage;
+
+    /**
      * 用户列表
      */
-    @ApiModelProperty(value = "用户列表")
-    public List<QualityReportExt_UserVO> users;
+//    @ApiModelProperty(value = "用户列表")
+//    public List<QualityReportExt_UserVO> users;
 }

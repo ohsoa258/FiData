@@ -7,16 +7,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.DataSourceInfoDTO;
+import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.service.dataquality.DatacheckCodeService;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DatacheckStandardsGroupVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -42,6 +40,12 @@ public class DataCheckController {
     private IDatacheckStandardsGroupService datacheckStandardsGroupService;
     @Resource
     private DatacheckCodeService datacheckCodeService;
+
+    @ApiOperation("获取规则搜索条件")
+    @GetMapping("/getRuleSearchWhere")
+    public ResultEntity<DataCheckRuleSearchWhereVO> getRuleSearchWhere() {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.getRuleSearchWhere());
+    }
 
     @ApiOperation("查询全部校验规则")
     @PostMapping("/getAllRule")
@@ -85,6 +89,12 @@ public class DataCheckController {
         return service.nifiSyncCheckData(dto);
     }
 
+    @ApiOperation("获取数据检查结果日志搜索条件")
+    @GetMapping("/getDataCheckLogSearchWhere")
+    public ResultEntity<DataCheckRuleSearchWhereVO> getDataCheckLogSearchWhere() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogSearchWhere());
+    }
+
     @ApiOperation("获取数据检查结果日志分页列表")
     @PostMapping("/getDataCheckLogsPage")
     public ResultEntity<Page<DataCheckLogsVO>> getDataCheckLogsPage(@RequestBody DataCheckLogsQueryDTO dto) {
@@ -103,7 +113,7 @@ public class DataCheckController {
         return service.deleteDataCheckLogs(ruleId);
     }
 
-    @ApiOperation("生成数据检查结果——Excel")
+    @ApiOperation("生成数据检查结果Excel")
     @PostMapping("/createDataCheckResultExcel")
     public ResultEntity<String> createDataCheckResultExcel(@RequestParam("logIds") String logIds) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, service.createDataCheckResultExcel(logIds));

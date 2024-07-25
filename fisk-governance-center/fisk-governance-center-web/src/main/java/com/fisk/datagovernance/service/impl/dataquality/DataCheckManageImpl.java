@@ -53,6 +53,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -160,7 +163,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             }
             // 第三步：获取所有表校验规则
-            List<DataCheckVO> allRule = baseMapper.getAllRule();
+            List<DataCheckVO> allRule = baseMapper.getAllRule(query.getCheckProcess(),
+                    query.getTableUnique(), query.getRuleName(), null, null);
             if (CollectionUtils.isEmpty(allRule)) {
                 return page;
             }
@@ -231,6 +235,100 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             throw new FkException(ResultEnum.ERROR, ex);
         }
         return page;
+    }
+
+    @Override
+    public DataCheckRuleSearchWhereVO getRuleSearchWhere() {
+        // 数据校验搜索条件
+        DataCheckRuleSearchWhereVO dataCheckRuleSearchWhereVO = new DataCheckRuleSearchWhereVO();
+
+        // 查询数据校验搜索条件-执行环节
+        List<DataCheckRuleSearchWhereMapVO> checkProcessMap = new ArrayList<>();
+        List<RuleExecuteNodeTypeEnum> ruleExecuteNodeTypeEnumList = new ArrayList<>();
+        ruleExecuteNodeTypeEnumList.add(RuleExecuteNodeTypeEnum.BEFORE_SYNCHRONIZATION);
+        ruleExecuteNodeTypeEnumList.add(RuleExecuteNodeTypeEnum.SYNCHRONIZATION);
+        ruleExecuteNodeTypeEnumList.add(RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION);
+        ruleExecuteNodeTypeEnumList.forEach(t -> {
+            DataCheckRuleSearchWhereMapVO searchWhereMap_CheckProcess = new DataCheckRuleSearchWhereMapVO();
+            searchWhereMap_CheckProcess.setText(t.getName());
+            searchWhereMap_CheckProcess.setValue(t.getValue());
+            checkProcessMap.add(searchWhereMap_CheckProcess);
+        });
+
+        // 查询数据校验搜索条件-表名称
+        List<DataCheckRuleSearchWhereMapVO> tableFullNameMap = new ArrayList<>();
+        QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
+        dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1);
+        List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
+            for (DataCheckPO dataCheckPO : dataCheckPOList) {
+                // 表标识为空 或者 表名称为空则跳过
+                if (StringUtils.isEmpty(dataCheckPO.getTableUnique()) || StringUtils.isEmpty(dataCheckPO.getTableName())) {
+                    continue;
+                }
+                DataCheckRuleSearchWhereMapVO searchWhereMap_TableFullName = tableFullNameMap.stream().filter(t -> t.getValue().toString().equals(dataCheckPO.getTableUnique())).findFirst().orElse(null);
+                if (searchWhereMap_TableFullName == null) {
+                    String tableFullName = StringUtils.isNotEmpty(dataCheckPO.getSchemaName()) ? dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName() : dataCheckPO.getTableName();
+                    searchWhereMap_TableFullName = new DataCheckRuleSearchWhereMapVO();
+                    searchWhereMap_TableFullName.setText(tableFullName);
+                    searchWhereMap_TableFullName.setValue(dataCheckPO.getTableUnique());
+                    tableFullNameMap.add(searchWhereMap_TableFullName);
+                }
+            }
+        }
+
+        dataCheckRuleSearchWhereVO.setCheckProcessMap(checkProcessMap);
+        dataCheckRuleSearchWhereVO.setTableFullNameMap(tableFullNameMap);
+
+        return dataCheckRuleSearchWhereVO;
+    }
+
+    @Override
+    public DataCheckRuleSearchWhereVO getDataCheckLogSearchWhere() {
+        // 问题稽查知识库搜索条件
+        DataCheckRuleSearchWhereVO dataCheckRuleSearchWhereVO = new DataCheckRuleSearchWhereVO();
+
+        // 问题稽查知识库搜索条件-报告批次号
+        List<DataCheckRuleSearchWhereMapVO> reportBatchNumberMap = new ArrayList<>();
+        // 问题稽查知识库搜索条件-表名称
+        List<DataCheckRuleSearchWhereMapVO> tableFullNameMap = new ArrayList<>();
+
+        QueryWrapper<DataCheckLogsPO> dataCheckLogsPOQueryWrapper = new QueryWrapper<>();
+        dataCheckLogsPOQueryWrapper.lambda().eq(DataCheckLogsPO::getDelFlag, 1)
+                .eq(DataCheckLogsPO::getLogType, DataCheckLogTypeEnum.SUBSCRIPTION_REPORT_RULE_CHECK_LOG.getValue())
+                .orderByDesc(DataCheckLogsPO::getCreateTime);
+        List<DataCheckLogsPO> dataCheckLogsPOS = dataCheckLogsMapper.selectList(dataCheckLogsPOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(dataCheckLogsPOS)) {
+            dataCheckLogsPOS.forEach(dataCheckLog -> {
+                // 报告批次号
+                DataCheckRuleSearchWhereMapVO searchWhereMap_reportBatchNumber = reportBatchNumberMap
+                        .stream().filter(t -> t.getValue().toString().equals(dataCheckLog.getCheckBatchNumber()))
+                        .findFirst().orElse(null);
+                if (searchWhereMap_reportBatchNumber == null) {
+                    searchWhereMap_reportBatchNumber = new DataCheckRuleSearchWhereMapVO();
+                    searchWhereMap_reportBatchNumber.setText(dataCheckLog.getCheckBatchNumber());
+                    searchWhereMap_reportBatchNumber.setValue(dataCheckLog.getCheckBatchNumber());
+                    reportBatchNumberMap.add(searchWhereMap_reportBatchNumber);
+                }
+
+                // 表名称
+                String tableFullName = StringUtils.isNotEmpty(dataCheckLog.getSchemaName()) ? dataCheckLog.getSchemaName() + "." + dataCheckLog.getTableName() : dataCheckLog.getTableName();
+                DataCheckRuleSearchWhereMapVO searchWhereMap_TableFullName = tableFullNameMap
+                        .stream().filter(t -> t.getValue().toString().equals(tableFullName))
+                        .findFirst().orElse(null);
+                if (searchWhereMap_TableFullName == null) {
+                    searchWhereMap_TableFullName = new DataCheckRuleSearchWhereMapVO();
+                    searchWhereMap_TableFullName.setText(tableFullName);
+                    searchWhereMap_TableFullName.setValue(tableFullName);
+                    tableFullNameMap.add(searchWhereMap_TableFullName);
+                }
+            });
+        }
+
+        dataCheckRuleSearchWhereVO.setReportBatchNumberMap(reportBatchNumberMap);
+        dataCheckRuleSearchWhereVO.setTableFullNameMap(tableFullNameMap);
+
+        return dataCheckRuleSearchWhereVO;
     }
 
     @Override
@@ -2726,7 +2824,21 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Override
     public Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto) {
-        return dataCheckLogsMapper.getAll(dto.page, dto);
+        Page<DataCheckLogsVO> all = dataCheckLogsMapper.getAll(dto.page, dto);
+        if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            // 查询校验表所属的数据库
+            List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+            for (DataCheckLogsVO dataCheckLogsVO : all.getRecords()) {
+                if (CollectionUtils.isNotEmpty(allDataSource)) {
+                    DataSourceConVO dataSourceConVO = allDataSource.stream().filter(source -> source.getDatasourceId() == dataCheckLogsVO.getFiDatasourceId()).findFirst().orElse(null);
+                    if (dataSourceConVO != null) {
+                        dataCheckLogsVO.setDataBaseIp(dataSourceConVO.getConIp());
+                        dataCheckLogsVO.setDataBaseName(dataSourceConVO.getConDbname());
+                    }
+                }
+            }
+        }
+        return all;
     }
 
     @Override
