@@ -16,6 +16,11 @@ public class QualityReportSummary_BodyDTO {
     public String tableFullName;
 
     /**
+     * 检查的表字段
+     */
+    public String fieldName;
+
+    /**
      * 检查规则名称
      */
     public String ruleName;

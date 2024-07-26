@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
@@ -594,4 +595,8 @@ public class DimensionAttributeImpl
         return ResultEnum.SUCCESS;
     }
 
+    @Override
+    public List<TableFieldDTO> searchColumn(String key) {
+        return attributeMapper.searchColumn(key);
+    }
 }

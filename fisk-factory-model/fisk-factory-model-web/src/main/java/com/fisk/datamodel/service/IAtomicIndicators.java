@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamodel.dto.atomicindicator.*;
 
 import java.util.List;
@@ -68,4 +69,10 @@ public interface IAtomicIndicators {
      * @return
      */
     ResultEntity<String> getAnalysisIndexSql(int factId);
+    /**
+     * 搜索表字段
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(String key);
 }

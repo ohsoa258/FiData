@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -142,15 +143,27 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 List<BusinessTargetinfoPO> businessTargetinfoPOList = businessTargetinfoMapper.selectBatchIds(parentIds);
                 parentBusinessMap = businessTargetinfoPOList.stream().collect(Collectors.toMap(i->String.valueOf(i.getId()), i->i));
             }
+            List<Map<String, Object>> menuTreeNames = businessTargetinfoMapper.getMenuTreeNames();
             Map<String, BusinessTargetinfoPO> finalParentBusinessMap = parentBusinessMap;
             result = list.stream().map(i -> {
                 BusinessTargetinfoMenuDTO businessTargetinfoMenuDTO = new BusinessTargetinfoMenuDTO();
                 businessTargetinfoMenuDTO.setId((int) i.getId());
                 businessTargetinfoMenuDTO.setName(i.getIndicatorName());
                 businessTargetinfoMenuDTO.setType(i.getIndicatorType());
-                Map<String, String> categoryNameMaps = businessCategoryPOS.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), BusinessCategoryPO::getName));
-                businessTargetinfoMenuDTO.setCategoryId(i.getName());
-                businessTargetinfoMenuDTO.setCategoryName(categoryNameMaps.get(i.getName()));
+//                Map<String, String> categoryNameMaps = businessCategoryPOS.stream().collect(Collectors.toMap(v -> String.valueOf(v.getId()), BusinessCategoryPO::getName));
+                String path = null;
+                if (!StringUtils.isEmpty(i.getName())){
+                    businessTargetinfoMenuDTO.setCategoryId(i.getName());
+                    List<Map<String, Object>> menuTreeName = menuTreeNames.stream().filter(j -> i.getName().contains(j.get("id").toString())).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(menuTreeName)){
+                        Map<String, Object> menuTreeNameMap = menuTreeName.get(0);
+                        Object full_path = menuTreeNameMap.get("full_path");
+                        if (ObjectUtils.isNotEmpty(full_path)){
+                            path = full_path.toString().replace("->", "/");
+                        }
+                        businessTargetinfoMenuDTO.setCategoryName(path);
+                    }
+                }
                 businessTargetinfoMenuDTO.setParentBusinessId(i.getParentBusinessId());
                 BusinessTargetinfoPO businessTargetinfoPO = finalParentBusinessMap.get(String.valueOf(i.getParentBusinessId()));
                 if(businessTargetinfoPO != null){

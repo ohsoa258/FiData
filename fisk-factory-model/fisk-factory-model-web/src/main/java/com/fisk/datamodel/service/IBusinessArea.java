@@ -16,6 +16,7 @@ import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
+import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -291,4 +292,10 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @return
      */
     Integer getBusinessTableTotal();
+
+    /**
+     * 搜数据建模数据元关联字段(数据标准用)
+     * @param key
+     */
+    List<SearchColumnDTO> searchStandardBeCitedField(String key);
 }

@@ -127,7 +127,7 @@ public class DataCheckLogsPO extends BasePO {
     public String checkDataDuration;
 
     /**
-     * 检查数据的SQL语句
+     * 检查错误数据的SQL语句
      */
     public String checkDataSql;
 
@@ -135,4 +135,9 @@ public class DataCheckLogsPO extends BasePO {
      * 检查数据总条数的SQL语句
      */
     public String checkDataCountSql;
+
+    /**
+     * 检查错误数据条数的SQL语句
+     */
+    public String checkErrorDataCountSql;
 }

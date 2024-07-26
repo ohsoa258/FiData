@@ -27,6 +27,7 @@ import com.fisk.datagovernance.vo.dataquality.external.MetaDataFieldRuleVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataTableRuleVO;
 import com.google.common.base.Joiner;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -453,6 +454,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_bodyDTO.setDataAccuracy(dataCheckLogsPO.getCheckDataAccuracy());
             qualityReportSummary_bodyDTO.setCheckStatus(dataCheckLogsPO.getCheckResult());
             qualityReportSummary_bodyDTO.setTableFullName(tableFullName);
+            qualityReportSummary_bodyDTO.setFieldName(dataCheckLogsPO.getFieldName());
             qualityReportSummary_bodyList.add(qualityReportSummary_bodyDTO);
         }
 
@@ -587,41 +589,46 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
             } catch (Exception ex) {
                 log.error("【dataCheck_QualityReport_Check】质量报告检查时出现异常：" + ex);
+                log.error(String.format("【dataCheck_QualityReport_Check】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
                 continue;
             }
 
-            // 第五步：将检查不通过的数据写入Excel文件，如果检查出来的错误数据不超过10w条，则写入Excel并记录附件信息
+            // 第五步：将检查不通过的数据写入Excel文件，如果检查出来的错误数据大于0条且不超过5000条，则写入Excel并记录附件信息
             SheetDataDto sheetDataDto = qualityReportSummary_ruleDTO.getSheetData();
-            if (sheetDataDto.getColumnData().size() < 100000) {
-                // 生成附件记录
-                AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
-                attachmentInfoPO.setOriginalName(dataCheckPO.getRuleName() + ".xlsx");
-                String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
-                attachmentInfoPO.setCurrentFileName(currentFileName);
-                attachmentInfoPO.setExtensionName(".xlsx");
-                // 绝对路径，例如：/root/nginx/app/file/qualityreport/rulereport/20240719
-                String absolutePath = uploadUrl + "rulereport/" + DateTimeUtils.getNowToShortDate_v1() + "/";
-                isExistsCreateDirectory(absolutePath);
-                attachmentInfoPO.setAbsolutePath(absolutePath);
-                attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue());
-                attachmentInfoPO.setObjectId(dataCheckLogs_Uuid);
-                attachmentInfos.add(attachmentInfoPO);
+            List<List<String>> columnData = null;
+            if (sheetDataDto != null) {
+                columnData = sheetDataDto.getColumnData();
+                if (CollectionUtils.isNotEmpty(columnData) && columnData.size() > 0 && columnData.size() <= 5000) {
+                    // 生成附件记录
+                    AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+                    attachmentInfoPO.setOriginalName(dataCheckPO.getRuleName() + ".xlsx");
+                    String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+                    attachmentInfoPO.setCurrentFileName(currentFileName);
+                    attachmentInfoPO.setExtensionName(".xlsx");
+                    // 绝对路径，例如：/root/nginx/app/file/qualityreport/rulereport/20240719
+                    String absolutePath = uploadUrl + "rulereport/" + DateTimeUtils.getNowToShortDate_v1() + "/";
+                    isExistsCreateDirectory(absolutePath);
+                    attachmentInfoPO.setAbsolutePath(absolutePath);
+                    attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue());
+                    attachmentInfoPO.setObjectId(dataCheckLogs_Uuid);
+                    attachmentInfos.add(attachmentInfoPO);
 
-                // 生成Excel文件
-                ExcelDto excelDto = new ExcelDto();
-                excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
-                List<SheetDto> sheets = new ArrayList<>();
-                SheetDto sheet = new SheetDto();
-                sheet.setSheetName(dataCheckPO.getRuleName());
-                List<RowDto> singRows = dataCheck_QualityReport_GetRuleSingRows(qualityReportSummary_ruleDTO);
-                sheet.setSingRows(singRows);
-                // 检查的字段，会加黄色的底色
-                sheet.setSingFields(Arrays.asList(fieldName.split(",")));
-                // 检查不通过的数据
-                sheet.setDataRows(sheetDataDto.getColumnData());
-                sheets.add(sheet);
-                excelDto.setSheets(sheets);
-                ExcelReportUtil.createExcel(excelDto, absolutePath, currentFileName, true);
+                    // 生成Excel文件
+                    ExcelDto excelDto = new ExcelDto();
+                    excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
+                    List<SheetDto> sheets = new ArrayList<>();
+                    SheetDto sheet = new SheetDto();
+                    sheet.setSheetName(dataCheckPO.getRuleName());
+                    List<RowDto> singRows = dataCheck_QualityReport_GetRuleSingRows(qualityReportSummary_ruleDTO);
+                    sheet.setSingRows(singRows);
+                    // 检查的字段，会加黄色的底色
+                    sheet.setSingFields(Arrays.asList(fieldName.split(",")));
+                    // 检查不通过的数据
+                    sheet.setDataRows(sheetDataDto.getColumnData());
+                    sheets.add(sheet);
+                    excelDto.setSheets(sheets);
+                    ExcelReportUtil.createExcel(excelDto, absolutePath, currentFileName, true);
+                }
             }
 
             //规则检查结束计时
@@ -654,17 +661,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             LocalDateTime endDate = LocalDateTime.parse(checkDataEndTime, formatter);
             Duration duration = Duration.between(startDate, endDate);
             dataCheckLogsPO.setCheckDataDuration(String.valueOf(duration.getSeconds()));
-            dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckSql());
+            dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
             dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
+            dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
             dataCheckLogs.add(dataCheckLogsPO);
 
             // 第七步：释放集合对象
+            columnData = null;
             sheetDataDto = null;
             qualityReportSummary_ruleDTO = null;
         }
 
         // 报告下规则数量与检查规则日志数量不一致时，检查不通过
         if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
+            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
+            List<Integer> diff = new ArrayList<>(ruleIdList);
+            diff.removeAll(ruleIdList_log);
+            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
             return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
         }
         return ResultEnum.SUCCESS;
@@ -735,20 +749,33 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
 
         boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
+        // 查询不满足校验规则的数据明细
         String sql_QueryCheckData = "";
+        // 查询不满足校验规则的数据数量，如果超过5000条则无需再查询数据明细，提高程序性能
+        String sql_QueryCheckErrorDataCount = "";
         if (charValid) {
             sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '' OR %s = 'null') ",
                     f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, f_Name, f_Name);
+            sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND (%s IS NULL OR %s = '' OR %s = 'null') ",
+                    t_Name, fieldCheckWhereSql, f_Name, f_Name, f_Name);
         } else {
             sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s IS NULL ",
                     f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name);
+            sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s IS NULL ",
+                    t_Name, fieldCheckWhereSql, f_Name);
         }
+        // 查询校验的数据总条数
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
 
-        SheetDataDto sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount);
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+        }
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryDataTotalCount);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -767,8 +794,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     public QualityReportSummary_RuleDTO dataCheck_QualityReport_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
                                                                            DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
+        // 查询不满足校验规则的数据明细
         String sql_QueryCheckData = "";
+        // 查询校验的数据总条数
         String sql_QueryDataTotalCount = "";
+        // 查询不满足校验规则的数据数量，如果超过5000条则无需再查询数据明细，提高程序性能
+        String sql_QueryCheckErrorDataCount = "";
         String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
                 tName = qualityReportSummary_paramDTO.getTableName(),
                 f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
@@ -789,10 +820,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         childrenQuery = String.format("SELECT IFNULL(%s,'') FROM %s", f_Name, t_Name);
                         sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
                                 f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
+                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
+                                t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
                     } else {
                         childrenQuery = String.format("SELECT %s FROM %s", f_Name, t_Name);
                         sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
                                 f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
+                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
+                                t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
                     }
                 } else {
                     // 指定序列范围
@@ -804,9 +839,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
                                 f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, sql_InString);
+                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
+                                t_Name, fieldCheckWhereSql, f_Name, sql_InString);
                     } else {
                         sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
                                 f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, sql_InString);
+                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
+                                t_Name, fieldCheckWhereSql, f_Name, sql_InString);
                     }
                 }
                 break;
@@ -825,6 +864,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s ",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
+                    sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s ",
+                            t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                 } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
                     // 单向取值
                     Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
@@ -837,6 +878,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
+                    sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s",
+                            t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                 } else {
                     log.info("同步后-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
                 }
@@ -850,6 +893,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
                 sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1  %s AND (((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))) ",
                         f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, f_Name, f_Name, startTime, endTime);
+                sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1  %s AND (((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))) ",
+                        t_Name, fieldCheckWhereSql, f_Name, f_Name, f_Name, startTime, endTime);
                 break;
             case KEYWORDS_INCLUDE:
                 // 关键字包含
@@ -872,14 +917,21 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 }
                 sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s not like %s ",
                         f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, likeValue);
+                sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s not like %s ",
+                        t_Name, fieldCheckWhereSql, f_Name, likeValue);
                 break;
         }
         sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s;", t_Name, fieldCheckWhereSql);
 
-        SheetDataDto sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount);
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+        }
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryDataTotalCount);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -898,10 +950,22 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     public QualityReportSummary_RuleDTO dataCheck_QualityReport_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
                                                                               DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
+        // 查询不满足校验规则的数据明细
         String sql_QueryCheckData = "";
+        // 查询校验的数据总条数
         String sql_QueryDataTotalCount = "";
+        // 查询不满足校验规则的数据数量，如果超过5000条则无需再查询数据明细，提高程序性能
+        String sql_QueryCheckErrorDataCount = "";
+
         String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
+                f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
+                f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
                 fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
+
+        sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        String sqlWhere = "";
 
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
@@ -909,7 +973,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             case DATE_FORMAT:
                 // 日期格式
                 List<String> dateFormatList = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
-                sql_QueryCheckData = standardCheck_GetDateFormatCheckSql(dateFormatList, dataSourceTypeEnum, qualityReportSummary_paramDTO);
+                sqlWhere = standardCheck_GetDateFormatCheckSql(dateFormatList, dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 break;
             case CHARACTER_PRECISION_LENGTH_RANGE:
                 // 字符范围
@@ -918,31 +982,37 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_PRECISION_RANGE) {
                     int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
                     int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
-                    sql_QueryCheckData = standardCheck_GetCharacterAccuracyFormatCheckSql(minFieldLength, maxFieldLength, dataSourceTypeEnum, qualityReportSummary_paramDTO);
+                    sqlWhere = standardCheck_GetCharacterAccuracyFormatCheckSql(minFieldLength, maxFieldLength, dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 } else if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_LENGTH_RANGE) {
                     // 字符长度范围
                     String standardCheckTypeLengthOperator = dataCheckExtendPO.getStandardCheckTypeLengthOperator();
                     int standardCheckTypeLengthValue = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue());
-                    sql_QueryCheckData = standardCheck_GetCharacterLengthFormatCheckSql(standardCheckTypeLengthOperator, standardCheckTypeLengthValue, dataSourceTypeEnum, qualityReportSummary_paramDTO);
+                    sqlWhere = standardCheck_GetCharacterLengthFormatCheckSql(standardCheckTypeLengthOperator, standardCheckTypeLengthValue, dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 } else {
                     log.info("同步后-规范检查-字符范围-未匹配到有效的枚举：" + standardCheckCharRangeTypeEnum.getName());
                 }
                 break;
             case URL_ADDRESS:
                 // URL地址
-                sql_QueryCheckData = standardCheck_GetURLFormatCheckSql(dataSourceTypeEnum, qualityReportSummary_paramDTO);
+                sqlWhere = standardCheck_GetURLFormatCheckSql(dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 break;
             case BASE64_BYTE_STREAM:
                 // BASE64字节流
-                sql_QueryCheckData = standardCheck_GetBase64FormatCheckSql(dataSourceTypeEnum, qualityReportSummary_paramDTO);
+                sqlWhere = standardCheck_GetBase64FormatCheckSql(dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 break;
         }
-        sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        sql_QueryCheckData += sqlWhere;
+        sql_QueryCheckErrorDataCount += sqlWhere;
 
-        SheetDataDto sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount);
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+        }
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryDataTotalCount);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -959,11 +1029,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     public String standardCheck_GetDateFormatCheckSql(List<String> dateFormatList, DataSourceTypeEnum dataSourceTypeEnum,
                                                       QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
 
-        String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
-                f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
-                f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
-                fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
-        String sql = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        String f_Name = qualityReportSummary_paramDTO.getFieldNameFormat();
+        String sql = "";
 
         for (String dateFormat : dateFormatList) {
             switch (dateFormat) {
@@ -1444,11 +1511,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      */
     public String standardCheck_GetCharacterAccuracyFormatCheckSql(int minFieldLength, int maxFieldLength, DataSourceTypeEnum dataSourceTypeEnum,
                                                                    QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
-        String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
-                f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
-                f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
-                fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
-        String sql = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        String f_Name = qualityReportSummary_paramDTO.getFieldNameFormat();
+        String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
             sql += " AND (" + f_Name + " IS NULL OR " +
@@ -1479,11 +1543,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      */
     public String standardCheck_GetCharacterLengthFormatCheckSql(String standardCheckTypeLengthOperator, int standardCheckTypeLengthValue, DataSourceTypeEnum dataSourceTypeEnum,
                                                                  QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
-        String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
-                f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
-                f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
-                fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
-        String sql = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        String f_Name = qualityReportSummary_paramDTO.getFieldNameFormat();
+        String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
             sql += String.format(" AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) %s %s)\n", standardCheckTypeLengthOperator, standardCheckTypeLengthValue);
@@ -1507,11 +1568,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params qualityReportSummary_paramDTO
      */
     public String standardCheck_GetURLFormatCheckSql(DataSourceTypeEnum dataSourceTypeEnum, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
-        String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
-                f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
-                f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
-                fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
-        String sql = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        String f_Name = qualityReportSummary_paramDTO.getFieldNameFormat();
+        String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
             sql += " AND (" + f_Name + " IS NULL OR " +
@@ -1539,11 +1597,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params qualityReportSummary_paramDTO
      */
     public String standardCheck_GetBase64FormatCheckSql(DataSourceTypeEnum dataSourceTypeEnum, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
-        String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
-                f_Name = qualityReportSummary_paramDTO.getFieldNameFormat(),
-                f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
-                fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
-        String sql = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        String f_Name = qualityReportSummary_paramDTO.getFieldNameFormat();
+        String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
             sql += " AND (" + f_Name + " IS NULL OR " +
@@ -1589,14 +1644,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
                 fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
 
-        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS '数据重复条数' FROM %s WHERE 1=1 %s \n" +
-                "GROUP BY %s HAVING COUNT(*) > 1;", f_Name, t_Name, fieldCheckWhereSql, f_Name);
+        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS '数据重复条数' FROM %s WHERE 1=1 %s " +
+                "GROUP BY %s HAVING COUNT(*) > 1 ", f_Name, t_Name, fieldCheckWhereSql, f_Name);
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        String sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM ( %s ) t", sql_QueryCheckData);
 
-        SheetDataDto sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount);
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+        }
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryDataTotalCount);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1623,7 +1684,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
                 fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
 
-        String sql_QueryCheckData = "", sql_QueryDataTotalCount = "";
+        String sql_QueryCheckData = "", sql_QueryDataTotalCount = "", sql_QueryCheckErrorDataCount = "";
         boolean isValid = true;
         double thresholdValue = dataCheckExtendPO.getFluctuateCheckValue();
         double realityValue = 0.0;
@@ -1646,7 +1707,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 break;
         }
 
-        List<Map<String, Object>> maps = qualityReport_QueryTableData_Maps(dataSourceConVO, sql_QueryCheckData);
+        List<Map<String, Object>> maps = qualityReport_QueryTableData_Maps(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (CollectionUtils.isNotEmpty(maps)) {
             realityValue = Double.parseDouble(maps.get(0).get("realityValue").toString());
         }
@@ -1681,14 +1742,21 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         // 检查不通过，查询不通过的数据
         SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = 0;
         if (!isValid) {
             sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
-            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+            sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+
+            errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+            if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+                sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+            }
         }
         sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount);
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryDataTotalCount);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1732,27 +1800,36 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 fAllocate = qualityReportSummary_paramDTO.getAllocateFieldNames(),
                 f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
                 fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
-        String sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+
+        String sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+        String sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        String sqlWhere = "";
 
         String regexpCheckValue = dataCheckExtendPO.getRegexpCheckValue();
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-            sql_QueryCheckData += " AND (" + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
+            sqlWhere += " AND (" + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
             // SQLSERVER数据库没有内置的正则表达式函数
             return qualityReportSummary_ruleDTO;
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            sql_QueryCheckData += " AND (" + f_Name + " ~ '" + regexpCheckValue + "')\n";
+            sqlWhere += " AND (" + f_Name + " ~ '" + regexpCheckValue + "')\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            sql_QueryCheckData += " AND (" + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
+            sqlWhere += " AND (" + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
         }
+        sql_QueryCheckData += sqlWhere;
+        sql_QueryCheckErrorDataCount += sqlWhere;
 
-        String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s", t_Name, fieldCheckWhereSql);
-
-        SheetDataDto sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
-        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount);
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+        }
+        Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryDataTotalCount);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1773,14 +1850,33 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
 
         String sql_QueryCheckData = dataCheckExtendPO.getSqlCheckValue();
-        SheetDataDto sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData);
+        String sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM ( %s ) t", sql_QueryCheckData);
+        String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM ( %s ) t", sql_QueryCheckData);
+
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        Integer errorDataTotalCount = 0;
         Integer checkDataTotalCount = 0;
-        if (sheetDataDto != null && CollectionUtils.isNotEmpty(sheetDataDto.getColumnData())) {
-            checkDataTotalCount = sheetDataDto.getColumnData().size();
+
+        try {
+            errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+            checkDataTotalCount = errorDataTotalCount;
+        } catch (Exception ex) {
+            log.error("【dataCheck_QualityReport_SqlScriptCheck】-嵌套查询错误数据总条数SQL执行异常，查询SQL：" + sql_QueryCheckData);
+            log.error("【dataCheck_QualityReport_SqlScriptCheck】-嵌套查询错误数据总条数SQL执行异常，嵌套后SQL：" + sql_QueryCheckErrorDataCount);
+            // 说明嵌套SQL执行异常，重新赋值，检查总条数和错误条数直接取检查结果条数
+            sql_QueryCheckErrorDataCount = sql_QueryCheckData;
+            sql_QueryDataTotalCount = sql_QueryCheckData;
         }
+
+        // 错误数据条数小于5000，查询具体的错误明细数据
+        if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
+            sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
+        }
+
         // 因为SQL脚本可能连表多条件查询，因此此处查询表数据条数也用检查的SQL
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
-                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData, sql_QueryCheckData);
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1788,7 +1884,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportSummary_RuleDTO
      * @description 返回质量报告总结的基础信息
      * @author dick
-     * @date 2024/7/17 15:13
+     * @date 2024/7/23 20:03
      * @version v1.0
      * @params templatePO
      * @params dataSourceConVO
@@ -1797,10 +1893,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params qualityReportSummary_paramDTO
      * @params sheetDataDto
      * @params checkDataTotalCount
+     * @params sql_QueryCheckData
+     * @params sql_QueryDataTotalCount
+     * @params errorDataTotalCount
+     * @params sql_QueryCheckErrorDataCount
      */
     public QualityReportSummary_RuleDTO dataCheck_QualityReportSummary_GetBasicInfo(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO,
                                                                                     QualityReportSummary_ParamDTO qualityReportSummary_paramDTO, SheetDataDto sheetDataDto, Integer checkDataTotalCount,
-                                                                                    String sql_QueryCheckData, String sql_QueryDataTotalCount) {
+                                                                                    String sql_QueryCheckData, String sql_QueryDataTotalCount, Integer errorDataTotalCount,
+                                                                                    String sql_QueryCheckErrorDataCount) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = new QualityReportSummary_RuleDTO();
         qualityReportSummary_ruleDTO.setRuleName(dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO.setRuleDescribe(dataCheckPO.getRuleDescribe());
@@ -1809,7 +1910,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         qualityReportSummary_ruleDTO.setRuleTemplate(templateTypeEnum.getName());
         qualityReportSummary_ruleDTO.setRuleIllustrate(dataCheckPO.getRuleIllustrate());
-        Integer errorDataTotalCount = sheetDataDto.getColumnData().size();
         double checkDataAccuracy = 0.00;
         String checkStatus = errorDataTotalCount == 0 ? "通过" : "不通过";
         if (checkDataTotalCount == 0) {
@@ -1818,7 +1918,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 checkDataAccuracy = 100.00;
                 checkStatus = "通过";
             } else {
-                checkDataAccuracy = 100.00;
+                checkDataAccuracy = 0.00;
                 checkStatus = "表结果集为空，跳过检查";
             }
         } else {
@@ -1835,8 +1935,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         qualityReportSummary_ruleDTO.setDataAccuracy(bigDecimal_CheckDataAccuracy.toString() + "%");
         qualityReportSummary_ruleDTO.setCheckStatus(checkStatus);
         qualityReportSummary_ruleDTO.setSheetData(sheetDataDto);
-        qualityReportSummary_ruleDTO.setCheckSql(sql_QueryCheckData);
+        qualityReportSummary_ruleDTO.setCheckDataSql(sql_QueryCheckData);
         qualityReportSummary_ruleDTO.setCheckTotalCountSql(sql_QueryDataTotalCount);
+        qualityReportSummary_ruleDTO.setCheckErrorDataCountSql(sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1898,7 +1999,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 if (StringUtils.isEmpty(dataCheckConditionPO.getFieldName())) {
                     continue;
                 }
-                String sqlWhereStr = qualityReport_GetSqlFieldWhereFormat(dataSourceTypeEnum, dataCheckConditionPO.getFieldOperator());
+                String sqlWhereStr = qualityReport_GetSqlFieldWhereFormat(dataSourceTypeEnum,
+                        dataCheckConditionPO.getFieldOperator(), false);
                 sqlWhere += " AND " + String.format(sqlWhereStr, dataCheckConditionPO.getFieldName(), dataCheckConditionPO.getFieldValue());
             }
             if (StringUtils.isNotEmpty(sqlWhere)) {
@@ -1917,32 +2019,39 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataSourceTypeEnum
      * @params operator
      */
-    public String qualityReport_GetSqlFieldWhereFormat(DataSourceTypeEnum dataSourceTypeEnum, String operator) {
+    public String qualityReport_GetSqlFieldWhereFormat(DataSourceTypeEnum dataSourceTypeEnum,
+                                                       String operator, boolean setQuotationMarks) {
         String sqlWhereStr = dataSourceTypeEnum == DataSourceTypeEnum.MYSQL
                 ? "`%s`" + operator + "'%s'" :
                 dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER
                         ? "[%s]" + operator + "'%s'" :
                         dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
                                 ? "\"%s\"" + operator + "'%s'" :
-                                dataSourceTypeEnum == DataSourceTypeEnum.DORIS
-                                        ? "`%s`" + operator + "'%s'" : "%s" + operator + "'%s'";
+                                dataSourceTypeEnum == DataSourceTypeEnum.DORIS && setQuotationMarks
+                                        ? "`%s`" + operator + "'%s'" :
+                                        dataSourceTypeEnum == DataSourceTypeEnum.DORIS && !setQuotationMarks
+                                                ? "`%s`" + operator + "%s" : "%s" + operator + "'%s'";
         return sqlWhereStr;
     }
 
     /**
-     * @return com.alibaba.fastjson.JSONArray
+     * @return java.lang.Integer
      * @description 执行SQL返回数据总条数
      * @author dick
-     * @date 2024/7/17 14:13
+     * @date 2024/7/25 14:36
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params fieldName
+     * @params ruleId
+     * @params ruleName
      */
-    public Integer qualityReport_QueryTableTotalCount(DataSourceConVO dataSourceConVO, String sql) {
+    public Integer qualityReport_QueryTableTotalCount(DataSourceConVO dataSourceConVO, String sql, String fieldName,
+                                                      long ruleId, String ruleName) {
         String totalCount = "0";
-        List<Map<String, Object>> mapList = qualityReport_QueryTableData_Maps(dataSourceConVO, sql);
+        List<Map<String, Object>> mapList = qualityReport_QueryTableData_Maps(dataSourceConVO, sql, ruleId, ruleName);
         if (CollectionUtils.isNotEmpty(mapList)) {
-            totalCount = mapList.get(0).get("totalCount").toString();
+            totalCount = mapList.get(0).get(fieldName).toString();
         }
         return Integer.valueOf(totalCount);
     }
@@ -2009,14 +2118,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return java.util.List<java.util.Map < java.lang.String, java.lang.Object>>
      * @description 执行SQL返回Maps
      * @author dick
-     * @date 2024/7/17 14:12
+     * @date 2024/7/25 14:40
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params ruleId
+     * @params ruleName
      */
-    public List<Map<String, Object>> qualityReport_QueryTableData_Maps(DataSourceConVO dataSourceConVO, String sql) {
+    public List<Map<String, Object>> qualityReport_QueryTableData_Maps(DataSourceConVO dataSourceConVO, String sql,
+                                                                       long ruleId, String ruleName) {
+        log.info(String.format("【qualityReport_QueryTableData_Maps】执行SQL返回Maps，规则id：%s、规则名称：%s、SQL语句：%s：", ruleId, ruleName, sql));
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
-        log.info("【nifiSync_UpdateTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         List<Map<String, Object>> mapList = AbstractCommonDbHelper.execQueryResultMaps(sql, connection);
         return mapList;
@@ -2026,14 +2138,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return com.fisk.common.core.utils.Dto.Excel.SheetDataDto
      * @description 执行SQL返回Sheet
      * @author dick
-     * @date 2024/7/17 14:12
+     * @date 2024/7/25 14:39
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params ruleId
+     * @params ruleName
      */
-    public SheetDataDto qualityReport_QueryTableData_Sheet(DataSourceConVO dataSourceConVO, String sql) {
+    public SheetDataDto qualityReport_QueryTableData_Sheet(DataSourceConVO dataSourceConVO, String sql,
+                                                           long ruleId, String ruleName) {
+        log.info(String.format("【qualityReport_QueryTableData_Sheet】执行SQL返回Sheet，规则id：%s、规则名称：%s、SQL语句：%s：", ruleId, ruleName, sql));
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
-        log.info("【dataCheck_QualityReport_QueryTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         SheetDataDto sheetDataDto = AbstractCommonDbHelper.execQueryResultSheet(sql, connection);
         return sheetDataDto;
@@ -2043,14 +2158,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @return com.alibaba.fastjson.JSONArray
      * @description 执行SQL返回JSONArray
      * @author dick
-     * @date 2024/7/17 14:13
+     * @date 2024/7/25 14:39
      * @version v1.0
      * @params dataSourceConVO
      * @params sql
+     * @params ruleId
+     * @params ruleName
      */
-    public JSONArray qualityReport_QueryTableData_Array(DataSourceConVO dataSourceConVO, String sql) {
+    public JSONArray qualityReport_QueryTableData_Array(DataSourceConVO dataSourceConVO, String sql,
+                                                        long ruleId, String ruleName) {
+        log.info(String.format("【qualityReport_QueryTableData_Array】执行SQL返回JSONArray，规则id：%s、规则名称：%s、SQL语句：%s：", ruleId, ruleName, sql));
         // 实时建立数据库连接实时释放，防止连接等待时间过长导致超时异常
-        log.info("【dataCheck_QualityReport_QueryTableData】待执行SQL：" + sql);
         Connection connection = dataSourceConManageImpl.getStatement(dataSourceConVO.getConType(), dataSourceConVO.getConStr(), dataSourceConVO.getConAccount(), dataSourceConVO.getConPassword());
         JSONArray jsonArray = AbstractCommonDbHelper.execQueryResultArrays(sql, connection);
         return jsonArray;

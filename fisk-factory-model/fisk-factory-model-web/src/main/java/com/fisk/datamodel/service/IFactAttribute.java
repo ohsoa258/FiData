@@ -3,6 +3,7 @@ package com.fisk.datamodel.service;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSelectDTO;
@@ -173,4 +174,11 @@ public interface IFactAttribute {
      * @return
      */
     Object mapModelFieldsWithIndex(List<ModelAndIndexMappingDTO> dtos);
+
+    /**
+     * 搜索表字段
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(String key);
 }

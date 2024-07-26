@@ -365,6 +365,12 @@ public class AppRegistrationController {
     public ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldsDataStructure(dto));
     }
+    @ApiOperation("搜索数据元关联字段(数据标准用)")
+    @GetMapping("/searchStandardBeCitedField")
+    public ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchStandardBeCitedField(key));
+    }
+
 
     @PostMapping("/buildTableRuleInfo")
     @ApiOperation(value = "构建业务元数据其他数据信息")

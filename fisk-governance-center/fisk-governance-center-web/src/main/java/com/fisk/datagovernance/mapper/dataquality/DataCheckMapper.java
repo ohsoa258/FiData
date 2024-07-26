@@ -21,7 +21,11 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      *
      * @return 查询结果
      */
-    List<DataCheckVO> getAllRule();
+    List<DataCheckVO> getAllRule(@Param("checkProcess") int checkProcess,
+                                 @Param("tableUnique") String tableUnique,
+                                 @Param("ruleName") String ruleName,
+                                 @Param("ruleState") String ruleState,
+                                 @Param("templateIds") List<Long> templateIds);
 
     /**
      * 查询数据校验列表

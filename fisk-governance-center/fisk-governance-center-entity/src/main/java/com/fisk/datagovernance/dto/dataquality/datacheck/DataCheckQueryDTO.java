@@ -58,4 +58,22 @@ public class DataCheckQueryDTO {
      */
     @ApiModelProperty(value = "页码")
     public int current;
+
+    /**
+     * 检查环节
+     */
+    @ApiModelProperty(value = "检查环节")
+    public int checkProcess;
+
+    /**
+     * 表全名称（含架构名）/表Id
+     */
+    @ApiModelProperty(value = "表全名称（含架构名）/表Id")
+    public String tableUnique;
+
+    /**
+     * 规则名称
+     */
+    @ApiModelProperty(value = "规则名称")
+    public String ruleName;
 }

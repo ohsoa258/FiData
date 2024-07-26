@@ -39,6 +39,18 @@ public class DataCheckLogsQueryDTO {
     public String ruleName;
 
     /**
+     * 报告批次号
+     */
+    @ApiModelProperty(value = "报告批次号")
+    public String reportBatchNumber;
+
+    /**
+     * 表全名称
+     */
+    @ApiModelProperty(value = "表全名称")
+    public String tableFullName;
+
+    /**
      * 分页对象
      */
     @ApiModelProperty(value = "分页对象")

@@ -94,10 +94,11 @@ public class SummaryReportUtils {
         sheet.setColumnWidth(1, 4000);
         sheet.setColumnWidth(2, 6000);
         sheet.setColumnWidth(3, 8000);
-        sheet.setColumnWidth(4, 10000);
-        sheet.setColumnWidth(5, 4000);
+        sheet.setColumnWidth(4, 8000);
+        sheet.setColumnWidth(5, 10000);
         sheet.setColumnWidth(6, 4000);
         sheet.setColumnWidth(7, 4000);
+        sheet.setColumnWidth(8, 4000);
 
         // 合并前两行，用来描述结语
         String epilogue = qualityReportSummaryList.get(0).getEpilogue();
@@ -110,7 +111,7 @@ public class SummaryReportUtils {
         // 创建列头
         Row headerRow = sheet.createRow(3);
         headerRow.setHeightInPoints(20);
-        String[] headers = {"报告名称", "报告负责人", "报告批次号", "表名称", "检查规则名称", "检查数据条数", "数据的正确率", "是否通过检查"};
+        String[] headers = {"报告名称", "报告负责人", "报告批次号", "表名称", "字段名称", "检查规则名称", "检查数据条数", "数据的正确率", "是否通过检查"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -127,10 +128,11 @@ public class SummaryReportUtils {
                     createCell(dataRow, 1, qualityReportSummaryDTO.getReportPrincipal(), style_data);
                     createCell(dataRow, 2, qualityReportSummaryDTO.getReportBatchNumber(), style_data);
                     createCell(dataRow, 3, qualityReportSummaryDTO.getTableFullName(), style_data);
-                    createCell(dataRow, 4, qualityReportSummary_bodyDTO.getRuleName(), style_data);
-                    createCell(dataRow, 5, qualityReportSummary_bodyDTO.getCheckDataCount(), style_data);
-                    createCell(dataRow, 6, qualityReportSummary_bodyDTO.getDataAccuracy(), style_data);
-                    createCell(dataRow, 7, qualityReportSummary_bodyDTO.getCheckStatus(), style_data);
+                    createCell(dataRow, 4, qualityReportSummary_bodyDTO.getFieldName(), style_data);
+                    createCell(dataRow, 5, qualityReportSummary_bodyDTO.getRuleName(), style_data);
+                    createCell(dataRow, 6, qualityReportSummary_bodyDTO.getCheckDataCount(), style_data);
+                    createCell(dataRow, 7, qualityReportSummary_bodyDTO.getDataAccuracy(), style_data);
+                    createCell(dataRow, 8, qualityReportSummary_bodyDTO.getCheckStatus(), style_data);
                     dataIndex++;
                 }
             }

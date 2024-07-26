@@ -19,6 +19,7 @@ import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.FieldNameDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.classification.BusinessTargetinfoDTO;
 import com.fisk.datamanagement.dto.classification.FacttreeListDTO;
@@ -845,4 +846,8 @@ public class FactAttributeImpl
         return str.toString();
     }
 
+    @Override
+    public List<TableFieldDTO> searchColumn(String key) {
+        return mapper.searchColumn(key);
+    }
 }

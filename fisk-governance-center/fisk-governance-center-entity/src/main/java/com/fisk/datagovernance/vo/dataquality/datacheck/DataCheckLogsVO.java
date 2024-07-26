@@ -148,9 +148,9 @@ public class DataCheckLogsVO {
     public String checkDataDuration;
 
     /**
-     * 检查数据的SQL语句
+     * 检查错误数据的SQL语句
      */
-    @ApiModelProperty(value = "检查数据的SQL语句")
+    @ApiModelProperty(value = "检查错误数据的SQL语句")
     public String checkDataSql;
 
     /**
@@ -160,8 +160,32 @@ public class DataCheckLogsVO {
     public String checkDataCountSql;
 
     /**
+     * 检查错误数据条数的SQL语句
+     */
+    @ApiModelProperty(value = "检查错误数据条数的SQL语句")
+    public String checkErrorDataCountSql;
+
+    /**
      * 创建时间
      */
     @ApiModelProperty(value = "创建时间")
     public String createTime;
+
+    /**
+     * 报告名称
+     */
+    @ApiModelProperty(value = "报告名称")
+    public String reportName;
+
+    /**
+     * 数据库IP
+     */
+    @ApiModelProperty(value = "数据库IP")
+    public String dataBaseIp;
+
+    /**
+     * 数据库名称
+     */
+    @ApiModelProperty(value = "数据库名称")
+    public String dataBaseName;
 }

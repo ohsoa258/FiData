@@ -2,6 +2,7 @@ package com.fisk.datamodel.service;
 
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.*;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
@@ -94,4 +95,10 @@ public interface IDimensionAttribute {
      */
     ResultEnum addDimensionAttribute(DimensionAttributeDTO dto);
 
+    /**
+     * 搜索表字段
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(String key);
 }

@@ -1,15 +1,13 @@
 package com.fisk.datagovernance.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datagovernance.config.SwaggerConfig;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportEditDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportLogQueryDTO;
-import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportQueryDTO;
+import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.PreviewQualityReportVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportExtVO;
@@ -80,9 +78,9 @@ public class QualityReportController {
     }
 
     @ApiOperation("报告相关数据")
-    @GetMapping("/getReportExt")
-    public ResultEntity<QualityReportExtVO> getReportExt() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getReportExt());
+    @PostMapping("/getReportExt")
+    public ResultEntity<QualityReportExtVO> getReportExt(@RequestBody QualityReportRuleQueryDTO queryDTO) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getReportExt(queryDTO));
     }
 
     @ApiOperation("数据校验质量报告日志分页")

@@ -125,4 +125,10 @@ public class ModelController {
     public ResultEntity<Object> getModelTotal(){
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getModelTotal());
     }
+
+    @ApiOperation("搜索主数据数据元关联字段")
+    @GetMapping("/searchStandardBeCitedField")
+    public ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchStandardBeCitedField(key));
+    }
 }

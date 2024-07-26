@@ -13,6 +13,7 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -48,6 +49,7 @@ import com.fisk.dataaccess.dto.savepointhistory.SavepointHistoryDTO;
 import com.fisk.dataaccess.dto.table.*;
 import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
 import com.fisk.dataaccess.dto.tablefield.ClassificationsAndLevelsDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.entity.*;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.enums.PublishTypeEnum;
@@ -2337,6 +2339,11 @@ public class TableFieldsImpl
             throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
         }
         return dataSourceConfig.data;
+    }
+
+    @Override
+    public List<TableFieldDTO> searchColumn(String key) {
+        return this.baseMapper.searchColumn(key);
     }
 
 }

@@ -36,6 +36,7 @@ import com.fisk.dataaccess.vo.table.CDCAppNameVO;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
+import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
 import com.fisk.task.dto.atlas.AtlasEntityDTO;
 import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
@@ -485,6 +486,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<TableColumnDTO> getFieldsDataStructure(ColumnQueryDTO dto);
+
+    /**
+     * 搜索数据元关联字段(数据标准用)
+     * @param key
+     * @return
+     */
+    List<SearchColumnDTO> searchStandardBeCitedField(String key);
 
     /**
      * 获取元数据地图 数据湖（数据接入）

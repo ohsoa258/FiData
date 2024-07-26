@@ -2,11 +2,11 @@ package com.fisk.datamanagement.service.impl;
 
 import cn.afterturn.easypoi.excel.ExcelImportUtil;
 import cn.afterturn.easypoi.excel.entity.ImportParams;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.entity.BasePO;
@@ -16,6 +16,8 @@ import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.core.utils.dbutils.utils.MySqlConUtils;
@@ -28,14 +30,14 @@ import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
+import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
+import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
+import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.standards.*;
-import com.fisk.datamanagement.entity.CodeSetPO;
-import com.fisk.datamanagement.entity.StandardsBeCitedPO;
-import com.fisk.datamanagement.entity.StandardsMenuPO;
-import com.fisk.datamanagement.entity.StandardsPO;
+import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.ValueRangeTypeEnum;
 import com.fisk.datamanagement.excelentity.StandardsExcel;
 import com.fisk.datamanagement.map.CodeSetMap;
@@ -51,6 +53,7 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -91,6 +94,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 
     @Resource
     MdmClient mdmClient;
+
+    @Resource
+    GenerateCondition generateCondition;
+
+    @Resource
+    UserHelper userHelper;
 
     @Override
     public StandardsDTO getStandards(int id) {
@@ -869,6 +878,32 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public Integer getStandardTotal() {
         return this.baseMapper.getStandardTotal();
+    }
+
+    @Override
+    public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
+        List<SearchColumnDTO> searchColumnDTOS = new ArrayList<>();
+        ResultEntity<Object> fieldsDataStructure1 = dataAccessClient.searchStandardBeCitedField(key);
+        if (fieldsDataStructure1.code == ResultEnum.SUCCESS.getCode()) {
+            List<SearchColumnDTO> data = (List<SearchColumnDTO>) fieldsDataStructure1.data;
+            searchColumnDTOS.addAll(data);
+        }
+        ResultEntity<Object> fieldsDataStructure2 = dataModelClient.searchStandardBeCitedField(key);
+        if (fieldsDataStructure2.code == ResultEnum.SUCCESS.getCode()) {
+            List<SearchColumnDTO> data = (List<SearchColumnDTO>) fieldsDataStructure2.data;
+            searchColumnDTOS.addAll(data);
+        }
+        ResultEntity<Object> fieldsDataStructure3 = mdmClient.searchStandardBeCitedField(key);
+        if (fieldsDataStructure3.code == ResultEnum.SUCCESS.getCode()) {
+            List<SearchColumnDTO> data = (List<SearchColumnDTO>) fieldsDataStructure3.data;
+            searchColumnDTOS.addAll(data);
+        }
+        return searchColumnDTOS;
+    }
+
+    @Override
+    public List<StandardsDetailDTO> getStandardsDetailMenuList(String pid, String keyWord) {
+        return baseMapper.getStandardsDetailMenuList(pid,keyWord);
     }
 
     private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {

@@ -13,8 +13,10 @@ import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckRuleSearchWhereVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -30,6 +32,20 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 规则列表
      */
     PageDTO<DataCheckVO> getAllRule(DataCheckQueryDTO query);
+
+    /**
+     * 获取规则搜索条件
+     *
+     * @return 规则列表
+     */
+    DataCheckRuleSearchWhereVO getRuleSearchWhere();
+
+    /**
+     * 获取数据检查结果日志搜索条件
+     *
+     * @return 规则列表
+     */
+    DataCheckRuleSearchWhereVO getDataCheckLogSearchWhere();
 
     /**
      * 查询所有规则
