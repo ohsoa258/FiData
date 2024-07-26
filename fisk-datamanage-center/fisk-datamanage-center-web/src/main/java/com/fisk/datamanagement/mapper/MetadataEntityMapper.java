@@ -27,12 +27,28 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
     List<MetadataEntityPO> selectMetadataEntity(@Param("type") Integer type);
 
     /**
-     * 获取实体集合 排除temp表
+     * 获取实体集合
      *
      * @param type
      * @return
      */
     List<MetadataEntityPO> selectMetadataEntityWithoutTemp(@Param("type") Integer type);
+
+    /**
+     * 为业务术语获取指定表元数据节点下的字段
+     *
+     * @param type
+     * @return
+     */
+    List<MetadataEntityPO> selectMetadataEntityOnlyField(@Param("type") Integer type,@Param("entityId") Integer entityId);
+
+    /**
+     * 获取实体集合 排除temp表
+     *
+     * @param type
+     * @return
+     */
+    List<MetadataEntityPO> selectMetadataEntityWithoutTempAndField(@Param("type") Integer type,@Param("fieldType") Integer fieldType);
 
     /**
      * 根据类型获取实体集合

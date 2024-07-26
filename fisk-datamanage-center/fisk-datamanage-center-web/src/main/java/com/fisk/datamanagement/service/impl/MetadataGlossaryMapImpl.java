@@ -17,6 +17,7 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,23 +36,31 @@ public class MetadataGlossaryMapImpl
      */
     @Override
     public Object mapGlossaryWithMetaEntity(GlossaryAndMetaDatasMapDTO dto) {
-        //先根据术语id删除所有关联关系
+
+        //查询该术语下所有关联关系  如果有重复的则剔除
         Integer glossaryId = dto.getGlossaryId();
+        List<MetadataEntitySimpleDTO> metadataEntitys = dto.getMetadataEntityIds();
+
         LambdaQueryWrapper<MetaDataGlossaryMapPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
-        remove(wrapper);
+        wrapper.select(MetaDataGlossaryMapPO::getMetadataQualifiedName)
+                .eq(MetaDataGlossaryMapPO::getGlossaryId, glossaryId);
+        Set<String> qNamesSet = list(wrapper).stream()
+                .map(MetaDataGlossaryMapPO::getMetadataQualifiedName)
+                .collect(Collectors.toSet());
+
+        //如果这次保存时 与已绑定的重复 则剔除
+        metadataEntitys.removeIf(simDto -> qNamesSet.contains(simDto.getMetadataQualifiedName()));
 
         // 获取本次术语要绑定的元数据集合
-        List<MetadataEntitySimpleDTO> metadataEntityIds = dto.getMetadataEntityIds();
         // 元数据集合为空则不往下进行
-        if (CollectionUtils.isEmpty(metadataEntityIds)) {
+        if (CollectionUtils.isEmpty(metadataEntitys)) {
             return null;
         }
 
         ArrayList<MetaDataGlossaryMapPO> metaDataGlossaryMapPOS = new ArrayList<>();
 
         //获取术语 和 元数据对象们 的map对象
-        for (MetadataEntitySimpleDTO simDto : metadataEntityIds) {
+        for (MetadataEntitySimpleDTO simDto : metadataEntitys) {
             MetaDataGlossaryMapPO metaDataGlossaryMapPO = new MetaDataGlossaryMapPO();
 
             //改为关联限定名称
@@ -88,12 +97,23 @@ public class MetadataGlossaryMapImpl
 
             List<MetadataEntityPO> metadataEntityPOS = metadataEntityImpl.list(
                     new LambdaQueryWrapper<MetadataEntityPO>()
-                            .select(MetadataEntityPO::getId, MetadataEntityPO::getQualifiedName, MetadataEntityPO::getName, MetadataEntityPO::getTypeId)
+                            .select(MetadataEntityPO::getId, MetadataEntityPO::getQualifiedName, MetadataEntityPO::getName, MetadataEntityPO::getTypeId, MetadataEntityPO::getParentId)
                             .in(MetadataEntityPO::getQualifiedName, collect)
             );
+
             for (MetadataEntityPO metadataEntityPO : metadataEntityPOS) {
                 MetadataEntitySimpleDTO dto = new MetadataEntitySimpleDTO();
                 dto.setId(metadataEntityPO.getId());
+                dto.setPId(metadataEntityPO.getParentId());
+
+                //获取元数据的父名称
+                MetadataEntityPO one = metadataEntityImpl.getOne(
+                        new LambdaQueryWrapper<MetadataEntityPO>()
+                                .select(MetadataEntityPO::getName)
+                                .eq(MetadataEntityPO::getId, metadataEntityPO.getParentId())
+                );
+                if (one != null) dto.setParentName(one.name);
+
                 dto.setMetadataQualifiedName(metadataEntityPO.getQualifiedName());
                 dto.setEntityName(metadataEntityPO.getName());
                 dto.setType(metadataEntityPO.getTypeId());

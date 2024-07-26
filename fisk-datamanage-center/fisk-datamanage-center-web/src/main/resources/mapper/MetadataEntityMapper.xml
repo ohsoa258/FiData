@@ -22,6 +22,28 @@
         ORDER BY name
     </select>
 
+    <!-- 为业务术语获取指定表元数据节点下的字段 -->
+    <select id="selectMetadataEntityOnlyField" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
+        SELECT *
+        FROM tb_metadata_entity
+        WHERE type_id = #{type}
+          and parent_id = #{entityId}
+          and del_flag=1
+        ORDER BY name
+    </select>
+
+    <!-- 排除temp_表和字段 -->
+    <select id="selectMetadataEntityWithoutTempAndField" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
+        SELECT *
+        FROM tb_metadata_entity
+        WHERE type_id != #{type}
+          and type_id != #{fieldType}
+          and del_flag=1
+          and LEFT (name
+            , 5) != "temp_"
+        ORDER BY name
+    </select>
+
     <!--查询抽取详情，和输入输出源-->
     <resultMap id="processMap" type="com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO">
         <id property="id" column="id"/>

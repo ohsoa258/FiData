@@ -63,6 +63,17 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityListForBusinessTerm());
     }
 
+    /**
+     * 为业务术语获取指定表元数据节点下的字段 根据表元数据id
+     *
+     * @return
+     */
+    @ApiOperation("为业务术语获取指定表元数据节点下的字段 根据表元数据id")
+    @GetMapping("/getEntityColumnsForBusinessTermByEntityId")
+    public ResultEntity<Object> getEntityColumnsForBusinessTermByEntityId(@RequestParam("entityId") Integer entityId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityColumnsForBusinessTermByEntityId(entityId));
+    }
+
     @ApiOperation("刷新即席查询元数据对象树形列表（ods dw mdm olap）")
     @GetMapping("/refreshEntityTreeForAdHocQuery")
     public void refreshEntityTreeForAdHocQuery() {

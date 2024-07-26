@@ -36,9 +36,16 @@ public interface IEntity {
     List<EntityTreeDTO> getEntityListForBusinessTerm();
 
     /**
+     * 为业务术语获取指定表元数据节点下的字段 根据表元数据id
+     *
+     * @param entityId
+     * @return
+     */
+    List<EntityTreeDTO> getEntityColumnsForBusinessTermByEntityId(Integer entityId);
+
+    /**
      *刷新元数据对象树形列表
      */
-
     void refreshEntityTreeList();
 
     /**
@@ -147,4 +154,5 @@ public interface IEntity {
      * @return
      */
     List<MetaMapTblDTO> getMetaMapTableDetailByType(Integer type, Integer appId,Integer businessType);
+
 }

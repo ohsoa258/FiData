@@ -534,6 +534,34 @@ public class MetadataEntityImpl
         return list;
     }
 
+    /**
+     * 为业务术语获取指定表元数据节点下的字段
+     *
+     * @return
+     */
+    public List<EntityTreeDTO> getEntityColumnsForBusinessTermByEntityId(Integer entityId) {
+        List<EntityTreeDTO> list = new ArrayList<>();
+        //获取所有实体  排除临时表和字段
+        //获取表元数据节点下的所有字段
+        List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntityOnlyField(EntityTypeEnum.RDBMS_COLUMN.getValue(), entityId);
+        if (CollectionUtils.isEmpty(poList)) {
+            return list;
+        }
+        for (MetadataEntityPO item : poList) {
+            String parentId = String.valueOf(item.getParentId());
+            EntityTreeDTO dto = new EntityTreeDTO();
+            dto.id = String.valueOf(item.id);
+            dto.label = item.name;
+            // 缓存类型名，避免重复计算
+            dto.type = EntityTypeEnum.getValue(item.typeId).getName();
+            dto.parentId = parentId;
+            dto.displayName = item.displayName;
+            dto.qualifiedName = item.qualifiedName;
+            list.add(dto);
+        }
+        return list;
+    }
+
     public EntityTreeDTO buildBetterChildTree(EntityTreeDTO pNode, List<MetadataEntityPO> poList) {
         // 创建一个HashMap来存储每个父节点的子节点列表
         Map<String, List<EntityTreeDTO>> childrenMap = new HashMap<>();
@@ -555,7 +583,8 @@ public class MetadataEntityImpl
             dto.displayName = item.displayName;
             //表级别 为了能和元数据地图的id匹配上 增加唯一查询名称给前端 用来匹配
             if (item.typeId == EntityTypeEnum.RDBMS_TABLE.getValue()
-                    ||item.typeId==EntityTypeEnum.RDBMS_COLUMN.getValue()
+                    || item.typeId == EntityTypeEnum.RDBMS_COLUMN.getValue()
+                    || item.typeId == EntityTypeEnum.RDBMS_DB.getValue()
             ) {
                 dto.qualifiedName = item.qualifiedName;
             }
@@ -1678,13 +1707,13 @@ public class MetadataEntityImpl
             List<String> metaQNames = glossary.getClassificationByEntityId((int) infoByName.id);
 
             //通过限定名称获取元数据id
-            if (!CollectionUtils.isEmpty(metaQNames)){
+            if (!CollectionUtils.isEmpty(metaQNames)) {
                 List<MetadataEntityPO> mIds = this.list(
                         new QueryWrapper<MetadataEntityPO>()
                                 .select("id")
                                 .in("qualified_name", metaQNames));
                 metadataEntity = mIds.stream().map(e -> (int) e.id).collect(Collectors.toList());
-            }else {
+            } else {
                 metadataEntity = new ArrayList<>();
             }
 

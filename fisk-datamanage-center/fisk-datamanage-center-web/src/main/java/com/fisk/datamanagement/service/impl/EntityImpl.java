@@ -132,6 +132,17 @@ public class EntityImpl implements IEntity {
         return metadataEntityTree;
     }
 
+    /**
+     * 为业务术语获取指定表元数据节点下的字段
+     *
+     * @param entityId
+     * @return
+     */
+    @Override
+    public List<EntityTreeDTO> getEntityColumnsForBusinessTermByEntityId(Integer entityId) {
+        return metadataEntity.getEntityColumnsForBusinessTermByEntityId(entityId);
+    }
+
     @Override
     public void refreshEntityTreeList() {
         Boolean exist = redisTemplate.hasKey(metaDataEntity);

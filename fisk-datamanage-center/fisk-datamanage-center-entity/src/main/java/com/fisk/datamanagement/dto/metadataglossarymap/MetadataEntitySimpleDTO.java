@@ -17,7 +17,13 @@ public class MetadataEntitySimpleDTO implements Serializable {
     @ApiModelProperty(value = "id")
     public long id;
 
-    @ApiModelProperty(value = "id")
+    @ApiModelProperty(value = "pId")
+    public long pId;
+
+    @ApiModelProperty(value = "parentName")
+    public String parentName;
+
+    @ApiModelProperty(value = "entityName")
     public String entityName;
 
     @ApiModelProperty(value = "元数据实体限定名称")
