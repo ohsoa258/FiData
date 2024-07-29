@@ -289,7 +289,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATA_CHECK_MODULE.getValue())
                 .orderByAsc(TemplatePO::getTemplateSort);
         List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
-        if (CollectionUtils.isNotEmpty(templateMap)) {
+        if (CollectionUtils.isNotEmpty(templatePOList)) {
             templatePOList.forEach(template -> {
                 DataCheckRuleSearchWhereMapVO searchWhereMap_Template = new DataCheckRuleSearchWhereMapVO();
                 searchWhereMap_Template.setText(template.getTemplateName());
