@@ -30,4 +30,10 @@ public class DataCheckRuleSearchWhereVO {
      */
     @ApiModelProperty(value = "报告批次号")
     public List<DataCheckRuleSearchWhereMapVO> reportBatchNumberMap;
+
+    /**
+     * 数据校验-规则模板
+     */
+    @ApiModelProperty(value = "数据校验-规则模板")
+    public List<DataCheckRuleSearchWhereMapVO> templateMap;
 }

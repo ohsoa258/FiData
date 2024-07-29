@@ -188,4 +188,16 @@ public class DataCheckLogsVO {
      */
     @ApiModelProperty(value = "数据库名称")
     public String dataBaseName;
+
+    /**
+     * 是否存在报告
+     */
+    @ApiModelProperty(value = "是否存在规则报告")
+    public boolean existReport;
+
+    /**
+     * 报告名称
+     */
+    @ApiModelProperty(value = "规则报告名称")
+    public String originalName;
 }

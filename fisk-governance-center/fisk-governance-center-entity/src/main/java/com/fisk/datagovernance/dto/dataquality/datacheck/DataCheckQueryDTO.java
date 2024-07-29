@@ -76,4 +76,10 @@ public class DataCheckQueryDTO {
      */
     @ApiModelProperty(value = "规则名称")
     public String ruleName;
+
+    /**
+     * 模板id
+     */
+    @ApiModelProperty(value = "模板id")
+    public long templateId;
 }

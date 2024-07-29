@@ -163,8 +163,13 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             }
             // 第三步：获取所有表校验规则
+            List<Long> templateIdList = null;
+            if (query.getTemplateId() < 0) {
+                templateIdList = new ArrayList<>();
+                templateIdList.add(query.getTemplateId());
+            }
             List<DataCheckVO> allRule = baseMapper.getAllRule(query.getCheckProcess(),
-                    query.getTableUnique(), query.getRuleName(), null, null);
+                    query.getTableUnique(), query.getRuleName(), null, templateIdList);
             if (CollectionUtils.isEmpty(allRule)) {
                 return page;
             }
@@ -277,8 +282,25 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
         }
 
+        // 查询数据校验搜索条件-规则模板名称
+        List<DataCheckRuleSearchWhereMapVO> templateMap = new ArrayList<>();
+        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+        templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
+                .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATA_CHECK_MODULE.getValue())
+                .orderByAsc(TemplatePO::getTemplateSort);
+        List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(templateMap)) {
+            templatePOList.forEach(template -> {
+                DataCheckRuleSearchWhereMapVO searchWhereMap_Template = new DataCheckRuleSearchWhereMapVO();
+                searchWhereMap_Template.setText(template.getTemplateName());
+                searchWhereMap_Template.setValue(template.getId());
+                templateMap.add(searchWhereMap_Template);
+            });
+        }
+
         dataCheckRuleSearchWhereVO.setCheckProcessMap(checkProcessMap);
         dataCheckRuleSearchWhereVO.setTableFullNameMap(tableFullNameMap);
+        dataCheckRuleSearchWhereVO.setTemplateMap(templateMap);
 
         return dataCheckRuleSearchWhereVO;
     }
@@ -2826,8 +2848,18 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     public Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto) {
         Page<DataCheckLogsVO> all = dataCheckLogsMapper.getAll(dto.page, dto);
         if (all != null && CollectionUtils.isNotEmpty(all.getRecords())) {
+            // 规则校验日志ID
+            List<String> idUuidList = all.getRecords().stream().map(DataCheckLogsVO::getIdUuid).collect(Collectors.toList());
+
             // 查询校验表所属的数据库
             List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+            // 查询校验规则的附件信息
+            QueryWrapper<AttachmentInfoPO> attachmentInfoPOQueryWrapper = new QueryWrapper<>();
+            attachmentInfoPOQueryWrapper.lambda().eq(AttachmentInfoPO::getDelFlag, 1)
+                    .eq(AttachmentInfoPO::getCategory, AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue())
+                    .in(AttachmentInfoPO::getObjectId, idUuidList);
+            List<AttachmentInfoPO> attachmentInfoPOList = attachmentInfoMapper.selectList(attachmentInfoPOQueryWrapper);
+
             for (DataCheckLogsVO dataCheckLogsVO : all.getRecords()) {
                 if (CollectionUtils.isNotEmpty(allDataSource)) {
                     DataSourceConVO dataSourceConVO = allDataSource.stream().filter(source -> source.getDatasourceId() == dataCheckLogsVO.getFiDatasourceId()).findFirst().orElse(null);
@@ -2835,6 +2867,28 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         dataCheckLogsVO.setDataBaseIp(dataSourceConVO.getConIp());
                         dataCheckLogsVO.setDataBaseName(dataSourceConVO.getConDbname());
                     }
+                }
+                if (CollectionUtils.isNotEmpty(attachmentInfoPOList)) {
+                    AttachmentInfoPO attachmentInfoPO = attachmentInfoPOList.stream().filter(t -> t.getObjectId().equals(dataCheckLogsVO.getIdUuid())).findFirst().orElse(null);
+                    if (attachmentInfoPO != null) {
+                        String filePath = "";
+                        if (attachmentInfoPO.getAbsolutePath().endsWith("/")) {
+                            filePath = attachmentInfoPO.getAbsolutePath() + attachmentInfoPO.getCurrentFileName();
+                        } else {
+                            filePath = attachmentInfoPO.getAbsolutePath() + File.separator + attachmentInfoPO.getCurrentFileName();
+                        }
+                        File file = new File(filePath);
+                        if (file.exists()) {
+                            dataCheckLogsVO.setExistReport(true);
+                            dataCheckLogsVO.setOriginalName(attachmentInfoPO.getOriginalName());
+                        }
+                    }
+                }
+                // 秒转分
+                if (StringUtils.isNotEmpty(dataCheckLogsVO.getCheckDataDuration())) {
+                    int minutes = Integer.parseInt(dataCheckLogsVO.getCheckDataDuration()) / 60;
+                    int seconds = Integer.parseInt(dataCheckLogsVO.getCheckDataDuration()) % 60;
+                    dataCheckLogsVO.setCheckDataDuration(minutes + "分" + seconds + "秒");
                 }
             }
         }

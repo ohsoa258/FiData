@@ -58,5 +58,6 @@
             log.table_name ELSE CONCAT( log.schema_name, '.', log.table_name )
             END = #{query.tableFullName})
         </if>
+        ORDER BY log.create_time DESC
     </select>
 </mapper>

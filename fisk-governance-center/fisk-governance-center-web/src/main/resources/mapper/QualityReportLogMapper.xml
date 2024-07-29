@@ -31,7 +31,7 @@
         FROM
         tb_quality_report_log
         WHERE
-        del_flag = 1 AND report_id=#{reportId}
+        del_flag = 1
         <if test="reportId > 0 ">
             AND report_id = #{reportId}
         </if>
