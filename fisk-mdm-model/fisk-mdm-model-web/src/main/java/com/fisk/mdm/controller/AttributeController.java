@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.mdm.config.SwaggerConfig;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.service.AttributeService;
@@ -104,5 +106,27 @@ public class AttributeController {
     @GetMapping("/getPoiAuthorization")
     public ResultEntity<Map<String, Object>> getPoiAuthorization() {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getPoiAuthorization());
+    }
+
+    /**
+     * 获取主数据字段数据分类和数据级别
+     *
+     * @return
+     */
+    @GetMapping("/getDataClassificationsAndLevels")
+    @ApiOperation(value = "获主数据字段数据分类和数据级别")
+    public ResultEntity<CAndLDTO> getDataClassificationsAndLevels() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataClassificationsAndLevels());
+    }
+
+    /**
+     * 关联主数据表字段和数据元标准
+     * @param dtos
+     * @return
+     */
+    @ApiOperation("关联主数据表字段和数据元标准")
+    @PostMapping("/mapMDMFieldsWithStandards")
+    public ResultEntity<Object> mapMDMFieldsWithStandards(@RequestBody List<StandardsBeCitedDTO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.mapMDMFieldsWithStandards(dtos));
     }
 }
