@@ -1149,6 +1149,33 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2'))\n";
                     }
                     break;
+                case "yyyyMMdd":
+                    if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                        sql += " AND (" + f_Name + " IS NULL OR " +
+                                "LENGTH(" + f_Name + ") != 8 OR " +
+                                "SUBSTRING(" + f_Name + ", 1, 4) < '1900' OR " +
+                                "SUBSTRING(" + f_Name + ", 5, 2) > '12' OR " +
+                                "SUBSTRING(" + f_Name + ", 7, 2) > '31')\n";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+                        sql += " AND (" + f_Name + " IS NULL OR " +
+                                "LEN(" + f_Name + ") != 8 OR " +
+                                "SUBSTRING(" + f_Name + ", 1, 4) < '1900' OR " +
+                                "SUBSTRING(" + f_Name + ", 5, 2) > '12' OR " +
+                                "SUBSTRING(" + f_Name + ", 7, 2) > '31')\n";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                        sql += " AND (" + f_Name + " IS NULL OR " +
+                                "LENGTH(" + f_Name + ") != 8 OR " +
+                                "SUBSTRING(" + f_Name + " FROM 1 FOR 4) < '1900' OR " +
+                                "SUBSTRING(" + f_Name + " FROM 5 FOR 2) > '12' OR " +
+                                "SUBSTRING(" + f_Name + " FROM 7 FOR 2) > '31')\n";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+                        sql += " AND (" + f_Name + " IS NULL OR " +
+                                "CHAR_LENGTH(" + f_Name + ") != 8 OR " +
+                                "SUBSTRING(" + f_Name + ", 1, 4) < '1900' OR " +
+                                "SUBSTRING(" + f_Name + ", 5, 2) > '12' OR " +
+                                "SUBSTRING(" + f_Name + ", 7, 2) > '31')\n";
+                    }
+                    break;
                 case "yyyy-MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n" +
