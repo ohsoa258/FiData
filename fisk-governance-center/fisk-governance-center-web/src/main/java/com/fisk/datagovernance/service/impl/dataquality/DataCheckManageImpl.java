@@ -3087,6 +3087,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return dataRowList;
     }
 
+    /**
+     * @description 定时清理存储在数据库的错误数据
+     * @author dick
+     * @date 2024/7/30 16:27
+     * @version v1.0
+     * @params
+     * @return com.fisk.common.core.response.ResultEnum
+     */
     public ResultEnum deleteCheckResult() {
         // 第一步：设置计划任务每天凌晨12点执行
         // 第二步：检查校验规则是否设置错误数据保留时间

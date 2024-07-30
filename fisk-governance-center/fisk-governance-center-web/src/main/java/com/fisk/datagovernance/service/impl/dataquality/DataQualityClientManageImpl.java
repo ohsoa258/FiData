@@ -868,7 +868,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                 } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
                     // 单向取值，因为页面可以配置运算符，比如页面配置字段=6，所以要查的是!=6的数据，业务页面配置的规则认为是满足校验规则的数据
-                    Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                    Integer rangeCheckValue = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue());
                     String rangeCheckOneWayOperator = qualityReport_GetReverseOperator(dataCheckExtendPO.getRangeCheckOneWayOperator());
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
@@ -1459,65 +1459,59 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
                                 "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
                                 "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 1) != ' '\n" +
-                                "OR SUBSTRING( " + f_Name + " , 13, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 16, 1) != ':'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 20, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 21, 3) BETWEEN '000' AND '999'))\n";
-                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 23\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 9, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 1) != ' '\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 13, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 13, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 16, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 17, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 20, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 21, 3)) != 1\n" +
+                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
+                                "OR SUBSTRING( " + f_Name + " , 12, 2) NOT BETWEEN '00' AND '23'\n" +
+                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
+                                "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
+                                "OR SUBSTRING( " + f_Name + " , 15, 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING( " + f_Name + " , 18, 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING( " + f_Name + " , 20, 1) != '.'\n" +
                                 "OR SUBSTRING( " + f_Name + " , 21, 3) NOT BETWEEN '000' AND '999')\n";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+                        sql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 23\n" +
+                                "OR SUBSTRING(" + f_Name + ", 5, 1) != '-'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 8, 1) != '-'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 6, 2) NOT BETWEEN '01' AND '12'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 9, 2) NOT BETWEEN '01' AND '31'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 11, 1) != ' '\n" +
+                                "OR SUBSTRING(" + f_Name + ", 12, 2) NOT BETWEEN '00' AND '23'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 14, 1) != ':'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 17, 1) != ':'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 15, 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 18, 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 20, 1) != '.'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 21, 3) NOT BETWEEN '000' AND '999')\n";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 23\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 8 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 9 FOR 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 12 FOR 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 13 FOR 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 16 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 17 FOR 2) BETWEEN '00' AND '59')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 20 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 21 FOR 3) BETWEEN '000' AND '999'))\n";
+                        sql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 23\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 5 FOR 1) != '-'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 8 FOR 1) != '-'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 1 FOR 4) NOT BETWEEN '0000' AND '9999'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 6 FOR 2) NOT BETWEEN '01' AND '12'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 9 FOR 2) NOT BETWEEN '01' AND '31'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 11 FOR 1) != ' '\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 12 FOR 2) NOT BETWEEN '00' AND '23'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 14 FOR 1) != ':'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 17 FOR 1) != ':'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 15 FOR 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 18 FOR 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 20 FOR 1) != '.'\n" +
+                                "OR SUBSTRING(" + f_Name + " FROM 21 FOR 3) NOT BETWEEN '000' AND '999')\n";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 23\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 1) BETWEEN '0' AND '3')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 9, 1) = '3' AND SUBSTRING( " + f_Name + " , 10, 1) NOT BETWEEN '0' AND '1')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 13, 1) BETWEEN '0' AND '2')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 13, 1) = '2' AND SUBSTRING( " + f_Name + " , 14, 1) NOT BETWEEN '0' AND '3')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 16, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 17, 1) BETWEEN '0' AND '5')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 20, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 21, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 22, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 23, 1) BETWEEN '0' AND '9'))\n";
+                        sql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 23\n" +
+                                "OR SUBSTRING(" + f_Name + ", 5, 1) != '-'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 8, 1) != '-'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 6, 2) NOT BETWEEN '01' AND '12'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 9, 2) NOT BETWEEN '01' AND '31'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 11, 1) != ' '\n" +
+                                "OR SUBSTRING(" + f_Name + ", 12, 2) NOT BETWEEN '00' AND '23'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 14, 1) != ':'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 17, 1) != ':'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 15, 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 18, 2) NOT BETWEEN '00' AND '59'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 20, 1) != '.'\n" +
+                                "OR SUBSTRING(" + f_Name + ", 21, 3) NOT BETWEEN '000' AND '999')\n";
                     }
                     break;
             }
