@@ -1033,488 +1033,266 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql = "";
 
         for (String dateFormat : dateFormatList) {
+            String tempSql = "", numberType = "";
             switch (dateFormat) {
                 case "HH:mm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 5\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 3, 1) != ':'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 4, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 5\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 5\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 3, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 4, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 4, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 5\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 5\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 2 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 3 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 4 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 5 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 1 FOR 2)::INTEGER NOT BETWEEN 0 AND 23\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 4 FOR 2)::INTEGER NOT BETWEEN 0 AND 59)\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 5\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 5\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 3, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 5, 1) BETWEEN '0' AND '9')\n" +
-                                "OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS UNSIGNED) NOT BETWEEN 0 AND 23\n" +
-                                "OR CAST(SUBSTRING( " + f_Name + " , 4, 2) AS UNSIGNED) NOT BETWEEN 0 AND 59)\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 5\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 3, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "HHmm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " ,'')) != 4\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 3, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 4\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 4\n" +
-                                "OR ISNUMERIC( " + f_Name + " ) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 3, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 4\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 4\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 2 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 3 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 4 FOR 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 1 FOR 2)::INTEGER NOT BETWEEN 0 AND 23\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 3 FOR 2)::INTEGER NOT BETWEEN 0 AND 59)\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 4\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " ,'')) != 4\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS UNSIGNED) NOT BETWEEN 0 AND 23\n" +
-                                "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS UNSIGNED) NOT BETWEEN 0 AND 59)\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 4\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyyMM":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 6\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 2) NOT BETWEEN '01' AND '12')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 6\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 6\n" +
-                                "OR ISNUMERIC( " + f_Name + " ) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 2) NOT BETWEEN '01' AND '12')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 6\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 6\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 5 FOR 2) BETWEEN '01' AND '12'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 6\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 6\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 5, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 5, 1) = '1' AND SUBSTRING( " + f_Name + " , 6, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 5, 1) = '0' AND SUBSTRING( " + f_Name + " , 6, 1) NOT BETWEEN '1' AND '9'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 6\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
                     break;
                 case "yyyy-MM":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 7\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 7\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 7\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 7\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 7\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 7\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 7\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 7\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
                     break;
                 case "yyyyMMdd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (" + f_Name + " IS NULL OR " +
-                                "LENGTH(" + f_Name + ") != 8 OR " +
-                                "SUBSTRING(" + f_Name + ", 1, 4) < '1900' OR " +
-                                "SUBSTRING(" + f_Name + ", 5, 2) > '12' OR " +
-                                "SUBSTRING(" + f_Name + ", 7, 2) > '31')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 8\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (" + f_Name + " IS NULL OR " +
-                                "LEN(" + f_Name + ") != 8 OR " +
-                                "SUBSTRING(" + f_Name + ", 1, 4) < '1900' OR " +
-                                "SUBSTRING(" + f_Name + ", 5, 2) > '12' OR " +
-                                "SUBSTRING(" + f_Name + ", 7, 2) > '31')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 8\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (" + f_Name + " IS NULL OR " +
-                                "LENGTH(" + f_Name + ") != 8 OR " +
-                                "SUBSTRING(" + f_Name + " FROM 1 FOR 4) < '1900' OR " +
-                                "SUBSTRING(" + f_Name + " FROM 5 FOR 2) > '12' OR " +
-                                "SUBSTRING(" + f_Name + " FROM 7 FOR 2) > '31')\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 8\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (" + f_Name + " IS NULL OR " +
-                                "CHAR_LENGTH(" + f_Name + ") != 8 OR " +
-                                "SUBSTRING(" + f_Name + ", 1, 4) < '1900' OR " +
-                                "SUBSTRING(" + f_Name + ", 5, 2) > '12' OR " +
-                                "SUBSTRING(" + f_Name + ", 7, 2) > '31')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 8\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 7, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy-MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 10\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 9, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 10\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 10\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 8 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 9 FOR 2) BETWEEN '01' AND '31'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 10\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 1) BETWEEN '0' AND '3')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 9, 1) = '3' AND SUBSTRING( " + f_Name + " , 10, 1) NOT BETWEEN '0' AND '1'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 10\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy/MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 10\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 9, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 10\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 10\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 8 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 9 FOR 2) BETWEEN '01' AND '31'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 10\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 10\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 1) BETWEEN '0' AND '3')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 9, 1) = '3' AND SUBSTRING( " + f_Name + " , 10, 1) NOT BETWEEN '0' AND '1'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 10\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy-MM-dd HH:mm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 16\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 12, 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 15, 2) BETWEEN '00' AND '59'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 16\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 16\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 9, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 1) != ' '\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 13, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 13, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 15, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 16, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 16, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 16\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 16\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 8 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 9 FOR 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 11 FOR 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 12 FOR 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 14 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 15 FOR 2) BETWEEN '00' AND '59'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 16\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 16\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 1) BETWEEN '0' AND '3')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 9, 1) = '3' AND SUBSTRING( " + f_Name + " , 10, 1) NOT BETWEEN '0' AND '1')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 12, 1) BETWEEN '0' AND '2')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 12, 1) = '2' AND SUBSTRING( " + f_Name + " , 13, 1) NOT BETWEEN '0' AND '3')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 15, 1) BETWEEN '0' AND '5')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 16, 1) BETWEEN '0' AND '9'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 16\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy-MM-dd HH:mm:ss":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 19\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 12, 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 15, 2) BETWEEN '00' AND '59')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 18, 2) BETWEEN '00' AND '59'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 19\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 19\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 9, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 1) != ' '\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 13, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 13, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 15, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 16, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 16, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 18, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 19, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 19, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 19\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 19\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 8 FOR 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 9 FOR 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 11 FOR 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 12 FOR 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 14 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 15 FOR 2) BETWEEN '00' AND '59')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 17 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 18 FOR 2) BETWEEN '00' AND '59'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 19\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 19\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 1) BETWEEN '0' AND '3')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 9, 1) = '3' AND SUBSTRING( " + f_Name + " , 10, 1) NOT BETWEEN '0' AND '1')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 12, 1) BETWEEN '0' AND '2')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 12, 1) = '2' AND SUBSTRING( " + f_Name + " , 13, 1) NOT BETWEEN '0' AND '3')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 15, 1) BETWEEN '0' AND '5')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 16, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 18, 1) BETWEEN '0' AND '5')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 19, 1) BETWEEN '0' AND '9'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 19\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy/MM/dd HH:mm:ss":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 19\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 12, 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 15, 2) BETWEEN '00' AND '59')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 18, 2) BETWEEN '00' AND '59'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 19\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL( " + f_Name + " , '')) != 19\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 1, 4)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 6, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '/'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 9, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 1) != ' '\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 13, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 13, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 15, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 16, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 16, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 18, 1) != ':'\n" +
-                                "OR ISNUMERIC(SUBSTRING( " + f_Name + " , 19, 2)) != 1\n" +
-                                "OR SUBSTRING( " + f_Name + " , 19, 2) NOT BETWEEN '00' AND '59')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 19\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (LENGTH(COALESCE( " + f_Name + " , '')) != 19\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 1 FOR 4) BETWEEN '0000' AND '9999')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 5 FOR 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 6 FOR 2) BETWEEN '01' AND '12')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 8 FOR 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 9 FOR 2) BETWEEN '01' AND '31')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 11 FOR 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 12 FOR 2) BETWEEN '00' AND '23')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 14 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 15 FOR 2) BETWEEN '00' AND '59')\n" +
-                                "OR SUBSTRING( " + f_Name + "  FROM 17 FOR 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + "  FROM 18 FOR 2) BETWEEN '00' AND '59'))\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 19\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 19\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 1, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 2, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 3, 1) BETWEEN '0' AND '9')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 4, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 6, 1) BETWEEN '0' AND '1')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 6, 1) = '1' AND SUBSTRING( " + f_Name + " , 7, 1) NOT BETWEEN '0' AND '2')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '/'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 9, 1) BETWEEN '0' AND '3')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 9, 1) = '3' AND SUBSTRING( " + f_Name + " , 10, 1) NOT BETWEEN '0' AND '1')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 12, 1) BETWEEN '0' AND '2')\n" +
-                                "OR (SUBSTRING( " + f_Name + " , 12, 1) = '2' AND SUBSTRING( " + f_Name + " , 13, 1) NOT BETWEEN '0' AND '3')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 15, 1) BETWEEN '0' AND '5')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 16, 1) BETWEEN '0' AND '9')\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 18, 1) BETWEEN '0' AND '5')\n" +
-                                "OR NOT (SUBSTRING( " + f_Name + " , 19, 1) BETWEEN '0' AND '9'))\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 19\n";
+                        numberType = " UNSIGNED ";
                     }
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '/'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy-MM-dd HH:mm:ss.SSS":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 23\n" +
-                                "OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                                "OR SUBSTRING( " + f_Name + " , 12, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 15, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 18, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 20, 1) != '.'\n" +
-                                "OR SUBSTRING( " + f_Name + " , 21, 3) NOT BETWEEN '000' AND '999')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL( " + f_Name + " , '')) != 23\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-                        sql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 23\n" +
-                                "OR SUBSTRING(" + f_Name + ", 5, 1) != '-'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 8, 1) != '-'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 11, 1) != ' '\n" +
-                                "OR SUBSTRING(" + f_Name + ", 12, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 14, 1) != ':'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 17, 1) != ':'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 15, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 18, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 20, 1) != '.'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 21, 3) NOT BETWEEN '000' AND '999')\n";
+                        tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 23\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 23\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 5 FOR 1) != '-'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 8 FOR 1) != '-'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 1 FOR 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 6 FOR 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 9 FOR 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 11 FOR 1) != ' '\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 12 FOR 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 14 FOR 1) != ':'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 17 FOR 1) != ':'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 15 FOR 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 18 FOR 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 20 FOR 1) != '.'\n" +
-                                "OR SUBSTRING(" + f_Name + " FROM 21 FOR 3) NOT BETWEEN '000' AND '999')\n";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 23\n";
+                        numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-                        sql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 23\n" +
-                                "OR SUBSTRING(" + f_Name + ", 5, 1) != '-'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 8, 1) != '-'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 1, 4) NOT BETWEEN '0000' AND '9999'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 6, 2) NOT BETWEEN '01' AND '12'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 9, 2) NOT BETWEEN '01' AND '31'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 11, 1) != ' '\n" +
-                                "OR SUBSTRING(" + f_Name + ", 12, 2) NOT BETWEEN '00' AND '23'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 14, 1) != ':'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 17, 1) != ':'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 15, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 18, 2) NOT BETWEEN '00' AND '59'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 20, 1) != '.'\n" +
-                                "OR SUBSTRING(" + f_Name + ", 21, 3) NOT BETWEEN '000' AND '999')\n";
+                        tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 23\n";
+                        numberType = " UNSIGNED ";
                     }
+//                        -- -- 检查 '-' 字符在正确位置
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 5, 1); -- = '-'
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 8, 1); -- = '-'
+//                        -- -- 检查年份在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 1, 4) ;-- BETWEEN '0000' AND '9999'
+//                        -- -- 检查月份在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 6, 2) ;-- BETWEEN '01' AND '12'
+//                        -- -- 检查日期在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 9, 2) ;-- BETWEEN '01' AND '31'
+//                        -- -- 检查空格在正确位置
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 11, 1) ;-- = ' '
+//                        -- -- 检查小时在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 12, 2) ;-- BETWEEN '00' AND '23'
+//                        -- -- 检查 ':' 字符在正确位置
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 14, 1); -- = ':'
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 17, 1); -- = ':'
+//                        -- -- 检查分钟在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 15, 2); -- BETWEEN '00' AND '59'
+//                        -- -- 检查秒在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 18, 2); -- BETWEEN '00' AND '59'
+//                        -- -- 检查毫秒在正确范围内
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 20, 1); -- = '.'
+//                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 21, 3); -- BETWEEN '000' AND '999'
+                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR SUBSTRING( " + f_Name + " , 20, 1) != '.'\n" +
+                            "OR CAST(SUBSTRING( " + f_Name + " , 21, 3) AS " + numberType + ") NOT BETWEEN '000' AND '999') \n";
+
                     break;
             }
+            sql += tempSql;
         }
         return sql;
     }
