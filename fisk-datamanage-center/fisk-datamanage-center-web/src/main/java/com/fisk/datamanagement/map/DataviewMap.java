@@ -2,10 +2,10 @@ package com.fisk.datamanagement.map;
 
 import com.fisk.datamanagement.entity.DataviewFilterPO;
 import com.fisk.datamanagement.entity.DataviewPO;
-import com.fisk.system.dto.DataViewAddDTO;
-import com.fisk.system.dto.DataViewDTO;
-import com.fisk.system.dto.DataViewEditDTO;
-import com.fisk.system.dto.DataViewFilterDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewAddDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewEditDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewFilterDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;

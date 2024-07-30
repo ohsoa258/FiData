@@ -14,7 +14,13 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
+import com.fisk.dataaccess.dto.tablefield.ClassificationsAndLevelsDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
+import com.fisk.dataaccess.enums.tablefield.DataClassificationEnum;
+import com.fisk.dataaccess.enums.tablefield.DataLevelEnum;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.dto.attributelog.AttributeLogSaveDTO;
 import com.fisk.mdm.entity.AttributeGroupDetailsPO;
@@ -33,6 +39,7 @@ import com.fisk.mdm.service.EventLogService;
 import com.fisk.mdm.vo.attribute.AttributeVO;
 import com.fisk.mdm.vo.entity.EntityMsgVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
@@ -106,6 +113,9 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
 
     @Value("${open-metadata}")
     private Boolean openMetadata;
+
+    @Value("${fiData-data-mdm-source}")
+    private Integer mdmSource;
 
     @Override
     public ResultEntity<AttributeVO> getById(Integer id) {
@@ -727,5 +737,76 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             log.error("------------------------获取数据失败:{}", e.getMessage());
             throw new FkException(ResultEnum.ERROR, e.getMessage());
         }
+    }
+
+    /**
+     * 获取主数据字段数据分类和数据级别
+     *
+     * @return
+     */
+    @Override
+    public CAndLDTO getDataClassificationsAndLevels() {
+        CAndLDTO cAndLDTO = new CAndLDTO();
+        List<ClassificationsAndLevelsDTO> classifications = new ArrayList<>();
+        List<ClassificationsAndLevelsDTO> levels = new ArrayList<>();
+
+        for (DataClassificationEnum value : DataClassificationEnum.values()) {
+            ClassificationsAndLevelsDTO dto = new ClassificationsAndLevelsDTO();
+            dto.setEnumName(value.getName());
+            dto.setEnumValue(value.getValue());
+            dto.setEnumLevel(value.getLevel());
+            classifications.add(dto);
+        }
+
+        for (DataLevelEnum value : DataLevelEnum.values()) {
+            ClassificationsAndLevelsDTO dto = new ClassificationsAndLevelsDTO();
+            dto.setEnumName(value.getName());
+            dto.setEnumValue(value.getValue());
+            dto.setEnumLevel(value.getLevel());
+            levels.add(dto);
+        }
+        cAndLDTO.setClassifications(classifications);
+        cAndLDTO.setLevels(levels);
+
+        return cAndLDTO;
+    }
+
+    @Override
+    public Object mapMDMFieldsWithStandards(List<StandardsBeCitedDTO> dtos) {
+        //        if (CollectionUtils.isEmpty(dtos)) {
+//            throw new FkException(ResultEnum.PARAMTER_NOTNULL);
+//        }
+
+        //获取 dmp_dw配置信息
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(mdmSource);
+        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        DataSourceDTO data = resultEntity.getData();
+
+        //重新装载前端没有的信息
+        for (StandardsBeCitedDTO dto : dtos) {
+            //设置数据库名称
+            dto.setDatabaseName(data.getConDbname());
+            //设置数据源id
+            dto.setDbId(mdmSource);
+            //设置数据源名称
+            dto.setDatasourceName(data.getName());
+        }
+
+        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos);
+
+        return result.getData();
+    }
+
+    /**
+     * 搜索主数据数据元关联字段
+     * @param key
+     * @return
+     */
+    @Override
+    public List<TableFieldDTO> searchColumn(String key) {
+        return this.baseMapper.searchColumn(key);
     }
 }

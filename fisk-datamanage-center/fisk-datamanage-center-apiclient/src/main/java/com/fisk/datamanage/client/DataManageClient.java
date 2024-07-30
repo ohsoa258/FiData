@@ -245,6 +245,15 @@ public interface DataManageClient {
     @GetMapping("/Standards/modelGetStandardsMap")
     List<StandardsBeCitedDTO> modelGetStandardsMap();
 
+    /**
+     * 数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     *
+     * @return
+     */
+    @ApiOperation("主数据-获取所有主数据字段和数据元标准的关联关系")
+    @GetMapping("/Standards/mdmGetStandardsMap")
+    List<StandardsBeCitedDTO> mdmGetStandardsMap();
+
 
     /**
      * 获取数仓字段和指标所属表里所有关联关系 只获取字段id 和指标id

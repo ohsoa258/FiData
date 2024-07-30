@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
+import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.mdm.dto.attribute.*;
 import com.fisk.mdm.entity.AttributePO;
 import com.fisk.mdm.vo.attribute.AttributeVO;
@@ -121,4 +124,25 @@ public interface AttributeService extends IService<AttributePO> {
      * @return
      */
     List<AttributePO> getAttributeByEntityId(Integer entityId);
+
+    /**
+     * 获取主数据字段数据分类和数据级别
+     *
+     * @return
+     */
+    CAndLDTO getDataClassificationsAndLevels();
+
+    /**
+     * 关联主数据表字段和数据元标准
+     * @param dtos
+     * @return
+     */
+    Object mapMDMFieldsWithStandards(List<StandardsBeCitedDTO> dtos);
+
+    /**
+     *搜索主数据数据元关联字段
+     * @param key
+     * @return
+     */
+    List<TableFieldDTO> searchColumn(String key);
 }

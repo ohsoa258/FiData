@@ -20,6 +20,75 @@
                 )
         </if>
     </select>
+
+    <select id="getStandardsDetailMenuList" resultType="com.fisk.datamanagement.dto.standards.StandardsDetailDTO">
+        SELECT
+        a.id,
+        a.name,
+        a.pid,
+        a.sort,
+        a.type,
+        b.english_name,
+        b.description,
+        b.field_type,
+        b.datameta_code,
+        b.quality_rule,
+        b.value_range_type,
+        b.symbols,
+        b.value_range,
+        b.value_range_max
+        FROM
+        `tb_standards_menu` a
+        LEFT JOIN
+        tb_standards b ON a.id = b.menu_id
+        WHERE
+        a.del_flag = 1
+        AND b.del_flag = 1
+        <if test="ids != null and ids.size() > 0">
+            AND a.pid IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        ORDER BY a.create_time DESC, a.id
+    </select>
+    <select id="getStandardsDetailListByKeyWord" resultType="com.fisk.datamanagement.dto.standards.StandardsDetailDTO">
+        SELECT
+        a.id,
+        a.name,
+        a.pid,
+        a.sort,
+        a.type,
+        b.english_name,
+        b.description,
+        b.field_type,
+        b.datameta_code,
+        b.quality_rule,
+        b.value_range_type,
+        b.symbols,
+        b.value_range,
+        b.value_range_max
+        FROM
+        `tb_standards_menu` a
+        LEFT JOIN
+        tb_standards b ON a.id = b.menu_id
+        WHERE
+        a.del_flag = 1
+        AND b.del_flag = 1
+        <if test="ids != null and ids.size() > 0">
+            AND a.pid IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="keyWord !=null and keyWord.length()>0 ">
+            AND (b.chinese_name LIKE concat('%', #{keyWord}, '%')
+            OR b.english_name LIKE concat('%', #{keyWord}, '%')
+            OR b.datameta_code LIKE concat('%', #{keyWord}, '%')
+            )
+        </if>
+        ORDER BY a.create_time DESC, a.id
+    </select>
     <select id="getStandardsBySource" resultType="com.fisk.datamanagement.dto.standards.StandardsDTO">
         SELECT
             *
@@ -48,5 +117,39 @@
 
     <select id="getStandardTotal" resultType="Integer">
         select count(1) from tb_standards where del_flag = 1
+    </select>
+
+    <select id="filter" resultType="com.fisk.datamanagement.dto.standards.StandardsDetailDTO">
+        SELECT
+        a.id,
+        a.name,
+        a.pid,
+        a.sort,
+        a.type,
+        b.english_name,
+        b.description,
+        b.field_type,
+        b.datameta_code,
+        b.quality_rule,
+        b.value_range_type,
+        b.symbols,
+        b.value_range,
+        b.value_range_max
+        FROM
+        `tb_standards_menu` a
+        LEFT JOIN
+        tb_standards b ON a.id = b.menu_id
+        WHERE
+        a.del_flag = 1
+        AND b.del_flag = 1
+        <if test="ids != null and ids.size() > 0">
+            AND a.pid IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="where !=null and where.length()>0 ">
+            ${where}
+        </if>
     </select>
 </mapper>

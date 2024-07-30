@@ -141,7 +141,7 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessMetaDataDetailMenuList(pid));
     }
 
-    @ApiOperation("获取业务指标明细数据下拉列表(数据)")
+    @ApiOperation("获取业务指标明细数据列表(数据)")
     @GetMapping("/getBusinessMetaDataNameList")
     public ResultEntity<Object> getBusinessMetaDataNameList(@RequestParam(value = "key", required = false) String key) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessTargetinfoService.getBusinessMetaDataNameList(key));

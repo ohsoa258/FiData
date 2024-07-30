@@ -5,11 +5,12 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.dataview.DataViewAddDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewEditDTO;
+import com.fisk.datamanagement.enums.serverModuleTypeEnum;
 import com.fisk.datamanagement.service.DataviewService;
-import com.fisk.system.dto.DataViewAddDTO;
-import com.fisk.system.dto.DataViewDTO;
-import com.fisk.system.dto.DataViewEditDTO;
-import com.fisk.system.enums.serverModuleTypeEnum;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -32,8 +33,8 @@ public class DataviewController {
 
     @GetMapping("/get")
     @ApiOperation("获取个人视图和系统视图")
-    public ResultEntity<Page<DataViewDTO>> get(Integer currentPage, Integer pageSize, serverModuleTypeEnum type) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataviewService.queryAll(currentPage,pageSize,type));
+    public ResultEntity<Page<DataViewDTO>> get(Integer currentPage, Integer pageSize, serverModuleTypeEnum type,String filterName) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, dataviewService.queryAll(currentPage,pageSize,type,filterName));
     }
 
     @PostMapping("/add")

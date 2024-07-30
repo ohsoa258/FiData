@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
+import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -14,7 +15,11 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
+import com.fisk.mdm.dto.attribute.FieldsAssociatedMetricsDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
 import com.fisk.mdm.dto.dataops.TableInfoDTO;
 import com.fisk.mdm.dto.entity.EntityDTO;
@@ -47,6 +52,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.model.TableDTO;
 import com.fisk.task.dto.task.BuildDeleteTableServiceDTO;
 import com.fisk.task.enums.OlapTableEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +69,7 @@ import static com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils.*;
  * @date 2022/4/2 17:49
  */
 @Service
+@Slf4j
 public class EntityServiceImpl implements EntityService {
 
     @Resource
@@ -396,7 +403,59 @@ public class EntityServiceImpl implements EntityService {
 
             // 获取创建人、修改人
             ReplenishUserInfo.replenishUserName(dtoList, userClient, UserFieldEnum.USER_ACCOUNT);
+            try {
+                //2.1获取所有数据元 -> 数据元id 数据元名称
+                List<StandardsDTO> standardsDTOS = dataManageClient.modelGetStandards();
+                //2.2获取数仓字段和数据元关联表里所有关联关系
+                List<StandardsMenuDTO> standardMenus = dataManageClient.getStandardMenus();
+                Map<Integer, String> standardsMenuMap = standardMenus.stream()
+                        .collect(Collectors.toMap(
+                                StandardsMenuDTO::getId,
+                                StandardsMenuDTO::getName
+                        ));
 
+                //2.3获取数仓字段和数据元关联表里所有关联关系
+                List<StandardsBeCitedDTO> standardsBeCitedDTOS = dataManageClient.mdmGetStandardsMap();
+
+                for (AttributeInfoDTO attributeInfoDTO : dtoList) {
+                    ArrayList<FieldsAssociatedMetricsDTO> objDTOS = new ArrayList<>();
+                    //获取字段id
+                    long filedId = attributeInfoDTO.getId();
+                    //不为空则说明该事实表字段关联的有数据元标准
+                    if (!CollectionUtils.isEmpty(standardsBeCitedDTOS)) {
+                        //循环数据元标准关联关系
+                        for (StandardsBeCitedDTO s : standardsBeCitedDTOS) {
+                            //只获取主数据表的关联关系
+                            if (!TableBusinessTypeEnum.ENTITY_TABLR.equals(s.getTableBusinessType())) {
+                                continue;
+                            }
+
+                            if (s.getFieldId().equals(String.valueOf(filedId))) {
+                                //循环数据元标准集合 获取数据元标准名称
+                                for (StandardsDTO standardsDTO : standardsDTOS) {
+                                    if (s.getStandardsId().equals(standardsDTO.getId())) {
+                                        FieldsAssociatedMetricsDTO dto = new FieldsAssociatedMetricsDTO();
+                                        //获取到数据元标准id关联的数据元标准menuid
+                                        int menuId = standardsDTO.getMenuId();
+                                        //获取menuId对应的菜单名称
+                                        String menuName = standardsMenuMap.get(menuId);
+                                        dto.setId(menuId);
+                                        dto.setName(menuName);
+                                        //类型 0指标 1数据元
+                                        dto.setType(1);
+                                        objDTOS.add(dto);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    attributeInfoDTO.setAssociatedDto(objDTOS);
+                }
+            } catch (Exception e) {
+                log.error("==============================");
+                log.error("获取数仓贯标失败..." + e);
+                log.error("==============================");
+            }
             //若属性类型为域字段，需返回关联实体名称
             for (AttributeInfoDTO attributeInfoDTO : dtoList) {
                 //判断类型是否为域字段，并且域字段id是否为空

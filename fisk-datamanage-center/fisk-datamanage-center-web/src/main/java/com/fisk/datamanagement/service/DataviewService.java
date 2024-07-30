@@ -2,10 +2,10 @@ package com.fisk.datamanagement.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.response.ResultEnum;
-import com.fisk.system.dto.DataViewAddDTO;
-import com.fisk.system.dto.DataViewDTO;
-import com.fisk.system.dto.DataViewEditDTO;
-import com.fisk.system.enums.serverModuleTypeEnum;
+import com.fisk.datamanagement.dto.dataview.DataViewAddDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewEditDTO;
+import com.fisk.datamanagement.enums.serverModuleTypeEnum;
 
 /**
  * @Author: wangjian
@@ -15,12 +15,14 @@ import com.fisk.system.enums.serverModuleTypeEnum;
 public interface DataviewService {
     /**
      * 查询获取个人视图和系统视图
+     *
      * @param currentPage
      * @param pageSize
      * @param type
+     * @param filterName
      * @return
      */
-    Page<DataViewDTO> queryAll(Integer currentPage, Integer pageSize, serverModuleTypeEnum type);
+    Page<DataViewDTO> queryAll(Integer currentPage, Integer pageSize, serverModuleTypeEnum type,String filterName);
 
     /**
      * 添加数据视图

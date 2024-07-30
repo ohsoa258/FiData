@@ -7,7 +7,6 @@ import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.entity.StandardsPO;
 import org.springframework.web.multipart.MultipartFile;
@@ -91,6 +90,12 @@ public interface StandardsService extends IService<StandardsPO> {
      */
     List<StandardsBeCitedDTO> modelGetStandardsMap();
 
+    /**
+     * 主数据-获取所有主数据字段和数据元标准的关联关系
+     * @return
+     */
+    List<StandardsBeCitedDTO> mdmGetStandardsMap();
+
     List<SearchColumnDTO> searchStandardBeCitedField(String key);
 
     /**
@@ -98,5 +103,20 @@ public interface StandardsService extends IService<StandardsPO> {
      * @return
      */
     Integer getStandardTotal();
+
+
+
+
+    List<StandardsDetailDTO> getStandardsDetailMenuList(String menuId);
+
+    List<StandardsDetailDTO> getStandardsDetailListByKeyWord(String keyWord);
+
+    /**
+     * 筛选器
+     *
+     * @param query 查询条件
+     * @return 筛选结果
+     */
+    List<StandardsDetailDTO> pageFilter(CategoryQueryDTO query);
 }
 

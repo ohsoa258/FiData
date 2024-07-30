@@ -2,7 +2,7 @@ package com.fisk.datamanagement.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
-import com.fisk.system.enums.serverModuleTypeEnum;
+import com.fisk.datamanagement.enums.serverModuleTypeEnum;
 import lombok.Data;
 
 /**

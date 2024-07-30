@@ -7,6 +7,7 @@ import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
+import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.service.StandardsBeCitedService;
 import com.fisk.datamanagement.service.StandardsMenuService;
@@ -121,6 +122,23 @@ public class StandardsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.standardsQuery(dto));
     }
 
+    @ApiOperation("数据标准根据menuId查询数据元")
+    @GetMapping("/getStandardsDetailMenuList")
+    public ResultEntity<Object> getStandardsDetailMenuList(@RequestParam("menuId") String menuId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardsDetailMenuList(menuId));
+    }
+    @ApiOperation("数据标准根据关键字查询数据元")
+    @GetMapping("/getStandardsDetailListByKeyWord")
+    public ResultEntity<Object> getStandardsDetailListByKeyWord(@RequestParam(value = "keyWord",required = false) String keyWord) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getStandardsDetailListByKeyWord(keyWord));
+    }
+
+    @ApiOperation(value = "筛选器")
+    @PostMapping("/pageFilter")
+    public ResultEntity<List<StandardsDetailDTO>> pageFilter(@RequestBody CategoryQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.pageFilter(dto));
+    }
+
     @ApiOperation("根据数据源信息查询数据标准基本属性")
     @GetMapping("/getStandardsBySource")
     public ResultEntity<List<StandardsDTO>> getStandardsBySource(Integer fieldMetadataId) {
@@ -173,6 +191,17 @@ public class StandardsController {
     @GetMapping("/modelGetStandardsMap")
     public List<StandardsBeCitedDTO> modelGetStandardsMap() {
         return standardsService.modelGetStandardsMap();
+    }
+
+    /**
+     * 主数据-获取所有主数据字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     *
+     * @return
+     */
+    @ApiOperation("主数据-获取所有主数据字段和数据元标准的关联关系")
+    @GetMapping("/mdmGetStandardsMap")
+    public List<StandardsBeCitedDTO> mdmGetStandardsMap() {
+        return standardsService.mdmGetStandardsMap();
     }
 
     @ApiOperation("获取所有数据元标准menu-只要id和name")

@@ -10,10 +10,10 @@ import com.fisk.datamanagement.map.DataviewMap;
 import com.fisk.datamanagement.mapper.DataviewFilterMapper;
 import com.fisk.datamanagement.mapper.DataviewMapper;
 import com.fisk.datamanagement.service.DataviewService;
-import com.fisk.system.dto.DataViewAddDTO;
-import com.fisk.system.dto.DataViewDTO;
-import com.fisk.system.dto.DataViewEditDTO;
-import com.fisk.system.enums.serverModuleTypeEnum;
+import com.fisk.datamanagement.dto.dataview.DataViewAddDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewDTO;
+import com.fisk.datamanagement.dto.dataview.DataViewEditDTO;
+import com.fisk.datamanagement.enums.serverModuleTypeEnum;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -37,7 +37,7 @@ public class DataviewServiceImpl implements DataviewService {
     DataviewFilterMapper dataviewFilterMapper;
 
     @Override
-    public Page<DataViewDTO> queryAll(Integer currentPage, Integer pageSize, serverModuleTypeEnum type) {
+    public Page<DataViewDTO> queryAll(Integer currentPage, Integer pageSize, serverModuleTypeEnum type, String filterName) {
         QueryWrapper<DataviewPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .orderByDesc(DataviewPO::getCreateTime);
@@ -45,6 +45,7 @@ public class DataviewServiceImpl implements DataviewService {
         List<DataViewDTO> dtoList = new ArrayList<>();
         // 根据当前登录人筛选数据
         QueryWrapper<DataviewPO> queryView = new QueryWrapper<>();
+        queryView.lambda().eq(DataviewPO::getViewName,filterName);
         if (type == null){
             queryView.lambda().eq(DataviewPO::getViewType,"1");
         }else {

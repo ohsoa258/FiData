@@ -17,7 +17,6 @@ import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
-import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.core.utils.dbutils.utils.MySqlConUtils;
@@ -34,7 +33,6 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
 import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
-import com.fisk.datamanagement.dto.classification.BusinessTargetinfoMenuDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.standards.*;
 import com.fisk.datamanagement.entity.*;
@@ -53,7 +51,6 @@ import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
-import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -876,6 +873,15 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
+    public List<StandardsBeCitedDTO> mdmGetStandardsMap() {
+        LambdaQueryWrapper<StandardsBeCitedPO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(StandardsBeCitedPO::getStandardsId,StandardsBeCitedPO::getFieldId)
+                .eq(StandardsBeCitedPO::getDbId,3);
+        List<StandardsBeCitedPO> list = standardsBeCitedService.list();
+        return StandardsBeCitedMap.INSTANCES.poListToDTOList(list);
+    }
+
+    @Override
     public Integer getStandardTotal() {
         return this.baseMapper.getStandardTotal();
     }
@@ -902,8 +908,59 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
-    public List<StandardsDetailDTO> getStandardsDetailMenuList(String pid, String keyWord) {
-        return baseMapper.getStandardsDetailMenuList(pid,keyWord);
+    public List<StandardsDetailDTO> getStandardsDetailMenuList(String menuId) {
+        List<StandardsMenuPO> standardsMenuPOList = standardsMenuService.list(new QueryWrapper<>());
+        List<StandardsMenuPO> self = standardsMenuPOList.stream().filter(i -> (int) i.getId() == Integer.parseInt(menuId)).collect(Collectors.toList());
+        List<StandardsMenuPO> allChildrenCategories = getAllChildrenCategories(standardsMenuPOList, Integer.valueOf(menuId));
+        allChildrenCategories.addAll(self);
+        List<Integer> ids = allChildrenCategories.stream().map(i -> (int)i.getId()).collect(Collectors.toList());
+        return baseMapper.getStandardsDetailMenuList(ids);
+    }
+
+    @Override
+    public List<StandardsDetailDTO> getStandardsDetailListByKeyWord(String keyWord) {
+        List<StandardsMenuPO> allMenuList = standardsMenuService.list(new QueryWrapper<>());
+        List<Integer> parentIds = allMenuList.stream().filter(i -> i.getPid() == 0).map(i->(int)i.getId()).collect(Collectors.toList());
+        List<Integer> allChildIds = getAllChildIds(allMenuList, parentIds);
+        allChildIds.addAll(parentIds);
+        return baseMapper.getStandardsDetailListByKeyWord(allChildIds, keyWord);
+    }
+
+    // 递归获取多个根节点的子节点的方法
+    public List<Integer> getAllChildIds(List<StandardsMenuPO> allCategory, List<Integer> parentIds) {
+        Map<Integer, List<StandardsMenuPO>> categoryMap = groupByPid(allCategory);
+        List<Integer> childIds = new ArrayList<>();
+        // 遍历父节点 ID 集合
+        for (Integer parentId : parentIds) {
+            // 如果当前父节点存在子节点，则递归添加子节点
+            if (categoryMap.containsKey(parentId)) {
+                List<StandardsMenuPO> children = categoryMap.get(parentId);
+                List<Integer> ids = children.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+                // 递归调用，查找当前父节点的子节点
+                List<Integer> childrenIds = getAllChildIds(allCategory, ids);
+                childIds.addAll(ids);
+                childIds.addAll(childrenIds);
+            }
+        }
+        // 转换为 List 返回
+        return childIds;
+    }
+
+    // 将分类列表按照 pid 分组
+    private Map<Integer, List<StandardsMenuPO>> groupByPid(List<StandardsMenuPO> allCategory) {
+        return allCategory.stream()
+                .collect(Collectors.groupingBy(StandardsMenuPO::getPid));
+    }
+
+    public static List<StandardsMenuPO> getAllChildrenCategories(List<StandardsMenuPO> allCategories, Integer pid) {
+        List<StandardsMenuPO> children = new ArrayList<>();
+        for (StandardsMenuPO category : allCategories) {
+            if (Objects.equals(category.getPid(), pid)) {
+                children.add(category);
+                children.addAll(getAllChildrenCategories(allCategories, (int) category.getId()));
+            }
+        }
+        return children;
     }
 
     private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {
@@ -982,4 +1039,37 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             AbstractCommonDbHelper.closeConnection(conn);
         }
     }
+
+    @Override
+    public List<StandardsDetailDTO> pageFilter(CategoryQueryDTO query) {
+        StringBuilder querySql = new StringBuilder();
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
+        List<StandardsMenuPO> allMenuList = standardsMenuService.list(new QueryWrapper<>());
+        List<Integer> parentIds = allMenuList.stream().filter(i -> i.getPid() == 0).map(i->(int)i.getId()).collect(Collectors.toList());
+        List<Integer> allChildIds = getAllChildIds(allMenuList, parentIds);
+        allChildIds.addAll(parentIds);
+        List<StandardsDetailDTO> filter = baseMapper.filter(allChildIds,querySql.toString());
+        return filter;
+    }
+
+//    // 递归获取多个根节点的子节点的方法
+//    public List<Integer> getAllChildIds(List<BusinessCategoryPO> allCategory, List<Integer> parentIds) {
+//        Map<Integer, List<BusinessCategoryPO>> categoryMap = groupByPid(allCategory);
+//        List<Integer> childIds = new ArrayList<>();
+//        // 遍历父节点 ID 集合
+//        for (Integer parentId : parentIds) {
+//            // 如果当前父节点存在子节点，则递归添加子节点
+//            if (categoryMap.containsKey(parentId)) {
+//                List<BusinessCategoryPO> children = categoryMap.get(parentId);
+//                List<Integer> ids = children.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
+//                // 递归调用，查找当前父节点的子节点
+//                List<Integer> childrenIds = getAllChildIds(allCategory, ids);
+//                childIds.addAll(ids);
+//                childIds.addAll(childrenIds);
+//            }
+//        }
+//        // 转换为 List 返回
+//        return childIds;
+//    }
 }
