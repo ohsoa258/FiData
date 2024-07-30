@@ -32,4 +32,9 @@ public class MetaSyncTimePO extends BasePO implements Serializable {
      */
     private Integer status;
 
+    /**
+     * 元数据总数
+     */
+    private Integer TotalNum;
+
 }

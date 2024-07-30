@@ -154,7 +154,7 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 String path = null;
                 if (!StringUtils.isEmpty(i.getName())){
                     businessTargetinfoMenuDTO.setCategoryId(i.getName());
-                    List<Map<String, Object>> menuTreeName = menuTreeNames.stream().filter(j -> i.getName().contains(j.get("id").toString())).collect(Collectors.toList());
+                    List<Map<String, Object>> menuTreeName = menuTreeNames.stream().filter(j -> i.getName().equals(j.get("id").toString())).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(menuTreeName)){
                         Map<String, Object> menuTreeNameMap = menuTreeName.get(0);
                         Object full_path = menuTreeNameMap.get("full_path");

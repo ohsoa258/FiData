@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.metasynctime.ClassificationTypeDTO;
+import com.fisk.datamanagement.dto.metasynctime.EntityTotalNumDTO;
 import com.fisk.datamanagement.dto.metasynctime.MetaSyncDTO;
 import com.fisk.datamanagement.entity.MetaSyncTimePO;
 import com.fisk.datamanagement.mapper.MetaSyncTimePOMapper;
@@ -16,8 +17,10 @@ import com.fisk.system.dto.userinfo.UserDTO;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author 56263
@@ -27,7 +30,6 @@ import java.util.List;
 @Service
 public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper, MetaSyncTimePO>
         implements MetaSyncTimePOService {
-
 
     @Resource
     private UserClient userClient;
@@ -102,6 +104,33 @@ public class MetaSyncTimePOServiceImpl extends ServiceImpl<MetaSyncTimePOMapper,
         page1.setPages(page.getPages());
         return page1;
     }
+
+    /**
+     * 资产全景图 获取资产目录趋势分析（近七天）
+     *
+     * @return
+     */
+    @Override
+    public List<EntityTotalNumDTO> getAssetCatalogTrendAnalysis() {
+        List<EntityTotalNumDTO> result;
+        List<MetaSyncTimePO> list = this.list(new LambdaQueryWrapper<MetaSyncTimePO>()
+                .eq(MetaSyncTimePO::getServiceType, ClassificationTypeEnum.MASTER_DATA.getValue())
+                .isNotNull(MetaSyncTimePO::getTotalNum)
+                .orderByDesc(MetaSyncTimePO::getCreateTime)
+                .last("limit 7")
+        );
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        result = list.stream()
+                .map(po -> {
+                    EntityTotalNumDTO dto = new EntityTotalNumDTO();
+                    dto.setDate(po.getUpdateTime().format(formatter));
+                    dto.setTotalNum(po.getTotalNum());
+                    return dto;
+                }).collect(Collectors.toList());
+        return result;
+    }
+
 }
 
 

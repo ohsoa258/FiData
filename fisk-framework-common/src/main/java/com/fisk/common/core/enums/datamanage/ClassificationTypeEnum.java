@@ -14,7 +14,8 @@ public enum ClassificationTypeEnum implements BaseEnum {
     DATA_DISTRIBUTION(4, "数据库分发服务", "通过数据库和接口配置，实现数据交互到下游数据库"),
     VIEW_ANALYZE_SERVICE(5, "数据分析试图服务", "提供数据查询视图"),
     MASTER_DATA(6, "主数据", "主数据"),
-    EXTERNAL_DATA(7,"外部数据源","外部数据源")
+    EXTERNAL_DATA(7,"外部数据源","外部数据源"),
+    TOTAL(8,"元数据实体总数","元数据实体总数")
 
     ;
 

@@ -7,6 +7,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.metasynctime.ClassificationTypeDTO;
+import com.fisk.datamanagement.dto.metasynctime.EntityTotalNumDTO;
 import com.fisk.datamanagement.dto.metasynctime.MetaSyncDTO;
 import com.fisk.datamanagement.service.MetaSyncTimePOService;
 import io.swagger.annotations.Api;
@@ -47,6 +48,17 @@ public class MetaSyncTimeController {
     @GetMapping("/getMetaSyncLogByType")
     public ResultEntity<Page<MetaSyncDTO>> getMetaSyncLogByType(ClassificationTypeEnum type, Integer current, Integer size) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaSyncLogByType(type,current,size));
+    }
+
+    /**
+     * 资产全景图 获取资产目录趋势分析（近七天）
+     *
+     * @return
+     */
+    @ApiOperation("资产全景图 获取资产目录趋势分析（近七天）")
+    @GetMapping("/getAssetCatalogTrendAnalysis")
+    public ResultEntity<List<EntityTotalNumDTO>> getAssetCatalogTrendAnalysis() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAssetCatalogTrendAnalysis());
     }
 
 }
