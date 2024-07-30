@@ -25,10 +25,14 @@ database:
   mdm_id: 3
   olap_id: 4
 file:
-  uploadUrl: D:/Excel/
-  echoPath: D:/Excel/
-  logoPath: D:/image/companyLogo.jpg
-  excelFilePath: D:/Excel/
+#  uploadUrl: D:/Excel/
+#  echoPath: D:/Excel/
+#  logoPath: D:/image/companyLogo.jpg
+#  excelFilePath: D:/Excel/
+  uploadUrl: /root/nginx/app/file/qualityreport/
+  echoPath: /file/qualityreport/
+  logoPath: /root/nginx/app/file/qualityreport/image/companyLogo.jpg
+  excelFilePath: /root/nginx/app/file/excel/
 doris:
   catalogName: qs_dmp_ods
 checkStandards: true

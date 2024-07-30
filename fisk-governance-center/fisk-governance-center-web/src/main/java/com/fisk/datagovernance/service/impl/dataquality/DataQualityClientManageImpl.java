@@ -867,9 +867,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s ",
                             t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                 } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
-                    // 单向取值
+                    // 单向取值，因为页面可以配置运算符，比如页面配置字段=6，所以要查的是!=6的数据，业务页面配置的规则认为是满足校验规则的数据
                     Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
-                    String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+                    String rangeCheckOneWayOperator = qualityReport_GetReverseOperator(dataCheckExtendPO.getRangeCheckOneWayOperator());
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                         sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
@@ -985,7 +985,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     sqlWhere = standardCheck_GetCharacterAccuracyFormatCheckSql(minFieldLength, maxFieldLength, dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 } else if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_LENGTH_RANGE) {
                     // 字符长度范围
-                    String standardCheckTypeLengthOperator = dataCheckExtendPO.getStandardCheckTypeLengthOperator();
+                    String standardCheckTypeLengthOperator = qualityReport_GetReverseOperator(dataCheckExtendPO.getStandardCheckTypeLengthOperator());
                     int standardCheckTypeLengthValue = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue());
                     sqlWhere = standardCheck_GetCharacterLengthFormatCheckSql(standardCheckTypeLengthOperator, standardCheckTypeLengthValue, dataSourceTypeEnum, qualityReportSummary_paramDTO);
                 } else {
@@ -1809,14 +1809,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String regexpCheckValue = dataCheckExtendPO.getRegexpCheckValue();
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-            sqlWhere += " AND (" + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
+            sqlWhere += " AND (NOT " + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
             // SQLSERVER数据库没有内置的正则表达式函数
             return qualityReportSummary_ruleDTO;
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            sqlWhere += " AND (" + f_Name + " ~ '" + regexpCheckValue + "')\n";
+            sqlWhere += " AND (NOT " + f_Name + " ~ '" + regexpCheckValue + "')\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            sqlWhere += " AND (" + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
+            sqlWhere += " AND (NOT " + f_Name + " REGEXP '" + regexpCheckValue + "')\n";
         }
         sql_QueryCheckData += sqlWhere;
         sql_QueryCheckErrorDataCount += sqlWhere;
@@ -2054,6 +2054,35 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             totalCount = mapList.get(0).get(fieldName).toString();
         }
         return Integer.valueOf(totalCount);
+    }
+
+    /**
+     * @return java.lang.String
+     * @description 获取反向运算符
+     * @author dick
+     * @date 2024/7/30 14:20
+     * @version v1.0
+     * @params operator
+     */
+    public String qualityReport_GetReverseOperator(String operator) {
+        String reverseOperator = operator;
+        if (StringUtils.isEmpty(operator)) {
+            return reverseOperator;
+        }
+        if (operator.equals("=")) {
+            reverseOperator = "!=";
+        } else if (operator.equals("!=")) {
+            reverseOperator = "=";
+        } else if (operator.equals(">")) {
+            reverseOperator = "<=";
+        } else if (operator.equals(">=")) {
+            reverseOperator = "<";
+        } else if (operator.equals("<")) {
+            reverseOperator = ">=";
+        } else if (operator.equals("<=")) {
+            reverseOperator = ">";
+        }
+        return reverseOperator;
     }
 
     /**
