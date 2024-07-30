@@ -11,7 +11,9 @@ import com.fisk.common.service.accessAndModel.LogPageQueryDTO;
 import com.fisk.common.service.accessAndModel.NifiLogResultDTO;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.table.TableAccessDTO;
+import com.fisk.dataaccess.enums.HttpRequestEnum;
 import com.fisk.task.dto.DwLogQueryDTO;
 import com.fisk.task.dto.DwLogResultDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
@@ -22,6 +24,8 @@ import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.utils.StackTraceHelper;
+import com.fisk.task.utils.httprequest.ApiHttpRequestFactoryHelper;
+import com.fisk.task.utils.httprequest.IBuildHttpRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -258,7 +262,15 @@ public class ApiListenerImpl implements IApiListener {
                         String pt = between.toString().replaceFirst("PT", "");
                         nifiLogResultDTO.setDuration(pt.toLowerCase());
                         nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
-                        nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + pipelineTableLogPO.getComment());
+
+                        String errorMsg = pipelineTableLogPO.getComment();
+                        //截取doris严格模式报错时，给出的追踪地址
+                        if (errorMsg.contains("tracking_url=")) {
+                            errorMsg = replaceUrlToDetail(errorMsg);
+                            nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + errorMsg);
+                        } else {
+                            nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + errorMsg);
+                        }
                     }
 
                     nifiLogResultDTOS.add(nifiLogResultDTO);
@@ -331,7 +343,15 @@ public class ApiListenerImpl implements IApiListener {
                         String pt = between.toString().replaceFirst("PT", "");
                         nifiLogResultDTO.setDuration(pt.toLowerCase());
                         nifiLogResultDTO.setDataRows(etlLogPO.getDatarows());
-                        nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + pipelineTableLogPO.getComment());
+
+                        String errorMsg = pipelineTableLogPO.getComment();
+                        //截取doris严格模式报错时，给出的追踪地址
+                        if (errorMsg.contains("tracking_url=")) {
+                            errorMsg = replaceUrlToDetail(errorMsg);
+                            nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + errorMsg);
+                        } else {
+                            nifiLogResultDTO.setErrorMsg("同步失败，nifi同步流程报错!报错详情：" + errorMsg);
+                        }
                     }
                     nifiLogResultDTOS.add(nifiLogResultDTO);
                 }
@@ -347,6 +367,25 @@ public class ApiListenerImpl implements IApiListener {
         resultDTOPage.setSize(size);
         resultDTOPage.setOrders(page.getOrders());
         return resultDTOPage;
+    }
+
+    /**
+     * 将doris严格模式 报错信息中的追踪地址替换成具体的报错原因
+     *
+     * @param errorMsg
+     * @return
+     */
+    public static String replaceUrlToDetail(String errorMsg) {
+        //地址
+        String dorisErrorUrl = errorMsg.substring(errorMsg.lastIndexOf("tracking_url=") + 13, errorMsg.lastIndexOf(";"));
+        log.info("tracking_url = ：" + dorisErrorUrl);
+        //发送请求，获取doris因严格模式报错时，具体的原因（什么字段的什么内容导致的报错）
+        ApiHttpRequestDTO apiHttpRequestDTO = new ApiHttpRequestDTO();
+        apiHttpRequestDTO.setUri(dorisErrorUrl);
+        apiHttpRequestDTO.setHttpRequestEnum(HttpRequestEnum.GET);
+        IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDTO);
+        String s = iBuildHttpRequest.httpRequest(apiHttpRequestDTO);
+        return errorMsg + "详细原因：" + s;
     }
 
 }

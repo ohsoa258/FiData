@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -132,16 +131,8 @@ public class TableHistoryImpl
                 String errorMsg = dwTblNifiLog.getErrorMsg();
                 //截取doris严格模式报错时，给出的追踪地址
                 if (errorMsg.contains("tracking_url=")) {
-                    //地址
-                    String dorisErrorUrl = errorMsg.substring(errorMsg.lastIndexOf("tracking_url=") + 13, errorMsg.lastIndexOf(";"));
-                    log.info("tracking_url = ：" + dorisErrorUrl);
-                    //发送请求，获取doris因严格模式报错时，具体的原因（什么字段的什么内容导致的报错）
-                    ApiHttpRequestDTO apiHttpRequestDTO = new ApiHttpRequestDTO();
-                    apiHttpRequestDTO.setUri(dorisErrorUrl);
-                    apiHttpRequestDTO.setHttpRequestEnum(HttpRequestEnum.GET);
-                    IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDTO);
-                    String s = iBuildHttpRequest.httpRequest(apiHttpRequestDTO);
-                    dwTblNifiLog.setErrorMsg(errorMsg + "详细原因：" + s);
+                    errorMsg = replaceUrlToDetail(errorMsg);
+                    dwTblNifiLog.setErrorMsg(errorMsg);
                 }
             }
 
@@ -150,6 +141,25 @@ public class TableHistoryImpl
             log.error("数仓建模-获取nifi同步日志报错：" + e);
             throw new FkException(ResultEnum.DATA_MODEL_GET_NIFI_LOG_ERROR);
         }
+    }
+
+    /**
+     * 将doris严格模式 报错信息中的追踪地址替换成具体的报错原因
+     *
+     * @param errorMsg
+     * @return
+     */
+    public static String replaceUrlToDetail(String errorMsg) {
+        //地址
+        String dorisErrorUrl = errorMsg.substring(errorMsg.lastIndexOf("tracking_url=") + 13, errorMsg.lastIndexOf(";"));
+        log.info("tracking_url = ：" + dorisErrorUrl);
+        //发送请求，获取doris因严格模式报错时，具体的原因（什么字段的什么内容导致的报错）
+        ApiHttpRequestDTO apiHttpRequestDTO = new ApiHttpRequestDTO();
+        apiHttpRequestDTO.setUri(dorisErrorUrl);
+        apiHttpRequestDTO.setHttpRequestEnum(HttpRequestEnum.GET);
+        IBuildHttpRequest iBuildHttpRequest = ApiHttpRequestFactoryHelper.buildHttpRequest(apiHttpRequestDTO);
+        String s = iBuildHttpRequest.httpRequest(apiHttpRequestDTO);
+        return errorMsg + "详细原因：" + s;
     }
 
 }
