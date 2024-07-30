@@ -37,6 +37,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.vo.emailserver.EmailServerVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.UnifiedControlDTO;
@@ -459,7 +460,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         QualityReportExtVO qualityReportExtVO = new QualityReportExtVO();
         List<QualityReportExt_RuleVO> cRules = new ArrayList<>();
         List<QualityReportExt_EmailVO> emails = new ArrayList<>();
-        //List<QualityReportExt_UserVO> users = new ArrayList<>();
+        List<QualityReportExt_UserVO> users = new ArrayList<>();
 
         // 第一步：查询数据源信息
         List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
@@ -532,22 +533,22 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
         }
 
         // 第七步：查询用户列表
-//        ResultEntity<List<UserDTO>> userList = userClient.getAllUserList();
-//        if (userList.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(userList.getData())) {
-//            userList.getData().forEach(t -> {
-//                QualityReportExt_UserVO systemUserVO = new QualityReportExt_UserVO();
-//                systemUserVO.setId(t.id);
-//                systemUserVO.setUsername(t.getUsername());
-//                systemUserVO.setUserAccount(t.getUserAccount());
-//                systemUserVO.setEmail(t.getEmail());
-//                systemUserVO.setValid(t.isValid());
-//                users.add(systemUserVO);
-//            });
-//        }
+        ResultEntity<List<UserDTO>> userList = userClient.getAllUserList();
+        if (userList.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(userList.getData())) {
+            userList.getData().forEach(t -> {
+                QualityReportExt_UserVO systemUserVO = new QualityReportExt_UserVO();
+                systemUserVO.setId(t.id);
+                systemUserVO.setUsername(t.getUsername());
+                systemUserVO.setUserAccount(t.getUserAccount());
+                systemUserVO.setEmail(t.getEmail());
+                systemUserVO.setValid(t.isValid());
+                users.add(systemUserVO);
+            });
+        }
 
         qualityReportExtVO.setRules_c(cRules);
         qualityReportExtVO.setEmails(emails);
-//        qualityReportExtVO.setUsers(users);
+        qualityReportExtVO.setUsers(users);
 
         // 规则排序、分页
         if (CollectionUtils.isNotEmpty(cRules)) {

@@ -40,6 +40,6 @@ public class QualityReportExtVO {
     /**
      * 用户列表
      */
-//    @ApiModelProperty(value = "用户列表")
-//    public List<QualityReportExt_UserVO> users;
+    @ApiModelProperty(value = "用户列表")
+    public List<QualityReportExt_UserVO> users;
 }
