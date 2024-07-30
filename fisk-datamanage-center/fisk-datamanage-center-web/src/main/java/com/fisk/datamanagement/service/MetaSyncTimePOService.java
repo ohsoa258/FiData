@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.datamanagement.dto.metasynctime.ClassificationTypeDTO;
+import com.fisk.datamanagement.dto.metasynctime.EntityTotalNumDTO;
 import com.fisk.datamanagement.dto.metasynctime.MetaSyncDTO;
 import com.fisk.datamanagement.entity.MetaSyncTimePO;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -31,5 +32,12 @@ public interface MetaSyncTimePOService extends IService<MetaSyncTimePO> {
      * @return
      */
     Page<MetaSyncDTO> getMetaSyncLogByType(ClassificationTypeEnum type, Integer current, Integer size);
+
+    /**
+     * 资产全景图 获取资产目录趋势分析（近七天）
+     *
+     * @return
+     */
+    List<EntityTotalNumDTO> getAssetCatalogTrendAnalysis();
 
 }

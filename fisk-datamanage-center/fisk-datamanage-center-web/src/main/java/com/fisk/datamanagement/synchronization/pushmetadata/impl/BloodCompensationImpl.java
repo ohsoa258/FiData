@@ -277,6 +277,9 @@ public class BloodCompensationImpl
             updateLastSyncTime(syncTimeId, 1);
             masterDataStopWatch.stop();
 
+            //同步完主数据后每天统计一下总数
+            int totalNum = metadataEntityMapper.getTotalNum();
+            updateLastSyncTimeWithToTal(syncTimeId, totalNum);
         }
         log.info("***************元数据同步结束。开始时间：" + allBeginTime + ". 结束时间: " + DateTimeUtils.getNow() + "*********************");
         log.info("******同步外部数据源元数据同步耗时: " + externalDataStopWatch.getTotalTimeSeconds() + "秒 ******");
@@ -291,8 +294,8 @@ public class BloodCompensationImpl
         log.info("******开始刷新元数据树redis缓存******");
         try {
             entityImpl.refreshEntityTreeList();
-        }catch (Exception e){
-            log.error("******刷新元数据树redis缓存失败******"+e);
+        } catch (Exception e) {
+            log.error("******刷新元数据树redis缓存失败******" + e);
         }
 
         return ResultEnum.SUCCESS;
@@ -488,8 +491,8 @@ public class BloodCompensationImpl
         log.info("******开始刷新元数据树redis缓存******");
         try {
             entityImpl.refreshEntityTreeList();
-        }catch (Exception e){
-            log.error("******刷新元数据树redis缓存失败******"+e);
+        } catch (Exception e) {
+            log.error("******刷新元数据树redis缓存失败******" + e);
         }
 
         return ResultEnum.SUCCESS;
@@ -522,6 +525,20 @@ public class BloodCompensationImpl
                 .eq(MetaSyncTimePO::getId, id)
                 .set(MetaSyncTimePO::getStatus, status)
                 .set(MetaSyncTimePO::getUpdateTime, LocalDateTime.now())
+        );
+    }
+
+    /**
+     * 更新每天同步后 元数据的总数
+     *
+     * @param id
+     * @return
+     */
+    public void updateLastSyncTimeWithToTal(long id,int totalNum) {
+        metaSyncTimePOService.update(new LambdaUpdateWrapper<MetaSyncTimePO>()
+                .eq(MetaSyncTimePO::getId, id)
+                .set(MetaSyncTimePO::getUpdateTime, LocalDateTime.now())
+                .set(MetaSyncTimePO::getTotalNum, totalNum)
         );
     }
 
