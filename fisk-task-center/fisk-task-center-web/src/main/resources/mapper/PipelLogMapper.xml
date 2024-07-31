@@ -32,10 +32,37 @@
 
     <select id="getPipelineStatisticsLog" resultType="Integer">
         SELECT COUNT(1) AS num
-        FROM tb_pipel_log
-        where REGEXP_LIKE(msg,REPLACE(#{result}, ',', '|'))
-            AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
-          and del_flag = 1
+        FROM (
+        SELECT DISTINCT t1.workflow_name,t2.pipel_trace_id
+        FROM ${dispatchDbName}.tb_nifi_custom_workflow t1
+        LEFT JOIN tb_pipel_log t2 ON t1.id = t2.pipel_id
+        WHERE t1.del_flag = 1
+        and t2.create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY  )
+        ) AS t1
+        LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id AND t2.type = 1
+        LEFT JOIN (
+        SELECT
+        t.pipel_trace_id,
+        t.create_time,
+        t.msg,
+        ROW_NUMBER() OVER (PARTITION BY t.pipel_trace_id ORDER BY t. create_time DESC) AS rn
+        FROM
+        tb_pipel_log t
+        WHERE
+        t.type = 2
+        ) t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.rn = 1
+        WHERE 1 = 1
+        <choose>
+            <when test="result == '运行'">
+                and t3.msg is null
+            </when>
+            <when test="result == '成功'">
+                and t3.msg like '%运行成功%'
+            </when>
+            <when test="result == '失败'">
+                and t3.msg regexp '运行失败|取消运行'
+            </when>
+        </choose>
     </select>
     <resultMap id="GanttChartMap" type="com.fisk.task.vo.statistics.GanttChartVO">
         <result property="workflowName" column="workflow_name" ></result>

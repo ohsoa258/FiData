@@ -32,7 +32,7 @@ public interface PipelLogMapper extends FKBaseMapper<PipelLogPO> {
     @Select("select distinct pipel_id from tb_pipel_log where pipel_trace_id = #{pipelTraceId} and del_flag = 1")
     String getPipelIdByTraceId(@Param("pipelTraceId") String pipelTraceId);
 
-    Integer getPipelineStatisticsLog(@Param("lookday") int lookday, @Param("result") String result);
+    Integer getPipelineStatisticsLog(@Param("lookday") int lookday, @Param("result") String result,@Param("dispatchDbName")String dispatchDbName);
 
     List<GanttChartVO> getGanttChart(@Param("dispatchDbName")String dispatchDbName);
 
