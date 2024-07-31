@@ -33,7 +33,7 @@
     <select id="getPipelineStatisticsLog" resultType="Integer">
         SELECT COUNT(1) AS num
         FROM tb_pipel_log
-        where msg like concat('%', #{result}, '%')
+        where REGEXP_LIKE(msg,REPLACE(#{result}, ',', '|'))
             AND create_time >= DATE_SUB( CURDATE(), INTERVAL ( #{lookday} - 1 ) DAY )
           and del_flag = 1
     </select>
@@ -254,7 +254,7 @@
                         and t3.msg like '%运行成功%'
                     </when>
                     <when test="dto.status == '失败'">
-                        and t3.msg like '%运行失败%'
+                        and msg regexp '运行失败,取消运行'
                     </when>
                 </choose>
     </select>

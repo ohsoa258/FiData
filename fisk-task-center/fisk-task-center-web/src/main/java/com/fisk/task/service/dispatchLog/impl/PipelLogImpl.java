@@ -340,7 +340,7 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
     public StatisticsVO getLogStatistics(Integer lookday) {
         StatisticsVO statisticsVO = new StatisticsVO();
         Integer successSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "运行成功");
-        Integer failureSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "运行失败");
+        Integer failureSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "运行失败,取消运行");
         Integer runningSum = pipelLogMapper.getPipelineStatisticsLog(lookday, "开始运行");
 
         statisticsVO.runningSum = runningSum - failureSum - successSum;
@@ -408,6 +408,8 @@ public class PipelLogImpl extends ServiceImpl<PipelLogMapper, PipelLogPO> implem
                         pipelLineDetailVO.runningResult = "成功";
                     } else if (pipelLineDetailVO.runningStatus.contains("运行失败")) {
                         pipelLineDetailVO.runningResult = "失败";
+                    }else if (pipelLineDetailVO.runningStatus.contains("取消运行")){
+                        pipelLineDetailVO.runningResult = "取消";
                     }
                     pipelLineDetailVO.runningStatus = "已完成";
                 } else {
