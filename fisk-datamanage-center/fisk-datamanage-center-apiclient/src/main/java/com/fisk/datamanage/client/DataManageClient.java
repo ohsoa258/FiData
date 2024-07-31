@@ -2,6 +2,8 @@ package com.fisk.datamanage.client;
 
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
+import com.fisk.common.core.response.ResultEntityBuild;
+import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -235,6 +237,10 @@ public interface DataManageClient {
     @ApiOperation("获取所有数据元标准menu-只要id和name")
     @GetMapping("/Standards/getStandardMenus")
     List<StandardsMenuDTO> getStandardMenus();
+
+    @ApiOperation("获取数据标准")
+    @GetMapping("/Standards/getStandards/{id}")
+    ResultEntity<StandardsDTO> getStandards(@PathVariable("id") int id);
 
     /**
      * 数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
