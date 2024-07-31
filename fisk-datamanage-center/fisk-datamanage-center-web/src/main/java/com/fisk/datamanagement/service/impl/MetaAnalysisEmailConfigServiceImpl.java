@@ -159,9 +159,9 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
         rowDto.setRowIndex(0);
         List<String> headerNames = new ArrayList<>();
         headerNames.add("父元数据名称");
-        headerNames.add("元数据名称");
-        headerNames.add("变更时间");
         headerNames.add("变更内容");
+        headerNames.add("变更时间");
+        headerNames.add("元数据名称");
         headerNames.add("影响到的元数据");
         headerNames.add("元数据类型名称");
         headerNames.add("变更类型");
@@ -264,6 +264,7 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
 
     /**
      * 转换数据行
+     *
      * @param jsonArray
      * @return
      */
@@ -274,7 +275,6 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
                 Set<Map.Entry<String, Object>> entrySet = jsonArray.getJSONObject(i).entrySet();
                 List<String> dataRow = new ArrayList<>();
                 for (Map.Entry<String, Object> entry : entrySet) {
-                    String key = entry.getKey();
                     Object value = entry.getValue();
                     dataRow.add(value != null ? value.toString() : "");
                 }

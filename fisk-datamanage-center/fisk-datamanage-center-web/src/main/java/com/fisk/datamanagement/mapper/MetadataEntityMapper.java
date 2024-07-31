@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.mapper;
 
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.datamanagement.dto.metadataentity.EntitiesClassificationDTO;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.search.EntitiesDTO;
 import com.fisk.datamanagement.entity.MetadataEntityPO;
@@ -87,4 +88,13 @@ public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
 
     @Select("select count(1) from tb_metadata_entity where not (type_id = 7) and del_flag = 1")
     Integer getTotalNum();
+
+    /**
+     * 获取元数据和元数据关联的目录信息
+     *
+     * @param metadataIds
+     * @return
+     */
+    List<EntitiesClassificationDTO> getMetadataEntitiesWithClassification(@Param("metadataIds")List<Integer> metadataIds);
+
 }

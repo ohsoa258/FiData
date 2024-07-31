@@ -12,11 +12,13 @@ import com.fisk.datamanagement.dto.assetschangeanalysis.*;
 import com.fisk.datamanagement.dto.metaauditlog.AuditAnalysisAllChangeTotalVO;
 import com.fisk.datamanagement.dto.metaauditlog.AuditAnalysisDayChangeTotalVO;
 import com.fisk.datamanagement.dto.metaauditlog.MetadataEntityAuditLogVO;
+import com.fisk.datamanagement.dto.metadataentity.EntitiesClassificationDTO;
 import com.fisk.datamanagement.entity.*;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import com.fisk.datamanagement.map.MetadataEntityAuditLogMap;
 import com.fisk.datamanagement.mapper.MetadataEntityAuditLogMapper;
+import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IMetadataEntityAuditLog;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
@@ -59,6 +61,12 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
     @Resource
     private MetadataEntityImpl metadataEntityImpl;
+
+    @Resource
+    private ClassificationImpl classificationImpl;
+
+    @Resource
+    private MetadataEntityMapper metadataEntityMapper;
 
     @Resource
     private MetadataEntityAuditLogMapper auditLogMapper;
@@ -479,6 +487,9 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
         //获取所有表级元数据
         List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
+        //转为map
+        Map<Long, MetadataEntityPO> map = metadataEntityPOS.stream()
+                .collect(Collectors.toMap(MetadataEntityPO::getId, Function.identity()));
 
         //获取用户
         List<UserDTO> data = new ArrayList<>();
@@ -510,6 +521,16 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             }
 
             detailDTO.setEntityName(po.name);
+
+            //父id
+            // 然后尝试从Map中获取值
+            MetadataEntityPO metadataEntityPO = map.getOrDefault(Long.valueOf(po.parentId), null);
+            if (metadataEntityPO != null) {
+                detailDTO.setParentName(metadataEntityPO.getName());
+            } else {
+                detailDTO.setParentName("");
+            }
+
             detailDTO.setEntityType(po.operationType);
             if (po.operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
                 content = po.name;
@@ -519,7 +540,6 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                 } else {
                     content = "字符串(" + po.beforeValue + ") -> " + "字符串(" + po.afterValue + ")";
                 }
-
             }
             detailDTO.setChangeContent(content);
             detailDTO.setCreateTime(po.createTime);
@@ -586,11 +606,15 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
         //获取所有表级元数据
         List<MetadataEntityPO> metadataEntityPOS = getTableEntitys();
-
         //转为map
         Map<Long, MetadataEntityPO> map = metadataEntityPOS.stream()
                 .collect(Collectors.toMap(MetadataEntityPO::getId, Function.identity()));
 
+        //获取所有库级元数据
+        List<MetadataEntityPO> dbEntitys = getDBEntitys();
+        //转为map
+        Map<Long, MetadataEntityPO> dbMap = dbEntitys.stream()
+                .collect(Collectors.toMap(MetadataEntityPO::getId, Function.identity()));
 
         //获取用户
         List<UserDTO> data = new ArrayList<>();
@@ -603,33 +627,40 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             log.error("获取所有用户信息失败" + e);
         }
 
-
         for (AuditLogWithEntityTypeAndDetailPO po : auditLogs) {
             List<String> impactNames = new ArrayList<>();
             String content = "";
             AssetsChangeAnalysisDetailDTO detailDTO = new AssetsChangeAnalysisDetailDTO();
             detailDTO.setEntityId(po.getEntityId());
-            detailDTO.setAuditId(po.auditId);
+//            detailDTO.setAuditId(po.auditId);
             detailDTO.setType(EntityTypeEnum.getValue(po.typeId));
 
             //切换类型名称
             if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_TABLE)) {
                 detailDTO.setTypeName("表");
+                //父id
+                // 然后尝试从Map中获取值
+                MetadataEntityPO metadataEntityPO = dbMap.getOrDefault(Long.valueOf(po.parentId), null);
+                if (metadataEntityPO != null) {
+                    detailDTO.setParentName(metadataEntityPO.getName());
+                } else {
+                    detailDTO.setParentName("");
+                }
             } else if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {
                 detailDTO.setTypeName("字段");
+                // 父id
+                // 然后尝试从Map中获取值
+                MetadataEntityPO metadataEntityPO = map.getOrDefault(Long.valueOf(po.parentId), null);
+                if (metadataEntityPO != null) {
+                    detailDTO.setParentName(metadataEntityPO.getName());
+                } else {
+                    detailDTO.setParentName("");
+                }
             } else {
                 detailDTO.setTypeName(entityType.getName());
             }
 
             detailDTO.setEntityName(po.name);
-            //父id
-            // 然后尝试从Map中获取值
-            MetadataEntityPO metadataEntityPO = map.getOrDefault(Long.valueOf(po.parentId), null);
-            if (metadataEntityPO != null) {
-                detailDTO.setParentName(metadataEntityPO.getName());
-            }else {
-                detailDTO.setParentName("");
-            }
 //            detailDTO.setEntityType(po.operationType);
             if (po.operationType.equals(MetadataAuditOperationTypeEnum.ADD)) {
                 detailDTO.setEntityTypeName("新增");
@@ -652,11 +683,12 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                 data.stream().filter(userDTO -> userDTO.getId().toString().equals(po.createUser)).findFirst().ifPresent(userDTO -> {
                     detailDTO.setOwnerId(userDTO.getUsername());
                 });
-
+                if (detailDTO.getOwnerId()==null){
+                    detailDTO.setOwnerId("Auto");
+                }
             } else {
                 detailDTO.setOwnerId(po.createUser);
             }
-
 
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {
@@ -666,6 +698,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
             results.add(detailDTO);
         }
+
         return results;
     }
 
@@ -683,40 +716,91 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
     }
 
     /**
+     * 获取所有表元数据
+     *
+     * @return
+     */
+    private List<MetadataEntityPO> getDBEntitys() {
+        return metadataEntityImpl.list(
+                new LambdaQueryWrapper<MetadataEntityPO>()
+                        .select(MetadataEntityPO::getId, MetadataEntityPO::getName)
+                        .eq(MetadataEntityPO::getTypeId, EntityTypeEnum.RDBMS_DB.getValue())
+        );
+    }
+
+    /**
      * 检索该字段的影响性分析
      */
     private void checkColumnChange(AuditLogWithEntityTypeAndDetailPO po, List<String> impactNames, List<MetadataEntityPO> metadataEntityPOS) {
         //获取该字段所属的表的元数据id
         int parentId = po.getParentId();
-        String name = null;
-        try {
-            name = Objects.requireNonNull(metadataEntityPOS.stream()
-                            .filter(metadataEntityPO -> metadataEntityPO.getId() == parentId)
-                            .findFirst()
-                            .orElse(null))
-                    .getName();
-        } catch (Exception e) {
-            log.error("空指针：" + e);
+
+//        String name = null;
+//        try {
+//            name = Objects.requireNonNull(metadataEntityPOS.stream()
+//                            .filter(metadataEntityPO -> metadataEntityPO.getId() == parentId)
+//                            .findFirst()
+//                            .orElse(null))
+//                    .getName();
+//        } catch (Exception e) {
+//            log.error("空指针：" + e);
+//            return;
+//        }
+//
+//
+//        //字段的父表
+//        if (!StringUtils.isEmpty(name)) {
+//            impactNames.add("【Parent:" + name + "】");
+//        }
+
+        //获取表元数据的血缘 向下找
+        List<LineageMapRelationPO> list = lineageMapRelationImpl.list(new LambdaQueryWrapper<LineageMapRelationPO>()
+                .eq(LineageMapRelationPO::getFromEntityId, parentId));
+
+        //去重获取所有向下影响到的元数据id
+        List<Integer> distinctToIds = list.stream().map(LineageMapRelationPO::getToEntityId).distinct().collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(distinctToIds)) {
             return;
         }
 
-
-        //字段的父表
-        if (!StringUtils.isEmpty(name)) {
-            impactNames.add("【Parent:" + name + "】");
-        }
-        //获取表的血缘对象
-        List<LineageMapRelationPO> list = lineageMapRelationImpl.list(new LambdaQueryWrapper<LineageMapRelationPO>().eq(LineageMapRelationPO::getMetadataEntityId, parentId));
-        if (!CollectionUtils.isEmpty(list)) {
-            //获取该表的元数据id
-            for (LineageMapRelationPO lineageMapRelationPO : list) {
-                Integer fromEntityId = lineageMapRelationPO.getFromEntityId();
-                Integer toEntityId = lineageMapRelationPO.getToEntityId();
-                MetadataEntityPO fromName = metadataEntityImpl.getById(fromEntityId);
-                MetadataEntityPO toName = metadataEntityImpl.getById(toEntityId);
-                impactNames.add(fromName.getName());
-                impactNames.add(toName.getName());
+        //该集合用于循环向下找血缘
+        List<Integer> ids = new ArrayList<>(distinctToIds);
+        //循环向下获取所有受影响的元数据id
+        while (true) {
+            List<LineageMapRelationPO> list1 = lineageMapRelationImpl.list(new LambdaQueryWrapper<LineageMapRelationPO>()
+                    .in(LineageMapRelationPO::getFromEntityId, ids));
+            if (!CollectionUtils.isEmpty(list1)) {
+                distinctToIds.addAll(list1.stream().map(LineageMapRelationPO::getToEntityId).distinct().collect(Collectors.toList()));
+                ids.clear();
+                ids.addAll(list1.stream().map(LineageMapRelationPO::getToEntityId).distinct().collect(Collectors.toList()));
+            } else {
+                break;
             }
+        }
+
+        //获取元数据和元数据关联的目录信息
+        List<EntitiesClassificationDTO> dtos = metadataEntityMapper.getMetadataEntitiesWithClassification(distinctToIds);
+
+        if (!CollectionUtils.isEmpty(dtos)) {
+            //获取所有跟级业务分类(服务级别)
+            List<BusinessClassificationPO> classificationPOS = classificationImpl.list(
+                    new LambdaQueryWrapper<BusinessClassificationPO>()
+                            .isNull(BusinessClassificationPO::getPid)
+                            .select(BusinessClassificationPO::getId, BusinessClassificationPO::getName)
+            );
+
+            // id : name
+            Map<Integer, String> cin = classificationPOS.stream()
+                    .collect(Collectors.toMap(
+                            poa -> (int) poa.getId(), // 将long类型的id转换为int类型
+                            BusinessClassificationPO::getName
+                    ));
+
+            //服务名称：业务分类名称：元数据名称
+            dtos.forEach(dto -> {
+                impactNames.add("服务-" + cin.get(dto.getPid()) + "-" + dto.getCname() + ":" + dto.getName() + ";");
+            });
         }
     }
 

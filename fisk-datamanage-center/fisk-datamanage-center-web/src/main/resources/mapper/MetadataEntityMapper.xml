@@ -102,4 +102,38 @@
             , #{limit}
     </select>
 
+    <resultMap id="entitiesWithClassification" type="com.fisk.datamanagement.dto.metadataentity.EntitiesClassificationDTO">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="dname" column="dname"/>
+        <result property="cname" column="cname"/>
+        <result property="pid" column="pid"/>
+    </resultMap>
+    <select id="getMetadataEntitiesWithClassification" resultMap="entitiesWithClassification">
+        SELECT
+        tb_metadata_entity.id id,
+        tb_metadata_entity.name name,
+        tb_metadata_entity.display_name dname,
+        tb_business_classification.`name` cname,
+        tb_business_classification.`pid` pid
+        FROM
+        tb_metadata_entity
+        LEFT JOIN
+        tb_metadata_classification_map
+        ON
+        tb_metadata_entity.id = tb_metadata_classification_map.metadata_entity_id
+        LEFT JOIN
+        tb_business_classification
+        ON
+        tb_metadata_classification_map.business_classification_id = tb_business_classification.id
+        WHERE
+        tb_metadata_entity.id IN
+        <foreach item="id" collection="metadataIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and tb_metadata_entity.del_flag = 1
+        and tb_business_classification.del_flag = 1
+        and tb_metadata_classification_map.del_flag = 1
+    </select>
+
 </mapper>

@@ -10,6 +10,7 @@ import com.fisk.datamanagement.dto.assetschangeanalysis.AssetsChangeAnalysisDeta
 import com.fisk.datamanagement.dto.assetschangeanalysis.AssetsChangeAnalysisDetailQueryDTO;
 import com.fisk.datamanagement.dto.assetschangeanalysis.AssetsChangeAnalysisQueryDTO;
 import com.fisk.datamanagement.service.IMetadataEntityAuditLog;
+import com.fisk.datamanagement.service.impl.MetaAnalysisEmailConfigServiceImpl;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,9 @@ import javax.annotation.Resource;
 public class MetadataEntityAuditLogController {
     @Resource
     IMetadataEntityAuditLog service;
+
+    @Resource
+    private MetaAnalysisEmailConfigServiceImpl metaAnalysisEmailConfigService;
 
     @ApiOperation("获取元数据审计日志")
     @GetMapping("/get")
@@ -65,6 +69,19 @@ public class MetadataEntityAuditLogController {
     @PostMapping("/getMetaChangesChartsDetail")
     public ResultEntity<Page<AssetsChangeAnalysisDetailDTO>> getMetaChangesChartsDetail(@RequestBody AssetsChangeAnalysisDetailQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMetaChangesChartsDetail(dto));
+    }
+
+    /**
+     * 立即发送邮件
+     *
+     * @return
+     */
+    @ApiOperation("立即发送邮件")
+    @PostMapping("/sendEmailNow")
+    public ResultEntity<Object> sendEmailNow() {
+        metaAnalysisEmailConfigService.sendEmailOfMetaAudit();
+        return ResultEntityBuild.build(ResultEnum.SUCCESS);
+
     }
 
 
