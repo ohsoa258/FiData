@@ -1309,7 +1309,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
                         log.info("ORACLE驱动加载完毕");
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount);
                         break;
                     default:
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);

@@ -42,6 +42,10 @@ import com.fisk.datagovernance.service.dataquality.DatacheckCodeService;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import com.fisk.datamanagement.enums.ValueRangeTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import com.fisk.system.client.UserClient;
@@ -91,6 +95,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckConditionManageImpl dataCheckConditionManageImpl;
 
     @Resource
+    DatacheckStandardsGroupServiceImpl datacheckStandardsGroupService;
+
+    @Resource
     private DatacheckCodeService datacheckCodeService;
 
     @Resource
@@ -119,6 +126,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     UserClient userClient;
+
+    @Resource
+    DataManageClient dataManageClient;
 
     @Value("${spring.datasource.url}")
     private String dataBaseUrl;
@@ -764,7 +774,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                                   DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
-
+        Integer datacheckGroupId = dataCheckPO.datacheckGroupId;
+        DatacheckStandardsGroupPO groupPO = datacheckStandardsGroupService.getById(datacheckGroupId);
+        StandardsDTO standardsDTO = new StandardsDTO();
+        if (datacheckGroupId != null){
+            ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
+            if (standards.code == ResultEnum.SUCCESS.getCode()) {
+                standardsDTO = standards.data;
+            } else {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+        }
+        if (standardsDTO == null){
+            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id"+datacheckGroupId);
+        }
         // 第二步：判断检查的字段是否存在，存在则获取字段值
         String tName = dataCheckSyncParamDTO.getTableName();
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
@@ -772,7 +795,24 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
         JSONArray errorDataList = new JSONArray();
         JSONArray successDataList = new JSONArray();
-        RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
+        RangeCheckTypeEnum rangeCheckTypeEnum = null;
+        ValueRangeTypeEnum valueRangeType = standardsDTO.getValueRangeType();
+        if (datacheckGroupId != null){
+            rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
+        }else {
+            switch (valueRangeType){
+                case DATASET:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.SEQUENCE_RANGE;
+                    break;
+                case VALUE:
+                case VALUE_RANGE:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.VALUE_RANGE;
+                    break;
+                case NONE:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.NONE;
+                    break;
+            }
+        }
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             if (jsonObject.containsKey(fName)) {
@@ -782,113 +822,182 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 第三步：判断字段值是否通过值域验证
                 switch (rangeCheckTypeEnum) {
                     case SEQUENCE_RANGE:
-                        // 序列范围
-                        if (dataCheckExtendPO.rangeType == 2) {
-                            String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
-                            Connection conn = null;
-                            Statement st = null;
-                            try {
-                                Class.forName(dataSourceConVO.conType.getDriverName());
-                                conn = DriverManager.getConnection(dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
-                                st = conn.createStatement();
-                                //无需判断ddl语句执行结果,因为如果执行失败会进catch
-                                log.info("开始执行脚本:{}", childrenQuery);
-                                ResultSet resultSet = st.executeQuery(childrenQuery);
-                                List<String> list = resultSetToList(resultSet);
-                                List<String> fieldValues = new ArrayList<>();
-                                fieldValues.add(checkValue);
-                                List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
-                                if (CollectionUtils.isNotEmpty(valid)) {
-                                    errorDataList.add(jsonObject);
-                                } else {
-                                    successDataList.add(jsonObject);
-                                }
-                            } catch (Exception e) {
-                                errorDataList.add(jsonObject);
-                                dataCheckResultVO.setCheckResult(FAIL);
-                                dataCheckResultVO.setCheckResultMsg("查询关联表" + dataCheckExtendPO.getCheckTableName() + "异常,请检查连接是否正常");
-                            } finally {
-                                try {
-                                    assert st != null;
-                                    st.close();
-                                    conn.close();
-                                } catch (SQLException e) {
-                                    errorDataList.add(jsonObject);
-                                    dataCheckResultVO.setCheckResult(FAIL);
-                                    dataCheckResultVO.setCheckResultMsg("数据库连接关闭异常");
-                                    log.error("数据库连接关闭异常", e);
-                                }
-                            }
-                            break;
-                        } else {
+                        if (datacheckGroupId != null){
+                            List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
                             List<String> fieldValues = new ArrayList<>();
                             fieldValues.add(checkValue);
-                            List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                            List<String> list = codeSetDTOList.stream().map(v -> v.getName()).collect(Collectors.toList());
                             List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
                             if (CollectionUtils.isNotEmpty(valid)) {
                                 errorDataList.add(jsonObject);
                             } else {
                                 successDataList.add(jsonObject);
                             }
-                            break;
+                        }else {
+                            // 序列范围
+                            if (dataCheckExtendPO.rangeType == 2) {
+                                String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
+                                Connection conn = null;
+                                Statement st = null;
+                                try {
+                                    Class.forName(dataSourceConVO.conType.getDriverName());
+                                    conn = DriverManager.getConnection(dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
+                                    st = conn.createStatement();
+                                    //无需判断ddl语句执行结果,因为如果执行失败会进catch
+                                    log.info("开始执行脚本:{}", childrenQuery);
+                                    ResultSet resultSet = st.executeQuery(childrenQuery);
+                                    List<String> list = resultSetToList(resultSet);
+                                    List<String> fieldValues = new ArrayList<>();
+                                    fieldValues.add(checkValue);
+                                    List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
+                                    if (CollectionUtils.isNotEmpty(valid)) {
+                                        errorDataList.add(jsonObject);
+                                    } else {
+                                        successDataList.add(jsonObject);
+                                    }
+                                } catch (Exception e) {
+                                    errorDataList.add(jsonObject);
+                                    dataCheckResultVO.setCheckResult(FAIL);
+                                    dataCheckResultVO.setCheckResultMsg("查询关联表" + dataCheckExtendPO.getCheckTableName() + "异常,请检查连接是否正常");
+                                } finally {
+                                    try {
+                                        assert st != null;
+                                        st.close();
+                                        conn.close();
+                                    } catch (SQLException e) {
+                                        errorDataList.add(jsonObject);
+                                        dataCheckResultVO.setCheckResult(FAIL);
+                                        dataCheckResultVO.setCheckResultMsg("数据库连接关闭异常");
+                                        log.error("数据库连接关闭异常", e);
+                                    }
+                                }
+                            } else {
+                                List<String> fieldValues = new ArrayList<>();
+                                fieldValues.add(checkValue);
+                                List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                                List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
+                                if (CollectionUtils.isNotEmpty(valid)) {
+                                    errorDataList.add(jsonObject);
+                                } else {
+                                    successDataList.add(jsonObject);
+                                }
+                            }
                         }
+                        break;
                     case VALUE_RANGE:
-                        RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
-                        if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
-                            // 取值范围-区间取值
-                            Double lowerBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                            Double upperBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                            if (StringUtils.isNotEmpty(checkValue)) {
-                                Double value = Double.valueOf(checkValue);
-                                if (value < lowerBound_Int || value > upperBound_Int) {
+                        if (datacheckGroupId != null){
+                            if (valueRangeType == ValueRangeTypeEnum.VALUE){
+                                Double rangeCheckValue = Double.valueOf(standardsDTO.getValueRange());
+                                String rangeCheckOneWayOperator = standardsDTO.getSymbols();
+
+                                if (StringUtils.isEmpty(checkValue)) {
                                     errorDataList.add(jsonObject);
                                 } else {
-                                    successDataList.add(jsonObject);
-                                }
-                            } else {
-                                errorDataList.add(jsonObject);
-                            }
-                        } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
-                            Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
-                            String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+                                    Double value = Double.valueOf(checkValue);
+                                    boolean isValid = false;
 
-                            if (StringUtils.isEmpty(checkValue)) {
-                                errorDataList.add(jsonObject);
-                            } else {
-                                Double value = Double.valueOf(checkValue);
-                                boolean isValid = false;
-
-                                switch (rangeCheckOneWayOperator) {
-                                    case ">":
-                                        isValid = value > rangeCheckValue;
-                                        break;
-                                    case ">=":
-                                        isValid = value >= rangeCheckValue;
-                                        break;
-                                    case "=":
-                                        isValid = value.equals(rangeCheckValue); // Use equals for Double comparison
-                                        break;
-                                    case "!=":
-                                        isValid = !value.equals(rangeCheckValue);
-                                        break;
-                                    case "<":
-                                        isValid = value < rangeCheckValue;
-                                        break;
-                                    case "<=":
-                                        isValid = value <= rangeCheckValue;
-                                        break;
-                                    default:
-                                        log.info("值域检查-取值范围-单向取值-未匹配到有效的运算符：" + rangeCheckOneWayOperator);
-                                        break;
+                                    switch (rangeCheckOneWayOperator) {
+                                        case ">":
+                                            isValid = value > rangeCheckValue;
+                                            break;
+                                        case ">=":
+                                            isValid = value >= rangeCheckValue;
+                                            break;
+                                        case "=":
+                                            isValid = value.equals(rangeCheckValue); // Use equals for Double comparison
+                                            break;
+                                        case "!=":
+                                            isValid = !value.equals(rangeCheckValue);
+                                            break;
+                                        case "<":
+                                            isValid = value < rangeCheckValue;
+                                            break;
+                                        case "<=":
+                                            isValid = value <= rangeCheckValue;
+                                            break;
+                                        default:
+                                            log.info("值域检查-取值范围-单向取值-未匹配到有效的运算符：" + rangeCheckOneWayOperator);
+                                            break;
+                                    }
+                                    if (isValid) {
+                                        successDataList.add(jsonObject);
+                                    } else {
+                                        errorDataList.add(jsonObject);
+                                    }
                                 }
-                                if (isValid) {
-                                    successDataList.add(jsonObject);
+                            }else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE){
+                                // 取值范围-区间取值
+                                Double lowerBound_Int = Double.valueOf(standardsDTO.getValueRange());
+                                Double upperBound_Int = Double.valueOf(standardsDTO.getValueRangeMax());
+                                if (StringUtils.isNotEmpty(checkValue)) {
+                                    Double value = Double.valueOf(checkValue);
+                                    if (value < lowerBound_Int || value > upperBound_Int) {
+                                        errorDataList.add(jsonObject);
+                                    } else {
+                                        successDataList.add(jsonObject);
+                                    }
                                 } else {
                                     errorDataList.add(jsonObject);
                                 }
                             }
-                        } else {
-                            log.info("同步前-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
+                        }else {
+                            RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
+                            if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
+                                // 取值范围-区间取值
+                                Double lowerBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                                Double upperBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                                if (StringUtils.isNotEmpty(checkValue)) {
+                                    Double value = Double.valueOf(checkValue);
+                                    if (value < lowerBound_Int || value > upperBound_Int) {
+                                        errorDataList.add(jsonObject);
+                                    } else {
+                                        successDataList.add(jsonObject);
+                                    }
+                                } else {
+                                    errorDataList.add(jsonObject);
+                                }
+                            } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
+                                Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                                String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+
+                                if (StringUtils.isEmpty(checkValue)) {
+                                    errorDataList.add(jsonObject);
+                                } else {
+                                    Double value = Double.valueOf(checkValue);
+                                    boolean isValid = false;
+
+                                    switch (rangeCheckOneWayOperator) {
+                                        case ">":
+                                            isValid = value > rangeCheckValue;
+                                            break;
+                                        case ">=":
+                                            isValid = value >= rangeCheckValue;
+                                            break;
+                                        case "=":
+                                            isValid = value.equals(rangeCheckValue); // Use equals for Double comparison
+                                            break;
+                                        case "!=":
+                                            isValid = !value.equals(rangeCheckValue);
+                                            break;
+                                        case "<":
+                                            isValid = value < rangeCheckValue;
+                                            break;
+                                        case "<=":
+                                            isValid = value <= rangeCheckValue;
+                                            break;
+                                        default:
+                                            log.info("值域检查-取值范围-单向取值-未匹配到有效的运算符：" + rangeCheckOneWayOperator);
+                                            break;
+                                    }
+                                    if (isValid) {
+                                        successDataList.add(jsonObject);
+                                    } else {
+                                        errorDataList.add(jsonObject);
+                                    }
+                                }
+                            } else {
+                                log.info("同步前-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
+                            }
                         }
                         break;
                     case DATE_RANGE:
@@ -2042,7 +2151,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                                  DataCheckExtendPO dataCheckExtendPO, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
         // 第一步：获取检查结果基础信息
         DataCheckResultVO dataCheckResultVO = nifiSync_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO);
-
+        Integer datacheckGroupId = dataCheckPO.datacheckGroupId;
+        DatacheckStandardsGroupPO groupPO = datacheckStandardsGroupService.getById(datacheckGroupId);
+        StandardsDTO standardsDTO = new StandardsDTO();
+        if (datacheckGroupId != null){
+            ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
+            if (standards.code == ResultEnum.SUCCESS.getCode()) {
+                standardsDTO = standards.data;
+            } else {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+        }
+        if (standardsDTO == null){
+            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id"+datacheckGroupId);
+        }
         // 第二步：组装并执行SQL语句，获取校验结果
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
                 f_Name = dataCheckSyncParamDTO.getFieldNameFormat(),
@@ -2057,21 +2179,30 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         String sql_QueryCheckData = "", sql_UpdateErrorData = "";
 
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
-        RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
+        RangeCheckTypeEnum rangeCheckTypeEnum = null;
+        ValueRangeTypeEnum valueRangeType = standardsDTO.getValueRangeType();
+        if (datacheckGroupId != null){
+            rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
+        }else {
+            switch (valueRangeType){
+                case DATASET:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.SEQUENCE_RANGE;
+                    break;
+                case VALUE:
+                case VALUE_RANGE:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.VALUE_RANGE;
+                    break;
+                case NONE:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.NONE;
+                    break;
+            }
+        }
         switch (rangeCheckTypeEnum) {
             case SEQUENCE_RANGE:
-                if (dataCheckExtendPO.rangeType == 2) {
-                    String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
-
-                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, childrenQuery);
-                    if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
-                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, childrenQuery);
-                    }
-                    sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, childrenQuery);
-                    break;
-                } else {
+                if (datacheckGroupId != null){
                     // 序列范围
-                    List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                    List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
+                    List<String> list = codeSetDTOList.stream().map(v -> v.getName()).collect(Collectors.toList());
                     // 将list里面的序列范围截取为'','',''格式的字符串
                     String sql_InString = list.stream()
                             .map(item -> "N'" + item + "'")
@@ -2082,43 +2213,99 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, sql_InString);
                     }
                     sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, sql_InString);
-                    break;
+                }else {
+                    if (dataCheckExtendPO.rangeType == 2) {
+                        String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
+
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, childrenQuery);
+                        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                            sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, childrenQuery);
+                        }
+                        sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, childrenQuery);
+                    } else {
+                        // 序列范围
+                        List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                        // 将list里面的序列范围截取为'','',''格式的字符串
+                        String sql_InString = list.stream()
+                                .map(item -> "N'" + item + "'")
+                                .collect(Collectors.joining(", "));
+
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where, f_Name, sql_InString);
+                        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                            sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, sql_InString);
+                        }
+                        sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, sql_InString);
+                    }
                 }
+                break;
             case VALUE_RANGE:
-                // 取值范围
-                RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
-                if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
-                    Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                    Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
-                    String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
-                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
+                if (datacheckGroupId != null){
+                    if (valueRangeType == ValueRangeTypeEnum.VALUE){
+                        Double rangeCheckValue = Double.valueOf(standardsDTO.getValueRange());
+                        String rangeCheckOneWayOperator = standardsDTO.getSymbols();
+                        String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                            sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                            sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        }
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                            sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                        }
+                        sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
+
+                    }else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE){
+                        // 取值范围-区间取值
+                        Double lowerBound_Int = Double.valueOf(standardsDTO.getValueRange());
+                        Double upperBound_Int = Double.valueOf(standardsDTO.getValueRangeMax());
+                        String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                        if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                            sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                        } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                            sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
+                        }
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                            sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                        }
+                        sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
+
                     }
-                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
-                    if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
-                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                }else {
+                    // 取值范围
+                    RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
+                    if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
+                        Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                        Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                        String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                        if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                            sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                        } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                            sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
+                        }
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                            sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                        }
+                        sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
+                    } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
+                        Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                        String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+                        String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                            sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+                            sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        }
+                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
+                        if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                            sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
+                        }
+                        sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
+                    } else {
+                        log.info("同步中-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
                     }
-                    sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
-                    break;
-                } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
-                    Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
-                    String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
-                    String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
-                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
-                    }
-                    sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where, sql_BetweenAnd);
-                    if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
-                        sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, f_Name, t_Name, f_where_1, sql_BetweenAnd);
-                    }
-                    sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
-                    break;
-                } else {
-                    log.info("同步中-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
                 }
                 break;
             case DATE_RANGE:

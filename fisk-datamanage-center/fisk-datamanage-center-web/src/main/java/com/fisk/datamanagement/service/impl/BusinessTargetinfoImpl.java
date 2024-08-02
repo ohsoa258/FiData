@@ -117,7 +117,7 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
     private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
             "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道", "数据粒度"};
     private static final String[] parentTargetinfoHeaders1 = {"负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
-            "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道", "数据粒度"};
+            "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "数据粒度"};
 
 
     @Override
@@ -1116,9 +1116,6 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                 if (!aa.containsKey("filtering_criteria")) {
                     aa.put("filtering_criteria", "");
                 }
-                if (!aa.containsKey("order_channel")) {
-                    aa.put("order_channel", "");
-                }
                 if (!aa.containsKey("indicator_description")) {
                     aa.put("indicator_description", "");
                 }
@@ -1240,11 +1237,6 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
                     datamap.put("large_screen_link", stringObjectMap.get("large_screen_link"));
                 } else {
                     datamap.put("large_screen_link", null);
-                }
-                if (!StringUtils.isEmpty(stringObjectMap.get("order_channel"))) {
-                    datamap.put("order_channel", stringObjectMap.get("order_channel"));
-                } else {
-                    datamap.put("order_channel", null);
                 }
                 if (!StringUtils.isEmpty(stringObjectMap.get("data_granularity"))) {
                     datamap.put("data_granularity", stringObjectMap.get("data_granularity"));
