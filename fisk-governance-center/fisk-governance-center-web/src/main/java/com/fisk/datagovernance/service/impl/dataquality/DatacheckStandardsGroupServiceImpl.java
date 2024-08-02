@@ -66,10 +66,11 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             }
             // 将PO对象列表转换为VO对象列表
             current = current - 1;
+            pageDTO.setTotal(Long.valueOf(groupPOList.size()));
+            pageDTO.setTotalPage((long) Math.ceil(1.0 * groupPOList.size() / size));
             groupDtoList = groupPOList.stream().map(DatacheckStandardsGroupMap.INSTANCES::poToVo)
                     .skip((current - 1 + 1) * size).limit(size).collect(Collectors.toList());
-            pageDTO.setTotal(Long.valueOf(groupDtoList.size()));
-            pageDTO.setTotalPage((long) Math.ceil(1.0 * groupDtoList.size() / size));
+
 
             // 根据分组ID列表获取所有规则信息
             List<Integer> groupIds = groupPOList.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
