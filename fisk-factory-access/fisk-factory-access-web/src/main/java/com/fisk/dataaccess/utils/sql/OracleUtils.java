@@ -487,10 +487,10 @@ public class OracleUtils {
                 "    ) THEN '1' ELSE '0' END AS IS_PRIMARY_KEY ");
         str.append("FROM ");
         str.append("user_tab_cols a ");
-        str.append("LEFT JOIN ALL_COL_COMMENTS b ON a.TABLE_NAME = b.TABLE_NAME ");
+//        str.append("LEFT JOIN ALL_COL_COMMENTS b ON a.TABLE_NAME = b.TABLE_NAME ");
         str.append("WHERE ");
-        str.append("b.owner='" + dbName + "' ");
-        str.append("and ");
+//        str.append("b.owner='" + dbName + "' ");
+//        str.append("and ");
         str.append("a.TABLE_NAME='" + tableName + "' ");
         return str.toString();
     }
@@ -562,19 +562,19 @@ public class OracleUtils {
             dto.sourceDbName = dbName;
             dto.setIsPk(Integer.valueOf(rs.getString("IS_PRIMARY_KEY")));
             OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
-            switch (typeEnum) {
-                case NUMBER:
-                    if (rs.getString("DATA_PRECISION") == null) {
-                        dto.fieldLength = 0;
-                        dto.fieldPrecision = 0;
-                        break;
-                    }
-                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_PRECISION"));
-                    dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
-                    break;
-                default:
-                    break;
-            }
+//            switch (typeEnum) {
+//                case NUMBER:
+//                    if (rs.getString("DATA_PRECISION") == null) {
+//                        dto.fieldLength = 0;
+//                        dto.fieldPrecision = 0;
+//                        break;
+//                    }
+//                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_PRECISION"));
+//                    dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
+//                    break;
+//                default:
+//                    break;
+//            }
             return dto;
         } catch (SQLException e) {
             log.error("conversionType ex:", e);
