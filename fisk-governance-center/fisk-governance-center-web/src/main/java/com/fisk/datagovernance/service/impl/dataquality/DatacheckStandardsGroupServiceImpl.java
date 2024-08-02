@@ -155,7 +155,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
         queryWrapper.eq(DatacheckStandardsGroupPO::getStandardsId, dto.getStandardsId());
         List<DatacheckStandardsGroupPO> group = this.list(queryWrapper);
         List<String> groupNames = group.stream().map(DatacheckStandardsGroupPO::getCheckGroupName).collect(Collectors.toList());
-        if (groupNames.contains(dto.getCheckGroupName())) {
+        List<String> names = groupNames.stream().filter(i -> i.contains(dto.getCheckGroupName())).collect(Collectors.toList());
+        if (names.size()>1) {
             throw new FkException(ResultEnum.CHECK_STANDARDS_GROUP_ERROR);
         }
         this.updateById(groupPO);
