@@ -100,6 +100,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     private DataCheckLogsMapper dataCheckLogsMapper;
 
     @Resource
+    private QualityReportLogMapper qualityReportLogMapper;
+
+    @Resource
     private AttachmentInfoMapper attachmentInfoMapper;
 
     @Resource
@@ -164,7 +167,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
             // 第三步：获取所有表校验规则
             List<Long> templateIdList = null;
-            if (query.getTemplateId() < 0) {
+            if (query.getTemplateId() != 0) {
                 templateIdList = new ArrayList<>();
                 templateIdList.add(query.getTemplateId());
             }
@@ -321,14 +324,29 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 .orderByDesc(DataCheckLogsPO::getCreateTime);
         List<DataCheckLogsPO> dataCheckLogsPOS = dataCheckLogsMapper.selectList(dataCheckLogsPOQueryWrapper);
         if (CollectionUtils.isNotEmpty(dataCheckLogsPOS)) {
+
+            List<String> checkBatchNumberList = dataCheckLogsPOS.stream().map(DataCheckLogsPO::getCheckBatchNumber).collect(Collectors.toList());
+            QueryWrapper<QualityReportLogPO> qualityReportLogPOQueryWrapper = new QueryWrapper<>();
+            qualityReportLogPOQueryWrapper.lambda().eq(QualityReportLogPO::getDelFlag, 1)
+                    .in(QualityReportLogPO::getReportBatchNumber, checkBatchNumberList);
+            List<QualityReportLogPO> qualityReportLogPOS = qualityReportLogMapper.selectList(qualityReportLogPOQueryWrapper);
+
             dataCheckLogsPOS.forEach(dataCheckLog -> {
+                String reportName = "";
+                if (CollectionUtils.isNotEmpty(qualityReportLogPOS)) {
+                    QualityReportLogPO qualityReportLogPO = qualityReportLogPOS.stream().filter(t -> t.getReportBatchNumber().equals(dataCheckLog.getCheckBatchNumber())).findFirst().orElse(null);
+                    if (qualityReportLogPO != null) {
+                        reportName = qualityReportLogPO.getReportName();
+                    }
+                }
                 // 报告批次号
                 DataCheckRuleSearchWhereMapVO searchWhereMap_reportBatchNumber = reportBatchNumberMap
                         .stream().filter(t -> t.getValue().toString().equals(dataCheckLog.getCheckBatchNumber()))
                         .findFirst().orElse(null);
                 if (searchWhereMap_reportBatchNumber == null) {
                     searchWhereMap_reportBatchNumber = new DataCheckRuleSearchWhereMapVO();
-                    searchWhereMap_reportBatchNumber.setText(dataCheckLog.getCheckBatchNumber());
+                    String text = StringUtils.isNotEmpty(reportName) ? reportName + "(" + dataCheckLog.getCheckBatchNumber() + ")" : dataCheckLog.getCheckBatchNumber();
+                    searchWhereMap_reportBatchNumber.setText(text);
                     searchWhereMap_reportBatchNumber.setValue(dataCheckLog.getCheckBatchNumber());
                     reportBatchNumberMap.add(searchWhereMap_reportBatchNumber);
                 }
@@ -347,8 +365,25 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             });
         }
 
+        // 问题稽查知识库搜索条件-规则模板名称
+        List<DataCheckRuleSearchWhereMapVO> templateMap = new ArrayList<>();
+        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+        templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
+                .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATA_CHECK_MODULE.getValue())
+                .orderByAsc(TemplatePO::getTemplateSort);
+        List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
+        if (CollectionUtils.isNotEmpty(templatePOList)) {
+            templatePOList.forEach(template -> {
+                DataCheckRuleSearchWhereMapVO searchWhereMap_Template = new DataCheckRuleSearchWhereMapVO();
+                searchWhereMap_Template.setText(template.getTemplateName());
+                searchWhereMap_Template.setValue(template.getId());
+                templateMap.add(searchWhereMap_Template);
+            });
+        }
+
         dataCheckRuleSearchWhereVO.setReportBatchNumberMap(reportBatchNumberMap);
         dataCheckRuleSearchWhereVO.setTableFullNameMap(tableFullNameMap);
+        dataCheckRuleSearchWhereVO.setTemplateMap(templateMap);
 
         return dataCheckRuleSearchWhereVO;
     }
@@ -3088,12 +3123,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     /**
+     * @return com.fisk.common.core.response.ResultEnum
      * @description 定时清理存储在数据库的错误数据
      * @author dick
      * @date 2024/7/30 16:27
      * @version v1.0
      * @params
-     * @return com.fisk.common.core.response.ResultEnum
      */
     public ResultEnum deleteCheckResult() {
         // 第一步：设置计划任务每天凌晨12点执行
