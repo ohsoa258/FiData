@@ -314,8 +314,17 @@
                     ) AS t1
                         LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
                         AND t2.type = 1
-                        LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
-                        AND t3.type = 2
+                        LEFT JOIN (
+                        SELECT
+                            t.pipel_trace_id,
+                            t.create_time,
+                            t.msg,
+                            ROW_NUMBER() OVER (PARTITION BY t.pipel_trace_id ORDER BY t. create_time DESC) AS rn
+                        FROM
+                            tb_pipel_log t
+                        WHERE
+                            t.type = 2
+                    ) t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.rn = 1
             ) AS t
                 INNER JOIN (
                 SELECT
@@ -343,8 +352,17 @@
                             ) AS t1
                                 LEFT JOIN tb_pipel_log t2 ON t1.pipel_trace_id = t2.pipel_trace_id
                                 AND t2.type = 1
-                                LEFT JOIN tb_pipel_log t3 ON t1.pipel_trace_id = t3.pipel_trace_id
-                                AND t3.type = 2
+                                LEFT JOIN (
+                                SELECT
+                                    t.pipel_trace_id,
+                                    t.create_time,
+                                    t.msg,
+                                    ROW_NUMBER() OVER (PARTITION BY t.pipel_trace_id ORDER BY t. create_time DESC) AS rn
+                                FROM
+                                    tb_pipel_log t
+                                WHERE
+                                    t.type = 2
+                            ) t3 ON t1.pipel_trace_id = t3.pipel_trace_id AND t3.rn = 1
                     ) AS t5
                 GROUP BY
                     t5.workflowName
