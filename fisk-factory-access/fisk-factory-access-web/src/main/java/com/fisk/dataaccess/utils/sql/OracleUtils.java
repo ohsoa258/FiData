@@ -353,10 +353,11 @@ public class OracleUtils {
             list = new ArrayList<>();
             for (String tableName : tableList) {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSql(dbName, tableName));
+                log.info("开始获取oracle指定库表下的字段：db" + dbName + "tbl:" + tableName);
+                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSqlV2(dbName, tableName));
                 List<TableStructureDTO> colNameList = new ArrayList<>();
                 while (rs.next()) {
-                    colNameList.add(conversionType(rs));
+                    colNameList.add(conversionTypeV2(rs, tableName, dbName));
                 }
                 tablePyhNameDTO.setFields(colNameList);
                 tablePyhNameDTO.setTableName(tableName);
@@ -458,6 +459,43 @@ public class OracleUtils {
     }
 
     /**
+     * 根据user_tab_cols表,拼接查询表字段信息sql 查询字段是否主键
+     *
+     * @param dbName
+     * @param tableName
+     * @return
+     */
+    public String buildUserSelectTableColumnSqlV2(String dbName, String tableName) {
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT ");
+        str.append("a.TABLE_NAME,");
+        str.append("a.DATA_PRECISION,");
+        str.append("a.DATA_SCALE,");
+        str.append("a.COLUMN_NAME,");
+        str.append("a.DATA_TYPE,");
+        str.append("a.DATA_LENGTH,");
+        //加上字段是否是主键的判断
+        str.append("     CASE WHEN EXISTS (\n" +
+                "        SELECT 1 \n" +
+                "        FROM all_cons_columns k \n" +
+                "        JOIN all_constraints c ON k.constraint_name = c.constraint_name AND k.owner = c.owner\n" +
+                "        WHERE \n" +
+                "            c.constraint_type = 'P' AND \n" +
+                "            c.table_name = a.TABLE_NAME AND \n" +
+                "            k.column_name = a.COLUMN_NAME AND \n" +
+                "            c.status = 'ENABLED'\n" +
+                "    ) THEN '1' ELSE '0' END AS IS_PRIMARY_KEY ");
+        str.append("FROM ");
+        str.append("user_tab_cols a ");
+        str.append("LEFT JOIN ALL_COL_COMMENTS b ON a.TABLE_NAME = b.TABLE_NAME ");
+        str.append("WHERE ");
+        str.append("b.owner='" + dbName + "' ");
+        str.append("and ");
+        str.append("a.TABLE_NAME='" + tableName + "' ");
+        return str.toString();
+    }
+
+    /**
      * 获取该用户下所有表sql
      *
      * @return
@@ -485,6 +523,44 @@ public class OracleUtils {
             dto.fieldType = rs.getString("DATA_TYPE");
             dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
             dto.fieldPrecision = 0;
+            OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
+            switch (typeEnum) {
+                case NUMBER:
+                    if (rs.getString("DATA_PRECISION") == null) {
+                        dto.fieldLength = 0;
+                        dto.fieldPrecision = 0;
+                        break;
+                    }
+                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_PRECISION"));
+                    dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
+                    break;
+                default:
+                    break;
+            }
+            return dto;
+        } catch (SQLException e) {
+            log.error("conversionType ex:", e);
+            throw new FkException(ResultEnum.DATA_OPS_SQL_EXECUTE_ERROR);
+        }
+    }
+
+    /**
+     * 根据类型判断精度
+     *
+     * @param rs
+     * @return
+     */
+    public TableStructureDTO conversionTypeV2(ResultSet rs, String tableName, String dbName) {
+        try {
+            TableStructureDTO dto = new TableStructureDTO();
+            //dto.fieldDes = rs.getString("COMMENTS");
+            dto.fieldName = rs.getString("COLUMN_NAME");
+            dto.fieldType = rs.getString("DATA_TYPE");
+            dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
+            dto.fieldPrecision = 0;
+            dto.sourceTblName = tableName;
+            dto.sourceDbName = dbName;
+            dto.setIsPk(Integer.valueOf(rs.getString("IS_PRIMARY_KEY")));
             OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
             switch (typeEnum) {
                 case NUMBER:
