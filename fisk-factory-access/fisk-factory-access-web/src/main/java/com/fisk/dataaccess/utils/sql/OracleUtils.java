@@ -466,16 +466,15 @@ public class OracleUtils {
      * @return
      */
     public String buildUserSelectTableColumnSqlV2(String dbName, String tableName) {
-        StringBuilder str = new StringBuilder();
-        str.append("SELECT ");
-        str.append("a.TABLE_NAME,");
-        str.append("a.DATA_PRECISION,");
-        str.append("a.DATA_SCALE,");
-        str.append("a.COLUMN_NAME,");
-        str.append("a.DATA_TYPE,");
-        str.append("a.DATA_LENGTH,");
-        //加上字段是否是主键的判断
-        str.append("     CASE WHEN EXISTS (\n" +
+        String str = "SELECT " +
+                "a.TABLE_NAME," +
+                "a.DATA_PRECISION," +
+                "a.DATA_SCALE," +
+                "a.COLUMN_NAME," +
+                "a.DATA_TYPE," +
+                "a.DATA_LENGTH," +
+                //加上字段是否是主键的判断
+                "     CASE WHEN EXISTS (\n" +
                 "        SELECT 1 \n" +
                 "        FROM all_cons_columns k \n" +
                 "        JOIN all_constraints c ON k.constraint_name = c.constraint_name AND k.owner = c.owner\n" +
@@ -484,15 +483,12 @@ public class OracleUtils {
                 "            c.table_name = a.TABLE_NAME AND \n" +
                 "            k.column_name = a.COLUMN_NAME AND \n" +
                 "            c.status = 'ENABLED'\n" +
-                "    ) THEN '1' ELSE '0' END AS IS_PRIMARY_KEY ");
-        str.append("FROM ");
-        str.append("user_tab_cols a ");
-//        str.append("LEFT JOIN ALL_COL_COMMENTS b ON a.TABLE_NAME = b.TABLE_NAME ");
-        str.append("WHERE ");
-//        str.append("b.owner='" + dbName + "' ");
-//        str.append("and ");
-        str.append("a.TABLE_NAME='" + tableName + "' ");
-        return str.toString();
+                "    ) THEN '1' ELSE '0' END AS IS_PRIMARY_KEY " +
+                "FROM " +
+                "user_tab_cols a " +
+                "WHERE " +
+                "a.TABLE_NAME='" + tableName + "' ";
+        return str;
     }
 
     /**
