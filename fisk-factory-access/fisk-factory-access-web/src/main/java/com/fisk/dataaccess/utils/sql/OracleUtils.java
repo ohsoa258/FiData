@@ -361,7 +361,7 @@ public class OracleUtils {
                 }
                 tablePyhNameDTO.setFields(colNameList);
                 //schema名字加表名
-                tablePyhNameDTO.setTableName(schemaName + "_" + tableName);
+                tablePyhNameDTO.setTableName(schemaName + "." + tableName);
                 list.add(tablePyhNameDTO);
                 rs.close();
             }
