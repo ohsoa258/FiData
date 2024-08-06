@@ -20,7 +20,7 @@ public class TableFieldDTO {
      * 表id
      */
     @ApiModelProperty(value = "表id", required = true)
-    public String tableId;
+    public String tbId;
     /**
      * 字段名
      */

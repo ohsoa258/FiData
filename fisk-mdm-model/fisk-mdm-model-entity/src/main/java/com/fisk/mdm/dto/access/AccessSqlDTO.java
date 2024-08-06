@@ -8,7 +8,11 @@ import lombok.Data;
  */
 @Data
 public class AccessSqlDTO {
-    private long id;
+    @ApiModelProperty(value = "accessId")
+    private long accessId;
+
+    @ApiModelProperty(value = "entityId")
+    private Integer entityId;
     /**
      * 数据源id
      */
@@ -19,4 +23,10 @@ public class AccessSqlDTO {
      */
     @ApiModelProperty(value = "执行sql")
     private String sqlScript;
+
+    /**
+     * 版本描述（同发布描述）
+     */
+    @ApiModelProperty(value = "版本描述（同发布描述）")
+    private String versionDes;
 }

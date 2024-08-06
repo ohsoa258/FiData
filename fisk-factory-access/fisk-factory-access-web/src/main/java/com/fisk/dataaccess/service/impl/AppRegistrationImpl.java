@@ -1034,7 +1034,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
         List<TableFieldDTO> tableColumnDTOS = this.tableFieldsImpl.searchColumn(key);
         if (!CollectionUtils.isEmpty(tableColumnDTOS)) {
-            Map<String, List<TableFieldDTO>> filedMap = tableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Map<String, List<TableFieldDTO>> filedMap = tableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTbId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<TableAccessPO> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.in(TableAccessPO::getId, strings);

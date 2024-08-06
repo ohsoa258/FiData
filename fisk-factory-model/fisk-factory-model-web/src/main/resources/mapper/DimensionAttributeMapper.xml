@@ -53,7 +53,7 @@
 	<select id="searchColumn" resultType="com.fisk.dataaccess.dto.tablefield.TableFieldDTO">
 		select
 		id as fieldId,
-		dimension_id as tableId,
+		dimension_id as tbId,
 		dimension_field_en_name as field_name,
 		dimension_field_des as field_des,
 		dimension_field_type as field_type,

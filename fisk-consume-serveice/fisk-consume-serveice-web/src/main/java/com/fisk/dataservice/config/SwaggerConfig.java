@@ -43,6 +43,7 @@ public static final String TAG_1 = "数据源接口";
     public static final String TAG_9 = "数据服务元数据调用";
     public static final String TAG_10 = "代理服务接口";
     public static final String TAG_11 = "表服务API接口";
+    public static final String TAG_12 = "主数据版本sql";
 
     @Bean
     public Docket createRestApi() {
@@ -60,6 +61,7 @@ public static final String TAG_1 = "数据源接口";
                 .tags(new Tag(TAG_9,"数据服务元数据调用"))
                 .tags(new Tag(TAG_10,"代理服务接口"))
                 .tags(new Tag(TAG_11,"表服务API接口"))
+                .tags(new Tag(TAG_12,"主数据版本sql"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
