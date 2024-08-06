@@ -405,7 +405,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
                     log.info("ORACLE驱动加载完毕");
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                    tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount, dto.serviceName);
                     break;
                 default:
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
@@ -1033,7 +1033,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     @Override
     public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
         List<TableFieldDTO> tableColumnDTOS = this.tableFieldsImpl.searchColumn(key);
-        if (!CollectionUtils.isEmpty(tableColumnDTOS)){
+        if (!CollectionUtils.isEmpty(tableColumnDTOS)) {
             Map<String, List<TableFieldDTO>> filedMap = tableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<TableAccessPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -1048,7 +1048,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
                 return searchColumnDTO;
             }).collect(Collectors.toList());
-        }else {
+        } else {
             return new ArrayList<>();
         }
     }
@@ -1309,7 +1309,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
                         log.info("ORACLE驱动加载完毕");
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount);
+                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount, dto.serviceName);
                         break;
                     default:
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
@@ -1360,7 +1360,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setIsRealtime(1);
                         fieldDTO.setIsBusinesstime(0);
                         fieldDTO.setIsTimestamp(0);
-                        fieldDTO.setSourceDbName(field.sourceDbName);
+                        fieldDTO.setSourceDbName(dto.getServiceName());
                         fieldDTO.setSourceTblName(table.getTableName());
                         list.add(fieldDTO);
                     }
@@ -1508,7 +1508,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
                         log.info("ORACLE驱动加载完毕");
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount, dto.serviceName);
                         break;
                     default:
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
@@ -1707,7 +1707,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
                         log.info("ORACLE驱动加载完毕");
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
-                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conDbname);
+                        tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount, dto.serviceName);
                         break;
                     default:
                         conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);

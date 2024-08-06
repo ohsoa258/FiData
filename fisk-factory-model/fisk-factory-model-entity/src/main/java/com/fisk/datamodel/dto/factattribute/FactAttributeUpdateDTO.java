@@ -60,4 +60,10 @@ public class FactAttributeUpdateDTO {
     @ApiModelProperty(value = "数据分级：DataLevelEnum")
     public Integer dataLevel;
 
+    /**
+     * 属性类型：0:退化维度，1:维度键，2:度量字段
+     */
+    @ApiModelProperty(value = "属性类型：0:退化维度，1:维度键，2:度量字段")
+    public int attributeType;
+
 }
