@@ -32,6 +32,7 @@ import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.ApiEncryptConfigService;
 import com.fisk.dataservice.service.IApiRegisterManageService;
+import com.fisk.dataservice.service.ITableVersionSqlService;
 import com.fisk.dataservice.vo.api.*;
 import com.fisk.dataservice.vo.datasource.DataSourceConVO;
 import com.fisk.dataservice.vo.fileservice.FileServiceVO;
@@ -50,6 +51,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -122,6 +124,9 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
 
     @Resource
     private ApiEncryptConfigService apiEncryptConfigService;
+
+    @Resource
+    private ITableVersionSqlService tableVersionSqlService;
 
     @Override
     public Page<ApiConfigVO> getAll(ApiRegisterQueryDTO query) {
@@ -601,6 +606,15 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         if (!isUpdate)
             return ResultEnum.SAVE_DATA_ERROR;
         apiId = (int) apiConfigPO.getId();
+
+        TableVersionSqlPO tableVersionSqlPO = new TableVersionSqlPO();
+        tableVersionSqlPO.setApiId(apiId);
+        tableVersionSqlPO.setVersionDes(apiConfigPO.getApiDesc());
+        tableVersionSqlPO.setApiType(apiConfigPO.getApiType());
+        tableVersionSqlPO.setVersionNumber(String.valueOf(Instant.now().toEpochMilli()));
+        tableVersionSqlPO.setHistoricalSql(apiConfigPO.getCreateSql());
+        tableVersionSqlPO.setHistoricalCountSql(apiConfigPO.getCreateCountSql());
+        tableVersionSqlService.save(tableVersionSqlPO);
 
         // API代理只需要保存API的基本信息
         if (apiConfigPO.getCreateApiType() == 3) {

@@ -306,6 +306,8 @@ public class FactAttributeImpl
         po.dataClassification = dto.dataClassification;
         //数据分级
         po.dataLevel = dto.dataLevel;
+        //属性类型
+        po.attributeType = dto.attributeType;
 
         //系统变量
         if (!org.springframework.util.CollectionUtils.isEmpty(dto.deltaTimes)) {

@@ -75,7 +75,7 @@
     <select id="searchColumn" resultType="com.fisk.dataaccess.dto.tablefield.TableFieldDTO">
         select
         id as fieldId,
-        entity_id as tableId,
+        entity_id as tbId,
         column_name as fieldName,
         `desc` as fieldDes,
         data_type_decimal_length as fieldPrecision,

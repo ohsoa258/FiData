@@ -337,10 +337,10 @@ public class OracleUtils {
      * 读取Oracle表、字段信息
      *
      * @param conn
-     * @param dbName
+     * @param schemaName
      * @return
      */
-    public List<TablePyhNameDTO> getTrueTableNameList(Connection conn, String dbName) {
+    public List<TablePyhNameDTO> getTrueTableNameList(Connection conn, String schemaName, String dbName) {
         Statement st = null;
         List<TablePyhNameDTO> list = new ArrayList<>();
         try {
@@ -353,14 +353,15 @@ public class OracleUtils {
             list = new ArrayList<>();
             for (String tableName : tableList) {
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                log.info("开始获取oracle指定库表下的字段：db" + dbName + "tbl:" + tableName);
-                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSqlV2(dbName, tableName));
+                log.info("开始获取oracle指定schema表下的字段：db" + schemaName + "tbl:" + tableName);
+                ResultSet rs = st.executeQuery(this.buildUserSelectTableColumnSqlV2(schemaName, tableName));
                 List<TableStructureDTO> colNameList = new ArrayList<>();
                 while (rs.next()) {
                     colNameList.add(conversionTypeV2(rs, tableName, dbName));
                 }
                 tablePyhNameDTO.setFields(colNameList);
-                tablePyhNameDTO.setTableName(tableName);
+                //schema名字加表名
+                tablePyhNameDTO.setTableName(schemaName + "." + tableName);
                 list.add(tablePyhNameDTO);
                 rs.close();
             }

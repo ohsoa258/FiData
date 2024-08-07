@@ -3,6 +3,7 @@ package com.fisk.common.service.factorycodepreview.impl;
 import com.fisk.common.service.factorycodepreview.IBuildFactoryCodePreview;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PreviewTableBusinessDTO;
 import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishFieldDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
  * @describe 该工具类用于数仓建模和数据接入模块的sql预览
  * @createtime 2023-04-21
  */
+@Slf4j
 public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview {
 
     /**
@@ -31,17 +33,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
 //        fieldList = fieldList.stream().filter(f -> !StringUtils.isEmpty(f.sourceFieldName)).collect(Collectors.toList());
         //遍历字段集合
         for (PublishFieldDTO f : fieldList) {
-//            if (f.sourceFieldName != null && f.attributeType == 0) {
-//                prefix.append("[")
-//                        .append(f.sourceFieldName)
-//                        .append("]")
-//                        .append(",");
-//            } else {
-//                prefix.append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(",");
-//            }
             prefix.append("[")
                     .append(f.fieldEnName)
                     .append("]")
@@ -152,199 +143,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
             }
         }
 
-//            if (f.sourceFieldName != null && f.attributeType == 0) {
-//                //主键不需要
-//                if (f.fieldType.equalsIgnoreCase("DATE")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(LEFT(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'1970-1-1'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(LEFT(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'08:00:00'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("INT") || f.fieldType.equalsIgnoreCase("BIGINT")) {
-//                    suffix.append("CAST(CONVERT(FLOAT,")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("])")
-//                            .append(" AS ")
-//                            .append(f.fieldType)
-//                            .append(")")
-//                            .append(" AS ")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(",");
-//                } else {
-//                    suffix.append("CAST(")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(" AS ")
-//                            .append(f.fieldType);
-//                    if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
-//                        suffix.append("(")
-//                                .append(f.fieldLength)
-//                                .append("))");
-//                    } else {
-//                        suffix.append(")");
-//                    }
-//                    suffix.append(" AS ")
-//                            .append("[")
-//                            .append(f.sourceFieldName)
-//                            .append("]")
-//                            .append(",");
-//                }
-//            } else {
-//                //主键不需要
-//                if (f.fieldType.equalsIgnoreCase("DATE")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(LEFT(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'1970-1-1'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(LEFT(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'08:00:00'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-//                    suffix.append(" CASE WHEN CAST(isnumeric(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(")")
-//                            .append(" AS int) <=0 THEN ")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END, ");
-//                } else if (f.fieldType.equalsIgnoreCase("INT") || f.fieldType.equalsIgnoreCase("BIGINT")) {
-//                    suffix.append("CAST(CONVERT(FLOAT,")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("])")
-//                            .append(" AS ")
-//                            .append(f.fieldType)
-//                            .append(")")
-//                            .append(" AS ")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(",");
-//                } else {
-//                    suffix.append("CAST(")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(" AS ")
-//                            .append(f.fieldType);
-//                    if ("NVARCHAR".equalsIgnoreCase(f.fieldType) || "VARCHAR".equalsIgnoreCase(f.fieldType)) {
-//                        suffix.append("(")
-//                                .append(f.fieldLength)
-//                                .append("))");
-//                    } else {
-//                        suffix.append(")");
-//                    }
-//                    suffix.append(" AS ")
-//                            .append("[")
-//                            .append(f.fieldEnName)
-//                            .append("]")
-//                            .append(",");
-//                }
-//            }
-//        }
-
         suffix.append("getdate(),")
                 .append("getdate(),")
                 .append("fidata_batch_code")
@@ -399,6 +197,8 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         } else {
             pkFields = fieldList.stream().filter(f -> f.isBusinessKey == 1).collect(Collectors.toList());
         }
+        log.info("业务标识覆盖方式标识的字段：" + pkFields);
+
 //        //筛选出只有源字段的字段
 //        pkFields = pkFields.stream().filter(f -> !StringUtils.isEmpty(f.sourceFieldName)).collect(Collectors.toList());
 
@@ -422,18 +222,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         if (!CollectionUtils.isEmpty(pkFields)) {
             //此循环是为了拼出所有业务覆盖标识字段名称的字符串 格式为:  字段a,字段b,字段c,字段,
             for (PublishFieldDTO pkField : pkFields) {
-//                if (pkField.sourceFieldName != null && pkField.attributeType == 0) {
-//                    pkFieldNames.append("[")
-//                            .append(pkField.sourceFieldName)
-//                            .append("]")
-//                            .append(",");
-//                } else {
-//                    pkFieldNames.append("[")
-//                            .append(pkField.fieldEnName)
-//                            .append("]")
-//                            .append(",");
-//                }
-
                 if (pkField.fieldType.equalsIgnoreCase("DATE")) {
                     pkFieldNames.append(" CASE WHEN CAST(isnumeric(")
                             .append("[")
@@ -608,7 +396,7 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         String regex = "\\?";
         String regex1 = "<\\?>";
         //将所有的占位符 ? 替换成我们拼接完成的业务覆盖标识字段字符串
-        String halfSql = String.valueOf(suffix).replaceFirst(regex, String.valueOf(pkFieldNames));
+        String halfSql = suffix.replaceFirst(regex, String.valueOf(pkFieldNames));
         halfSql = halfSql.replaceFirst(regex1, String.valueOf(pkFieldNames1));
         //将所有的占位符 <?> 替换成我们拼接完成的业务覆盖标识字段字符串
 
@@ -616,27 +404,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         StringBuilder matchAgain = new StringBuilder(halfSql);
         //第二次拼接开始：AND TARGET.'业务主键标识的字段' = SOURCE.'业务主键标识的字段' ...
         for (PublishFieldDTO pkField : pkFields) {
-//            if (pkField.sourceFieldName != null && pkField.attributeType == 0) {
-//                matchAgain.append("AND TARGET.")
-//                        .append("[")
-//                        .append(pkField.sourceFieldName)
-//                        .append("]")
-//                        .append(" = SOURCE.")
-//                        .append("[")
-//                        .append(pkField.sourceFieldName)
-//                        .append("]")
-//                        .append(" ");
-//            } else {
-//                matchAgain.append("AND TARGET.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" = SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" ");
-//            }
             matchAgain.append("AND TARGET.")
                     .append("[")
                     .append(pkField.fieldEnName)
@@ -646,88 +413,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                     .append(pkField.fieldEnName)
                     .append("]")
                     .append(" ");
-
-//            matchAgain.append("AND TARGET.")
-//                    .append("[")
-//                    .append(pkField.fieldEnName)
-//                    .append("]")
-//                    .append(" = ");
-//
-//            if (pkField.fieldType.equalsIgnoreCase("DATE")) {
-//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(")")
-//                        .append(" AS int) <=0 THEN SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" ELSE convert(date,DATEADD(MINUTE,CAST(LEFT(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(",10) AS bigint)/60,'1970-1-1'),112) END ");
-//            } else if (pkField.fieldType.equalsIgnoreCase("TIME")) {
-//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(")")
-//                        .append(" AS int) <=0 THEN SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" ELSE convert(time,DATEADD(MINUTE,CAST(LEFT(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(",10) AS bigint)/60,'08:00:00'),112) END ");
-//            } else if (pkField.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(")")
-//                        .append(" AS int) <=0 THEN ")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END ");
-//            } else if (pkField.fieldType.equalsIgnoreCase("DATETIME")) {
-//                suffix.append(" CASE WHEN CAST(isnumeric(SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(")")
-//                        .append(" AS int) <=0 THEN SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" ELSE convert(datetime,DATEADD(MINUTE,CAST(left(")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(",10) AS bigint)/60,'1970-01-01 08:00:00'),112) END ");
-//            } else if (pkField.fieldType.equalsIgnoreCase("INT") || pkField.fieldType.equalsIgnoreCase("BIGINT")) {
-//                suffix.append("CAST(CONVERT(FLOAT,SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("])")
-//                        .append(" AS ")
-//                        .append(pkField.fieldType)
-//                        .append(") ");
-//            } else {
-//                suffix.append("SOURCE.")
-//                        .append("[")
-//                        .append(pkField.fieldEnName)
-//                        .append("]")
-//                        .append(" ");
-//            }
         }
         //拼接分号，拼成最终的sql
         String finalSql = String.valueOf(matchAgain.append(";   "));
@@ -758,17 +443,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                 .append(" AS TARGET USING (SELECT ");
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-//            if (f.sourceFieldName != null && f.attributeType == 0) {
-//                startSql.append("[")
-//                        .append(f.sourceFieldName)
-//                        .append("]")
-//                        .append(",");
-//            } else {
-//                startSql.append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(",");
-//            }
             if (f.fieldType.equalsIgnoreCase("DATE")) {
                 startSql.append(" CASE WHEN CAST(isnumeric(")
                         .append("[")
@@ -871,27 +545,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
         if (!CollectionUtils.isEmpty(pkFields)) {
             //遍历前端传递的字段集合--只包含主键
             for (PublishFieldDTO pkField : pkFields) {
-//                if (pkField.sourceFieldName != null && pkField.attributeType == 0) {
-//                    startSql.append("TARGET.")
-//                            .append("[")
-//                            .append(pkField.sourceFieldName)
-//                            .append("]")
-//                            .append(" = SOURCE.")
-//                            .append("[")
-//                            .append(pkField.sourceFieldName)
-//                            .append("]")
-//                            .append(" AND ");
-//                } else {
-//                    startSql.append("TARGET.")
-//                            .append("[")
-//                            .append(pkField.fieldEnName)
-//                            .append("]")
-//                            .append(" = SOURCE.")
-//                            .append("[")
-//                            .append(pkField.fieldEnName)
-//                            .append("]")
-//                            .append(" AND ");
-//                }
                 startSql.append("TARGET.")
                         .append("[")
                         .append(pkField.fieldEnName)
@@ -914,51 +567,6 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
 
         //遍历字段集合--不包含主键
         for (PublishFieldDTO f : fieldList) {
-//            if (f.fieldType.equalsIgnoreCase("DATE")) {
-//                middleSql.append("TARGET.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(" = convert(date,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
-//                        .append(",");
-//            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-//                middleSql.append("TARGET.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(" = convert(time,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'08:00:00'),112)")
-//                        .append(",");
-//            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-//                middleSql.append("TARGET.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-//                        .append(",");
-//            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-//                middleSql.append("TARGET.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(" = convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-//                        .append(",");
-//            } else {
             middleSql.append("TARGET.")
                     .append("[")
                     .append(f.fieldEnName)
@@ -992,45 +600,12 @@ public class FactoryCodePreviewSqlServerImpl implements IBuildFactoryCodePreview
                         .append("]")
                         .append(",");
             }
-//            endSql.append("[")
-//                    .append(f.fieldEnName)
-//                    .append("]")
-//                    .append(",");
 
         }
         endSql.append("fi_createtime, fi_updatetime, fidata_batch_code) Values(");
 
         //遍历字段集合,拼接values...
         for (PublishFieldDTO f : fieldList) {
-//            if (f.fieldType.equalsIgnoreCase("DATE")) {
-//                endSql.append("convert(date,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'1970-01-01'),112)")
-//                        .append(",");
-//            } else if (f.fieldType.equalsIgnoreCase("TIME")) {
-//                endSql.append("convert(time,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'08:00:00'),112)")
-//                        .append(",");
-//            } else if (f.fieldType.equalsIgnoreCase("TIMESTAMP")) {
-//                endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-//                        .append(",");
-//            } else if (f.fieldType.equalsIgnoreCase("DATETIME")) {
-//                endSql.append("convert(datetime,DATEADD(MINUTE,CAST(left(SOURCE.")
-//                        .append("[")
-//                        .append(f.fieldEnName)
-//                        .append("]")
-//                        .append(", 10) AS bigint) / 60,'1970-01-01 08:00:00'),112)")
-//                        .append(",");
-//            } else {
             endSql.append("SOURCE.")
                     .append("[")
                     .append(f.fieldEnName)

@@ -19,6 +19,18 @@ public class AccessAttributeAddDTO{
      */
     @ApiModelProperty(value = "是否发布")
     public boolean publish;
+
+    /**
+     * 数据源id
+     */
+    @ApiModelProperty(value = "数据源id")
+    private Integer dataSourceId;
+
+    /**
+     * 查询接入sql
+     */
+    @ApiModelProperty(value = "查询接入sql")
+    public String accessSql;
     /**
      * 覆盖脚本
      */
