@@ -2084,7 +2084,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         List<SearchColumnDTO> result = new ArrayList<>();
         List<TableFieldDTO> dimensionTableColumnDTOS = this.dimensionAttribute.searchColumn(key);
         if (!CollectionUtils.isEmpty(dimensionTableColumnDTOS)){
-            Map<String, List<TableFieldDTO>> filedMap = dimensionTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Map<String, List<TableFieldDTO>> filedMap = dimensionTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTbId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<DimensionPO> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.in(DimensionPO::getId, strings);
@@ -2104,7 +2104,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         }
         List<TableFieldDTO> factTableColumnDTOS = this.factAttributeImpl.searchColumn(key);
         if (!CollectionUtils.isEmpty(factTableColumnDTOS)){
-            Map<String, List<TableFieldDTO>> filedMap = factTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTableId));
+            Map<String, List<TableFieldDTO>> filedMap = factTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTbId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<FactAttributePO> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.in(FactAttributePO::getId, strings);

@@ -62,6 +62,9 @@ public class SwaggerConfig {
     public static final String STANDARDS = "数据标准";
 
     public static final String CODESET = "代码集";
+
+    public static final String CODECOLLECTION = "代码集合";
+
     public static final String METADATA_AUDIT = "元数据审计日志";
     public static final String META_MAP = "元数据地图";
     public static final String EMAIL_GROUP = "邮箱组";

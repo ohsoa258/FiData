@@ -25,6 +25,7 @@ import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
+import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DataBaseTypeEnum;
 import com.fisk.datamodel.enums.RelateTableTypeEnum;
 import com.fisk.mdm.dto.access.*;
@@ -56,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -106,6 +108,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     private UserClient userClient;
     @Resource
     private UserHelper userHelper;
+    @Resource
+    ITableVersionSqlService tableVersionSqlService;
 
     @Value("${pgsql-mdm.url}")
     private String pgJdbcStr;
@@ -193,13 +197,27 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
 
     @Override
     public ResultEnum updateAccessSql(AccessSqlDTO dto) {
-        AccessDataPO model = mapper.selectById(dto.getId());
+        ResultEnum resultEnum = ResultEnum.SUCCESS;
+        AccessDataPO model = mapper.selectById(dto.getAccessId());
         if (model == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
         model.setExtractionSql(dto.getSqlScript());
         model.setSouceSystemId(dto.getDataSourceId());
-        return mapper.updateById(model) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        int i = mapper.updateById(model);
+        if (i<=0){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        TableVersionSqlPO tableVersionSqlPO = new TableVersionSqlPO();
+        tableVersionSqlPO.setVersionNumber(String.valueOf(Instant.now().toEpochMilli()));
+        tableVersionSqlPO.setHistoricalSql(dto.getSqlScript());
+        tableVersionSqlPO.setTableId(dto.getEntityId());
+        tableVersionSqlPO.setVersionDes(dto.getVersionDes());
+        boolean save = tableVersionSqlService.save(tableVersionSqlPO);
+        if (!save){
+            return ResultEnum.SAVE_DATA_ERROR;
+        }
+        return resultEnum;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -210,6 +228,13 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if (accessDataPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        AccessSqlDTO accessSqlDTO = new AccessSqlDTO();
+        accessSqlDTO.setAccessId(accessDataPO.id);
+        accessSqlDTO.setEntityId(accessDataPO.getEntityId());
+        accessSqlDTO.setDataSourceId(dto.getDataSourceId());
+        accessSqlDTO.setSqlScript(dto.getAccessSql());
+        accessSqlDTO.setVersionDes(dto.getRemark());
+        accessDataService.updateAccessSql(accessSqlDTO);
 
         //系统变量
         if (!CollectionUtils.isEmpty(dto.deltaTimes)) {

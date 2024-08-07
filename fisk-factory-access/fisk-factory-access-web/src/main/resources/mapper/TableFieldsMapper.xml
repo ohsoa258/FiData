@@ -20,7 +20,7 @@
     <select id="searchColumn" resultType="com.fisk.dataaccess.dto.tablefield.TableFieldDTO">
         select
         id as fieldId,
-        table_access_id as tableId,
+        table_access_id as tbId,
         field_name,
         field_des,
         field_type,
