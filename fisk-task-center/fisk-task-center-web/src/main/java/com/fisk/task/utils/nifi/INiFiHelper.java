@@ -257,6 +257,14 @@ public interface INiFiHelper {
     BusinessResult<ProcessorEntity> buildCallDbProcedureProcess(BuildCallDbProcedureProcessorDTO dto);
 
     /**
+     * 调用存储过程
+     *
+     * @param dto
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildCallDbProcedureProcessForDoris(BuildCallDbProcedureProcessorDTO dto);
+
+    /**
      * 定义insert语句values参数
      *
      * @param config                          config

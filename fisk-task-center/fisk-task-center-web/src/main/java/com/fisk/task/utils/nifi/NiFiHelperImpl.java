@@ -890,6 +890,56 @@ public class NiFiHelperImpl implements INiFiHelper {
         return buildProcessor(buildCallDbProcedureProcessorDTO.groupId, entity, dto, config);
     }
 
+    /**
+     * doris
+     * @param buildCallDbProcedureProcessorDTO
+     * @return
+     */
+    @Override
+    public BusinessResult<ProcessorEntity> buildCallDbProcedureProcessForDoris(BuildCallDbProcedureProcessorDTO buildCallDbProcedureProcessorDTO) {
+        List<String> autoRes = new ArrayList<>();
+        if (!buildCallDbProcedureProcessorDTO.haveNextOne) {
+            autoRes.add(AutoEndBranchTypeEnum.SUCCESS.getName());
+        }
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        Map<String, String> map = new HashMap<>(2);
+        map.put("Database Connection Pooling Service", buildCallDbProcedureProcessorDTO.dbConnectionId);
+        map.put("SQL select query", buildCallDbProcedureProcessorDTO.executsql);
+        map.put("sql-pre-query", buildCallDbProcedureProcessorDTO.sqlPreQuery);
+        map.put("sql-post-query", buildCallDbProcedureProcessorDTO.sqlPostQuery);
+        //组件配置信息
+        MyProcessorConfigDTO config = new MyProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        config.setComments(buildCallDbProcedureProcessorDTO.details);
+        if (buildCallDbProcedureProcessorDTO.concurrencyNums != null) {
+            // 组件并发数量
+            config.setConcurrentlySchedulableTaskCount(buildCallDbProcedureProcessorDTO.concurrencyNums);
+        }
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+
+        //添加重试机制
+        List<String> relationShips = new ArrayList<>();
+        //配置需要重试的结果 failure retry
+        relationShips.add("failure");
+        config.setRetriedRelationships(relationShips);
+        //重试最长回退期 默认10分钟
+        config.setMaxBackoffPeriod("10 mins");
+        //重试回退策略 礼让
+        config.setBackoffMechanism("YIELD_PROCESSOR");
+        //重试次数 5次
+        config.setRetryCount(5);
+
+        dto.setName(buildCallDbProcedureProcessorDTO.name);
+        dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
+        dto.setPosition(buildCallDbProcedureProcessorDTO.getPositionDTO());
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(buildCallDbProcedureProcessorDTO.groupId, entity, dto, config);
+    }
+
     @Override
     public BusinessResult<ProcessorEntity> buildSqlParameterProcess(DataAccessConfigDTO dataAccessConfigDTO, BuildProcessEvaluateJsonPathDTO data) {
         //流程分支，是否自动结束
