@@ -594,13 +594,12 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                     tableDtoTree.setLabel(entity.getTableName());
                                     tableDtoTree.setLabelAlias(entity.getTableName());
                                     tableDtoTree.setLabelRelName(entity.getTableName());
-                                    tableDtoTree.setLabelFramework(entity.getTableName());
                                     tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
                                     tableDtoTree.setSourceType(1);
                                     tableDtoTree.setSourceId(Integer.parseInt(id));
                                     tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
                                     tableDtoTree.setLabelDesc(entity.getDesc());
-                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
 
                                     //第四层: field层
                                     List<FiDataMetaDataTreeDTO> fieldTreeList = attributeService.query()
@@ -628,7 +627,6 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 fieldDtoTree.setParentName(entity.getTableName());
                                                 fieldDtoTree.setParentNameAlias(entity.getTableName());
                                                 fieldDtoTree.setParentLabelRelName(entity.getTableName());
-                                                fieldDtoTree.setParentLabelFramework(entity.getTableName());
                                                 fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
                                                 return fieldDtoTree;
                                             }).collect(Collectors.toList());
