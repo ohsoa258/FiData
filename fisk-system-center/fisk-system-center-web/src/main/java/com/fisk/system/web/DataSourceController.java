@@ -81,6 +81,16 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllODSDataSource());
     }
 
+    /**
+     * 获取mdm数据源连接信息
+     *
+     * @return
+     */
+    @PostMapping("/getAllMdmDataSource")
+    public ResultEntity<List<DataSourceMyDTO>> getAllMdmDataSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllMdmDataSource());
+    }
+
     @PostMapping("/add")
     @ApiOperation("添加数据源")
     public ResultEntity<Object> addDate(@RequestBody DataSourceSaveDTO dto) {

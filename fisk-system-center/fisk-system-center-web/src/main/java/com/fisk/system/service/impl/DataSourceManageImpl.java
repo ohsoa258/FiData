@@ -579,6 +579,17 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         return DataSourceMap.INSTANCES.posToDtos(list);
     }
 
+    @Override
+    public List<DataSourceMyDTO> getAllMdmDataSource() {
+        List<DataSourcePO> list = this.list(
+                new LambdaQueryWrapper<DataSourcePO>()
+                        .eq(DataSourcePO::getSourceType, 1) //1代表数据工厂 2代表外部数据源
+                        .eq(DataSourcePO::getSourceBusinessType, SourceBusinessTypeEnum.MDM.getValue()) //只查询mdm类型的
+        );
+
+        return DataSourceMap.INSTANCES.posToDtos(list);
+    }
+
     public DataSourcePO updateDataSourceByAccess(DataSourcePO po, DataSourceSaveDTO dto) {
         po.conAccount = dto.conAccount;
         po.conDbname = dto.conDbname;

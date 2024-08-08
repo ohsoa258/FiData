@@ -1,6 +1,7 @@
 package com.fisk.datamodel.service.impl.fact;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,6 +22,7 @@ import com.fisk.datamodel.dto.dimension.ModelMetaDataDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeAddListDTO;
 import com.fisk.datamodel.dto.fact.FactDataDTO;
+import com.fisk.datamodel.dto.factattribute.FactAttributeDTO;
 import com.fisk.datamodel.dto.factattribute.FactAttributeDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
@@ -56,6 +58,8 @@ import com.fisk.datamodel.service.impl.BusinessAreaImpl;
 import com.fisk.datamodel.service.impl.CustomScriptImpl;
 import com.fisk.datamodel.service.impl.TableHistoryImpl;
 import com.fisk.datamodel.service.impl.dimension.DimensionFolderImpl;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
@@ -126,6 +130,9 @@ public class BusinessProcessImpl
 
     @Resource
     private BusinessAreaImpl businessAreaImpl;
+
+    @Resource
+    UserClient userClient;
 
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto) {
@@ -513,6 +520,43 @@ public class BusinessProcessImpl
         }
 
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public BusinessQueryDataParamDTO getBusinessQueryDataParam(Integer fieldId) {
+        // 创建业务查询数据参数对象
+        BusinessQueryDataParamDTO businessQueryDataParamDTO = new BusinessQueryDataParamDTO();
+        // 通过字段ID获取事实属性信息
+        FactAttributePO facttAttributePO = factAttribute.getById(fieldId);
+        // 获取事实ID
+        int factId = facttAttributePO.getFactId();
+        // 构建查询条件，查询同一事实下的所有属性
+        LambdaQueryWrapper<FactAttributePO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FactAttributePO::getFactId, factId);
+        // 执行查询，获取事实属性列表
+        List<FactAttributePO> factAttributePOS = factAttributeMapper.selectList(queryWrapper);
+        // 将事实属性列表转换为DTO列表
+        List<FactAttributeDTO> factAttributeDTOS = FactAttributeMap.INSTANCES.poListsToDtoList(factAttributePOS);
+        // 设置转换后的DTO列表到业务查询数据参数对象中
+        businessQueryDataParamDTO.setFactAttributeDTOList(factAttributeDTOS);
+        // 通过事实ID获取事实信息
+        FactPO factPO = factImpl.getById(factId);
+        // 获取数据源ID
+        Integer dataSourceId = factPO.dataSourceId;
+        // 根据数据源ID调用远程服务获取数据源信息
+        ResultEntity<DataSourceDTO> dataSource = userClient.getById(dataSourceId);
+        // 校验数据源信息获取是否成功
+        if (dataSource.getCode() != ResultEnum.SUCCESS.getCode() || dataSource.data == null) {
+            // 如果获取失败，抛出异常
+            throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+        } else {
+            // 如果获取成功，设置数据源IP到业务查询数据参数对象中
+            DataSourceDTO data = dataSource.data;
+            businessQueryDataParamDTO.setIp(data.conIp);
+            businessQueryDataParamDTO.setDbName(data.conDbname);
+        }
+        // 返回业务查询数据参数对象
+        return businessQueryDataParamDTO;
     }
 
     /**

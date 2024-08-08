@@ -97,4 +97,10 @@ public interface IBusinessProcess {
      */
     ResultEnum batchPublishForDorisAggregateTbl(BusinessProcessPublishQueryDTO dto);
 
+    /**
+     * 获取指标数据查询参数
+     * @param fieldId
+     * @return
+     */
+    BusinessQueryDataParamDTO getBusinessQueryDataParam(Integer fieldId);
 }

@@ -28,6 +28,7 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessQueryDataParamDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
@@ -479,4 +480,8 @@ public interface DataModelClient {
     @ApiOperation("获取数仓数据表数量")
     @GetMapping("/business/getBusinessTableTotal")
     ResultEntity<Object> getBusinessTableTotal();
+
+    @ApiOperation("获取指标数据查询参数")
+    @GetMapping("/businessProcess/getBusinessQueryDataParam")
+    ResultEntity<BusinessQueryDataParamDTO> getBusinessQueryDataParam(@RequestParam("fieldId") Integer fieldId);
 }

@@ -10,6 +10,7 @@ import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessProcessPublishQueryDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessQueryDataParamDTO;
 import com.fisk.datamodel.service.IBusinessProcess;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -97,5 +98,9 @@ public class BusinessProcessController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.batchPublishBusinessProcess(dto));
     }
 
-
+    @ApiOperation("获取指标数据查询参数")
+    @GetMapping("/getBusinessQueryDataParam")
+    public ResultEntity<BusinessQueryDataParamDTO> getBusinessQueryDataParam(@RequestParam("fieldId") Integer fieldId){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessQueryDataParam(fieldId));
+    }
 }
