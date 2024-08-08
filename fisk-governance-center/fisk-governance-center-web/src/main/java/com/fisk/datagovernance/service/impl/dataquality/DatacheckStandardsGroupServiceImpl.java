@@ -160,11 +160,12 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
     public ResultEnum editDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(DatacheckStandardsGroupPO::getStandardsId, dto.getStandardsId());
+        queryWrapper.eq(DatacheckStandardsGroupPO::getStandardsId, dto.getStandardsId())
+                .ne(DatacheckStandardsGroupPO::getId, dto.getId());
         List<DatacheckStandardsGroupPO> group = this.list(queryWrapper);
         List<String> groupNames = group.stream().map(DatacheckStandardsGroupPO::getCheckGroupName).collect(Collectors.toList());
         List<String> names = groupNames.stream().filter(i -> i.contains(dto.getCheckGroupName())).collect(Collectors.toList());
-        if (names.size()>1) {
+        if (names.size() > 0) {
             throw new FkException(ResultEnum.CHECK_STANDARDS_GROUP_ERROR);
         }
         this.updateById(groupPO);
