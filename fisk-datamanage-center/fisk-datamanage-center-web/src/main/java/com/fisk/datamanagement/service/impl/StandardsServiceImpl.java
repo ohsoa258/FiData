@@ -768,6 +768,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
                 fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
+                fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
             } else if (i.getType() == 2) {
                 fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
@@ -782,6 +783,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
                 fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
+                fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
 
 //                StandardsPO standardsPO = standardMap.get((int) i.getId());
