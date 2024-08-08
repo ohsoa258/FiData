@@ -105,4 +105,10 @@ public interface IDataSourceManageService extends IService<DataSourcePO> {
      * @return
      */
     List<DataSourceMyDTO> getAllODSDataSource();
+
+    /**
+     * 获取mdm数据源连接信息
+     * @return
+     */
+    List<DataSourceMyDTO> getAllMdmDataSource();
 }

@@ -15,6 +15,7 @@ import com.fisk.datamanagement.dto.modelAndIndex.ModelAndIndexMappingDTO;
 import com.fisk.datamanagement.entity.BusinessExtendedfieldsPO;
 import com.fisk.datamanagement.entity.FactTreePOs;
 import com.fisk.datamanagement.service.*;
+import com.fisk.datamodel.dto.businessprocess.BusinessQueryDataParamDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -322,5 +323,11 @@ public class BusinessCategoryController {
     @PostMapping("/businessCategorySort")
     public ResultEntity<Object> businessCategorySort(@RequestBody BusinessCategorySortDTO dto) {
         return ResultEntityBuild.build(businessCategoryService.businessCategorySort(dto));
+    }
+
+    @ApiOperation("获取指标数据查询参数")
+    @GetMapping("/getBusinessQueryDataParam")
+    public ResultEntity<BusinessQueryDataParamDTO> getBusinessQueryDataParam(@RequestParam("fieldId") Integer fieldId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,businessTargetinfoService.getBusinessQueryDataParam(fieldId));
     }
 }

@@ -370,4 +370,12 @@ public interface UserClient {
     @PostMapping("/datasource/getAllODSDataSource")
     ResultEntity<List<DataSourceMyDTO>> getAllODSDataSource();
 
+    /**
+     * 获取mdm数据源连接信息
+     *
+     * @return
+     */
+    @PostMapping("/datasource/getAllMdmDataSource")
+    ResultEntity<List<DataSourceMyDTO>> getAllMdmDataSource();
+
 }

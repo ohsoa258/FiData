@@ -7,6 +7,7 @@ import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.category.IndexForAssetCatalogDTO;
 import com.fisk.datamanagement.dto.classification.*;
 import com.fisk.datamanagement.entity.BusinessTargetinfoPO;
+import com.fisk.datamodel.dto.businessprocess.BusinessQueryDataParamDTO;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -110,4 +111,11 @@ public interface BusinessTargetinfoService {
      * @return 筛选结果
      */
     List<BusinessTargetinfoMenuDTO> pageFilter(CategoryQueryDTO query);
+
+    /**
+     * 获取指标数据查询参数
+     * @param fieldId
+     * @return
+     */
+    BusinessQueryDataParamDTO getBusinessQueryDataParam(Integer fieldId);
 }

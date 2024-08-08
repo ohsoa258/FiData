@@ -54,6 +54,7 @@ import com.fisk.mdm.vo.model.ModelInfoVO;
 import com.fisk.mdm.vo.model.ModelVO;
 import com.fisk.mdm.vo.viwGroup.ViwGroupVO;
 import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceMyDTO;
 import com.fisk.system.relenish.ReplenishUserInfo;
 import com.fisk.system.relenish.UserFieldEnum;
 import com.fisk.task.client.PublishTaskClient;
@@ -419,31 +420,238 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     @Override
     public boolean setDataStructure(FiDataMetaDataReqDTO reqDto) {
-        List<FiDataMetaDataDTO> list = new ArrayList<>();
-        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
-        dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
-
-        // 第一层id
-        String uuid = reqDto.dataSourceId;
-        List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
-        FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
-        dataTree.setId(uuid);
-        dataTree.setParentId("-10");
-        dataTree.setLabel(reqDto.getDataSourceName());
-        dataTree.setLabelAlias(reqDto.getDataSourceName());
-        dataTree.setLevelType(LevelTypeEnum.DATABASE);
-        // 获取模型数据
-        dataTree.setChildren(this.getModelData(uuid));
-        dataTreeList.add(dataTree);
-
-        dto.setChildren(dataTreeList);
-        list.add(dto);
-
-        // 放入redis缓存
-        if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
-            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+//        List<FiDataMetaDataDTO> list = new ArrayList<>();
+//        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+//        dto.setDataSourceId(Integer.parseInt(StringUtils.isBlank(reqDto.dataSourceId) ? String.valueOf(0) : reqDto.dataSourceId));
+//
+//        // 第一层id
+//        String uuid = reqDto.dataSourceId;
+//        List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+//        FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+//        dataTree.setId(uuid);
+//        dataTree.setParentId("-10");
+//        dataTree.setLabel(reqDto.getDataSourceName());
+//        dataTree.setLabelAlias(reqDto.getDataSourceName());
+//        dataTree.setLevelType(LevelTypeEnum.DATABASE);
+//        // 获取模型数据
+//        dataTree.setChildren(this.getModelData(uuid));
+//        dataTreeList.add(dataTree);
+//
+//        dto.setChildren(dataTreeList);
+//        list.add(dto);
+//
+//        // 放入redis缓存
+//        if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
+//            redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(reqDto.dataSourceId), JSON.toJSONString(list));
+//        }
+//        return true;
+        //获取平台配置所有ODS类型的数据源
+        ResultEntity<List<DataSourceMyDTO>> resultEntity = userClient.getAllMdmDataSource();
+        if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            return false;
         }
+        List<DataSourceMyDTO> data = resultEntity.getData();
+
+        for (DataSourceMyDTO sourceDTO : data) {
+            List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+            List<FiDataMetaDataDTO> list = new ArrayList<>();
+            FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+            // FiData数据源id: 数据资产自定义
+            dto.setDataSourceId(sourceDTO.id);
+
+            // 第一层id
+            FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+            dataTree.setId(String.valueOf(sourceDTO.id));
+            dataTree.setParentId("-10");
+            dataTree.setLabel(sourceDTO.conDbname);
+            dataTree.setLabelAlias(sourceDTO.conDbname);
+            dataTree.setLevelType(LevelTypeEnum.DATABASE);
+            dataTree.setSourceType(1);
+            dataTree.setSourceId(sourceDTO.id);
+
+            // 封装data-access所有结构数据
+            // 数据质量-左侧 tree数据目录
+            HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = buildChildren(String.valueOf(sourceDTO.id));
+            Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> next = hashMap.entrySet().iterator().next();
+            dataTree.setChildren(next.getValue());
+            dataTreeList.add(dataTree);
+
+            List<FiDataMetaDataTreeDTO> key = next.getKey();
+            if (!org.springframework.util.CollectionUtils.isEmpty(key)) {
+                String s = JSON.toJSONString(key);
+                redisUtil.set(RedisKeyBuild.buildFiDataTableStructureKey(String.valueOf(sourceDTO.id)), s);
+            }
+            dto.setChildren(dataTreeList);
+            list.add(dto);
+
+            if (!org.springframework.util.CollectionUtils.isEmpty(list)) {
+                redisUtil.set(RedisKeyBuild.buildFiDataStructureKey(String.valueOf(sourceDTO.id)), JSON.toJSONString(list));
+            }
+        }
+
         return true;
+    }
+
+    /**
+     * 构建data-access子集树
+     *
+     * @param id FiData数据源id
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/15 17:46
+     */
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> buildChildren(String id) {
+
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+
+        List<FiDataMetaDataTreeDTO> modelTypeTreeList = new ArrayList<>();
+
+        FiDataMetaDataTreeDTO modelTreeByRealTime = new FiDataMetaDataTreeDTO();
+        String modelTreeByRealTimeGuid = UUID.randomUUID().toString();
+        modelTreeByRealTime.setId(modelTreeByRealTimeGuid);
+        modelTreeByRealTime.setParentId(id);
+        modelTreeByRealTime.setLabel("模型");
+        modelTreeByRealTime.setLabelAlias("模型");
+        modelTreeByRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        modelTreeByRealTime.setSourceType(1);
+        modelTreeByRealTime.setSourceId(Integer.parseInt(id));
+
+        // 所有应用
+        List<ModelPO> appPoList = this.list(
+                new LambdaQueryWrapper<ModelPO>()
+                        .orderByDesc(ModelPO::getCreateTime)
+        );
+        // 所有应用下表字段信息
+        List<FiDataMetaDataTreeDTO> tableFieldList = new ArrayList<>();
+
+        //实时应用下的表
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByModel = getFiDataMetaDataTreeByModel(modelTreeByRealTimeGuid, id, appPoList);
+        Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByModel = fiDataMetaDataTreeByModel.entrySet().iterator().next();
+        modelTreeByRealTime.setChildren(nextTreeByModel.getValue());
+        tableFieldList.addAll(nextTreeByModel.getKey());
+
+        modelTypeTreeList.add(modelTreeByRealTime);
+        // key是表字段 value是tree
+        hashMap.put(tableFieldList, modelTypeTreeList);
+        return hashMap;
+    }
+
+    /**
+     * 获取主数据模型结构
+     * @param modelTreeByEntityGuid
+     * @param id
+     * @param modelPoList
+     * @return
+     */
+    private HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> getFiDataMetaDataTreeByModel(String modelTreeByEntityGuid, String id, List<ModelPO> modelPoList) {
+        HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> hashMap = new HashMap<>();
+        List<FiDataMetaDataTreeDTO> key = new ArrayList<>();
+        List<FiDataMetaDataTreeDTO> value = modelPoList.stream()
+                .filter(Objects::nonNull)
+                .map(app -> {
+                    // 第一层: model层
+                    FiDataMetaDataTreeDTO modelDtoTree = new FiDataMetaDataTreeDTO();
+                    // 当前层默认生成的uuid
+                    String uuid_modelId = UUID.randomUUID().toString().replace("-", "");
+                    modelDtoTree.setId(uuid_modelId);
+                    // 上一级的id
+                    modelDtoTree.setSourceType(1);
+                    modelDtoTree.setSourceId(Integer.parseInt(id));
+                    modelDtoTree.setParentId(modelTreeByEntityGuid);
+                    modelDtoTree.setLabel(app.name);
+                    modelDtoTree.setLabelAlias(app.displayName);
+                    modelDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    modelDtoTree.setLabelDesc(app.desc);
+                    List<FiDataMetaDataTreeDTO> apiTreeList = entityMapper.selectList(
+                                    new LambdaQueryWrapper<EntityPO>()
+                                            .eq(EntityPO::getModelId, app.id)
+                                            .orderByDesc(EntityPO::getCreateTime)
+                            ).stream()
+                            .filter(Objects::nonNull)
+                            .map(entity -> {
+                                FiDataMetaDataTreeDTO entityDtoTree = new FiDataMetaDataTreeDTO();
+                                String uuid_entityId = UUID.randomUUID().toString().replace("-", "");
+                                entityDtoTree.setId(uuid_entityId);
+                                entityDtoTree.setParentId(uuid_modelId);
+                                entityDtoTree.setLabel(entity.getDisplayName());
+                                entityDtoTree.setLabelAlias(entity.getDisplayName());
+                                entityDtoTree.setSourceType(1);
+                                entityDtoTree.setSourceId(Integer.parseInt(id));
+                                entityDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                // 不是已发布的都当作未发布处理
+                                if (entity.getStatus() == MdmStatusTypeEnum.CREATED_SUCCESSFULLY) {
+                                    entityDtoTree.setPublishState("1");
+                                } else {
+                                    entityDtoTree.setPublishState("0");
+                                }
+                                entityDtoTree.setLabelDesc(entity.getDesc());
+
+                                //第三层: table层
+                                List<FiDataMetaDataTreeDTO> tableTreeList = accessDataService.query().eq("model_id", app.id).eq("entity_id", entity.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                    tableDtoTree.setId(String.valueOf(table.id));
+                                    tableDtoTree.setParentId(uuid_entityId);
+                                    tableDtoTree.setLabel(entity.getTableName());
+                                    tableDtoTree.setLabelAlias(entity.getTableName());
+                                    tableDtoTree.setLabelRelName(entity.getTableName());
+                                    tableDtoTree.setLabelFramework(entity.getTableName());
+                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                    tableDtoTree.setSourceType(1);
+                                    tableDtoTree.setSourceId(Integer.parseInt(id));
+                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                    tableDtoTree.setLabelDesc(entity.getDesc());
+                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.NONE.getValue());
+
+                                    //第四层: field层
+                                    List<FiDataMetaDataTreeDTO> fieldTreeList = attributeService.query()
+                                            .eq("entity_id", entity.id)
+                                            .list().stream()
+                                            .filter(Objects::nonNull)
+                                            .map(field -> {
+                                                FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                                                fieldDtoTree.setId(String.valueOf(field.id));
+                                                fieldDtoTree.setParentId(String.valueOf(table.id));
+                                                fieldDtoTree.setLabel(field.getColumnName());
+                                                fieldDtoTree.setLabelAlias(field.getName());
+                                                fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                                                fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                                if (field.getDataTypeLength()!= null){
+                                                    fieldDtoTree.setLabelLength(String.valueOf(field.getDataTypeLength()));
+                                                }else if (field.getDataTypeDecimalLength() != null){
+                                                    fieldDtoTree.setLabelLength(String.valueOf(field.getDataTypeDecimalLength()));
+                                                }
+
+                                                fieldDtoTree.setLabelType(field.getDataType().getName());
+                                                fieldDtoTree.setLabelDesc(field.getDesc());
+                                                fieldDtoTree.setSourceType(1);
+                                                fieldDtoTree.setSourceId(Integer.parseInt(id));
+                                                fieldDtoTree.setParentName(entity.getTableName());
+                                                fieldDtoTree.setParentNameAlias(entity.getTableName());
+                                                fieldDtoTree.setParentLabelRelName(entity.getTableName());
+                                                fieldDtoTree.setParentLabelFramework(entity.getTableName());
+                                                fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
+                                                return fieldDtoTree;
+                                            }).collect(Collectors.toList());
+
+                                    // table的子级
+                                    tableDtoTree.setChildren(fieldTreeList);
+                                    return tableDtoTree;
+                                }).collect(Collectors.toList());
+
+                                // entity的子级
+                                entityDtoTree.setChildren(tableTreeList);
+                                // 表字段信息单独再保存一份
+                                if (!org.springframework.util.CollectionUtils.isEmpty(tableTreeList)) {
+                                    key.addAll(tableTreeList);
+                                }
+                                return entityDtoTree;
+                            }).collect(Collectors.toList());
+                    // model的子级
+                    modelDtoTree.setChildren(apiTreeList);
+                    return modelDtoTree;
+                }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
     }
 
     @Override

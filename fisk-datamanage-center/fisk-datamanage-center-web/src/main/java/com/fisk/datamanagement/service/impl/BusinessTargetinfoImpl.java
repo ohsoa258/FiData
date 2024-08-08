@@ -37,6 +37,7 @@ import com.fisk.datamanagement.mapper.FactTreeListMapper;
 import com.fisk.datamanagement.service.*;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
+import com.fisk.datamodel.dto.businessprocess.BusinessQueryDataParamDTO;
 import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.dimensionattribute.DimensionAttributeDTO;
 import com.fisk.datamodel.dto.dimensionfolder.DimensionFolderDTO;
@@ -1630,6 +1631,16 @@ public class BusinessTargetinfoImpl extends ServiceImpl<BusinessTargetinfoMapper
 
         List<BusinessTargetinfoMenuDTO> filter = baseMapper.filter(allChildIds,querySql.toString());
         return filter;
+    }
+
+    @Override
+    public BusinessQueryDataParamDTO getBusinessQueryDataParam(Integer fieldId) {
+        BusinessQueryDataParamDTO data = new BusinessQueryDataParamDTO();
+        ResultEntity<BusinessQueryDataParamDTO> businessQueryDataParam = modelClient.getBusinessQueryDataParam(fieldId);
+        if (businessQueryDataParam.code == ResultEnum.SUCCESS.getCode() && businessQueryDataParam.data != null){
+            data = businessQueryDataParam.data;
+        }
+        return data;
     }
 
     private int RecursivelyFetchMetrics(long id, List<BusinessCategoryPO> allData, List<String> indexes) {
