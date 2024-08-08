@@ -39,5 +39,6 @@ public class DatacheckStandardsGroupVO {
 
     @ApiModelProperty(value = "数据元编号")
     private String datametaCode;
+
     List<DataCheckVO> dataCheckList;
 }

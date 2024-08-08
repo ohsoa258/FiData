@@ -42,6 +42,7 @@ import com.fisk.datagovernance.service.dataquality.DatacheckCodeService;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
+import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportRuleVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
 import com.fisk.datamanagement.dto.standards.StandardsDTO;
@@ -90,6 +91,12 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     private DataCheckConditionMapper dataCheckConditionMapper;
+
+    @Resource
+    private QualityReportRuleMapper qualityReportRuleMapper;
+
+    @Resource
+    private QualityReportMapper qualityReportMapper;
 
     @Resource
     private DataCheckConditionManageImpl dataCheckConditionManageImpl;
@@ -235,6 +242,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     t.setDataCheckCondition(dataCheckConditionVOS);
                 });
             }
+            List<QualityReportRuleVO> qualityReportRuleVOList = qualityReportMapper.getByRuleIds(ruleIds);
+            if (CollectionUtils.isNotEmpty(qualityReportRuleVOList)) {
+                filterRule.forEach(t -> {
+                    List<String> reportNameList = qualityReportRuleVOList.stream().filter(k -> k.getRuleId() == t.getId()).map(QualityReportRuleVO::getReportName).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(reportNameList)) {
+                        t.setBelongToReportNameList(reportNameList);
+                    }
+                });
+            }
+
             // 第五步：排序分页设置
             query.current = query.current - 1;
             page.setTotal(Long.valueOf(filterRule.size()));
@@ -519,6 +536,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         dataCheckExtendMapper.updateByRuleId(id);
         // 删除数据校验的检查条件
         dataCheckConditionMapper.updateByRuleId(id);
+        // 删除报告下的规则
+        qualityReportRuleMapper.updateByRuleId(id);
+
         return baseMapper.deleteByIdWithFill(dataCheckPO) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
@@ -777,7 +797,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         Integer datacheckGroupId = dataCheckPO.datacheckGroupId;
         DatacheckStandardsGroupPO groupPO = datacheckStandardsGroupService.getById(datacheckGroupId);
         StandardsDTO standardsDTO = new StandardsDTO();
-        if (datacheckGroupId != null){
+        if (datacheckGroupId != null) {
             ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
             if (standards.code == ResultEnum.SUCCESS.getCode()) {
                 standardsDTO = standards.data;
@@ -785,8 +805,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
         }
-        if (standardsDTO == null){
-            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id"+datacheckGroupId);
+        if (standardsDTO == null) {
+            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id" + datacheckGroupId);
         }
         // 第二步：判断检查的字段是否存在，存在则获取字段值
         String tName = dataCheckSyncParamDTO.getTableName();
@@ -797,10 +817,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         JSONArray successDataList = new JSONArray();
         RangeCheckTypeEnum rangeCheckTypeEnum = null;
         ValueRangeTypeEnum valueRangeType = standardsDTO.getValueRangeType();
-        if (datacheckGroupId != null){
+        if (datacheckGroupId != null) {
             rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
-        }else {
-            switch (valueRangeType){
+        } else {
+            switch (valueRangeType) {
                 case DATASET:
                     rangeCheckTypeEnum = RangeCheckTypeEnum.SEQUENCE_RANGE;
                     break;
@@ -822,7 +842,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 // 第三步：判断字段值是否通过值域验证
                 switch (rangeCheckTypeEnum) {
                     case SEQUENCE_RANGE:
-                        if (datacheckGroupId != null){
+                        if (datacheckGroupId != null) {
                             List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
                             List<String> fieldValues = new ArrayList<>();
                             fieldValues.add(checkValue);
@@ -833,7 +853,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                             } else {
                                 successDataList.add(jsonObject);
                             }
-                        }else {
+                        } else {
                             // 序列范围
                             if (dataCheckExtendPO.rangeType == 2) {
                                 String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
@@ -885,8 +905,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         }
                         break;
                     case VALUE_RANGE:
-                        if (datacheckGroupId != null){
-                            if (valueRangeType == ValueRangeTypeEnum.VALUE){
+                        if (datacheckGroupId != null) {
+                            if (valueRangeType == ValueRangeTypeEnum.VALUE) {
                                 Double rangeCheckValue = Double.valueOf(standardsDTO.getValueRange());
                                 String rangeCheckOneWayOperator = standardsDTO.getSymbols();
 
@@ -925,7 +945,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                         errorDataList.add(jsonObject);
                                     }
                                 }
-                            }else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE){
+                            } else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE) {
                                 // 取值范围-区间取值
                                 Double lowerBound_Int = Double.valueOf(standardsDTO.getValueRange());
                                 Double upperBound_Int = Double.valueOf(standardsDTO.getValueRangeMax());
@@ -940,7 +960,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                     errorDataList.add(jsonObject);
                                 }
                             }
-                        }else {
+                        } else {
                             RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
                             if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
                                 // 取值范围-区间取值
@@ -2154,7 +2174,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         Integer datacheckGroupId = dataCheckPO.datacheckGroupId;
         DatacheckStandardsGroupPO groupPO = datacheckStandardsGroupService.getById(datacheckGroupId);
         StandardsDTO standardsDTO = new StandardsDTO();
-        if (datacheckGroupId != null){
+        if (datacheckGroupId != null) {
             ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
             if (standards.code == ResultEnum.SUCCESS.getCode()) {
                 standardsDTO = standards.data;
@@ -2162,8 +2182,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
             }
         }
-        if (standardsDTO == null){
-            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id"+datacheckGroupId);
+        if (standardsDTO == null) {
+            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id" + datacheckGroupId);
         }
         // 第二步：组装并执行SQL语句，获取校验结果
         String t_Name = dataCheckSyncParamDTO.getTableNameFormat(),
@@ -2181,10 +2201,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         RangeCheckTypeEnum rangeCheckTypeEnum = null;
         ValueRangeTypeEnum valueRangeType = standardsDTO.getValueRangeType();
-        if (datacheckGroupId != null){
+        if (datacheckGroupId != null) {
             rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
-        }else {
-            switch (valueRangeType){
+        } else {
+            switch (valueRangeType) {
                 case DATASET:
                     rangeCheckTypeEnum = RangeCheckTypeEnum.SEQUENCE_RANGE;
                     break;
@@ -2199,7 +2219,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         switch (rangeCheckTypeEnum) {
             case SEQUENCE_RANGE:
-                if (datacheckGroupId != null){
+                if (datacheckGroupId != null) {
                     // 序列范围
                     List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
                     List<String> list = codeSetDTOList.stream().map(v -> v.getName()).collect(Collectors.toList());
@@ -2213,7 +2233,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         sql_QueryCheckData = String.format("SELECT %s, %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, f_Name, t_Name, f_where_1, f_Name, sql_InString);
                     }
                     sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s)", f_uniqueIdName, t_Name, f_where, f_Name, sql_InString);
-                }else {
+                } else {
                     if (dataCheckExtendPO.rangeType == 2) {
                         String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
 
@@ -2239,8 +2259,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
                 break;
             case VALUE_RANGE:
-                if (datacheckGroupId != null){
-                    if (valueRangeType == ValueRangeTypeEnum.VALUE){
+                if (datacheckGroupId != null) {
+                    if (valueRangeType == ValueRangeTypeEnum.VALUE) {
                         Double rangeCheckValue = Double.valueOf(standardsDTO.getValueRange());
                         String rangeCheckOneWayOperator = standardsDTO.getSymbols();
                         String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
@@ -2255,7 +2275,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         }
                         sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
 
-                    }else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE){
+                    } else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE) {
                         // 取值范围-区间取值
                         Double lowerBound_Int = Double.valueOf(standardsDTO.getValueRange());
                         Double upperBound_Int = Double.valueOf(standardsDTO.getValueRangeMax());
@@ -2272,7 +2292,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                         sql_UpdateErrorData = String.format("SELECT %s FROM %s WHERE 1=1 %s AND %s", f_uniqueIdName, t_Name, f_where, sql_BetweenAnd);
 
                     }
-                }else {
+                } else {
                     // 取值范围
                     RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
                     if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {

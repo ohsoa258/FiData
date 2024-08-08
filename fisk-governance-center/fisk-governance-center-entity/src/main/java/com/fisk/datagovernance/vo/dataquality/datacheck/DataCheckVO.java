@@ -174,11 +174,15 @@ public class DataCheckVO {
     @ApiModelProperty(value = "模板名称")
     public String templateName;
 
-
-
     /**
      * 规则所属分组id(数据标准)
      */
     @ApiModelProperty(value = "规则所属分组id(数据标准)")
     public Integer datacheckGroupId;
+
+    /**
+     * 规则所属报告
+     */
+    @ApiModelProperty(value = "规则所属报告")
+    public List<String> belongToReportNameList;
 }

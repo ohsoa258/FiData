@@ -26,6 +26,9 @@ import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataFieldRuleVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataTableRuleVO;
+import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import com.google.common.base.Joiner;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +103,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     private QualityReportNoticeMapper qualityReportNoticeMapper;
+
+    @Resource
+    private DatacheckStandardsGroupServiceImpl dataCheckStandardsGroupServiceImpl;
+
+    @Resource
+    private DataManageClient dataManageClient;
 
     @Value("${file.uploadUrl}")
     private String uploadUrl;
@@ -229,12 +238,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             String reportBatchNumber = UUID.randomUUID().toString().replace("-", "");
 
             // 第二步：查询质量报告下的规则配置，并按照执行顺序排序
-            QueryWrapper<QualityReportRulePO> qualityReportRulePOQueryWrapper = new QueryWrapper<>();
-            qualityReportRulePOQueryWrapper.lambda()
-                    .eq(QualityReportRulePO::getReportId, reportId)
-                    .eq(QualityReportRulePO::getDelFlag, 1);
-            List<QualityReportRulePO> qualityReportRules = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper).stream().sorted(Comparator.comparing(QualityReportRulePO::getRuleSort)).collect(Collectors.toList());
-            if (!CollectionUtils.isNotEmpty(qualityReportRules)) {
+            List<QualityReportRulePO> qualityReportRules = qualityReportRuleMapper.getQualityReportRuleList(reportId);
+            if (CollectionUtils.isEmpty(qualityReportRules)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
             }
 
@@ -810,11 +815,31 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
+
+        // 如果元数据组ID不为空，序列范围-指定序列范围和取值范围的配置信息取自元数据组
+        StandardsDTO standardsDTO = null;
+        Integer dataCheckGroupId = dataCheckPO.getDatacheckGroupId();
+        if (dataCheckGroupId != null && dataCheckGroupId > 0
+                && ((rangeCheckTypeEnum == RangeCheckTypeEnum.SEQUENCE_RANGE && dataCheckExtendPO.getRangeType() == 2)
+                || rangeCheckTypeEnum == RangeCheckTypeEnum.VALUE_RANGE)) {
+            DatacheckStandardsGroupPO groupPO = dataCheckStandardsGroupServiceImpl.getById(dataCheckGroupId);
+            ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
+            if (standards.code == ResultEnum.SUCCESS.getCode()) {
+                standardsDTO = standards.data;
+            } else {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+            if (standardsDTO == null) {
+                log.info("【数据元未查询到匹配数据请检查并清理脏数据】,数据元id：" + dataCheckGroupId);
+            }
+        }
+
+
         switch (rangeCheckTypeEnum) {
             // 序列范围
             case SEQUENCE_RANGE:
                 // 表字段序列范围
-                if (dataCheckExtendPO.rangeType == 2) {
+                if (dataCheckExtendPO.getRangeType() == 2) {
                     String childrenQuery = "";
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         childrenQuery = String.format("SELECT IFNULL(%s,'') FROM %s", f_Name, t_Name);
@@ -830,8 +855,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                 t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
                     }
                 } else {
+
                     // 指定序列范围
-                    List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                    List<String> list = new ArrayList<>();
+                    if (standardsDTO == null) {
+                        list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                    } else {
+                        List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
+                        list = codeSetDTOList.stream().map(v -> v.getName()).collect(Collectors.toList());
+                    }
+
                     // 将list里面的序列范围截取为'','',''格式的字符串
                     String sql_InString = list.stream()
                             .map(item -> dataSourceTypeEnum == DataSourceTypeEnum.DORIS ? "'" + item + "'" : "N'" + item + "'")
@@ -854,8 +887,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
                 // 区间取值
                 if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
-                    Integer lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
-                    Integer upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                    // 声明的类型不要用小数，否则数据库检查时会出现0!=0.00的情况
+                    Integer lowerBound_Int = 0, upperBound_Int = 0;
+                    if (standardsDTO == null) {
+                        lowerBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                        upperBound_Int = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                    } else {
+                        lowerBound_Int = Integer.valueOf(standardsDTO.getValueRange());
+                        upperBound_Int = Integer.valueOf(standardsDTO.getValueRangeMax());
+                    }
+
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                         sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
@@ -868,8 +909,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                             t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                 } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
                     // 单向取值，因为页面可以配置运算符，比如页面配置字段=6，所以要查的是!=6的数据，业务页面配置的规则认为是满足校验规则的数据
-                    Integer rangeCheckValue = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue());
-                    String rangeCheckOneWayOperator = qualityReport_GetReverseOperator(dataCheckExtendPO.getRangeCheckOneWayOperator());
+                    Integer rangeCheckValue = 0;
+                    String rangeCheckOneWayOperator = "";
+                    if (standardsDTO == null) {
+                        rangeCheckValue = Integer.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                        rangeCheckOneWayOperator = qualityReport_GetReverseOperator(dataCheckExtendPO.getRangeCheckOneWayOperator());
+                    } else {
+                        rangeCheckValue = Integer.valueOf(standardsDTO.getValueRange());
+                        rangeCheckOneWayOperator = qualityReport_GetReverseOperator(standardsDTO.getSymbols());
+                    }
+
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
                         sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);

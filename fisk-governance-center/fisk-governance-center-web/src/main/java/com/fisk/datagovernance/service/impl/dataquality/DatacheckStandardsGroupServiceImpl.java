@@ -10,6 +10,7 @@ import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DatacheckStandardsGroupDTO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.entity.dataquality.DatacheckStandardsGroupPO;
+import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.map.dataquality.DatacheckStandardsGroupMap;
 import com.fisk.datagovernance.mapper.dataquality.DataCheckExtendMapper;
@@ -41,6 +42,9 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
 
     @Resource
     private DataCheckExtendMapper dataCheckExtendMapper;
+
+    @Resource
+    private DataSourceConManageImpl dataSourceConManageImpl;
 
 
     /**
@@ -134,6 +138,15 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName;
+
+                // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
+                if (i.getSourceType() == SourceTypeEnum.FiData) {
+                    int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
+                    if (idByDataSourceId != 0) {
+                        i.setDatasourceId(idByDataSourceId);
+                    }
+                }
+
                 return i;
             }).collect(Collectors.toList());
             dataCheckList.forEach(dataCheckDTO -> {

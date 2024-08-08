@@ -24,6 +24,12 @@ public class QualityReportRuleVO {
     public int reportId;
 
     /**
+     * 报告名称
+     */
+    @ApiModelProperty(value = "报告名称")
+    public String reportName;
+
+    /**
      * 报告类型 100、质量校验报告 200、数据清洗报告
      */
     @ApiModelProperty(value = "报告类型 100、质量校验报告 200、数据清洗报告")

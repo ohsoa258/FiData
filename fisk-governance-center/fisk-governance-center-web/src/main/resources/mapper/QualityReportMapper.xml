@@ -21,4 +21,26 @@
             ${query.where}
         </if>
     </select>
+    <select id="getByRuleIds" resultType="com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportRuleVO">
+        SELECT
+        reportRule.report_id,
+        reportRule.rule_id,
+        report.report_name
+        FROM
+        tb_quality_report report
+        LEFT JOIN tb_quality_report_rule reportRule ON report.id = reportRule.report_id
+        WHERE
+        report.del_flag = 1
+        AND reportRule.del_flag = 1
+        GROUP BY
+        reportRule.report_id,
+        reportRule.rule_id,
+        report.report_name
+        <if test="ruleIds != null and ruleIds.size() > 0">
+            AND reportRule.rule_id IN
+            <foreach collection="ruleIds" item="ruleId" open="(" separator="," close=")">
+                #{ruleId}
+            </foreach>
+        </if>
+    </select>
 </mapper>
