@@ -62,7 +62,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
         if (!CollectionUtils.isEmpty(standardByMenuId)) {
             // 查询条件构造，查询与标准ID列表匹配的所有标准分组信息
             LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.in(DatacheckStandardsGroupPO::getStandardsId, standardByMenuId);
+            queryWrapper.in(DatacheckStandardsGroupPO::getStandardsId, standardByMenuId)
+                    .orderByDesc(DatacheckStandardsGroupPO::getCreateTime);
             List<DatacheckStandardsGroupPO> groupPOList = this.list(queryWrapper);
             // 如果查询结果为空，直接返回空列表
             if (CollectionUtils.isEmpty(groupPOList)) {
@@ -96,10 +97,12 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             }
             // 根据指定的排序规则对规则信息进行排序
             allRules = allRules.stream().sorted(
+                    // 1.先按照表名称排正序，并处理tableAlias为空的情况
                     Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 2.再按照执行节点排正序，并处理ruleExecuteNode为空的情况
                             .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            .thenComparing(DataCheckVO::getTemplateType, Comparator.nullsFirst(Comparator.naturalOrder()))
-            ).collect(Collectors.toList());
+                            // 3.再按照创建时间排倒叙，并处理创建时间为空的情况
+                            .thenComparing(DataCheckVO::getCreateTime, Comparator.nullsFirst(Comparator.reverseOrder()))).collect(Collectors.toList());
             // 根据数据检查组ID将规则信息分组，然后为每个标准分组VO设置规则信息列表
             if (!CollectionUtils.isEmpty(allRules)) {
                 Map<Integer, List<DataCheckVO>> datacheckMap = allRules.stream()
@@ -138,15 +141,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName;
-
-                // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
-                if (i.getSourceType() == SourceTypeEnum.FiData) {
-                    int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
-                    if (idByDataSourceId != 0) {
-                        i.setDatasourceId(idByDataSourceId);
-                    }
-                }
-
                 return i;
             }).collect(Collectors.toList());
             dataCheckList.forEach(dataCheckDTO -> {
@@ -180,6 +174,14 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName;
+
+                // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
+                if (i.getSourceType() == SourceTypeEnum.FiData) {
+                    int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
+                    if (idByDataSourceId != 0) {
+                        i.setDatasourceId(idByDataSourceId);
+                    }
+                }
                 return i;
             }).collect(Collectors.toList());
             dataCheckEditList.forEach(dataCheckDTO -> {
