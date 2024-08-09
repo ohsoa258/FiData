@@ -134,6 +134,9 @@ public class BusinessProcessImpl
     @Resource
     UserClient userClient;
 
+    @Value("${fiData-data-dw-source}")
+    private Integer dw;
+
     @Override
     public IPage<BusinessProcessDTO> getBusinessProcessList(QueryDTO dto) {
         QueryWrapper<BusinessProcessPO> queryWrapper = new QueryWrapper<>();
@@ -539,12 +542,8 @@ public class BusinessProcessImpl
         List<FactAttributeDTO> factAttributeDTOS = FactAttributeMap.INSTANCES.poListsToDtoList(factAttributePOS);
         // 设置转换后的DTO列表到业务查询数据参数对象中
         businessQueryDataParamDTO.setFactAttributeDTOList(factAttributeDTOS);
-        // 通过事实ID获取事实信息
-        FactPO factPO = factImpl.getById(factId);
-        // 获取数据源ID
-        Integer dataSourceId = factPO.dataSourceId;
         // 根据数据源ID调用远程服务获取数据源信息
-        ResultEntity<DataSourceDTO> dataSource = userClient.getById(dataSourceId);
+        ResultEntity<DataSourceDTO> dataSource = userClient.getById(dw);
         // 校验数据源信息获取是否成功
         if (dataSource.getCode() != ResultEnum.SUCCESS.getCode() || dataSource.data == null) {
             // 如果获取失败，抛出异常
