@@ -763,7 +763,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 } else {
                     fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
                 }
-                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.FOLDER);
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD_FOLDER);
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
                 fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
