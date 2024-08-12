@@ -276,8 +276,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
 //                    tableRules.add(tableRuleCountDTO);
 //                }
 //            }
-            FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
-            fiDataMetaDataTreeBase.children.add(standardsTree);
+            try {
+                FiDataMetaDataTreeDTO standardsTree = getStandardsTree(fiDataMetaDataTreeBase.getId());
+                fiDataMetaDataTreeBase.children.add(standardsTree);
+            }catch (Exception ex){
+                log.error("【getFiDataConfigMetaData】获取平台数据源Tree-数据标准异常：" + ex);
+                throw new FkException(ResultEnum.ERROR, ex);
+            }
         }
         log.info("【getFiDataConfigMetaData】 数据质量左侧Tree- 2 -结束：" + uuid);
 
@@ -914,7 +919,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         if (sourceType == SourceTypeEnum.FiData) {
             FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
             if (fiDataConfigMetaData != null) {
-                tree.children.add(getFiDataConfigMetaData(false));
+                tree.children.add(fiDataConfigMetaData);
             }
         } else if (sourceType == SourceTypeEnum.custom) {
             FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
@@ -923,9 +928,8 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             }
         } else {
             FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
-
             if (fiDataConfigMetaData != null) {
-                tree.children.add(getFiDataConfigMetaData(false));
+                tree.children.add(fiDataConfigMetaData);
             }
             FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
             if (customizeMetaData != null) {
