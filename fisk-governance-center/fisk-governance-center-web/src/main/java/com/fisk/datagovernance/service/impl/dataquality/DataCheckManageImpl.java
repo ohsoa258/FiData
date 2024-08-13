@@ -218,6 +218,10 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                 t.getTableUnique().equals(dto.getId())).collect(Collectors.toList());
                     }
                     if (CollectionUtils.isNotEmpty(rules)) {
+                        // 设置表下面的字段列表
+                        rules.forEach(t -> {
+                            t.setTableFieldList(dto.getTableFieldList());
+                        });
                         filterRule.addAll(rules);
                     }
                 }

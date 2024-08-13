@@ -2,6 +2,7 @@ package com.fisk.datagovernance.vo.dataquality.datacheck;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.enums.dataquality.*;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -185,4 +186,10 @@ public class DataCheckVO {
      */
     @ApiModelProperty(value = "规则所属报告")
     public List<String> belongToReportNameList;
+
+    /**
+     * 表下面的字段集合
+     */
+    @ApiModelProperty(value = "表下面的字段集合")
+    public List<FiDataMetaDataTreeDTO> tableFieldList;
 }

@@ -295,6 +295,13 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return fiDataMetaDataTreeBase;
     }
 
+
+    public FiDataMetaDataTreeDTO getTreeTableNode(){
+        FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO=new FiDataMetaDataTreeDTO();
+
+        return fiDataMetaDataTreeDTO;
+    }
+
     public FiDataMetaDataTreeDTO getStandardsTree(String id) {
         FiDataMetaDataTreeDTO standardsTree = new FiDataMetaDataTreeDTO();
         String standardsUuid = UUID.randomUUID().toString().replace("-", "");
@@ -926,15 +933,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
             if (customizeMetaData != null) {
                 tree.children.add(customizeMetaData);
             }
-        } else {
-            FiDataMetaDataTreeDTO fiDataConfigMetaData = getFiDataConfigMetaData(false);
-            if (fiDataConfigMetaData != null) {
-                tree.children.add(fiDataConfigMetaData);
-            }
-            FiDataMetaDataTreeDTO customizeMetaData = getCustomizeMetaData(false);
-            if (customizeMetaData != null) {
-                tree.children.add(customizeMetaData);
-            }
         }
         if (CollectionUtils.isNotEmpty(tree.children)) {
             // 递归获取选择的节点
@@ -975,6 +973,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 model.setTableBusinessType(TableBusinessTypeEnum.getEnum(tree.getLabelBusinessType()));
                 model.setSourceId(tree.getSourceId());
                 model.setSourceType(SourceTypeEnum.getEnum(tree.getSourceType()));
+                model.setTableFieldList(tree.getChildren());
                 list.add(model);
             }
             if (CollectionUtils.isNotEmpty(tree.getChildren())) {

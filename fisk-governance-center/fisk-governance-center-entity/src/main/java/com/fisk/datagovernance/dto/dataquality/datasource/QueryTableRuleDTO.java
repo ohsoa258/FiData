@@ -2,9 +2,12 @@ package com.fisk.datagovernance.dto.dataquality.datasource;
 
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
+import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.enums.dataquality.SourceTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author dick
@@ -32,4 +35,7 @@ public class QueryTableRuleDTO
 
     @ApiModelProperty(value = "层级类型")
     public LevelTypeEnum tableType;
+
+    @ApiModelProperty(value = "表下面的字段集合")
+    public List<FiDataMetaDataTreeDTO> tableFieldList;
 }
