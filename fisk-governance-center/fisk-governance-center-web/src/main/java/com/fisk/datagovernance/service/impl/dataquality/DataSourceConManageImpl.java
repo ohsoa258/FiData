@@ -973,7 +973,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 model.setTableBusinessType(TableBusinessTypeEnum.getEnum(tree.getLabelBusinessType()));
                 model.setSourceId(tree.getSourceId());
                 model.setSourceType(SourceTypeEnum.getEnum(tree.getSourceType()));
-                model.setTableFieldList(tree.getChildren());
+                model.setTableFieldList(tree);
                 list.add(model);
             }
             if (CollectionUtils.isNotEmpty(tree.getChildren())) {

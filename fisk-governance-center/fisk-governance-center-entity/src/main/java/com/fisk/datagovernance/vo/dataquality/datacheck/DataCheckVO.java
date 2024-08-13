@@ -188,8 +188,8 @@ public class DataCheckVO {
     public List<String> belongToReportNameList;
 
     /**
-     * 表下面的字段集合
+     * 表字段信息
      */
-    @ApiModelProperty(value = "表下面的字段集合")
-    public List<FiDataMetaDataTreeDTO> tableFieldList;
+    @ApiModelProperty(value = "表字段信息")
+    public FiDataMetaDataTreeDTO tableFieldList;
 }

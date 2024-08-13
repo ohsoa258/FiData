@@ -36,6 +36,6 @@ public class QueryTableRuleDTO
     @ApiModelProperty(value = "层级类型")
     public LevelTypeEnum tableType;
 
-    @ApiModelProperty(value = "表下面的字段集合")
-    public List<FiDataMetaDataTreeDTO> tableFieldList;
+    @ApiModelProperty(value = "表字段")
+    public FiDataMetaDataTreeDTO tableFieldList;
 }
