@@ -586,10 +586,10 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 }
                                 entityDtoTree.setLabelDesc(entity.getDesc());
 
-                                //第三层: table层
+                                //第三层: etl层
                                 List<FiDataMetaDataTreeDTO> tableTreeList = accessDataService.query().eq("model_id", app.id).eq("entity_id", entity.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
                                     FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
-                                    tableDtoTree.setId(String.valueOf(table.id));
+                                    tableDtoTree.setId(String.valueOf(entity.id));
                                     tableDtoTree.setParentId(uuid_entityId);
                                     tableDtoTree.setLabel(entity.getTableName());
                                     tableDtoTree.setLabelAlias(entity.getTableName());
@@ -609,7 +609,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                             .map(field -> {
                                                 FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
                                                 fieldDtoTree.setId(String.valueOf(field.id));
-                                                fieldDtoTree.setParentId(String.valueOf(table.id));
+                                                fieldDtoTree.setParentId(String.valueOf(entity.id));
                                                 fieldDtoTree.setLabel(field.getColumnName());
                                                 fieldDtoTree.setLabelAlias(field.getName());
                                                 fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
