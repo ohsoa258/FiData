@@ -12,6 +12,8 @@ import lombok.Data;
 public class CodeSetDTO {
     @ApiModelProperty(value = "id")
     public Integer id;
+    @ApiModelProperty(value = "集合Id")
+    public Integer collectionId;
     @ApiModelProperty(value = "编号")
     public String code;
     @ApiModelProperty(value = "名称")
