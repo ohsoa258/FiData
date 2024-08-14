@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service;
 import com.alibaba.fastjson.JSONObject;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.datamanagement.dto.metadataentity.DBTableFiledNameDto;
 import com.fisk.datamanagement.dto.metadataentity.MetadataEntityDTO;
 import com.fisk.datamanagement.dto.metadataentity.UpdateMetadataEmailGroupDTO;
@@ -28,6 +29,16 @@ public interface IMetadataEntity {
     Integer addMetadataEntity(MetaDataBaseAttributeDTO dto, String rdbmsType, String parentEntityId);
 
     /**
+     * 元数据新增
+     *
+     * @param dto
+     * @param rdbmsType
+     * @param parentEntityId
+     * @return
+     */
+    Integer addMetadataEntityForInstance(MetaDataInstanceAttributeDTO dto, String rdbmsType, String parentEntityId);
+
+    /**
      * 元数据修改
      *
      * @param dto
@@ -36,6 +47,16 @@ public interface IMetadataEntity {
      * @return
      */
     Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId,String parentId,String rdbmsType);
+
+    /**
+     * 元数据修改
+     *
+     * @param dto
+     * @param entityId
+     * @param rdbmsType
+     * @return
+     */
+    Integer updateMetadataEntityForInstance(MetaDataInstanceAttributeDTO dto, Integer entityId,String parentId,String rdbmsType);
 
     /**
      * 批量删除元数据实体

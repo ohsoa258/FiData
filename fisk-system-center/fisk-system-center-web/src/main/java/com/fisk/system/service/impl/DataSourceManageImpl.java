@@ -290,6 +290,19 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             }
         }
 
+        //数据源名称不允许重复
+        List<DataSourcePO> list1 = list(
+                new LambdaQueryWrapper<DataSourcePO>()
+                        .eq(DataSourcePO::getName, dto.name)
+        );
+        if (CollectionUtils.isNotEmpty(list1)) {
+            List<String> sourceNames = new ArrayList<>();
+            list1.forEach(dataSourcePO -> {
+                sourceNames.add(dataSourcePO.name);
+            });
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS, sourceNames);
+        }
+
         //新增数据源时,相同数据库类型,相同ip,相同库名不允许重复添加
         LambdaQueryWrapper<DataSourcePO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DataSourcePO::getConIp, dto.getConIp())

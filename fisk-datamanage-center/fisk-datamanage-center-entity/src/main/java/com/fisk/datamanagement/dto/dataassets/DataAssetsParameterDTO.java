@@ -36,6 +36,12 @@ public class DataAssetsParameterDTO {
     public List<String> fieldNames;
 
     /**
+     * 要查询的字段的中文名称
+     */
+    @ApiModelProperty(value = "要查询的字段的中文名称")
+    public List<String> fieldCnNames;
+
+    /**
      * where 筛选条件
      */
     @ApiModelProperty(value = "where 筛选条件")

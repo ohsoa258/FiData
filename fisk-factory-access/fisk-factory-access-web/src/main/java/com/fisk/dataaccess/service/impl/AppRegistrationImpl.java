@@ -3936,6 +3936,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         for (AppRegistrationPO appRegistrationPo : appRegistrationList) {
 
             MetaDataInstanceAttributeDTO metaDataInstance = getMetaDataInstance(appRegistrationPo);
+            if (metaDataInstance == null) continue;
 
             List<TableAccessPO> tableAccessPoList = tableAccessImpl.query().eq("app_id", appRegistrationPo.id).list();
             if (CollectionUtils.isEmpty(tableAccessPoList)) {
@@ -4413,7 +4414,27 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @return
      */
     public MetaDataInstanceAttributeDTO getMetaDataInstance(AppRegistrationPO app) {
-        ResultEntity<DataSourceDTO> dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);
+        //获取应用引用的数据源在系统模块平台配置中的数据源id
+        List<Integer> systemIds = appDataSourceImpl.list(
+                new LambdaQueryWrapper<AppDataSourcePO>()
+                        .eq(AppDataSourcePO::getAppId, app.getId())
+                        .select(AppDataSourcePO::getSystemDataSourceId)
+        ).stream().map(AppDataSourcePO::getSystemDataSourceId).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(systemIds)) {
+            return null;
+        }
+
+        //获取应用引用的数据源在平台配置的信息
+        ResultEntity<DataSourceDTO> dataSourceConfig;
+
+        //2意味着CDC接入
+        if (app.appType == 2) {
+            dataSourceConfig = userClient.getFiDataDataSourceById(systemIds.get(0));
+        } else {
+            dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);
+        }
+
         if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
             throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
         }
@@ -4426,12 +4447,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         String dbName = dataSourceConfig.data.conDbname;
         // 实例
         MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
+        if (app.appType == 2) {
+            instance.setSourceName(dataSourceConfig.data.name + "(Hudi)");
+        } else {
+            instance.setSourceName(dataSourceConfig.data.name);
+        }
+
         instance.setRdbms_type(rdbmsType);
         instance.setPlatform(platform);
         instance.setHostname(hostname);
         instance.setPort(port);
         instance.setProtocol(protocol);
-        instance.setQualifiedName(hostname);
+        instance.setQualifiedName(hostname + "_" + dbName + "_instance_"+dataSourceConfig.data.id);
         instance.setName(hostname);
         instance.setContact_info(app.getAppPrincipal());
         instance.setDescription(app.getAppDes());

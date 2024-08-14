@@ -258,7 +258,7 @@ public class TermImpl implements ITerm {
         }
 
         QueryWrapper<MetaDataGlossaryMapPO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("metadata_entity_id", collect).eq("glossary_id", dto.termGuid);
+        queryWrapper.in("metadata_qualified_name", collect).eq("glossary_id", dto.termGuid);
 
         List<MetaDataGlossaryMapPO> metaDataGlossaryMapPOS = metaDataGlossaryMapMapper.selectList(queryWrapper);
         if (CollectionUtils.isEmpty(metaDataGlossaryMapPOS)) {

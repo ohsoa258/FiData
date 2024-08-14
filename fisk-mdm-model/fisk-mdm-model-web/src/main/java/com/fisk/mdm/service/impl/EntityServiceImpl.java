@@ -672,10 +672,11 @@ public class EntityServiceImpl implements EntityService {
         instance.hostname = dataSourceDTO.conIp;
         instance.port = dataSourceDTO.conPort.toString();
         instance.platform = dataSourceDTO.platform;
-        instance.qualifiedName = dataSourceDTO.conIp;
+        instance.qualifiedName = dataSourceDTO.conIp + "_" + dataSourceDTO.conDbname + "_instance_"+dataSourceDTO.id;
         instance.protocol = dataSourceDTO.protocol;
         instance.rdbms_type = dataSourceDTO.conType.getName();
         instance.displayName = dataSourceDTO.conIp;
+        instance.sourceName = dataSourceDTO.name;
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();

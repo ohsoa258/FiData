@@ -21,6 +21,8 @@ public class  MetaDataInstanceAttributeDTO extends MetaDataBaseAttributeDTO {
     public String port;
     @ApiModelProperty(value = "创建实例：网络协议")
     public String protocol;
+    @ApiModelProperty(value = "平台配置数据源名称")
+    public String sourceName;
     @ApiModelProperty(value = "数据库集合")
     public List<MetaDataDbAttributeDTO> dbList;
 }

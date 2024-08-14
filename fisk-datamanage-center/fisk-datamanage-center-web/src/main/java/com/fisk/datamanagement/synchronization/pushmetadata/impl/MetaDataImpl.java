@@ -208,7 +208,16 @@ public class MetaDataImpl implements IMetaData {
             }
 
             for (MetaDataInstanceAttributeDTO instance : data) {
-                String instanceGuid = metaDataInstance(instance, "-1");
+                String instanceGuid = null;
+                if (classificationTypeEnum.equals(ClassificationTypeEnum.DATA_ACCESS)
+                        || classificationTypeEnum.equals(ClassificationTypeEnum.EXTERNAL_DATA)
+                        || classificationTypeEnum.equals(ClassificationTypeEnum.MASTER_DATA)
+                        || classificationTypeEnum.equals(ClassificationTypeEnum.ANALYZE_DATA)
+                ) {
+                    instanceGuid = metaDataInstanceByEnum(instance, "-1");
+                } else {
+                    instanceGuid = metaDataInstance(instance, "-1");
+                }
                 if (StringUtils.isEmpty(instanceGuid) || CollectionUtils.isEmpty(instance.dbList)) {
                     continue;
                 }
@@ -300,6 +309,20 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), parentEntityId).toString();
         }
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
+    }
+
+    /**
+     * 元数据对象：数据库实例 新增/修改
+     *
+     * @param dto
+     * @return
+     */
+    private String metaDataInstanceByEnum(MetaDataInstanceAttributeDTO dto, String parentEntityId) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntityForInstance(dto, EntityTypeEnum.RDBMS_INSTANCE.getName(), parentEntityId).toString();
+        }
+        return this.metadataEntity.updateMetadataEntityForInstance(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_INSTANCE.getName()).toString();
     }
 
     /**

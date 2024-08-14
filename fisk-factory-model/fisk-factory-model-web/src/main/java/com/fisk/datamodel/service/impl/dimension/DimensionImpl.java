@@ -889,10 +889,11 @@ public class DimensionImpl
         data.hostname = result.data.conIp;
         data.port = result.data.conPort.toString();
         data.platform = result.data.platform;
-        data.qualifiedName = result.data.conIp;
+        data.qualifiedName = result.data.conIp + "_" + result.data.conDbname + "_instance_"+ dataSourceId;
         data.protocol = result.data.protocol;
         data.rdbms_type = result.data.conType.getName();
         data.displayName = result.data.conIp;
+        data.sourceName = result.data.name;
         //库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
         MetaDataDbAttributeDTO db = new MetaDataDbAttributeDTO();

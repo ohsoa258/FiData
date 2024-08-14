@@ -12,6 +12,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataBaseAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -245,6 +246,42 @@ public class MetadataEntityImpl
         return (int) po.id;
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Integer addMetadataEntityForInstance(MetaDataInstanceAttributeDTO dto, String rdbmsType, String parentEntityId) {
+        MetadataEntityPO po = new MetadataEntityPO();
+        po.name = dto.name;
+        po.description = dto.description;
+        po.displayName = dto.sourceName;
+        po.owner = dto.owner;
+        po.typeId = metadataEntityType.getTypeId(rdbmsType);
+        po.qualifiedName = dto.qualifiedName;
+        //父级
+        po.parentId = Integer.parseInt(parentEntityId);
+        //字段数据分类
+        po.dataClassification = dto.dataClassification;
+        //字段数据分级
+        po.dataLevel = dto.dataLevel;
+
+        /*
+         * 该行代码无效 原因是MetadataEntityPO继承了BasePo
+         * BasePo的createUser属性使用了@TableField(value = "create_user", fill = FieldFill.INSERT)注解
+         * 会被Common类的 BaseMetaObjectHandler拦截器拦截掉 更换为执行同步血缘接口时 使用的token用户id
+         */
+        po.createUser = dto.owner;
+
+        boolean save = this.save(po);
+        if (!save) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //添加审计日志
+        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType, po.owner);
+        //添加技术属性
+        metadataAttribute.addMetadataAttribute(dto, (int) po.id);
+
+        return (int) po.id;
+    }
+
     @Override
     public Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId, String parentId, String rdbmsType) {
         MetadataEntityPO po = this.query().eq("id", entityId).one();
@@ -255,6 +292,39 @@ public class MetadataEntityImpl
 
         po.owner = dto.owner;
         po.displayName = dto.displayName;
+        po.name = dto.name;
+        po.description = dto.description;
+        //字段数据分类
+        po.dataClassification = dto.dataClassification;
+        //字段数据分级
+        po.dataLevel = dto.dataLevel;
+        if (parentId != null) {
+            po.parentId = Integer.valueOf(parentId);
+        }
+
+
+        boolean flat = this.updateById(po);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //添加审计日志
+        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType, po.owner);
+        //添加技术属性
+        metadataAttribute.operationMetadataAttribute(dto, entityId);
+
+        return (int) po.id;
+    }
+
+    @Override
+    public Integer updateMetadataEntityForInstance(MetaDataInstanceAttributeDTO dto, Integer entityId, String parentId, String rdbmsType) {
+        MetadataEntityPO po = this.query().eq("id", entityId).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
+
+
+        po.owner = dto.owner;
+        po.displayName = dto.sourceName;
         po.name = dto.name;
         po.description = dto.description;
         //字段数据分类
@@ -334,6 +404,11 @@ public class MetadataEntityImpl
                     //数据源
                     parent.setParentId(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
                 }
+            }
+
+            //如果是数据接入CDC类型的 则改为数据工厂
+            if (parent.displayName.contains("(Hudi)")) {
+                parent.setParentId(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
             }
         }
 
@@ -467,7 +542,7 @@ public class MetadataEntityImpl
                 dto.type = EntityTypeEnum.CLASSIFICATION.getName();
                 dto.parentId = "-100";
                 dto.displayName = value.getName();
-                EntityTreeDTO entityTreeDTO = buildBetterChildTree(dto, poList);
+                EntityTreeDTO entityTreeDTO = buildBetterChildTreeForAdHocQuery(dto, poList);
                 list.add(entityTreeDTO);
             }
         }
@@ -571,6 +646,50 @@ public class MetadataEntityImpl
             String parentId = String.valueOf(item.getParentId());
             EntityTreeDTO dto = new EntityTreeDTO();
             dto.id = String.valueOf(item.id);
+
+            //实例Instance的label改为DisPlayName
+            if (item.typeId == EntityTypeEnum.RDBMS_INSTANCE.getValue()) {
+                dto.label = item.displayName;
+            } else {
+                dto.label = item.name;
+            }
+
+            // 缓存类型名，避免重复计算
+            String typeName = EntityTypeEnum.getValue(item.typeId).getName();
+            if (item.typeId == EntityTypeEnum.DB_NAME.getValue()) {
+                typeName = pNode.displayName;
+            }
+            dto.type = typeName;
+            dto.parentId = parentId;
+            dto.displayName = item.displayName;
+            //表级别 为了能和元数据地图的id匹配上 增加唯一查询名称给前端 用来匹配
+            if (item.typeId == EntityTypeEnum.RDBMS_TABLE.getValue()
+                    || item.typeId == EntityTypeEnum.RDBMS_COLUMN.getValue()
+                    || item.typeId == EntityTypeEnum.RDBMS_DB.getValue()
+            ) {
+                dto.qualifiedName = item.qualifiedName;
+            }
+
+            // 将当前节点添加到其父节点的子节点列表中
+            childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
+        }
+
+        // 递归地构建子树  将构建好的子树附加到当前节点
+        pNode.children = buildChildTrees(childrenMap, pNode.id);
+        return pNode;
+    }
+
+    public EntityTreeDTO buildBetterChildTreeForAdHocQuery(EntityTreeDTO pNode, List<MetadataEntityPO> poList) {
+        // 创建一个HashMap来存储每个父节点的子节点列表
+        Map<String, List<EntityTreeDTO>> childrenMap = new HashMap<>();
+
+        // 遍历poList，构建每个节点的EntityTreeDTO，并添加到childrenMap中
+        for (MetadataEntityPO item : poList) {
+            String parentId = String.valueOf(item.getParentId());
+            EntityTreeDTO dto = new EntityTreeDTO();
+            dto.id = String.valueOf(item.id);
+
+            //实例Instance的label改为DisPlayName
             dto.label = item.name;
 
             // 缓存类型名，避免重复计算
@@ -597,6 +716,7 @@ public class MetadataEntityImpl
         pNode.children = buildChildTrees(childrenMap, pNode.id);
         return pNode;
     }
+
 
     /**
      * 递归地构建子树

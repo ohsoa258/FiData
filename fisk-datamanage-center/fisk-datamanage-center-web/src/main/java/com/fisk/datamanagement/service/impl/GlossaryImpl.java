@@ -141,19 +141,47 @@ public class GlossaryImpl
 
     @Override
     public ResultEnum deleteGlossary(String guid) {
-        // 查询是否存在
-        QueryWrapper<GlossaryLibraryPO> qw = new QueryWrapper<>();
-        qw.eq("id", guid).isNull("pid");
-        GlossaryLibraryPO model = glossaryLibraryMapper.selectOne(qw);
-        if (model == null) {
-            throw new FkException(ResultEnum.ERROR, "术语库不存在");
+        //删除术语库时 同时删除所有术语库下的目录和目录下的术语
+        //1删除术语库
+        glossaryLibraryMapper.deleteById(guid);
+
+        //2查询术语库下的目录
+        List<GlossaryLibraryPO> glossaryLibraryPOS = glossaryLibraryMapper.selectList(
+                new LambdaQueryWrapper<GlossaryLibraryPO>()
+                        .eq(GlossaryLibraryPO::getPid, guid)
+        );
+
+        List<Long> collect = null;
+        //删除该术语库下的所有目录
+        if (!CollectionUtils.isEmpty(glossaryLibraryPOS)) {
+            collect = glossaryLibraryPOS.stream().map(GlossaryLibraryPO::getId).collect(Collectors.toList());
+            glossaryLibraryMapper.deleteBatchIds(collect);
         }
 
-        if (glossaryLibraryMapper.deleteById(guid) > 0) {
-            return ResultEnum.SUCCESS;
-        } else {
-            throw new FkException(ResultEnum.ERROR, "删除失败");
+        if (!CollectionUtils.isEmpty(collect)) {
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+            //查询该目录下的所有术语
+            List<Long> collect1 = glossaryMapper.selectList(
+                    new LambdaQueryWrapper<GlossaryPO>()
+                            .in(GlossaryPO::getGlossaryLibraryId, collect)
+            ).stream().map(GlossaryPO::getId).collect(Collectors.toList());
+
+            //3删除术语库下的术语和元数据的关联关系
+            if (!CollectionUtils.isEmpty(collect1)){
+                metaDataGlossaryMapMapper.delete(
+                        new LambdaQueryWrapper<MetaDataGlossaryMapPO>()
+                                .in(MetaDataGlossaryMapPO::getGlossaryId, collect1)
+                );
+            }
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+
+            //3.1删除目录下的术语
+            this.remove(
+                    new LambdaQueryWrapper<GlossaryPO>()
+                            .in(GlossaryPO::getGlossaryLibraryId, collect)
+            );
         }
+        return ResultEnum.SUCCESS;
     }
 
     @Override

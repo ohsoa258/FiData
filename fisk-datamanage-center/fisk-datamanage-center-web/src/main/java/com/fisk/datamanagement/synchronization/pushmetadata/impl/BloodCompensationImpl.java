@@ -534,7 +534,7 @@ public class BloodCompensationImpl
      * @param id
      * @return
      */
-    public void updateLastSyncTimeWithToTal(long id,int totalNum) {
+    public void updateLastSyncTimeWithToTal(long id, int totalNum) {
         metaSyncTimePOService.update(new LambdaUpdateWrapper<MetaSyncTimePO>()
                 .eq(MetaSyncTimePO::getId, id)
                 .set(MetaSyncTimePO::getUpdateTime, LocalDateTime.now())
@@ -855,12 +855,14 @@ public class BloodCompensationImpl
                     //去重数据源,防止重复数据源
                     AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO();
                     appDataSourceDTO.dbName = e.dbName;
+                    appDataSourceDTO.name = e.name;
                     appDataSourceDTO.connectStr = e.connectStr;
                     appDataSourceDTO.connectAccount = e.connectAccount;
                     appDataSourceDTO.connectPwd = e.connectPwd;
                     appDataSourceDTO.driveType = e.driveType;
                     appDataSourceDTO.port = e.port;
                     appDataSourceDTO.host = e.host;
+                    appDataSourceDTO.systemDataSourceId = e.systemDataSourceId;
                     return appDataSourceDTO;
                 }).distinct().collect(Collectors.toList());
         List<MetaDataInstanceAttributeDTO> instanceList = new ArrayList<>();
@@ -934,9 +936,10 @@ public class BloodCompensationImpl
         instance.setRdbms_type(appSource.driveType);
         instance.setHostname(appSource.host);
         instance.setPort(appSource.port);
-        instance.setQualifiedName(appSource.host);
+        instance.setQualifiedName(appSource.host + "_" + appSource.dbName + "_instance_"+ appSource.systemDataSourceId);
         instance.setName(appSource.host);
         instance.setDisplayName(appSource.host);
+        instance.setSourceName(appSource.name);
 
         // 库
         List<MetaDataDbAttributeDTO> dbList = new ArrayList<>();
