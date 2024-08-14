@@ -140,7 +140,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             dataCheckList = dataCheckList.stream().map(i -> {
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
-                i.ruleName = groupPO.getCheckGroupName() + i.tableName;
+                String filedName = i.getDataCheckExtend().fieldName;
+                i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
                 return i;
             }).collect(Collectors.toList());
             dataCheckList.forEach(dataCheckDTO -> {
@@ -174,7 +175,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             dataCheckEditList = dataCheckEditList.stream().map(i -> {
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
-                i.ruleName = groupPO.getCheckGroupName() + i.tableName;
+                String filedName = i.getDataCheckExtend().fieldName;
+                i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
 
                 // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
                 if (i.getSourceType() == SourceTypeEnum.FiData) {
