@@ -407,7 +407,7 @@ public class MetadataEntityImpl
             }
 
             //如果是数据接入CDC类型的 则改为数据工厂
-            if (parent.displayName.contains("(Hudi)")) {
+            if (parent.displayName != null && parent.displayName.contains("(Hudi)")) {
                 parent.setParentId(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
             }
         }
