@@ -22,6 +22,6 @@ public interface CodeCollectionMapper extends BaseMapper<CodeCollectionPO> {
     Integer getAllCodeCollectionCount();
 
     List<CodeCollectionVO> getCodeCollection(@Param("keyword") String keyword,
-                                             @Param("current") Integer startIndex,
-                                             @Param("size") Integer pageSize);
+                                             @Param("startIndex") Integer startIndex,
+                                             @Param("pageSize") Integer pageSize);
 }
