@@ -36,7 +36,7 @@ public class CodeCollectionServiceImpl extends ServiceImpl<CodeCollectionMapper,
     @Resource
     UserClient userClient;
     @Resource
-    CodeCollectionService codeCollectionService;
+    CodeSetServiceImpl codeSetService;
     @Override
     public ResultEnum addCodeCollection(CodeCollectionDTO dto) {
         CodeCollectionPO codeCollectionPO = CodeCollectionMap.INSTANCES.dtoToPo(dto);
@@ -66,6 +66,7 @@ public class CodeCollectionServiceImpl extends ServiceImpl<CodeCollectionMapper,
         if (!del) {
             return ResultEnum.DELETE_ERROR;
         }
+        codeSetService.delCodeSetByCollectionId(id);
         return ResultEnum.SUCCESS;
     }
 
