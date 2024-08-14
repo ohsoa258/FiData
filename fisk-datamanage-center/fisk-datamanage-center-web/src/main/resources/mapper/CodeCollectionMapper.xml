@@ -6,23 +6,24 @@
     <resultMap id="codeCollection" type="com.fisk.datamanagement.vo.CodeCollectionVO">
         <result column="collection_id" property="collectionId"/>
         <result column="collection_name" property="collectionName"/>
-        <collection property="codeSetVOList" ofType="com.fisk.datamanagement.vo.CodeSetVO"/>
-    </resultMap>
-    <resultMap id="codeSetVOList" type="com.fisk.datamanagement.vo.CodeSetVO">
-        <result property="id" column="id"/>
-        <result column="code" property="code"/>
-        <result column="name" property="name"/>
-        <result column="description" property="description"/>
-        <result column="createTime" property="createTime"/>
-        <result column="createUser" property="createUser"/>
+        <result column="collectionDescription" property="collectionDescription"/>
+        <collection property="codeSetVOList" javaType="java.util.List" ofType="com.fisk.datamanagement.vo.CodeSetVO">
+            <id property="id" column="id"/>
+            <result column="code" property="code"/>
+            <result column="name" property="name"/>
+            <result column="description" property="description"/>
+            <result column="create_time" property="createTime"/>
+            <result column="create_user" property="createUser"/>
+        </collection>
     </resultMap>
     <select id="getAllCodeCollectionCount" resultType="Integer">
         select count(1) from tb_code_collection
     </select>
-    <select id="getCodeCollection" resultType="com.fisk.datamanagement.vo.CodeCollectionVO">
+    <select id="getCodeCollection" resultMap="codeCollection">
         SELECT
             c1.id AS collectionId,
             c1.collection_name,
+            c1.description as collectionDescription,
             c2.id,
             c2.`code`,
             c2.`name`,
