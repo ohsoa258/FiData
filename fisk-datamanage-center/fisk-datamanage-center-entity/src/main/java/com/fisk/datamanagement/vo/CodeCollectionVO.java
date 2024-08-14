@@ -13,5 +13,6 @@ import java.util.List;
 public class CodeCollectionVO {
     private Integer collectionId;
     private String collectionName;
+    private String collectionDescription;
     List<CodeSetVO> codeSetVOList;
 }

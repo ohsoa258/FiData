@@ -1,5 +1,6 @@
 package com.fisk.datamanagement.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -83,6 +84,17 @@ public class CodeSetServiceImpl extends ServiceImpl<CodeSetMapper, CodeSetPO> im
     @Override
     public ResultEnum delCodeSet(Integer id) {
         boolean del = this.removeById(id);
+        if (!del) {
+            return ResultEnum.DELETE_ERROR;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum delCodeSetByCollectionId(Integer collectionId) {
+        LambdaQueryWrapper<CodeSetPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(CodeSetPO::getCollectionId,collectionId);
+        boolean del = this.remove(queryWrapper);
         if (!del) {
             return ResultEnum.DELETE_ERROR;
         }

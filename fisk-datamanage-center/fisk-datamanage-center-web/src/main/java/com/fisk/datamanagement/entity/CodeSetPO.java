@@ -15,6 +15,9 @@ import io.swagger.annotations.ApiModelProperty;
 @Data
 public class CodeSetPO extends BasePO {
 
+	@ApiModelProperty(value = "集合Id")
+	public Integer collectionId;
+
 	@ApiModelProperty(value = "编号")
 	private String code;
 
