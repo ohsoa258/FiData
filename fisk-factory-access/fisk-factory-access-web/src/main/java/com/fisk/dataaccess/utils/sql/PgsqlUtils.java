@@ -278,7 +278,7 @@ public class PgsqlUtils {
                     }
                     insertSqlIndex = insertSqlIndex.substring(0, insertSqlIndex.lastIndexOf(",")) + ") values";
                     insertSqlLast = insertSqlLast.substring(0, insertSqlLast.lastIndexOf(",")) + ")";
-                    inserSql = insertSqlIndex + insertSqlLast+";";
+                    inserSql = insertSqlIndex + insertSqlLast;
                     log.info("数据推送到stg的sql为: " + inserSql);
                     countSql++;
                     statement.addBatch(inserSql);
