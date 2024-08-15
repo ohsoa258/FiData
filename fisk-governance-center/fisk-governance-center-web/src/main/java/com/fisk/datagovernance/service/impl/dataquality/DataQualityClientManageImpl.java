@@ -902,7 +902,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("%s::NUMERIC NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
+                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name,f_Name, lowerBound_Int, upperBound_Int);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
                     }
@@ -924,7 +924,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("%s::NUMERIC %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC %s %s)",f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
@@ -977,10 +977,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        log.info("值域检查返回errorDataTotalCount：" + errorDataTotalCount);
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
             sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         }
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
+        log.info("值域检查返回checkDataTotalCount：" + checkDataTotalCount);
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
