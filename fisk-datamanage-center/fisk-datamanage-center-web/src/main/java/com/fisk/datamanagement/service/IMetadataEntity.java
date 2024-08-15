@@ -36,6 +36,16 @@ public interface IMetadataEntity {
      * @param parentEntityId
      * @return
      */
+    Integer addMetadataEntityForExternal(MetaDataBaseAttributeDTO dto, String rdbmsType, String parentEntityId);
+
+    /**
+     * 元数据新增
+     *
+     * @param dto
+     * @param rdbmsType
+     * @param parentEntityId
+     * @return
+     */
     Integer addMetadataEntityForInstance(MetaDataInstanceAttributeDTO dto, String rdbmsType, String parentEntityId);
 
     /**
@@ -47,6 +57,16 @@ public interface IMetadataEntity {
      * @return
      */
     Integer updateMetadataEntity(MetaDataBaseAttributeDTO dto, Integer entityId,String parentId,String rdbmsType);
+
+    /**
+     * 元数据修改
+     *
+     * @param dto
+     * @param entityId
+     * @param rdbmsType
+     * @return
+     */
+    Integer updateMetadataEntityExternal(MetaDataBaseAttributeDTO dto, Integer entityId,String parentId,String rdbmsType);
 
     /**
      * 元数据修改
