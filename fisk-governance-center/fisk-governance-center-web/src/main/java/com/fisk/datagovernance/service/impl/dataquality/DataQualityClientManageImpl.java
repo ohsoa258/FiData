@@ -1904,6 +1904,13 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      */
     public Integer qualityReport_QueryTableTotalCount(DataSourceConVO dataSourceConVO, String sql, String fieldName,
                                                       long ruleId, String ruleName) {
+
+        DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
+        // PGSQL中，查询的列不加引号默认都会被转小写，比如 SELECT totalCount就会输出为totalcount
+        if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL
+                && (fieldName.equals("totalCount") || fieldName.equals("errorTotalCount"))) {
+            fieldName = fieldName.toLowerCase();
+        }
         String totalCount = "0";
         List<Map<String, Object>> mapList = qualityReport_QueryTableData_Maps(dataSourceConVO, sql, ruleId, ruleName);
         if (CollectionUtils.isNotEmpty(mapList)) {
