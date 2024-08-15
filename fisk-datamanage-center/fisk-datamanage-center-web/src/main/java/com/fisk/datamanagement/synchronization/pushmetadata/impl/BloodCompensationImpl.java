@@ -10,10 +10,10 @@ import com.fisk.common.core.utils.DateTimeUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
+import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.TablePyhNameDTO;
 import com.fisk.common.service.dbMetaData.dto.TableStructureDTO;
 import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
-import com.fisk.common.service.dbMetaData.utils.OracleUtils;
 import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
 import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
 import com.fisk.common.service.metadata.dto.metadata.*;
@@ -32,6 +32,7 @@ import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.service.impl.EntityImpl;
 import com.fisk.datamanagement.service.impl.MetaSyncTimePOServiceImpl;
 import com.fisk.datamanagement.synchronization.pushmetadata.IBloodCompensation;
+import com.fisk.datamanagement.utils.OracleUtils;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.Resource;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -871,13 +874,19 @@ public class BloodCompensationImpl
             String dbQualifiedName = null;
 
             List<MetaDataTableAttributeDTO> tableAttributeDTOList = new ArrayList<>();
+            Connection conn = null;
             try {
                 //组装实例信息
                 MetaDataInstanceAttributeDTO instanceAttributeDTO = buildInstance(appSource);
                 instanceList.add(instanceAttributeDTO);
                 switch (appSource.driveType) {
                     case "oracle":
-                        tableNameAndColumns = new OracleUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, DriverTypeEnum.ORACLE);
+                        log.info("ORACLE驱动开始加载");
+                        log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        log.info("ORACLE驱动加载完毕");
+                        conn = DriverManager.getConnection(appSource.connectStr, appSource.connectAccount, appSource.connectPwd);
+                        tableNameAndColumns = new OracleUtils().getTrueTableNameList(conn, appSource.connectAccount, appSource.serviceName);
                         break;
                     case "mysql":
                         tableNameAndColumns = new MysqlConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
@@ -898,6 +907,8 @@ public class BloodCompensationImpl
             } catch (Exception e) {
                 log.error("查询外部数据源元数据信息失败" + e);
                 continue;
+            }finally {
+                AbstractCommonDbHelper.closeConnection(conn);
             }
             if (!CollectionUtils.isEmpty(tableNameAndColumns)) {
                 for (TablePyhNameDTO tableNameAndColumn : tableNameAndColumns) {
