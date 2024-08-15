@@ -110,27 +110,49 @@ public class BuildDataInputDeletePgTableListener {
                 if (inputData.tableList != null && inputData.tableList.size() != 0) {
                     HashMap<String, Object> conditionHashMap = new HashMap<>();
                     if (Objects.equals(inputData.businessTypeEnum, BusinessTypeEnum.DATAINPUT)) {
-                        List<String> atlasEntityId = new ArrayList();
-                        inputData.tableList.forEach((t) -> {
-                            List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(t.tableName);
-                            buildDelSqlStr.append(stgAndTableName.get(0) + "," + stgAndTableName.get(1) + ", ");
-                            atlasEntityId.add(t.tableAtlasId);
-                            conditionHashMap.put("table_name", stgAndTableName.get(0));
-                            taskPgTableStructureMapper.deleteByMap(conditionHashMap);
-                            tbetlIncremental.delEtlIncrementalList(stgAndTableName.get(0));
-                            conditionHashMap.put("table_name", stgAndTableName.get(1));
-                            taskPgTableStructureMapper.deleteByMap(conditionHashMap);
-                            tbetlIncremental.delEtlIncrementalList(stgAndTableName.get(1));
-                        });
-                        String delSqlStr = buildDelSqlStr.toString();
-                        delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
-                        if (inputData.targetDbId != null) {
-                            postgreHelper.postgreExecuteSqlByDbType(delSqlStr, BusinessTypeEnum.DATAINPUT, inputData.targetDbId);
-                        } else {
-                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
+                        //doris删表语句不一样
+                        //sqlserver支持DROP TABLE IF EXISTS fact_dr_01, temp_fact_dr_01 ;
+                        //doris不支持  doris只支持：
+                        //DROP TABLE IF EXISTS fact_dr_01;DROP TABLE IF EXISTS temp_fact_dr_01;
+                        if (Objects.equals(DataSourceTypeEnum.DORIS, conType)) {
+                            inputData.tableList.forEach((t) -> {
+                                buildDelSqlStr.append(t.tableName).append(" FORCE; ");
+                                buildDelSqlStr.append("DROP TABLE IF EXISTS ").append("temp_").append(t.tableName).append(" FORCE, ");
+                                conditionHashMap.put("table_name", t.tableName);
+                                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                                tbetlIncremental.delEtlIncrementalList(t.tableName);
+                                //doris.dorisBuildTable("DROP TABLE IF EXISTS " + t.tableName + ";");
+                                //doris.dorisBuildTable("DROP TABLE IF EXISTS external_" + t.tableName + ";");
+                            });
+                            String delSqlStr = buildDelSqlStr.toString();
+                            delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
+                            log.info("delsql:" + delSqlStr);
+                            postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAMODEL);
+                            log.info("执行pg delete table 完成");
+                        }else {
+                            List<String> atlasEntityId = new ArrayList();
+                            inputData.tableList.forEach((t) -> {
+                                List<String> stgAndTableName = TableNameGenerateUtils.getStgAndTableName(t.tableName);
+                                buildDelSqlStr.append(stgAndTableName.get(0) + "," + stgAndTableName.get(1) + ", ");
+                                atlasEntityId.add(t.tableAtlasId);
+                                conditionHashMap.put("table_name", stgAndTableName.get(0));
+                                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                                tbetlIncremental.delEtlIncrementalList(stgAndTableName.get(0));
+                                conditionHashMap.put("table_name", stgAndTableName.get(1));
+                                taskPgTableStructureMapper.deleteByMap(conditionHashMap);
+                                tbetlIncremental.delEtlIncrementalList(stgAndTableName.get(1));
+                            });
+                            String delSqlStr = buildDelSqlStr.toString();
+                            delSqlStr = delSqlStr.substring(0, delSqlStr.lastIndexOf(",")) + " ;";
+                            log.info("delsql:" + delSqlStr);
+                            if (inputData.targetDbId != null) {
+                                postgreHelper.postgreExecuteSqlByDbType(delSqlStr, BusinessTypeEnum.DATAINPUT, inputData.targetDbId);
+                            } else {
+                                postgreHelper.postgreExecuteSql(delSqlStr, BusinessTypeEnum.DATAINPUT);
+                            }
+                            log.info("执行pg delete table 完成");
                         }
-                        log.info("delsql:" + delSqlStr);
-                        log.info("执行pg delete table 完成");
+
                     } else {
                         //doris删表语句不一样
                         //sqlserver支持DROP TABLE IF EXISTS fact_dr_01, temp_fact_dr_01 ;
