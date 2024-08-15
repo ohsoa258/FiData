@@ -111,7 +111,9 @@ public class BloodCompensationImpl
 
 //endregion
 
-    @Scheduled(cron = "0 0 20 * * ?")//每晚20点执行刷新元数据任务
+
+    //定时任务暂时停掉
+    //    @Scheduled(cron = "0 0 20 * * ?")//每晚20点执行刷新元数据任务
     public void syncBlood() {
         List<Integer> moduleIds = new ArrayList<>();
         moduleIds.add(ClassificationTypeEnum.DATA_ACCESS.getValue());

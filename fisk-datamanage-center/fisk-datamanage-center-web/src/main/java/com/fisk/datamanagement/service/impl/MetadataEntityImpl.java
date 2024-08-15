@@ -248,6 +248,42 @@ public class MetadataEntityImpl
 
     @Transactional(rollbackFor = Exception.class)
     @Override
+    public Integer addMetadataEntityForExternal(MetaDataBaseAttributeDTO dto, String rdbmsType, String parentEntityId) {
+        MetadataEntityPO po = new MetadataEntityPO();
+        po.name = dto.name;
+        po.description = dto.description;
+        po.displayName = dto.displayName;
+        po.owner = dto.owner;
+        po.typeId = metadataEntityType.getTypeId(rdbmsType);
+        po.qualifiedName = dto.qualifiedName+"_external";
+        //父级
+        po.parentId = Integer.parseInt(parentEntityId);
+        //字段数据分类
+        po.dataClassification = dto.dataClassification;
+        //字段数据分级
+        po.dataLevel = dto.dataLevel;
+
+        /*
+         * 该行代码无效 原因是MetadataEntityPO继承了BasePo
+         * BasePo的createUser属性使用了@TableField(value = "create_user", fill = FieldFill.INSERT)注解
+         * 会被Common类的 BaseMetaObjectHandler拦截器拦截掉 更换为执行同步血缘接口时 使用的token用户id
+         */
+        po.createUser = dto.owner;
+
+        boolean save = this.save(po);
+        if (!save) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //添加审计日志
+        metadataEntityAuditLog.setMetadataAuditLog(dto, (int) po.id, MetadataAuditOperationTypeEnum.ADD, rdbmsType, po.owner);
+        //添加技术属性
+        metadataAttribute.addMetadataAttribute(dto, (int) po.id);
+
+        return (int) po.id;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
     public Integer addMetadataEntityForInstance(MetaDataInstanceAttributeDTO dto, String rdbmsType, String parentEntityId) {
         MetadataEntityPO po = new MetadataEntityPO();
         po.name = dto.name;
@@ -289,6 +325,38 @@ public class MetadataEntityImpl
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
+
+        po.owner = dto.owner;
+        po.displayName = dto.displayName;
+        po.name = dto.name;
+        po.description = dto.description;
+        //字段数据分类
+        po.dataClassification = dto.dataClassification;
+        //字段数据分级
+        po.dataLevel = dto.dataLevel;
+        if (parentId != null) {
+            po.parentId = Integer.valueOf(parentId);
+        }
+
+
+        boolean flat = this.updateById(po);
+        if (!flat) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        //添加审计日志
+        metadataEntityAuditLog.setMetadataAuditLog(dto, entityId, MetadataAuditOperationTypeEnum.EDIT, rdbmsType, po.owner);
+        //添加技术属性
+        metadataAttribute.operationMetadataAttribute(dto, entityId);
+
+        return (int) po.id;
+    }
+
+    @Override
+    public Integer updateMetadataEntityExternal(MetaDataBaseAttributeDTO dto, Integer entityId, String parentId, String rdbmsType) {
+        MetadataEntityPO po = this.query().eq("id", entityId).one();
+        if (po == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
+        }
 
         po.owner = dto.owner;
         po.displayName = dto.displayName;

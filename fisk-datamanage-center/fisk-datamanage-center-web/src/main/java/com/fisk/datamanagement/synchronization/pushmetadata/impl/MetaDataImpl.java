@@ -223,7 +223,14 @@ public class MetaDataImpl implements IMetaData {
                 }
                 for (MetaDataDbAttributeDTO db : instance.dbList) {
                     //判断是否已同步库元数据，有则修改无则新增
-                    String dbGuid = metaDataDb(db, instanceGuid);
+                    String dbGuid;
+                    //外部数据源-数据库的唯一限定名要和别的模块区分开 避免节点混乱
+                    if (classificationTypeEnum.equals(ClassificationTypeEnum.EXTERNAL_DATA)){
+                        dbGuid = metaDataDbForExternal(db, instanceGuid);
+                    }else {
+                        dbGuid = metaDataDb(db, instanceGuid);
+                    }
+
                     if (StringUtils.isEmpty(dbGuid) || CollectionUtils.isEmpty(db.tableList)) {
                         continue;
                     }
@@ -338,6 +345,22 @@ public class MetaDataImpl implements IMetaData {
             return this.metadataEntity.addMetadataEntity(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
         }
         return this.metadataEntity.updateMetadataEntity(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_DB.getName()).toString();
+
+    }
+
+    /**
+     * 元数据对参观：数据库 新增/修改
+     *
+     * @param dto
+     * @param parentEntityId
+     * @return
+     */
+    private String metaDataDbForExternal(MetaDataDbAttributeDTO dto, String parentEntityId) {
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        if (metadataEntity == null) {
+            return this.metadataEntity.addMetadataEntityForExternal(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
+        }
+        return this.metadataEntity.updateMetadataEntityExternal(dto, metadataEntity, parentEntityId, EntityTypeEnum.RDBMS_DB.getName()).toString();
 
     }
 
