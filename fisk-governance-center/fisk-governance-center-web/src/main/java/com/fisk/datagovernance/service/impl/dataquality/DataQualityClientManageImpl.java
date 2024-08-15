@@ -902,7 +902,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name,f_Name, lowerBound_Int, upperBound_Int);
+                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
                     }
@@ -924,7 +924,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC %s %s)",f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
@@ -1497,8 +1497,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 f_Allocate = qualityReportSummary_paramDTO.getAllocateFieldNamesFormat(),
                 fieldCheckWhereSql = qualityReportSummary_paramDTO.getFieldCheckWhereSql();
 
-        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS '数据重复条数' FROM %s WHERE 1=1 %s " +
-                "GROUP BY %s HAVING COUNT(*) > 1 ", f_Name, t_Name, fieldCheckWhereSql, f_Name);
+        DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
+        String ailsName = dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL ? "" + "数据重复条数" + "" : "'数据重复条数'";
+
+        String sql_QueryCheckData = String.format("SELECT %s, COUNT(*) AS %s FROM %s WHERE 1=1 %s " +
+                "GROUP BY %s HAVING COUNT(*) > 1 ", f_Name, ailsName, t_Name, fieldCheckWhereSql, f_Name);
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
         String sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM ( %s ) t", sql_QueryCheckData);
 
