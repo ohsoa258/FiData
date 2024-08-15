@@ -820,7 +820,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         StandardsDTO standardsDTO = null;
         Integer dataCheckGroupId = dataCheckPO.getDatacheckGroupId();
         if (dataCheckGroupId != null && dataCheckGroupId > 0
-                && ((rangeCheckTypeEnum == RangeCheckTypeEnum.SEQUENCE_RANGE && dataCheckExtendPO.getRangeType() == 2)
+                && ((rangeCheckTypeEnum == RangeCheckTypeEnum.SEQUENCE_RANGE && dataCheckExtendPO.getRangeType() == 1)
                 || rangeCheckTypeEnum == RangeCheckTypeEnum.VALUE_RANGE)) {
             DatacheckStandardsGroupPO groupPO = dataCheckStandardsGroupServiceImpl.getById(dataCheckGroupId);
             ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
@@ -866,8 +866,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     }
 
                     // 将list里面的序列范围截取为'','',''格式的字符串
+                    boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
+                    String isConsN = charValid ? "N" : "";
+
                     String sql_InString = list.stream()
-                            .map(item -> dataSourceTypeEnum == DataSourceTypeEnum.DORIS ? "'" + item + "'" : "N'" + item + "'")
+                            .map(item -> dataSourceTypeEnum == DataSourceTypeEnum.DORIS ? "'" + item + "'" : "" + isConsN + "'" + item + "'")
                             .collect(Collectors.joining(", "));
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",

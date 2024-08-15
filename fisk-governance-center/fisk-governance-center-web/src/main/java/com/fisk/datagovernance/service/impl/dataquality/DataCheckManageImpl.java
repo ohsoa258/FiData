@@ -182,6 +182,24 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     queryTableParams.addAll(treeTableNodes);
                 }
             }
+
+            log.info("getAllRule...节点下表信息数量：" + queryTableParams.size());
+            log.info("getAllRule...节点下表信息[{}]", JSONObject.toJSON(queryTableParams));
+            if (CollectionUtils.isNotEmpty(queryTableParams)) {
+                // 表信息去重
+                queryTableParams = queryTableParams.stream().collect(Collectors.collectingAndThen(
+                        Collectors.toCollection(() -> new TreeSet<>(
+                                Comparator.comparing(o -> o.getId() + ";"
+                                        + o.getName() + ";"
+                                        + o.getSourceId() + ";"
+                                        + o.getSourceType().getName() + ";"
+                                        + o.getTableBusinessType().getName() + ";"
+                                        + o.getTableType().getName()
+                                ))), ArrayList::new));
+            }
+            log.info("getAllRule...节点下表信息数量-去重后数量：：" + queryTableParams.size());
+            log.info("getAllRule...节点下表信息-去重后[{}]", JSONObject.toJSON(queryTableParams));
+
             // 第三步：获取所有表校验规则
             List<Long> templateIdList = null;
             if (query.getTemplateId() != 0) {
@@ -193,6 +211,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (CollectionUtils.isEmpty(allRule)) {
                 return page;
             }
+
+            log.info("getAllRule...规则数量：" + allRule.size());
+
             // 第四步：筛选满足条件的表/视图的规则
             if (CollectionUtils.isNotEmpty(queryTableParams)) {
                 for (QueryTableRuleDTO dto : queryTableParams) {
@@ -231,30 +252,31 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             if (CollectionUtils.isEmpty(filterRule)) {
                 return page;
             }
+
+            log.info("getAllRule...规则数量-节点筛选后：" + filterRule.size());
+
+
             List<Integer> ruleIds = filterRule.stream().map(DataCheckVO::getId).distinct().collect(Collectors.toList());
             List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
-            if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
-                filterRule.forEach(t -> {
+            List<DataCheckConditionVO> dataCheckConditionVOList = dataCheckConditionMapper.getDataCheckExtendByRuleIdList(ruleIds);
+            List<QualityReportRuleVO> qualityReportRuleVOList = qualityReportMapper.getByRuleIds(ruleIds);
+
+            filterRule.forEach(t -> {
+                if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
                     DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
                     t.setDataCheckExtend(dataCheckExtendVO);
-                });
-            }
-            List<DataCheckConditionVO> dataCheckConditionVOList = dataCheckConditionMapper.getDataCheckExtendByRuleIdList(ruleIds);
-            if (CollectionUtils.isNotEmpty(dataCheckConditionVOList)) {
-                filterRule.forEach(t -> {
+                }
+                if (CollectionUtils.isNotEmpty(dataCheckConditionVOList)) {
                     List<DataCheckConditionVO> dataCheckConditionVOS = dataCheckConditionVOList.stream().filter(k -> k.getRuleId() == t.getId()).collect(Collectors.toList());
                     t.setDataCheckCondition(dataCheckConditionVOS);
-                });
-            }
-            List<QualityReportRuleVO> qualityReportRuleVOList = qualityReportMapper.getByRuleIds(ruleIds);
-            if (CollectionUtils.isNotEmpty(qualityReportRuleVOList)) {
-                filterRule.forEach(t -> {
+                }
+                if (CollectionUtils.isNotEmpty(qualityReportRuleVOList)) {
                     List<String> reportNameList = qualityReportRuleVOList.stream().filter(k -> k.getRuleId() == t.getId()).map(QualityReportRuleVO::getReportName).collect(Collectors.toList());
                     if (CollectionUtils.isNotEmpty(reportNameList)) {
                         t.setBelongToReportNameList(reportNameList);
                     }
-                });
-            }
+                }
+            });
 
             // 第五步：排序分页设置
             query.current = query.current - 1;
