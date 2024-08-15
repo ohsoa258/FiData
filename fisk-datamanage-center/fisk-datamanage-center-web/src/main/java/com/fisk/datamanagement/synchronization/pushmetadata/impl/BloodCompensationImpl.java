@@ -936,7 +936,7 @@ public class BloodCompensationImpl
         instance.setRdbms_type(appSource.driveType);
         instance.setHostname(appSource.host);
         instance.setPort(appSource.port);
-        instance.setQualifiedName(appSource.host + "_" + appSource.dbName + "_instance_"+ appSource.systemDataSourceId);
+        instance.setQualifiedName(appSource.host + "_" + appSource.dbName + "_externalInstance_"+ appSource.systemDataSourceId);
         instance.setName(appSource.host);
         instance.setDisplayName(appSource.host);
         instance.setSourceName(appSource.name);
