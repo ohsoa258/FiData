@@ -410,6 +410,11 @@ public class MetadataEntityImpl
             if (parent.displayName != null && parent.displayName.contains("(Hudi)")) {
                 parent.setParentId(MetaClassificationTypeEnum.DATA_FACTORY.getValue());
             }
+
+            //如果限定名称包含_externalInstance_ 则代表是外部数据源
+            if (parent.displayName != null && parent.qualifiedName.contains("_externalInstance_")) {
+                parent.setParentId(MetaClassificationTypeEnum.DATA_SOURCE.getValue());
+            }
         }
 
         //获取元数据的分类
