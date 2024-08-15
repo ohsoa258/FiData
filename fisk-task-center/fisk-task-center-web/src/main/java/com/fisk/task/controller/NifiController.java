@@ -156,6 +156,12 @@ public class NifiController {
             return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_ACCOUNT_ALREADY_EXISTS);
         }
 
+        //新增数据源时，不允许数据源名称重复
+        if (resultEntity.getCode() == ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS.getCode()) {
+            log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
+            return ResultEntityBuild.build(ResultEnum.DATA_SOURCE_NAME_ALREADY_EXISTS, resultEntity.getData());
+        }
+
         //新增数据源时,相同数据库类型,相同ip,相同库名不允许重复添加
         if (resultEntity.getCode() == ResultEnum.DATA_SOURCE_ALREADY_EXISTS.getCode()) {
             log.error("system服务添加数据源失败，[{}]", resultEntity.getMsg());
