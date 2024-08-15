@@ -124,6 +124,14 @@ public class RegexUtils {
         integerType.add("int");
         integerType.add("integer");
         integerType.add("bigint");
+        integerType.add("整数");
+        integerType.add("数字");
+        integerType.add("整型");
+        integerType.add("数值");
+        integerType.add("浮点");
+        integerType.add("数字型");
+        integerType.add("数值型");
+        integerType.add("浮点型");
         // 精确数值型
         List<String> accurateType = new ArrayList<>();
         accurateType.add("decimal");
