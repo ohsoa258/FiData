@@ -3,7 +3,6 @@ package com.fisk.datamanagement.synchronization.pushmetadata.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
-import com.fisk.common.core.enums.task.nifi.DriverTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.DateTimeUtils;
@@ -111,9 +110,7 @@ public class BloodCompensationImpl
 
 //endregion
 
-
-    //定时任务暂时停掉
-    //    @Scheduled(cron = "0 0 20 * * ?")//每晚20点执行刷新元数据任务
+    @Scheduled(cron = "0 0 20 * * ?")//每晚20点执行刷新元数据任务
     public void syncBlood() {
         List<Integer> moduleIds = new ArrayList<>();
         moduleIds.add(ClassificationTypeEnum.DATA_ACCESS.getValue());
@@ -909,7 +906,7 @@ public class BloodCompensationImpl
             } catch (Exception e) {
                 log.error("查询外部数据源元数据信息失败" + e);
                 continue;
-            }finally {
+            } finally {
                 AbstractCommonDbHelper.closeConnection(conn);
             }
             if (!CollectionUtils.isEmpty(tableNameAndColumns)) {
@@ -949,7 +946,7 @@ public class BloodCompensationImpl
         instance.setRdbms_type(appSource.driveType);
         instance.setHostname(appSource.host);
         instance.setPort(appSource.port);
-        instance.setQualifiedName(appSource.host + "_" + appSource.dbName + "_externalInstance_"+ appSource.systemDataSourceId);
+        instance.setQualifiedName(appSource.host + "_" + appSource.dbName + "_externalInstance_" + appSource.systemDataSourceId);
         instance.setName(appSource.host);
         instance.setDisplayName(appSource.host);
         instance.setSourceName(appSource.name);

@@ -63,6 +63,9 @@ public class MetadataGlossaryMapImpl
         for (MetadataEntitySimpleDTO simDto : metadataEntitys) {
             MetaDataGlossaryMapPO metaDataGlossaryMapPO = new MetaDataGlossaryMapPO();
 
+            if (simDto.getMetadataQualifiedName()==null){
+                continue;
+            }
             //改为关联限定名称
             metaDataGlossaryMapPO.setMetadataQualifiedName(simDto.getMetadataQualifiedName());
             metaDataGlossaryMapPO.setGlossaryId(glossaryId);
