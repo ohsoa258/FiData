@@ -1087,7 +1087,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql = "";
 
         for (String dateFormat : dateFormatList) {
-            String tempSql = "", numberType = "";
+            String tempSql = "", numberType = "", castFieldStr = f_Name;
             switch (dateFormat) {
                 case "HH:mm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1097,15 +1097,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 5\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 5\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 5\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 5\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 3, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 3, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "HHmm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1115,14 +1116,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 4\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 4\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 4\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 4\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR CAST(SUBSTRING( " + castFieldStr + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyyMM":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1132,14 +1134,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 6\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 6\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 6\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 6\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
+                    tempSql += " OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
                     break;
                 case "yyyy-MM":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1149,15 +1152,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 7\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 7\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 7\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 7\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
                     break;
                 case "yyyyMMdd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1167,15 +1171,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 8\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 8\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 8\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 8\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 7, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
+                    tempSql += " OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 7, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy-MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1185,17 +1190,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 10\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy/MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1205,17 +1211,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 10\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '/'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy-MM-dd HH:mm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1225,21 +1232,22 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 16\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 16\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 16\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 16\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy-MM-dd HH:mm:ss":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1249,23 +1257,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 19\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy/MM/dd HH:mm:ss":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1275,23 +1284,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 19\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '/'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '/'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '/'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy-MM-dd HH:mm:ss.SSS":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1301,7 +1311,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 23\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 23\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 23\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 23\n";
@@ -1330,19 +1341,19 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 //                        -- -- 检查毫秒在正确范围内
 //                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 20, 1); -- = '.'
 //                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 21, 3); -- BETWEEN '000' AND '999'
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 20, 1) != '.'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 21, 3) AS " + numberType + ") NOT BETWEEN '000' AND '999') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 20, 1) != '.'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 21, 3) AS " + numberType + ") NOT BETWEEN '000' AND '999') \n";
 
                     break;
             }
