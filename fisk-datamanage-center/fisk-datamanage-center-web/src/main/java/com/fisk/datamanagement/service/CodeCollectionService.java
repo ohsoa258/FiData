@@ -8,6 +8,8 @@ import com.fisk.datamanagement.dto.DataSet.CodeCollectionQueryDTO;
 import com.fisk.datamanagement.entity.CodeCollectionPO;
 import com.fisk.datamanagement.vo.CodeCollectionVO;
 
+import java.util.List;
+
 
 /**
  * 
@@ -26,6 +28,6 @@ public interface CodeCollectionService extends IService<CodeCollectionPO> {
 
     Page<CodeCollectionVO> getCodeCollection(CodeCollectionQueryDTO query);
 
-    Page<CodeCollectionVO> pageCollectionList(CodeCollectionQueryDTO query);
+    List<CodeCollectionVO> getCollectionList();
 }
 

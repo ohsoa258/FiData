@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 
 @Api(tags = {SwaggerConfig.CODECOLLECTION})
@@ -47,9 +48,9 @@ public class CodeCollectionController {
     public ResultEntity<Page<CodeCollectionVO>> getCodeCollection(@RequestBody CodeCollectionQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.getCodeCollection(query));
     }
-    @ApiOperation("分页查询代码集合")
-    @PostMapping("/pageCollectionList")
-    public ResultEntity<Page<CodeCollectionVO>> pageCollectionList(@RequestBody CodeCollectionQueryDTO query) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.pageCollectionList(query));
+    @ApiOperation("查询代码集合")
+    @GetMapping("/getCollectionList")
+    public ResultEntity<List<CodeCollectionVO>> getCollectionList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.getCollectionList());
     }
 }

@@ -40,7 +40,7 @@
             or c2.description like concat('%', #{keyword}, '%'))
         </if>
     </select>
-    <select id="pageCollectionList" resultType="com.fisk.datamanagement.vo.CodeCollectionVO">
+    <select id="getCollectionList" resultType="com.fisk.datamanagement.vo.CodeCollectionVO">
         select id as collectionId,
                collection_name,
                description as collectionDescription

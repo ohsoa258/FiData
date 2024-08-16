@@ -105,6 +105,7 @@ public class SwaggerConfig {
                 .tags(new Tag(EXPORT_TEMPLATE, "元数据导出模板"))
                 .tags(new Tag(STANDARDS, "数据标准"))
                 .tags(new Tag(BUSINESS_Category, "指标数据对象"))
+                .tags(new Tag(CODECOLLECTION, "代码集合"))
                 .tags(new Tag(CODESET, "代码集"))
                 .tags(new Tag(METADATA_AUDIT,"元数据审计日志"))
                 .tags(new Tag(META_MAP,"元数据地图"))
