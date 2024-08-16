@@ -4,11 +4,9 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.DataSet.CodeCollectionDTO;
 import com.fisk.datamanagement.dto.DataSet.CodeCollectionQueryDTO;
-import com.fisk.datamanagement.dto.DataSet.CodeSetQueryDTO;
 import com.fisk.datamanagement.entity.CodeCollectionPO;
 import com.fisk.datamanagement.map.CodeCollectionMap;
 import com.fisk.datamanagement.mapper.CodeCollectionMapper;
@@ -17,12 +15,9 @@ import com.fisk.datamanagement.vo.CodeCollectionVO;
 import com.fisk.datamanagement.vo.CodeSetVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.userinfo.UserDTO;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -123,7 +118,7 @@ public class CodeCollectionServiceImpl extends ServiceImpl<CodeCollectionMapper,
     }
 
     @Override
-    public Page<CodeCollectionVO> pageCollectionList(CodeCollectionQueryDTO query) {
-        return baseMapper.pageCollectionList(query.page, query);
+    public List<CodeCollectionVO> getCollectionList() {
+        return baseMapper.getCollectionList();
     }
 }
