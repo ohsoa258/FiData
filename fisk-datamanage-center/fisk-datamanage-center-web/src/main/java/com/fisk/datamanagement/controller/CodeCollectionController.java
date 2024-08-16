@@ -42,9 +42,14 @@ public class CodeCollectionController {
         return ResultEntityBuild.build(codeCollectionService.delCodeCollection(id));
     }
 
-    @ApiOperation("分页查询代码集")
+    @ApiOperation("分页查询代码集合")
     @PostMapping("/pageCollection")
     public ResultEntity<Page<CodeCollectionVO>> getCodeCollection(@RequestBody CodeCollectionQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.getCodeCollection(query));
+    }
+    @ApiOperation("分页查询代码集合")
+    @PostMapping("/pageCollection1")
+    public ResultEntity<Page<CodeCollectionVO>> getCodeCollection1(@RequestBody CodeCollectionQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.getCodeCollection(query));
     }
 }
