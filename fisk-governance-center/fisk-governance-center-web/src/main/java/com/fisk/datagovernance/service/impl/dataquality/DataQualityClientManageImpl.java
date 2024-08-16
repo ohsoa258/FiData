@@ -902,7 +902,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
+                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')!='' AND %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
                     }
@@ -924,7 +924,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(COALESCE(%s,'')!='' AND %s::NUMERIC %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')!='' AND %s::NUMERIC %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
                         sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
