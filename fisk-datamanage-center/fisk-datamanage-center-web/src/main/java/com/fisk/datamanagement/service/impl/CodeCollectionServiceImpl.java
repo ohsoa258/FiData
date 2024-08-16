@@ -121,4 +121,9 @@ public class CodeCollectionServiceImpl extends ServiceImpl<CodeCollectionMapper,
         }
         return page;
     }
+
+    @Override
+    public Page<CodeCollectionVO> pageCollectionList(CodeCollectionQueryDTO query) {
+        return baseMapper.pageCollectionList(query.page, query);
+    }
 }

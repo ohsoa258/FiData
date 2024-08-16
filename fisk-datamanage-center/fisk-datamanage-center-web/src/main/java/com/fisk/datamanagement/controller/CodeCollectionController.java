@@ -48,8 +48,8 @@ public class CodeCollectionController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.getCodeCollection(query));
     }
     @ApiOperation("分页查询代码集合")
-    @PostMapping("/pageCollection1")
-    public ResultEntity<Page<CodeCollectionVO>> getCodeCollection1(@RequestBody CodeCollectionQueryDTO query) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.getCodeCollection(query));
+    @PostMapping("/pageCollectionList")
+    public ResultEntity<Page<CodeCollectionVO>> pageCollectionList(@RequestBody CodeCollectionQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, codeCollectionService.pageCollectionList(query));
     }
 }

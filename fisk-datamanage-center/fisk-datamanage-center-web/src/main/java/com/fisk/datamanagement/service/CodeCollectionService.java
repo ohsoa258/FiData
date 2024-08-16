@@ -25,5 +25,7 @@ public interface CodeCollectionService extends IService<CodeCollectionPO> {
     ResultEnum delCodeCollection(Integer id);
 
     Page<CodeCollectionVO> getCodeCollection(CodeCollectionQueryDTO query);
+
+    Page<CodeCollectionVO> pageCollectionList(CodeCollectionQueryDTO query);
 }
 
