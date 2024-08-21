@@ -192,6 +192,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             dataCheckEditList = dataCheckEditList.stream().map(i -> {
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
+                i.ruleName = groupPO.getCheckGroupName() + i.tableName + i.getDataCheckExtend().fieldName;
                 return i;
             }).collect(Collectors.toList());
             List<Integer> dataCheckIds = dataCheckEditList.stream().map(i -> i.getId()).collect(Collectors.toList());
