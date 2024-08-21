@@ -49,6 +49,9 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
     IDataCheckManageService dataCheckManageService;
 
     @Resource
+    DataCheckManageImpl dataCheckManageImpl;
+
+    @Resource
     private DataCheckExtendMapper dataCheckExtendMapper;
 
     @Resource
@@ -136,7 +139,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -156,12 +158,9 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
                 return i;
             }).collect(Collectors.toList());
-
-            for (DataCheckEditDTO dataCheckDTO : dataCheckList) {
-                ResultEnum ruleCheckResultEnum = dataCheckManageService.addData(dataCheckDTO);
-                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
-                    return ruleCheckResultEnum;
-                }
+            ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchAddData(dataCheckList);
+            if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                return ruleCheckResultEnum;
             }
         }
         return ResultEnum.SUCCESS;
@@ -174,7 +173,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public ResultEnum editDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -194,16 +192,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             dataCheckEditList = dataCheckEditList.stream().map(i -> {
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
-                String filedName = i.getDataCheckExtend().fieldName;
-                i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
-
-                // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
-                if (i.getSourceType() == SourceTypeEnum.FiData) {
-                    int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
-                    if (idByDataSourceId != 0 && i.getId() != 0) {
-                        i.setDatasourceId(idByDataSourceId);
-                    }
-                }
                 return i;
             }).collect(Collectors.toList());
             List<Integer> dataCheckIds = dataCheckEditList.stream().map(i -> i.getId()).collect(Collectors.toList());
@@ -216,20 +204,10 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                     dataCheckManageService.deleteData((int) dataCheckPO.id);
                 }
             }
-
-
-            for (DataCheckEditDTO dataCheckDTO : dataCheckEditList) {
-                ResultEnum ruleCheckResultEnum;
-                if (dataCheckDTO.getId() == 0) {
-                    ruleCheckResultEnum = dataCheckManageService.addData(dataCheckDTO);
-                } else {
-                    ruleCheckResultEnum = dataCheckManageService.editData(dataCheckDTO);
-                }
-                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
-                    return ruleCheckResultEnum;
-                }
+            ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchEditData(dataCheckEditList);
+            if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                return ruleCheckResultEnum;
             }
-            ;
         }
         return ResultEnum.SUCCESS;
     }

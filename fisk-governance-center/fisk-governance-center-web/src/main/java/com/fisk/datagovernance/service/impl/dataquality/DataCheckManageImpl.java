@@ -450,9 +450,60 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return baseMapper.getRuleByIds(ids);
     }
 
+    public ResultEnum batchAddData(List<DataCheckEditDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+
+        // 检查是否存在配置错误 && 执行预校验
+        for (DataCheckEditDTO dto : dtoList) {
+            //第一步：验证模板是否存在以及表规则是否存在
+            TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
+            if (templatePO == null) {
+                return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+            }
+            QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().in(DataCheckPO::getRuleName, dto.getRuleName())
+                    .eq(DataCheckPO::getDelFlag, 1);
+            List<DataCheckPO> dataCheckPOList = baseMapper.selectList(queryWrapper);
+            if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
+                return ResultEnum.DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS;
+            }
+
+            //第二步：转换DTO对象为PO对象
+            DataCheckPO dataCheckPO = DataCheckMap.INSTANCES.dtoToPo(dto);
+            if (dataCheckPO == null) {
+                return ResultEnum.SAVE_VERIFY_ERROR;
+            }
+            DataCheckExtendPO dataCheckExtendPO = null;
+            if (dto.getDataCheckExtend() != null) {
+                dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+            }
+            List<DataCheckConditionPO> dataCheckExtendPOs = null;
+            if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
+                dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
+            }
+
+            //第三步：验证配置的校验规则（同步后）是否能正常运行
+            if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
+                ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                    return ruleCheckResultEnum;
+                }
+            }
+        }
+
+        // 开始保存数据
+        for (DataCheckEditDTO dto : dtoList) {
+            addData(dto, false);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum addData(DataCheckDTO dto) {
+    public ResultEnum addData(DataCheckDTO dto, boolean isPreVerification) {
         // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
         if (dto.getSourceType() == SourceTypeEnum.FiData) {
             int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
@@ -489,7 +540,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
 
         //第三步：验证配置的校验规则（同步后）是否能正常运行
-        if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
+        if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION && isPreVerification) {
             ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                 return ruleCheckResultEnum;
@@ -519,9 +570,65 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return ResultEnum.SUCCESS;
     }
 
+    public ResultEnum batchEditData(List<DataCheckEditDTO> dtoList) {
+        if (CollectionUtils.isEmpty(dtoList)) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+
+        // 检查是否存在配置错误 && 执行预校验
+        for (DataCheckEditDTO dto : dtoList) {
+            //第一步：验证模板是否存在
+            TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
+            if (templatePO == null) {
+                return ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS;
+            }
+            DataCheckPO dataCheckPO = baseMapper.selectById(dto.getId());
+            if (dataCheckPO == null) {
+                return ResultEnum.DATA_NOTEXISTS;
+            }
+            QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.lambda().in(DataCheckPO::getRuleName, dto.getRuleName())
+                    .eq(DataCheckPO::getDelFlag, 1)
+                    .ne(DataCheckPO::getId, dto.getId());
+            List<DataCheckPO> dataCheckPOList = baseMapper.selectList(queryWrapper);
+            if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
+                return ResultEnum.DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS;
+            }
+
+            //第二步：转换DTO对象为PO对象
+            dataCheckPO = DataCheckMap.INSTANCES.dtoToPo_Edit(dto);
+            if (dataCheckPO == null) {
+                return ResultEnum.SAVE_VERIFY_ERROR;
+            }
+            DataCheckExtendPO dataCheckExtendPO = null;
+            if (dto.getDataCheckExtend() != null) {
+                dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+            }
+            List<DataCheckConditionPO> dataCheckExtendPOs = null;
+            if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
+                dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
+            }
+
+            //第三步：验证配置的校验规则（同步后）是否能正常运行
+            if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
+                ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                    return ruleCheckResultEnum;
+                }
+            }
+        }
+
+        // 开始保存数据
+        for (DataCheckEditDTO dto : dtoList) {
+            editData(dto, false);
+        }
+
+        return ResultEnum.SUCCESS;
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultEnum editData(DataCheckEditDTO dto) {
+    public ResultEnum editData(DataCheckEditDTO dto, boolean isPreVerification) {
         //第一步：验证模板是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
         if (templatePO == null) {
@@ -529,7 +636,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
         DataCheckPO dataCheckPO = baseMapper.selectById(dto.getId());
         if (dataCheckPO == null) {
-            return ResultEnum.SAVE_VERIFY_ERROR;
+            return ResultEnum.DATA_NOTEXISTS;
         }
         QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().in(DataCheckPO::getRuleName, dto.getRuleName())
@@ -555,7 +662,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
 
         //第三步：验证配置的校验规则（同步后）是否能正常运行
-        if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
+        if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION && isPreVerification) {
             ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                 return ruleCheckResultEnum;

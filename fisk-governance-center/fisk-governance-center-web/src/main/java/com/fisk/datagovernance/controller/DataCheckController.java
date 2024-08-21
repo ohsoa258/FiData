@@ -57,13 +57,13 @@ public class DataCheckController {
     @ApiOperation("添加数据校验模板组件")
     @PostMapping("/add")
     public ResultEntity<Object> addData(@RequestBody DataCheckDTO dto) {
-        return ResultEntityBuild.build(service.addData(dto));
+        return ResultEntityBuild.build(service.addData(dto, true));
     }
 
     @ApiOperation("编辑数据校验模板组件")
     @PutMapping("/edit")
     public ResultEntity<Object> editData(@RequestBody DataCheckEditDTO dto) {
-        return ResultEntityBuild.build(service.editData(dto));
+        return ResultEntityBuild.build(service.editData(dto, true));
     }
 
     @ApiOperation("获取关联值")
