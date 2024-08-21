@@ -456,6 +456,8 @@ public enum ResultEnum {
 
     CHECK_STANDARDS_GROUP_ERROR(14019, "添加失败，该校验组名称已存在"),
 
+    CHECK_STANDARDS_UPDATE_FAIL(14020,"更新数据元成功，数据校验规则同步失败，请手动同步校验规则"),
+
     /**
      * mdm
      */

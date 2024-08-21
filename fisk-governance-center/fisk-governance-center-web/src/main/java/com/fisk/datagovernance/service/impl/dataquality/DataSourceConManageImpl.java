@@ -590,6 +590,22 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         return id;
     }
 
+    public  Map<Integer,Integer> getIdByDataSourceIds(SourceTypeEnum sourceTypeEnum, Set<Integer> datasourceIds) {
+        int id = 0;
+        Map<Integer,Integer> result = new HashMap<>();
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        for (Integer datasourceId : datasourceIds) {
+            if (sourceTypeEnum == SourceTypeEnum.FiData) {
+                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == datasourceId).findFirst().orElse(null);
+                if (dataSourceConVO != null) {
+                    id = dataSourceConVO.getId();
+                    result.put(datasourceId,id);
+                }
+            }
+        }
+        return result;
+    }
+
     /**
      * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO>
      * @description 查询缓存中FiData的表字段名称

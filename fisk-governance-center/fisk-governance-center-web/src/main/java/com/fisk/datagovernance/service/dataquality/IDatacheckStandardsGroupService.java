@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DatacheckStandardsGroupDTO;
 import com.fisk.datagovernance.entity.dataquality.DatacheckStandardsGroupPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DatacheckStandardsGroupVO;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
 
 import java.util.List;
 
@@ -47,5 +48,7 @@ public interface IDatacheckStandardsGroupService extends IService<DatacheckStand
      * @return
      */
     ResultEnum deleteDataCheckStandardsGroup(Integer id);
+
+    ResultEnum editDataCheckByStandards(StandardsDTO standardsDTO);
 }
 

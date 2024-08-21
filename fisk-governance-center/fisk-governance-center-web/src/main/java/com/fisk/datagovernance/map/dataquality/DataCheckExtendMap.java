@@ -2,6 +2,7 @@ package com.fisk.datagovernance.map.dataquality;
 
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckExtendDTO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckExtendPO;
+import com.fisk.datagovernance.util.TypeConversionUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -16,7 +17,7 @@ import java.util.List;
  * @description 数据校验扩展属性
  * @date 2022/4/2 11:18
  */
-@Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(uses ={TypeConversionUtils.class},nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DataCheckExtendMap {
 
     DataCheckExtendMap INSTANCES = Mappers.getMapper(DataCheckExtendMap.class);
@@ -37,4 +38,25 @@ public interface DataCheckExtendMap {
             @Mapping(source = "parentageCheckType.value", target = "parentageCheckType"),
     })
     DataCheckExtendPO dtoToPo(DataCheckExtendDTO dto);
+
+    @Mappings({
+            @Mapping(source = "rangeCheckType", target = "rangeCheckType"),
+            @Mapping(source = "standardCheckType", target = "standardCheckType"),
+            @Mapping(source = "rangeCheckValueRangeType", target = "rangeCheckValueRangeType"),
+            @Mapping(source = "rangeCheckKeywordIncludeType", target = "rangeCheckKeywordIncludeType"),
+            @Mapping(source = "standardCheckCharRangeType", target = "standardCheckCharRangeType"),
+            @Mapping(source = "fluctuateCheckType", target = "fluctuateCheckType"),
+            @Mapping(source = "parentageCheckType", target = "parentageCheckType"),
+    })
+    DataCheckExtendDTO poToDto(DataCheckExtendPO po);
+    @Mappings({
+            @Mapping(source = "rangeCheckType", target = "rangeCheckType"),
+            @Mapping(source = "standardCheckType", target = "standardCheckType"),
+            @Mapping(source = "rangeCheckValueRangeType", target = "rangeCheckValueRangeType"),
+            @Mapping(source = "rangeCheckKeywordIncludeType", target = "rangeCheckKeywordIncludeType"),
+            @Mapping(source = "standardCheckCharRangeType", target = "standardCheckCharRangeType"),
+            @Mapping(source = "fluctuateCheckType", target = "fluctuateCheckType"),
+            @Mapping(source = "parentageCheckType", target = "parentageCheckType"),
+    })
+    List<DataCheckExtendDTO> poListToDtoList(List<DataCheckExtendPO> po);
 }
