@@ -30,6 +30,7 @@ import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -135,6 +136,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -154,9 +156,13 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
                 return i;
             }).collect(Collectors.toList());
-            dataCheckList.forEach(dataCheckDTO -> {
-                dataCheckManageService.addData(dataCheckDTO);
-            });
+
+            for (DataCheckEditDTO dataCheckDTO : dataCheckList) {
+                ResultEnum ruleCheckResultEnum = dataCheckManageService.addData(dataCheckDTO);
+                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                    return ruleCheckResultEnum;
+                }
+            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -168,6 +174,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum editDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -205,17 +212,24 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             queryWrapper1.eq(DataCheckPO::getTemplateId, templateId);
             List<DataCheckPO> dataCheckPOS = dataCheckManageService.list(queryWrapper1);
             for (DataCheckPO dataCheckPO : dataCheckPOS) {
-                if (!dataCheckIds.contains((int)dataCheckPO.id)){
+                if (!dataCheckIds.contains((int) dataCheckPO.id)) {
                     dataCheckManageService.deleteData((int) dataCheckPO.id);
                 }
             }
-            dataCheckEditList.forEach(dataCheckDTO -> {
-                if (dataCheckDTO.getId() == 0){
-                    dataCheckManageService.addData(dataCheckDTO);
-                }else {
-                    dataCheckManageService.editData(dataCheckDTO);
+
+
+            for (DataCheckEditDTO dataCheckDTO : dataCheckEditList) {
+                ResultEnum ruleCheckResultEnum;
+                if (dataCheckDTO.getId() == 0) {
+                    ruleCheckResultEnum = dataCheckManageService.addData(dataCheckDTO);
+                } else {
+                    ruleCheckResultEnum = dataCheckManageService.editData(dataCheckDTO);
                 }
-            });
+                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                    return ruleCheckResultEnum;
+                }
+            }
+            ;
         }
         return ResultEnum.SUCCESS;
     }
@@ -247,7 +261,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(DatacheckStandardsGroupPO::getStandardsId, standardsDTO.getId());
         List<DatacheckStandardsGroupPO> group = this.list(queryWrapper);
-        if (CollectionUtils.isEmpty(group)){
+        if (CollectionUtils.isEmpty(group)) {
             return ResultEnum.SUCCESS;
         }
         List<Long> groupIds = group.stream().map(BasePO::getId).collect(Collectors.toList());
@@ -262,7 +276,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
         for (DatacheckStandardsGroupPO groupPO : group) {
             DatacheckStandardsGroupDTO dto = new DatacheckStandardsGroupDTO();
             List<DataCheckPO> dataCheckPOList = groupMap.get((int) groupPO.id);
-            dto.setId((int)groupPO.id);
+            dto.setId((int) groupPO.id);
             dto.setStandardsId(standardsDTO.getId());
             dto.setStandardsMenuId(standardsDTO.getMenuId());
             dto.setStandardsId(standardsDTO.getId());
@@ -278,7 +292,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 Integer dbId = idByDataSourceIds.get(standardsBeCitedDTO.getDbId());
                 DataCheckEditDTO checkEditDTO = new DataCheckEditDTO();
                 DataCheckPO dataCheckPO1 = dataCheckPOList.get(0);
-                checkEditDTO.setDatacheckGroupId((int)groupPO.id);
+                checkEditDTO.setDatacheckGroupId((int) groupPO.id);
                 checkEditDTO.setRuleCheckType(RuleCheckTypeEnum.getEnum(dataCheckPO1.getRuleCheckType()));
                 checkEditDTO.setDatasourceId(standardsBeCitedDTO.getDbId());
                 checkEditDTO.setRuleDescribe(dataCheckPO1.getRuleDescribe());
@@ -300,11 +314,11 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 checkEditDTO.setRuleExecuteSort(dataCheckPO1.getRuleExecuteSort());
                 for (DataCheckPO dataCheckPO : dataCheckPOList) {
                     if (dbId.equals(dataCheckPO.getDatasourceId())
-                            && standardsBeCitedDTO.getTableId().equals(dataCheckPO.getTableUnique())){
+                            && standardsBeCitedDTO.getTableId().equals(dataCheckPO.getTableUnique())) {
                         LambdaQueryWrapper<DataCheckExtendPO> query = new LambdaQueryWrapper<>();
                         query.eq(DataCheckExtendPO::getRuleId, dataCheckPO.getId());
                         DataCheckExtendPO dataCheckExtendPO = dataCheckExtendMapper.selectOne(query);
-                        if (standardsBeCitedDTO.getFieldId().equals(dataCheckExtendPO.fieldUnique)){
+                        if (standardsBeCitedDTO.getFieldId().equals(dataCheckExtendPO.fieldUnique)) {
                             checkEditDTO = DataCheckMap.INSTANCES.poToDto_Edit(dataCheckPO);
                         }
                     }
