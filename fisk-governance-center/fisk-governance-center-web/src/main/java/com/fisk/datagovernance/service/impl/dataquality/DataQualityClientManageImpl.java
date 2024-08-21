@@ -455,6 +455,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 添加规则检查结果到规则正文列表
             QualityReportSummary_BodyDTO qualityReportSummary_bodyDTO = new QualityReportSummary_BodyDTO();
             qualityReportSummary_bodyDTO.setRuleName(dataCheckLogsPO.getRuleName());
+            qualityReportSummary_bodyDTO.setRuleIllustrate(dataCheckLogsPO.getCheckRuleIllustrate());
             qualityReportSummary_bodyDTO.setCheckDataCount(Integer.valueOf(dataCheckLogsPO.getCheckTotalCount()));
             qualityReportSummary_bodyDTO.setDataAccuracy(dataCheckLogsPO.getCheckDataAccuracy());
             qualityReportSummary_bodyDTO.setCheckStatus(dataCheckLogsPO.getCheckResult());
@@ -526,24 +527,148 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (dataCheckExtendPO == null) {
                 continue;
             }
-            List<DataCheckExtendPO> dataCheckExtendPOs = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(dataCheckExtendPOs)) {
-                continue;
-            }
-
             //获取数据检查规则的检查条件
             List<DataCheckConditionPO> dataCheckConditionPOs = dataCheckConditionPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-
-            //当前校验规则对应的 数据校验模板 tb_template_config
+            //当前校验规则对应的 数据校验模板
             TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
             if (templatePO == null) {
                 continue;
             }
-
             //获取数据源
             DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
             if (dataSourceConVO == null) {
                 continue;
+            }
+
+            QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
+            ResultEntity<QualityReportSummary_RuleDTO> resultEntity = null;
+            try {
+                resultEntity = dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO, dataCheckExtendPO, templatePO, dataCheckConditionPOs);
+                // 单个规则校验不通过，跳过
+                if (resultEntity == null || resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    continue;
+                }
+                qualityReportSummary_ruleDTO = resultEntity.getData();
+            } catch (Exception ex) {
+                continue;
+            }
+
+            // 第五步：将检查不通过的数据写入Excel文件，如果检查出来的错误数据大于0条且不超过5000条，则写入Excel并记录附件信息
+            SheetDataDto sheetDataDto = qualityReportSummary_ruleDTO.getSheetData();
+            List<List<String>> columnData = null;
+            if (sheetDataDto != null) {
+                columnData = sheetDataDto.getColumnData();
+                if (CollectionUtils.isNotEmpty(columnData) && columnData.size() > 0 && columnData.size() <= 5000) {
+                    // 生成附件记录
+                    AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+                    attachmentInfoPO.setOriginalName(dataCheckPO.getRuleName() + ".xlsx");
+                    String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+                    attachmentInfoPO.setCurrentFileName(currentFileName);
+                    attachmentInfoPO.setExtensionName(".xlsx");
+                    // 绝对路径，例如：/root/nginx/app/file/qualityreport/rulereport/20240719
+                    String absolutePath = uploadUrl + "rulereport/" + DateTimeUtils.getNowToShortDate_v1() + "/";
+                    isExistsCreateDirectory(absolutePath);
+                    attachmentInfoPO.setAbsolutePath(absolutePath);
+                    attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue());
+                    attachmentInfoPO.setObjectId(dataCheckLogs_Uuid);
+                    attachmentInfos.add(attachmentInfoPO);
+
+                    // 生成Excel文件
+                    ExcelDto excelDto = new ExcelDto();
+                    excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
+                    List<SheetDto> sheets = new ArrayList<>();
+                    SheetDto sheet = new SheetDto();
+                    sheet.setSheetName(dataCheckPO.getRuleName());
+                    List<RowDto> singRows = dataCheck_QualityReport_GetRuleSingRows(qualityReportSummary_ruleDTO);
+                    sheet.setSingRows(singRows);
+                    // 检查的字段，会加黄色的底色
+                    sheet.setSingFields(Arrays.asList(dataCheckExtendPO.getFieldName().split(",")));
+                    // 检查不通过的数据
+                    sheet.setDataRows(sheetDataDto.getColumnData());
+                    sheets.add(sheet);
+                    excelDto.setSheets(sheets);
+                    ExcelReportUtil.createExcel(excelDto, absolutePath, currentFileName, true);
+                }
+            }
+
+            //规则检查结束计时
+            String checkDataEndTime = DateTimeUtils.getNow();
+            // 第六步：生成规则的检查日志
+            DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
+            dataCheckLogsPO.setIdUuid(dataCheckLogs_Uuid);
+            dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
+            dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
+            dataCheckLogsPO.setCheckTemplateName(qualityReportSummary_ruleDTO.getRuleTemplate());
+            dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+            dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.SUBSCRIPTION_REPORT_RULE_CHECK_LOG.getValue());
+            dataCheckLogsPO.setSchemaName(dataCheckPO.getSchemaName());
+            dataCheckLogsPO.setTableName(dataCheckPO.getTableName());
+            dataCheckLogsPO.setFieldName(dataCheckExtendPO.getFieldName());
+            dataCheckLogsPO.setCheckBatchNumber(reportBatchNumber);
+            dataCheckLogsPO.setCheckSmallBatchNumber(reportBatchNumber);
+            dataCheckLogsPO.setCheckTotalCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckDataCount()));
+            dataCheckLogsPO.setCheckFailCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckErrorDataCount()));
+            dataCheckLogsPO.setCheckResult(qualityReportSummary_ruleDTO.getCheckStatus());
+            dataCheckLogsPO.setCheckMsg("");
+            dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
+            dataCheckLogsPO.setErrorData("");
+            dataCheckLogsPO.setCheckDataAccuracy(qualityReportSummary_ruleDTO.getDataAccuracy());
+            dataCheckLogsPO.setCheckDataStartTime(checkDataStartTime);
+            dataCheckLogsPO.setCheckDataEndTime(checkDataEndTime);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime startDate = LocalDateTime.parse(checkDataStartTime, formatter);
+            LocalDateTime endDate = LocalDateTime.parse(checkDataEndTime, formatter);
+            Duration duration = Duration.between(startDate, endDate);
+            dataCheckLogsPO.setCheckDataDuration(String.valueOf(duration.getSeconds()));
+            dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
+            dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
+            dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
+            dataCheckLogs.add(dataCheckLogsPO);
+
+            // 第七步：释放集合对象
+            columnData = null;
+            sheetDataDto = null;
+            qualityReportSummary_ruleDTO = null;
+        }
+
+        // 报告下规则数量与检查规则日志数量不一致时，检查不通过
+        if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
+            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
+            List<Integer> diff = new ArrayList<>(ruleIdList);
+            diff.removeAll(ruleIdList_log);
+            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
+            return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEntity<QualityReportSummary_RuleDTO> dataVerificationAndPreVerification(DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                                                         DataCheckExtendPO dataCheckExtendPO, TemplatePO templatePO,
+                                                                                         List<DataCheckConditionPO> dataCheckConditionPOs) {
+        ResultEntity<QualityReportSummary_RuleDTO> resultEntity = new ResultEntity<>();
+        resultEntity.setCode(ResultEnum.SUCCESS.getCode());
+        try {
+            //当前校验规则
+            if (dataCheckPO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_RULE_CONFIG_ISNULL.getCode());
+                return resultEntity;
+            }
+            //当前校验规则扩展属性
+            if (dataCheckPO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_RULE_CONFIG_ISNULL.getCode());
+                return resultEntity;
+            }
+            //当前校验规则对应的 数据校验模板
+            if (templatePO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_TEMPLATE_DOES_NOT_EXIST.getCode());
+                return resultEntity;
+            }
+            //当前校验规则对应的 数据源
+            if (dataSourceConVO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_DATA_SOURCE_DOES_NOT_EXIST.getCode());
+                return resultEntity;
             }
 
             // 获取表和字段信息，将其进行转义处理
@@ -586,107 +711,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_paramDTO.setAllocateFieldNames(allocateFieldNames);
             qualityReportSummary_paramDTO.setAllocateFieldNamesFormat(allocateFieldNamesFormat);
             qualityReportSummary_paramDTO.setFieldCheckWhereSql(fieldCheckWhereSql);
-            qualityReportSummary_paramDTO.setReportBatchNumber(reportBatchNumber);
-            log.info("【dataCheck_QualityReport_Create】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
+            log.info("【dataVerificationAndPreVerification】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
 
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
-            try {
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
-            } catch (Exception ex) {
-                log.error("【dataCheck_QualityReport_Check】质量报告检查时出现异常：" + ex);
-                log.error(String.format("【dataCheck_QualityReport_Check】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
-                continue;
-            }
-
-            // 第五步：将检查不通过的数据写入Excel文件，如果检查出来的错误数据大于0条且不超过5000条，则写入Excel并记录附件信息
-            SheetDataDto sheetDataDto = qualityReportSummary_ruleDTO.getSheetData();
-            List<List<String>> columnData = null;
-            if (sheetDataDto != null) {
-                columnData = sheetDataDto.getColumnData();
-                if (CollectionUtils.isNotEmpty(columnData) && columnData.size() > 0 && columnData.size() <= 5000) {
-                    // 生成附件记录
-                    AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
-                    attachmentInfoPO.setOriginalName(dataCheckPO.getRuleName() + ".xlsx");
-                    String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
-                    attachmentInfoPO.setCurrentFileName(currentFileName);
-                    attachmentInfoPO.setExtensionName(".xlsx");
-                    // 绝对路径，例如：/root/nginx/app/file/qualityreport/rulereport/20240719
-                    String absolutePath = uploadUrl + "rulereport/" + DateTimeUtils.getNowToShortDate_v1() + "/";
-                    isExistsCreateDirectory(absolutePath);
-                    attachmentInfoPO.setAbsolutePath(absolutePath);
-                    attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue());
-                    attachmentInfoPO.setObjectId(dataCheckLogs_Uuid);
-                    attachmentInfos.add(attachmentInfoPO);
-
-                    // 生成Excel文件
-                    ExcelDto excelDto = new ExcelDto();
-                    excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
-                    List<SheetDto> sheets = new ArrayList<>();
-                    SheetDto sheet = new SheetDto();
-                    sheet.setSheetName(dataCheckPO.getRuleName());
-                    List<RowDto> singRows = dataCheck_QualityReport_GetRuleSingRows(qualityReportSummary_ruleDTO);
-                    sheet.setSingRows(singRows);
-                    // 检查的字段，会加黄色的底色
-                    sheet.setSingFields(Arrays.asList(fieldName.split(",")));
-                    // 检查不通过的数据
-                    sheet.setDataRows(sheetDataDto.getColumnData());
-                    sheets.add(sheet);
-                    excelDto.setSheets(sheets);
-                    ExcelReportUtil.createExcel(excelDto, absolutePath, currentFileName, true);
-                }
-            }
-
-            //规则检查结束计时
-            String checkDataEndTime = DateTimeUtils.getNow();
-            // 第六步：生成规则的检查日志
-            DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
-            dataCheckLogsPO.setIdUuid(dataCheckLogs_Uuid);
-            dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-            dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
-            dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
-            dataCheckLogsPO.setCheckTemplateName(qualityReportSummary_ruleDTO.getRuleTemplate());
-            dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
-            dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.SUBSCRIPTION_REPORT_RULE_CHECK_LOG.getValue());
-            dataCheckLogsPO.setSchemaName(dataCheckPO.getSchemaName());
-            dataCheckLogsPO.setTableName(dataCheckPO.getTableName());
-            dataCheckLogsPO.setFieldName(dataCheckExtendPO.getFieldName());
-            dataCheckLogsPO.setCheckBatchNumber(qualityReportSummary_paramDTO.getReportBatchNumber());
-            dataCheckLogsPO.setCheckSmallBatchNumber(qualityReportSummary_paramDTO.getReportBatchNumber());
-            dataCheckLogsPO.setCheckTotalCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckDataCount()));
-            dataCheckLogsPO.setCheckFailCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckErrorDataCount()));
-            dataCheckLogsPO.setCheckResult(qualityReportSummary_ruleDTO.getCheckStatus());
-            dataCheckLogsPO.setCheckMsg("");
-            dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
-            dataCheckLogsPO.setErrorData("");
-            dataCheckLogsPO.setCheckDataAccuracy(qualityReportSummary_ruleDTO.getDataAccuracy());
-            dataCheckLogsPO.setCheckDataStartTime(checkDataStartTime);
-            dataCheckLogsPO.setCheckDataEndTime(checkDataEndTime);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            LocalDateTime startDate = LocalDateTime.parse(checkDataStartTime, formatter);
-            LocalDateTime endDate = LocalDateTime.parse(checkDataEndTime, formatter);
-            Duration duration = Duration.between(startDate, endDate);
-            dataCheckLogsPO.setCheckDataDuration(String.valueOf(duration.getSeconds()));
-            dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
-            dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
-            dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
-            dataCheckLogs.add(dataCheckLogsPO);
-
-            // 第七步：释放集合对象
-            columnData = null;
-            sheetDataDto = null;
-            qualityReportSummary_ruleDTO = null;
+            qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+            resultEntity.setData(qualityReportSummary_ruleDTO);
+        } catch (Exception ex) {
+            log.error("【dataVerificationAndPreVerification】质量报告检查时出现异常：" + ex);
+            log.error(String.format("【dataVerificationAndPreVerification】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
+            resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_NOT_APPROVED.getCode());
+            resultEntity.setMsg(ex.getMessage());
         }
-
-        // 报告下规则数量与检查规则日志数量不一致时，检查不通过
-        if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
-            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
-            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
-            List<Integer> diff = new ArrayList<>(ruleIdList);
-            diff.removeAll(ruleIdList_log);
-            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
-            return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
-        }
-        return ResultEnum.SUCCESS;
+        return resultEntity;
     }
 
     public QualityReportSummary_RuleDTO dataCheck_QualityReport_Check(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,

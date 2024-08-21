@@ -22,6 +22,7 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DatacheckStandardsGroupVO;
 import com.fisk.datamanage.client.DataManageClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
@@ -125,6 +126,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum addDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -144,9 +146,13 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
                 return i;
             }).collect(Collectors.toList());
-            dataCheckList.forEach(dataCheckDTO -> {
-                dataCheckManageService.addData(dataCheckDTO);
-            });
+
+            for (DataCheckEditDTO dataCheckDTO : dataCheckList) {
+                ResultEnum ruleCheckResultEnum = dataCheckManageService.addData(dataCheckDTO);
+                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                    return ruleCheckResultEnum;
+                }
+            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -158,6 +164,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum editDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -187,9 +194,13 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 }
                 return i;
             }).collect(Collectors.toList());
-            dataCheckEditList.forEach(dataCheckDTO -> {
-                dataCheckManageService.editData(dataCheckDTO);
-            });
+
+            for (DataCheckEditDTO dataCheckDTO : dataCheckEditList) {
+                ResultEnum ruleCheckResultEnum = dataCheckManageService.editData(dataCheckDTO);
+                if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                    return ruleCheckResultEnum;
+                }
+            }
         }
         return ResultEnum.SUCCESS;
     }
@@ -201,6 +212,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      * @return
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultEnum deleteDataCheckStandardsGroup(Integer id) {
         this.removeById(id);
         LambdaQueryWrapper<DataCheckPO> queryWrapper = new LambdaQueryWrapper<>();

@@ -31,6 +31,7 @@ import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
+import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportSummary_RuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -106,6 +107,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     private DatacheckCodeService datacheckCodeService;
+
+    @Resource
+    private DataQualityClientManageImpl dataQualityClientManage;
 
     @Resource
     private DataCheckLogsManageImpl dataCheckLogsManage;
@@ -469,12 +473,30 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
             return ResultEnum.DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS;
         }
+
         //第二步：转换DTO对象为PO对象
         DataCheckPO dataCheckPO = DataCheckMap.INSTANCES.dtoToPo(dto);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
-        //第三步：保存数据校验
+        DataCheckExtendPO dataCheckExtendPO = null;
+        if (dto.getDataCheckExtend() != null) {
+            dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+        }
+        List<DataCheckConditionPO> dataCheckExtendPOs = null;
+        if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
+            dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
+        }
+
+        //第三步：验证配置的校验规则（同步后）是否能正常运行
+        if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
+            ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+            if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                return ruleCheckResultEnum;
+            }
+        }
+
+        //第四步：保存数据校验
         UserInfo loginUserInfo = userHelper.getLoginUserInfo();
         dataCheckPO.setCreateTime(LocalDateTime.now());
         dataCheckPO.setCreateUser(String.valueOf(loginUserInfo.getId()));
@@ -482,21 +504,17 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第四步：保存数据校验扩展属性
-        if (dto.getDataCheckExtend() != null) {
-            DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+        //第五步：保存数据校验扩展属性
+        if (dataCheckExtendPO != null) {
             dataCheckExtendPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
             dataCheckExtendMapper.insert(dataCheckExtendPO);
         }
-        //第五步：保存数据校验的检查条件
-        if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
-            List<DataCheckConditionPO> dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
-            if (CollectionUtils.isNotEmpty(dataCheckExtendPOs)) {
-                dataCheckExtendPOs.forEach(t -> {
-                    t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-                });
-                dataCheckConditionManageImpl.saveBatch(dataCheckExtendPOs);
-            }
+        //第六步：保存数据校验的检查条件
+        if (CollectionUtils.isNotEmpty(dataCheckExtendPOs)) {
+            dataCheckExtendPOs.forEach(t -> {
+                t.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            });
+            dataCheckConditionManageImpl.saveBatch(dataCheckExtendPOs);
         }
         return ResultEnum.SUCCESS;
     }
@@ -521,34 +539,66 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (CollectionUtils.isNotEmpty(dataCheckPOList)) {
             return ResultEnum.DATA_QUALITY_CHECK_CODE_ALREADY_EXISTS;
         }
+
         //第二步：转换DTO对象为PO对象
         dataCheckPO = DataCheckMap.INSTANCES.dtoToPo_Edit(dto);
         if (dataCheckPO == null) {
             return ResultEnum.SAVE_VERIFY_ERROR;
         }
-        //第三步：保存数据校验信息
+        DataCheckExtendPO dataCheckExtendPO = null;
+        if (dto.getDataCheckExtend() != null) {
+            dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+        }
+        List<DataCheckConditionPO> dataCheckExtendPOs = null;
+        if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
+            dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
+        }
+
+        //第三步：验证配置的校验规则（同步后）是否能正常运行
+        if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
+            ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+            if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                return ruleCheckResultEnum;
+            }
+        }
+
+        //第四步：保存数据校验信息
         int i = baseMapper.updateById(dataCheckPO);
         if (i <= 0) {
             return ResultEnum.SAVE_DATA_ERROR;
         }
-        //第四步：保存数据校验扩展属性
-        if (dto.getDataCheckExtend() != null) {
-            DataCheckExtendPO dataCheckExtendPO = DataCheckExtendMap.INSTANCES.dtoToPo(dto.getDataCheckExtend());
+        //第五步：保存数据校验扩展属性
+        if (dataCheckExtendPO != null) {
             dataCheckExtendPO.setRuleId(dto.getId());
             dataCheckExtendMapper.updateById(dataCheckExtendPO);
         }
-        //第五步：保存数据校验的检查条件
+        //第六步：保存数据校验的检查条件
         dataCheckConditionMapper.updateByRuleId(dto.getId());
-        if (CollectionUtils.isNotEmpty(dto.getDataCheckCondition())) {
-            List<DataCheckConditionPO> dataCheckExtendPOs = DataCheckConditionMap.INSTANCES.dtoListToPoList(dto.getDataCheckCondition());
-            if (CollectionUtils.isNotEmpty(dataCheckExtendPOs)) {
-                dataCheckExtendPOs.forEach(t -> {
-                    t.setRuleId(Math.toIntExact(dto.getId()));
-                });
-                dataCheckConditionManageImpl.saveBatch(dataCheckExtendPOs);
-            }
+        if (CollectionUtils.isNotEmpty(dataCheckExtendPOs)) {
+            dataCheckExtendPOs.forEach(t -> {
+                t.setRuleId(Math.toIntExact(dto.getId()));
+            });
+            dataCheckConditionManageImpl.saveBatch(dataCheckExtendPOs);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    public ResultEnum rulePreVerification(DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO,
+                                          TemplatePO templatePO, List<DataCheckConditionPO> dataCheckConditionPOs) {
+        //获取数据源
+        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+        if (CollectionUtils.isEmpty(allDataSource)) {
+            return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+        }
+        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+        if (dataSourceConVO == null) {
+            return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+        }
+
+        ResultEntity<QualityReportSummary_RuleDTO> resultEntity = dataQualityClientManage.dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
+                dataCheckExtendPO, templatePO, dataCheckConditionPOs);
+
+        return ResultEnum.getEnum(resultEntity.getCode());
     }
 
     @Override
