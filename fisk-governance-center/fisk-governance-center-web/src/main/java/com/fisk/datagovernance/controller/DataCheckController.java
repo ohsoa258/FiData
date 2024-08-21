@@ -15,6 +15,7 @@ import com.fisk.datagovernance.service.dataquality.DatacheckCodeService;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.*;
+import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -168,5 +169,11 @@ public class DataCheckController {
     @GetMapping("/getDataCheckRoleTotal")
     public ResultEntity<Object> getDataCheckRoleTotal() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckRoleTotal());
+    }
+
+    @ApiOperation("修改数据校验数据元标准组(数据元更新同步)")
+    @PostMapping("/editDataCheckByStandards")
+    public ResultEntity<Object> editDataCheckByStandards(@RequestBody StandardsDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.editDataCheckByStandards(dto));
     }
 }
