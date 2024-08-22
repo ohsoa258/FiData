@@ -20,12 +20,20 @@ import java.util.List;
 public interface MetadataEntityMapper extends FKBaseMapper<MetadataEntityPO> {
 
     /**
-     * 获取实体集合
+     * 获取实体集合 不包含字段
      *
      * @param type
      * @return
      */
     List<MetadataEntityPO> selectMetadataEntity(@Param("type") Integer type);
+
+    /**
+     * 获取实体集合 不包含字段
+     *
+     * @param id
+     * @return
+     */
+    List<MetadataEntityPO> getColumnMetadataEntities(@Param("id") Integer id);
 
     /**
      * 获取实体集合

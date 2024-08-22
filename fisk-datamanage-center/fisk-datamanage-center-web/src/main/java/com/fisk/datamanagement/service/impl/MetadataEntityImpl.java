@@ -438,7 +438,7 @@ public class MetadataEntityImpl
 
     public List<EntityTreeDTO> getMetadataEntityTree() {
         List<EntityTreeDTO> list = new ArrayList<>();
-        //获取所有实体
+        //获取所有实体 不包含字段
         List<MetadataEntityPO> poList = metadataEntityMapper.selectMetadataEntity(EntityTypeEnum.PROCESS.getValue());
         if (CollectionUtils.isEmpty(poList)) {
             return list;

@@ -47,6 +47,14 @@ public class GetMetadata {
         } catch (ClassNotFoundException | SQLException e) {
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
+
+        //过滤字段加入部门/业态
+        FilterFieldDTO model = new FilterFieldDTO();
+        model.setColumnName("`department_name`");
+        model.setColumnDes("部门/业态");
+        model.setColumnType("varchar");
+        list.add(model);
+
         return list;
     }
 }

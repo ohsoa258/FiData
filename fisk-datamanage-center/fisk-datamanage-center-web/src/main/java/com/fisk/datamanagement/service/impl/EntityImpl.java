@@ -18,8 +18,10 @@ import com.fisk.datamanagement.dto.metadatalabelmap.MetadataLabelMapParameter;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamanagement.dto.search.SearchBusinessGlossaryEntityDTO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.enums.AtlasResultEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
+import com.fisk.datamanagement.mapper.MetadataEntityMapper;
 import com.fisk.datamanagement.service.IEntity;
 import com.fisk.datamanagement.utils.atlas.AtlasClient;
 import com.fisk.datamanagement.vo.ResultDataDTO;
@@ -79,6 +81,9 @@ public class EntityImpl implements IEntity {
     @Resource
     private DataModelClient dataModelClient;
 
+    @Resource
+    MetadataEntityMapper metadataEntityMapper;
+
     @Override
     public List<EntityTreeDTO> getEntityTreeList() {
         List<EntityTreeDTO> list;
@@ -90,6 +95,30 @@ public class EntityImpl implements IEntity {
         }
         list = getEntityList();
         return list;
+    }
+
+    /**
+     * 获取元数据表节点下的字段  只有表节点才能使用此接口!
+     *
+     * @param entityId
+     * @return
+     */
+    @Override
+    public List<EntityTreeDTO> getEntityListOfTable(Integer entityId) {
+        List<MetadataEntityPO> poList = metadataEntityMapper.getColumnMetadataEntities(entityId);
+        List<EntityTreeDTO> dtos = new ArrayList<>();
+        for (MetadataEntityPO po : poList) {
+            EntityTreeDTO dto = new EntityTreeDTO();
+            dto.setId(String.valueOf(po.getId()));
+            dto.setLabel(po.getName());
+            String typeName = EntityTypeEnum.getValue(po.typeId).getName();
+            dto.setType(typeName);
+            dto.setParentId(String.valueOf(po.getParentId()));
+            dto.setDisplayName(po.getDisplayName());
+            dto.setQualifiedName(po.getQualifiedName());
+            dtos.add(dto);
+        }
+        return dtos;
     }
 
     /**
@@ -304,17 +333,17 @@ public class EntityImpl implements IEntity {
     /**
      * 元数据地图根据应用id或业务过程id获取表 0数据湖 1数仓
      *
-     * @param type 0数据湖 1数仓
+     * @param type  0数据湖 1数仓
      * @param appId 应用id/业务过程id
      * @return
      */
     @Override
-    public List<MetaMapTblDTO> getMetaMapTableDetailByType(Integer type, Integer appId,Integer businessType) {
+    public List<MetaMapTblDTO> getMetaMapTableDetailByType(Integer type, Integer appId, Integer businessType) {
         //0数据湖 1数仓
         if (type == 0) {
             return dataAccessClient.accessGetMetaMapTableDetail(appId);
         } else if (type == 1) {
-            return dataModelClient.modelGetMetaMapTableDetail(appId,businessType);
+            return dataModelClient.modelGetMetaMapTableDetail(appId, businessType);
         } else {
             return null;
         }

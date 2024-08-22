@@ -6,7 +6,15 @@
     <select id="selectMetadataEntity" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
         SELECT *
         FROM tb_metadata_entity
-        WHERE type_id != #{type}
+        WHERE type_id != #{type} and type_id !=6
+          and del_flag=1
+        ORDER BY name
+    </select>
+
+    <select id="getColumnMetadataEntities" resultType="com.fisk.datamanagement.entity.MetadataEntityPO">
+        SELECT *
+        FROM tb_metadata_entity
+        WHERE parent_id = #{id} and type_id =6
           and del_flag=1
         ORDER BY name
     </select>

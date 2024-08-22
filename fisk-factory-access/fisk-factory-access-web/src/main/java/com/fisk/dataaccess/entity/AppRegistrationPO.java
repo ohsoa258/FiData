@@ -34,7 +34,7 @@ public class AppRegistrationPO extends BasePO {
     public String appDes;
 
     /**
-     * 应用类型: 0: 实时应用   1: 非实时应用
+     * 应用类型: 0: 实时应用   1: 非实时应用  2:CDC接入  3:JDBC接入
      */
     public int appType;
 
@@ -61,7 +61,7 @@ public class AppRegistrationPO extends BasePO {
     public Integer targetDbId;
 
     /**
-     * 部门名称(浦东应急局专供)
+     * 部门/业态
      */
     public String departmentName;
 

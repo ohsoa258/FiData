@@ -197,9 +197,21 @@ public class AppRegistrationController {
     }
 
     @PostMapping("/pageFilter")
-    @ApiOperation(value = "筛选器")
+    @ApiOperation(value = "应用筛选器 不包含doris外部目录应用")
     public ResultEntity<Page<AppRegistrationVO>> listData(@RequestBody AppRegistrationQueryDTO query) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.listData(query));
+    }
+
+    /**
+     * 应用筛选器 包含doris外部目录应用
+     *
+     * @param query
+     * @return
+     */
+    @PostMapping("/getDorisCatalogs")
+    @ApiOperation(value = "应用筛选器 只包含doris外部目录应用")
+    public ResultEntity<Page<AppRegistrationVO>> getDorisCatalogs(@RequestBody AppRegistrationQueryDTO query) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDorisCatalogs(query));
     }
 
     @GetMapping("/getColumn")

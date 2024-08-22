@@ -719,7 +719,7 @@ public class EntityServiceImpl implements EntityService {
                 tableAttributeDTO.setComment(String.valueOf(model.getId()));
                 tableAttributeDTO.setAppName(model.getDisplayName());
                 tableAttributeDTO.setAppId((int) model.getId());
-                tableAttributeDTO.setOwner(entity.createUser);
+                tableAttributeDTO.setOwner(model.createUser);
                 tableAttributeDTO.setIsExistClassification(true);
                 tableAttributeDTO.setIsExistStg(true);
                 tableAttributeDTO.setWhetherSchema(false);
@@ -740,7 +740,7 @@ public class EntityServiceImpl implements EntityService {
                     metaDataColumnAttributeDTO.setDisplayName(attribute.getDisplayName());
                     metaDataColumnAttributeDTO.setDataType(attribute.getDataType().getName());
                     metaDataColumnAttributeDTO.setLength(String.valueOf(attribute.getDataTypeLength()));
-                    metaDataColumnAttributeDTO.setOwner(entity.createUser);
+                    metaDataColumnAttributeDTO.setOwner(attribute.createUser);
                     metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
 
                 }

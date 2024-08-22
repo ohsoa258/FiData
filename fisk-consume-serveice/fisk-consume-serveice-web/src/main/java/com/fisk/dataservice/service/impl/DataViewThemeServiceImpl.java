@@ -747,7 +747,7 @@ public class DataViewThemeServiceImpl
                     metaDataColumnAttributeDTO.setDisplayName(fieldConfigVO.getFieldName());
                     metaDataColumnAttributeDTO.setDescription(fieldConfigVO.getFieldDesc());
                     metaDataColumnAttributeDTO.setQualifiedName(metaDataEntityDTO.getQualifiedName() + "_" + fieldConfigVO.getId());
-                    metaDataColumnAttributeDTO.setOwner(dataViewThemePO.getThemePrincipal());
+                    metaDataColumnAttributeDTO.setOwner(fieldConfigVO.getCreateUser());
                     metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
                 }
                 metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);
@@ -813,7 +813,7 @@ public class DataViewThemeServiceImpl
         metaDataEntityDTO.setCreateSql(dataViewPO.getViewScript());
         metaDataEntityDTO.setDatasourceDbId(dataViewThemePO.getTargetDbId());
         metaDataEntityDTO.setEntityType(13);
-        metaDataEntityDTO.setOwner(dataViewThemePO.getThemePrincipal());
+        metaDataEntityDTO.setOwner(dataViewPO.getCreateUser());
         metaDataEntityDTO.setAppName(dataViewThemePO.getThemeName());
         return metaDataEntityDTO;
     }

@@ -24,6 +24,14 @@ public interface IEntity {
     List<EntityTreeDTO> getEntityTreeList();
 
     /**
+     * 获取元数据表节点下的字段  只有表节点才能使用此接口!
+     *
+     * @param entityId
+     * @return
+     */
+    List<EntityTreeDTO> getEntityListOfTable(Integer entityId);
+
+    /**
      * 为即席查询获取元数据对象树形列表（ods dw mdm）
      * @return
      */

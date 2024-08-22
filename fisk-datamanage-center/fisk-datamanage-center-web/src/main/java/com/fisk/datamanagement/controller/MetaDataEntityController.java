@@ -40,6 +40,18 @@ public class MetaDataEntityController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityTreeList());
     }
 
+    /**
+     * 获取元数据表节点下的字段  只有表节点才能使用此接口！
+     *
+     * @param entityId
+     * @return
+     */
+    @ApiOperation("获取元数据表节点下的字段  只有表节点才能使用此接口!")
+    @GetMapping("/getEntityListOfTable")
+    public ResultEntity<Object> getEntityListOfTable(Integer entityId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getEntityListOfTable(entityId));
+    }
+
     @ApiOperation("刷新元数据对象树形列表")
     @GetMapping("/refreshEntityTreeList")
     public void refreshEntityTreeList() {

@@ -2465,12 +2465,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return updateById ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
+    /**
+     * 应用筛选器 不包含doris外部目录应用
+     *
+     * @param query 查询条件
+     * @return
+     */
     @Override
     public Page<AppRegistrationVO> listData(AppRegistrationQueryDTO query) {
 
         StringBuilder querySql = new StringBuilder();
         if (query.key != null && query.key.length() > 0) {
-            querySql.append(" and app_name like concat('%', " + "'" + query.key + "'" + ", '%') ");
+            querySql.append(" and app_name like concat('%', " + "'")
+                    .append(query.key)
+                    .append("'")
+                    .append(", '%') ");
         }
 
         // 拼接原生筛选条件
@@ -2523,8 +2532,84 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 }
             }
 
+            //排除doris_catalog 类型的doris外部目录应用
+            List<AppRegistrationVO> collect = appRegistrationVOList.stream()
+                    .filter(appRegistrationVO -> !appRegistrationVO.getDriveType().equals(DataSourceTypeEnum.DORIS_CATALOG.getName())).collect(Collectors.toList());
+            filter.setRecords(collect);
+        }
+        return filter;
+    }
 
-            filter.setRecords(appRegistrationVOList);
+    /**
+     * 应用筛选器 包含doris外部目录应用
+     *
+     * @param query
+     * @return
+     */
+    public Page<AppRegistrationVO> getDorisCatalogs(AppRegistrationQueryDTO query) {
+
+        StringBuilder querySql = new StringBuilder();
+        if (query.key != null && query.key.length() > 0) {
+            querySql.append(" and app_name like concat('%', " + "'")
+                    .append(query.key)
+                    .append("'")
+                    .append(", '%') ");
+        }
+
+        // 拼接原生筛选条件
+        querySql.append(generateCondition.getCondition(query.dto));
+        AppRegistrationPageDTO data = new AppRegistrationPageDTO();
+        data.page = query.page;
+        // 筛选器左边的模糊搜索查询SQL拼接
+        data.where = querySql.toString();
+        Page<AppRegistrationVO> filter = baseMapper.filter(query.page, data);
+        // 查询驱动类型
+        List<AppRegistrationVO> appRegistrationVOList = filter.getRecords();
+        if (!CollectionUtils.isEmpty(appRegistrationVOList)) {
+            List<Long> appIds = appRegistrationVOList.stream().map(AppRegistrationVO::getId).collect(Collectors.toList());
+            QueryWrapper<AppDataSourcePO> qw = new QueryWrapper<>();
+            qw.in("app_id", appIds);
+            List<AppDataSourcePO> driveTypePOList = appDataSourceMapper.selectList(qw);
+            if (driveTypePOList != null) {
+                for (AppRegistrationVO item : appRegistrationVOList) {
+                    AppDataSourcePO po = driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null);
+                    String driveType = Objects.requireNonNull(po).getDriveType();
+                    log.info("应用驱动类型：" + driveType);
+                    item.setDriveType(driveType);
+                    //数据库连接账号
+                    item.setDbAccount(po.getConnectAccount());
+                    //数据库连接字符串
+                    item.setConStr(po.getConnectStr());
+
+                    //实时和非实时计数方式不同
+                    if (item.appType == 0) {
+                        if (DbTypeEnum.doris_catalog.getName().equalsIgnoreCase(driveType)) {
+                            item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
+                            continue;
+                        }
+                        item.setTblCount(apiConfigImpl.countTblByAppForApi((int) item.id));
+                    } else {
+                        item.setTblCount(tableAccessImpl.countTblByApp((int) item.id));
+                    }
+                }
+            }
+
+            // 新增 获取应用下的表的最近同步时间
+            if (redisUtil.hasKey(accessAppLatestSyncTimeS1)) {
+                List<AppRegistrationVO> vos = JSON.parseArray(redisUtil.get(accessAppLatestSyncTimeS1).toString(), AppRegistrationVO.class);
+                for (AppRegistrationVO appRegistrationVO : appRegistrationVOList) {
+                    for (AppRegistrationVO vo : vos) {
+                        if (appRegistrationVO.getId() == vo.getId()) {
+                            appRegistrationVO.setLastSyncTime(vo.getLastSyncTime());
+                        }
+                    }
+                }
+            }
+
+            //只保留doris_catalog类型的 doris外部目录应用
+            List<AppRegistrationVO> collect = appRegistrationVOList.stream()
+                    .filter(appRegistrationVO -> appRegistrationVO.getDriveType().equals(DataSourceTypeEnum.DORIS_CATALOG.getName())).collect(Collectors.toList());
+            filter.setRecords(collect);
         }
         return filter;
     }
@@ -4498,8 +4583,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
-        //cdc类型应用， 表名称为原名称
-        if (app.appType == 2) {
+        //cdc类型应用/jdbc类型应用， 表名称为原名称
+        if (app.appType == 2|| app.appType == 3) {
 //            String[] tableNames = tableAccess.getDisplayName().split("\\.");
 
             table.setName(tableAccess.getTableName());
@@ -4542,7 +4627,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             return field;
         }).collect(Collectors.toList());
 
-        if (app.appType == 2) {
+        if (app.appType == 2 || app.appType == 3) {
             if (!CollectionUtils.isEmpty(tableFieldsPOS)) {
                 String sourceTblName = tableFieldsPOS.get(0).sourceTblName;
                 if (!StringUtils.isEmpty(sourceTblName)) {

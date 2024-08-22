@@ -616,7 +616,7 @@ public class TableAppManageImpl
         metaDataEntityDTO.setTargetDbId(tableServicePO.getTargetDbId());
         metaDataEntityDTO.setTableName(tableServicePO.getTargetTable());
         metaDataEntityDTO.setEntityType(14);
-        metaDataEntityDTO.setOwner(tableAppPO.getAppPrincipal());
+        metaDataEntityDTO.setOwner(tableServicePO.getCreateUser());
         metaDataEntityDTO.setAppName(tableAppPO.getAppName());
         //获取表下的字段
         LambdaQueryWrapper<TableFieldPO> tableFieldPOLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -632,7 +632,7 @@ public class TableAppManageImpl
             metaDataColumnAttributeDTO.setDataType(tableFieldPO.getFieldType());
             metaDataColumnAttributeDTO.setLength(tableFieldPO.getFieldType());
             metaDataColumnAttributeDTO.setQualifiedName(String.valueOf(tableFieldPO.getId()));
-            metaDataColumnAttributeDTO.setOwner(tableAppPO.getAppPrincipal());
+            metaDataColumnAttributeDTO.setOwner(tableFieldPO.getCreateUser());
             metaDataColumnAttributeDTOList.add(metaDataColumnAttributeDTO);
         }
         metaDataEntityDTO.setAttributeDTOList(metaDataColumnAttributeDTOList);

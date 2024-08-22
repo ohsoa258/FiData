@@ -146,12 +146,20 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
     ResultEnum addAtlasInstanceIdAndDbId(long appid, String atlasInstanceId, String atlasDbId);
 
     /**
-     * 过滤器
+     * 应用筛选器 不包含doris外部目录应用
      *
      * @param query 查询条件
      * @return 过滤结果
      */
     Page<AppRegistrationVO> listData(AppRegistrationQueryDTO query);
+
+    /**
+     * 应用筛选器 包含doris外部目录应用
+     *
+     * @param query
+     * @return
+     */
+    Page<AppRegistrationVO> getDorisCatalogs(AppRegistrationQueryDTO query);
 
     /**
      * 获取过滤器表字段
