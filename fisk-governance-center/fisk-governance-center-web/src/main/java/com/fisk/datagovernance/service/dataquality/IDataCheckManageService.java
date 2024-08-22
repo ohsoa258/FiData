@@ -60,7 +60,7 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum addData(DataCheckDTO dto);
+    ResultEnum addData(DataCheckDTO dto, boolean isPreVerification);
 
     /**
      * 编辑数据
@@ -68,7 +68,7 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @param dto dto
      * @return 执行结果
      */
-    ResultEnum editData(DataCheckEditDTO dto);
+    ResultEnum editData(DataCheckEditDTO dto, boolean isPreVerification);
 
     /**
      * 删除数据
@@ -129,6 +129,7 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
 
     /**
      * 查看数据源结构树
+     *
      * @param dbId
      * @return
      */
@@ -136,6 +137,7 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
 
     /**
      * 获取表字段信息
+     *
      * @param dto
      * @return
      */
@@ -143,6 +145,7 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
 
     /**
      * 获取所有数据校验规则数量
+     *
      * @return
      */
     Integer getDataCheckRoleTotal();

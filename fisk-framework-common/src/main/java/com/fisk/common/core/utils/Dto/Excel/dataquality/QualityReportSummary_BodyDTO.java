@@ -26,6 +26,11 @@ public class QualityReportSummary_BodyDTO {
     public String ruleName;
 
     /**
+     * 检查规则说明
+     */
+    public String ruleIllustrate;
+
+    /**
      * 检查的数据条数
      */
     public Integer checkDataCount;

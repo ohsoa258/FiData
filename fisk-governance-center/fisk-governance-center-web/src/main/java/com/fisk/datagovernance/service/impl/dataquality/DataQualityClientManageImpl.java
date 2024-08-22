@@ -455,6 +455,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 添加规则检查结果到规则正文列表
             QualityReportSummary_BodyDTO qualityReportSummary_bodyDTO = new QualityReportSummary_BodyDTO();
             qualityReportSummary_bodyDTO.setRuleName(dataCheckLogsPO.getRuleName());
+            qualityReportSummary_bodyDTO.setRuleIllustrate(dataCheckLogsPO.getCheckRuleIllustrate());
             qualityReportSummary_bodyDTO.setCheckDataCount(Integer.valueOf(dataCheckLogsPO.getCheckTotalCount()));
             qualityReportSummary_bodyDTO.setDataAccuracy(dataCheckLogsPO.getCheckDataAccuracy());
             qualityReportSummary_bodyDTO.setCheckStatus(dataCheckLogsPO.getCheckResult());
@@ -526,24 +527,148 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (dataCheckExtendPO == null) {
                 continue;
             }
-            List<DataCheckExtendPO> dataCheckExtendPOs = dataCheckExtendPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(dataCheckExtendPOs)) {
-                continue;
-            }
-
             //获取数据检查规则的检查条件
             List<DataCheckConditionPO> dataCheckConditionPOs = dataCheckConditionPOList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).collect(Collectors.toList());
-
-            //当前校验规则对应的 数据校验模板 tb_template_config
+            //当前校验规则对应的 数据校验模板
             TemplatePO templatePO = templateMapper.selectById(dataCheckPO.getTemplateId());
             if (templatePO == null) {
                 continue;
             }
-
             //获取数据源
             DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
             if (dataSourceConVO == null) {
                 continue;
+            }
+
+            QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
+            ResultEntity<QualityReportSummary_RuleDTO> resultEntity = null;
+            try {
+                resultEntity = dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO, dataCheckExtendPO, templatePO, dataCheckConditionPOs);
+                // 单个规则校验不通过，跳过
+                if (resultEntity == null || resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    continue;
+                }
+                qualityReportSummary_ruleDTO = resultEntity.getData();
+            } catch (Exception ex) {
+                continue;
+            }
+
+            // 第五步：将检查不通过的数据写入Excel文件，如果检查出来的错误数据大于0条且不超过5000条，则写入Excel并记录附件信息
+            SheetDataDto sheetDataDto = qualityReportSummary_ruleDTO.getSheetData();
+            List<List<String>> columnData = null;
+            if (sheetDataDto != null) {
+                columnData = sheetDataDto.getColumnData();
+                if (CollectionUtils.isNotEmpty(columnData) && columnData.size() > 0 && columnData.size() <= 5000) {
+                    // 生成附件记录
+                    AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
+                    attachmentInfoPO.setOriginalName(dataCheckPO.getRuleName() + ".xlsx");
+                    String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
+                    attachmentInfoPO.setCurrentFileName(currentFileName);
+                    attachmentInfoPO.setExtensionName(".xlsx");
+                    // 绝对路径，例如：/root/nginx/app/file/qualityreport/rulereport/20240719
+                    String absolutePath = uploadUrl + "rulereport/" + DateTimeUtils.getNowToShortDate_v1() + "/";
+                    isExistsCreateDirectory(absolutePath);
+                    attachmentInfoPO.setAbsolutePath(absolutePath);
+                    attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue());
+                    attachmentInfoPO.setObjectId(dataCheckLogs_Uuid);
+                    attachmentInfos.add(attachmentInfoPO);
+
+                    // 生成Excel文件
+                    ExcelDto excelDto = new ExcelDto();
+                    excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
+                    List<SheetDto> sheets = new ArrayList<>();
+                    SheetDto sheet = new SheetDto();
+                    sheet.setSheetName(dataCheckPO.getRuleName());
+                    List<RowDto> singRows = dataCheck_QualityReport_GetRuleSingRows(qualityReportSummary_ruleDTO);
+                    sheet.setSingRows(singRows);
+                    // 检查的字段，会加黄色的底色
+                    sheet.setSingFields(Arrays.asList(dataCheckExtendPO.getFieldName().split(",")));
+                    // 检查不通过的数据
+                    sheet.setDataRows(sheetDataDto.getColumnData());
+                    sheets.add(sheet);
+                    excelDto.setSheets(sheets);
+                    ExcelReportUtil.createExcel(excelDto, absolutePath, currentFileName, true);
+                }
+            }
+
+            //规则检查结束计时
+            String checkDataEndTime = DateTimeUtils.getNow();
+            // 第六步：生成规则的检查日志
+            DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
+            dataCheckLogsPO.setIdUuid(dataCheckLogs_Uuid);
+            dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
+            dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
+            dataCheckLogsPO.setCheckTemplateName(qualityReportSummary_ruleDTO.getRuleTemplate());
+            dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+            dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.SUBSCRIPTION_REPORT_RULE_CHECK_LOG.getValue());
+            dataCheckLogsPO.setSchemaName(dataCheckPO.getSchemaName());
+            dataCheckLogsPO.setTableName(dataCheckPO.getTableName());
+            dataCheckLogsPO.setFieldName(dataCheckExtendPO.getFieldName());
+            dataCheckLogsPO.setCheckBatchNumber(reportBatchNumber);
+            dataCheckLogsPO.setCheckSmallBatchNumber(reportBatchNumber);
+            dataCheckLogsPO.setCheckTotalCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckDataCount()));
+            dataCheckLogsPO.setCheckFailCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckErrorDataCount()));
+            dataCheckLogsPO.setCheckResult(qualityReportSummary_ruleDTO.getCheckStatus());
+            dataCheckLogsPO.setCheckMsg("");
+            dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
+            dataCheckLogsPO.setErrorData("");
+            dataCheckLogsPO.setCheckDataAccuracy(qualityReportSummary_ruleDTO.getDataAccuracy());
+            dataCheckLogsPO.setCheckDataStartTime(checkDataStartTime);
+            dataCheckLogsPO.setCheckDataEndTime(checkDataEndTime);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime startDate = LocalDateTime.parse(checkDataStartTime, formatter);
+            LocalDateTime endDate = LocalDateTime.parse(checkDataEndTime, formatter);
+            Duration duration = Duration.between(startDate, endDate);
+            dataCheckLogsPO.setCheckDataDuration(String.valueOf(duration.getSeconds()));
+            dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
+            dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
+            dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
+            dataCheckLogs.add(dataCheckLogsPO);
+
+            // 第七步：释放集合对象
+            columnData = null;
+            sheetDataDto = null;
+            qualityReportSummary_ruleDTO = null;
+        }
+
+        // 报告下规则数量与检查规则日志数量不一致时，检查不通过
+        if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
+            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
+            List<Integer> diff = new ArrayList<>(ruleIdList);
+            diff.removeAll(ruleIdList_log);
+            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
+            return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    public ResultEntity<QualityReportSummary_RuleDTO> dataVerificationAndPreVerification(DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                                                         DataCheckExtendPO dataCheckExtendPO, TemplatePO templatePO,
+                                                                                         List<DataCheckConditionPO> dataCheckConditionPOs) {
+        ResultEntity<QualityReportSummary_RuleDTO> resultEntity = new ResultEntity<>();
+        resultEntity.setCode(ResultEnum.SUCCESS.getCode());
+        try {
+            //当前校验规则
+            if (dataCheckPO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_RULE_CONFIG_ISNULL.getCode());
+                return resultEntity;
+            }
+            //当前校验规则扩展属性
+            if (dataCheckPO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_RULE_CONFIG_ISNULL.getCode());
+                return resultEntity;
+            }
+            //当前校验规则对应的 数据校验模板
+            if (templatePO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_TEMPLATE_DOES_NOT_EXIST.getCode());
+                return resultEntity;
+            }
+            //当前校验规则对应的 数据源
+            if (dataSourceConVO == null) {
+                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_DATA_SOURCE_DOES_NOT_EXIST.getCode());
+                return resultEntity;
             }
 
             // 获取表和字段信息，将其进行转义处理
@@ -586,107 +711,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_paramDTO.setAllocateFieldNames(allocateFieldNames);
             qualityReportSummary_paramDTO.setAllocateFieldNamesFormat(allocateFieldNamesFormat);
             qualityReportSummary_paramDTO.setFieldCheckWhereSql(fieldCheckWhereSql);
-            qualityReportSummary_paramDTO.setReportBatchNumber(reportBatchNumber);
-            log.info("【dataCheck_QualityReport_Create】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
+            log.info("【dataVerificationAndPreVerification】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
 
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
-            try {
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
-            } catch (Exception ex) {
-                log.error("【dataCheck_QualityReport_Check】质量报告检查时出现异常：" + ex);
-                log.error(String.format("【dataCheck_QualityReport_Check】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
-                continue;
-            }
-
-            // 第五步：将检查不通过的数据写入Excel文件，如果检查出来的错误数据大于0条且不超过5000条，则写入Excel并记录附件信息
-            SheetDataDto sheetDataDto = qualityReportSummary_ruleDTO.getSheetData();
-            List<List<String>> columnData = null;
-            if (sheetDataDto != null) {
-                columnData = sheetDataDto.getColumnData();
-                if (CollectionUtils.isNotEmpty(columnData) && columnData.size() > 0 && columnData.size() <= 5000) {
-                    // 生成附件记录
-                    AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
-                    attachmentInfoPO.setOriginalName(dataCheckPO.getRuleName() + ".xlsx");
-                    String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
-                    attachmentInfoPO.setCurrentFileName(currentFileName);
-                    attachmentInfoPO.setExtensionName(".xlsx");
-                    // 绝对路径，例如：/root/nginx/app/file/qualityreport/rulereport/20240719
-                    String absolutePath = uploadUrl + "rulereport/" + DateTimeUtils.getNowToShortDate_v1() + "/";
-                    isExistsCreateDirectory(absolutePath);
-                    attachmentInfoPO.setAbsolutePath(absolutePath);
-                    attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_RULES_VERIFICATION_DETAIL_REPORT.getValue());
-                    attachmentInfoPO.setObjectId(dataCheckLogs_Uuid);
-                    attachmentInfos.add(attachmentInfoPO);
-
-                    // 生成Excel文件
-                    ExcelDto excelDto = new ExcelDto();
-                    excelDto.setExcelName(attachmentInfoPO.getCurrentFileName());
-                    List<SheetDto> sheets = new ArrayList<>();
-                    SheetDto sheet = new SheetDto();
-                    sheet.setSheetName(dataCheckPO.getRuleName());
-                    List<RowDto> singRows = dataCheck_QualityReport_GetRuleSingRows(qualityReportSummary_ruleDTO);
-                    sheet.setSingRows(singRows);
-                    // 检查的字段，会加黄色的底色
-                    sheet.setSingFields(Arrays.asList(fieldName.split(",")));
-                    // 检查不通过的数据
-                    sheet.setDataRows(sheetDataDto.getColumnData());
-                    sheets.add(sheet);
-                    excelDto.setSheets(sheets);
-                    ExcelReportUtil.createExcel(excelDto, absolutePath, currentFileName, true);
-                }
-            }
-
-            //规则检查结束计时
-            String checkDataEndTime = DateTimeUtils.getNow();
-            // 第六步：生成规则的检查日志
-            DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
-            dataCheckLogsPO.setIdUuid(dataCheckLogs_Uuid);
-            dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
-            dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
-            dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
-            dataCheckLogsPO.setCheckTemplateName(qualityReportSummary_ruleDTO.getRuleTemplate());
-            dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
-            dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.SUBSCRIPTION_REPORT_RULE_CHECK_LOG.getValue());
-            dataCheckLogsPO.setSchemaName(dataCheckPO.getSchemaName());
-            dataCheckLogsPO.setTableName(dataCheckPO.getTableName());
-            dataCheckLogsPO.setFieldName(dataCheckExtendPO.getFieldName());
-            dataCheckLogsPO.setCheckBatchNumber(qualityReportSummary_paramDTO.getReportBatchNumber());
-            dataCheckLogsPO.setCheckSmallBatchNumber(qualityReportSummary_paramDTO.getReportBatchNumber());
-            dataCheckLogsPO.setCheckTotalCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckDataCount()));
-            dataCheckLogsPO.setCheckFailCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckErrorDataCount()));
-            dataCheckLogsPO.setCheckResult(qualityReportSummary_ruleDTO.getCheckStatus());
-            dataCheckLogsPO.setCheckMsg("");
-            dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
-            dataCheckLogsPO.setErrorData("");
-            dataCheckLogsPO.setCheckDataAccuracy(qualityReportSummary_ruleDTO.getDataAccuracy());
-            dataCheckLogsPO.setCheckDataStartTime(checkDataStartTime);
-            dataCheckLogsPO.setCheckDataEndTime(checkDataEndTime);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            LocalDateTime startDate = LocalDateTime.parse(checkDataStartTime, formatter);
-            LocalDateTime endDate = LocalDateTime.parse(checkDataEndTime, formatter);
-            Duration duration = Duration.between(startDate, endDate);
-            dataCheckLogsPO.setCheckDataDuration(String.valueOf(duration.getSeconds()));
-            dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
-            dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
-            dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
-            dataCheckLogs.add(dataCheckLogsPO);
-
-            // 第七步：释放集合对象
-            columnData = null;
-            sheetDataDto = null;
-            qualityReportSummary_ruleDTO = null;
+            qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+            resultEntity.setData(qualityReportSummary_ruleDTO);
+        } catch (Exception ex) {
+            log.error("【dataVerificationAndPreVerification】质量报告检查时出现异常：" + ex);
+            log.error(String.format("【dataVerificationAndPreVerification】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
+            resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_NOT_APPROVED.getCode());
+            resultEntity.setMsg(ex.getMessage());
         }
-
-        // 报告下规则数量与检查规则日志数量不一致时，检查不通过
-        if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
-            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
-            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
-            List<Integer> diff = new ArrayList<>(ruleIdList);
-            diff.removeAll(ruleIdList_log);
-            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
-            return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
-        }
-        return ResultEnum.SUCCESS;
+        return resultEntity;
     }
 
     public QualityReportSummary_RuleDTO dataCheck_QualityReport_Check(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
@@ -1087,7 +1123,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql = "";
 
         for (String dateFormat : dateFormatList) {
-            String tempSql = "", numberType = "";
+            String tempSql = "", numberType = "", castFieldStr = f_Name;
             switch (dateFormat) {
                 case "HH:mm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1097,15 +1133,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 5\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 5\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 5\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 5\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 3, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 3, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "HHmm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1115,14 +1152,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 4\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 4\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 4\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 4\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR CAST(SUBSTRING( " + castFieldStr + " , 1, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 3, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyyMM":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1132,14 +1170,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 6\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 6\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 6\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 6\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
+                    tempSql += " OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
                     break;
                 case "yyyy-MM":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1149,15 +1188,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 7\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 7\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 7\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 7\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12') \n";
                     break;
                 case "yyyyMMdd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1167,15 +1207,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 8\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 8\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 8\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 8\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 7, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
+                    tempSql += " OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 5, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 7, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy-MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1185,17 +1226,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 10\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy/MM-dd":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1205,17 +1247,18 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 10\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 10\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 10\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '/'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31') \n";
                     break;
                 case "yyyy-MM-dd HH:mm":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1225,21 +1268,22 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 16\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 16\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 16\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 16\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy-MM-dd HH:mm:ss":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1249,23 +1293,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 19\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy/MM/dd HH:mm:ss":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1275,23 +1320,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 19\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 19\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 19\n";
                         numberType = " UNSIGNED ";
                     }
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '/'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '/'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '/'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '/'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59') \n";
                     break;
                 case "yyyy-MM-dd HH:mm:ss.SSS":
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
@@ -1301,7 +1347,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         tempSql += " AND (LEN(ISNULL(" + f_Name + ", '')) != 23\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + f_Name + ", '')) != 23\n";
+                        castFieldStr = "CAST(" + f_Name + " AS VARCHAR)";
+                        tempSql += " AND (CHAR_LENGTH(COALESCE(" + castFieldStr + ", '')) != 23\n";
                         numberType = " INT ";
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
                         tempSql += " AND (CHAR_LENGTH(IFNULL(" + f_Name + ", '')) != 23\n";
@@ -1330,19 +1377,19 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 //                        -- -- 检查毫秒在正确范围内
 //                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 20, 1); -- = '.'
 //                        -- SELECT SUBSTRING('2024-07-01 00:00:00.000', 21, 3); -- BETWEEN '000' AND '999'
-                    tempSql += " OR SUBSTRING( " + f_Name + " , 5, 1) != '-'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 8, 1) != '-'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 11, 1) != ' '\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 14, 1) != ':'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 17, 1) != ':'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
-                            "OR SUBSTRING( " + f_Name + " , 20, 1) != '.'\n" +
-                            "OR CAST(SUBSTRING( " + f_Name + " , 21, 3) AS " + numberType + ") NOT BETWEEN '000' AND '999') \n";
+                    tempSql += " OR SUBSTRING( " + castFieldStr + " , 5, 1) != '-'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 8, 1) != '-'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 1, 4) AS " + numberType + ") NOT BETWEEN '0000' AND '9999'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 6, 2) AS " + numberType + ") NOT BETWEEN '01' AND '12'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 9, 2) AS " + numberType + ") NOT BETWEEN '01' AND '31'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 11, 1) != ' '\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 12, 2) AS " + numberType + ") NOT BETWEEN '00' AND '23'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 14, 1) != ':'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 17, 1) != ':'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 15, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 18, 2) AS " + numberType + ") NOT BETWEEN '00' AND '59'\n" +
+                            "OR SUBSTRING( " + castFieldStr + " , 20, 1) != '.'\n" +
+                            "OR CAST(SUBSTRING( " + castFieldStr + " , 21, 3) AS " + numberType + ") NOT BETWEEN '000' AND '999') \n";
 
                     break;
             }

@@ -19,4 +19,16 @@ public class DataCheckEditDTO extends DataCheckDTO
      */
     @ApiModelProperty(value = "主键id")
     public int id;
+
+    /**
+     * 字段Id(数据元同步用其他用不到这个字段)
+     */
+    @ApiModelProperty(value = "字段Id")
+    public String fieldUnique;
+
+    /**
+     * 字段Id(数据元同步用其他用不到这个字段)
+     */
+    @ApiModelProperty(value = "字段名称")
+    public String fieldName;
 }
