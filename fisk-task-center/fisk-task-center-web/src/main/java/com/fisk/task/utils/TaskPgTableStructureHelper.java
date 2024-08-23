@@ -15,6 +15,7 @@ import com.fisk.task.entity.TaskPgTableStructurePO;
 import com.fisk.task.listener.postgre.datainput.IbuildTable;
 import com.fisk.task.listener.postgre.datainput.impl.BuildDorisTableImpl;
 import com.fisk.task.listener.postgre.datainput.impl.BuildFactoryHelper;
+import com.fisk.task.listener.postgre.datainput.impl.BuildMysqlTableImpl;
 import com.fisk.task.mapper.TaskPgTableStructureMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,7 +45,7 @@ public class TaskPgTableStructureHelper
     @Resource
     private BuildDorisTableImpl buildDorisTable;
     @Resource
-    private BuildDorisTableImpl buildMysqlTable;
+    private BuildMysqlTableImpl buildMysqlTable;
 
 
     public static String taskdbUrl;

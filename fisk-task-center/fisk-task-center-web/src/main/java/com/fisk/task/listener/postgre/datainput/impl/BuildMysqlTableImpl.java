@@ -273,7 +273,7 @@ public class BuildMysqlTableImpl implements IbuildTable {
                 if (!Objects.equals(newPo.fieldName, field.fieldName)) {
                     sql.append(" ALTER TABLE `")
                             .append(oldTblName)
-                            .append("` RENAME COLUMN `")
+                            .append("` CHANGE COLUMN `")
                             .append(field.fieldName)
                             .append("` `")
                             .append(newPo.fieldName)
