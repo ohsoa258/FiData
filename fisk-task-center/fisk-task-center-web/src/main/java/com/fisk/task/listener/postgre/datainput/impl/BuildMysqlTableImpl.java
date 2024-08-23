@@ -328,7 +328,7 @@ public class BuildMysqlTableImpl implements IbuildTable {
                     .append(oldTableKeyName)
                     .append("` `")
                     .append(newTableKeyName)
-                    .append("`; ");
+                    .append("` varchar(50); ");
             sql.append("ALTER TABLE `")
                     .append(oldTblName)
                     .append("` RENAME `")
