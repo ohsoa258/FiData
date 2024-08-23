@@ -41,4 +41,7 @@ public class DatacheckStandardsGroupVO {
     private String datametaCode;
 
     List<DataCheckVO> dataCheckList;
+
+    @ApiModelProperty(value = "数据元组下面规则被报告的引用清单")
+    public List<String> belongToReportNameList;
 }

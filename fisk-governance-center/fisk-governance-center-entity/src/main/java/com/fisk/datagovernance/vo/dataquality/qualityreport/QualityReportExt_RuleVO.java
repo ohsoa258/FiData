@@ -60,8 +60,14 @@ public class QualityReportExt_RuleVO {
     public String tableName;
 
     /**
-     * 引用状态：1：已引用 2：未引用
+     * 字段名称
      */
-    @ApiModelProperty(value = "引用状态：1：已引用 2：未引用")
-    public int referenceStatus;
+    @ApiModelProperty(value = "字段名称")
+    public String fieldName;
+
+    /**
+     * 规则所属分组名称(数据标准)
+     */
+    @ApiModelProperty(value = "规则所属分组名称(数据标准)")
+    public String checkGroupName;
 }

@@ -4,12 +4,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckRulePageDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.entity.dataquality.QualityReportPO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.PreviewQualityReportVO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportExtVO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportLogVO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportVO;
+import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -71,11 +69,18 @@ public interface IQualityReportManageService extends IService<QualityReportPO> {
     ResultEnum collReport(int id);
 
     /**
-     * 报告相关数据
+     * 获取创建质量报告所需的扩展信息（邮件服务器、用户邮箱）
      *
      * @return 执行结果
      */
-    QualityReportExtVO getReportExt(QualityReportRuleQueryDTO queryDTO);
+    QualityReportExtVO getMailServerAndUserInfo();
+
+    /**
+     * 获取质量报告数据校验规则弹窗列表
+     *
+     * @return 分页列表
+     */
+    Page<QualityReportExt_RuleVO> getQualityReportRuleList(DataCheckRulePageDTO query);
 
     /**
      * 数据校验质量报告日志

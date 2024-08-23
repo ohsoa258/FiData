@@ -1,9 +1,14 @@
 package com.fisk.datagovernance.mapper.dataquality;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckRulePageDTO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DeleteCheckResultVO;
+import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportVO;
+import com.fisk.dataservice.dto.api.ApiRegisterQueryDTO;
+import com.fisk.dataservice.vo.api.ApiConfigVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -26,6 +31,13 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
                                  @Param("ruleName") String ruleName,
                                  @Param("ruleState") String ruleState,
                                  @Param("templateIds") List<Long> templateIds);
+
+    /**
+     * 查询数据校验分页列表
+     *
+     * @return 查询结果
+     */
+    Page<DataCheckVO> getPageAllRule(Page<DataCheckVO> page, @Param("query") DataCheckRulePageDTO query);
 
     /**
      * 查询数据校验列表
