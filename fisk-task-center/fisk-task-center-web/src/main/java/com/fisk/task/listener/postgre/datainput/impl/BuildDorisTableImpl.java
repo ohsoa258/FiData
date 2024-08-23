@@ -253,11 +253,13 @@ public class BuildDorisTableImpl implements IbuildTable {
                 if (!Objects.equals(newPo.fieldName, field.fieldName)) {
                     sql.append(" ALTER TABLE `")
                             .append(oldTblName)
-                            .append("` RENAME COLUMN `")
+                            .append("` CHANGE COLUMN `")
                             .append(field.fieldName)
                             .append("` `")
                             .append(newPo.fieldName)
-                            .append("`; ");
+                            .append("` ")
+                            .append(newPo.fieldType)
+                            .append("; ");
                 }
             }
         }
@@ -308,7 +310,9 @@ public class BuildDorisTableImpl implements IbuildTable {
                     .append(oldTableKeyName)
                     .append("` `")
                     .append(newTableKeyName)
-                    .append("`; ");
+                    .append("` ")
+                    .append("varchar(50)")
+                    .append("; ");
             sql.append("ALTER TABLE `")
                     .append(oldTblName)
                     .append("` RENAME `")

@@ -89,7 +89,6 @@ public class MysqlConUtils {
                     continue;
                 }
 
-
                 TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
                 tablePyhNameDTO.setTableName(tableName);
                 tablePyhNameDTO.setFields(colNames);

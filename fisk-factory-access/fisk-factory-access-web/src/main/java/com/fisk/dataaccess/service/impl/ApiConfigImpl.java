@@ -684,7 +684,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
             }
 
-            //3.获取当前app选择的数据源类型
+            //3.获取当前app选择的目标数据源类型
             ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(modelApp.targetDbId);
             if (result.code != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);

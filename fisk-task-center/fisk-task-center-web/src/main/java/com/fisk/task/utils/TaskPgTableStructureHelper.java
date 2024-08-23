@@ -43,6 +43,8 @@ public class TaskPgTableStructureHelper
     UserClient userClient;
     @Resource
     private BuildDorisTableImpl buildDorisTable;
+    @Resource
+    private BuildDorisTableImpl buildMysqlTable;
 
 
     public static String taskdbUrl;
@@ -328,7 +330,10 @@ public class TaskPgTableStructureHelper
      */
     public String getTblSchemaChangeSqlForDoris(String version, int type, DataSourceTypeEnum dataSourceType) {
         try {
-            //拼接SQL
+            //mysql 和 doris语法有微小差异
+            if (dataSourceType.equals(DataSourceTypeEnum.MYSQL)) {
+                return buildMysqlTable.prepareCallSqlForDoris(version, type);
+            }
             return buildDorisTable.prepareCallSqlForDoris(version, type);
         } catch (Exception e) {
             log.error("获取doris表结构修改语句失败:" + e);
@@ -503,7 +508,7 @@ public class TaskPgTableStructureHelper
                 String[] sqls = sql.split(";");
                 log.info("执行存储过程返回修改语句:" + Arrays.toString(sqls));
                 for (String s : sqls) {
-                    if (s.equals(" ")){
+                    if (s.equals(" ")) {
                         continue;
                     }
                     log.info("本次执行的doris sql" + s + ";");

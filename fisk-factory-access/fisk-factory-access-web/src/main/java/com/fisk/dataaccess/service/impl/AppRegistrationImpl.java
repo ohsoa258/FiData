@@ -1312,7 +1312,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         tableNames = oracleUtils.getTrueTableNameList(conn, dto.conAccount, dto.serviceName);
                         break;
                     default:
-                        conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                        break;
                 }
 
                 log.info("查询到的库表字段详情：" + tableNames);
@@ -1360,7 +1360,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setIsRealtime(1);
                         fieldDTO.setIsBusinesstime(0);
                         fieldDTO.setIsTimestamp(0);
-                        fieldDTO.setSourceDbName(dto.getServiceName());
+                        fieldDTO.setSourceDbName(field.sourceDbName);
+
                         fieldDTO.setSourceTblName(table.getTableName());
                         list.add(fieldDTO);
                     }

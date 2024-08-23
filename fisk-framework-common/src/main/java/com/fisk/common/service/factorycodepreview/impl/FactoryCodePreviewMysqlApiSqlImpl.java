@@ -375,10 +375,6 @@ public class FactoryCodePreviewMysqlApiSqlImpl implements IBuildFactoryCodePrevi
         }
         prefix.append("fi_createtime,")
                 .append("fi_updatetime")
-//                .append("fidata_batch_code")
-//                .append("`")
-//                .append(tabNameWithoutPre)
-//                .append("key`)");
                 .append(") ");
         //拼接insert into完毕
 
@@ -439,8 +435,6 @@ public class FactoryCodePreviewMysqlApiSqlImpl implements IBuildFactoryCodePrevi
         }
         suffix.append("now() AS fi_createtime,")
                 .append("now() AS fi_updatetime")
-//                .append("fidata_batch_code")
-//                .append("md5(concat(\"\"lishiji))")
                 .append(" FROM ")
                 .append(sourceTableName)
                 .append(" SOURCE ON DUPLICATE KEY UPDATE ");
@@ -459,8 +453,7 @@ public class FactoryCodePreviewMysqlApiSqlImpl implements IBuildFactoryCodePrevi
             suffix.append(" WHERE fidata_batch_code='${fidata_batch_code}' AND fidata_flow_batch_code='${fragment.index}' AND fi_verify_type<>'2'");
         }
         //返回拼接完成的追加覆盖方式拼接的sql
-        String sql = prefix + "   " + suffix;
-        return String.valueOf(sql);
+        return prefix + "   " + suffix;
     }
 
     /**
