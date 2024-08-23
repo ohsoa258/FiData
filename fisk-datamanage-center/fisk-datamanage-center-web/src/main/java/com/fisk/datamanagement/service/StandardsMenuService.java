@@ -25,6 +25,12 @@ public interface StandardsMenuService extends IService<StandardsMenuPO> {
     List<StandardsTreeDTO> getStandardsTree();
 
     /**
+     * 查看数据标准树形标签(数据校验用)
+     * @return
+     */
+    List<StandardsTreeDTO> getStandardsTreeByCheck();
+
+    /**
      * 添加或修改数据标准标签
      * @param standardsMenuDTO
      * @return

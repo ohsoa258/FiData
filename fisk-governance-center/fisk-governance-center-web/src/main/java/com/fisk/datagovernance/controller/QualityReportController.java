@@ -7,12 +7,10 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.datagovernance.config.SwaggerConfig;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckRulePageDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.PreviewQualityReportVO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportExtVO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportLogVO;
-import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportVO;
+import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
@@ -77,10 +75,16 @@ public class QualityReportController {
         return ResultEntityBuild.build(service.collReport(id));
     }
 
-    @ApiOperation("报告相关数据")
-    @PostMapping("/getReportExt")
-    public ResultEntity<QualityReportExtVO> getReportExt(@RequestBody QualityReportRuleQueryDTO queryDTO) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getReportExt(queryDTO));
+    @ApiOperation("获取创建质量报告所需的扩展信息（邮件服务器、用户邮箱）")
+    @GetMapping("/getMailServerAndUserInfo")
+    public ResultEntity<QualityReportExtVO> getMailServerAndUserInfo() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMailServerAndUserInfo());
+    }
+
+    @ApiOperation("获取质量报告数据校验规则弹窗列表")
+    @PostMapping("/getQualityReportRuleList")
+    public ResultEntity<Page<QualityReportExt_RuleVO>> getQualityReportRuleList(@RequestBody DataCheckRulePageDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getQualityReportRuleList(dto));
     }
 
     @ApiOperation("数据校验质量报告日志分页")

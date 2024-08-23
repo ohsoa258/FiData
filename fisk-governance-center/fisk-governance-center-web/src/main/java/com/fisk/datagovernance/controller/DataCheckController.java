@@ -7,7 +7,6 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.DataSourceInfoDTO;
-import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
@@ -151,6 +150,12 @@ public class DataCheckController {
     @GetMapping("/deleteDataCheckStandardsGroup")
     public ResultEntity<Object> deleteDataCheckStandardsGroup(@RequestParam("id") Integer id) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.deleteDataCheckStandardsGroup(id));
+    }
+
+    @ApiOperation("根据数据元标准ID获取数据元校验规则组")
+    @PostMapping("/getRuleGroupByStandardIds")
+    public ResultEntity<List<DataCheckRuleGroupVO>> getRuleGroupByStandardIds(@RequestBody DataCheckRuleGroupDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, datacheckStandardsGroupService.getRuleGroupByStandardIds(dto));
     }
 
     @ApiOperation("查看数据源结构树")

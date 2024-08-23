@@ -1,16 +1,14 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckExtendDTO;
-import com.fisk.datagovernance.dto.dataquality.datacheck.DatacheckStandardsGroupDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckExtendPO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.entity.dataquality.DatacheckStandardsGroupPO;
@@ -20,11 +18,14 @@ import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.map.dataquality.DatacheckStandardsGroupMap;
 import com.fisk.datagovernance.mapper.dataquality.DataCheckExtendMapper;
 import com.fisk.datagovernance.mapper.dataquality.DatacheckStandardsGroupMapper;
+import com.fisk.datagovernance.mapper.dataquality.QualityReportMapper;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckRuleGroupVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DatacheckStandardsGroupVO;
+import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportRuleVO;
 import com.fisk.datagovernance.vo.dataquality.template.TemplateVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
@@ -53,6 +54,9 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
 
     @Resource
     private DataCheckExtendMapper dataCheckExtendMapper;
+
+    @Resource
+    private QualityReportMapper qualityReportMapper;
 
     @Resource
     private DataSourceConManageImpl dataSourceConManageImpl;
@@ -102,11 +106,21 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             // 获取所有规则ID的列表，去重后查询扩展信息
             List<Integer> ruleIds = allRules.stream().map(DataCheckVO::getId).distinct().collect(Collectors.toList());
             List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
+            // 查询规则被报告的引用情况
+            List<QualityReportRuleVO> qualityReportRuleVOList = qualityReportMapper.getByRuleIds(ruleIds);
+
             // 如果存在扩展信息，则为每条规则设置扩展信息
             if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
                 allRules.forEach(t -> {
                     DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
                     t.setDataCheckExtend(dataCheckExtendVO);
+
+                    if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(qualityReportRuleVOList)) {
+                        List<String> reportNameList = qualityReportRuleVOList.stream().filter(k -> k.getRuleId() == t.getId()).map(QualityReportRuleVO::getReportName).collect(Collectors.toList());
+                        if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(reportNameList)) {
+                            t.setBelongToReportNameList(reportNameList);
+                        }
+                    }
                 });
             }
             // 根据指定的排序规则对规则信息进行排序
@@ -123,6 +137,17 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                         .collect(groupingBy(DataCheckVO::getDatacheckGroupId));
                 groupDtoList = groupDtoList.stream().map(i -> {
                     List<DataCheckVO> dataCheckDTOS = datacheckMap.get(i.getId());
+                    if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(dataCheckDTOS)) {
+                        List<List<String>> belongToReportNameList = dataCheckDTOS.stream().map(DataCheckVO::getBelongToReportNameList).collect(Collectors.toList());
+                        if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(belongToReportNameList)) {
+                            List<String> dist_BelongToReportNameList = new ArrayList<>();
+                            for (List<String> bReportNameList : belongToReportNameList) {
+                                dist_BelongToReportNameList.addAll(bReportNameList);
+                            }
+                            dist_BelongToReportNameList = dist_BelongToReportNameList.stream().distinct().collect(Collectors.toList());
+                            i.setBelongToReportNameList(dist_BelongToReportNameList);
+                        }
+                    }
                     i.setDataCheckList(dataCheckDTOS);
                     return i;
                 }).collect(Collectors.toList());
@@ -193,6 +218,14 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + i.getDataCheckExtend().fieldName;
+
+                // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
+                if (i.getSourceType() == SourceTypeEnum.FiData) {
+                    int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
+                    if (idByDataSourceId != 0 && i.getId() != 0) {
+                        i.setDatasourceId(idByDataSourceId);
+                    }
+                }
                 return i;
             }).collect(Collectors.toList());
             List<Integer> dataCheckIds = dataCheckEditList.stream().map(i -> i.getId()).collect(Collectors.toList());
@@ -231,6 +264,28 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             });
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public List<DataCheckRuleGroupVO> getRuleGroupByStandardIds(DataCheckRuleGroupDTO dto) {
+        List<DataCheckRuleGroupVO> ruleGroupVOS = new ArrayList<>();
+        if (dto == null || CollectionUtils.isEmpty(dto.getStandardIdList())) {
+            return ruleGroupVOS;
+        }
+        QueryWrapper<DatacheckStandardsGroupPO> dataCheckStandardsGroupPOQueryWrapper = new QueryWrapper<>();
+        dataCheckStandardsGroupPOQueryWrapper.lambda().eq(DatacheckStandardsGroupPO::getDelFlag, 1)
+                .in(DatacheckStandardsGroupPO::getStandardsId, dto.getStandardIdList());
+        List<DatacheckStandardsGroupPO> dataCheckStandardsGroupPOS = baseMapper.selectList(dataCheckStandardsGroupPOQueryWrapper);
+        if (!CollectionUtils.isEmpty(dataCheckStandardsGroupPOS)) {
+            dataCheckStandardsGroupPOS.forEach(t -> {
+                DataCheckRuleGroupVO dataCheckRuleGroupVO = new DataCheckRuleGroupVO();
+                dataCheckRuleGroupVO.setStandardsId(t.getStandardsId());
+                dataCheckRuleGroupVO.setDataCheckGroupId(Math.toIntExact(t.getId()));
+                dataCheckRuleGroupVO.setCheckGroupName(t.getCheckGroupName());
+                ruleGroupVOS.add(dataCheckRuleGroupVO);
+            });
+        }
+        return ruleGroupVOS;
     }
 
     @Override

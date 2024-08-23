@@ -182,6 +182,12 @@ public class DataCheckVO {
     public Integer datacheckGroupId;
 
     /**
+     * 规则所属分组名称(数据标准)
+     */
+    @ApiModelProperty(value = "规则所属分组名称(数据标准)")
+    public String checkGroupName;
+
+    /**
      * 规则所属报告
      */
     @ApiModelProperty(value = "规则所属报告")

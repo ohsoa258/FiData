@@ -60,6 +60,72 @@
         </if>
     </select>
 
+    <select id="getPageAllRule" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO">
+        SELECT
+        t1.id,
+        t1.template_id,
+        t1.datasource_id,
+        t1.rule_name,
+        t1.schema_name,
+        t1.table_unique,
+        t1.table_name,
+        t1.table_describe,
+        CASE
+        WHEN IFNULL( t1.schema_name, '' )= '' THEN
+        t1.table_name ELSE CONCAT( t1.schema_name, '.', t1.table_name )
+        END AS tableAlias,
+        t1.table_type AS tableType,
+        t1.table_business_type AS tableBusinessType,
+        t1.rule_check_type AS ruleCheckType,
+        t1.rule_execute_node AS ruleExecuteNode,
+        t1.rule_execute_sort,
+        t1.rule_state AS ruleState,
+        t1.rule_weight,
+        t1.rule_describe,
+        t1.rule_illustrate,
+        t1.create_time,
+        t1.create_user,
+        t2.template_type AS templateType,
+        t2.template_name,
+        t3.datasource_id AS fiDataSourceId,
+        t3.datasource_type AS sourceType,
+        t1.datacheck_group_Id,
+        t4.check_group_name
+        FROM
+        tb_datacheck_rule t1
+        LEFT JOIN tb_template_config t2 ON t1.template_id = t2.id
+        LEFT JOIN tb_datasource_config t3 ON t1.datasource_id = t3.id
+        LEFT JOIN tb_datacheck_standards_group t4 ON t1.datacheck_group_Id=t4.id
+        WHERE
+        t1.del_flag = 1
+        AND t2.del_flag = 1
+        AND t3.del_flag = 1
+        <if test="query.ruleDataSourceType == 1 ">
+            AND IFNULL(t1.datacheck_group_Id,0)=0
+        </if>
+        <if test="query.ruleDataSourceType == 2 ">
+            AND IFNULL(t1.datacheck_group_Id,0)!=0 AND t4.del_flag = 1
+        </if>
+        <if test="query.dataCheckGroupIds != null and query.dataCheckGroupIds.size() > 0">
+            AND t1.datacheck_group_Id IN
+            <foreach collection="query.dataCheckGroupIds" item="dataCheckGroupId" open="(" separator="," close=")">
+                #{dataCheckGroupId}
+            </foreach>
+        </if>
+        <if test="query.checkProcess > 0 ">
+            AND t1.rule_execute_node = #{query.checkProcess}
+        </if>
+        <if test="query.tableUnique != null and query.tableUnique != '' ">
+            AND t1.table_unique = #{query.tableUnique}
+        </if>
+        <if test="query.ruleName != null and query.ruleName != '' ">
+            AND t1.rule_name LIKE concat('%', #{query.ruleName}, '%')
+        </if>
+        <if test="query.ruleState != null and query.ruleState != '' ">
+            AND t1.rule_state = #{query.ruleState}
+        </if>
+    </select>
+
     <select id="getRuleByIds" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO">
         SELECT
         t1.id,

@@ -43,6 +43,12 @@ public class StandardsController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsMenuService.getStandardsTree());
     }
 
+    @ApiOperation("查看数据标准树形标签(数据校验用)")
+    @GetMapping("/getStandardsTreeByCheck")
+    public ResultEntity<List<StandardsTreeDTO>> getStandardsTreeByCheck() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsMenuService.getStandardsTreeByCheck());
+    }
+
     @ApiOperation("查看数据标准树形标签--非懒加载")
     @GetMapping("/getStandardsAllTree")
     public ResultEntity<List<StandardsTreeDTO>> getStandardsAllTree() {

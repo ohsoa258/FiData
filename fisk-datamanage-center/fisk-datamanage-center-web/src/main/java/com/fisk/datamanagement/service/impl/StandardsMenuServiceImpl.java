@@ -52,6 +52,32 @@ public class StandardsMenuServiceImpl extends ServiceImpl<StandardsMenuMapper, S
         return parentList;
     }
 
+    @Override
+    public List<StandardsTreeDTO> getStandardsTreeByCheck() {
+        LambdaQueryWrapper<StandardsMenuPO> queryWrapper = new LambdaQueryWrapper<>();
+        List<StandardsMenuPO> standardsMenus = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(standardsMenus)) {
+            return new ArrayList<>();
+        }
+        List<StandardsTreeDTO> allList = standardsMenus.stream().map(i -> {
+            StandardsTreeDTO standardsTreeDTO = new StandardsTreeDTO();
+            standardsTreeDTO.setId((int) i.getId());
+            standardsTreeDTO.setPid(i.getPid());
+            standardsTreeDTO.setName(i.getName());
+            standardsTreeDTO.setType(i.getType());
+            standardsTreeDTO.setSort(i.getSort());
+            standardsTreeDTO.setCreateTime(i.getCreateTime());
+            return standardsTreeDTO;
+        }).collect(Collectors.toList());
+        List<StandardsTreeDTO> parentList = allList.stream().filter(item -> item.getPid() == null || item.getPid() == 0).collect(Collectors.toList());
+        if (parentList.size() > 1) {
+            parentList.sort(Comparator.comparing(StandardsTreeDTO::getCreateTime).reversed());
+        }
+        // 递归处理子集
+        standardsTree(allList, parentList);
+        return parentList;
+    }
+
     private void standardsTree(List<StandardsTreeDTO> allList, List<StandardsTreeDTO> parentList) {
         Map<Integer, List<StandardsTreeDTO>> childrenMap = new HashMap<>();
         for (StandardsTreeDTO dto : allList) {

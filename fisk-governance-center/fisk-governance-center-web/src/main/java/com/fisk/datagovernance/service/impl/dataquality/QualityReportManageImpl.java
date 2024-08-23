@@ -23,6 +23,7 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.datagovernance.dto.GetConfigDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckRulePageDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.*;
 import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.*;
@@ -33,6 +34,7 @@ import com.fisk.datagovernance.map.dataquality.QualityReportRuleMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IQualityReportManageService;
 import com.fisk.datagovernance.vo.appcount.AppRuleCountVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckExtendVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.*;
@@ -106,6 +108,9 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 
     @Resource
     private DataSourceConManageImpl dataSourceConManage;
+
+    @Resource
+    private DataCheckExtendMapper dataCheckExtendMapper;
 
     @Resource
     private UserClient userClient;
@@ -456,72 +461,12 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     }
 
     @Override
-    public QualityReportExtVO getReportExt(QualityReportRuleQueryDTO query) {
+    public QualityReportExtVO getMailServerAndUserInfo() {
         QualityReportExtVO qualityReportExtVO = new QualityReportExtVO();
-        List<QualityReportExt_RuleVO> cRules = new ArrayList<>();
         List<QualityReportExt_EmailVO> emails = new ArrayList<>();
         List<QualityReportExt_UserVO> users = new ArrayList<>();
 
-        // 第一步：查询数据源信息
-        List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
-        if (CollectionUtils.isEmpty(allDataSource)) {
-            return qualityReportExtVO;
-        }
-
-        // 第二步：查询数据检查类型的模板
-        QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
-        templatePOQueryWrapper.lambda().eq(TemplatePO::getDelFlag, 1)
-                .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATA_CHECK_MODULE.getValue());
-        List<TemplatePO> templatePOS = templateMapper.selectList(templatePOQueryWrapper);
-
-        // 第三步：查询校验规则
-        List<DataCheckVO> dataCheckVOList = null;
-        if (CollectionUtils.isNotEmpty(templatePOS)) {
-            List<Long> templateIdList = templatePOS.stream().map(TemplatePO::getId).collect(Collectors.toList());
-            dataCheckVOList = dataCheckMapper.getAllRule(RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION.getValue(),
-                    query.getTableUnique(), query.getRuleName(),
-                    String.valueOf(RuleStateEnum.Enable.getValue()), templateIdList);
-        }
-
-        // 第四步：查询报告下的校验规则
-        QueryWrapper<QualityReportRulePO> qualityReportRulePOQueryWrapper = new QueryWrapper<>();
-        qualityReportRulePOQueryWrapper.lambda().eq(QualityReportRulePO::getDelFlag, 1)
-                .eq(QualityReportRulePO::getReportId, query.getReportId())
-                .eq(QualityReportRulePO::getReportType, 100);
-        List<QualityReportRulePO> qualityReportRulePOS = qualityReportRuleMapper.selectList(qualityReportRulePOQueryWrapper);
-
-        // 第五步：判断校验规则是否在报告中引用
-        if (CollectionUtils.isNotEmpty(dataCheckVOList)) {
-            dataCheckVOList.forEach(t -> {
-                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
-                if (dataSourceConVO == null) {
-                    return;
-                }
-                QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
-                cRule.setId(Long.valueOf(t.getId()));
-                cRule.setName(t.getRuleName());
-                cRule.setDescribe(t.getRuleDescribe());
-                cRule.setStateName(t.getRuleState().getName());
-                cRule.setIp(dataSourceConVO.getConIp());
-                cRule.setDbName(dataSourceConVO.getConDbname());
-                cRule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
-                String tableNameFormat = "";
-                if (StringUtils.isNotEmpty(t.getSchemaName())) {
-                    tableNameFormat = t.getSchemaName() + ".";
-                }
-                tableNameFormat += t.getTableName();
-                cRule.setTableName(tableNameFormat);
-                QualityReportRulePO qualityReportRulePO = qualityReportRulePOS.stream().filter(q -> q.getRuleId() == t.getId()).findFirst().orElse(null);
-                if (qualityReportRulePO != null) {
-                    cRule.setReferenceStatus(1);
-                } else {
-                    cRule.setReferenceStatus(2);
-                }
-                cRules.add(cRule);
-            });
-        }
-
-        // 第六步：查询邮件服务配置
+        // 查询邮件服务配置
         ResultEntity<List<EmailServerVO>> emailServerList = userClient.getEmailServerList();
         if (emailServerList != null && emailServerList.getCode() == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(emailServerList.getData())) {
             emailServerList.getData().forEach(t -> {
@@ -532,7 +477,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             });
         }
 
-        // 第七步：查询用户列表
+        // 查询用户列表
         ResultEntity<List<UserDTO>> userList = userClient.getAllUserList();
         if (userList.code == ResultEnum.SUCCESS.getCode() && CollectionUtils.isNotEmpty(userList.getData())) {
             userList.getData().forEach(t -> {
@@ -546,30 +491,67 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
             });
         }
 
-        qualityReportExtVO.setRules_c(cRules);
         qualityReportExtVO.setEmails(emails);
         qualityReportExtVO.setUsers(users);
-
-        // 规则排序、分页
-        if (CollectionUtils.isNotEmpty(cRules)) {
-            query.current = query.current - 1;
-            qualityReportExtVO.setTotal(Long.valueOf(cRules.size()));
-            qualityReportExtVO.setTotalPage((long) Math.ceil(1.0 * cRules.size() / query.getSize()));
-
-            qualityReportExtVO.rules_c = cRules.stream().sorted(
-                    // 1.先引用状态排正序
-                    Comparator.comparing(QualityReportExt_RuleVO::getReferenceStatus, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 1.再按照IP排正序
-                            .thenComparing(QualityReportExt_RuleVO::getIp, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 2.再按照数据库排正序
-                            .thenComparing(QualityReportExt_RuleVO::getDbName, Comparator.nullsFirst(Comparator.naturalOrder()))
-                            // 3.再按照表名称排正序
-                            .thenComparing(QualityReportExt_RuleVO::getTableName, Comparator.nullsFirst(Comparator.naturalOrder()))
-                    // 4.再按照规则执行顺序排正序
-                    //.thenComparing(QualityReportExt_RuleVO::getSort, Comparator.nullsFirst(Comparator.naturalOrder()))
-            ).skip((query.current - 1 + 1) * query.size).limit(query.size).collect(Collectors.toList());
-        }
         return qualityReportExtVO;
+    }
+
+    @Override
+    public Page<QualityReportExt_RuleVO> getQualityReportRuleList(DataCheckRulePageDTO query) {
+        Page<QualityReportExt_RuleVO> all = new Page<>();
+        List<QualityReportExt_RuleVO> qualityReportExt_ruleVOS=new ArrayList<>();
+
+        // 查询校验规则
+        Page<DataCheckVO> pageAllRule = dataCheckMapper.getPageAllRule(query.getPage(), query);
+
+        if (pageAllRule != null && CollectionUtils.isNotEmpty(pageAllRule.getRecords())) {
+
+            // 查询数据源信息
+            List<DataSourceConVO> allDataSource = dataSourceConManage.getAllDataSource();
+            if (CollectionUtils.isEmpty(allDataSource)) {
+                return all;
+            }
+            // 查询校验规则扩展信息
+            List<Integer> ruleIds = pageAllRule.getRecords().stream().map(DataCheckVO::getId).distinct().collect(Collectors.toList());
+            List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
+
+            pageAllRule.getRecords().forEach(t -> {
+                QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
+                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
+                if (dataSourceConVO == null) {
+                    return;
+                }
+                if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
+                    DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
+                    if (dataCheckExtendVO!=null){
+                        cRule.setFieldName(dataCheckExtendVO.getFieldName());
+                    }
+                }
+
+                cRule.setId(Long.valueOf(t.getId()));
+                cRule.setName(t.getRuleName());
+                cRule.setDescribe(t.getRuleDescribe());
+                cRule.setStateName(t.getRuleState().getName());
+                cRule.setIp(dataSourceConVO.getConIp());
+                cRule.setDbName(dataSourceConVO.getConDbname());
+                cRule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
+                String tableNameFormat = "";
+                if (StringUtils.isNotEmpty(t.getSchemaName())) {
+                    tableNameFormat = t.getSchemaName() + ".";
+                }
+                tableNameFormat += t.getTableName();
+                cRule.setTableName(tableNameFormat);
+                cRule.setCheckGroupName(t.getCheckGroupName());
+                qualityReportExt_ruleVOS.add(cRule);
+            });
+        }
+
+        all.setPages(pageAllRule.getPages());
+        all.setTotal(pageAllRule.getTotal());
+        all.setCurrent(pageAllRule.getCurrent());
+        all.setSize(pageAllRule.getSize());
+        all.setRecords(qualityReportExt_ruleVOS);
+        return all;
     }
 
     @Override
