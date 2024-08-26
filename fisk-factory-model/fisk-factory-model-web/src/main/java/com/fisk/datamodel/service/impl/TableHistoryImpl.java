@@ -1,7 +1,9 @@
 package com.fisk.datamodel.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
@@ -10,6 +12,7 @@ import com.fisk.datamodel.dto.dimension.DimensionDTO;
 import com.fisk.datamodel.dto.fact.FactDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryDTO;
 import com.fisk.datamodel.dto.tablehistory.TableHistoryQueryDTO;
+import com.fisk.datamodel.dto.versionsql.VersionSqlDTO;
 import com.fisk.datamodel.entity.TableHistoryPO;
 import com.fisk.datamodel.map.TableHistoryMap;
 import com.fisk.datamodel.mapper.TableHistoryMapper;
@@ -18,6 +21,8 @@ import com.fisk.datamodel.service.IFact;
 import com.fisk.datamodel.service.ITableHistory;
 import com.fisk.datamodel.utils.httprequest.ApiHttpRequestFactoryHelper;
 import com.fisk.datamodel.utils.httprequest.IBuildHttpRequest;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.DwLogQueryDTO;
 import com.fisk.task.dto.DwLogResultDTO;
@@ -52,6 +57,9 @@ public class TableHistoryImpl
     @Resource
     private PublishTaskClient taskClient;
 
+    @Resource
+    private UserClient userClient;
+
     @Override
     public ResultEnum addTableHistory(List<TableHistoryDTO> dto) {
         dto.stream().filter(Objects::nonNull)
@@ -72,8 +80,37 @@ public class TableHistoryImpl
                 .eq(TableHistoryPO::getTableType, dto.tableType);
         List<TableHistoryDTO> tableHistoryDTOS = TableHistoryMap.INSTANCES.poListToDtoList(mapper.selectList(queryWrapper));
 
-        for (TableHistoryDTO tableHistoryDTO : tableHistoryDTOS) {
+        //以下代码是为了将创建人从id转为用户名称username
+        //不抛出异常的原因：不要因为创建人转换错误导致本整个获取失败
+        try {
+            //获取平台所有用户信息
+            ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserList();
+            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                List<UserDTO> userDTOS = resultEntity.getData();
+                if (!CollectionUtils.isEmpty(userDTOS)){
+                    for (TableHistoryDTO historyDTO : tableHistoryDTOS) {
+                        userDTOS.stream()
+                                .filter(userDTO -> String.valueOf(userDTO.getId()).equals(historyDTO.getCreateUser()))
+                                .findFirst()
+                                .ifPresent(userDTO -> historyDTO.createUser = userDTO.getUsername());
+                    }
 
+                    //若tableHistoryDTOS和userDTOS都很大的话 使用lambda并行流
+//                    tableHistoryDTOS.parallelStream().forEach(versionSqlDTO -> {
+//                        userDTOS.stream()
+//                                .filter(userDTO -> String.valueOf(userDTO.getId()).equals(historyDTO.getCreateUser()))
+//                                .findFirst()
+//                                .ifPresent(userDTO -> historyDTO.createUser = userDTO.getUsername());
+//                    });
+
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取平台所有用户信息失败,原因：", e);
+        }
+
+        //获取数仓表单表发布时，nifi的同步情况：日志+报错信息
+        for (TableHistoryDTO tableHistoryDTO : tableHistoryDTOS) {
             int tableType = tableHistoryDTO.tableType;
             int tableId = tableHistoryDTO.getTableId();
             LocalDateTime createTime = tableHistoryDTO.getCreateTime();
@@ -82,6 +119,7 @@ public class TableHistoryImpl
             tableHistoryQueryDTO.setTableId(tableId);
             tableHistoryQueryDTO.setTableType(tableType);
             tableHistoryQueryDTO.setPublishTime(createTime);
+            //获取数仓表单表发布时，nifi的同步情况：日志+报错信息
             DwLogResultDTO dwPublishNifiStatus = getDwPublishNifiStatus(tableHistoryQueryDTO);
             tableHistoryDTO.setDto(dwPublishNifiStatus);
         }

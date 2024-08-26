@@ -39,9 +39,15 @@ public class VersionSqlDTO {
     private Integer tableType;
 
     /**
-     *
+     * 创建时间
      */
     @ApiModelProperty(value = "创建时间")
     public LocalDateTime createTime;
+
+    /**
+     * 创建人
+     */
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
 
 }

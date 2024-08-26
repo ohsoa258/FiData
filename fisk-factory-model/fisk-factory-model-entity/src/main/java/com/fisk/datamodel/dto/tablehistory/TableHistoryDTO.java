@@ -48,4 +48,10 @@ public class TableHistoryDTO {
      * 本次同步详情
      */
     public DwLogResultDTO dto;
+
+    /**
+     * 创建人
+     */
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
 }
