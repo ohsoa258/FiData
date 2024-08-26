@@ -114,6 +114,13 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
     ResultEnum deleteDataCheckLogs(long ruleId);
 
     /**
+     * 检查规则日志增加评语
+     *
+     * @return 结果
+     */
+    ResultEnum dataCheckLogAddUserComment(DataCheckLogCommentDTO dto);
+
+    /**
      * 生成数据检查结果——Excel
      *
      * @return 检查结果

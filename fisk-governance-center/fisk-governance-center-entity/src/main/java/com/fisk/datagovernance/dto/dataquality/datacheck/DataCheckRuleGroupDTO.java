@@ -14,8 +14,8 @@ import java.util.List;
 @Data
 public class DataCheckRuleGroupDTO {
     /**
-     * 数据元标准ID集合(数据标准)
+     * 数据标准目录id(数据标准)
      */
-    @ApiModelProperty(value = "数据元标准ID集合(数据标准)")
-    public List<Integer> standardIdList;
+    @ApiModelProperty(value = "数据标准目录id(数据标准)")
+    public List<Integer> standardMenuIdList;
 }

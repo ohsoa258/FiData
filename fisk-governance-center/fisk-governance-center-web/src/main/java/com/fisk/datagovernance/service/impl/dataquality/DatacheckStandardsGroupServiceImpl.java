@@ -138,7 +138,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 groupDtoList = groupDtoList.stream().map(i -> {
                     List<DataCheckVO> dataCheckDTOS = datacheckMap.get(i.getId());
                     if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(dataCheckDTOS)) {
-                        List<List<String>> belongToReportNameList = dataCheckDTOS.stream().map(DataCheckVO::getBelongToReportNameList).collect(Collectors.toList());
+                        List<List<String>> belongToReportNameList = dataCheckDTOS.stream().filter(s -> !CollectionUtils.isEmpty(s.getBelongToReportNameList())).map(DataCheckVO::getBelongToReportNameList).collect(Collectors.toList());
                         if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(belongToReportNameList)) {
                             List<String> dist_BelongToReportNameList = new ArrayList<>();
                             for (List<String> bReportNameList : belongToReportNameList) {
@@ -267,18 +267,19 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
     }
 
     @Override
-    public List<DataCheckRuleGroupVO> getRuleGroupByStandardIds(DataCheckRuleGroupDTO dto) {
+    public List<DataCheckRuleGroupVO> getRuleGroupByStandardMenuIds(DataCheckRuleGroupDTO dto) {
         List<DataCheckRuleGroupVO> ruleGroupVOS = new ArrayList<>();
-        if (dto == null || CollectionUtils.isEmpty(dto.getStandardIdList())) {
+        if (dto == null || CollectionUtils.isEmpty(dto.getStandardMenuIdList())) {
             return ruleGroupVOS;
         }
         QueryWrapper<DatacheckStandardsGroupPO> dataCheckStandardsGroupPOQueryWrapper = new QueryWrapper<>();
         dataCheckStandardsGroupPOQueryWrapper.lambda().eq(DatacheckStandardsGroupPO::getDelFlag, 1)
-                .in(DatacheckStandardsGroupPO::getStandardsId, dto.getStandardIdList());
+                .in(DatacheckStandardsGroupPO::getStandardsMenuId, dto.getStandardMenuIdList());
         List<DatacheckStandardsGroupPO> dataCheckStandardsGroupPOS = baseMapper.selectList(dataCheckStandardsGroupPOQueryWrapper);
         if (!CollectionUtils.isEmpty(dataCheckStandardsGroupPOS)) {
             dataCheckStandardsGroupPOS.forEach(t -> {
                 DataCheckRuleGroupVO dataCheckRuleGroupVO = new DataCheckRuleGroupVO();
+                dataCheckRuleGroupVO.setStandardsMenuId(t.getStandardsMenuId());
                 dataCheckRuleGroupVO.setStandardsId(t.getStandardsId());
                 dataCheckRuleGroupVO.setDataCheckGroupId(Math.toIntExact(t.getId()));
                 dataCheckRuleGroupVO.setCheckGroupName(t.getCheckGroupName());

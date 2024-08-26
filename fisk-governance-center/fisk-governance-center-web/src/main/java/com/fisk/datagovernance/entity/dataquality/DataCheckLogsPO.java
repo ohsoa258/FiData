@@ -140,4 +140,9 @@ public class DataCheckLogsPO extends BasePO {
      * 检查错误数据条数的SQL语句
      */
     public String checkErrorDataCountSql;
+
+    /**
+     * 用户评语
+     */
+    public String userComment;
 }

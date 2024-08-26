@@ -22,6 +22,7 @@ import com.fisk.datagovernance.entity.dataquality.*;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.IDataQualityClientManageService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataFieldRuleVO;
 import com.fisk.datagovernance.vo.dataquality.external.MetaDataQualityRuleVO;
@@ -82,6 +83,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     @Resource
     private QualityReportManageImpl qualityReportManage;
+
+    @Resource
+    private DataCheckLogsMapper dataCheckLogsMapper;
 
     @Resource
     private DataCheckLogsManageImpl dataCheckLogsManageImpl;
@@ -243,7 +247,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
             }
 
-            // 第三步：查询质量报告下的通知方式
+            // 第三步：查询质量报告下最新的校验规则日志且评语不为空且检查不通过的检查日志
+            List<DataCheckLogsVO> dataCheckLogUserCommentList = dataCheckLogsMapper.getDataCheckLogUserComment(reportId);
+
+            // 第四步：查询质量报告下的通知方式
             QualityReportNoticeDTO qualityReportNoticeDTO = new QualityReportNoticeDTO();
             QueryWrapper<QualityReportNoticePO> qualityReportNoticePOQueryWrapper = new QueryWrapper<>();
             qualityReportNoticePOQueryWrapper.lambda().eq(QualityReportNoticePO::getDelFlag, 1)
@@ -259,7 +266,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportNoticeDTO.setSubject(qualityReportNoticePO.getSubject());
             qualityReportNoticeDTO.setEmailServerId(qualityReportNoticePO.getEmailServerId());
 
-            // 第四步：查询质量报告下的接收人
+            // 第五步：查询质量报告下的接收人
             List<QualityReportRecipientDTO> qualityReportRecipientDTOs = new ArrayList<>();
             QueryWrapper<QualityReportRecipientPO> qualityReportRecipientPOQueryWrapper = new QueryWrapper<>();
             qualityReportRecipientPOQueryWrapper.lambda().eq(QualityReportRecipientPO::getDelFlag, 1)
@@ -285,7 +292,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 toAddressStr = Joiner.on(";").join(toAddressList);
             }
 
-            // 第五步：查询数据源信息
+            // 第六步：查询数据源信息
             List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
             if (!CollectionUtils.isNotEmpty(allDataSource)) {
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, "");
@@ -296,11 +303,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             // 检查规则附件
             List<AttachmentInfoPO> attachmentInfos = new ArrayList<>();
 
-            // 第六步：根据规则检查数据是否合规，不合规的数据生成规则检查报告
+            // 第七步：根据规则检查数据是否合规，不合规的数据生成规则检查报告
             ResultEnum resultEnum = ResultEnum.SUCCESS;
             switch (qualityReportPO.getReportType()) {
                 case 100:
-                    resultEnum = dataCheck_Rule_QualityReport_Create(qualityReportRules, allDataSource, dataCheckLogs, attachmentInfos, reportBatchNumber);
+                    resultEnum = dataCheck_Rule_QualityReport_Create(qualityReportRules, allDataSource,
+                            dataCheckLogs, attachmentInfos, dataCheckLogUserCommentList, reportBatchNumber);
                     break;
             }
             if (resultEnum != ResultEnum.SUCCESS) {
@@ -308,7 +316,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return ResultEntityBuild.buildData(resultEnum, "");
             }
 
-            // 第七步：根据返回的检查规则日志，生成summary报告
+            // 第八步：根据返回的检查规则日志，生成summary报告
             QualityReportLogPO qualityReportLogPO = new QualityReportLogPO();
             AttachmentInfoPO attachmentInfoPO = new AttachmentInfoPO();
             attachmentInfoPO.setOriginalName(qualityReportPO.getReportName() + ".xlsx");
@@ -327,7 +335,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return ResultEntityBuild.buildData(resultEnum, "");
             }
 
-            // 第八步：发送邮件,将summary报告发给指定收件人
+            // 第九步：发送邮件,将summary报告发给指定收件人
             ResultEntity<Object> sendResultObj = null;
             QualityReportDTO qualityReportDTO = new QualityReportDTO();
             qualityReportDTO.sendAttachment = true;
@@ -342,7 +350,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
             // 创建质量报告结束计时
             String createReportEndTime = DateTimeUtils.getNow();
-            // 第九步：生成summary报告发送日志，继续补充报告日志信息
+            // 第十步：生成summary报告发送日志，继续补充报告日志信息
             qualityReportLogPO.setReportId(Math.toIntExact(qualityReportPO.getId()));
             qualityReportLogPO.setReportName(qualityReportPO.getReportName());
             qualityReportLogPO.setReportType(qualityReportPO.getReportType());
@@ -368,7 +376,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             attachmentInfoPO.setObjectId(String.valueOf(qualityReportLogPO.getId()));
             attachmentInfos.add(attachmentInfoPO);
 
-            // 第十步：保存规则检查日志和附件日志
+            // 第十一步：保存规则检查日志和附件日志
             dataCheckLogsManageImpl.saveBatch(dataCheckLogs);
             attachmentInfoImpl.saveBatch(attachmentInfos);
         } catch (Exception ex) {
@@ -461,6 +469,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_bodyDTO.setCheckStatus(dataCheckLogsPO.getCheckResult());
             qualityReportSummary_bodyDTO.setTableFullName(tableFullName);
             qualityReportSummary_bodyDTO.setFieldName(dataCheckLogsPO.getFieldName());
+            qualityReportSummary_bodyDTO.setUserComment(dataCheckLogsPO.getUserComment());
             qualityReportSummary_bodyList.add(qualityReportSummary_bodyDTO);
         }
 
@@ -485,8 +494,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return ResultEnum.SUCCESS;
     }
 
-    public ResultEnum dataCheck_Rule_QualityReport_Create(List<QualityReportRulePO> qualityReportRulePOS, List<DataSourceConVO> allDataSource,
-                                                          List<DataCheckLogsPO> dataCheckLogs, List<AttachmentInfoPO> attachmentInfos, String reportBatchNumber) {
+    public ResultEnum dataCheck_Rule_QualityReport_Create(List<QualityReportRulePO> qualityReportRulePOS,
+                                                          List<DataSourceConVO> allDataSource,
+                                                          List<DataCheckLogsPO> dataCheckLogs,
+                                                          List<AttachmentInfoPO> attachmentInfos,
+                                                          List<DataCheckLogsVO> dataCheckLogUserCommentList,
+                                                          String reportBatchNumber) {
         // 第一步：查询待执行的检查规则
         List<Integer> ruleIds = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
         QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
@@ -539,11 +552,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (dataSourceConVO == null) {
                 continue;
             }
+            // 如果校验不通过且用户评语不为空，回写用户评语
+            String userComment = "";
+            if (CollectionUtils.isNotEmpty(dataCheckLogUserCommentList)) {
+                DataCheckLogsVO dataCheckLogUserCommentVO = dataCheckLogUserCommentList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
+                if (dataCheckLogUserCommentVO != null) {
+                    userComment = dataCheckLogUserCommentVO.getUserComment();
+                }
+            }
 
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
             ResultEntity<QualityReportSummary_RuleDTO> resultEntity = null;
             try {
-                resultEntity = dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO, dataCheckExtendPO, templatePO, dataCheckConditionPOs);
+                resultEntity = dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
+                        dataCheckExtendPO, templatePO, dataCheckConditionPOs, userComment);
                 // 单个规则校验不通过，跳过
                 if (resultEntity == null || resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                     continue;
@@ -624,6 +646,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
             dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
             dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
+            dataCheckLogsPO.setUserComment(qualityReportSummary_ruleDTO.getUserComment());
             dataCheckLogs.add(dataCheckLogsPO);
 
             // 第七步：释放集合对象
@@ -646,7 +669,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
     public ResultEntity<QualityReportSummary_RuleDTO> dataVerificationAndPreVerification(DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
                                                                                          DataCheckExtendPO dataCheckExtendPO, TemplatePO templatePO,
-                                                                                         List<DataCheckConditionPO> dataCheckConditionPOs) {
+                                                                                         List<DataCheckConditionPO> dataCheckConditionPOs,
+                                                                                         String userComment) {
         ResultEntity<QualityReportSummary_RuleDTO> resultEntity = new ResultEntity<>();
         resultEntity.setCode(ResultEnum.SUCCESS.getCode());
         try {
@@ -711,6 +735,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_paramDTO.setAllocateFieldNames(allocateFieldNames);
             qualityReportSummary_paramDTO.setAllocateFieldNamesFormat(allocateFieldNamesFormat);
             qualityReportSummary_paramDTO.setFieldCheckWhereSql(fieldCheckWhereSql);
+            qualityReportSummary_paramDTO.setUserComment(userComment);
             log.info("【dataVerificationAndPreVerification】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
 
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
@@ -908,17 +933,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     String sql_InString = list.stream()
                             .map(item -> dataSourceTypeEnum == DataSourceTypeEnum.DORIS ? "'" + item + "'" : "" + isConsN + "'" + item + "'")
                             .collect(Collectors.joining(", "));
+                    String caseFieldStr = f_Name;
                     if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
-                                f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, sql_InString);
-                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
-                                t_Name, fieldCheckWhereSql, f_Name, sql_InString);
-                    } else {
-                        sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
-                                f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, sql_InString);
-                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
-                                t_Name, fieldCheckWhereSql, f_Name, sql_InString);
+                        caseFieldStr = " IFNULL(" + f_Name + ",'') ";
+                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+                        caseFieldStr = " COALESCE(CAST(" + f_Name + " AS VARCHAR),'') ";
                     }
+                    sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
+                            f_Name, f_Allocate, t_Name, fieldCheckWhereSql, caseFieldStr, sql_InString);
+                    sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
+                            t_Name, fieldCheckWhereSql, caseFieldStr, sql_InString);
                 }
                 break;
             //取值范围
@@ -938,9 +962,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')!='' AND %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
+                        // 为空也属于错误数据
+                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')='' OR %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql_BetweenAnd = String.format("%s NOT BETWEEN '%s' AND '%s'", f_Name, lowerBound_Int, upperBound_Int);
+                        // 为空也属于错误数据
+                        sql_BetweenAnd = String.format("(IFNULL(CAST(%s AS VARCHAR),'')='' OR %s NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s ",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
@@ -960,9 +986,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
                     String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')!='' AND %s::NUMERIC %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        // 为空也属于错误数据
+                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')='' OR %s::NUMERIC %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        sql_BetweenAnd = String.format("%s %s '%s'", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        // 为空也属于错误数据
+                        sql_BetweenAnd = String.format("(IFNULL(CAST(%s AS VARCHAR),'')='' OR %s %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
@@ -1833,6 +1861,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 保留两位小数，不进行四舍五入
         BigDecimal bigDecimal_CheckDataAccuracy = new BigDecimal(checkDataAccuracy).setScale(2, BigDecimal.ROUND_DOWN);
 
+        if (checkStatus != "通过") {
+            qualityReportSummary_ruleDTO.setUserComment(qualityReportSummary_paramDTO.getUserComment());
+        }
+
         qualityReportSummary_ruleDTO.setCheckDataCount(checkDataTotalCount);
         qualityReportSummary_ruleDTO.setCheckErrorDataCount(errorDataTotalCount);
         qualityReportSummary_ruleDTO.setDataAccuracy(bigDecimal_CheckDataAccuracy.toString() + "%");
@@ -2020,6 +2052,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         columns.add("检查数据条数");
         columns.add("数据的正确率");
         columns.add("是否通过检查");
+        columns.add("用户评语");
         rowDto.setColumns(columns);
         singRows.add(rowDto);
 
@@ -2034,6 +2067,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         columns.add(String.valueOf(qualityReportSummaryRuleDTO.getCheckDataCount()));
         columns.add(qualityReportSummaryRuleDTO.getDataAccuracy());
         columns.add(qualityReportSummaryRuleDTO.getCheckStatus());
+        columns.add(qualityReportSummaryRuleDTO.getUserComment());
         rowDto.setColumns(columns);
         singRows.add(rowDto);
 

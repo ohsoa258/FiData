@@ -703,7 +703,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
 
         ResultEntity<QualityReportSummary_RuleDTO> resultEntity = dataQualityClientManage.dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
-                dataCheckExtendPO, templatePO, dataCheckConditionPOs);
+                dataCheckExtendPO, templatePO, dataCheckConditionPOs, "");
 
         return ResultEnum.getEnum(resultEntity.getCode());
     }
@@ -3358,6 +3358,20 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             dataCheckLogsMapper.delete(dataCheckLogsPOQueryWrapper);
         }
         return ResultEnum.SUCCESS;
+    }
+
+    @Override
+    public ResultEnum dataCheckLogAddUserComment(DataCheckLogCommentDTO dto) {
+        if (dto == null) {
+            return ResultEnum.PARAMTER_NOTNULL;
+        }
+        DataCheckLogsPO dataCheckLogsPO = dataCheckLogsMapper.selectById(dto.getId());
+        if (dataCheckLogsPO == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        dataCheckLogsPO.setUserComment(dto.getUserComment());
+        int i = dataCheckLogsMapper.updateById(dataCheckLogsPO);
+        return i > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }
 
     @Override
