@@ -144,13 +144,15 @@ public class DataCheckController {
     @ApiOperation("添加数据校验数据元标准组")
     @PostMapping("/addDataCheckStandardsGroup")
     public ResultEntity<Object> addDataCheckStandardsGroup(@RequestBody DatacheckStandardsGroupDTO dto) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.addDataCheckStandardsGroup(dto));
+        ResultEnum resultEnum = datacheckStandardsGroupService.addDataCheckStandardsGroup(dto);
+        return ResultEntityBuild.buildData(resultEnum, resultEnum);
     }
 
     @ApiOperation("修改数据校验数据元标准组")
     @PostMapping("/editDataCheckStandardsGroup")
     public ResultEntity<Object> editDataCheckStandardsGroup(@RequestBody DatacheckStandardsGroupDTO dto) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.editDataCheckStandardsGroup(dto));
+        ResultEnum resultEnum = datacheckStandardsGroupService.editDataCheckStandardsGroup(dto);
+        return ResultEntityBuild.buildData(resultEnum, resultEnum);
     }
 
     @ApiOperation("删除数据校验数据元标准组")

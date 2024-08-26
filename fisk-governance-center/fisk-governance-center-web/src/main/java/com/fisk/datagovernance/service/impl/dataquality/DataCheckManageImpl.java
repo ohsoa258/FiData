@@ -457,6 +457,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         // 检查是否存在配置错误 && 执行预校验
         for (DataCheckEditDTO dto : dtoList) {
+            // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
+            int idByDataSourceId = 0;
+            if (dto.getSourceType() == SourceTypeEnum.FiData) {
+                idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
+                if (idByDataSourceId == 0) {
+                    return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+                }
+            }
             //第一步：验证模板是否存在以及表规则是否存在
             TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
             if (templatePO == null) {
@@ -486,7 +494,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
             //第三步：验证配置的校验规则（同步后）是否能正常运行
             if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
-                ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+                ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO,
+                        templatePO, dataCheckExtendPOs, idByDataSourceId);
                 if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                     return ruleCheckResultEnum;
                 }
@@ -505,8 +514,9 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(DataCheckDTO dto, boolean isPreVerification) {
         // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
+        int idByDataSourceId = 0;
         if (dto.getSourceType() == SourceTypeEnum.FiData) {
-            int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
+            idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceType(), dto.getDatasourceId());
             if (idByDataSourceId == 0) {
                 return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
             }
@@ -541,7 +551,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         //第三步：验证配置的校验规则（同步后）是否能正常运行
         if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION && isPreVerification) {
-            ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+            ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO,
+                    templatePO, dataCheckExtendPOs, idByDataSourceId);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                 return ruleCheckResultEnum;
             }
@@ -577,6 +588,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         // 检查是否存在配置错误 && 执行预校验
         for (DataCheckEditDTO dto : dtoList) {
+            int idByDataSourceId = dto.getDatasourceId();
             //第一步：验证模板是否存在
             TemplatePO templatePO = templateMapper.selectById(dto.getTemplateId());
             if (templatePO == null) {
@@ -611,7 +623,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
             //第三步：验证配置的校验规则（同步后）是否能正常运行
             if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION) {
-                ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+                ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO,
+                        templatePO, dataCheckExtendPOs, idByDataSourceId);
                 if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                     return ruleCheckResultEnum;
                 }
@@ -638,6 +651,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
+        int idByDataSourceId = dataCheckPO.getDatasourceId();
         QueryWrapper<DataCheckPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().in(DataCheckPO::getRuleName, dto.getRuleName())
                 .eq(DataCheckPO::getDelFlag, 1)
@@ -663,7 +677,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
         //第三步：验证配置的校验规则（同步后）是否能正常运行
         if (dto.getRuleExecuteNode() == RuleExecuteNodeTypeEnum.AFTER_SYNCHRONIZATION && isPreVerification) {
-            ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO, templatePO, dataCheckExtendPOs);
+            ResultEnum ruleCheckResultEnum = rulePreVerification(dataCheckPO, dataCheckExtendPO,
+                    templatePO, dataCheckExtendPOs, idByDataSourceId);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                 return ruleCheckResultEnum;
             }
@@ -691,13 +706,14 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     public ResultEnum rulePreVerification(DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO,
-                                          TemplatePO templatePO, List<DataCheckConditionPO> dataCheckConditionPOs) {
+                                          TemplatePO templatePO, List<DataCheckConditionPO> dataCheckConditionPOs,
+                                          int datasourceId) {
         //获取数据源
         List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
         if (CollectionUtils.isEmpty(allDataSource)) {
             return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
         }
-        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+        DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == datasourceId).findFirst().orElse(null);
         if (dataSourceConVO == null) {
             return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
         }
