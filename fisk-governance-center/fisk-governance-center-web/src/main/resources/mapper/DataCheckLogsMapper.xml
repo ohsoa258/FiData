@@ -30,7 +30,7 @@
         log.check_data_sql,
         log.check_data_count_sql,
         log.check_error_data_count_sql,
-        log.user_comment,
+        log.quality_analysis,
         log.create_time
         FROM
         tb_datacheck_rule_logs log

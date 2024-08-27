@@ -97,8 +97,8 @@ public class QualityReportSummary_RuleDTO {
     public SheetDataDto sheetData;
 
     /**
-     * 用户评语
+     * 质量分析
      */
-    @ApiModelProperty(value = "用户评语")
-    public String userComment;
+    @ApiModelProperty(value = "质量分析")
+    public String qualityAnalysis;
 }

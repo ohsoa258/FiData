@@ -46,7 +46,7 @@ public class QualityReportSummary_BodyDTO {
     public String checkStatus;
 
     /**
-     * 用户评语
+     * 质量分析
      */
-    public String userComment;
+    public String qualityAnalysis;
 }

@@ -142,7 +142,7 @@ public class DataCheckLogsPO extends BasePO {
     public String checkErrorDataCountSql;
 
     /**
-     * 用户评语
+     * 质量分析
      */
-    public String userComment;
+    public String qualityAnalysis;
 }
