@@ -52,7 +52,7 @@ public class GenerateCondition {
                         str.append(" and " + model.columnName + " = " + model.columnValue + " ");
                         break;
                     case CONTAINS:
-                        str.append(" or " + model.columnName + " like '%" + "" + model.columnValue + "'");
+                        str.append(" (or " + model.columnName + " like '%" + "" + model.columnValue + "'");
                         break;
                     default:
                         break;
@@ -61,7 +61,9 @@ public class GenerateCondition {
         }
 
         if (str.toString().contains("or")){
-            str.replace(str.indexOf("or"), str.indexOf("or") + 2, "and");
+            str.replace(str.indexOf("(or"), str.indexOf("(or") + 3, "and (");
+            str.replace(str.indexOf("(or"), str.indexOf("(or") + 1, "");
+            str.append(")");
         }
 
         return str.toString();

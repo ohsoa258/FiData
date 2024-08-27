@@ -2500,6 +2500,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             if (driveTypePOList != null) {
                 for (AppRegistrationVO item : appRegistrationVOList) {
                     AppDataSourcePO po = driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null);
+                    if (po==null){
+                        continue;
+                    }
                     String driveType = Objects.requireNonNull(po).getDriveType();
                     log.info("应用驱动类型：" + driveType);
                     item.setDriveType(driveType);
