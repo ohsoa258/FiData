@@ -54,13 +54,13 @@ public interface IDatacheckStandardsGroupService extends IService<DatacheckStand
 
     /**
      * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckRuleGroupVO>
-     * @description 根据数据元标准ID获取数据元校验规则组
+     * @description 根据数据元目录ID获取数据元校验规则组
      * @author dick
      * @date 2024/8/23 10:10
      * @version v1.0
      * @params dto
      */
-    List<DataCheckRuleGroupVO> getRuleGroupByStandardIds(DataCheckRuleGroupDTO dto);
+    List<DataCheckRuleGroupVO> getRuleGroupByStandardMenuIds(DataCheckRuleGroupDTO dto);
 
     ResultEnum editDataCheckByStandards(StandardsDTO standardsDTO);
 }

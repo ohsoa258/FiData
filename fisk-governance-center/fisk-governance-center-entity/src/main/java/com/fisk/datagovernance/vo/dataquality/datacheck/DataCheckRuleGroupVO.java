@@ -18,6 +18,12 @@ public class DataCheckRuleGroupVO {
     public Integer standardsId;
 
     /**
+     * 数据标准目录id(数据标准)
+     */
+    @ApiModelProperty(value = "数据标准目录id(数据标准)")
+    public Integer standardsMenuId;
+
+    /**
      * 规则所属分组id(数据标准)
      */
     @ApiModelProperty(value = "规则所属分组id(数据标准)")

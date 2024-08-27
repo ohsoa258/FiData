@@ -64,4 +64,10 @@ public class QualityReportSummary_ParamDTO {
      */
     @ApiModelProperty(value = "报告批次号")
     public String reportBatchNumber;
+
+    /**
+     * 用户评语
+     */
+    @ApiModelProperty(value = "用户评语")
+    public String userComment;
 }

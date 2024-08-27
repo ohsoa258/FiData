@@ -44,4 +44,9 @@ public class QualityReportSummary_BodyDTO {
      * 是否检查通过
      */
     public String checkStatus;
+
+    /**
+     * 用户评语
+     */
+    public String userComment;
 }

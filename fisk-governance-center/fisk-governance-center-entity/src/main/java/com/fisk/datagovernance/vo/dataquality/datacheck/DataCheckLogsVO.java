@@ -200,4 +200,10 @@ public class DataCheckLogsVO {
      */
     @ApiModelProperty(value = "规则报告名称")
     public String originalName;
+
+    /**
+     * 用户评语
+     */
+    @ApiModelProperty(value = "用户评语")
+    public String userComment;
 }

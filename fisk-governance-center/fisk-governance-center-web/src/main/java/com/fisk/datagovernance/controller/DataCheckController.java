@@ -113,6 +113,13 @@ public class DataCheckController {
         return service.deleteDataCheckLogs(ruleId);
     }
 
+    @ApiOperation("检查规则日志增加用户评语")
+    @PostMapping("/dataCheckLogAddUserComment")
+    public ResultEntity<ResultEnum> dataCheckLogAddUserComment(@RequestBody DataCheckLogCommentDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataCheckLogAddUserComment(dto));
+
+    }
+
     @ApiOperation("生成数据检查结果Excel")
     @PostMapping("/createDataCheckResultExcel")
     public ResultEntity<String> createDataCheckResultExcel(@RequestParam("logIds") String logIds) {
@@ -137,13 +144,15 @@ public class DataCheckController {
     @ApiOperation("添加数据校验数据元标准组")
     @PostMapping("/addDataCheckStandardsGroup")
     public ResultEntity<Object> addDataCheckStandardsGroup(@RequestBody DatacheckStandardsGroupDTO dto) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.addDataCheckStandardsGroup(dto));
+        ResultEnum resultEnum = datacheckStandardsGroupService.addDataCheckStandardsGroup(dto);
+        return ResultEntityBuild.buildData(resultEnum, resultEnum);
     }
 
     @ApiOperation("修改数据校验数据元标准组")
     @PostMapping("/editDataCheckStandardsGroup")
     public ResultEntity<Object> editDataCheckStandardsGroup(@RequestBody DatacheckStandardsGroupDTO dto) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.editDataCheckStandardsGroup(dto));
+        ResultEnum resultEnum = datacheckStandardsGroupService.editDataCheckStandardsGroup(dto);
+        return ResultEntityBuild.buildData(resultEnum, resultEnum);
     }
 
     @ApiOperation("删除数据校验数据元标准组")
@@ -152,10 +161,10 @@ public class DataCheckController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.deleteDataCheckStandardsGroup(id));
     }
 
-    @ApiOperation("根据数据元标准ID获取数据元校验规则组")
-    @PostMapping("/getRuleGroupByStandardIds")
-    public ResultEntity<List<DataCheckRuleGroupVO>> getRuleGroupByStandardIds(@RequestBody DataCheckRuleGroupDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, datacheckStandardsGroupService.getRuleGroupByStandardIds(dto));
+    @ApiOperation("根据数据元目录ID获取数据元校验规则组")
+    @PostMapping("/getRuleGroupByStandardMenuIds")
+    public ResultEntity<List<DataCheckRuleGroupVO>> getRuleGroupByStandardMenuIds(@RequestBody DataCheckRuleGroupDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, datacheckStandardsGroupService.getRuleGroupByStandardMenuIds(dto));
     }
 
     @ApiOperation("查看数据源结构树")

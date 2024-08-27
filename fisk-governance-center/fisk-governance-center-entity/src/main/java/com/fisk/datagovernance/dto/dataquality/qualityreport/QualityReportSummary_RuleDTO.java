@@ -95,4 +95,10 @@ public class QualityReportSummary_RuleDTO {
      */
     @ApiModelProperty(value = "检查出来的错误数据")
     public SheetDataDto sheetData;
+
+    /**
+     * 用户评语
+     */
+    @ApiModelProperty(value = "用户评语")
+    public String userComment;
 }
