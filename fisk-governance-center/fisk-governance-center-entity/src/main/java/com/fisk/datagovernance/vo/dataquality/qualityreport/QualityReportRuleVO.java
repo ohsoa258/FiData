@@ -90,6 +90,12 @@ public class QualityReportRuleVO {
     public String tableName;
 
     /**
+     * 字段名称
+     */
+    @ApiModelProperty(value = "字段名称")
+    public String fieldName;
+
+    /**
      * 表类型
      */
     @ApiModelProperty(value = "表类型")

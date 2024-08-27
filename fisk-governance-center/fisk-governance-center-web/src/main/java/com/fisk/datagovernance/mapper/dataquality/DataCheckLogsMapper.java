@@ -32,7 +32,7 @@ public interface DataCheckLogsMapper extends FKBaseMapper<DataCheckLogsPO>
             "\ttb_datacheck_rule_logs \n" +
             "WHERE\n" +
             "\tdel_flag = 1 \n" +
-            "\tAND IFNULL( user_comment, '' )!= '' \n" +
+            "\tAND IFNULL( quality_analysis, '' )!= '' \n" +
             "\tAND check_result!='通过' \n"+
             "\tAND check_batch_number = (\n" +
             "\tSELECT\n" +
