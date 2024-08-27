@@ -129,7 +129,6 @@ public class BuildDataInputPgTableListener {
                     log.info("数仓执行修改表结构的存储过程返回结果" + msg);
                 }
 
-
                 log.info("保存版本号方法执行成功");
                 //获取建表语句
                 List<String> sqlList = dbCommand.buildStgAndOdsTable(buildPhysicalTableDTO);

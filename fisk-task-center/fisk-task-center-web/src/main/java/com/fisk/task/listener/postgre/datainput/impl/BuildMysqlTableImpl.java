@@ -328,7 +328,9 @@ public class BuildMysqlTableImpl implements IbuildTable {
                     .append(oldTableKeyName)
                     .append("` `")
                     .append(newTableKeyName)
-                    .append("` varchar(50); ");
+                    .append("` varchar(50) ")
+                    .append("DEFAULT 'uuid()'")
+                    .append(";");
             sql.append("ALTER TABLE `")
                     .append(oldTblName)
                     .append("` RENAME `")
