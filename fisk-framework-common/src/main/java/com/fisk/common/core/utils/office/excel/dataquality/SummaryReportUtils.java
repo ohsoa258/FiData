@@ -113,7 +113,8 @@ public class SummaryReportUtils {
         // 创建列头
         Row headerRow = sheet.createRow(3);
         headerRow.setHeightInPoints(20);
-        String[] headers = {"报告名称", "报告负责人", "报告批次号", "表名称", "字段名称", "检查规则名称", "规则内容", "检查数据条数", "数据的正确率", "是否通过检查", "用户评语"};
+        String[] headers = {"报告名称", "报告负责人", "报告批次号", "表名称", "字段名称", "检查规则名称",
+                "规则内容", "检查数据条数", "数据的正确率", "是否通过检查", "质量分析"};
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
@@ -136,7 +137,7 @@ public class SummaryReportUtils {
                     createCell(dataRow, 7, qualityReportSummary_bodyDTO.getCheckDataCount(), style_data);
                     createCell(dataRow, 8, qualityReportSummary_bodyDTO.getDataAccuracy(), style_data);
                     createCell(dataRow, 9, qualityReportSummary_bodyDTO.getCheckStatus(), style_data);
-                    createCell(dataRow, 10, qualityReportSummary_bodyDTO.getUserComment(), style_data);
+                    createCell(dataRow, 10, qualityReportSummary_bodyDTO.getQualityAnalysis(), style_data);
                     dataIndex++;
                 }
             }

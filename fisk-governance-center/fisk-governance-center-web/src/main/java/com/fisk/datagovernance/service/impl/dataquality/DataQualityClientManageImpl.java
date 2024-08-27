@@ -247,8 +247,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_NOTICE_NOTEXISTS, "");
             }
 
-            // 第三步：查询质量报告下最新的校验规则日志且评语不为空且检查不通过的检查日志
-            List<DataCheckLogsVO> dataCheckLogUserCommentList = dataCheckLogsMapper.getDataCheckLogUserComment(reportId);
+            // 第三步：查询质量报告下最新的校验规则日志且质量分析不为空且检查不通过的检查日志
+            List<DataCheckLogsVO> dataCheckLogQualityAnalysisList = dataCheckLogsMapper.getDataCheckLogQualityAnalysis(reportId);
 
             // 第四步：查询质量报告下的通知方式
             QualityReportNoticeDTO qualityReportNoticeDTO = new QualityReportNoticeDTO();
@@ -308,7 +308,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             switch (qualityReportPO.getReportType()) {
                 case 100:
                     resultEnum = dataCheck_Rule_QualityReport_Create(qualityReportRules, allDataSource,
-                            dataCheckLogs, attachmentInfos, dataCheckLogUserCommentList, reportBatchNumber);
+                            dataCheckLogs, attachmentInfos, dataCheckLogQualityAnalysisList, reportBatchNumber);
                     break;
             }
             if (resultEnum != ResultEnum.SUCCESS) {
@@ -469,7 +469,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_bodyDTO.setCheckStatus(dataCheckLogsPO.getCheckResult());
             qualityReportSummary_bodyDTO.setTableFullName(tableFullName);
             qualityReportSummary_bodyDTO.setFieldName(dataCheckLogsPO.getFieldName());
-            qualityReportSummary_bodyDTO.setUserComment(dataCheckLogsPO.getUserComment());
+            qualityReportSummary_bodyDTO.setQualityAnalysis(dataCheckLogsPO.getQualityAnalysis());
             qualityReportSummary_bodyList.add(qualityReportSummary_bodyDTO);
         }
 
@@ -498,7 +498,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                                           List<DataSourceConVO> allDataSource,
                                                           List<DataCheckLogsPO> dataCheckLogs,
                                                           List<AttachmentInfoPO> attachmentInfos,
-                                                          List<DataCheckLogsVO> dataCheckLogUserCommentList,
+                                                          List<DataCheckLogsVO> dataCheckLogQualityAnalysisList,
                                                           String reportBatchNumber) {
         // 第一步：查询待执行的检查规则
         List<Integer> ruleIds = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
@@ -552,12 +552,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             if (dataSourceConVO == null) {
                 continue;
             }
-            // 如果校验不通过且用户评语不为空，回写用户评语
-            String userComment = "";
-            if (CollectionUtils.isNotEmpty(dataCheckLogUserCommentList)) {
-                DataCheckLogsVO dataCheckLogUserCommentVO = dataCheckLogUserCommentList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
+            // 如果校验不通过且质量分析不为空，回写质量分析
+            String qualityAnalysis = "";
+            if (CollectionUtils.isNotEmpty(dataCheckLogQualityAnalysisList)) {
+                DataCheckLogsVO dataCheckLogUserCommentVO = dataCheckLogQualityAnalysisList.stream().filter(t -> t.getRuleId() == dataCheckPO.getId()).findFirst().orElse(null);
                 if (dataCheckLogUserCommentVO != null) {
-                    userComment = dataCheckLogUserCommentVO.getUserComment();
+                    qualityAnalysis = dataCheckLogUserCommentVO.getQualityAnalysis();
                 }
             }
 
@@ -565,7 +565,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             ResultEntity<QualityReportSummary_RuleDTO> resultEntity = null;
             try {
                 resultEntity = dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
-                        dataCheckExtendPO, templatePO, dataCheckConditionPOs, userComment);
+                        dataCheckExtendPO, templatePO, dataCheckConditionPOs, qualityAnalysis);
                 // 单个规则校验不通过，跳过
                 if (resultEntity == null || resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                     continue;
@@ -646,7 +646,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataCheckLogsPO.setCheckDataSql(qualityReportSummary_ruleDTO.getCheckDataSql());
             dataCheckLogsPO.setCheckDataCountSql(qualityReportSummary_ruleDTO.getCheckTotalCountSql());
             dataCheckLogsPO.setCheckErrorDataCountSql(qualityReportSummary_ruleDTO.getCheckErrorDataCountSql());
-            dataCheckLogsPO.setUserComment(qualityReportSummary_ruleDTO.getUserComment());
+            dataCheckLogsPO.setQualityAnalysis(qualityReportSummary_ruleDTO.getQualityAnalysis());
             dataCheckLogs.add(dataCheckLogsPO);
 
             // 第七步：释放集合对象
@@ -670,7 +670,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     public ResultEntity<QualityReportSummary_RuleDTO> dataVerificationAndPreVerification(DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
                                                                                          DataCheckExtendPO dataCheckExtendPO, TemplatePO templatePO,
                                                                                          List<DataCheckConditionPO> dataCheckConditionPOs,
-                                                                                         String userComment) {
+                                                                                         String qualityAnalysis) {
         ResultEntity<QualityReportSummary_RuleDTO> resultEntity = new ResultEntity<>();
         resultEntity.setCode(ResultEnum.SUCCESS.getCode());
         try {
@@ -735,7 +735,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_paramDTO.setAllocateFieldNames(allocateFieldNames);
             qualityReportSummary_paramDTO.setAllocateFieldNamesFormat(allocateFieldNamesFormat);
             qualityReportSummary_paramDTO.setFieldCheckWhereSql(fieldCheckWhereSql);
-            qualityReportSummary_paramDTO.setUserComment(userComment);
+            qualityReportSummary_paramDTO.setQualityAnalysis(qualityAnalysis);
             log.info("【dataVerificationAndPreVerification】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
 
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
@@ -1862,7 +1862,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         BigDecimal bigDecimal_CheckDataAccuracy = new BigDecimal(checkDataAccuracy).setScale(2, BigDecimal.ROUND_DOWN);
 
         if (checkStatus != "通过") {
-            qualityReportSummary_ruleDTO.setUserComment(qualityReportSummary_paramDTO.getUserComment());
+            qualityReportSummary_ruleDTO.setQualityAnalysis(qualityReportSummary_paramDTO.getQualityAnalysis());
         }
 
         qualityReportSummary_ruleDTO.setCheckDataCount(checkDataTotalCount);
@@ -2052,7 +2052,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         columns.add("检查数据条数");
         columns.add("数据的正确率");
         columns.add("是否通过检查");
-        columns.add("用户评语");
+        columns.add("质量分析");
         rowDto.setColumns(columns);
         singRows.add(rowDto);
 
@@ -2067,7 +2067,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         columns.add(String.valueOf(qualityReportSummaryRuleDTO.getCheckDataCount()));
         columns.add(qualityReportSummaryRuleDTO.getDataAccuracy());
         columns.add(qualityReportSummaryRuleDTO.getCheckStatus());
-        columns.add(qualityReportSummaryRuleDTO.getUserComment());
+        columns.add(qualityReportSummaryRuleDTO.getQualityAnalysis());
         rowDto.setColumns(columns);
         singRows.add(rowDto);
 

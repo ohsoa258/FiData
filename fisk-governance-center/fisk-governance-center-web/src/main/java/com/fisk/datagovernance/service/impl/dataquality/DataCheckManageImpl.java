@@ -3377,7 +3377,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     }
 
     @Override
-    public ResultEnum dataCheckLogAddUserComment(DataCheckLogCommentDTO dto) {
+    public ResultEnum dataCheckLogAddQualityAnalysis(DataCheckLogCommentDTO dto) {
         if (dto == null) {
             return ResultEnum.PARAMTER_NOTNULL;
         }
@@ -3385,7 +3385,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         if (dataCheckLogsPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        dataCheckLogsPO.setUserComment(dto.getUserComment());
+        dataCheckLogsPO.setQualityAnalysis(dto.getQualityAnalysis());
         int i = dataCheckLogsMapper.updateById(dataCheckLogsPO);
         return i > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
     }

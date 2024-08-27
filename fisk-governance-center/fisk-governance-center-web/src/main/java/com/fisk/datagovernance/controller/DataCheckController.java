@@ -113,10 +113,10 @@ public class DataCheckController {
         return service.deleteDataCheckLogs(ruleId);
     }
 
-    @ApiOperation("检查规则日志增加用户评语")
-    @PostMapping("/dataCheckLogAddUserComment")
-    public ResultEntity<ResultEnum> dataCheckLogAddUserComment(@RequestBody DataCheckLogCommentDTO dto) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataCheckLogAddUserComment(dto));
+    @ApiOperation("检查规则日志增加质量分析")
+    @PostMapping("/dataCheckLogAddQualityAnalysis")
+    public ResultEntity<ResultEnum> dataCheckLogAddQualityAnalysis(@RequestBody DataCheckLogCommentDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataCheckLogAddQualityAnalysis(dto));
 
     }
 

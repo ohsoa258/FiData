@@ -27,12 +27,12 @@ public interface DataCheckLogsMapper extends FKBaseMapper<DataCheckLogsPO>
             "\tid,\n" +
             "\trule_id AS ruleId,\n" +
             "\tcheck_batch_number AS checkBatchNumber,\n" +
-            "\tuser_comment AS userComment \n" +
+            "\tquality_analysis AS qualityAnalysis \n" +
             "FROM\n" +
             "\ttb_datacheck_rule_logs \n" +
             "WHERE\n" +
             "\tdel_flag = 1 \n" +
-            "\tAND IFNULL( user_comment, '' )!= '' \n" +
+            "\tAND IFNULL( quality_analysis, '' )!= '' \n" +
             "\tAND check_result!='通过' \n"+
             "\tAND check_batch_number = (\n" +
             "\tSELECT\n" +
@@ -46,5 +46,5 @@ public interface DataCheckLogsMapper extends FKBaseMapper<DataCheckLogsPO>
             "\t\tcreate_time DESC \n" +
             "\tLIMIT 0,\n" +
             "\t1)")
-    List<DataCheckLogsVO> getDataCheckLogUserComment(@Param("reportId") int reportId);
+    List<DataCheckLogsVO> getDataCheckLogQualityAnalysis(@Param("reportId") int reportId);
 }

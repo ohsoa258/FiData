@@ -154,6 +154,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
 
                 // 质量报告下的质量规则的详细信息
                 List<DataCheckPO> dataCheckPOList = null;
+                List<DataCheckExtendPO> dataCheckExtendPOList = null;
                 if (CollectionUtils.isNotEmpty(qualityReportRulePOS)) {
                     // 查询质量报告下的质量规则详细信息
                     List<Integer> dataCheck_RuleIdList = qualityReportRulePOS.stream().filter(t -> t.getReportType() == 100).map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
@@ -162,6 +163,11 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         dataCheckPOQueryWrapper.lambda().eq(DataCheckPO::getDelFlag, 1)
                                 .in(DataCheckPO::getId, dataCheck_RuleIdList);
                         dataCheckPOList = dataCheckMapper.selectList(dataCheckPOQueryWrapper);
+
+                        QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+                        dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                                .in(DataCheckExtendPO::getRuleId, dataCheck_RuleIdList);
+                        dataCheckExtendPOList = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
                     }
                 }
 
@@ -182,6 +188,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 int totalCount = 0;
 
                 List<DataCheckPO> finalDataCheckPOList = dataCheckPOList;
+                List<DataCheckExtendPO> finalDataCheckExtendPOList = dataCheckExtendPOList;
 
                 for (QualityReportVO t : all.getRecords()) {
 
@@ -204,12 +211,15 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                         List<QualityReportRulePO> qualityReportRulePOList = qualityReportRulePOS.stream().filter(rule -> rule.getReportId() == t.getId()).sorted(Comparator.comparing(QualityReportRulePO::getRuleSort)).collect(Collectors.toList());
                         if (CollectionUtils.isNotEmpty(qualityReportRulePOList) && CollectionUtils.isNotEmpty(finalDataCheckPOList)) {
                             List<QualityReportRuleVO> qualityReportRuleVOS = QualityReportRuleMap.INSTANCES.poToVo(qualityReportRulePOList);
+
                             qualityReportRuleVOS.forEach(rule -> {
 
                                 DataCheckPO dataCheckPO = finalDataCheckPOList.stream().filter(r -> r.getId() == rule.getRuleId()).findFirst().orElse(null);
                                 if (dataCheckPO == null) {
                                     return;
                                 }
+                                DataCheckExtendPO dataCheckExtendPO = finalDataCheckExtendPOList.stream().filter(r -> r.getRuleId() == rule.getRuleId()).findFirst().orElse(null);
+
                                 DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
                                 if (dataSourceConVO == null) {
                                     return;
@@ -229,6 +239,9 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                 }
                                 tableNameFormat += dataCheckPO.getTableName();
                                 rule.setTableName(tableNameFormat);
+                                if (dataCheckExtendPO != null) {
+                                    rule.setFieldName(dataCheckExtendPO.getFieldName());
+                                }
 
                                 if (StringUtils.isNotEmpty(rule.getRuleName())) {
                                     rules.add(rule);
@@ -499,7 +512,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
     @Override
     public Page<QualityReportExt_RuleVO> getQualityReportRuleList(DataCheckRulePageDTO query) {
         Page<QualityReportExt_RuleVO> all = new Page<>();
-        List<QualityReportExt_RuleVO> qualityReportExt_ruleVOS=new ArrayList<>();
+        List<QualityReportExt_RuleVO> qualityReportExt_ruleVOS = new ArrayList<>();
 
         // 查询校验规则
         Page<DataCheckVO> pageAllRule = dataCheckMapper.getPageAllRule(query.getPage(), query);
@@ -523,7 +536,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 }
                 if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
                     DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
-                    if (dataCheckExtendVO!=null){
+                    if (dataCheckExtendVO != null) {
                         cRule.setFieldName(dataCheckExtendVO.getFieldName());
                     }
                 }
