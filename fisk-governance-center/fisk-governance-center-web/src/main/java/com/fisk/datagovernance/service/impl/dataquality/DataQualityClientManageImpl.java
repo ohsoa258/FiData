@@ -885,7 +885,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 || rangeCheckTypeEnum == RangeCheckTypeEnum.VALUE_RANGE)) {
             DatacheckStandardsGroupPO groupPO = dataCheckStandardsGroupServiceImpl.getById(dataCheckGroupId);
             ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
-            if (standards.code == ResultEnum.SUCCESS.getCode()) {
+            if (standards!=null && standards.code == ResultEnum.SUCCESS.getCode()) {
                 standardsDTO = standards.data;
             } else {
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
