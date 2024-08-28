@@ -31,14 +31,14 @@
             c2.create_time,
             c2.create_user
         FROM
-        ( SELECT * FROM tb_code_collection c1 where c1.del_flag = 1 LIMIT #{startIndex},#{pageSize}) AS c1
+        ( SELECT * FROM tb_code_collection c1 where c1.del_flag = 1
+        <if test="keyword !=null and keyword.length()>0 ">
+            and c1.collection_name like concat('%', #{keyword}, '%')
+        </if>
+         LIMIT #{startIndex},#{pageSize}) AS c1
             LEFT JOIN tb_code_set c2 ON c1.id = c2.collection_id
         and c2.del_flag = 1
-        <if test="keyword !=null and keyword.length()>0 ">
-            and (c2.`code` like concat('%', #{keyword}, '%')
-            or c2.`name` like concat('%', #{keyword}, '%')
-            or c2.description like concat('%', #{keyword}, '%'))
-        </if>
+
     </select>
     <select id="getCollectionList" resultType="com.fisk.datamanagement.vo.CodeCollectionVO">
         select id as collectionId,
