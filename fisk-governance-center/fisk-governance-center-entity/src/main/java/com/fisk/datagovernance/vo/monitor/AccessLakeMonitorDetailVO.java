@@ -28,4 +28,6 @@ public class AccessLakeMonitorDetailVO {
     private Integer targetRows;
     @ApiModelProperty(value = "缓存时间")
     private String catchTime;
+    @ApiModelProperty(value = "差异度")
+    private Integer difference;
 }
