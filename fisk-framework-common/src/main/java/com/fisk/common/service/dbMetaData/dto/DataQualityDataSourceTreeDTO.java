@@ -39,11 +39,14 @@ public class DataQualityDataSourceTreeDTO {
     @ApiModelProperty(value = "平台数据源类型，1、FiData 2、自定义", required = true)
     public int sourceType;
 
-    @ApiModelProperty(value = "平台数据源ID", required = true)
+    @ApiModelProperty(value = "平台数据源ID，DW:1、ODS:2、MDM:3、Olap:4。 自定义数据源ID：数据质量数据源表主键ID", required = true)
     public int sourceId;
 
     @ApiModelProperty(value = "节点层级类型", required = true)
     public LevelTypeEnum levelType;
+
+    @ApiModelProperty(value = "是否是外部目录表，只有表节点且ODS外部目录库下的表才为True", required = true)
+    public boolean externalTable;
 
     @ApiModelProperty(value = "发布状态 0：未发布 1：已发布，只有表节点才有发布状态")
     public String publishState;
