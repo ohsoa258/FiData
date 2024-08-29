@@ -185,6 +185,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             }).collect(Collectors.toList());
             ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchAddData(dataCheckList);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
+                // 质量验证不通过，删除刚刚添加的数据元组
+                this.removeById(groupPO.id);
                 return ruleCheckResultEnum;
             }
         }
@@ -209,7 +211,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
         if (names.size() > 0) {
             throw new FkException(ResultEnum.CHECK_STANDARDS_GROUP_ERROR);
         }
-        this.updateById(groupPO);
         Integer templateId = 0;
         List<DataCheckEditDTO> dataCheckEditList = dto.getDataCheckList();
         if (!CollectionUtils.isEmpty(dataCheckEditList)) {
@@ -243,6 +244,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 return ruleCheckResultEnum;
             }
         }
+        // 质量规则验证保存通过再保存组信息
+        this.updateById(groupPO);
         return ResultEnum.SUCCESS;
     }
 

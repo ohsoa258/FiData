@@ -132,6 +132,13 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         if (catchTotal != null){
             accessLakeMonitorVO.setCatchTotal((int)catchTotal);
         }
+        detailVOS = detailVOS.stream().map(i->{
+            if (i.getTargetRows() != null && i.getSourceRows() != null){
+                int abs = Math.abs((i.getSourceRows() - i.getTargetRows()) / i.getSourceRows()) * 100;
+                i.setDifference(abs);
+            }
+            return i;
+        }).collect(Collectors.toList());
         accessLakeMonitorVO.setDetailVO(detailVOS);
         return accessLakeMonitorVO;
     }
