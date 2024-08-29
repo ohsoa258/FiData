@@ -197,7 +197,6 @@ public class MetaDataImpl implements IMetaData {
     public ResultEnum consumeMetaData(List<MetaDataInstanceAttributeDTO> data, String currUserName, ClassificationTypeEnum classificationTypeEnum, Long syncTimeId) {
         log.info("开始同步元数据***********");
         try {
-
             //获取当前dmp_dw 数仓的类型 doris和其他不一样
             DataSourceTypeEnum conType = null;
             try {
@@ -206,7 +205,6 @@ public class MetaDataImpl implements IMetaData {
             } catch (Exception e) {
                 log.error("获取dmp_dw 数仓数据库类型失败：" + e);
             }
-
             for (MetaDataInstanceAttributeDTO instance : data) {
                 String instanceGuid = null;
                 if (classificationTypeEnum.equals(ClassificationTypeEnum.DATA_ACCESS)
@@ -356,7 +354,7 @@ public class MetaDataImpl implements IMetaData {
      * @return
      */
     private String metaDataDbForExternal(MetaDataDbAttributeDTO dto, String parentEntityId) {
-        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName);
+        Integer metadataEntity = this.metadataEntity.getMetadataEntity(dto.qualifiedName+"_external");
         if (metadataEntity == null) {
             return this.metadataEntity.addMetadataEntityForExternal(dto, EntityTypeEnum.RDBMS_DB.getName(), parentEntityId).toString();
         }

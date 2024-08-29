@@ -26,6 +26,7 @@ import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
 import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.datamanagement.entity.BusinessClassificationPO;
 import com.fisk.datamanagement.entity.MetaSyncTimePO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.mapper.*;
 import com.fisk.datamanagement.service.impl.ClassificationImpl;
 import com.fisk.datamanagement.service.impl.EntityImpl;
@@ -45,10 +46,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -119,8 +117,8 @@ public class BloodCompensationImpl
         moduleIds.add(ClassificationTypeEnum.DATA_DISTRIBUTION.getValue());
         moduleIds.add(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE.getValue());
         moduleIds.add(ClassificationTypeEnum.MASTER_DATA.getValue());
-        //外部数据源暂时不跑
-//        moduleIds.add(ClassificationTypeEnum.EXTERNAL_DATA.getValue());
+        //外部数据源
+        moduleIds.add(ClassificationTypeEnum.EXTERNAL_DATA.getValue());
         //不初始化 刷新所有模块
         this.systemSynchronousBloodV2(moduleIds);
     }
@@ -142,7 +140,8 @@ public class BloodCompensationImpl
             long syncTimeId = addLastSyncTime(ClassificationTypeEnum.EXTERNAL_DATA);
 
             log.info("******一.开始同步外部数据源元数据******");
-            synchronousExternalData(null);
+            //增量同步外部数据源元数据
+            synchronousExternalDataV2(null);
 
             //同步完成后更新状态
             //1成功 2失败 3同步中
@@ -913,7 +912,12 @@ public class BloodCompensationImpl
                 for (TablePyhNameDTO tableNameAndColumn : tableNameAndColumns) {
                     MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
                     tableAttributeDTO.setName(tableNameAndColumn.tableName);
-                    tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableName);
+                    //外部数据源 表的限定名称加上架构（如果架构非空）
+                    if (tableNameAndColumn.tableFramework != null) {
+                        tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableFramework + "_" + tableNameAndColumn.tableName);
+                    } else {
+                        tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableName);
+                    }
                     tableAttributeDTO.setDisplayName(tableNameAndColumn.tableFullName);
                     tableAttributeDTO.setIsExistStg(false);
                     tableAttributeDTO.setOwner("外部数据源");
@@ -938,6 +942,191 @@ public class BloodCompensationImpl
         metaData.consumeMetaData(instanceList, currUserName, ClassificationTypeEnum.EXTERNAL_DATA, null);
 
 
+    }
+
+    /**
+     * 增量同步外部数据源
+     *
+     * @param currUserName
+     */
+    public void synchronousExternalDataV2(String currUserName) {
+        //获取数据接入已使用的外部数据源所有的表元数据信息
+        List<AppDataSourceDTO> allAppSources = dataAccessClient.getAppSources();
+        List<AppDataSourceDTO> appSources = allAppSources.stream().filter(e -> e.driveType.equals(DataSourceTypeEnum.SQLSERVER.getName())
+                        || e.driveType.equals(DataSourceTypeEnum.MYSQL.getName())
+                        || e.driveType.equals(DataSourceTypeEnum.ORACLE.getName())
+                        || e.driveType.equals(DataSourceTypeEnum.POSTGRESQL.getName()))
+                .map(e -> {
+                    //去重数据源,防止重复数据源
+                    AppDataSourceDTO appDataSourceDTO = new AppDataSourceDTO();
+                    appDataSourceDTO.dbName = e.dbName;
+                    appDataSourceDTO.name = e.name;
+                    appDataSourceDTO.connectStr = e.connectStr;
+                    appDataSourceDTO.connectAccount = e.connectAccount;
+                    appDataSourceDTO.connectPwd = e.connectPwd;
+                    appDataSourceDTO.driveType = e.driveType;
+                    appDataSourceDTO.port = e.port;
+                    appDataSourceDTO.host = e.host;
+                    appDataSourceDTO.systemDataSourceId = e.systemDataSourceId;
+                    return appDataSourceDTO;
+                }).distinct().collect(Collectors.toList());
+        List<MetaDataInstanceAttributeDTO> instanceList = new ArrayList<>();
+        for (AppDataSourceDTO appSource : appSources) {
+            List<TablePyhNameDTO> tableNameAndColumns = null;
+            String dbQualifiedName = null;
+
+            List<MetaDataTableAttributeDTO> tableAttributeDTOList = new ArrayList<>();
+            Connection conn = null;
+            MetaDataInstanceAttributeDTO instanceAttributeDTO;
+            try {
+                //组装实例信息
+                instanceAttributeDTO = buildInstance(appSource);
+                instanceList.add(instanceAttributeDTO);
+                switch (appSource.driveType) {
+                    case "oracle":
+                        log.info("ORACLE驱动开始加载");
+                        log.info("ORACLE驱动基本信息：" + com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        Class.forName(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE.getDriverName());
+                        log.info("ORACLE驱动加载完毕");
+                        conn = DriverManager.getConnection(appSource.connectStr, appSource.connectAccount, appSource.connectPwd);
+                        tableNameAndColumns = new OracleUtils().getTrueTableNameList(conn, appSource.connectAccount, appSource.serviceName);
+                        break;
+                    case "mysql":
+                        tableNameAndColumns = new MysqlConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+                        break;
+                    case "sqlserver":
+                        tableNameAndColumns = new SqlServerPlusUtils().getTableNameAndColumnsPlus(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                        break;
+                    case "postgresql":
+                        tableNameAndColumns = new PostgresConUtils().getTableNameAndColumns(appSource.connectStr, appSource.connectAccount, appSource.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
+                        break;
+                    default:
+                        break;
+                }
+                dbQualifiedName = instanceAttributeDTO.getDbList().get(0).getQualifiedName();
+
+                instanceAttributeDTO.getDbList().get(0).tableList = tableAttributeDTOList;
+
+            } catch (Exception e) {
+                log.error("查询外部数据源元数据信息失败" + e);
+                continue;
+            } finally {
+                AbstractCommonDbHelper.closeConnection(conn);
+            }
+
+            if (!CollectionUtils.isEmpty(tableNameAndColumns)) {
+
+                //获取到数据库的限定名称 通过限定名称获取这个数据库下的表元数据信息
+                String qualifiedName = instanceAttributeDTO.dbList.get(0).getQualifiedName() + "_external";
+                MetadataEntityPO entityPO = metadataEntityMapper.selectOne(
+                        new LambdaQueryWrapper<MetadataEntityPO>()
+                                .eq(MetadataEntityPO::getQualifiedName, qualifiedName)
+                                .select(MetadataEntityPO::getId)
+                );
+
+                //如果没找到，说明数据库是新增的
+                if (entityPO == null) {
+                    for (TablePyhNameDTO tableNameAndColumn : tableNameAndColumns) {
+                        MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
+                        tableAttributeDTO.setName(tableNameAndColumn.tableName);
+                        //外部数据源 表的限定名称加上架构（如果架构非空）
+                        if (tableNameAndColumn.tableFramework != null) {
+                            tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableFramework + "_" + tableNameAndColumn.tableName);
+                        } else {
+                            tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableName);
+                        }
+                        tableAttributeDTO.setDisplayName(tableNameAndColumn.tableFullName);
+                        tableAttributeDTO.setIsExistStg(false);
+                        tableAttributeDTO.setOwner("外部数据源");
+                        tableAttributeDTO.setIsExistClassification(false);
+                        List<MetaDataColumnAttributeDTO> columnAttributeDTOList = new ArrayList<>();
+                        for (TableStructureDTO field : tableNameAndColumn.getFields()) {
+                            MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
+                            metaDataColumnAttributeDTO.setName(field.fieldName);
+                            metaDataColumnAttributeDTO.setQualifiedName(tableAttributeDTO.qualifiedName + "_" + field.fieldName);
+                            metaDataColumnAttributeDTO.setDisplayName(field.fieldName);
+                            metaDataColumnAttributeDTO.setDataType(field.fieldType);
+                            metaDataColumnAttributeDTO.setLength(field.fieldLength + "");
+                            metaDataColumnAttributeDTO.setDescription(field.fieldDes);
+                            metaDataColumnAttributeDTO.setOwner("外部数据源");
+                            columnAttributeDTOList.add(metaDataColumnAttributeDTO);
+                        }
+                        tableAttributeDTO.columnList = columnAttributeDTOList;
+                        tableAttributeDTOList.add(tableAttributeDTO);
+                    }
+                } else {
+                    //获取这个数据库下的所有表元数据的限定名称
+                    Map<String, Long> tableEntityQualifiedNames = metadataEntityMapper.selectList(
+                            new LambdaQueryWrapper<MetadataEntityPO>()
+                                    .eq(MetadataEntityPO::getParentId, entityPO.getId())
+                                    .select(MetadataEntityPO::getQualifiedName, MetadataEntityPO::getId)
+                    ).stream().collect(Collectors.toMap(MetadataEntityPO::getQualifiedName, MetadataEntityPO::getId));
+
+                    for (TablePyhNameDTO tableNameAndColumn : tableNameAndColumns) {
+                        MetaDataTableAttributeDTO tableAttributeDTO = new MetaDataTableAttributeDTO();
+                        tableAttributeDTO.setName(tableNameAndColumn.tableName);
+                        //外部数据源 表的限定名称加上架构（如果架构非空）
+                        if (tableNameAndColumn.tableFramework != null) {
+                            tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableFramework + "_" + tableNameAndColumn.tableName);
+                        } else {
+                            tableAttributeDTO.setQualifiedName(dbQualifiedName + "_" + tableNameAndColumn.tableName);
+                        }
+                        tableAttributeDTO.setDisplayName(tableNameAndColumn.tableFullName);
+                        tableAttributeDTO.setIsExistStg(false);
+                        tableAttributeDTO.setOwner("外部数据源");
+                        tableAttributeDTO.setIsExistClassification(false);
+                        List<MetaDataColumnAttributeDTO> columnAttributeDTOList = new ArrayList<>();
+                        for (TableStructureDTO field : tableNameAndColumn.getFields()) {
+                            MetaDataColumnAttributeDTO metaDataColumnAttributeDTO = new MetaDataColumnAttributeDTO();
+                            metaDataColumnAttributeDTO.setName(field.fieldName);
+                            metaDataColumnAttributeDTO.setQualifiedName(tableAttributeDTO.qualifiedName + "_" + field.fieldName);
+                            metaDataColumnAttributeDTO.setDisplayName(field.fieldName);
+                            metaDataColumnAttributeDTO.setDataType(field.fieldType);
+                            metaDataColumnAttributeDTO.setLength(field.fieldLength + "");
+                            metaDataColumnAttributeDTO.setDescription(field.fieldDes);
+                            metaDataColumnAttributeDTO.setOwner("外部数据源");
+                            columnAttributeDTOList.add(metaDataColumnAttributeDTO);
+                        }
+
+                        //增量同步外部数据源元数据时，需要找到上游外部数据源是否有新增表或新增字段 如果有新增表或新增字段，则只同步新增的表或新增的字段
+                        //筛选表时 要考虑 1/表是否是新增 新增即代表在已有的元数据中没有这个表（通过限定名称查找）
+                        //如果已有的元数据包含这张表 则去校验这张表的字段是否有修改 如果字段有修改 才放行这张表
+                        if (tableEntityQualifiedNames.get(tableAttributeDTO.qualifiedName) != null) {
+                            //获取表元数据id 查找该表下面的所有字段 与通过外部数据源查询过来的字段对比 如果字段有变动 则放行这张表
+                            Long metadataId = tableEntityQualifiedNames.get(tableAttributeDTO.qualifiedName);
+                            List<String> columnEntities = metadataEntityMapper.selectList(
+                                    new LambdaQueryWrapper<MetadataEntityPO>()
+                                            .eq(MetadataEntityPO::getParentId, metadataId)
+                                            .select(MetadataEntityPO::getQualifiedName)
+                            ).stream().map(MetadataEntityPO::getQualifiedName).collect(Collectors.toList());
+
+                            //1.如果字段数对不上 则放行
+                            if (columnEntities.size() != columnAttributeDTOList.size()) {
+                                tableAttributeDTO.columnList = columnAttributeDTOList;
+                                tableAttributeDTOList.add(tableAttributeDTO);
+                                continue;
+                            }
+                            //2.如果字段名称有对不上的 则放行
+                            for (MetaDataColumnAttributeDTO metaDataColumnAttributeDTO : columnAttributeDTOList) {
+                                if (!columnEntities.contains(metaDataColumnAttributeDTO.getQualifiedName())) {
+                                    tableAttributeDTO.columnList = columnAttributeDTOList;
+                                    tableAttributeDTOList.add(tableAttributeDTO);
+                                    break;
+                                }
+                            }
+
+                            //如果表不存在于已同步的元数据内 则认为表是新增的 直接放行
+                        } else {
+                            tableAttributeDTO.columnList = columnAttributeDTOList;
+                            //若是新增的表直接放行
+                            //通过筛选的表才允许存进去 进行元数据的同步
+                            tableAttributeDTOList.add(tableAttributeDTO);
+                        }
+                    }
+                }
+            }
+        }
+        metaData.consumeMetaData(instanceList, currUserName, ClassificationTypeEnum.EXTERNAL_DATA, null);
     }
 
     public MetaDataInstanceAttributeDTO buildInstance(AppDataSourceDTO appSource) {
