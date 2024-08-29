@@ -626,6 +626,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                 tableHistoryDTOS = tableHistoryDTOS.stream().map(i -> {
                     LogResultDTO logResultDTO = logMap.get(i.subRunId);
                     if (logResultDTO != null){
+                        i.setOpenTransmission(true);
                         i.setDto(logResultDTO);
                     }else {
                         i.setDto(new LogResultDTO());
