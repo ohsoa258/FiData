@@ -1,6 +1,7 @@
 package com.fisk.mdm.dto.access;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.task.dto.accessmdm.LogResultDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * @author Lock
+ * @author wangjian
  */
 @Data
 public class TableHistoryDTO {
@@ -39,6 +40,10 @@ public class TableHistoryDTO {
      */
     @ApiModelProperty(value = "关联发布日志标识")
     public String subRunId;
+    /**
+     * 本次同步详情
+     */
+    public LogResultDTO dto;
 
     /**
      * 关联发布日志内容

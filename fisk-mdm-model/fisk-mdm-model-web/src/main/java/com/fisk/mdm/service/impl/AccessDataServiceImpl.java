@@ -25,7 +25,6 @@ import com.fisk.common.service.dbBEBuild.datamodel.dto.RelationDTO;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
-import com.fisk.datamodel.enums.CreateTypeEnum;
 import com.fisk.datamodel.enums.DataBaseTypeEnum;
 import com.fisk.datamodel.enums.RelateTableTypeEnum;
 import com.fisk.mdm.dto.access.*;
@@ -49,6 +48,7 @@ import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import com.fisk.task.dto.accessmdm.AccessMdmPublishFieldDTO;
 import com.fisk.task.dto.accessmdm.AccessMdmPublishTableDTO;
+import com.fisk.task.dto.accessmdm.LogResultDTO;
 import com.fisk.task.dto.mdmconfig.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -228,13 +228,12 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         if (accessDataPO == null) {
             return ResultEnum.DATA_NOTEXISTS;
         }
-        AccessSqlDTO accessSqlDTO = new AccessSqlDTO();
-        accessSqlDTO.setAccessId(accessDataPO.id);
-        accessSqlDTO.setEntityId(accessDataPO.getEntityId());
-        accessSqlDTO.setDataSourceId(dto.getDataSourceId());
-        accessSqlDTO.setSqlScript(dto.getAccessSql());
-        accessSqlDTO.setVersionDes(dto.getRemark());
-        accessDataService.updateAccessSql(accessSqlDTO);
+        TableVersionSqlPO tableVersionSqlPO = new TableVersionSqlPO();
+        tableVersionSqlPO.setVersionNumber(String.valueOf(Instant.now().toEpochMilli()));
+        tableVersionSqlPO.setHistoricalSql(dto.getAccessSql());
+        tableVersionSqlPO.setTableId(accessDataPO.getEntityId());
+        tableVersionSqlPO.setVersionDes(dto.getRemark());
+        tableVersionSqlService.save(tableVersionSqlPO);
 
         //系统变量
         if (!CollectionUtils.isEmpty(dto.deltaTimes)) {
@@ -283,6 +282,8 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         accessDataPO.setVersionId(dto.versionId);
         accessDataPO.setDomainUpdateSql(dto.domainUpdateSql);
         accessDataPO.setAccessType(syncModePo.syncMode);
+        accessDataPO.setExtractionSql(dto.accessSql);
+        accessDataPO.setSouceSystemId(dto.getDataSourceId());
         UserInfo userInfo = userHelper.getLoginUserInfo();
         dto.setUserId(userInfo.id);
         if (mapper.updateById(accessDataPO) == 0) {
@@ -616,7 +617,27 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     public List<TableHistoryDTO> getTableHistoryList(Integer tableId) {
         QueryWrapper<TableHistoryPO> queryWrapper=new QueryWrapper<>();
         queryWrapper.lambda().eq(TableHistoryPO::getTableId,tableId);
-        return TableHistoryMap.INSTANCES.poListToDtoList(tableHistoryMapper.selectList(queryWrapper));
+        List<TableHistoryDTO> tableHistoryDTOS = TableHistoryMap.INSTANCES.poListToDtoList(tableHistoryMapper.selectList(queryWrapper));
+        List<String> SubRunIds = tableHistoryDTOS.stream().map(i -> i.getSubRunId()).filter(Objects::nonNull).collect(Collectors.toList());
+        try{
+            if (CollectionUtils.isNotEmpty(SubRunIds)){
+                List<LogResultDTO> logs = publishTaskClient.getMdmTblNifiLog(SubRunIds);
+                Map<String, LogResultDTO> logMap = logs.stream().collect(Collectors.toMap(i -> i.getSubRunId(), i -> i));
+                tableHistoryDTOS = tableHistoryDTOS.stream().map(i -> {
+                    LogResultDTO logResultDTO = logMap.get(i.subRunId);
+                    if (logResultDTO != null){
+                        i.setDto(logResultDTO);
+                    }else {
+                        i.setDto(new LogResultDTO());
+                    }
+                    return i;
+                }).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+        log.error("主数据-获取nifi同步日志报错：" + e);
+        throw new FkException(ResultEnum.MDM_GET_NIFI_LOG_ERROR);
+        }
+        return tableHistoryDTOS;
     }
 
     @Override

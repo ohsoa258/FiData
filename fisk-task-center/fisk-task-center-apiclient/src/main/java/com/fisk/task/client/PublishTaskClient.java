@@ -23,6 +23,7 @@ import com.fisk.task.dto.AccessDataSuccessAndFailCountDTO;
 import com.fisk.task.dto.DwLogQueryDTO;
 import com.fisk.task.dto.DwLogResultDTO;
 import com.fisk.task.dto.WsAccessDTO;
+import com.fisk.task.dto.accessmdm.LogResultDTO;
 import com.fisk.task.dto.atlas.AtlasEntityQueryDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.daconfig.OverLoadCodeDTO;
@@ -603,6 +604,10 @@ public interface PublishTaskClient {
     @ApiOperation("dw数仓按时间获取单表nifi日志")
     @PostMapping("/nifi/getDwTblNifiLog")
     DwLogResultDTO getDwTblNifiLog(@RequestBody DwLogQueryDTO dwLogQueryDTO);
+
+    @ApiOperation("主数据获取发布日志结果")
+    @PostMapping("/nifi/getMdmTblNifiLog")
+    List<LogResultDTO> getMdmTblNifiLog(@RequestBody List<String> subRunIds);
 
     /**
      * 同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型
