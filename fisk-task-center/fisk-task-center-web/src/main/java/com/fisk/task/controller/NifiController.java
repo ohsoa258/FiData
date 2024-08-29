@@ -23,6 +23,7 @@ import com.fisk.system.dto.datasource.DataSourceSaveDTO;
 import com.fisk.task.config.SwaggerConfig;
 import com.fisk.task.dto.DwLogQueryDTO;
 import com.fisk.task.dto.DwLogResultDTO;
+import com.fisk.task.dto.accessmdm.LogResultDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -32,7 +33,9 @@ import com.fisk.task.listener.nifi.ISapBwListener;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
+import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.service.pipeline.INifiSchedulingComponentService;
+import com.fisk.task.service.pipeline.impl.EtlLogImpl;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -71,6 +74,9 @@ public class NifiController {
     private ISapBwListener sapBwListener;
     @Resource
     private IApiListener apiListener;
+
+    @Resource
+    IEtlLog etlLog;
 
     @ApiOperation("修改调度")
     @PostMapping("/modifyScheduling")
@@ -342,7 +348,12 @@ public class NifiController {
     public DwLogResultDTO getDwTblNifiLog(@RequestBody DwLogQueryDTO dwLogQueryDTO) {
         return apiListener.getDwTblNifiLog(dwLogQueryDTO);
     }
+    @ApiOperation("主数据获取发布日志结果")
+    @PostMapping("/getMdmTblNifiLog")
+    public List<LogResultDTO> getMdmTblNifiLog(@RequestBody List<String> subRunIds) {
+        return etlLog.getMdmTblNifiLog(subRunIds);
 
+    }
     /**
      * 同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型
      *

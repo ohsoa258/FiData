@@ -296,6 +296,8 @@ public enum ResultEnum {
     FACT_EXISTS_IN_DISPATCH(8024, "禁止移动该表-该表存在于以下管道:"),
     WRONG_TABLE_TYPE_ERROR(8025, "表类型只能为 0：维度表 1事实表"),
 
+    MDM_GET_NIFI_LOG_ERROR(8026, "主数据获取nifi同步日志失败"),
+
     /**
      * 数据工厂
      */
