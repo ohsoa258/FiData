@@ -89,8 +89,6 @@ public class SftpUtils {
         } catch (Exception e) {
             log.error("SSH方式连接FTP服务器时有JSchException异常!", e);
             throw new FkException(ResultEnum.SFTP_CONNECTION_ERROR);
-        }finally {
-            channel.disconnect();
         }
         return sftp;
     }
