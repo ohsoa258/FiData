@@ -951,10 +951,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         upperBound_Int = Integer.valueOf(standardsDTO.getValueRangeMax());
                     }
 
-                    String sql_BetweenAnd = String.format("(CAST(%s AS INT) NOT BETWEEN %s AND %s)", f_Name, lowerBound_Int, upperBound_Int);
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(%s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, lowerBound_Int, upperBound_Int);
+                    String sql_BetweenAnd = "";
+                    boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
+                    if (charValid) {
+                        sql_BetweenAnd = String.format("(%s NOT BETWEEN '%s' AND '%s')", f_Name, lowerBound_Int, upperBound_Int);
+                    } else {
+                        sql_BetweenAnd = String.format("(%s NOT BETWEEN %s AND %s)", f_Name, lowerBound_Int, upperBound_Int);
                     }
+
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s ",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                     sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s ",
@@ -971,9 +975,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         rangeCheckOneWayOperator = qualityReport_GetReverseOperator(standardsDTO.getSymbols());
                     }
 
-                    String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        sql_BetweenAnd = String.format("(%s::NUMERIC %s %s)", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    String sql_BetweenAnd ="";
+                    boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
+                    if (charValid) {
+                        sql_BetweenAnd =  String.format("(%s %s '%s')", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    } else {
+                        sql_BetweenAnd =  String.format("(%s %s %s)", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
