@@ -112,4 +112,8 @@ public interface DataGovernanceClient {
     @ApiOperation("修改数据校验数据元标准组(数据元更新同步)")
     @PostMapping("/datacheck/editDataCheckByStandards")
     ResultEntity<Object> editDataCheckByStandards(@RequestBody StandardsDTO dto,@RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
+
+    @ApiOperation("根据menuId删除数据校验数据元标准组")
+    @GetMapping("/datacheck/deleteDataCheckStandardsGroupByMenuId")
+    ResultEntity<Object> deleteDataCheckStandardsGroupByMenuId(@RequestParam("menuId") Integer menuId,@RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
 }

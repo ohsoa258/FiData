@@ -264,6 +264,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             queryWrapper.eq(StandardsBeCitedPO::getStandardsId, standardsPO.id);
             standardsBeCitedService.remove(queryWrapper);
         }
+        try {
+            UserInfo loginUserInfo = userHelper.getLoginUserInfo();
+            governanceClient.deleteDataCheckStandardsGroupByMenuId(id,loginUserInfo.getToken());
+        }catch (Exception e){
+            return ResultEnum.CHECK_STANDARDS_DELETE_FAIL;
+        }
         return ResultEnum.SUCCESS;
     }
 
