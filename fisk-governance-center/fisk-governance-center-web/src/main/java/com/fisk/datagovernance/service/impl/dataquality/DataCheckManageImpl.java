@@ -187,8 +187,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 }
             }
 
-            log.info("getAllRule...节点下表信息数量：" + queryTableParams.size());
-            log.info("getAllRule...节点下表信息[{}]", JSONObject.toJSON(queryTableParams));
+            //log.info("getAllRule...节点下表信息数量：" + queryTableParams.size());
+            //log.info("getAllRule...节点下表信息[{}]", JSONObject.toJSON(queryTableParams));
             if (CollectionUtils.isNotEmpty(queryTableParams)) {
                 // 表信息去重
                 queryTableParams = queryTableParams.stream().collect(Collectors.collectingAndThen(
@@ -201,8 +201,8 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                                         + o.getTableType().getName()
                                 ))), ArrayList::new));
             }
-            log.info("getAllRule...节点下表信息数量-去重后数量：：" + queryTableParams.size());
-            log.info("getAllRule...节点下表信息-去重后[{}]", JSONObject.toJSON(queryTableParams));
+            //log.info("getAllRule...节点下表信息数量-去重后数量：：" + queryTableParams.size());
+            //log.info("getAllRule...节点下表信息-去重后[{}]", JSONObject.toJSON(queryTableParams));
 
             // 第三步：获取所有表校验规则
             List<Long> templateIdList = null;
