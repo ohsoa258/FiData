@@ -243,9 +243,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         standardsMenuService.updateById(standardsMenuPO);
         try {
             UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-            governanceClient.editDataCheckByStandards(standardsDTO,loginUserInfo.getToken());
+            ResultEntity<Object> resultEntity = governanceClient.editDataCheckByStandards(standardsDTO, loginUserInfo.getToken());
+            if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                return ResultEnum.CHECK_STANDARDS_UPDATE_FAIL;
+            }
         }catch (Exception e){
-            return ResultEnum.CHECK_STANDARDS_UPDATE_FAIL;
+            return ResultEnum.REMOTE_SERVICE_CALLFAILED;
         }
         return ResultEnum.SUCCESS;
     }
@@ -266,9 +269,12 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         }
         try {
             UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-            governanceClient.deleteDataCheckStandardsGroupByMenuId(id,loginUserInfo.getToken());
+            ResultEntity<Object> resultEntity = governanceClient.deleteDataCheckStandardsGroupByMenuId(id, loginUserInfo.getToken());
+            if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                return ResultEnum.CHECK_STANDARDS_DELETE_FAIL;
+            }
         }catch (Exception e){
-            return ResultEnum.CHECK_STANDARDS_DELETE_FAIL;
+            return ResultEnum.REMOTE_SERVICE_CALLFAILED;
         }
         return ResultEnum.SUCCESS;
     }
