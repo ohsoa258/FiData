@@ -25,10 +25,7 @@ import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.accessAndModel.ServerTypeEnum;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -497,23 +494,23 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     }
 
     @Override
-    public List<FiDataMetaDataDTO> dataQualityGetMdmFolderTableTree(FiDataMetaDataReqDTO reqDto) {
+    public List<DataQualityFiDataMetaDataDTO> dataQualityGetMdmFolderTableTree(FiDataMetaDataReqDTO reqDto) {
         //获取平台配置所有ODS类型的数据源
         ResultEntity<List<DataSourceMyDTO>> resultEntity = userClient.getAllMdmDataSource();
         if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
             return null;
         }
         List<DataSourceMyDTO> data = resultEntity.getData();
-        List<FiDataMetaDataDTO> list = new ArrayList<>();
+        List<DataQualityFiDataMetaDataDTO> list = new ArrayList<>();
         for (DataSourceMyDTO sourceDTO : data) {
-            List<FiDataMetaDataTreeDTO> dataTreeList = new ArrayList<>();
+            List<DataQualityDataSourceTreeDTO> dataTreeList = new ArrayList<>();
 
-            FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+            DataQualityFiDataMetaDataDTO dto = new DataQualityFiDataMetaDataDTO();
             // FiData数据源id: 数据资产自定义
             dto.setDataSourceId(sourceDTO.id);
 
             // 第一层id
-            FiDataMetaDataTreeDTO dataTree = new FiDataMetaDataTreeDTO();
+            DataQualityDataSourceTreeDTO dataTree = new DataQualityDataSourceTreeDTO();
             dataTree.setId(String.valueOf(sourceDTO.id));
             dataTree.setParentId("-10");
             dataTree.setLabel(sourceDTO.conDbname);
@@ -522,7 +519,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
             dataTree.setSourceType(1);
             dataTree.setSourceId(sourceDTO.id);
             // 数据质量-左侧 tree数据目录
-            List<FiDataMetaDataTreeDTO> tree = dataQualityBuildChildren(String.valueOf(sourceDTO.id));
+            List<DataQualityDataSourceTreeDTO> tree = dataQualityBuildChildren(String.valueOf(sourceDTO.id));
             dataTree.setChildren(tree);
             dataTreeList.add(dataTree);
 
@@ -584,11 +581,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * @author Lock
      * @date 2022/6/15 17:46
      */
-    private List<FiDataMetaDataTreeDTO> dataQualityBuildChildren(String id) {
+    private List<DataQualityDataSourceTreeDTO> dataQualityBuildChildren(String id) {
 
-        List<FiDataMetaDataTreeDTO> modelTypeTreeList = new ArrayList<>();
+        List<DataQualityDataSourceTreeDTO> modelTypeTreeList = new ArrayList<>();
 
-        FiDataMetaDataTreeDTO modelTree = new FiDataMetaDataTreeDTO();
+        DataQualityDataSourceTreeDTO modelTree = new DataQualityDataSourceTreeDTO();
         String modelTreeByRealTimeGuid = UUID.randomUUID().toString();
         modelTree.setId(modelTreeByRealTimeGuid);
         modelTree.setParentId(id);
@@ -604,7 +601,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                         .orderByDesc(ModelPO::getCreateTime)
         );
         //应用下的表
-        List<FiDataMetaDataTreeDTO> fiDataMetaDataTreeByModel = dataQualityFiDataMetaDataTreeByModel(modelTreeByRealTimeGuid, id, appPoList);
+        List<DataQualityDataSourceTreeDTO> fiDataMetaDataTreeByModel = dataQualityFiDataMetaDataTreeByModel(modelTreeByRealTimeGuid, id, appPoList);
         modelTree.setChildren(fiDataMetaDataTreeByModel);
 
         modelTypeTreeList.add(modelTree);
@@ -736,12 +733,12 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
      * @param modelPoList
      * @return
      */
-    private List<FiDataMetaDataTreeDTO> dataQualityFiDataMetaDataTreeByModel(String modelTreeByEntityGuid, String id, List<ModelPO> modelPoList) {
-        List<FiDataMetaDataTreeDTO> value = modelPoList.stream()
+    private List<DataQualityDataSourceTreeDTO> dataQualityFiDataMetaDataTreeByModel(String modelTreeByEntityGuid, String id, List<ModelPO> modelPoList) {
+        List<DataQualityDataSourceTreeDTO> value = modelPoList.stream()
                 .filter(Objects::nonNull)
                 .map(app -> {
                     // 第一层: model层
-                    FiDataMetaDataTreeDTO modelDtoTree = new FiDataMetaDataTreeDTO();
+                    DataQualityDataSourceTreeDTO modelDtoTree = new DataQualityDataSourceTreeDTO();
                     // 当前层默认生成的uuid
                     String uuid_modelId = UUID.randomUUID().toString().replace("-", "");
                     modelDtoTree.setId(uuid_modelId);
@@ -753,14 +750,14 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                     modelDtoTree.setLabelAlias(app.displayName);
                     modelDtoTree.setLevelType(LevelTypeEnum.FOLDER);
                     modelDtoTree.setLabelDesc(app.desc);
-                    List<FiDataMetaDataTreeDTO> apiTreeList = entityMapper.selectList(
+                    List<DataQualityDataSourceTreeDTO> apiTreeList = entityMapper.selectList(
                                     new LambdaQueryWrapper<EntityPO>()
                                             .eq(EntityPO::getModelId, app.id)
                                             .orderByDesc(EntityPO::getCreateTime)
                             ).stream()
                             .filter(Objects::nonNull)
                             .map(entity -> {
-                                FiDataMetaDataTreeDTO entityDtoTree = new FiDataMetaDataTreeDTO();
+                                DataQualityDataSourceTreeDTO entityDtoTree = new DataQualityDataSourceTreeDTO();
                                 String uuid_entityId = UUID.randomUUID().toString().replace("-", "");
                                 entityDtoTree.setId(uuid_entityId);
                                 entityDtoTree.setParentId(uuid_modelId);
@@ -778,8 +775,8 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 entityDtoTree.setLabelDesc(entity.getDesc());
 
                                 //第三层: etl层
-                                List<FiDataMetaDataTreeDTO> tableTreeList = accessDataService.query().eq("model_id", app.id).eq("entity_id", entity.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
-                                    FiDataMetaDataTreeDTO tableDtoTree = new FiDataMetaDataTreeDTO();
+                                List<DataQualityDataSourceTreeDTO> tableTreeList = accessDataService.query().eq("model_id", app.id).eq("entity_id", entity.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                    DataQualityDataSourceTreeDTO tableDtoTree = new DataQualityDataSourceTreeDTO();
                                     tableDtoTree.setId(String.valueOf(entity.id));
                                     tableDtoTree.setParentId(uuid_entityId);
                                     tableDtoTree.setLabel(entity.getTableName());
@@ -805,7 +802,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     }
 
     @Override
-    public List<FiDataMetaDataTreeDTO> getFieldDataTree(String entityId) {
+    public List<DataQualityDataSourceTreeDTO> getFieldDataTree(String entityId) {
 
         EntityPO entity = entityMapper.selectOne(new LambdaQueryWrapper<EntityPO>()
                 .eq(EntityPO::getId, entityId)
@@ -814,12 +811,12 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                 .eq(AccessDataPO::getModelId, entity.getModelId())
                 .eq(AccessDataPO::getEntityId, entityId)
                 .orderByDesc(AccessDataPO::getCreateTime));
-        List<FiDataMetaDataTreeDTO> fieldTreeList = attributeService.query()
+        List<DataQualityDataSourceTreeDTO> fieldTreeList = attributeService.query()
                 .eq("entity_id", entity.id)
                 .list().stream()
                 .filter(Objects::nonNull)
                 .map(field -> {
-                    FiDataMetaDataTreeDTO fieldDtoTree = new FiDataMetaDataTreeDTO();
+                    DataQualityDataSourceTreeDTO fieldDtoTree = new DataQualityDataSourceTreeDTO();
                     fieldDtoTree.setId(String.valueOf(field.id));
                     fieldDtoTree.setParentId(String.valueOf(entity.id));
                     fieldDtoTree.setLabel(field.getColumnName());
@@ -836,9 +833,6 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                     fieldDtoTree.setLabelDesc(field.getDesc());
                     fieldDtoTree.setSourceType(1);
                     fieldDtoTree.setSourceId(Integer.parseInt(mdmSource));
-                    fieldDtoTree.setParentName(entity.getTableName());
-                    fieldDtoTree.setParentNameAlias(entity.getTableName());
-                    fieldDtoTree.setParentLabelRelName(entity.getTableName());
                     fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
                     return fieldDtoTree;
                 }).collect(Collectors.toList());

@@ -6,10 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.mdm.config.SwaggerConfig;
@@ -107,14 +104,14 @@ public class ModelController {
     @ApiOperation("获取主数据表结构(懒加载)")
     @PostMapping("/dataQualityGetMdmFolderTableTree")
     @ResponseBody
-    public ResultEntity<List<FiDataMetaDataDTO>> dataQualityGetMdmFolderTableTree(@RequestBody FiDataMetaDataReqDTO dto){
+    public ResultEntity<List<DataQualityFiDataMetaDataDTO>> dataQualityGetMdmFolderTableTree(@RequestBody FiDataMetaDataReqDTO dto){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.dataQualityGetMdmFolderTableTree(dto));
     }
 
     @ApiOperation("获取主数据字段结构(懒加载)")
     @PostMapping("/getFieldDataTree")
     @ResponseBody
-    public ResultEntity<List<FiDataMetaDataTreeDTO>> getFieldDataTree(String entityId){
+    public ResultEntity<List<DataQualityDataSourceTreeDTO>> getFieldDataTree(String entityId){
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS,service.getFieldDataTree(entityId));
     }
     @ApiOperation("根据modelId和entityId 获取modelName和entityName")
