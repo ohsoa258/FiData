@@ -184,7 +184,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + filedName;
                 return i;
             }).collect(Collectors.toList());
-            ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchAddData(dataCheckList);
+            ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchAddOrEditData(dataCheckList);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                 // 质量验证不通过，删除刚刚添加的数据元组
                 this.removeById(groupPO.id);
@@ -222,15 +222,18 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + i.getDataCheckExtend().fieldName;
 
                 // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
-                if (i.getSourceType() == SourceTypeEnum.FiData) {
+                // i.getId() != 0，只有修改时才在此处赋值数据质量数据源ID
+                if (i.getSourceType() == SourceTypeEnum.FiData && i.getId() != 0) {
                     int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
-                    if (idByDataSourceId != 0 && i.getId() != 0) {
+                    if (idByDataSourceId != 0) {
                         i.setDatasourceId(idByDataSourceId);
                     }
                 }
                 return i;
             }).collect(Collectors.toList());
-            List<Integer> dataCheckIds = dataCheckEditList.stream().map(i -> i.getId()).collect(Collectors.toList());
+
+            // 查询数据库中是否存在不在当前组下面的规则，存在则删除
+            List<Integer> dataCheckIds = dataCheckEditList.stream().filter(t -> t.getId() != 0).map(i -> i.getId()).collect(Collectors.toList());
             LambdaQueryWrapper<DataCheckPO> queryWrapper1 = new LambdaQueryWrapper<>();
             queryWrapper1.eq(DataCheckPO::getDatacheckGroupId, groupPO.id);
             queryWrapper1.eq(DataCheckPO::getTemplateId, templateId);
@@ -240,11 +243,12 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                     dataCheckManageService.deleteData((int) dataCheckPO.id);
                 }
             }
-            ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchEditData(dataCheckEditList);
+
+            ResultEnum ruleCheckResultEnum = dataCheckManageImpl.batchAddOrEditData(dataCheckEditList);
             if (ruleCheckResultEnum != ResultEnum.SUCCESS) {
                 return ruleCheckResultEnum;
             }
-        }else {
+        } else {
             List<TemplateVO> templates = templateManage.getAll();
             List<TemplateVO> templateVOList = templates.stream().filter(i -> i.getTemplateType() == TemplateTypeEnum.RANGE_CHECK).collect(Collectors.toList());
             LambdaQueryWrapper<DataCheckPO> queryWrapper1 = new LambdaQueryWrapper<>();
@@ -355,7 +359,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             dto.setDatametaCode(standardsDTO.getDatametaCode());
 
             List<DataCheckEditDTO> dataCheckEditList = new ArrayList<>();
-            if(!CollectionUtils.isEmpty(standardsBeCitedDTOList)) {
+            if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)) {
                 for (StandardsBeCitedDTO standardsBeCitedDTO : standardsBeCitedDTOList) {
                     Integer dbId = idByDataSourceIds.get(standardsBeCitedDTO.getDbId());
                     DataCheckEditDTO checkEditDTO = new DataCheckEditDTO();
