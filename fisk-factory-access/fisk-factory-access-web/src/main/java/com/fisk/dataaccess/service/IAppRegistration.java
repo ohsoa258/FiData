@@ -17,6 +17,7 @@ import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
+import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
@@ -520,4 +521,18 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      */
     List<DataSourceInfoDTO> getAppSourceAndTarget(Integer appId);
 
+    /**
+     * 数据质量左侧Tree接口-获取ods数据源文件夹表层级
+     *
+     * @return
+     */
+    DataQualityDataSourceTreeDTO getOdsFolderTableTree();
+
+    /**
+     * 数据质量左侧Tree接口-根据表ID获取表下面的字段
+     *
+     * @param dto
+     * @return
+     */
+    List<DataQualityDataSourceTreeDTO> getOdsTableFieldByTableId(OdsFieldQueryDTO dto);
 }

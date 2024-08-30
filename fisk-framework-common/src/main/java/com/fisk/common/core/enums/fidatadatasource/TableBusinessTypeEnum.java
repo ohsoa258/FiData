@@ -22,7 +22,12 @@ public enum TableBusinessTypeEnum implements BaseEnum {
 
     DATA_SERVICE_API(8,"data_service_api"),//数据分发api服务
 
-    STANDARD_DATABASE(9,"standard_database");//数据标准
+    STANDARD_DATABASE(9,"standard_database"),
+    PHYSICAL_TABLE(10,"physical_table"),//数接物理表
+    ACCESS_API(11,"standard_database"),//数接api
+    DORIS_CATALOG_TABLE(12,"doris_catalog_table"),//doris外部目录表
+
+    ;//数据标准
 
     TableBusinessTypeEnum(int value, String name) {
         this.value = value;

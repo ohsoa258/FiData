@@ -54,6 +54,7 @@ import com.fisk.datamanagement.dto.metamap.MetaMapAppDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
+import com.fisk.datamodel.dto.DwFieldQueryDTO;
 import com.fisk.datamodel.dto.GetConfigDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
@@ -1069,6 +1070,112 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
         return hashMap;
     }
 
+    /**
+     * 构建业务域子级 不包含字段
+     *
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @description 构建业务域子级
+     * @author Lock
+     * @date 2022/6/16 18:03
+     * @version v1.0
+     * @params id FiData数据源id
+     * @params businessPoList
+     */
+    private HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> buildBusinessChildrenNoField(String id, String dourceType, TableBusinessTypeEnum tableBusinessTypeEnum) {
+
+        // 建模暂时没有schema的设置
+        List<BusinessAreaPO> businessPoList = this.query().orderByDesc("create_time").list();
+
+        // 维度文件夹（公共域维度）
+        DimensionFolderPO dimensionFolderPO_Public = null;
+        List<DimensionFolderPO> dimensionFolderPOList_Public = dimensionFolderImpl.query().eq("share", 1).list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(dimensionFolderPOList_Public)) {
+            dimensionFolderPO_Public = dimensionFolderPOList_Public.get(0);
+        }
+        DimensionFolderPO finalDimensionFolderPO_Public = dimensionFolderPO_Public;
+        final boolean[] isSetTb_Public = {false};
+
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> hashMap = new HashMap<>();
+        List<DataQualityDataSourceTreeDTO> key = new ArrayList<>();
+        List<DataQualityDataSourceTreeDTO> value = businessPoList.stream().filter(Objects::nonNull).map(business -> {
+            // 第三层: 业务域
+            DataQualityDataSourceTreeDTO businessPoTreeDto = new DataQualityDataSourceTreeDTO();
+            String uuid_businessId = UUID.randomUUID().toString().replace("-", "");
+            businessPoTreeDto.setId(uuid_businessId); // String.valueOf(business.id)
+            businessPoTreeDto.setParentId(id);
+            businessPoTreeDto.setLabel(business.getBusinessName());
+            businessPoTreeDto.setLabelAlias(business.getBusinessName());
+            businessPoTreeDto.setLabelDesc(business.getBusinessDes());
+            businessPoTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+            businessPoTreeDto.setSourceId(Integer.parseInt(id));
+            businessPoTreeDto.setSourceType(1);
+
+            List<DataQualityDataSourceTreeDTO> folderList = new ArrayList<>();
+
+            List<DataQualityDataSourceTreeDTO> dimensionFolderTreeList = new ArrayList<>();
+
+
+            // 第四层 - 1: 维度文件夹（公共域维度）
+            if (finalDimensionFolderPO_Public != null) {
+                DataQualityDataSourceTreeDTO dimensionFolderTreeDto_public = getDimensionFolderNoFields(uuid_businessId, finalDimensionFolderPO_Public, id);
+                // 表字段信息单独再保存一份
+                dimensionFolderTreeList.add(dimensionFolderTreeDto_public);
+            }
+
+            // 第四层 - 1: 维度文件夹（当前域维度）
+            List<DimensionFolderPO> dimensionFolderPOS = dimensionFolderImpl.query().eq("business_id", business.id).list().stream().filter(Objects::nonNull).collect(Collectors.toList());
+            for (DimensionFolderPO dimensionFolder : dimensionFolderPOS) {
+                DataQualityDataSourceTreeDTO dimensionFolderTreeDto = getDimensionFolderNoFields(uuid_businessId, dimensionFolder, id);
+                dimensionFolderTreeList.add(dimensionFolderTreeDto);
+            }
+
+            // 第四层 - 2: 事实文件夹
+            List<DataQualityDataSourceTreeDTO> businessProcessTreeList = this.businessProcessImpl.query().eq("business_id", business.id).list().stream().filter(Objects::nonNull).map(businessProcess -> {
+                DataQualityDataSourceTreeDTO businessProcessTreeDto = new DataQualityDataSourceTreeDTO();
+                String uuid_businessProcessId = UUID.randomUUID().toString().replace("-", "");
+                businessProcessTreeDto.setId(uuid_businessProcessId); // String.valueOf(businessProcess.id)
+                businessProcessTreeDto.setParentId(uuid_businessId); //String.valueOf(business.id)
+                businessProcessTreeDto.setLabel(businessProcess.businessProcessCnName);
+                businessProcessTreeDto.setLabelAlias(businessProcess.businessProcessCnName);
+                businessProcessTreeDto.setLabelDesc(businessProcess.businessProcessDesc);
+                businessProcessTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+                businessProcessTreeDto.setSourceId(Integer.parseInt(id));
+                businessProcessTreeDto.setSourceType(1);
+
+                // 第五层: 事实表
+                List<DataQualityDataSourceTreeDTO> factTreeList = factImpl.query().eq("business_process_id", businessProcess.id).list().stream().filter(Objects::nonNull).map(fact -> {
+                    DataQualityDataSourceTreeDTO factTreeDto = new DataQualityDataSourceTreeDTO();
+                    factTreeDto.setId(String.valueOf(fact.id));
+                    factTreeDto.setParentId(uuid_businessProcessId); // String.valueOf(businessProcess.id)
+                    factTreeDto.setLabel(fact.factTabName);
+                    factTreeDto.setLabelAlias(fact.factTabName);
+                    factTreeDto.setLabelRelName(fact.factTabName);
+                    factTreeDto.setLevelType(LevelTypeEnum.TABLE);
+                    factTreeDto.setPublishState(String.valueOf(fact.isPublish != 1 ? 0 : 1));
+                    factTreeDto.setLabelDesc(fact.factTableDesc);
+                    factTreeDto.setSourceId(Integer.parseInt(id));
+                    factTreeDto.setSourceType(1);
+                    factTreeDto.setLabelBusinessType(tableBusinessTypeEnum.getValue());
+                    return factTreeDto;
+                }).collect(Collectors.toList());
+
+                // 事实文件夹子级
+                businessProcessTreeDto.setChildren(factTreeList);
+                return businessProcessTreeDto;
+            }).collect(Collectors.toList());
+            // 业务域子级-维度
+            folderList.addAll(dimensionFolderTreeList);
+            // 业务域子级-事实
+            folderList.addAll(businessProcessTreeList);
+            businessPoTreeDto.setChildren(folderList);
+            return businessPoTreeDto;
+        }).collect(Collectors.toList());
+
+        hashMap.put(key, value);
+        return hashMap;
+    }
+
+
     public FiDataMetaDataTreeDTO getDimensionFolder(String uuid_businessId, DimensionFolderPO dimensionFolder, String id) {
         FiDataMetaDataTreeDTO dimensionFolderTreeDto = new FiDataMetaDataTreeDTO();
         String uuid_dimensionFolderId = UUID.randomUUID().toString().replace("-", "");
@@ -1118,6 +1225,40 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
 
             // 维度表子级
             dimensionTreeDto.setChildren(dimensionAttributeTreeList);
+            return dimensionTreeDto;
+        }).collect(Collectors.toList());
+
+        dimensionFolderTreeDto.setChildren(dimensionTreeList);
+
+        return dimensionFolderTreeDto;
+    }
+
+    public DataQualityDataSourceTreeDTO getDimensionFolderNoFields(String uuid_businessId, DimensionFolderPO dimensionFolder, String id) {
+        DataQualityDataSourceTreeDTO dimensionFolderTreeDto = new DataQualityDataSourceTreeDTO();
+        String uuid_dimensionFolderId = UUID.randomUUID().toString().replace("-", "");
+        dimensionFolderTreeDto.setId(uuid_dimensionFolderId); //  String.valueOf(dimensionFolder.id)
+        dimensionFolderTreeDto.setParentId(uuid_businessId); //  String.valueOf(business.id)
+        dimensionFolderTreeDto.setLabel(dimensionFolder.dimensionFolderCnName);
+        dimensionFolderTreeDto.setLabelAlias(dimensionFolder.dimensionFolderCnName);
+        dimensionFolderTreeDto.setLabelDesc(dimensionFolder.dimensionFolderDesc);
+        dimensionFolderTreeDto.setLevelType(LevelTypeEnum.FOLDER);
+        dimensionFolderTreeDto.setSourceId(Integer.parseInt(id));
+        dimensionFolderTreeDto.setSourceType(1);
+
+        // 第五层: 维度表
+        List<DataQualityDataSourceTreeDTO> dimensionTreeList = dimensionImpl.query().eq("dimension_folder_id", dimensionFolder.id).list().stream().filter(Objects::nonNull).map(dimension -> {
+            DataQualityDataSourceTreeDTO dimensionTreeDto = new DataQualityDataSourceTreeDTO();
+            dimensionTreeDto.setId(String.valueOf(dimension.id));
+            dimensionTreeDto.setParentId(uuid_dimensionFolderId); // String.valueOf(dimensionFolder.id)
+            dimensionTreeDto.setLabel(dimension.dimensionTabName);
+            dimensionTreeDto.setLabelAlias(dimension.dimensionTabName);
+            dimensionTreeDto.setLabelRelName(dimension.dimensionTabName);
+            dimensionTreeDto.setLevelType(LevelTypeEnum.TABLE);
+            dimensionTreeDto.setPublishState(String.valueOf(dimension.isPublish != 1 ? 0 : 1));
+            dimensionTreeDto.setLabelDesc(dimension.dimensionDesc);
+            dimensionTreeDto.setSourceId(Integer.parseInt(id));
+            dimensionTreeDto.setSourceType(1);
+            dimensionTreeDto.setLabelBusinessType(TableBusinessTypeEnum.DW_DIMENSION.getValue());
             return dimensionTreeDto;
         }).collect(Collectors.toList());
 
@@ -2083,7 +2224,7 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
     public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
         List<SearchColumnDTO> result = new ArrayList<>();
         List<TableFieldDTO> dimensionTableColumnDTOS = this.dimensionAttribute.searchColumn(key);
-        if (!CollectionUtils.isEmpty(dimensionTableColumnDTOS)){
+        if (!CollectionUtils.isEmpty(dimensionTableColumnDTOS)) {
             Map<String, List<TableFieldDTO>> filedMap = dimensionTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTbId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<DimensionPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -2098,12 +2239,12 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                 searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
                 return searchColumnDTO;
             }).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(dimensionData)){
+            if (!CollectionUtils.isEmpty(dimensionData)) {
                 result.addAll(dimensionData);
             }
         }
         List<TableFieldDTO> factTableColumnDTOS = this.factAttributeImpl.searchColumn(key);
-        if (!CollectionUtils.isEmpty(factTableColumnDTOS)){
+        if (!CollectionUtils.isEmpty(factTableColumnDTOS)) {
             Map<String, List<TableFieldDTO>> filedMap = factTableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTbId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<FactAttributePO> queryWrapper = new LambdaQueryWrapper<>();
@@ -2118,11 +2259,90 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
                 searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
                 return searchColumnDTO;
             }).collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(factData)){
+            if (!CollectionUtils.isEmpty(factData)) {
                 result.addAll(factData);
             }
         }
         return result;
+    }
+
+    /**
+     * 数据质量左侧Tree接口-获取dw数据源文件夹表层级
+     *
+     * @return
+     */
+    @Override
+    public DataQualityDataSourceTreeDTO getDwFolderTableTree() {
+
+        //获取dmp_dw的数据源信息 id为1
+        ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(1);
+        if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+
+        DataSourceDTO data = result.getData();
+
+        DataQualityDataSourceTreeDTO dwDataTree = new DataQualityDataSourceTreeDTO();
+        dwDataTree.setId(String.valueOf(data.getId()));
+        dwDataTree.setParentId("-10");
+        dwDataTree.setLabel(data.getName());
+        dwDataTree.setLabelAlias(data.getName());
+        dwDataTree.setLevelType(LevelTypeEnum.DATABASE);
+        dwDataTree.setSourceId(data.getId());
+        dwDataTree.setSourceType(1);
+
+        // 封装dw所有结构数据
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> fiDataMetaDataTree_DW = buildBusinessChildrenNoField(String.valueOf(data.getId()), "dw", TableBusinessTypeEnum.DW_FACT);
+        Map.Entry<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> nextTree_DW = fiDataMetaDataTree_DW.entrySet().iterator().next();
+        dwDataTree.setChildren(nextTree_DW.getValue());
+
+        return dwDataTree;
+    }
+
+    /**
+     * 数据质量左侧Tree接口-根据表ID获取表下面的字段
+     *
+     * @return
+     */
+    @Override
+    public List<DataQualityDataSourceTreeDTO> getDwTableFieldByTableId(DwFieldQueryDTO dto) {
+        List<DataQualityDataSourceTreeDTO> fieldList = null;
+        if (dto.tblType == TableBusinessTypeEnum.DW_DIMENSION.getValue()){
+            fieldList = dimensionAttribute.query().eq("dimension_id", dto.tblId).list().stream().filter(Objects::nonNull).map(field -> {
+                DataQualityDataSourceTreeDTO dimensionAttributeTreeDto = new DataQualityDataSourceTreeDTO();
+                dimensionAttributeTreeDto.setId(String.valueOf(field.id));
+                dimensionAttributeTreeDto.setParentId(String.valueOf(dto.tblId));
+                dimensionAttributeTreeDto.setLabel(field.dimensionFieldEnName);
+                dimensionAttributeTreeDto.setLabelAlias(field.dimensionFieldEnName);
+                dimensionAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                dimensionAttributeTreeDto.setPublishState(String.valueOf(dto.getPublishState()));
+                dimensionAttributeTreeDto.setLabelLength(String.valueOf(field.dimensionFieldLength));
+                dimensionAttributeTreeDto.setLabelType(field.dimensionFieldType);
+                dimensionAttributeTreeDto.setLabelDesc(field.dimensionFieldDes);
+                dimensionAttributeTreeDto.setSourceId(1);
+                dimensionAttributeTreeDto.setSourceType(1);
+                dimensionAttributeTreeDto.setLabelBusinessType(dto.tblType);
+                return dimensionAttributeTreeDto;
+            }).collect(Collectors.toList());
+        }else if(dto.tblType == TableBusinessTypeEnum.DW_FACT.getValue()){
+            fieldList = factAttributeImpl.query().eq("fact_id", dto.tblId).list().stream().filter(Objects::nonNull).map(field -> {
+                DataQualityDataSourceTreeDTO factAttributeTreeDto = new DataQualityDataSourceTreeDTO();
+                factAttributeTreeDto.setId(String.valueOf(field.id));
+                factAttributeTreeDto.setParentId(String.valueOf(dto.tblId));
+                factAttributeTreeDto.setLabel(field.factFieldEnName);
+                factAttributeTreeDto.setLabelAlias(field.factFieldEnName);
+                factAttributeTreeDto.setLevelType(LevelTypeEnum.FIELD);
+                factAttributeTreeDto.setPublishState(String.valueOf(dto.getPublishState()));
+                factAttributeTreeDto.setLabelLength(String.valueOf(field.factFieldLength));
+                factAttributeTreeDto.setLabelType(field.factFieldType);
+                factAttributeTreeDto.setLabelDesc(field.factFieldDes);
+                factAttributeTreeDto.setSourceId(1);
+                factAttributeTreeDto.setSourceType(1);
+                factAttributeTreeDto.setLabelBusinessType(dto.tblType);
+                return factAttributeTreeDto;
+            }).collect(Collectors.toList());
+        }
+        return fieldList;
     }
 
     private List<TableNameDTO> buildTableNames(TableBusinessTypeEnum tableBusinessTypeEnum) {

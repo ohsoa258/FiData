@@ -17,6 +17,7 @@ import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
+import com.fisk.datamodel.dto.DwFieldQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.dto.webindex.WebIndexDTO;
@@ -298,4 +299,19 @@ public interface IBusinessArea extends IService<BusinessAreaPO> {
      * @param key
      */
     List<SearchColumnDTO> searchStandardBeCitedField(String key);
+
+    /**
+     * 数据质量左侧Tree接口-获取dw数据源文件夹表层级
+     *
+     * @return
+     */
+    DataQualityDataSourceTreeDTO getDwFolderTableTree();
+
+    /**
+     * 数据质量左侧Tree接口-根据表ID获取表下面的字段
+     *
+     * @return
+     */
+    List<DataQualityDataSourceTreeDTO> getDwTableFieldByTableId(DwFieldQueryDTO dto);
+
 }

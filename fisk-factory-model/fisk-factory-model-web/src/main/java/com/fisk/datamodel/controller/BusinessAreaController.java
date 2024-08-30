@@ -13,6 +13,7 @@ import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDT
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
+import com.fisk.datamodel.dto.DwFieldQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.IndicatorQueryDTO;
 import com.fisk.datamodel.dto.businessarea.*;
 import com.fisk.datamodel.service.IBusinessArea;
@@ -131,6 +132,28 @@ public class BusinessAreaController {
     @ApiOperation(value = "刷新数据建模结构")
     public ResultEntity<Object> setDataModelStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataModelStructure(dto));
+    }
+
+    /**
+     * 数据质量左侧Tree接口-获取dw数据源文件夹表层级
+     *
+     * @return
+     */
+    @GetMapping("/dataQuality_GetDwFolderTableTree")
+    @ApiOperation(value = "数据质量左侧Tree接口-获取dw数据源文件夹表层级")
+    public ResultEntity<DataQualityDataSourceTreeDTO> getDwFolderTableTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDwFolderTableTree());
+    }
+
+    /**
+     * 数据质量左侧Tree接口-根据表ID获取表下面的字段
+     *
+     * @return
+     */
+    @PostMapping("/dataQuality_GetDwTableFieldByTableId")
+    @ApiOperation(value = "数据质量左侧Tree接口-根据表ID获取表下面的字段")
+    public ResultEntity<List<DataQualityDataSourceTreeDTO>> getDwTableFieldByTableId(@RequestBody DwFieldQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDwTableFieldByTableId(dto));
     }
 
 

@@ -45,9 +45,6 @@ public class DataQualityDataSourceTreeDTO {
     @ApiModelProperty(value = "节点层级类型", required = true)
     public LevelTypeEnum levelType;
 
-    @ApiModelProperty(value = "是否是外部目录表，只有表节点且ODS外部目录库下的表才为True", required = true)
-    public boolean externalTable;
-
     @ApiModelProperty(value = "发布状态 0：未发布 1：已发布，只有表节点才有发布状态")
     public String publishState;
 
