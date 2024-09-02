@@ -8,10 +8,7 @@ import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.datamanagement.dto.standards.SearchColumnDTO;
@@ -76,7 +73,14 @@ public interface IModelService extends IService<ModelPO> {
      * @return
      */
     List<FiDataMetaDataDTO> getDataStructure(FiDataMetaDataReqDTO reqDto);
+    /**
+     * 获取主数据结构
+     * @return
+     */
+    List<DataQualityFiDataMetaDataDTO> dataQualityGetMdmFolderTableTree(FiDataMetaDataReqDTO reqDto);
 
+
+    List<DataQualityDataSourceTreeDTO> getFieldDataTree(String entityId);
     /**
      * 刷新主数据结构
      * @return

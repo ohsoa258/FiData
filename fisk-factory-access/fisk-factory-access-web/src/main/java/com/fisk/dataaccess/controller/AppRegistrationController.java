@@ -15,6 +15,7 @@ import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
+import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
@@ -365,6 +366,29 @@ public class AppRegistrationController {
     public ResultEntity<Object> setDataAccessStructure(@RequestBody FiDataMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.setDataAccessStructure(dto));
     }
+
+    /**
+     * 数据质量左侧Tree接口-获取ods数据源文件夹表层级
+     *
+     * @return
+     */
+    @PostMapping("/dataQuality_GetOdsFolderTableTree")
+    @ApiOperation(value = "数据质量左侧Tree接口-获取ods数据源文件夹表层级")
+    public ResultEntity<DataQualityDataSourceTreeDTO> getOdsFolderTableTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getOdsFolderTableTree());
+    }
+
+    /**
+     * 数据质量左侧Tree接口-根据表ID获取表下面的字段
+     *
+     * @return
+     */
+    @PostMapping("/dataQuality_GetOdsTableFieldByTableId")
+    @ApiOperation(value = "数据质量左侧Tree接口-根据表ID获取表下面的字段")
+    public ResultEntity<List<DataQualityDataSourceTreeDTO>> getOdsTableFieldByTableId(@RequestBody OdsFieldQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getOdsTableFieldByTableId(dto));
+    }
+
 
     @PostMapping("/getTableDataStructure")
     @ApiOperation(value = "获取数据接入表结构(数据标准用)")

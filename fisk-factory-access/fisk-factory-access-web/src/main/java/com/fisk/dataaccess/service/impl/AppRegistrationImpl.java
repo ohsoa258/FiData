@@ -49,6 +49,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.dataaccess.dto.GetConfigDTO;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
+import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
@@ -2500,7 +2501,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             if (driveTypePOList != null) {
                 for (AppRegistrationVO item : appRegistrationVOList) {
                     AppDataSourcePO po = driveTypePOList.stream().filter(e -> e.getAppId() == item.getId()).findFirst().orElse(null);
-                    if (po==null){
+                    if (po == null) {
                         continue;
                     }
                     String driveType = Objects.requireNonNull(po).getDriveType();
@@ -3098,6 +3099,134 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return true;
     }
 
+    /**
+     * 数据质量左侧Tree接口-获取ods数据源文件夹表层级
+     *
+     * @return
+     */
+    @Override
+    public DataQualityDataSourceTreeDTO getOdsFolderTableTree() {
+
+        //获取平台配置所有ODS类型的数据源
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(2);
+        if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        DataSourceDTO sourceDTO = resultEntity.getData();
+        FiDataMetaDataDTO dto = new FiDataMetaDataDTO();
+        // FiData数据源id: 数据资产自定义
+        dto.setDataSourceId(sourceDTO.id);
+        // 第一层id
+        DataQualityDataSourceTreeDTO dataTree = new DataQualityDataSourceTreeDTO();
+        dataTree.setId(String.valueOf(sourceDTO.id));
+        dataTree.setParentId("-10");
+        dataTree.setLabel(sourceDTO.conDbname);
+        dataTree.setLabelAlias(sourceDTO.conDbname);
+        dataTree.setLevelType(LevelTypeEnum.DATABASE);
+        dataTree.setSourceType(1);
+        dataTree.setSourceId(sourceDTO.id);
+        // 封装data-access所有结构数据
+        //todo:数据质量-左侧 tree数据目录 需要包含Doris应用类型的数据目录层级
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> hashMap = buildChildrenWithoutField(String.valueOf(sourceDTO.id));
+        Map.Entry<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> next = hashMap.entrySet().iterator().next();
+        dataTree.setChildren(next.getValue());
+        return dataTree;
+    }
+
+    /**
+     * 数据质量左侧Tree接口-根据表ID获取表下面的字段
+     *
+     * @param table
+     * @return
+     */
+    @Override
+    public List<DataQualityDataSourceTreeDTO> getOdsTableFieldByTableId(OdsFieldQueryDTO table) {
+        List<DataQualityDataSourceTreeDTO> fieldTreeList = new ArrayList<>();
+        //非实时物理表 和 api
+        if (table.tblType == TableBusinessTypeEnum.PHYSICAL_TABLE.getValue()) {
+            List<DataQualityDataSourceTreeDTO> fields = this.tableFieldsImpl.query()
+                    .eq("table_access_id", table.tblId)
+                    .list().stream()
+                    .filter(Objects::nonNull)
+                    .map(field -> {
+                        DataQualityDataSourceTreeDTO fieldDtoTree = new DataQualityDataSourceTreeDTO();
+                        fieldDtoTree.setId(String.valueOf(field.id));
+                        fieldDtoTree.setParentId(String.valueOf(table.tblId));
+                        fieldDtoTree.setLabel(field.fieldName);
+                        fieldDtoTree.setLabelAlias(field.fieldName);
+                        fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                        fieldDtoTree.setPublishState(String.valueOf(table.publishState));
+                        fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                        fieldDtoTree.setLabelType(field.fieldType);
+                        fieldDtoTree.setLabelDesc(field.fieldDes);
+                        fieldDtoTree.setSourceType(1);
+                        fieldDtoTree.setSourceId(table.dbId);
+                        fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.PHYSICAL_TABLE.getValue());
+                        return fieldDtoTree;
+                    }).collect(Collectors.toList());
+            fieldTreeList.addAll(fields);
+            //外部目录表
+        }else if(table.tblType == TableBusinessTypeEnum.ACCESS_API.getValue()){
+            List<DataQualityDataSourceTreeDTO> fields = this.tableFieldsImpl.query()
+                    .eq("table_access_id", table.tblId)
+                    .list().stream()
+                    .filter(Objects::nonNull)
+                    .map(field -> {
+                        DataQualityDataSourceTreeDTO fieldDtoTree = new DataQualityDataSourceTreeDTO();
+                        fieldDtoTree.setId(String.valueOf(field.id));
+                        fieldDtoTree.setParentId(String.valueOf(table.tblId));
+                        fieldDtoTree.setLabel(field.fieldName);
+                        fieldDtoTree.setLabelAlias(field.fieldName);
+                        fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                        fieldDtoTree.setPublishState(String.valueOf(table.publishState));
+                        fieldDtoTree.setLabelLength(String.valueOf(field.fieldLength));
+                        fieldDtoTree.setLabelType(field.fieldType);
+                        fieldDtoTree.setLabelDesc(field.fieldDes);
+                        fieldDtoTree.setSourceType(1);
+                        fieldDtoTree.setSourceId(table.dbId);
+                        fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ACCESS_API.getValue());
+                        return fieldDtoTree;
+                    }).collect(Collectors.toList());
+            fieldTreeList.addAll(fields);
+        }else if (table.tblType == TableBusinessTypeEnum.DORIS_CATALOG_TABLE.getValue()) {
+            String trueCataLogName = table.catalogName;
+            String dbName = table.dbName;
+            String tbName = table.tblName;
+            Connection connection = null;
+            try {
+                //获取doris jdbc connection
+                ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(table.dbId);
+                if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                    throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                }
+                DataSourceDTO data = result.getData();
+                connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+                //获取指定表下的字段信息
+                List<DorisTblSchemaDTO> fields = getCatalogTblSchema(trueCataLogName, dbName, tbName, connection);
+                for (DorisTblSchemaDTO field : fields) {
+                    DataQualityDataSourceTreeDTO fdDtoTree = new DataQualityDataSourceTreeDTO();
+                    fdDtoTree.setId(trueCataLogName + "." + dbName + "." + tbName + "." + field.getFieldName());
+                    fdDtoTree.setParentId(trueCataLogName + "." + dbName + "." + tbName);
+                    fdDtoTree.setLabel(field.getFieldName());
+                    fdDtoTree.setLabelAlias(field.getFieldName());
+                    fdDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                    fdDtoTree.setPublishState(String.valueOf(1));
+                    fdDtoTree.setLabelType(field.getType());
+                    fdDtoTree.setSourceType(1);
+                    fdDtoTree.setSourceId(table.dbId);
+                    fdDtoTree.setLabelBusinessType(TableBusinessTypeEnum.DORIS_CATALOG_TABLE.getValue());
+                    fieldTreeList.add(fdDtoTree);
+                }
+            } catch (Exception e) {
+                log.error(trueCataLogName + "." + dbName + " 查询表结构失败,原因:", e);
+                throw new FkException(ResultEnum.ERROR, e);
+            } finally {
+                AbstractCommonDbHelper.closeConnection(connection);
+            }
+        }
+        return fieldTreeList;
+    }
+
     @Override
     public TableRuleInfoDTO buildTableRuleInfo(TableRuleParameterDTO dto) {
 
@@ -3360,6 +3489,66 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
+     * 构建data-access子集树 不包含字段层级
+     *
+     * @param id FiData数据源id
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/15 17:46
+     */
+    private HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> buildChildrenWithoutField(String id) {
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> hashMap = new HashMap<>();
+        List<DataQualityDataSourceTreeDTO> appTypeTreeList = new ArrayList<>();
+        DataQualityDataSourceTreeDTO appTreeByRealTime = new DataQualityDataSourceTreeDTO();
+        String appTreeByRealTimeGuid = UUID.randomUUID().toString();
+        appTreeByRealTime.setId(appTreeByRealTimeGuid);
+        appTreeByRealTime.setParentId(id);
+        appTreeByRealTime.setLabel("实时应用");
+        appTreeByRealTime.setLabelAlias("实时应用");
+        appTreeByRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        appTreeByRealTime.setSourceType(1);
+        appTreeByRealTime.setSourceId(Integer.parseInt(id));
+
+        DataQualityDataSourceTreeDTO appTreeByNonRealTime = new DataQualityDataSourceTreeDTO();
+        String appTreeByNonRealTimeGuid = UUID.randomUUID().toString();
+        appTreeByNonRealTime.setId(appTreeByNonRealTimeGuid);
+        appTreeByNonRealTime.setParentId(id);
+        appTreeByNonRealTime.setLabel("非实时应用");
+        appTreeByNonRealTime.setLabelAlias("非实时应用");
+        appTreeByNonRealTime.setLevelType(LevelTypeEnum.FOLDER);
+        appTreeByNonRealTime.setSourceType(1);
+        appTreeByNonRealTime.setSourceId(Integer.parseInt(id));
+
+        // 所有应用
+        //todo：根据FiData数据源id 去过滤当前系统数据源有哪些应用选用
+        List<AppRegistrationPO> appPoList = this.list(
+                new LambdaQueryWrapper<AppRegistrationPO>()
+                        .eq(AppRegistrationPO::getTargetDbId, Integer.parseInt(id))
+                        .orderByDesc(AppRegistrationPO::getCreateTime)
+        );
+        // 所有应用下表字段信息
+        List<DataQualityDataSourceTreeDTO> tableFieldList = new ArrayList<>();
+
+        //实时应用下的表
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> fiDataMetaDataTreeByRealTime = getFiDataMetaDataTreeByRealTimeNoField(appTreeByRealTimeGuid, id, appPoList);
+        Map.Entry<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> nextTreeByRealTime = fiDataMetaDataTreeByRealTime.entrySet().iterator().next();
+        appTreeByRealTime.setChildren(nextTreeByRealTime.getValue());
+        tableFieldList.addAll(nextTreeByRealTime.getKey());
+
+        //非实时应用下的表
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> fiDataMetaDataTreeByNonRealTime = getFiDataMetaDataTreeByNonRealTimeNoField(appTreeByNonRealTimeGuid, id, appPoList);
+        Map.Entry<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> nextTreeByNonRealTime = fiDataMetaDataTreeByNonRealTime.entrySet().iterator().next();
+        appTreeByNonRealTime.setChildren(nextTreeByNonRealTime.getValue());
+        tableFieldList.addAll(nextTreeByNonRealTime.getKey());
+
+        appTypeTreeList.add(appTreeByRealTime);
+        appTypeTreeList.add(appTreeByNonRealTime);
+        // key是表字段 value是tree
+        hashMap.put(tableFieldList, appTypeTreeList);
+        return hashMap;
+    }
+
+    /**
      * 获取实时应用结构
      *
      * @param appPoList 所有的应用实体对象
@@ -3525,6 +3714,136 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     }
 
     /**
+     * 获取实时应用结构 没有字段层级
+     *
+     * @param appPoList 所有的应用实体对象
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/16 15:21
+     * @params id FiData数据源id
+     */
+    private HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> getFiDataMetaDataTreeByRealTimeNoField(String appTreeByRealTimeGuid, String id, List<AppRegistrationPO> appPoList) {
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> hashMap = new HashMap<>();
+        List<DataQualityDataSourceTreeDTO> key = new ArrayList<>();
+        List<DataQualityDataSourceTreeDTO> value = appPoList.stream()
+                .filter(Objects::nonNull)
+                .filter(e -> e.appType == 0)// 实时应用
+                .map(app -> {
+                    // 第一层: app层
+                    DataQualityDataSourceTreeDTO appDtoTree = new DataQualityDataSourceTreeDTO();
+                    // 当前层默认生成的uuid
+                    String uuid_appId = UUID.randomUUID().toString().replace("-", "");
+                    appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
+                    // 上一级的id
+                    appDtoTree.setSourceType(1);
+                    appDtoTree.setSourceId(Integer.parseInt(id));
+                    appDtoTree.setParentId(appTreeByRealTimeGuid);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appAbbreviation);
+                    appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setLabelDesc(app.appDes);
+
+                    AppDataSourcePO appDataSourcePO = null;
+                    QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
+                    appDataSourcePOQueryWrapper.lambda()
+                            .eq(AppDataSourcePO::getAppId, app.id)
+                            .eq(AppDataSourcePO::getDelFlag, 1);
+                    List<AppDataSourcePO> appDataSourcePOS = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
+
+                    //获取数据接入-app应用引用的数据源类型
+                    //目前接入的应用只允许选一个数据源 集合不为空 取下标为0的数据即可
+                    if (!CollectionUtils.isEmpty(appDataSourcePOS)) {
+                        appDataSourcePO = appDataSourcePOS.get(0);
+                    }
+                    //应用引用的数据源类型的type这里不能为空 为空则返回
+                    if (appDataSourcePO == null) {
+                        return appDtoTree;
+                    }
+                    // 根据驱动类型封装不同的子级
+                    switch (appDataSourcePO.driveType) {
+                        case "RestfulAPI"://DataSourceTypeEnum.RestfulAPI.getName():
+                            // 第二层: api层
+                            // 当前app下的所有api
+                            List<DataQualityDataSourceTreeDTO> apiTreeList = this.apiConfigImpl.query()
+                                    .eq("app_id", app.id)
+                                    .orderByDesc("create_time")
+                                    .list()
+                                    .stream()
+                                    .filter(Objects::nonNull)
+                                    .map(api -> {
+                                        DataQualityDataSourceTreeDTO apiDtoTree = new DataQualityDataSourceTreeDTO();
+                                        String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                                        apiDtoTree.setId(uuid_apiId);// String.valueOf(api.id)
+                                        apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                                        apiDtoTree.setLabel(api.apiName);
+                                        apiDtoTree.setLabelAlias(api.apiName);
+                                        apiDtoTree.setSourceType(1);
+                                        apiDtoTree.setSourceId(Integer.parseInt(id));
+                                        apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                        // 不是已发布的都当作未发布处理
+                                        if (api.publish == null) {
+                                            apiDtoTree.setPublishState("0");
+                                        } else {
+                                            apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                        }
+                                        apiDtoTree.setLabelDesc(api.apiDes);
+                                        //第三层: table层
+                                        List<DataQualityDataSourceTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("api_id", api.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                            DataQualityDataSourceTreeDTO tableDtoTree = new DataQualityDataSourceTreeDTO();
+                                            tableDtoTree.setId(String.valueOf(table.id));
+                                            tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
+                                            tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                            tableDtoTree.setLabelAlias(table.tableName);
+                                            tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                            tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                            tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                            tableDtoTree.setSourceType(1);
+                                            tableDtoTree.setSourceId(Integer.parseInt(id));
+                                            if (table.publish == null) {
+                                                tableDtoTree.setPublishState("0");
+                                                table.publish = 0;
+                                            }
+                                            tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                            // 实时API应用表描述不存在，取api的描述
+                                            tableDtoTree.setLabelDesc(api.apiDes);
+                                            tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ACCESS_API.getValue());
+                                            return tableDtoTree;
+                                        }).collect(Collectors.toList());
+
+                                        // api的子级
+                                        apiDtoTree.setChildren(tableTreeList);
+                                        return apiDtoTree;
+                                    }).collect(Collectors.toList());
+                            // app的子级
+                            appDtoTree.setChildren(apiTreeList);
+                            break;
+                        case "doris_catalog"://DataSourceTypeEnum.DORIS_CATALOG.getName():
+                            //获取当前应用下的所有外部目录
+                            List<TableAccessPO> cataLogs = tableAccessImpl.list(
+                                    new LambdaQueryWrapper<TableAccessPO>()
+                                            .eq(TableAccessPO::getAppId, app.getId())
+                            );
+
+                            //拼接真实外部目录名称 应用简称_表名
+                            List<String> trueCataLogNames = cataLogs.stream()
+                                    .map(cataLog -> app.appAbbreviation + "_" + cataLog.getTableName())
+                                    .collect(Collectors.toList());
+
+                            //获取目录下的所有表信息
+                            List<DataQualityDataSourceTreeDTO> cataLogTreeList = catalogTreeListNoField(trueCataLogNames, uuid_appId, appDataSourcePO, id, app.targetDbId, key);
+                            appDtoTree.setChildren(cataLogTreeList);
+                            break;
+                        default:
+                            break;
+                    }
+                    return appDtoTree;
+                }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
+    }
+
+
+    /**
      * 获取doris目录下的表信息
      *
      * @param trueCataLogNames 真实的doris catalog 目录名称集合
@@ -3661,6 +3980,111 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         }
         return cataLogTreeList;
     }
+
+    /**
+     * 获取doris目录下的表信息 不包含字段层级
+     *
+     * @param trueCataLogNames 真实的doris catalog 目录名称集合
+     * @param uuid_appId       上层app guid
+     * @param appDataSourcePO  当前应用引用的数据源
+     * @param id               平台配置 系统数据源id
+     * @param targetDbId       应用的目标数据源id
+     * @return
+     */
+    private List<DataQualityDataSourceTreeDTO> catalogTreeListNoField(List<String> trueCataLogNames, String uuid_appId, AppDataSourcePO appDataSourcePO, String id, Integer targetDbId, List<DataQualityDataSourceTreeDTO> key) {
+        List<DataQualityDataSourceTreeDTO> cataLogTreeList = new ArrayList<>();
+        for (String trueCataLogName : trueCataLogNames) {
+            //第二层 目录层
+            DataQualityDataSourceTreeDTO cataLogDtoTree = new DataQualityDataSourceTreeDTO();
+            String uuid_cataLogId = UUID.randomUUID().toString().replace("-", "");
+            cataLogDtoTree.setId(uuid_cataLogId);// String.valueOf(api.id)
+            cataLogDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+            cataLogDtoTree.setLabel(trueCataLogName);
+            cataLogDtoTree.setLabelAlias(trueCataLogName);
+            cataLogDtoTree.setSourceType(1);
+            cataLogDtoTree.setSourceId(Integer.parseInt(id));
+            cataLogDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+            cataLogDtoTree.setPublishState("1");
+            cataLogDtoTree.setLabelDesc(trueCataLogName);
+
+            //获取doris指定目录下的库表信息
+            Map<String, List<String>> map = tableAccessImpl.getDorisCatalogTreeByCatalogName(appDataSourcePO.systemDataSourceId, trueCataLogName);
+            //获取目录下的所有库名称
+            Set<String> dbNames = map.keySet();
+            List<DataQualityDataSourceTreeDTO> dbTreeList = new ArrayList<>();
+            for (String dbName : dbNames) {
+                //第三层 库层
+                DataQualityDataSourceTreeDTO dbDtoTree = new DataQualityDataSourceTreeDTO();
+                String uuid_dbLogId = UUID.randomUUID().toString().replace("-", "");
+                dbDtoTree.setId(uuid_dbLogId);
+                dbDtoTree.setParentId(uuid_cataLogId);
+                dbDtoTree.setLabel(dbName);
+                dbDtoTree.setLabelAlias(dbName);
+                dbDtoTree.setSourceType(1);
+                dbDtoTree.setSourceId(Integer.parseInt(id));
+                dbDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                dbDtoTree.setPublishState("1");
+                dbDtoTree.setLabelDesc(dbName);
+
+                //获取当前库下的所有表名
+                List<String> tbNames = map.get(dbName);
+                List<DataQualityDataSourceTreeDTO> tbTreeList = new ArrayList<>();
+
+                //在查询表结构时 为了避免多次开关流消耗数据库资源 每个库下的所有表使用同一个连接去查询
+                Connection connection = null;
+                try {
+                    //获取doris jdbc connection
+                    ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(targetDbId);
+                    if (result.getCode() != ResultEnum.SUCCESS.getCode()) {
+                        throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+                    }
+                    DataSourceDTO data = result.getData();
+                    connection = DriverManager.getConnection(data.conStr, data.conAccount, data.conPassword);
+
+                    for (String tbName : tbNames) {
+                        //第四层 数据表层
+                        DataQualityDataSourceTreeDTO tbDtoTree = new DataQualityDataSourceTreeDTO();
+                        tbDtoTree.setId(trueCataLogName + "." + dbName + "." + tbName);
+                        tbDtoTree.setParentId(uuid_dbLogId);
+                        //全称表名
+                        tbDtoTree.setLabel(trueCataLogName + "." + dbName + "." + tbName);
+                        //表别名 没有 因此使用不带 目录和库名的 表名
+                        tbDtoTree.setLabelAlias(tbName);
+                        //表真实名称
+                        tbDtoTree.setLabelRelName(tbName);
+                        //表架构 目录名.库名
+                        tbDtoTree.setLabelFramework(trueCataLogName + "." + dbName);
+                        tbDtoTree.setSourceType(1);
+                        //数据源id
+                        tbDtoTree.setSourceId(Integer.parseInt(id));
+                        //节点类型
+                        tbDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                        //发布状态 外部目录的发布状态默认为1
+                        tbDtoTree.setPublishState("1");
+                        tbDtoTree.setLabelDesc(tbName);
+                        tbDtoTree.setLabelBusinessType(TableBusinessTypeEnum.DORIS_CATALOG_TABLE.getValue());
+                        tbTreeList.add(tbDtoTree);
+                    }
+                } catch (Exception e) {
+                    log.error(trueCataLogName + "." + dbName + " 查询表结构失败,原因:", e);
+                    continue;
+                } finally {
+                    AbstractCommonDbHelper.closeConnection(connection);
+                }
+
+                //如果库下面没有表 那这个库不要显示
+                if (CollectionUtils.isEmpty(tbTreeList)) {
+                    continue;
+                }
+                dbDtoTree.setChildren(tbTreeList);
+                dbTreeList.add(dbDtoTree);
+            }
+            cataLogDtoTree.setChildren(dbTreeList);
+            cataLogTreeList.add(cataLogDtoTree);
+        }
+        return cataLogTreeList;
+    }
+
 
     /**
      * 获取非实时应用结构
@@ -3849,6 +4273,133 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         hashMap.put(key, value);
         return hashMap;
     }
+
+    /**
+     * 获取非实时应用结构 不包含字段
+     *
+     * @param id        guid
+     * @param appPoList 所有的应用实体对象
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/16 15:21
+     */
+    private HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> getFiDataMetaDataTreeByNonRealTimeNoField(String appTreeByNonRealTimeGuid, String id, List<AppRegistrationPO> appPoList) {
+        HashMap<List<DataQualityDataSourceTreeDTO>, List<DataQualityDataSourceTreeDTO>> hashMap = new HashMap<>();
+        List<DataQualityDataSourceTreeDTO> key = new ArrayList<>();
+        List<DataQualityDataSourceTreeDTO> value = appPoList.stream().filter(Objects::nonNull)
+                // 非实时应用
+                .filter(e -> e.appType == 1).map(app -> {
+
+                    // 第一层: app层
+                    DataQualityDataSourceTreeDTO appDtoTree = new DataQualityDataSourceTreeDTO();
+                    String uuid_appId = UUID.randomUUID().toString().replace("-", "");
+                    appDtoTree.setId(uuid_appId); //String.valueOf(app.id)
+                    // 上一级的id
+                    appDtoTree.setParentId(appTreeByNonRealTimeGuid);
+                    appDtoTree.setLabel(app.appName);
+                    appDtoTree.setLabelAlias(app.appAbbreviation);
+                    appDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    appDtoTree.setSourceType(1);
+                    appDtoTree.setSourceId(Integer.parseInt(id));
+                    appDtoTree.setLabelDesc(app.appDes);
+
+                    // 查询驱动类型
+                    String type = "dataBase";
+                    QueryWrapper<AppDataSourcePO> appDataSourcePOQueryWrapper = new QueryWrapper<>();
+                    appDataSourcePOQueryWrapper.lambda().eq(AppDataSourcePO::getAppId, app.id).eq(AppDataSourcePO::getDelFlag, 1).eq(AppDataSourcePO::getDriveType, DataSourceTypeEnum.API.getName());
+                    List<AppDataSourcePO> appDataSourcePOS = appDataSourceMapper.selectList(appDataSourcePOQueryWrapper);
+                    if (!CollectionUtils.isEmpty(appDataSourcePOS)) {
+                        type = "api";
+                    }
+                    // 根据驱动类型封装不同的子级
+                    switch (type) {
+                        // 第二层: api层
+                        case "api":
+                            // 当前app下的所有api
+                            List<DataQualityDataSourceTreeDTO> apiTreeList = this.apiConfigImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(api -> {
+                                DataQualityDataSourceTreeDTO apiDtoTree = new DataQualityDataSourceTreeDTO();
+
+                                String uuid_apiId = UUID.randomUUID().toString().replace("-", "");
+                                apiDtoTree.setId(uuid_apiId); // String.valueOf(api.id)
+                                apiDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                                apiDtoTree.setLabel(api.apiName);
+                                apiDtoTree.setLabelAlias(api.apiName);
+                                apiDtoTree.setSourceType(1);
+                                apiDtoTree.setSourceId(Integer.parseInt(id));
+                                apiDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                // 不是已发布的都当作未发布处理
+                                if (api.publish == null) {
+                                    apiDtoTree.setPublishState("0");
+                                } else {
+                                    apiDtoTree.setPublishState(String.valueOf(api.publish != 1 ? 0 : 1));
+                                }
+                                apiDtoTree.setLabelDesc(api.apiDes);
+
+                                // 第三层: table层
+                                List<DataQualityDataSourceTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("api_id", api.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                    DataQualityDataSourceTreeDTO tableDtoTree = new DataQualityDataSourceTreeDTO();
+                                    tableDtoTree.setId(String.valueOf(table.id));
+                                    tableDtoTree.setParentId(uuid_apiId); // String.valueOf(api.id)
+                                    tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLabelAlias(table.tableName);
+                                    tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                    tableDtoTree.setSourceType(1);
+                                    tableDtoTree.setSourceId(Integer.parseInt(id));
+                                    if (table.publish == null) {
+                                        tableDtoTree.setPublishState("0");
+                                        table.publish = 0;
+                                    } else {
+                                        tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                    }
+                                    tableDtoTree.setLabelDesc(table.tableDes);
+                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ACCESS_API.getValue());
+                                    return tableDtoTree;
+                                }).collect(Collectors.toList());
+
+                                // api的子级
+                                apiDtoTree.setChildren(tableTreeList);
+                                return apiDtoTree;
+                            }).collect(Collectors.toList());
+
+                            // app的子级
+                            appDtoTree.setChildren(apiTreeList);
+                            break;
+                        // 第二层: table层
+                        case "dataBase":
+                            List<DataQualityDataSourceTreeDTO> tableTreeList = this.tableAccessImpl.query().eq("app_id", app.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                DataQualityDataSourceTreeDTO tableDtoTree = new DataQualityDataSourceTreeDTO();
+                                tableDtoTree.setId(String.valueOf(table.id));
+                                tableDtoTree.setParentId(uuid_appId); // String.valueOf(app.id)
+                                tableDtoTree.setLabel(TableNameGenerateUtils.buildOdsTableName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                tableDtoTree.setLabelAlias(table.tableName);
+                                tableDtoTree.setLabelRelName(TableNameGenerateUtils.buildOdsTableRelName(table.tableName, app.appAbbreviation, app.whetherSchema));
+                                tableDtoTree.setLabelFramework(TableNameGenerateUtils.buildOdsSchemaName(app.appAbbreviation, app.whetherSchema));
+                                tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                tableDtoTree.setSourceType(1);
+                                tableDtoTree.setSourceId(Integer.parseInt(id));
+                                if (table.publish == null) {
+                                    tableDtoTree.setPublishState("0");
+                                    table.publish = 0;
+                                } else {
+                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                }
+                                tableDtoTree.setLabelDesc(table.tableDes);
+                                tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.PHYSICAL_TABLE.getValue());
+                                return tableDtoTree;
+                            }).collect(Collectors.toList());
+                            appDtoTree.setChildren(tableTreeList);
+                            break;
+                        default:
+                            break;
+                    }
+                    return appDtoTree;
+                }).collect(Collectors.toList());
+        hashMap.put(key, value);
+        return hashMap;
+    }
+
 
     /**
      * 获取指定doris外部目录catalog下的指定表的表结构
@@ -4547,7 +5098,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         instance.setHostname(hostname);
         instance.setPort(port);
         instance.setProtocol(protocol);
-        instance.setQualifiedName(hostname + "_" + dbName + "_instance_"+dataSourceConfig.data.id);
+        instance.setQualifiedName(hostname + "_" + dbName + "_instance_" + dataSourceConfig.data.id);
         instance.setName(hostname);
         instance.setContact_info(app.getAppPrincipal());
         instance.setDescription(app.getAppDes());
@@ -4588,7 +5139,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         MetaDataTableAttributeDTO table = new MetaDataTableAttributeDTO();
         table.setQualifiedName(qualifiedName + "_" + tableAccess.getId());
         //cdc类型应用/jdbc类型应用， 表名称为原名称
-        if (app.appType == 2|| app.appType == 3) {
+        if (app.appType == 2 || app.appType == 3) {
 //            String[] tableNames = tableAccess.getDisplayName().split("\\.");
 
             table.setName(tableAccess.getTableName());

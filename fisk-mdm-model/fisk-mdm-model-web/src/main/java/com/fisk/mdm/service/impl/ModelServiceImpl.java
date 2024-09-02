@@ -25,10 +25,7 @@ import com.fisk.common.server.metadata.ClassificationInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.accessAndModel.ServerTypeEnum;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -123,6 +120,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Value("${open-metadata}")
     private Boolean openMetadata;
 
+    @Value("${fiData-data-mdm-source}")
+    private String mdmSource;
+
     /**
      * 通过id查询
      *
@@ -194,7 +194,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         logService.saveEventLog((int) modelPO.getId(), ObjectTypeEnum.MODEL, EventTypeEnum.SAVE, desc);
 
         //同步数据资产业务分类
-        syncMetadataClassification(modelDTO.getDisplayName(),modelDTO.getDesc(),false);
+        syncMetadataClassification(modelDTO.getDisplayName(), modelDTO.getDesc(), false);
         //创建成功
         return ResultEnum.SUCCESS;
     }
@@ -236,7 +236,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         logService.saveEventLog((int) modelPO.getId(), ObjectTypeEnum.MODEL, EventTypeEnum.UPDATE, desc);
 
         //同步数据资产业务分类
-        syncMetadataClassification(modelUpdateDTO.getDisplayName(),modelUpdateDTO.getDesc(),false);
+        syncMetadataClassification(modelUpdateDTO.getDisplayName(), modelUpdateDTO.getDesc(), false);
 
         //添加成功
         return ResultEnum.SUCCESS;
@@ -244,13 +244,14 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     /**
      * 同步数据资产业务分类
+     *
      * @param modelDisplayName
      * @param modelDes
      * @param delete
      */
-    public void  syncMetadataClassification(String modelDisplayName,String modelDes,boolean delete){
-        if(openMetadata){
-            ClassificationInfoDTO classificationInfoDTO=new ClassificationInfoDTO();
+    public void syncMetadataClassification(String modelDisplayName, String modelDes, boolean delete) {
+        if (openMetadata) {
+            ClassificationInfoDTO classificationInfoDTO = new ClassificationInfoDTO();
             classificationInfoDTO.setName(modelDisplayName);
             classificationInfoDTO.setDescription(modelDes);
             classificationInfoDTO.setSourceType(ClassificationTypeEnum.MASTER_DATA);
@@ -280,9 +281,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
             return ResultEnum.DATA_NOTEXISTS;
         }
         LambdaQueryWrapper<AccessDataPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(AccessDataPO::getModelId,id);
+        queryWrapper.eq(AccessDataPO::getModelId, id);
         List<AccessDataPO> tableApiServicePOS = accessDataService.list(queryWrapper);
-        List<Long> tableApiIdList = tableApiServicePOS.stream().map(i->i.getEntityId().longValue()).collect(Collectors.toList());
+        List<Long> tableApiIdList = tableApiServicePOS.stream().map(i -> i.getEntityId().longValue()).collect(Collectors.toList());
         BuildDeleteTableServiceDTO buildDeleteTableApiServiceDTO = new BuildDeleteTableServiceDTO();
         buildDeleteTableApiServiceDTO.ids = tableApiIdList;
         buildDeleteTableApiServiceDTO.appId = String.valueOf(id);
@@ -291,19 +292,19 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         buildDeleteTableApiServiceDTO.delBusiness = true;
         publishTaskClient.publishDeleteAccessMdmNifiFlowTask(buildDeleteTableApiServiceDTO);
         LambdaQueryWrapper<EntityPO> entityQueryWrapper = new LambdaQueryWrapper<>();
-        entityQueryWrapper.eq(EntityPO::getModelId,modelPO.getId());
+        entityQueryWrapper.eq(EntityPO::getModelId, modelPO.getId());
         List<EntityPO> entityPOS = entityMapper.selectList(entityQueryWrapper);
-        List<Integer> ids = entityPOS.stream().map(i->(int)i.getId()).collect(Collectors.toList());
+        List<Integer> ids = entityPOS.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
         // 删除实体下的属性
-        if (CollectionUtils.isNotEmpty(ids)){
+        if (CollectionUtils.isNotEmpty(ids)) {
             this.deleteAttrByEntityIds(ids);
         }
         for (EntityPO entityPO : entityPOS) {
             TableDTO tableDTO = new TableDTO();
-            tableDTO.setLogTableName(generateLogTableName(modelPO.getName(),entityPO.getName()));
-            tableDTO.setStgTableName(generateStgTableName(modelPO.getName(),entityPO.getName()));
-            tableDTO.setMdmTableName(generateMdmTableName(modelPO.getName(),entityPO.getName()));
-            tableDTO.setViwTableName(generateViwTableName(modelPO.getName(),entityPO.getName()));
+            tableDTO.setLogTableName(generateLogTableName(modelPO.getName(), entityPO.getName()));
+            tableDTO.setStgTableName(generateStgTableName(modelPO.getName(), entityPO.getName()));
+            tableDTO.setMdmTableName(generateMdmTableName(modelPO.getName(), entityPO.getName()));
+            tableDTO.setViwTableName(generateViwTableName(modelPO.getName(), entityPO.getName()));
             publishTaskClient.deleteBackendTable(tableDTO);
         }
 
@@ -312,7 +313,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         logService.saveEventLog(id, ObjectTypeEnum.MODEL, EventTypeEnum.DELETE, desc);
 
         //同步数据资产业务分类
-        syncMetadataClassification(modelPO.getDisplayName(),modelPO.getDesc(),true);
+        syncMetadataClassification(modelPO.getDisplayName(), modelPO.getDesc(), true);
 
         //删除成功
         return ResultEnum.SUCCESS;
@@ -492,6 +493,42 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         return true;
     }
 
+    @Override
+    public List<DataQualityFiDataMetaDataDTO> dataQualityGetMdmFolderTableTree(FiDataMetaDataReqDTO reqDto) {
+        //获取平台配置所有ODS类型的数据源
+        ResultEntity<List<DataSourceMyDTO>> resultEntity = userClient.getAllMdmDataSource();
+        if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            return null;
+        }
+        List<DataSourceMyDTO> data = resultEntity.getData();
+        List<DataQualityFiDataMetaDataDTO> list = new ArrayList<>();
+        for (DataSourceMyDTO sourceDTO : data) {
+            List<DataQualityDataSourceTreeDTO> dataTreeList = new ArrayList<>();
+
+            DataQualityFiDataMetaDataDTO dto = new DataQualityFiDataMetaDataDTO();
+            // FiData数据源id: 数据资产自定义
+            dto.setDataSourceId(sourceDTO.id);
+
+            // 第一层id
+            DataQualityDataSourceTreeDTO dataTree = new DataQualityDataSourceTreeDTO();
+            dataTree.setId(String.valueOf(sourceDTO.id));
+            dataTree.setParentId("-10");
+            dataTree.setLabel(sourceDTO.conDbname);
+            dataTree.setLabelAlias(sourceDTO.conDbname);
+            dataTree.setLevelType(LevelTypeEnum.DATABASE);
+            dataTree.setSourceType(1);
+            dataTree.setSourceId(sourceDTO.id);
+            // 数据质量-左侧 tree数据目录
+            List<DataQualityDataSourceTreeDTO> tree = dataQualityBuildChildren(String.valueOf(sourceDTO.id));
+            dataTree.setChildren(tree);
+            dataTreeList.add(dataTree);
+
+            dto.setChildren(dataTreeList);
+            list.add(dto);
+        }
+        return list;
+    }
+
     /**
      * 构建data-access子集树
      *
@@ -524,7 +561,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         // 所有应用下表字段信息
         List<FiDataMetaDataTreeDTO> tableFieldList = new ArrayList<>();
 
-        //实时应用下的表
+        //应用下的表
         HashMap<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> fiDataMetaDataTreeByModel = getFiDataMetaDataTreeByModel(modelTreeByRealTimeGuid, id, appPoList);
         Map.Entry<List<FiDataMetaDataTreeDTO>, List<FiDataMetaDataTreeDTO>> nextTreeByModel = fiDataMetaDataTreeByModel.entrySet().iterator().next();
         modelTreeByRealTime.setChildren(nextTreeByModel.getValue());
@@ -537,7 +574,43 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     }
 
     /**
+     * 构建data-access子集树
+     *
+     * @param id FiData数据源id
+     * @return java.util.List<com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO>
+     * @author Lock
+     * @date 2022/6/15 17:46
+     */
+    private List<DataQualityDataSourceTreeDTO> dataQualityBuildChildren(String id) {
+
+        List<DataQualityDataSourceTreeDTO> modelTypeTreeList = new ArrayList<>();
+
+        DataQualityDataSourceTreeDTO modelTree = new DataQualityDataSourceTreeDTO();
+        String modelTreeByRealTimeGuid = UUID.randomUUID().toString();
+        modelTree.setId(modelTreeByRealTimeGuid);
+        modelTree.setParentId(id);
+        modelTree.setLabel("模型");
+        modelTree.setLabelAlias("模型");
+        modelTree.setLevelType(LevelTypeEnum.FOLDER);
+        modelTree.setSourceType(1);
+        modelTree.setSourceId(Integer.parseInt(id));
+
+        // 所有应用
+        List<ModelPO> appPoList = this.list(
+                new LambdaQueryWrapper<ModelPO>()
+                        .orderByDesc(ModelPO::getCreateTime)
+        );
+        //应用下的表
+        List<DataQualityDataSourceTreeDTO> fiDataMetaDataTreeByModel = dataQualityFiDataMetaDataTreeByModel(modelTreeByRealTimeGuid, id, appPoList);
+        modelTree.setChildren(fiDataMetaDataTreeByModel);
+
+        modelTypeTreeList.add(modelTree);
+        return modelTypeTreeList;
+    }
+
+    /**
      * 获取主数据模型结构
+     *
      * @param modelTreeByEntityGuid
      * @param id
      * @param modelPoList
@@ -614,9 +687,9 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                                 fieldDtoTree.setLabelAlias(field.getName());
                                                 fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
                                                 fieldDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
-                                                if (field.getDataTypeLength()!= null){
+                                                if (field.getDataTypeLength() != null) {
                                                     fieldDtoTree.setLabelLength(String.valueOf(field.getDataTypeLength()));
-                                                }else if (field.getDataTypeDecimalLength() != null){
+                                                } else if (field.getDataTypeDecimalLength() != null) {
                                                     fieldDtoTree.setLabelLength(String.valueOf(field.getDataTypeDecimalLength()));
                                                 }
 
@@ -652,6 +725,120 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         return hashMap;
     }
 
+    /**
+     * 获取主数据模型结构
+     *
+     * @param modelTreeByEntityGuid
+     * @param id
+     * @param modelPoList
+     * @return
+     */
+    private List<DataQualityDataSourceTreeDTO> dataQualityFiDataMetaDataTreeByModel(String modelTreeByEntityGuid, String id, List<ModelPO> modelPoList) {
+        List<DataQualityDataSourceTreeDTO> value = modelPoList.stream()
+                .filter(Objects::nonNull)
+                .map(app -> {
+                    // 第一层: model层
+                    DataQualityDataSourceTreeDTO modelDtoTree = new DataQualityDataSourceTreeDTO();
+                    // 当前层默认生成的uuid
+                    String uuid_modelId = UUID.randomUUID().toString().replace("-", "");
+                    modelDtoTree.setId(uuid_modelId);
+                    // 上一级的id
+                    modelDtoTree.setSourceType(1);
+                    modelDtoTree.setSourceId(Integer.parseInt(id));
+                    modelDtoTree.setParentId(modelTreeByEntityGuid);
+                    modelDtoTree.setLabel(app.name);
+                    modelDtoTree.setLabelAlias(app.displayName);
+                    modelDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                    modelDtoTree.setLabelDesc(app.desc);
+                    List<DataQualityDataSourceTreeDTO> apiTreeList = entityMapper.selectList(
+                                    new LambdaQueryWrapper<EntityPO>()
+                                            .eq(EntityPO::getModelId, app.id)
+                                            .orderByDesc(EntityPO::getCreateTime)
+                            ).stream()
+                            .filter(Objects::nonNull)
+                            .map(entity -> {
+                                DataQualityDataSourceTreeDTO entityDtoTree = new DataQualityDataSourceTreeDTO();
+                                String uuid_entityId = UUID.randomUUID().toString().replace("-", "");
+                                entityDtoTree.setId(uuid_entityId);
+                                entityDtoTree.setParentId(uuid_modelId);
+                                entityDtoTree.setLabel(entity.getDisplayName());
+                                entityDtoTree.setLabelAlias(entity.getDisplayName());
+                                entityDtoTree.setSourceType(1);
+                                entityDtoTree.setSourceId(Integer.parseInt(id));
+                                entityDtoTree.setLevelType(LevelTypeEnum.FOLDER);
+                                // 不是已发布的都当作未发布处理
+                                if (entity.getStatus() == MdmStatusTypeEnum.CREATED_SUCCESSFULLY) {
+                                    entityDtoTree.setPublishState("1");
+                                } else {
+                                    entityDtoTree.setPublishState("0");
+                                }
+                                entityDtoTree.setLabelDesc(entity.getDesc());
+
+                                //第三层: etl层
+                                List<DataQualityDataSourceTreeDTO> tableTreeList = accessDataService.query().eq("model_id", app.id).eq("entity_id", entity.id).orderByDesc("create_time").list().stream().filter(Objects::nonNull).map(table -> {
+                                    DataQualityDataSourceTreeDTO tableDtoTree = new DataQualityDataSourceTreeDTO();
+                                    tableDtoTree.setId(String.valueOf(entity.id));
+                                    tableDtoTree.setParentId(uuid_entityId);
+                                    tableDtoTree.setLabel(entity.getTableName());
+                                    tableDtoTree.setLabelAlias(entity.getTableName());
+                                    tableDtoTree.setLabelRelName(entity.getTableName());
+                                    tableDtoTree.setLevelType(LevelTypeEnum.TABLE);
+                                    tableDtoTree.setSourceType(1);
+                                    tableDtoTree.setSourceId(Integer.parseInt(id));
+                                    tableDtoTree.setPublishState(String.valueOf(table.publish != 1 ? 0 : 1));
+                                    tableDtoTree.setLabelDesc(entity.getDesc());
+                                    tableDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
+                                    return tableDtoTree;
+                                }).collect(Collectors.toList());
+                                // entity的子级
+                                entityDtoTree.setChildren(tableTreeList);
+                                return entityDtoTree;
+                            }).collect(Collectors.toList());
+                    // model的子级
+                    modelDtoTree.setChildren(apiTreeList);
+                    return modelDtoTree;
+                }).collect(Collectors.toList());
+        return value;
+    }
+
+    @Override
+    public List<DataQualityDataSourceTreeDTO> getFieldDataTree(String entityId) {
+
+        EntityPO entity = entityMapper.selectOne(new LambdaQueryWrapper<EntityPO>()
+                .eq(EntityPO::getId, entityId)
+                .orderByDesc(EntityPO::getCreateTime));
+        AccessDataPO accessDataPO = accessDataService.getOne(new LambdaQueryWrapper<AccessDataPO>()
+                .eq(AccessDataPO::getModelId, entity.getModelId())
+                .eq(AccessDataPO::getEntityId, entityId)
+                .orderByDesc(AccessDataPO::getCreateTime));
+        List<DataQualityDataSourceTreeDTO> fieldTreeList = attributeService.query()
+                .eq("entity_id", entity.id)
+                .list().stream()
+                .filter(Objects::nonNull)
+                .map(field -> {
+                    DataQualityDataSourceTreeDTO fieldDtoTree = new DataQualityDataSourceTreeDTO();
+                    fieldDtoTree.setId(String.valueOf(field.id));
+                    fieldDtoTree.setParentId(String.valueOf(entity.id));
+                    fieldDtoTree.setLabel(field.getColumnName());
+                    fieldDtoTree.setLabelAlias(field.getName());
+                    fieldDtoTree.setLevelType(LevelTypeEnum.FIELD);
+                    fieldDtoTree.setPublishState(String.valueOf(accessDataPO.publish != 1 ? 0 : 1));
+                    if (field.getDataTypeLength() != null) {
+                        fieldDtoTree.setLabelLength(String.valueOf(field.getDataTypeLength()));
+                    } else if (field.getDataTypeDecimalLength() != null) {
+                        fieldDtoTree.setLabelLength(String.valueOf(field.getDataTypeDecimalLength()));
+                    }
+
+                    fieldDtoTree.setLabelType(field.getDataType().getName());
+                    fieldDtoTree.setLabelDesc(field.getDesc());
+                    fieldDtoTree.setSourceType(1);
+                    fieldDtoTree.setSourceId(Integer.parseInt(mdmSource));
+                    fieldDtoTree.setLabelBusinessType(TableBusinessTypeEnum.ENTITY_TABLR.getValue());
+                    return fieldDtoTree;
+                }).collect(Collectors.toList());
+        return fieldTreeList;
+    }
+
     @Override
     public List<TableNameDTO> getTableDataStructure(FiDataMetaDataReqDTO reqDto) {
         List<TableNameDTO> tableNames = new ArrayList<>();
@@ -659,11 +846,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         List<ModelPO> modelPoList = baseMapper.selectList(null);
         modelPoList = modelPoList.stream().filter(Objects::nonNull).collect(Collectors.toList());
         List<Long> modelIds = modelPoList.stream().map(BasePO::getId).collect(Collectors.toList());
-        if (CollectionUtils.isNotEmpty(modelIds)){
+        if (CollectionUtils.isNotEmpty(modelIds)) {
             LambdaQueryWrapper<EntityPO> entityQueryWrapper = new LambdaQueryWrapper<>();
-            entityQueryWrapper.in(EntityPO::getModelId,modelIds);
+            entityQueryWrapper.in(EntityPO::getModelId, modelIds);
             List<EntityPO> entityPOList = entityMapper.selectList(entityQueryWrapper);
-            if (CollectionUtils.isNotEmpty(entityPOList)){
+            if (CollectionUtils.isNotEmpty(entityPOList)) {
                 for (EntityPO entityPO : entityPOList) {
                     TableNameDTO tableName = new TableNameDTO();
                     tableName.setTableId(String.valueOf(entityPO.getId()));
@@ -679,12 +866,12 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Override
     public List<TableColumnDTO> getFieldDataStructure(ColumnQueryDTO reqDto) {
         List<AttributeInfoDTO> attributeList = entityService.getAttributeById(Integer.valueOf(reqDto.getTableId()), null).getAttributeList();
-        return attributeList.stream().map(i->{
+        return attributeList.stream().map(i -> {
             TableColumnDTO tableColumnDTO = new TableColumnDTO();
             tableColumnDTO.setFieldId(String.valueOf(i.getId()));
-            if (i.getDataTypeLength() == null){
+            if (i.getDataTypeLength() == null) {
                 tableColumnDTO.setFieldLength(0);
-            }else {
+            } else {
                 tableColumnDTO.setFieldLength(i.getDataTypeLength());
             }
             tableColumnDTO.setFieldName(i.getColumnName());
@@ -696,6 +883,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     /**
      * 获取模型名称和实体名称
+     *
      * @param dto
      * @return
      */
@@ -711,7 +899,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                 // 主数据
                 case MDM_TABLE_TASK:
                     QueryWrapper<EntityPO> queryWrapper = new QueryWrapper<>();
-                    queryWrapper.eq("id",dto.tableId);
+                    queryWrapper.eq("id", dto.tableId);
                     EntityPO entityPO = entityMapper.selectOne(queryWrapper);
                     componentIdDTO.tableName = entityPO == null ? "" : entityPO.getName();
                     break;
@@ -724,17 +912,18 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
 
     /**
      * 获取主数据业务分类
+     *
      * @return
      */
     @Override
     public List<AppBusinessInfoDTO> getMasterDataModel() {
         List<ModelPO> modelPOS = baseMapper.selectList(null);
-        List<AppBusinessInfoDTO> appBusinessInfoDTOList=  modelPOS.stream().map(e->{
-             AppBusinessInfoDTO appBusinessInfoDTO=new AppBusinessInfoDTO();
-             appBusinessInfoDTO.setName(e.getDisplayName());
-             appBusinessInfoDTO.setAppDes(e.getDesc());
-             appBusinessInfoDTO.setSourceType(ClassificationTypeEnum.MASTER_DATA.getValue());
-             return appBusinessInfoDTO;
+        List<AppBusinessInfoDTO> appBusinessInfoDTOList = modelPOS.stream().map(e -> {
+            AppBusinessInfoDTO appBusinessInfoDTO = new AppBusinessInfoDTO();
+            appBusinessInfoDTO.setName(e.getDisplayName());
+            appBusinessInfoDTO.setAppDes(e.getDesc());
+            appBusinessInfoDTO.setSourceType(ClassificationTypeEnum.MASTER_DATA.getValue());
+            return appBusinessInfoDTO;
         }).collect(Collectors.toList());
         return appBusinessInfoDTOList;
     }
@@ -746,11 +935,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
         //查询组装数据
         for (ModelPO modelPO : modelPOList) {
             AccessAndModelAppDTO accessAndModelAppDTO = new AccessAndModelAppDTO();
-            accessAndModelAppDTO.setAppId((int)modelPO.id);
+            accessAndModelAppDTO.setAppId((int) modelPO.id);
             accessAndModelAppDTO.setAppName(modelPO.name);
             accessAndModelAppDTO.setServerType(ServerTypeEnum.MDM.getValue());
             LambdaQueryWrapper<EntityPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(EntityPO::getModelId,modelPO.getId());
+            queryWrapper.eq(EntityPO::getModelId, modelPO.getId());
             List<EntityPO> entityPOS = entityMapper.selectList(queryWrapper);
             List<AccessAndModelTableDTO> accessAndModelTableDTOS = entityPOS.stream().map(i -> {
                 AccessAndModelTableDTO accessAndModelTableDTO = new AccessAndModelTableDTO();
@@ -774,7 +963,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
     @Override
     public List<SearchColumnDTO> searchStandardBeCitedField(String key) {
         List<TableFieldDTO> tableColumnDTOS = this.attributeService.searchColumn(key);
-        if (CollectionUtils.isNotEmpty(tableColumnDTOS)){
+        if (CollectionUtils.isNotEmpty(tableColumnDTOS)) {
             Map<String, List<TableFieldDTO>> filedMap = tableColumnDTOS.stream().collect(Collectors.groupingBy(TableFieldDTO::getTbId));
             Set<String> strings = filedMap.keySet();
             LambdaQueryWrapper<EntityPO> queryWrapper = new LambdaQueryWrapper<>();
@@ -789,7 +978,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                 searchColumnDTO.setColumnDTOList(filedMap.get(tableId));
                 return searchColumnDTO;
             }).collect(Collectors.toList());
-        }else {
+        } else {
             return new ArrayList<>();
         }
     }
@@ -884,7 +1073,7 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelPO> implemen
                                 .map(item -> {
 
                                     // 视图层级
-                                    String viwName = TableNameGenerateUtils.generateViwTableName(e.getName(),item.getName());
+                                    String viwName = TableNameGenerateUtils.generateViwTableName(e.getName(), item.getName());
                                     String entityUuid = String.valueOf(item.getId());
                                     FiDataMetaDataTreeDTO entityDto = new FiDataMetaDataTreeDTO();
                                     entityDto.setId(entityUuid);
