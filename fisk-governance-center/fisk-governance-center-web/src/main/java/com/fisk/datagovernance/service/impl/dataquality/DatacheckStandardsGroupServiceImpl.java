@@ -219,14 +219,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 Integer id = (int) groupPO.id;
                 i.setDatacheckGroupId(id);
                 i.ruleName = groupPO.getCheckGroupName() + i.tableName + i.getDataCheckExtend().fieldName;
-
-                // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
-                if (i.getSourceType() == SourceTypeEnum.FiData) {
-                    int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(i.getSourceType(), i.getDatasourceId());
-                    if (idByDataSourceId != 0 && i.getId() != 0) {
-                        i.setDatasourceId(idByDataSourceId);
-                    }
-                }
                 return i;
             }).collect(Collectors.toList());
             List<Integer> dataCheckIds = dataCheckEditList.stream().map(i -> i.getId()).collect(Collectors.toList());
@@ -309,8 +301,6 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
         List<DataCheckPO> dataCheckPOS = dataCheckManageService.list(queryWrapper1);
         Map<Integer, List<DataCheckPO>> groupMap = dataCheckPOS.stream().collect(groupingBy(DataCheckPO::getDatacheckGroupId));
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsDTO.getStandardsBeCitedDTOList();
-        Set<Integer> dbIds = standardsBeCitedDTOList.stream().map(StandardsBeCitedDTO::getDbId).collect(Collectors.toSet());
-        Map<Integer, Integer> idByDataSourceIds = dataSourceConManageImpl.getIdByDataSourceIds(SourceTypeEnum.FiData, dbIds);
         for (DatacheckStandardsGroupPO groupPO : group) {
             DatacheckStandardsGroupDTO dto = new DatacheckStandardsGroupDTO();
             List<DataCheckPO> dataCheckPOList = groupMap.get((int) groupPO.id);
@@ -327,7 +317,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
 
             List<DataCheckEditDTO> dataCheckEditList = new ArrayList<>();
             for (StandardsBeCitedDTO standardsBeCitedDTO : standardsBeCitedDTOList) {
-                Integer dbId = idByDataSourceIds.get(standardsBeCitedDTO.getDbId());
+                Integer dbId = standardsBeCitedDTO.getDbId();
                 DataCheckEditDTO checkEditDTO = new DataCheckEditDTO();
                 DataCheckPO dataCheckPO1 = dataCheckPOList.get(0);
                 checkEditDTO.setDatacheckGroupId((int) groupPO.id);

@@ -548,7 +548,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 continue;
             }
             //获取数据源
-            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
             if (dataSourceConVO == null) {
                 continue;
             }

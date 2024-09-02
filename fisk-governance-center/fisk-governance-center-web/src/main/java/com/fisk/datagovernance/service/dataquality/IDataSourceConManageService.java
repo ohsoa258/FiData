@@ -2,6 +2,7 @@ package com.fisk.datagovernance.service.dataquality;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
@@ -67,14 +68,21 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
      *
      * @return 查询结果
      */
-    DataQualityDataSourceTreeDTO getFiDataConfigMetaData(boolean isComputeRuleCount);
+    DataQualityDataSourceTreeDTO getFiDataConfigMetaData();
 
     /**
      * 获取自定义数据源元数据信息
      *
      * @return 查询结果
      */
-    DataQualityDataSourceTreeDTO getCustomizeMetaData(boolean isComputeRuleCount);
+    DataQualityDataSourceTreeDTO getCustomizeMetaData();
+
+    /**
+     * 根据表ID获取表字段详情
+     *
+     * @return 查询结果
+     */
+    ResultEntity<List<DataQualityDataSourceTreeDTO>> getTableFieldByTableId(QueryTableFieldDTO dto);
 
     /**
      * 数据库信息同步到redis

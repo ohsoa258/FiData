@@ -61,7 +61,7 @@ public class ExternalInterfaceImpl {
                 dataTableFieldDTO.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
                 dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(tableBusinessType));
                 dtoList.add(dataTableFieldDTO);
-                List<FiDataMetaDataDTO> fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dtoList);
+                List<FiDataMetaDataDTO> fiDataMetaDatas = null;//dataSourceConManageImpl.getTableFieldName(dtoList);
                 if (CollectionUtils.isEmpty(fiDataMetaDatas)) {
                     return;
                 }
