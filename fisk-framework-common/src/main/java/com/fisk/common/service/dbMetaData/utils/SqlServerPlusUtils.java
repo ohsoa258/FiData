@@ -163,6 +163,84 @@ public class SqlServerPlusUtils {
     }
 
     /**
+     * 获取表详情(表信息)
+     */
+    public List<TablePyhNameDTO> getTableNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum) {
+        List<TablePyhNameDTO> tablesPlus = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            //1.加载驱动程序
+            Class.forName(driverTypeEnum.getDriverName());
+            //2.获得数据库的连接
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            // 获取指定数据库所有表
+            tablesPlus = this.getTablesPlus(conn);
+//            if (CollectionUtils.isNotEmpty(tablesPlus)) {
+//                for (TablePyhNameDTO tablePyhNameDTO : tablesPlus) {
+//                    List<TableStructureDTO> columnsName = getColumns(conn, tablePyhNameDTO.getTableName(), tablePyhNameDTO.getTableFramework());
+//                    tablePyhNameDTO.setFields(columnsName);
+//                }
+//            }
+        } catch (Exception e) {
+            log.error("【SqlServerPlusUtils-getTableNames】获取表详情(表信息+字段信息)异常", e);
+            log.error("数据库url信息：" + url);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【SqlServerPlusUtils-getTableNames】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+            }
+        }
+        return tablesPlus;
+    }
+
+    /**
+     * 获取表字段详情(字段信息)
+     */
+    public List<TableStructureDTO> getTableColumns(String url, String user, String password, DataSourceTypeEnum driverTypeEnum,
+                                                 String tableName,String tableFramework) {
+        List<TableStructureDTO> columnsName = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            //1.加载驱动程序
+            Class.forName(driverTypeEnum.getDriverName());
+            //2.获得数据库的连接
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+           columnsName = getColumns(conn, tableName, tableFramework);
+        } catch (Exception e) {
+            log.error("【SqlServerPlusUtils-getTableColumns】获取表详情(表信息+字段信息)异常", e);
+            log.error("数据库url信息：" + url);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【SqlServerPlusUtils-getTableColumns】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+            }
+        }
+        return columnsName;
+    }
+
+    /**
      * 获取视图详情(视图名称 + 字段)
      */
     public List<DataBaseViewDTO> loadViewDetails(DataSourceTypeEnum driverTypeEnum, String url, String user, String password) {

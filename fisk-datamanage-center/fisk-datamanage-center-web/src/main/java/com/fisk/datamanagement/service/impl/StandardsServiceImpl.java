@@ -27,6 +27,7 @@ import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
@@ -120,7 +121,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         //处理值域范围回显
         if (standardsPO.getValueRangeType() == ValueRangeTypeEnum.DATASET.getValue()) {
             String DataSetIds = standardsPO.getValueRange();
-            if (!StringUtils.isEmpty(DataSetIds)){
+            if (!StringUtils.isEmpty(DataSetIds)) {
                 List<Long> ids = Stream.of(DataSetIds.split(","))
                         .map(Long::valueOf)
                         .collect(Collectors.toList());
@@ -243,8 +244,8 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         standardsMenuService.updateById(standardsMenuPO);
         try {
             UserInfo loginUserInfo = userHelper.getLoginUserInfo();
-            governanceClient.editDataCheckByStandards(standardsDTO,loginUserInfo.getToken());
-        }catch (Exception e){
+            governanceClient.editDataCheckByStandards(standardsDTO, loginUserInfo.getToken());
+        } catch (Exception e) {
             return ResultEnum.CHECK_STANDARDS_UPDATE_FAIL;
         }
         return ResultEnum.SUCCESS;
@@ -319,17 +320,17 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
             }
             DataSourceDTO data = dataSourceConfig.data;
-            if (DataSourceTypeEnum.POSTGRESQL == data.conType){
-                query.tableName = "\""+query.tableName+"\"";
+            if (DataSourceTypeEnum.POSTGRESQL == data.conType) {
+                query.tableName = "\"" + query.tableName + "\"";
             }
             conn = getConnection(data);
             st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
             st.setMaxRows(10);
-            query.setQuerySql("select "+query.column+" from " + query.tableName);
+            query.setQuerySql("select " + query.column + " from " + query.tableName);
             rs = st.executeQuery(query.getQuerySql());
             // 获取数据集
             array = resultSetToJsonArrayDataAccess(rs);
-            array.sql = "select "+query.column+" from " + query.tableName;
+            array.sql = "select " + query.column + " from " + query.tableName;
             array.total = array.dataArray.size();
         } catch (SQLException e) {
             log.error("preview ex:", e);
@@ -738,13 +739,24 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
-    public List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id) {
+    public DataQualityDataSourceTreeDTO dataQuality_GetAllStandardsTree() {
+
+        DataQualityDataSourceTreeDTO fiDataMetaDataTree_Standard = new DataQualityDataSourceTreeDTO();
+        String standardsUuid = UUID.randomUUID().toString().replace("-", "");
+        fiDataMetaDataTree_Standard.setId(standardsUuid);
+        fiDataMetaDataTree_Standard.setParentId("-10");
+        fiDataMetaDataTree_Standard.setLabel("数据标准");
+        fiDataMetaDataTree_Standard.setLabelAlias("数据标准");
+        fiDataMetaDataTree_Standard.setLabelRelName("数据标准");
+        fiDataMetaDataTree_Standard.setSourceType(1);
+        fiDataMetaDataTree_Standard.setLevelType(LevelTypeEnum.STANDARD_DATABASE);
+
         List<StandardsMenuPO> standardsMenus = standardsMenuService.list();
         if (CollectionUtils.isEmpty(standardsMenus)) {
-            return new ArrayList<>();
+            return fiDataMetaDataTree_Standard;
         }
 
-        List<StandardsMenuPO> standardsDataMenus = standardsMenus.stream().filter(i -> i.getType() == 2).collect(Collectors.toList());
+        //List<StandardsMenuPO> standardsDataMenus = standardsMenus.stream().filter(i -> i.getType() == 2).collect(Collectors.toList());
 
 //        List<Long> standardsDataMenuIds = standardsDataMenus.stream().map(BasePO::getId).collect(Collectors.toList());
 
@@ -765,37 +777,34 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 //                    fiDataMetaDataTreeDTO.setData(data);
 //                    return fiDataMetaDataTreeDTO;
 //                }, Collectors.toList())));
-        List<FiDataMetaDataTreeDTO> allTree = standardsMenus.stream().map(i -> {
-            FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+        List<DataQualityDataSourceTreeDTO> allTree = standardsMenus.stream().map(i -> {
+            DataQualityDataSourceTreeDTO fiDataMetaDataTreeDTO = new DataQualityDataSourceTreeDTO();
             if (i.getType() == 1) {
                 fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
                 if (i.getPid() == null || i.getPid() == 0) {
-                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(id));
+                    fiDataMetaDataTreeDTO.setParentId(standardsUuid);
                 } else {
                     fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
                 }
-                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD_FOLDER);
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
-                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
                 fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD_FOLDER);
             } else if (i.getType() == 2) {
                 fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
                 if (i.getPid() == null || i.getPid() == 0) {
-                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(id));
+                    fiDataMetaDataTreeDTO.setParentId(standardsUuid);
                 } else {
                     fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
                 }
-
-                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD);
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
-                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
                 fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD);
 
 //                StandardsPO standardsPO = standardMap.get((int) i.getId());
 //                if (standardsPO != null) {
@@ -806,9 +815,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             return fiDataMetaDataTreeDTO;
         }).collect(Collectors.toList());
 
-        List<FiDataMetaDataTreeDTO> parentTree = allTree.stream().filter(i -> i.getParentId().equals(id)).collect(Collectors.toList());
+        List<DataQualityDataSourceTreeDTO> parentTree = allTree.stream().filter(i -> i.getParentId().equals(standardsUuid)).collect(Collectors.toList());
         standardsTree(allTree, parentTree);
-        return parentTree;
+
+        fiDataMetaDataTree_Standard.setChildren(parentTree);
+        return fiDataMetaDataTree_Standard;
     }
 
     /**
@@ -859,7 +870,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public List<StandardsDTO> modelGetStandards() {
         LambdaQueryWrapper<StandardsPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(StandardsPO::getId, StandardsPO::getChineseName,StandardsPO::getMenuId);
+        wrapper.select(StandardsPO::getId, StandardsPO::getChineseName, StandardsPO::getMenuId);
         List<StandardsPO> list = this.list(wrapper);
         List<StandardsDTO> dtos = new ArrayList<>();
         for (StandardsPO po : list) {
@@ -874,13 +885,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 
     /**
      * 数仓建模-获取所有数仓字段和数据元标准的关联关系  数仓建模-获取所有数仓字段和数据元标准的关联关系 只获取字段id 和数据元标准id
+     *
      * @return
      */
     @Override
     public List<StandardsBeCitedDTO> modelGetStandardsMap() {
         LambdaQueryWrapper<StandardsBeCitedPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(StandardsBeCitedPO::getStandardsId,StandardsBeCitedPO::getFieldId)
-                .eq(StandardsBeCitedPO::getDbId,1);
+        wrapper.select(StandardsBeCitedPO::getStandardsId, StandardsBeCitedPO::getFieldId)
+                .eq(StandardsBeCitedPO::getDbId, 1);
         List<StandardsBeCitedPO> list = standardsBeCitedService.list();
         return StandardsBeCitedMap.INSTANCES.poListToDTOList(list);
     }
@@ -888,8 +900,8 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     @Override
     public List<StandardsBeCitedDTO> mdmGetStandardsMap() {
         LambdaQueryWrapper<StandardsBeCitedPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(StandardsBeCitedPO::getStandardsId,StandardsBeCitedPO::getFieldId)
-                .eq(StandardsBeCitedPO::getDbId,3);
+        wrapper.select(StandardsBeCitedPO::getStandardsId, StandardsBeCitedPO::getFieldId)
+                .eq(StandardsBeCitedPO::getDbId, 3);
         List<StandardsBeCitedPO> list = standardsBeCitedService.list();
         return StandardsBeCitedMap.INSTANCES.poListToDTOList(list);
     }
@@ -926,14 +938,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         List<StandardsMenuPO> self = standardsMenuPOList.stream().filter(i -> (int) i.getId() == Integer.parseInt(menuId)).collect(Collectors.toList());
         List<StandardsMenuPO> allChildrenCategories = getAllChildrenCategories(standardsMenuPOList, Integer.valueOf(menuId));
         allChildrenCategories.addAll(self);
-        List<Integer> ids = allChildrenCategories.stream().map(i -> (int)i.getId()).collect(Collectors.toList());
+        List<Integer> ids = allChildrenCategories.stream().map(i -> (int) i.getId()).collect(Collectors.toList());
         return baseMapper.getStandardsDetailMenuList(ids);
     }
 
     @Override
     public List<StandardsDetailDTO> getStandardsDetailListByKeyWord(String keyWord) {
         List<StandardsMenuPO> allMenuList = standardsMenuService.list(new QueryWrapper<>());
-        List<Integer> parentIds = allMenuList.stream().filter(i -> i.getPid() == 0).map(i->(int)i.getId()).collect(Collectors.toList());
+        List<Integer> parentIds = allMenuList.stream().filter(i -> i.getPid() == 0).map(i -> (int) i.getId()).collect(Collectors.toList());
         List<Integer> allChildIds = getAllChildIds(allMenuList, parentIds);
         allChildIds.addAll(parentIds);
         return baseMapper.getStandardsDetailListByKeyWord(allChildIds, keyWord);
@@ -976,14 +988,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         return children;
     }
 
-    private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {
-        Map<String, List<FiDataMetaDataTreeDTO>> childrenMap = new HashMap<>();
-        for (FiDataMetaDataTreeDTO dto : allList) {
+    private void standardsTree(List<DataQualityDataSourceTreeDTO> allList, List<DataQualityDataSourceTreeDTO> parentList) {
+        Map<String, List<DataQualityDataSourceTreeDTO>> childrenMap = new HashMap<>();
+        for (DataQualityDataSourceTreeDTO dto : allList) {
             String parentId = dto.getParentId() != null ? dto.getParentId() : "0";
             childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
         }
-        for (FiDataMetaDataTreeDTO parent : parentList) {
-            List<FiDataMetaDataTreeDTO> children = childrenMap.get(parent.getId());
+        for (DataQualityDataSourceTreeDTO parent : parentList) {
+            List<DataQualityDataSourceTreeDTO> children = childrenMap.get(parent.getId());
             if (children != null) {
                 parent.setChildren(children);
                 standardsTree(allList, children);
@@ -1059,10 +1071,10 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         // 拼接原生筛选条件
         querySql.append(generateCondition.getCondition(query.dto));
         List<StandardsMenuPO> allMenuList = standardsMenuService.list(new QueryWrapper<>());
-        List<Integer> parentIds = allMenuList.stream().filter(i -> i.getPid() == 0).map(i->(int)i.getId()).collect(Collectors.toList());
+        List<Integer> parentIds = allMenuList.stream().filter(i -> i.getPid() == 0).map(i -> (int) i.getId()).collect(Collectors.toList());
         List<Integer> allChildIds = getAllChildIds(allMenuList, parentIds);
         allChildIds.addAll(parentIds);
-        List<StandardsDetailDTO> filter = baseMapper.filter(allChildIds,querySql.toString());
+        List<StandardsDetailDTO> filter = baseMapper.filter(allChildIds, querySql.toString());
         return filter;
     }
 

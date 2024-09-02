@@ -33,13 +33,13 @@ public class DataQualityDataSourceTreeDTO {
     @ApiModelProperty(value = "架构名，只有表节点才有架构名")
     public String labelFramework;
 
-    @ApiModelProperty(value = "业务类型，对应TableBusinessTypeEnum枚举")
+    @ApiModelProperty(value = "业务类型，对应TableBusinessTypeEnum枚举，只有表节点才有业务类型")
     public int labelBusinessType;
 
     @ApiModelProperty(value = "平台数据源类型，1、FiData 2、自定义", required = true)
     public int sourceType;
 
-    @ApiModelProperty(value = "平台数据源ID，DW:1、ODS:2、MDM:3、Olap:4。 自定义数据源ID：数据质量数据源表主键ID", required = true)
+    @ApiModelProperty(value = "平台数据源ID，DW:1、ODS:2、MDM:3、Olap:4", required = true)
     public int sourceId;
 
     @ApiModelProperty(value = "节点层级类型", required = true)

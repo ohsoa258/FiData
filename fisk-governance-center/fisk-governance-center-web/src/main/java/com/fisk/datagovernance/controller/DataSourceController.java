@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
@@ -80,7 +81,7 @@ public class DataSourceController {
 
     @GetMapping("/getFiDataConfigMetaData")
     @ApiOperation("数据质量，获取FiData数据源元数据信息")
-    public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData() {
+    public ResultEntity<DataQualityDataSourceTreeDTO> getFiDataConfigMetaData() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData(true));
     }
 

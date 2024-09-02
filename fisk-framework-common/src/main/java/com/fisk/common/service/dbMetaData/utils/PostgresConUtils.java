@@ -58,6 +58,70 @@ public class PostgresConUtils {
     }
 
     /**
+     * 获取表详情(表信息)
+     */
+    public List<TablePyhNameDTO> getTableNames(String url, String user, String password, DataSourceTypeEnum driver) {
+        List<TablePyhNameDTO> tablesPlus = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(driver.getDriverName());
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            tablesPlus = getTablesPlus(conn);
+        } catch (Exception e) {
+            log.error("【PostgresConUtils-getTableNames】获取表详情(表信息)异常：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【PostgresConUtils-getTableNames】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+            }
+        }
+        return tablesPlus;
+    }
+
+    /**
+     * 获取表字段详情(字段信息)
+     */
+    public List<TableStructureDTO> getTableColumns(String url, String user, String password, DataSourceTypeEnum driver, String tableFullName) {
+        List<TableStructureDTO> colNames = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(driver.getDriverName());
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            colNames = getColumns_V1(stmt, tableFullName);
+        } catch (Exception e) {
+            log.error("【PostgresConUtils-getTableColumns】获取表字段详情(字段信息)异常：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【PostgresConUtils-getTableColumns】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETTABLEANDFIELD_ERROR);
+            }
+        }
+        return colNames;
+    }
+
+    /**
      * 获取视图详情(视图名称 + 字段)
      */
     public List<DataBaseViewDTO> loadViewDetails(DataSourceTypeEnum driverTypeEnum, String url, String user, String password) {
