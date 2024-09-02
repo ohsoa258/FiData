@@ -414,7 +414,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                     if (CollectionUtils.isEmpty(dataCheckExtendDTOS1)) {
                         for (List<DataCheckExtendDTO> value : extend.values()) {
                             DataCheckExtendDTO extendDTO = value.get(0);
-                            BeanUtils.copyProperties(extendDTO, dataCheckExtendDTO);
+                            BeanUtils.copyProperties(extendDTO, dataCheckExtendDTO,DataCheckExtendDTO.class);
                             break;
                         }
                         dataCheckExtendDTO.fieldName = i.getFieldName();

@@ -2,6 +2,7 @@ package com.fisk.datagovernance.dto.dataquality.datacheck;
 
 import com.fisk.datagovernance.enums.dataquality.*;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * @author dick
@@ -9,6 +10,7 @@ import io.swagger.annotations.ApiModelProperty;
  * @description 数据校验规则扩展属性
  * @date 2022/4/2 11:04
  */
+@Data
 public class DataCheckExtendDTO {
     /**
      * 数据校验扩展表主键id

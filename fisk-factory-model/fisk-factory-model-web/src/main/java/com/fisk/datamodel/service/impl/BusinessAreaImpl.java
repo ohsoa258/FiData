@@ -2141,7 +2141,6 @@ public class BusinessAreaImpl extends ServiceImpl<BusinessAreaMapper, BusinessAr
             TableNameDTO tableNameDTO = new TableNameDTO();
             tableNameDTO.setTableId(String.valueOf(dimension.id));
             tableNameDTO.setTableName(dimension.dimensionTabName);
-            tableNameDTO.setSchemaName(dimension.dimensionTabName);
             tableNameDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.DW_DIMENSION);
             return tableNameDTO;
         }).collect(Collectors.toList());
