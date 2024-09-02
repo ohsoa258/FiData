@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -134,7 +135,7 @@ public class AccessLakeMonitorServiceImpl implements AccessLakeMonitorService {
         }
         detailVOS = detailVOS.stream().map(i->{
             if (i.getTargetRows() != null && i.getSourceRows() != null){
-                int abs = Math.abs((i.getSourceRows() - i.getTargetRows()) / i.getSourceRows()) * 100;
+                int abs = (int)(Math.abs(new BigDecimal((float) (i.getSourceRows() - i.getTargetRows()) / i.getSourceRows()).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue()) * 100);
                 i.setDifference(abs);
             }
             return i;

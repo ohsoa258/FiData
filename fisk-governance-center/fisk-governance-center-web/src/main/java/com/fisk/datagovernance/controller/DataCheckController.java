@@ -161,6 +161,12 @@ public class DataCheckController {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.deleteDataCheckStandardsGroup(id));
     }
 
+    @ApiOperation("根据menuId删除数据校验数据元标准组")
+    @GetMapping("/deleteDataCheckStandardsGroupByMenuId")
+    public ResultEntity<Object> deleteDataCheckStandardsGroupByMenuId(@RequestParam("menuId") Integer menuId) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.deleteDataCheckStandardsGroupByMenuId(menuId));
+    }
+
     @ApiOperation("根据数据元目录ID获取数据元校验规则组")
     @PostMapping("/getRuleGroupByStandardMenuIds")
     public ResultEntity<List<DataCheckRuleGroupVO>> getRuleGroupByStandardMenuIds(@RequestBody DataCheckRuleGroupDTO dto) {

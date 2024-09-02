@@ -1,5 +1,7 @@
 package com.fisk.mdm.dto.access;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fisk.task.dto.accessmdm.LogResultDTO;
 import io.swagger.annotations.ApiModelProperty;
@@ -43,6 +45,7 @@ public class TableHistoryDTO {
     /**
      * 本次同步详情
      */
+    @ApiModelProperty(value = "本次同步详情")
     public LogResultDTO dto;
 
     /**
@@ -50,5 +53,9 @@ public class TableHistoryDTO {
      */
     @ApiModelProperty(value = "关联发布日志内容")
     public List<String> msg;
-
+    /**
+     * 创建人
+     */
+    @ApiModelProperty(value = "创建人")
+    public String createUser;
 }

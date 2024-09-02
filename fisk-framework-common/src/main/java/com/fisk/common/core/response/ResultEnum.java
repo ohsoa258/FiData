@@ -465,6 +465,8 @@ public enum ResultEnum {
 
     CHECK_STANDARDS_UPDATE_FAIL(14020,"更新数据元成功，数据校验规则同步失败，请手动同步校验规则"),
 
+    CHECK_STANDARDS_DELETE_FAIL(14021,"删除数据元成功，数据校验规则同步删除失败，请手动删除校验规则"),
+
     /**
      * mdm
      */

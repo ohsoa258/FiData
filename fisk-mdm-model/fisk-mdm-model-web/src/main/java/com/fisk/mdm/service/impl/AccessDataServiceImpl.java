@@ -44,6 +44,7 @@ import com.fisk.mdm.mapper.TableHistoryMapper;
 import com.fisk.mdm.service.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.accessmdm.AccessAttributeDTO;
 import com.fisk.task.dto.accessmdm.AccessMdmPublishFieldDTO;
@@ -619,6 +620,24 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         queryWrapper.lambda().eq(TableHistoryPO::getTableId,tableId);
         List<TableHistoryDTO> tableHistoryDTOS = TableHistoryMap.INSTANCES.poListToDtoList(tableHistoryMapper.selectList(queryWrapper));
         List<String> SubRunIds = tableHistoryDTOS.stream().map(i -> i.getSubRunId()).filter(Objects::nonNull).collect(Collectors.toList());
+
+        try {
+            //获取平台所有用户信息
+            ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserList();
+            if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+                List<UserDTO> userDTOS = resultEntity.getData();
+                if (!CollectionUtils.isEmpty(userDTOS)){
+                    for (TableHistoryDTO historyDTO : tableHistoryDTOS) {
+                        userDTOS.stream()
+                                .filter(userDTO -> String.valueOf(userDTO.getId()).equals(historyDTO.getCreateUser()))
+                                .findFirst()
+                                .ifPresent(userDTO -> historyDTO.createUser = userDTO.getUsername());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取平台所有用户信息失败,原因：", e);
+        }
         try{
             if (CollectionUtils.isNotEmpty(SubRunIds)){
                 List<LogResultDTO> logs = publishTaskClient.getMdmTblNifiLog(SubRunIds);
@@ -626,6 +645,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
                 tableHistoryDTOS = tableHistoryDTOS.stream().map(i -> {
                     LogResultDTO logResultDTO = logMap.get(i.subRunId);
                     if (logResultDTO != null){
+                        i.setOpenTransmission(true);
                         i.setDto(logResultDTO);
                     }else {
                         i.setDto(new LogResultDTO());

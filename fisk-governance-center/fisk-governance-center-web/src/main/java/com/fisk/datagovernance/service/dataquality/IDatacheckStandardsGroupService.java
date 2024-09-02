@@ -52,6 +52,15 @@ public interface IDatacheckStandardsGroupService extends IService<DatacheckStand
      */
     ResultEnum deleteDataCheckStandardsGroup(Integer id);
 
+
+    /**
+     * 删除数据校验数据元标准组
+     *
+     * @param menuId
+     * @return
+     */
+    ResultEnum deleteDataCheckStandardsGroupByMenuId(Integer menuId);
+
     /**
      * @return java.util.List<com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckRuleGroupVO>
      * @description 根据数据元目录ID获取数据元校验规则组

@@ -723,8 +723,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
 
             String fieldCheckWhereSql = "";
+            // 规则检查条件不为空，拼接检查条件
             if (CollectionUtils.isNotEmpty(dataCheckConditionPOs)) {
                 fieldCheckWhereSql = qualityReport_GetSqlFieldCheckWhere(dataSourceTypeEnum, dataCheckConditionPOs);
+            }
+            // 2024.08.29增加判断，除非空检查外，其他的检查规则如果字段值为空，则过滤该条数据，不参与规则校验
+            TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+            if (templateTypeEnum != TemplateTypeEnum.NULL_CHECK && StringUtils.isNotEmpty(fieldNameFormat)) {
+                fieldCheckWhereSql += qualityReport_CreateFieldNotNullSql(fieldNameFormat, dataSourceTypeEnum);
             }
 
             qualityReportSummary_paramDTO.setSchemaName(dataCheckPO.getSchemaName());
@@ -885,7 +891,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 || rangeCheckTypeEnum == RangeCheckTypeEnum.VALUE_RANGE)) {
             DatacheckStandardsGroupPO groupPO = dataCheckStandardsGroupServiceImpl.getById(dataCheckGroupId);
             ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
-            if (standards!=null && standards.code == ResultEnum.SUCCESS.getCode()) {
+            if (standards != null && standards.code == ResultEnum.SUCCESS.getCode()) {
                 standardsDTO = standards.data;
             } else {
                 throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
@@ -895,30 +901,19 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             }
         }
 
-
         switch (rangeCheckTypeEnum) {
             // 序列范围
             case SEQUENCE_RANGE:
                 // 表字段序列范围
                 if (dataCheckExtendPO.getRangeType() == 2) {
-                    String childrenQuery = "";
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        childrenQuery = String.format("SELECT IFNULL(%s,'') FROM %s", f_Name, t_Name);
-                        sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
-                                f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
-                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND IFNULL(%s,'') NOT IN (%s) ",
-                                t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
-                    } else {
-                        childrenQuery = String.format("SELECT %s FROM %s", f_Name, t_Name);
-                        sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
-                                f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
-                        sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
-                                t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
-                    }
+                    String childrenQuery = String.format("SELECT %s FROM %s", f_Name, t_Name);
+                    sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
+                            f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
+                    sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
+                            t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
                 } else {
-
                     // 指定序列范围
-                    List<String> list = new ArrayList<>();
+                    List<String> list = null;
                     if (standardsDTO == null) {
                         list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
                     } else {
@@ -930,19 +925,15 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                     boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
                     String isConsN = charValid ? "N" : "";
 
+                    // 判断生成的in条件是否带转义符“N”，例如 Name IN (N'张三','张三1')
                     String sql_InString = list.stream()
                             .map(item -> dataSourceTypeEnum == DataSourceTypeEnum.DORIS ? "'" + item + "'" : "" + isConsN + "'" + item + "'")
                             .collect(Collectors.joining(", "));
-                    String caseFieldStr = f_Name;
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        caseFieldStr = " IFNULL(" + f_Name + ",'') ";
-                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        caseFieldStr = " COALESCE(CAST(" + f_Name + " AS VARCHAR),'') ";
-                    }
+
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
-                            f_Name, f_Allocate, t_Name, fieldCheckWhereSql, caseFieldStr, sql_InString);
+                            f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, sql_InString);
                     sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
-                            t_Name, fieldCheckWhereSql, caseFieldStr, sql_InString);
+                            t_Name, fieldCheckWhereSql, f_Name, sql_InString);
                 }
                 break;
             //取值范围
@@ -960,14 +951,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         upperBound_Int = Integer.valueOf(standardsDTO.getValueRangeMax());
                     }
 
-                    String sql_BetweenAnd = String.format("CAST(%s AS INT) NOT BETWEEN %s AND %s", f_Name, lowerBound_Int, upperBound_Int);
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        // 为空也属于错误数据
-                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')='' OR %s::NUMERIC NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
-                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        // 为空也属于错误数据
-                        sql_BetweenAnd = String.format("(IFNULL(CAST(%s AS VARCHAR),'')='' OR %s NOT BETWEEN %s AND %s)", f_Name, f_Name, lowerBound_Int, upperBound_Int);
+                    String sql_BetweenAnd = "";
+                    boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
+                    if (charValid) {
+                        sql_BetweenAnd = String.format("(%s NOT BETWEEN '%s' AND '%s')", f_Name, lowerBound_Int, upperBound_Int);
+                    } else {
+                        sql_BetweenAnd = String.format("(%s NOT BETWEEN %s AND %s)", f_Name, lowerBound_Int, upperBound_Int);
                     }
+
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s ",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
                     sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s ",
@@ -984,13 +975,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         rangeCheckOneWayOperator = qualityReport_GetReverseOperator(standardsDTO.getSymbols());
                     }
 
-                    String sql_BetweenAnd = String.format("CAST(%s AS INT) %s %s", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
-                    if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-                        // 为空也属于错误数据
-                        sql_BetweenAnd = String.format("(COALESCE(CAST(%s AS VARCHAR),'')='' OR %s::NUMERIC %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
-                    } else if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-                        // 为空也属于错误数据
-                        sql_BetweenAnd = String.format("(IFNULL(CAST(%s AS VARCHAR),'')='' OR %s %s %s)", f_Name, f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    String sql_BetweenAnd ="";
+                    boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
+                    if (charValid) {
+                        sql_BetweenAnd =  String.format("(%s %s '%s')", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                    } else {
+                        sql_BetweenAnd =  String.format("(%s %s %s)", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
@@ -1007,10 +997,10 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 String[] timeRange = timeRangeString.split("~");
                 LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
                 LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
-                sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1  %s AND (((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))) ",
-                        f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, f_Name, f_Name, startTime, endTime);
-                sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1  %s AND (((%s IS NULL OR %s = '') OR (%s NOT BETWEEN '%s' AND '%s'))) ",
-                        t_Name, fieldCheckWhereSql, f_Name, f_Name, f_Name, startTime, endTime);
+                sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1  %s AND (%s NOT BETWEEN '%s' AND '%s') ",
+                        f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, startTime, endTime);
+                sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1  %s AND (%s NOT BETWEEN '%s' AND '%s') ",
+                        t_Name, fieldCheckWhereSql, f_Name, startTime, endTime);
                 break;
             case KEYWORDS_INCLUDE:
                 // 关键字包含
@@ -1443,16 +1433,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "CHAR_LENGTH(SUBSTRING(CAST(" + f_Name + " AS STRING), INSTR(CAST(" + f_Name + " AS STRING), '.') + 1)) NOT BETWEEN " + minFieldLength + " AND " + maxFieldLength + ")\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "LEN(SUBSTRING(CAST(" + f_Name + " AS NVARCHAR), CHARINDEX('.', CAST(" + f_Name + " AS NVARCHAR)) + 1, LEN(CAST(" + f_Name + " AS NVARCHAR)))) NOT BETWEEN " + minFieldLength + " AND " + maxFieldLength + ")\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "LENGTH(SUBSTRING(CAST(" + f_Name + " AS TEXT) FROM POSITION('.' IN CAST(" + f_Name + " AS TEXT)) + 1)) NOT BETWEEN " + minFieldLength + " AND " + maxFieldLength + ")\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "CHAR_LENGTH(SUBSTRING(CAST(" + f_Name + " AS CHAR), LOCATE('.', CAST(" + f_Name + " AS CHAR)) + 1)) NOT BETWEEN " + minFieldLength + " AND " + maxFieldLength + ")\n";
         }
         return sql;
@@ -1500,16 +1490,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "(LEFT(" + f_Name + ", 7) != 'http://' AND LEFT(" + f_Name + ", 8) != 'https://' AND LEFT(" + f_Name + ", 6) != 'ftp://'))\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "(" + f_Name + " NOT LIKE 'http://%' AND " + f_Name + " NOT LIKE 'https://%' AND " + f_Name + " NOT LIKE 'ftp://%'))\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "(" + f_Name + " !~ '^http://' AND " + f_Name + " !~ '^https://' AND " + f_Name + " !~ '^ftp://'))\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
+            sql += " AND (" +
                     "(" + f_Name + " NOT LIKE 'http://%' AND " + f_Name + " NOT LIKE 'https://%' AND " + f_Name + " NOT LIKE 'ftp://%'))\n";
         }
         return sql;
@@ -1529,21 +1519,21 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         String sql = "";
 
         if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
-                    "(CHAR_LENGTH(" + f_Name + ") % 4 != 0 OR " +
-                    "REGEXP_LIKE(" + f_Name + ", '[^A-Za-z0-9+/=]'))\n";
+            sql += " AND (" +
+                    "CHAR_LENGTH(" + f_Name + ") % 4 != 0 OR " +
+                    "REGEXP_LIKE(" + f_Name + ", '[^A-Za-z0-9+/=]')\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
-                    "(LEN(" + f_Name + ") % 4 != 0 OR " +
-                    "PATINDEX('%[^A-Za-z0-9+/=]%', " + f_Name + ") > 0))\n";
+            sql += " AND (" +
+                    "LEN(" + f_Name + ") % 4 != 0 OR " +
+                    "PATINDEX('%[^A-Za-z0-9+/=]%', " + f_Name + ") > 0)\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
-                    "(LENGTH(" + f_Name + ") % 4 != 0 OR " +
-                    f_Name + " ~ '[^A-Za-z0-9+/=]'))\n";
+            sql += " AND (" +
+                    "LENGTH(" + f_Name + ") % 4 != 0 OR " +
+                    f_Name + " ~ '[^A-Za-z0-9+/=]')\n";
         } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
-            sql += " AND (" + f_Name + " IS NULL OR " +
-                    "(CHAR_LENGTH(" + f_Name + ") % 4 != 0 OR " +
-                    f_Name + " REGEXP '[^A-Za-z0-9+/=]'))\n";
+            sql += " AND (" +
+                    "CHAR_LENGTH(" + f_Name + ") % 4 != 0 OR " +
+                    f_Name + " REGEXP '[^A-Za-z0-9+/=]')\n";
         }
         return sql;
     }
@@ -2025,6 +2015,30 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             reverseOperator = ">";
         }
         return reverseOperator;
+    }
+
+    /**
+     * @return java.lang.String
+     * @description 生成字段非空判断SQL
+     * @author dick
+     * @date 2024/8/30 13:52
+     * @version v1.0
+     * @params fieldName
+     */
+    public String qualityReport_CreateFieldNotNullSql(String fieldName, DataSourceTypeEnum dataSourceTypeEnum) {
+        String sql = "";
+
+        if (dataSourceTypeEnum == DataSourceTypeEnum.DORIS) {
+            sql += String.format(" AND (IFNULL(CAST(%s AS VARCHAR),'')!='') ", fieldName);
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.SQLSERVER) {
+            sql += String.format(" AND (ISNULL(CAST(%s AS VARCHAR),'')!='') ", fieldName);
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.POSTGRESQL) {
+            sql += String.format(" AND (COALESCE(CAST(%s AS VARCHAR),'')!='') ", fieldName);
+        } else if (dataSourceTypeEnum == DataSourceTypeEnum.MYSQL) {
+            sql += String.format(" AND (IFNULL(CAST(%s AS CHAR),'')!='') ", fieldName);
+        }
+
+        return sql;
     }
 
     /**

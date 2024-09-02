@@ -59,6 +59,6 @@
             log.table_name ELSE CONCAT( log.schema_name, '.', log.table_name )
             END = #{query.tableFullName})
         </if>
-        ORDER BY log.create_time DESC
+        ORDER BY log.create_time,log.rule_id DESC
     </select>
 </mapper>
