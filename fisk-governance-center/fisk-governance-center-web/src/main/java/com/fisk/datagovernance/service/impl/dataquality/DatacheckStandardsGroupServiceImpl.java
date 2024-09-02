@@ -32,6 +32,7 @@ import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -412,7 +413,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                     List<DataCheckExtendDTO> dataCheckExtendDTOS1 = extend.get(i.getId());
                     if (CollectionUtils.isEmpty(dataCheckExtendDTOS1)) {
                         for (List<DataCheckExtendDTO> value : extend.values()) {
-                            dataCheckExtendDTO = value.get(0);
+                            DataCheckExtendDTO extendDTO = value.get(0);
+                            BeanUtils.copyProperties(extendDTO, dataCheckExtendDTO);
                             break;
                         }
                         dataCheckExtendDTO.fieldName = i.getFieldName();
