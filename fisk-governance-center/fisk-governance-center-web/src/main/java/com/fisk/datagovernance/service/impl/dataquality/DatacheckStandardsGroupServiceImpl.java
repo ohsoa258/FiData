@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -30,6 +31,7 @@ import com.fisk.datagovernance.vo.dataquality.template.TemplateVO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -41,6 +43,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service("datacheckStandardsGroupService")
+@Slf4j
 public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckStandardsGroupMapper, DatacheckStandardsGroupPO> implements IDatacheckStandardsGroupService {
 
     @Resource
@@ -202,6 +205,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
      */
     @Override
     public ResultEnum editDataCheckStandardsGroup(DatacheckStandardsGroupDTO dto) {
+
         DatacheckStandardsGroupPO groupPO = DatacheckStandardsGroupMap.INSTANCES.dtoToPo(dto);
         LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(DatacheckStandardsGroupPO::getStandardsId, dto.getStandardsId())
@@ -421,6 +425,8 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 }).collect(Collectors.toList());
             }
             dto.setDataCheckList(dataCheckEditList);
+            // 同步更新数据校验组下的质量规则
+            log.info("editDataCheckByStandards-同步更新数据校验组下的质量规则[{}]", JSONObject.toJSON(dto));
             this.editDataCheckStandardsGroup(dto);
         }
         return ResultEnum.SUCCESS;
