@@ -206,11 +206,30 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                     delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_FACT.getValue() + "_" + id);
                 }
 
+                //原来开启同步元数据时 删除元数据的方法
                 if (openMetadata) {
                     deleteDto.qualifiedNames = delQualifiedName;
                     deleteDto.classifications = businessArea.getBusinessName();
                     dataManageClient.deleteMetaData(deleteDto);
                 }
+
+                //新版 删除元数据的方法
+                //创建固定大小的线程池 异步执行
+                ExecutorService executor = Executors.newFixedThreadPool(1);
+                //提交任务并立即返回
+                executor.submit(() -> {
+                    log.info("异步任务开始执行");
+                    try {
+                        deleteDto.qualifiedNames = delQualifiedName;
+                        deleteDto.classifications = businessArea.getBusinessName();
+                        //删除字段元数据
+                        dataManageClient.deleteFieldMetaData(deleteDto);
+                    } catch (Exception e) {
+                        log.error("数仓建模-删除字段时-异步删除元数据任务执行出错：" + e);
+                    }
+                    log.info("异步任务执行结束");
+                });
+
             }
 
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;

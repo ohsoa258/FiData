@@ -84,6 +84,7 @@
         <result property="displayText" column="ename"/>
         <result property="typeName" column="tname"/>
         <result property="parent1" column="parent1"/>
+        <result property="parent1Id" column="parent1Id"/>
         <result property="parent2" column="parent2"/>
         <association property="attributes" javaType="com.fisk.datamanagement.dto.entity.EntityAttributesDTO">
             <result property="name" column="ename"/>
@@ -98,6 +99,7 @@
                tme.qualified_name qname,
                tmp.type           tname,
                tme1.name          parent1,
+               tme1.id            parent1Id,
                tme2.name          parent2
         FROM tb_metadata_entity tme
                  LEFT JOIN tb_metadata_entity_type tmp ON tme.type_id = tmp.id

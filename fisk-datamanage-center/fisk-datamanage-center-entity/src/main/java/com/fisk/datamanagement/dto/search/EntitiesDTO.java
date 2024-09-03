@@ -72,6 +72,9 @@ public class EntitiesDTO {
     @ApiModelProperty(value = "父级")
     public String parent1;
 
+    @ApiModelProperty(value = "父级id")
+    public String parent1Id;
+
     @ApiModelProperty(value = "父级的父级")
     public String parent2;
 

@@ -111,6 +111,15 @@ public interface DataManageClient {
     ResultEntity<Object> deleteMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
 
     /**
+     * 删除字段元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    @DeleteMapping("/MetaData/deleteFieldMetaData")
+    ResultEntity<Object> deleteFieldMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
+
+    /**
      * 单个元数据信息消费
      *
      * @param dto

@@ -61,7 +61,6 @@ public class GlobalSearchImpl implements IGlobalSearch {
     @Resource
     LabelCategoryImpl labelCategory;
 
-
     @Value("${atlas.searchQuick}")
     private String searchQuick;
     @Value("${atlas.searchSuggestions}")
@@ -81,6 +80,21 @@ public class GlobalSearchImpl implements IGlobalSearch {
     @Override
     public List<EntitiesDTO> searchQuick(String query, int limit, int offset) {
         return metadataEntityMapper.searchEntitys(query, offset, limit);
+    }
+
+    /**
+     * 去掉最后一个_以及_后面的东西
+     * 例如:192.168.11.134_dmp_dw_2_7_38     to      192.168.11.134_dmp_dw_2_7
+     *
+     * @param str
+     * @return
+     */
+    private static String removeLastPart(String str) {
+        int lastDelimiterIndex = str.lastIndexOf('_');
+        if (lastDelimiterIndex == -1) {
+            return str; // 如果没有找到分隔符，返回原字符串
+        }
+        return str.substring(0, lastDelimiterIndex);
     }
 
     @Override

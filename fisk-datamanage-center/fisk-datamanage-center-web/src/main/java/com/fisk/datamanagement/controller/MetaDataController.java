@@ -85,6 +85,18 @@ public class MetaDataController {
         return ResultEntityBuild.build(service.deleteMetaData(dto));
     }
 
+    /**
+     * 删除字段元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("删除字段元数据实体")
+    @DeleteMapping("/deleteFieldMetaData")
+    public ResultEntity<Object> deleteFieldMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto) {
+        return ResultEntityBuild.build(service.deleteFieldMetaData(dto));
+    }
+
     @ApiOperation("删除元数据字段实体")
     @RequestMapping("/fieldDelete")
     public ResultEntity<Object> fieldDelete(@RequestParam("ids") List<Integer> ids) {
