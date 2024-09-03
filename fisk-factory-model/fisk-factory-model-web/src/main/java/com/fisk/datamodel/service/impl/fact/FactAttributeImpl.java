@@ -756,8 +756,8 @@ public class FactAttributeImpl
             //设置数据源名称
             dto.setDatasourceName(data.getName());
         }
-
-        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos);
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos,userInfo.getToken());
 
         return result.getData();
     }
