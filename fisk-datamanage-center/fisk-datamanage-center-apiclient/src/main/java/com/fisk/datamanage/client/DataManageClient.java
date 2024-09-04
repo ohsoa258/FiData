@@ -2,11 +2,9 @@ package com.fisk.datamanage.client;
 
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
-import com.fisk.common.core.response.ResultEntityBuild;
-import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
 import com.fisk.common.server.metadata.ClassificationInfoDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
@@ -174,8 +172,8 @@ public interface DataManageClient {
     @PostMapping("/MetaData/deleteConsumptionMetaData")
     ResultEntity<Object> deleteConsumptionMetaData(@RequestBody List<MetaDataEntityDTO> entityList);
 
-    @PostMapping("/Standards/getAllStandardsTree")
-    ResultEntity<List<FiDataMetaDataTreeDTO>> getAllStandardsTree(@RequestParam("id") String id);
+    @PostMapping("/Standards/dataQuality_GetAllStandardsTree")
+    ResultEntity<DataQualityDataSourceTreeDTO> dataQuality_GetAllStandardsTree();
 
     /**
      * 数仓建模-关联字段和数据源标准

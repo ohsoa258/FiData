@@ -27,6 +27,7 @@ import com.fisk.common.core.utils.dbutils.utils.SqlServerUtils;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
@@ -115,6 +116,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         queryBeCited.eq(StandardsBeCitedPO::getStandardsId, standardsPO.getId());
         List<StandardsBeCitedPO> standardsBeCitedPOList = standardsBeCitedService.list(queryBeCited);
         List<StandardsBeCitedDTO> standardsBeCitedDTOList = standardsBeCitedPOList.stream().map(StandardsBeCitedMap.INSTANCES::poToDTO).collect(Collectors.toList());
+        if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)){
+            standardsBeCitedDTOList.forEach(t->{
+                t.setTableBusinessTypeValue(t.getTableBusinessType().getValue());
+            });
+        }
         StandardsDTO standardsDTO = StandardsMap.INSTANCES.poToDTO(standardsPO);
 
         //处理值域范围回显
@@ -750,13 +756,24 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
     }
 
     @Override
-    public List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id) {
+    public DataQualityDataSourceTreeDTO dataQuality_GetAllStandardsTree() {
+
+        DataQualityDataSourceTreeDTO fiDataMetaDataTree_Standard = new DataQualityDataSourceTreeDTO();
+        String standardsUuid = UUID.randomUUID().toString().replace("-", "");
+        fiDataMetaDataTree_Standard.setId(standardsUuid);
+        fiDataMetaDataTree_Standard.setParentId("-10");
+        fiDataMetaDataTree_Standard.setLabel("数据标准");
+        fiDataMetaDataTree_Standard.setLabelAlias("数据标准");
+        fiDataMetaDataTree_Standard.setLabelRelName("数据标准");
+        fiDataMetaDataTree_Standard.setSourceType(1);
+        fiDataMetaDataTree_Standard.setLevelType(LevelTypeEnum.STANDARD_DATABASE);
+
         List<StandardsMenuPO> standardsMenus = standardsMenuService.list();
         if (CollectionUtils.isEmpty(standardsMenus)) {
-            return new ArrayList<>();
+            return fiDataMetaDataTree_Standard;
         }
 
-        List<StandardsMenuPO> standardsDataMenus = standardsMenus.stream().filter(i -> i.getType() == 2).collect(Collectors.toList());
+        //List<StandardsMenuPO> standardsDataMenus = standardsMenus.stream().filter(i -> i.getType() == 2).collect(Collectors.toList());
 
 //        List<Long> standardsDataMenuIds = standardsDataMenus.stream().map(BasePO::getId).collect(Collectors.toList());
 
@@ -777,37 +794,34 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
 //                    fiDataMetaDataTreeDTO.setData(data);
 //                    return fiDataMetaDataTreeDTO;
 //                }, Collectors.toList())));
-        List<FiDataMetaDataTreeDTO> allTree = standardsMenus.stream().map(i -> {
-            FiDataMetaDataTreeDTO fiDataMetaDataTreeDTO = new FiDataMetaDataTreeDTO();
+        List<DataQualityDataSourceTreeDTO> allTree = standardsMenus.stream().map(i -> {
+            DataQualityDataSourceTreeDTO fiDataMetaDataTreeDTO = new DataQualityDataSourceTreeDTO();
             if (i.getType() == 1) {
                 fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
                 if (i.getPid() == null || i.getPid() == 0) {
-                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(id));
+                    fiDataMetaDataTreeDTO.setParentId(standardsUuid);
                 } else {
                     fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
                 }
-                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD_FOLDER);
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
-                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
                 fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD_FOLDER);
             } else if (i.getType() == 2) {
                 fiDataMetaDataTreeDTO.setId(String.valueOf(i.getId()));
                 if (i.getPid() == null || i.getPid() == 0) {
-                    fiDataMetaDataTreeDTO.setParentId(String.valueOf(id));
+                    fiDataMetaDataTreeDTO.setParentId(standardsUuid);
                 } else {
                     fiDataMetaDataTreeDTO.setParentId(String.valueOf(i.getPid()));
                 }
-
-                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD);
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
-                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
                 fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
+                fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD);
 
 //                StandardsPO standardsPO = standardMap.get((int) i.getId());
 //                if (standardsPO != null) {
@@ -818,9 +832,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             return fiDataMetaDataTreeDTO;
         }).collect(Collectors.toList());
 
-        List<FiDataMetaDataTreeDTO> parentTree = allTree.stream().filter(i -> i.getParentId().equals(id)).collect(Collectors.toList());
+        List<DataQualityDataSourceTreeDTO> parentTree = allTree.stream().filter(i -> i.getParentId().equals(standardsUuid)).collect(Collectors.toList());
         standardsTree(allTree, parentTree);
-        return parentTree;
+
+        fiDataMetaDataTree_Standard.setChildren(parentTree);
+        return fiDataMetaDataTree_Standard;
     }
 
     /**
@@ -988,14 +1004,14 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         return children;
     }
 
-    private void standardsTree(List<FiDataMetaDataTreeDTO> allList, List<FiDataMetaDataTreeDTO> parentList) {
-        Map<String, List<FiDataMetaDataTreeDTO>> childrenMap = new HashMap<>();
-        for (FiDataMetaDataTreeDTO dto : allList) {
+    private void standardsTree(List<DataQualityDataSourceTreeDTO> allList, List<DataQualityDataSourceTreeDTO> parentList) {
+        Map<String, List<DataQualityDataSourceTreeDTO>> childrenMap = new HashMap<>();
+        for (DataQualityDataSourceTreeDTO dto : allList) {
             String parentId = dto.getParentId() != null ? dto.getParentId() : "0";
             childrenMap.computeIfAbsent(parentId, k -> new ArrayList<>()).add(dto);
         }
-        for (FiDataMetaDataTreeDTO parent : parentList) {
-            List<FiDataMetaDataTreeDTO> children = childrenMap.get(parent.getId());
+        for (DataQualityDataSourceTreeDTO parent : parentList) {
+            List<DataQualityDataSourceTreeDTO> children = childrenMap.get(parent.getId());
             if (children != null) {
                 parent.setChildren(children);
                 standardsTree(allList, children);

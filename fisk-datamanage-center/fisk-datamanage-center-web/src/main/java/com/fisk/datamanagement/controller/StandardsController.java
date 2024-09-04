@@ -5,6 +5,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.config.SwaggerConfig;
 import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
@@ -160,9 +161,9 @@ public class StandardsController {
     }
 
     @ApiOperation("获取所有数据标准树形结构(数据校验用)")
-    @PostMapping("/getAllStandardsTree")
-    public ResultEntity<List<FiDataMetaDataTreeDTO>> getAllStandardsTree(@RequestParam("id") String id) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.getAllStandardsTree(id));
+    @PostMapping("/dataQuality_GetAllStandardsTree")
+    public ResultEntity<DataQualityDataSourceTreeDTO> dataQuality_GetAllStandardsTree() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, standardsService.dataQuality_GetAllStandardsTree());
     }
 
     /**

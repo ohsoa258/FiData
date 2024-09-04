@@ -5,12 +5,10 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.access.NifiAccessDTO;
+import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.api.ApiImportDataDTO;
 import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.app.*;
@@ -653,4 +651,11 @@ public interface DataAccessClient {
     @GetMapping("/appRegistration/getDataAppRegistrationMeta")
     ResultEntity<Object> getDataAppRegistrationMeta();
 
+    @ApiOperation(value = "数据质量左侧Tree接口-获取ods数据源文件夹表层级")
+    @PostMapping("/appRegistration/dataQuality_GetOdsFolderTableTree")
+    ResultEntity<DataQualityDataSourceTreeDTO> dataQuality_GetOdsFolderTableTree();
+
+    @ApiOperation(value = "数据质量左侧Tree接口-根据表ID获取表下面的字段")
+    @PostMapping("/appRegistration/dataQuality_GetOdsTableFieldByTableId")
+    ResultEntity<List<DataQualityDataSourceTreeDTO>> dataQuality_GetOdsTableFieldByTableId(@RequestBody OdsFieldQueryDTO dto);
 }

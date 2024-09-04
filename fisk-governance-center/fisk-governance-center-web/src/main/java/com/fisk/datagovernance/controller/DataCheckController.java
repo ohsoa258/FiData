@@ -38,6 +38,7 @@ public class DataCheckController {
 
     @Resource
     private IDatacheckStandardsGroupService datacheckStandardsGroupService;
+
     @Resource
     private DatacheckCodeService datacheckCodeService;
 
@@ -117,7 +118,6 @@ public class DataCheckController {
     @PostMapping("/dataCheckLogAddQualityAnalysis")
     public ResultEntity<ResultEnum> dataCheckLogAddQualityAnalysis(@RequestBody DataCheckLogCommentDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataCheckLogAddQualityAnalysis(dto));
-
     }
 
     @ApiOperation("生成数据检查结果Excel")

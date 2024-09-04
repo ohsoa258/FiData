@@ -5,16 +5,14 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.GetDataOpsFieldSourceDTO;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConEditDTO;
-import com.fisk.datagovernance.dto.dataquality.datasource.DataSourceConQuery;
-import com.fisk.datagovernance.dto.dataquality.datasource.TestConnectionDTO;
+import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.service.dataops.IDataOpsDataSourceManageService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
@@ -79,15 +77,21 @@ public class DataSourceController {
     }
 
     @GetMapping("/getFiDataConfigMetaData")
-    @ApiOperation("数据质量，获取FiData配置表元数据信息")
-    public ResultEntity<FiDataMetaDataTreeDTO> getFiDataConfigMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData(true));
+    @ApiOperation("数据质量，获取FiData数据源元数据信息")
+    public ResultEntity<DataQualityDataSourceTreeDTO> getFiDataConfigMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFiDataConfigMetaData());
     }
 
     @GetMapping("/getCustomizeMetaData")
-    @ApiOperation("数据质量，获取自定义数据源表元数据信息")
-    public ResultEntity<FiDataMetaDataTreeDTO> getCustomizeMetaData() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData(true));
+    @ApiOperation("数据质量，获取自定义数据源元数据信息")
+    public ResultEntity<DataQualityDataSourceTreeDTO> getCustomizeMetaData() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getCustomizeMetaData());
+    }
+
+    @PostMapping("/getTableFieldByTableId")
+    @ApiOperation("数据质量，根据表ID获取表字段详情")
+    public ResultEntity<List<DataQualityDataSourceTreeDTO>> getTableFieldByTableId(@RequestBody QueryTableFieldDTO dto) {
+        return service.getTableFieldByTableId(dto);
     }
 
     @PostMapping("/reloadDataSource")
@@ -136,13 +140,13 @@ public class DataSourceController {
     @ApiOperation("导出查询结果")
     @ControllerAOPConfig(printParams = false)
     public void exportData(@RequestBody ExportResultVO vo, HttpServletResponse response) {
-        service.exportData(vo,response);
+        service.exportData(vo, response);
     }
 
     @GetMapping("/getObsSqlByUser")
     @ApiOperation("查询当前用户执行sql")
     public ResultEntity<Object> getObsSqlByUser() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getObsSqlByUser());
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getObsSqlByUser());
     }
 
     @PostMapping("/saveOrUpdateObsSql")

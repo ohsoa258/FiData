@@ -19,7 +19,7 @@ public class DataCheckPO extends BasePO {
     public int templateId;
 
     /**
-     * 数据源表主键id
+     * 系统数据源表主键id（FiData平台数据源表主键ID）
      */
     public int datasourceId;
 

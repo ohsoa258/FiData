@@ -118,7 +118,7 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
             } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
                     || query.getLevelType() == LevelTypeEnum.DATABASE
                     || query.getLevelType() == LevelTypeEnum.FOLDER) {
-                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.getSourceType(), query.getUniqueId());
+                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode(query.getSourceType(), query.getUniqueId());
                 if (CollectionUtils.isNotEmpty(treeTableNodes)) {
                     queryTableParams.addAll(treeTableNodes);
                 }
@@ -192,14 +192,14 @@ public class BusinessFilterManageImpl extends ServiceImpl<BusinessFilterMapper, 
         }
         try {
             // 如果是FiData的Tree节点，需要将平台数据源ID转换为数据质量数据源ID
-            if (dto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
-                int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceTypeEnum(), dto.getDatasourceId());
-                if (idByDataSourceId == 0)
-                {
-                    return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
-                }
-                dto.setDatasourceId(idByDataSourceId);
-            }
+//            if (dto.getSourceTypeEnum() == SourceTypeEnum.FiData) {
+//                int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.getSourceTypeEnum(), dto.getDatasourceId());
+//                if (idByDataSourceId == 0)
+//                {
+//                    return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+//                }
+//                dto.setDatasourceId(idByDataSourceId);
+//            }
             //第一步：验证表清洗规则是否存在
             QueryWrapper<BusinessFilterPO> queryWrapper = new QueryWrapper<>();
             queryWrapper.lambda().in(BusinessFilterPO::getRuleName, dto.getRuleName())

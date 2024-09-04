@@ -5,9 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -41,14 +39,16 @@ public interface MdmClient {
 
     /**
      * 根据实体id获取属性
+     *
      * @param id
      * @return
      */
     @GetMapping("/entity/getAttributeById")
-    ResultEntity<EntityInfoVO> getAttributeById(@RequestParam("id") Integer id,@RequestParam("name") String name);
+    ResultEntity<EntityInfoVO> getAttributeById(@RequestParam("id") Integer id, @RequestParam("name") String name);
 
     /**
      * 根据实体id获取属性
+     *
      * @param id
      * @return
      */
@@ -74,10 +74,11 @@ public interface MdmClient {
      * 审批
      */
     @PostMapping("/process/executeApproval")
-    ResultEntity<ResultEnum> executeApproval(@RequestBody List<ApprovalDTO> dataDto,@RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
+    ResultEntity<ResultEnum> executeApproval(@RequestBody List<ApprovalDTO> dataDto, @RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
 
     /**
      * 根据id查询查询属性
+     *
      * @param id
      * @return
      */
@@ -86,30 +87,35 @@ public interface MdmClient {
 
     /**
      * 更新发布状态
+     *
      * @param dto
      */
     @PutMapping("/access/updateAccessPublishState")
-    void updateAccessPublishState( @RequestBody AccessPublishStatusDTO dto);
+    void updateAccessPublishState(@RequestBody AccessPublishStatusDTO dto);
 
     /**
      * 获取接入表默认预览sql
+     *
      * @param moudleId
      * @param entityId
      * @return
      */
     @GetMapping("/access/getAccessDefaultSql")
-    ResultEntity<Object> getAccessDefaultSql(@RequestParam("moudleId")Integer moudleId,@RequestParam("entityId")Integer entityId);
+    ResultEntity<Object> getAccessDefaultSql(@RequestParam("moudleId") Integer moudleId, @RequestParam("entityId") Integer entityId);
 
     /**
      * 获取接入字段映射关系
+     *
      * @param accessId
      * @param entityId
      * @return
      */
     @GetMapping("/access/getAccessAttributeField")
-    ResultEntity<List<AccessAttributeDTO>> getAccessAttributeField(@RequestParam("accessId")Integer accessId,@RequestParam("entityId") Integer entityId);
+    ResultEntity<List<AccessAttributeDTO>> getAccessAttributeField(@RequestParam("accessId") Integer accessId, @RequestParam("entityId") Integer entityId);
+
     /**
      * 修改属性状态
+     *
      * @param statusDto
      * @return
      */
@@ -118,6 +124,7 @@ public interface MdmClient {
 
     /**
      * 修改实体
+     *
      * @param dto
      * @return
      */
@@ -126,6 +133,7 @@ public interface MdmClient {
 
     /**
      * 根据id集合查询属性信息
+     *
      * @param ids
      * @return
      */
@@ -134,6 +142,7 @@ public interface MdmClient {
 
     /**
      * 根据domainId查询属性
+     *
      * @param dto
      * @return
      */
@@ -142,6 +151,7 @@ public interface MdmClient {
 
     /**
      * 删除属性
+     *
      * @param id
      * @return
      */
@@ -150,6 +160,7 @@ public interface MdmClient {
 
     /**
      * 根据id获取实体
+     *
      * @param id
      * @return
      */
@@ -158,6 +169,7 @@ public interface MdmClient {
 
     /**
      * 获取主数据结构
+     *
      * @return
      */
     @PostMapping("/model/getDataStructure")
@@ -165,12 +177,15 @@ public interface MdmClient {
 
     /**
      * 刷新主数据结构
+     *
      * @return
      */
     @PostMapping("/model/setDataStructure")
     ResultEntity<Object> setMDMDataStructure(@RequestBody FiDataMetaDataReqDTO dto);
+
     /**
      * 获取主数据表结构(数据标准用)
+     *
      * @return
      */
     @PostMapping("/model/getTableDataStructure")
@@ -178,6 +193,7 @@ public interface MdmClient {
 
     /**
      * 获取主数据字段结构(数据标准用)
+     *
      * @param dto
      * @return
      */
@@ -186,6 +202,7 @@ public interface MdmClient {
 
     /**
      * 搜索主数据数据元关联字段(数据标准用)
+     *
      * @param key
      * @return
      */
@@ -195,6 +212,7 @@ public interface MdmClient {
 
     /**
      * 数据访问配置
+     *
      * @param entityId
      * @param modelId
      * @return
@@ -228,6 +246,7 @@ public interface MdmClient {
 
     /**
      * 根据实体ID,获取实体表名
+     *
      * @param tableQueryDTO
      * @return
      */
@@ -236,6 +255,7 @@ public interface MdmClient {
 
     /**
      * 获取主数据所有模型下的所有实体表
+     *
      * @return
      */
     @GetMapping("/model/getAllModelAndEntitys")
@@ -252,6 +272,7 @@ public interface MdmClient {
 
     /**
      * 获取主数据所有模型数量
+     *
      * @return
      */
     @GetMapping("/model/getModelTotal")
@@ -259,8 +280,25 @@ public interface MdmClient {
 
     /**
      * 获取主数据所有实体数量
+     *
      * @return
      */
     @GetMapping("/entity/getEntityTotal")
     ResultEntity<Object> getEntityTotal();
+
+    /**
+     * 获取主数据表结构(懒加载)
+     *
+     * @return
+     */
+    @PostMapping("/model/dataQuality_GetMdmFolderTableTree")
+    ResultEntity<DataQualityDataSourceTreeDTO> dataQuality_GetMdmFolderTableTree();
+
+    /**
+     * 获取主数据字段结构(懒加载)
+     *
+     * @return
+     */
+    @GetMapping("/model/dataQuality_GetMdmTableFieldByTableId")
+    ResultEntity<List<DataQualityDataSourceTreeDTO>> dataQuality_GetMdmTableFieldByTableId(@RequestParam("entityId") String entityId);
 }

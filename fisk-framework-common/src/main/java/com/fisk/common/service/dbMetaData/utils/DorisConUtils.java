@@ -70,6 +70,82 @@ public class DorisConUtils {
     }
 
     /**
+     * 获取表详情(表信息)
+     */
+    public List<TablePyhNameDTO> getTableNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum) {
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(driverTypeEnum.getDriverName());
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            int tag = 0;
+            List<String> tableNames = getTablesPlus(conn);
+            if (CollectionUtils.isNotEmpty(tableNames)) {
+                for (String tableName : tableNames) {
+                    TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                    // mysql没有架构概念
+                    tablePyhNameDTO.setTableFullName(tableName);
+                    tablePyhNameDTO.setTableName(tableName);
+                    tag++;
+                    tablePyhNameDTO.setTag(tag);
+                    list.add(tablePyhNameDTO);
+                }
+            }
+        } catch (Exception e) {
+            log.error("【DorisConUtils-getTableNames】获取表名报错：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【DorisConUtils-getTableNames】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * 获取表字段详情(字段信息)
+     */
+    public List<TableStructureDTO> getTableColumns(String url, String user, String password, DataSourceTypeEnum driverTypeEnum, String tableName) {
+        List<TableStructureDTO> colNames = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(driverTypeEnum.getDriverName());
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            colNames = getColNames(stmt, tableName);
+        } catch (Exception e) {
+            log.error("【DorisConUtils-getTableColumns】获取表名报错：", e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【DorisConUtils-getTableColumns】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            }
+        }
+        return colNames;
+    }
+
+    /**
      * 获取数据库中所有表名称
      */
     public List<String> getTablesPlus(Connection conn) {
@@ -184,7 +260,8 @@ public class DorisConUtils {
      */
     public List<TableStructureDTO> getCatalogNameAndTblName(Statement statement, String catalogName) {
         // tableName应携带架构名称
-        List<TableStructureDTO> catalogList = new ArrayList<>();;
+        List<TableStructureDTO> catalogList = new ArrayList<>();
+        ;
         ResultSet databases = null;
         ResultSet tbls = null;
         try {
@@ -212,7 +289,7 @@ public class DorisConUtils {
             }
 
 
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("【getCatalogNameAndTblName】获取doris外部目录异常：", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         }
@@ -249,7 +326,6 @@ public class DorisConUtils {
         }
         return colNameList;
     }
-
 
 
     public List<DorisCatalogDTO> getCataLogNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum) {

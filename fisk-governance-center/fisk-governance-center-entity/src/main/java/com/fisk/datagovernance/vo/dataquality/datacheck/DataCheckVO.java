@@ -31,9 +31,9 @@ public class DataCheckVO {
     public int templateId;
 
     /**
-     * 数据质量数据源表主键ID
+     * 系统数据源表主键id（FiData平台数据源表主键ID）
      */
-    @ApiModelProperty(value = "数据质量数据源表主键ID")
+    @ApiModelProperty(value = "系统数据源表主键id（FiData平台数据源表主键ID）")
     public int datasourceId;
 
     /**
@@ -94,7 +94,7 @@ public class DataCheckVO {
      * 表业务类型 1：事实表、2：维度表、3：指标表、4：宽表
      */
     @ApiModelProperty(value = "表业务类型 1：事实表、2：维度表、3：指标表、4：宽表")
-    public TableBusinessTypeEnum tableBusinessType;
+    public int tableBusinessType;
 
     /**
      * 规则检查类型：1、强规则 2、弱规则
@@ -196,6 +196,6 @@ public class DataCheckVO {
     /**
      * 表字段信息
      */
-    @ApiModelProperty(value = "表字段信息")
-    public FiDataMetaDataTreeDTO tableFieldList;
+    //@ApiModelProperty(value = "表字段信息")
+    //public FiDataMetaDataTreeDTO tableFieldList;
 }

@@ -82,7 +82,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
             } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
                     || query.getLevelType() == LevelTypeEnum.DATABASE
                     || query.getLevelType() == LevelTypeEnum.FOLDER) {
-                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode_main(query.getSourceType(), query.getUniqueId());
+                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode(query.getSourceType(), query.getUniqueId());
                 if (CollectionUtils.isNotEmpty(treeTableNodes)) {
                     queryTableParams.addAll(treeTableNodes);
                 }
@@ -140,7 +140,7 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
             });
             List<FiDataMetaDataDTO> tableFields = null;
             if (CollectionUtils.isNotEmpty(filterFiDataTables)) {
-                tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
+                //tableFields = dataSourceConManageImpl.getTableFieldName(filterFiDataTables);
             }
             // 第六步：表信息填充
             if (CollectionUtils.isNotEmpty(tableFields)) {
@@ -179,13 +179,13 @@ public class LifecycleManageImpl extends ServiceImpl<LifecycleMapper, LifecycleP
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultEnum addData(LifecycleDTO dto) {
-        if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
-            int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
-            if (idByDataSourceId == 0) {
-                return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
-            }
-            dto.datasourceId = idByDataSourceId;
-        }
+//        if (dto.sourceTypeEnum == SourceTypeEnum.FiData) {
+//            int idByDataSourceId = dataSourceConManageImpl.getIdByDataSourceId(dto.sourceTypeEnum, dto.datasourceId);
+//            if (idByDataSourceId == 0) {
+//                return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+//            }
+//            dto.datasourceId = idByDataSourceId;
+//        }
         //第一步：验证模板是否存在
         TemplatePO templatePO = templateMapper.selectById(dto.templateId);
         if (templatePO == null) {

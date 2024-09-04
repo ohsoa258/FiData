@@ -12,10 +12,7 @@ import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
 import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
-import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
+import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.datamodel.TableQueryDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
@@ -23,6 +20,7 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapDTO;
 import com.fisk.datamanagement.dto.metamap.MetaMapTblDTO;
+import com.fisk.datamodel.dto.DwFieldQueryDTO;
 import com.fisk.datamodel.dto.atomicindicator.DimensionTimePeriodDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
@@ -49,7 +47,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -484,4 +481,12 @@ public interface DataModelClient {
     @ApiOperation("获取指标数据查询参数")
     @GetMapping("/businessProcess/getBusinessQueryDataParam")
     ResultEntity<BusinessQueryDataParamDTO> getBusinessQueryDataParam(@RequestParam("fieldId") Integer fieldId);
+
+    @ApiOperation(value = "数据质量左侧Tree接口-获取dw数据源文件夹表层级")
+    @PostMapping("/business/dataQuality_GetDwFolderTableTree")
+    ResultEntity<DataQualityDataSourceTreeDTO> dataQuality_GetDwFolderTableTree();
+
+    @ApiOperation(value = "数据质量左侧Tree接口-根据表ID获取表下面的字段")
+    @PostMapping("/business/dataQuality_GetDwTableFieldByTableId")
+    ResultEntity<List<DataQualityDataSourceTreeDTO>> dataQuality_GetDwTableFieldByTableId(@RequestBody DwFieldQueryDTO dto);
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
+import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datamanagement.dto.category.CategoryQueryDTO;
 import com.fisk.datamanagement.dto.standards.*;
@@ -16,8 +17,6 @@ import java.util.List;
 
 
 /**
- * 
- *
  * @author wangjian
  * @email fisk@fisksoft.com
  * @date 2023-11-20 13:56:24
@@ -25,8 +24,10 @@ import java.util.List;
 public interface StandardsService extends IService<StandardsPO> {
 
     StandardsDTO getStandards(int id);
+
     /**
      * 添加数据标准数据
+     *
      * @param standardsDTO
      * @return
      */
@@ -34,6 +35,7 @@ public interface StandardsService extends IService<StandardsPO> {
 
     /**
      * 更新数据标准数据
+     *
      * @param standardsDTO
      * @return
      */
@@ -41,6 +43,7 @@ public interface StandardsService extends IService<StandardsPO> {
 
     /**
      * 删除数据标准数据
+     *
      * @param id
      * @return
      */
@@ -48,6 +51,7 @@ public interface StandardsService extends IService<StandardsPO> {
 
     /**
      * 批量删除数据标准数据
+     *
      * @param ids
      * @return
      */
@@ -67,12 +71,13 @@ public interface StandardsService extends IService<StandardsPO> {
 
     List<StandardsDTO> getStandardsBySource(Integer fieldMetadataId);
 
-    ResultEnum importExcelStandards(long menuId,MultipartFile file);
+    ResultEnum importExcelStandards(long menuId, MultipartFile file);
 
-    List<FiDataMetaDataTreeDTO> getAllStandardsTree(String id);
+    DataQualityDataSourceTreeDTO dataQuality_GetAllStandardsTree();
 
     /**
      * 数仓建模-关联字段和数据源标准
+     *
      * @param dtos
      * @return
      */
@@ -80,18 +85,21 @@ public interface StandardsService extends IService<StandardsPO> {
 
     /**
      * 数仓建模-获取所有数据元标准 只获取数据元id 和中文名、menuid
+     *
      * @return
      */
     List<StandardsDTO> modelGetStandards();
 
     /**
      * 数仓建模-获取所有数仓字段和数据元标准的关联关系
+     *
      * @return
      */
     List<StandardsBeCitedDTO> modelGetStandardsMap();
 
     /**
      * 主数据-获取所有主数据字段和数据元标准的关联关系
+     *
      * @return
      */
     List<StandardsBeCitedDTO> mdmGetStandardsMap();
@@ -100,11 +108,10 @@ public interface StandardsService extends IService<StandardsPO> {
 
     /**
      * 获取数据元标准数量
+     *
      * @return
      */
     Integer getStandardTotal();
-
-
 
 
     List<StandardsDetailDTO> getStandardsDetailMenuList(String menuId);

@@ -33,6 +33,9 @@ public class StandardsBeCitedDTO {
     @ApiModelProperty(value = "表业务类型")
     private TableBusinessTypeEnum tableBusinessType;
 
+    @ApiModelProperty(value = "表业务类型")
+    private int tableBusinessTypeValue;
+
     @ApiModelProperty(value = "架构名称")
     private String schemaName;
 

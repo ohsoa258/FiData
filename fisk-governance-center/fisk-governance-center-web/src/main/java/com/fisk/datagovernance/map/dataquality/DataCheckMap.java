@@ -26,7 +26,6 @@ public interface DataCheckMap {
      */
     @Mappings({
             @Mapping(source = "tableType.value", target = "tableType"),
-            @Mapping(source = "tableBusinessType.value", target = "tableBusinessType"),
             @Mapping(source = "ruleCheckType.value", target = "ruleCheckType"),
             @Mapping(source = "ruleExecuteNode.value", target = "ruleExecuteNode"),
             @Mapping(source = "ruleState.value", target = "ruleState")
@@ -41,7 +40,6 @@ public interface DataCheckMap {
      */
     @Mappings({
             @Mapping(source = "tableType.value", target = "tableType"),
-            @Mapping(source = "tableBusinessType.value", target = "tableBusinessType"),
             @Mapping(source = "ruleCheckType.value", target = "ruleCheckType"),
             @Mapping(source = "ruleExecuteNode.value", target = "ruleExecuteNode"),
             @Mapping(source = "ruleState.value", target = "ruleState")
@@ -56,7 +54,6 @@ public interface DataCheckMap {
      */
     @Mappings({
             @Mapping(source = "tableType", target = "tableType"),
-            @Mapping(source = "tableBusinessType", target = "tableBusinessType"),
             @Mapping(source = "ruleCheckType", target = "ruleCheckType"),
             @Mapping(source = "ruleExecuteNode", target = "ruleExecuteNode"),
             @Mapping(source = "ruleState", target = "ruleState")
@@ -73,7 +70,6 @@ public interface DataCheckMap {
      */
     @Mappings({
             @Mapping(source = "tableType", target = "tableType"),
-            @Mapping(source = "tableBusinessType", target = "tableBusinessType"),
             @Mapping(source = "ruleCheckType", target = "ruleCheckType"),
             @Mapping(source = "ruleExecuteNode", target = "ruleExecuteNode"),
             @Mapping(source = "ruleState", target = "ruleState")

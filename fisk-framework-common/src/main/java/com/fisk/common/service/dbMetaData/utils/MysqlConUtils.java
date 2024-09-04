@@ -31,7 +31,7 @@ public class MysqlConUtils {
 
             int tag = 0;
             List<String> tableNames = getTablesPlus(conn);
-            if (CollectionUtils.isNotEmpty(tableNames)){
+            if (CollectionUtils.isNotEmpty(tableNames)) {
                 for (String tableName : tableNames) {
                     // mysql没有架构概念
                     List<TableStructureDTO> colNames = getColNames(stmt, tableName);
@@ -49,7 +49,7 @@ public class MysqlConUtils {
             log.error("【getTableNameAndColumns】获取表名报错：", e);
             log.error("数据库url信息：" + url);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
-        }finally {
+        } finally {
             try {
                 if (stmt != null) {
                     stmt.close();
@@ -64,6 +64,89 @@ public class MysqlConUtils {
         }
         return list;
     }
+
+    /**
+     * 获取表详情(表信息)
+     */
+    public List<TablePyhNameDTO> getTableNames(String url, String user, String password, DataSourceTypeEnum driverTypeEnum) {
+        List<TablePyhNameDTO> list = new ArrayList<>();
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(driverTypeEnum.getDriverName());
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            int tag = 0;
+            List<String> tableNames = getTablesPlus(conn);
+            if (CollectionUtils.isNotEmpty(tableNames)) {
+                for (String tableName : tableNames) {
+                    // mysql没有架构概念
+                    //List<TableStructureDTO> colNames = getColNames(stmt, tableName);
+                    TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
+                    // mysql没有架构概念
+                    tablePyhNameDTO.setTableFullName(tableName);
+                    tablePyhNameDTO.setTableName(tableName);
+                    //tablePyhNameDTO.setFields(colNames);
+                    tag++;
+                    tablePyhNameDTO.setTag(tag);
+                    list.add(tablePyhNameDTO);
+                }
+            }
+        } catch (Exception e) {
+            log.error("【MysqlConUtils-getTableNames】获取表名报错：", e);
+            log.error("数据库url信息：" + url);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【MysqlConUtils-getTableNames】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            }
+        }
+        return list;
+    }
+
+    /**
+     * 获取表字段详情(表字段信息)
+     */
+    public List<TableStructureDTO> getTableColumns(String url, String user, String password, DataSourceTypeEnum driverTypeEnum, String tableName) {
+        List<TableStructureDTO> list = null;
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            Class.forName(driverTypeEnum.getDriverName());
+            conn = DriverManager.getConnection(url, user, password);
+            stmt = conn.createStatement();
+
+            // mysql没有架构概念
+            list = getColNames(stmt, tableName);
+        } catch (Exception e) {
+            log.error("【MysqlConUtils-getTableColumns】获取表名报错：", e);
+            log.error("数据库url信息：" + url);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                log.error("【MysqlConUtils-getTableColumns】关闭数据库连接异常：", e);
+                throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            }
+        }
+        return list;
+    }
+
 
     /**
      * 加载视图详情
@@ -192,7 +275,7 @@ public class MysqlConUtils {
 
             int tag = 0;
             List<String> tableNames = getTablesPlus(conn);
-            if (CollectionUtils.isNotEmpty(tableNames)){
+            if (CollectionUtils.isNotEmpty(tableNames)) {
                 for (String tableName : tableNames) {
                     // mysql没有架构概念
                     List<TableStructureDTO> colNames = getColNames(stmt, tableName);
@@ -209,7 +292,7 @@ public class MysqlConUtils {
         } catch (Exception e) {
             log.error("【getTableNameAndColumns】获取表名报错：", e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
-        }finally {
+        } finally {
             try {
                 if (stmt != null) {
                     stmt.close();

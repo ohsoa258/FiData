@@ -55,7 +55,7 @@ public class SynchronizationSchedule implements SchedulingConfigurer {
                    log.info("数据运维写入数据源到redis 结束");
 
                    log.info("数据质量写入数据源到redis 开始");
-                   dataSourceConManageImpl.setMetaDataToRedis();
+                   //dataSourceConManageImpl.setMetaDataToRedis();
                    log.info("数据质量写入数据源到redis 结束");
 
                    log.info("数据检查-检查校验结果是否达到最大保留时间 开始");

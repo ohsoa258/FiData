@@ -311,7 +311,7 @@ public class BusinessFilterApiManageImpl extends ServiceImpl<BusinessFilterApiMa
                 dataTableFieldDTO.setDataSourceConfigEnum(DataSourceConfigEnum.getEnum(dataSourceConVO.getDatasourceId()));
                 dataTableFieldDTO.setTableBusinessTypeEnum(TableBusinessTypeEnum.getEnum(dto.getTableBusinessType()));
                 dataTableFieldDTOS.add(dataTableFieldDTO);
-                List<FiDataMetaDataDTO> fiDataMetaDatas = dataSourceConManageImpl.getTableFieldName(dataTableFieldDTOS);
+                List<FiDataMetaDataDTO> fiDataMetaDatas = null; //dataSourceConManageImpl.getTableFieldName(dataTableFieldDTOS);
                 if (CollectionUtils.isNotEmpty(fiDataMetaDatas)) {
                     FiDataMetaDataTreeDTO fiDataMetaData_Table = fiDataMetaDatas.get(0).getChildren().get(0);
                     List<FiDataMetaDataTreeDTO> fiDataMetaData_Fields = fiDataMetaData_Table.getChildren();
