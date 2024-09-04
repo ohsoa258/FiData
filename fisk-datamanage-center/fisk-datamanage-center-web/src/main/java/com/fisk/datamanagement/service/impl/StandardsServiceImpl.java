@@ -851,32 +851,101 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         StandardsBeCitedDTO standardsBeCitedDTO = dtos.get(0);
         //获取本次操作的字段id(数仓的字段id 维度表字段/事实表字段)
         String fieldId = standardsBeCitedDTO.getFieldId();
+        TableBusinessTypeEnum tableBusinessType = standardsBeCitedDTO.getTableBusinessType();
 
         //如果本次没选择任何数据元标准 则认为此次为清空关联关系
         if (standardsBeCitedDTO.getStandardsId() == null) {
             LambdaQueryWrapper<StandardsBeCitedPO> delWrapper = new LambdaQueryWrapper<>();
+            delWrapper.eq(StandardsBeCitedPO::getTableBusinessType,tableBusinessType);
             delWrapper.eq(StandardsBeCitedPO::getFieldId, fieldId);
-            return standardsBeCitedService.remove(delWrapper);
+            List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedService.list(delWrapper);
+            for (StandardsBeCitedPO standardsBeCitedPO : standardsBeCitedPOS) {
+                LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
+                queryStandards.eq(StandardsPO::getId, standardsBeCitedPO.getStandardsId());
+                StandardsPO standardsPO = this.getOne(queryStandards);
+                StandardsDTO standards = getStandards(standardsPO.getMenuId());
+                List<StandardsBeCitedDTO> standardsBeCitedDTOList = standards.getStandardsBeCitedDTOList();
+                List<StandardsBeCitedDTO> collect = standardsBeCitedDTOList.stream().filter(i -> {
+                    if (!i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
+                            && !i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+                standards.setStandardsBeCitedDTOList(collect);
+                //调用更新逻辑
+                updateStandards(standards);
+            }
+            return true;
+        }else {
+            LambdaQueryWrapper<StandardsBeCitedPO> delWrapper = new LambdaQueryWrapper<>();
+            delWrapper.eq(StandardsBeCitedPO::getTableBusinessType,tableBusinessType);
+            delWrapper.eq(StandardsBeCitedPO::getFieldId, fieldId);
+            List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedService.list(delWrapper);
+            for (StandardsBeCitedPO standardsBeCitedPO : standardsBeCitedPOS) {
+                LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
+                queryStandards.eq(StandardsPO::getId, standardsBeCitedPO.getStandardsId());
+                StandardsPO standardsPO = this.getOne(queryStandards);
+                List<StandardsBeCitedDTO> filter = dtos.stream().filter(i -> i.getStandardsId().equals(standardsPO.getMenuId())).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(filter)){
+                    continue;
+                }
+                StandardsDTO standards = getStandards(standardsPO.getMenuId());
+                List<StandardsBeCitedDTO> standardsBeCitedDTOList = standards.getStandardsBeCitedDTOList();
+                List<StandardsBeCitedDTO> collect = standardsBeCitedDTOList.stream().filter(i -> {
+                    if (!i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
+                            && !i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+                standards.setStandardsBeCitedDTOList(collect);
+                //调用更新逻辑
+                updateStandards(standards);
+            }
+            for (StandardsBeCitedDTO citedDTO : dtos) {
+                StandardsDTO standards = getStandards(citedDTO.getStandardsId());
+                citedDTO.setStandardsId(standards.getId());
+                List<StandardsBeCitedDTO> standardsBeCitedDTOList = standards.getStandardsBeCitedDTOList();
+                List<StandardsBeCitedDTO> updates = new ArrayList<>();
+                Boolean flag = false;
+                for (StandardsBeCitedDTO beCitedDTO : standardsBeCitedDTOList) {
+                    if (beCitedDTO.getTableBusinessType().equals(citedDTO.getTableBusinessType()) && beCitedDTO.getFieldId().equals(citedDTO.getFieldId())){
+                        flag = true;
+                        citedDTO.setId(beCitedDTO.getId());
+                        updates.add(citedDTO);
+                    }else {
+                        updates.add(beCitedDTO);
+                    }
+                }
+                if (!flag){
+                    updates.add(citedDTO);
+                }
+                standards.setStandardsBeCitedDTOList(updates);
+                updateStandards(standards);
+            }
         }
-
-        /*
-        每次做关联 逻辑为：先删除字段原来关联的所有数据元标准  再添加这次选中的数据源标准
-         */
-        //1.删除字段原来关联的数据元标准
-        LambdaQueryWrapper<StandardsBeCitedPO> delAll = new LambdaQueryWrapper<>();
-        delAll.eq(StandardsBeCitedPO::getFieldId, fieldId);
-        standardsBeCitedService.remove(delAll);
-
-        //将standards menuId 替换为 standards id
-        for (StandardsBeCitedDTO dto : dtos) {
-            Integer standardMenuId = dto.getStandardsId();
-            StandardsPO one = getOne(new LambdaQueryWrapper<StandardsPO>().eq(StandardsPO::getMenuId, standardMenuId));
-            dto.setStandardsId(Math.toIntExact(one.getId()));
-        }
-
-        //2.删除字段原来关联的数据元标准
-        List<StandardsBeCitedPO> standardsBeCitedPOS = StandardsBeCitedMap.INSTANCES.dtoListToPoList(dtos);
-        return standardsBeCitedService.saveBatch(standardsBeCitedPOS);
+//
+//        /*
+//        每次做关联 逻辑为：先删除字段原来关联的所有数据元标准  再添加这次选中的数据源标准
+//         */
+//        //1.删除字段原来关联的数据元标准
+//        LambdaQueryWrapper<StandardsBeCitedPO> delAll = new LambdaQueryWrapper<>();
+//        delAll.eq(StandardsBeCitedPO::getFieldId, fieldId);
+//        standardsBeCitedService.remove(delAll);
+//
+//        //将standards menuId 替换为 standards id
+//        for (StandardsBeCitedDTO dto : dtos) {
+//            Integer standardMenuId = dto.getStandardsId();
+//            StandardsPO one = getOne(new LambdaQueryWrapper<StandardsPO>().eq(StandardsPO::getMenuId, standardMenuId));
+//            dto.setStandardsId(Math.toIntExact(one.getId()));
+//        }
+//
+//        //2.删除字段原来关联的数据元标准
+//        List<StandardsBeCitedPO> standardsBeCitedPOS = StandardsBeCitedMap.INSTANCES.dtoListToPoList(dtos);
+        return true;
     }
 
     /**

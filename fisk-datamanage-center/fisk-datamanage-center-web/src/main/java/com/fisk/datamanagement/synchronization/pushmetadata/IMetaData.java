@@ -46,6 +46,14 @@ public interface IMetaData {
     ResultEnum deleteMetaData(MetaDataDeleteAttributeDTO dto);
 
     /**
+     * 删除字段元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum deleteFieldMetaData(MetaDataDeleteAttributeDTO dto);
+
+    /**
      * 同步表级业务元数据
      *
      * @param dto

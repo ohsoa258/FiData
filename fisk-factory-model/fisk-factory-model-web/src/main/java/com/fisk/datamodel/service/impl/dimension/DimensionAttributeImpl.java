@@ -9,6 +9,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.dto.tablefield.TableFieldDTO;
 import com.fisk.datamanage.client.DataManageClient;
 import com.fisk.datamanagement.dto.classification.BusinessExtendedfieldsDTO;
@@ -44,19 +45,25 @@ import com.fisk.datamodel.service.impl.SyncModeImpl;
 import com.fisk.datamodel.service.impl.SystemVariablesImpl;
 import com.fisk.datamodel.service.impl.TableBusinessImpl;
 import com.fisk.datamodel.service.impl.fact.FactAttributeImpl;
+import com.fisk.system.client.UserClient;
+import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class DimensionAttributeImpl
         extends ServiceImpl<DimensionAttributeMapper, DimensionAttributePO>
         implements IDimensionAttribute {
@@ -84,6 +91,9 @@ public class DimensionAttributeImpl
     private DimensionImpl dimension;
     @Resource
     private DataManageClient dataManageClient;
+
+    @Resource
+    private UserClient userClient;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -267,8 +277,41 @@ public class DimensionAttributeImpl
             return ResultEnum.FIELDS_ASSOCIATED;
         }
 
-        ////DimensionAttributePO po=attributeMapper.selectById(ids.get(0));
-        return attributeMapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        //删除前先查询
+        List<DimensionAttributePO> dimPos = listByIds(ids);
+        //删除
+        ResultEnum resultEnum = attributeMapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
+        //创建固定大小的线程池
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        //异步
+        executor.submit(() -> {
+            log.info("异步任务开始执行");
+            try {
+                if (org.springframework.util.CollectionUtils.isEmpty(dimPos)) {
+                    return;
+                }
+                //获取平台配置-dmp_dw的信息 已经在catch块儿中 无需判断是否获取到
+                ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(1);
+                String conIp = resultEntity.getData().getConIp();
+                String conDbname = resultEntity.getData().getConDbname();
+
+                //获取限定名称
+                List<String> qNames = new ArrayList<>();
+                for (DimensionAttributePO po : dimPos) {
+                    qNames.add(conIp + "_" + conDbname + "_" + 1 + "_" + po.getDimensionId() + "_" + po.id);
+                }
+                MetaDataDeleteAttributeDTO metaDataDeleteAttributeDTO = new MetaDataDeleteAttributeDTO();
+                metaDataDeleteAttributeDTO.setQualifiedNames(qNames);
+                //删除字段元数据
+                dataManageClient.deleteFieldMetaData(metaDataDeleteAttributeDTO);
+            } catch (Exception e) {
+                log.error("数仓建模-维度表删除字段时-异步删除元数据任务执行出错：" + e);
+            }
+            log.info("异步任务执行结束");
+        });
+
+        return resultEnum;
     }
 
     @Override

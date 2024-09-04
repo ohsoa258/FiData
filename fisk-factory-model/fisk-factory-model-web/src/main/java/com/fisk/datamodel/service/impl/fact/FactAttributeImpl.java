@@ -15,6 +15,7 @@ import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.datamodel.BuildDataModelHelper;
 import com.fisk.common.service.dbBEBuild.datamodel.IBuildDataModelSqlCommand;
 import com.fisk.common.service.dbBEBuild.datamodel.dto.TableSourceRelationsDTO;
+import com.fisk.common.service.metadata.dto.metadata.MetaDataDeleteAttributeDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
@@ -76,6 +77,8 @@ import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -271,7 +274,41 @@ public class FactAttributeImpl
 
     @Override
     public ResultEnum deleteFactAttribute(List<Integer> ids) {
-        return mapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        //删除前先查询出来 为了同步删除数据资产的字段元数据
+        List<FactAttributePO> factAttributePOS = listByIds(ids);
+        ResultEnum resultEnum = mapper.deleteBatchIds(ids) > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+
+        // 创建固定大小的线程池
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        // 提交任务并立即返回
+        executor.submit(() -> {
+            // 这里是异步执行的方法
+            log.info("异步任务开始执行");
+            try {
+                if (CollectionUtils.isEmpty(factAttributePOS)) {
+                    return;
+                }
+                //获取平台配置-dmp_dw的信息 已经在catch块儿中 无需判断是否获取到
+                ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(1);
+                String conIp = resultEntity.getData().getConIp();
+                String conDbname = resultEntity.getData().getConDbname();
+
+                //获取限定名称
+                List<String> qNames = new ArrayList<>();
+                for (FactAttributePO po : factAttributePOS) {
+                    qNames.add(conIp + "_" + conDbname + "_" + 2 + "_" + po.getFactId() + "_" + po.id);
+                }
+                MetaDataDeleteAttributeDTO metaDataDeleteAttributeDTO = new MetaDataDeleteAttributeDTO();
+                metaDataDeleteAttributeDTO.setQualifiedNames(qNames);
+                //删除字段元数据
+                dataManageClient.deleteFieldMetaData(metaDataDeleteAttributeDTO);
+            } catch (Exception e) {
+                log.error("数仓建模-删除字段时-异步删除元数据任务执行出错：" + e);
+            }
+            log.info("异步任务执行结束");
+        });
+
+        return resultEnum;
     }
 
     @Override
@@ -414,14 +451,14 @@ public class FactAttributeImpl
                 long filedId = factAttributeDTO.getId();
 
                 //不为空则说明该事实表字段关联的有指标标准
-                if (!CollectionUtils.isEmpty(facttreeListDTOS)){
+                if (!CollectionUtils.isEmpty(facttreeListDTOS)) {
                     //循环指标关联关系
                     for (FacttreeListDTO d : facttreeListDTOS) {
-                        if (d.getFactFieldEnNameId().equals(String.valueOf(filedId))){
+                        if (d.getFactFieldEnNameId().equals(String.valueOf(filedId))) {
                             //循环指标 获取指标名称
                             for (BusinessTargetinfoDTO businessTargetinfoDTO : dtos) {
-                                if (d.getPid().equals(String.valueOf(businessTargetinfoDTO.getId()))){
-                                    log.info("指标信息："+ JSON.toJSONString(businessTargetinfoDTO));
+                                if (d.getPid().equals(String.valueOf(businessTargetinfoDTO.getId()))) {
+                                    log.info("指标信息：" + JSON.toJSONString(businessTargetinfoDTO));
                                     FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                     dto.setId(Math.toIntExact(businessTargetinfoDTO.getId()));
                                     dto.setName(businessTargetinfoDTO.getIndicatorName());
@@ -436,17 +473,17 @@ public class FactAttributeImpl
                 }
 
                 //不为空则说明该事实表字段关联的有数据元标准
-                if (!CollectionUtils.isEmpty(standardsBeCitedDTOS)){
+                if (!CollectionUtils.isEmpty(standardsBeCitedDTOS)) {
                     //循环数据元标准关联关系
                     for (StandardsBeCitedDTO s : standardsBeCitedDTOS) {
                         //只获取事实表的关联关系
-                        if (!TableBusinessTypeEnum.DW_FACT.equals(s.getTableBusinessType())){
+                        if (!TableBusinessTypeEnum.DW_FACT.equals(s.getTableBusinessType())) {
                             continue;
                         }
-                        if (s.getFieldId().equals(String.valueOf(filedId))){
+                        if (s.getFieldId().equals(String.valueOf(filedId))) {
                             //循环数据元标准集合 获取数据元标准名称
                             for (StandardsDTO standardsDTO : standardsDTOS) {
-                                if (s.getStandardsId().equals(standardsDTO.getId())){
+                                if (s.getStandardsId().equals(standardsDTO.getId())) {
                                     FieldsAssociatedMetricsOrMetaObjDTO dto = new FieldsAssociatedMetricsOrMetaObjDTO();
                                     //获取到数据元标准id关联的数据元标准menuid
                                     int menuId = standardsDTO.getMenuId();
@@ -468,7 +505,7 @@ public class FactAttributeImpl
             }
         } catch (Exception e) {
             log.error("==============================");
-            log.error("获取数仓贯标失败..."+e);
+            log.error("获取数仓贯标失败..." + e);
             log.error("==============================");
         }
 
@@ -756,8 +793,8 @@ public class FactAttributeImpl
             //设置数据源名称
             dto.setDatasourceName(data.getName());
         }
-
-        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos);
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos,userInfo.getToken());
 
         return result.getData();
     }

@@ -618,7 +618,8 @@ public class BloodCompensationImpl
         //9.清空元数据标签映射表：tb_metadata_label_map
         metadataLabelMapper.truncateTable();
         //10.清空元数据术语与实体映射表：tb_metadata_glossary_map
-        metaDataGlossaryMapMapper.truncateTable();
+        //目前已不再清空该表，因为业务术语和元数据的关联已改成了用唯一限定名称关联 而不是id
+//        metaDataGlossaryMapMapper.truncateTable();
         //11.元数据实体操作日志表：tb_metadata_entity_operation_log
         metaDataEntityOperationLogMapper.truncateTable();
         //12.清空元数据同步时间表
@@ -631,7 +632,6 @@ public class BloodCompensationImpl
 //        initMetaSyncTime(ClassificationTypeEnum.VIEW_ANALYZE_SERVICE);
 //        initMetaSyncTime(ClassificationTypeEnum.MASTER_DATA);
 //        initMetaSyncTime(ClassificationTypeEnum.EXTERNAL_DATA);
-
     }
 
     /**

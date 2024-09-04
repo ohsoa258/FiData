@@ -1,5 +1,6 @@
 package com.fisk.datamanage.client;
 
+import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.BusinessMetaDataInfoDTO;
@@ -108,6 +109,15 @@ public interface DataManageClient {
     ResultEntity<Object> deleteMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
 
     /**
+     * 删除字段元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    @DeleteMapping("/MetaData/deleteFieldMetaData")
+    ResultEntity<Object> deleteFieldMetaData(@Validated @RequestBody MetaDataDeleteAttributeDTO dto);
+
+    /**
      * 单个元数据信息消费
      *
      * @param dto
@@ -182,7 +192,7 @@ public interface DataManageClient {
      * @return
      */
     @PostMapping("/Standards/setStandardsByModelField")
-    ResultEntity<Object> setStandardsByModelField(@RequestBody List<StandardsBeCitedDTO> dtos);
+    ResultEntity<Object> setStandardsByModelField(@RequestBody List<StandardsBeCitedDTO> dtos,@RequestHeader(name = SystemConstants.HTTP_HEADER_AUTH) String token);
 
     /**
      * 关联数仓表字段和指标标准（维度表字段 指标粒度）
@@ -300,4 +310,8 @@ public interface DataManageClient {
     @ApiOperation("获取业务术语数量")
     @GetMapping("/Glossary/getGlossaryTotal")
     ResultEntity<Object> getGlossaryTotal();
+
+    @ApiOperation("修改数据标准")
+    @PostMapping("/Standards/updateStandards")
+    ResultEntity<Object> updateStandards(@RequestBody StandardsDTO dto);
 }

@@ -12,6 +12,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
+import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.dto.tablefield.CAndLDTO;
@@ -794,8 +795,8 @@ public class AttributeServiceImpl extends ServiceImpl<AttributeMapper, Attribute
             //设置数据源名称
             dto.setDatasourceName(data.getName());
         }
-
-        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos);
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos,userInfo.getToken());
 
         return result.getData();
     }

@@ -1224,6 +1224,28 @@ public class MetaDataImpl implements IMetaData {
     }
 
     /**
+     * 删除字段元数据实体
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEnum deleteFieldMetaData(MetaDataDeleteAttributeDTO dto) {
+        for (String qualifiedName : dto.qualifiedNames) {
+            MetadataEntityPO po = metadataEntity.getEntityByQualifiedNames(qualifiedName);
+            if (po == null) {
+                continue;
+            }
+            //删除元数据实体
+            List<Integer> metadataIds = new ArrayList<>();
+            metadataIds.add((int) po.getId());
+            metadataEntity.delMetadataEntity(metadataIds);
+            addOperationLog(po.getName(),"已删除",MetaDataeLogEnum.DELETE_OPERATION,po.createUser,String.valueOf(po.id));
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
      * 循环删除子节点
      *
      * @param atlasGuid
