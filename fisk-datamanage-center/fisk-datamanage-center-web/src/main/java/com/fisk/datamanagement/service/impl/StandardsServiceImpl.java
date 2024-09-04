@@ -766,6 +766,7 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
         fiDataMetaDataTree_Standard.setLabelAlias("数据标准");
         fiDataMetaDataTree_Standard.setLabelRelName("数据标准");
         fiDataMetaDataTree_Standard.setSourceType(1);
+        fiDataMetaDataTree_Standard.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
         fiDataMetaDataTree_Standard.setLevelType(LevelTypeEnum.STANDARD_DATABASE);
 
         List<StandardsMenuPO> standardsMenus = standardsMenuService.list();

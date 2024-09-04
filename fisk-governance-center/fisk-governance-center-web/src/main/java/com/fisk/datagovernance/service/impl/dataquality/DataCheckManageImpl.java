@@ -176,15 +176,16 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 queryTableParam.setSourceId(query.getDatasourceId());
                 queryTableParam.setSourceType(query.getSourceType());
                 queryTableParams.add(queryTableParam);
+            }  else if(query.getLevelType() == LevelTypeEnum.FOLDER){
+                // 点击文件夹暂时先返回空，后面会将文件夹ID固定
+                return page;
             } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
                     || query.getLevelType() == LevelTypeEnum.DATABASE
                     || query.getLevelType() == LevelTypeEnum.FOLDER) {
-//                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode(query.getSourceType(), query.getUniqueId());
-//                if (CollectionUtils.isNotEmpty(treeTableNodes)) {
-//                    queryTableParams.addAll(treeTableNodes);
-//                }
-                // 暂不支持非表节点查询
-                return page;
+                List<QueryTableRuleDTO> treeTableNodes = dataSourceConManageImpl.getTreeTableNode(query.getSourceType(), query.getUniqueId());
+                if (CollectionUtils.isNotEmpty(treeTableNodes)) {
+                    queryTableParams.addAll(treeTableNodes);
+                }
             }
 
             log.info("getAllRule...节点下表信息数量：" + queryTableParams.size());
