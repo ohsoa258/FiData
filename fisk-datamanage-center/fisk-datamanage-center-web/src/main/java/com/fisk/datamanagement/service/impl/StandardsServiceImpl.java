@@ -863,6 +863,32 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
             }
             return true;
         }else {
+            LambdaQueryWrapper<StandardsBeCitedPO> delWrapper = new LambdaQueryWrapper<>();
+            delWrapper.eq(StandardsBeCitedPO::getTableBusinessType,tableBusinessType);
+            delWrapper.eq(StandardsBeCitedPO::getFieldId, fieldId);
+            List<StandardsBeCitedPO> standardsBeCitedPOS = standardsBeCitedService.list(delWrapper);
+            for (StandardsBeCitedPO standardsBeCitedPO : standardsBeCitedPOS) {
+                LambdaQueryWrapper<StandardsPO> queryStandards = new LambdaQueryWrapper<>();
+                queryStandards.eq(StandardsPO::getId, standardsBeCitedPO.getStandardsId());
+                StandardsPO standardsPO = this.getOne(queryStandards);
+                List<StandardsBeCitedDTO> filter = dtos.stream().filter(i -> i.getStandardsId().equals(standardsPO.getMenuId())).collect(Collectors.toList());
+                if (!CollectionUtils.isEmpty(filter)){
+                    continue;
+                }
+                StandardsDTO standards = getStandards(standardsPO.getMenuId());
+                List<StandardsBeCitedDTO> standardsBeCitedDTOList = standards.getStandardsBeCitedDTOList();
+                List<StandardsBeCitedDTO> collect = standardsBeCitedDTOList.stream().filter(i -> {
+                    if (!i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
+                            && !i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }).collect(Collectors.toList());
+                standards.setStandardsBeCitedDTOList(collect);
+                //调用更新逻辑
+                updateStandards(standards);
+            }
             for (StandardsBeCitedDTO citedDTO : dtos) {
                 StandardsDTO standards = getStandards(citedDTO.getStandardsId());
                 citedDTO.setStandardsId(standards.getId());
