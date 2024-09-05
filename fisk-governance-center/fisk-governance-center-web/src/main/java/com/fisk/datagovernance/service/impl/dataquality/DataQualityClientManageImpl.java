@@ -659,11 +659,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
 
         // 报告下规则数量与检查规则日志数量不一致时，检查不通过
         if (qualityReportRulePOS.size() != dataCheckLogs.size()) {
-            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
-            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
-            List<Integer> diff = new ArrayList<>(ruleIdList);
-            diff.removeAll(ruleIdList_log);
-            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
+              // 检验过程中不通过的规则将记录到DB，此处无需重复打印
+//            List<Integer> ruleIdList = qualityReportRulePOS.stream().map(QualityReportRulePO::getRuleId).collect(Collectors.toList());
+//            List<Integer> ruleIdList_log = dataCheckLogs.stream().map(DataCheckLogsPO::getRuleId).collect(Collectors.toList());
+//            List<Integer> diff = new ArrayList<>(ruleIdList);
+//            diff.removeAll(ruleIdList_log);
+//            log.info("【dataCheck_QualityReport_Create】...报告下规则数量与检查规则日志数量不一致，缺少的规则id为：[{}]", JSONObject.toJSON(diff));
             return ResultEnum.DATA_QUALITY_REPORT_RULE_COUNT_NOT_EQUAL_TO_LOG_COUNT;
         }
         return ResultEnum.SUCCESS;
