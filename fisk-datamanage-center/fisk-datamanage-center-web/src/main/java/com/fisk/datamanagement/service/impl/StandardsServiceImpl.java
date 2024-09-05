@@ -807,6 +807,8 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
+                // 组下面的表描述
+                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
                 fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD_FOLDER);
@@ -820,6 +822,8 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 fiDataMetaDataTreeDTO.setLabel(i.getName());
                 fiDataMetaDataTreeDTO.setLabelAlias(i.getName());
                 fiDataMetaDataTreeDTO.setLabelRelName(i.getName());
+                // 组下面的表描述
+                fiDataMetaDataTreeDTO.setLabelDesc(i.getName());
                 fiDataMetaDataTreeDTO.setSourceType(1);
                 fiDataMetaDataTreeDTO.setLabelBusinessType(TableBusinessTypeEnum.STANDARD_DATABASE.getValue());
                 fiDataMetaDataTreeDTO.setLevelType(LevelTypeEnum.STANDARD);
