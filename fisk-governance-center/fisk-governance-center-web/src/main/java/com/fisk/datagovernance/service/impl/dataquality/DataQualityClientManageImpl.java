@@ -76,7 +76,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
     private BusinessFilterMapper businessFilterMapper;
 
     @Resource
-    private LifecycleMapper lifecycleMapper;
+    private QualityReportRuleErrorLogMapper qualityReportRuleErrorLogMapper;
 
     @Resource
     private QualityReportMapper qualityReportMapper;
@@ -307,7 +307,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             ResultEnum resultEnum = ResultEnum.SUCCESS;
             switch (qualityReportPO.getReportType()) {
                 case 100:
-                    resultEnum = dataCheck_Rule_QualityReport_Create(qualityReportRules, allDataSource,
+                    resultEnum = dataCheck_Rule_QualityReport_Create(qualityReportPO, qualityReportRules, allDataSource,
                             dataCheckLogs, attachmentInfos, dataCheckLogQualityAnalysisList, reportBatchNumber);
                     break;
             }
@@ -494,7 +494,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return ResultEnum.SUCCESS;
     }
 
-    public ResultEnum dataCheck_Rule_QualityReport_Create(List<QualityReportRulePO> qualityReportRulePOS,
+    public ResultEnum dataCheck_Rule_QualityReport_Create(QualityReportPO qualityReportPO,
+                                                          List<QualityReportRulePO> qualityReportRulePOS,
                                                           List<DataSourceConVO> allDataSource,
                                                           List<DataCheckLogsPO> dataCheckLogs,
                                                           List<AttachmentInfoPO> attachmentInfos,
@@ -565,7 +566,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             ResultEntity<QualityReportSummary_RuleDTO> resultEntity = null;
             try {
                 resultEntity = dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
-                        dataCheckExtendPO, templatePO, dataCheckConditionPOs, qualityAnalysis);
+                        dataCheckExtendPO, templatePO, dataCheckConditionPOs,
+                        qualityAnalysis, reportBatchNumber, qualityReportPO.getReportName());
                 // 单个规则校验不通过，跳过
                 if (resultEntity == null || resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
                     continue;
@@ -667,12 +669,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return ResultEnum.SUCCESS;
     }
 
-    public ResultEntity<QualityReportSummary_RuleDTO> dataVerificationAndPreVerification(DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                                         DataCheckExtendPO dataCheckExtendPO, TemplatePO templatePO,
+    public ResultEntity<QualityReportSummary_RuleDTO> dataVerificationAndPreVerification(DataSourceConVO dataSourceConVO,
+                                                                                         DataCheckPO dataCheckPO,
+                                                                                         DataCheckExtendPO dataCheckExtendPO,
+                                                                                         TemplatePO templatePO,
                                                                                          List<DataCheckConditionPO> dataCheckConditionPOs,
-                                                                                         String qualityAnalysis) {
+                                                                                         String qualityAnalysis,
+                                                                                         String batchNo,
+                                                                                         String reportName) {
         ResultEntity<QualityReportSummary_RuleDTO> resultEntity = new ResultEntity<>();
         resultEntity.setCode(ResultEnum.SUCCESS.getCode());
+        List<String> checkSqlList = null;
         try {
             //当前校验规则
             if (dataCheckPO == null) {
@@ -744,10 +751,27 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_paramDTO.setQualityAnalysis(qualityAnalysis);
             log.info("【dataVerificationAndPreVerification】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
 
+            checkSqlList = new ArrayList<>();
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
-            qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+            qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO,
+                    dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
             resultEntity.setData(qualityReportSummary_ruleDTO);
         } catch (Exception ex) {
+            // 记录错误日志
+            QualityReportRuleErrorLogPO qualityReportRuleErrorLogPO = new QualityReportRuleErrorLogPO();
+            qualityReportRuleErrorLogPO.setBatchNo(batchNo);
+            qualityReportRuleErrorLogPO.setReportName(reportName);
+            qualityReportRuleErrorLogPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+            qualityReportRuleErrorLogPO.setRuleName(dataCheckPO.getRuleName());
+            qualityReportRuleErrorLogPO.setDataCheckGroupId(dataCheckPO.getDatacheckGroupId());
+            if (CollectionUtils.isNotEmpty(checkSqlList) && checkSqlList.size() == 3) {
+                qualityReportRuleErrorLogPO.setCheckDataSql(checkSqlList.get(0));
+                qualityReportRuleErrorLogPO.setCheckDataCountSql(checkSqlList.get(1));
+                qualityReportRuleErrorLogPO.setCheckErrorDataCountSql(checkSqlList.get(2));
+            }
+            qualityReportRuleErrorLogPO.setErrorInfo(ex.getMessage());
+            qualityReportRuleErrorLogMapper.insert(qualityReportRuleErrorLogPO);
+
             log.error("【dataVerificationAndPreVerification】质量报告检查时出现异常：" + ex);
             log.error(String.format("【dataVerificationAndPreVerification】检查异常的规则id：%s、规则名称：%s", dataCheckPO.getId(), dataCheckPO.getRuleName()));
             resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_NOT_APPROVED.getCode());
@@ -756,42 +780,54 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return resultEntity;
     }
 
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_Check(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                      DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_Check(TemplatePO templatePO,
+                                                                      DataSourceConVO dataSourceConVO,
+                                                                      DataCheckPO dataCheckPO,
+                                                                      DataCheckExtendPO dataCheckExtendPO,
+                                                                      QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                      List<String> checkSqlList) {
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         switch (templateTypeEnum) {
             //空值检查
             case NULL_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_NullCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //值域检查
             case RANGE_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_RangeCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //规范检查
             case STANDARD_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_StandardCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //重复数据检查
             case DUPLICATE_DATA_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_DuplicateDateCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //波动检查
             case FLUCTUATION_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_FluctuationCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //血缘检查
             case PARENTAGE_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_ParentageCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //正则表达式检查
             case REGEX_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_RegexCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
             //SQL脚本检查
             case SQL_SCRIPT_CHECK:
-                qualityReportSummary_ruleDTO = dataCheck_QualityReport_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO);
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_SqlScriptCheck(templatePO,
+                        dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
         }
         return qualityReportSummary_ruleDTO;
@@ -808,9 +844,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params qualityReportSummary_paramDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                          DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_NullCheck(TemplatePO templatePO,
+                                                                          DataSourceConVO dataSourceConVO,
+                                                                          DataCheckPO dataCheckPO,
+                                                                          DataCheckExtendPO dataCheckExtendPO,
+                                                                          QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                          List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
                 tName = qualityReportSummary_paramDTO.getTableName(),
@@ -839,6 +880,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 查询校验的数据总条数
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
 
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
+
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
@@ -862,9 +908,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params qualityReportSummary_paramDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                           DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_RangeCheck(TemplatePO templatePO,
+                                                                           DataSourceConVO dataSourceConVO,
+                                                                           DataCheckPO dataCheckPO,
+                                                                           DataCheckExtendPO dataCheckExtendPO,
+                                                                           QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                           List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         // 查询不满足校验规则的数据明细
         String sql_QueryCheckData = "";
@@ -975,12 +1026,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                         rangeCheckOneWayOperator = qualityReport_GetReverseOperator(standardsDTO.getSymbols());
                     }
 
-                    String sql_BetweenAnd ="";
+                    String sql_BetweenAnd = "";
                     boolean charValid = RegexUtils.isCharValid(dataCheckExtendPO.getFieldType());
                     if (charValid) {
-                        sql_BetweenAnd =  String.format("(%s %s '%s')", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        sql_BetweenAnd = String.format("(%s %s '%s')", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     } else {
-                        sql_BetweenAnd =  String.format("(%s %s %s)", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
+                        sql_BetweenAnd = String.format("(%s %s %s)", f_Name, rangeCheckOneWayOperator, rangeCheckValue);
                     }
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, sql_BetweenAnd);
@@ -1029,6 +1080,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s;", t_Name, fieldCheckWhereSql);
 
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
+
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         log.info("值域检查返回errorDataTotalCount：" + errorDataTotalCount);
@@ -1054,9 +1110,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params qualityReportSummary_paramDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_StandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                              DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_StandardCheck(TemplatePO templatePO,
+                                                                              DataSourceConVO dataSourceConVO,
+                                                                              DataCheckPO dataCheckPO,
+                                                                              DataCheckExtendPO dataCheckExtendPO,
+                                                                              QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                              List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         // 查询不满足校验规则的数据明细
         String sql_QueryCheckData = "";
@@ -1111,6 +1172,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         }
         sql_QueryCheckData += sqlWhere;
         sql_QueryCheckErrorDataCount += sqlWhere;
+
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
 
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
@@ -1549,9 +1615,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params qualityReportSummary_paramDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_DuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO,
-                                                                                   QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_DuplicateDateCheck(TemplatePO templatePO,
+                                                                                   DataSourceConVO dataSourceConVO,
+                                                                                   DataCheckPO dataCheckPO,
+                                                                                   DataCheckExtendPO dataCheckExtendPO,
+                                                                                   QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                                   List<String> checkSqlList) {
         // 重复数据检查
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
@@ -1569,6 +1640,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 "GROUP BY %s HAVING COUNT(*) > 1 ", f_Name, ailsName, t_Name, fieldCheckWhereSql, f_Name);
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
         String sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM ( %s ) t", sql_QueryCheckData);
+
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
 
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
@@ -1593,9 +1669,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params qualityReportSummary_paramDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_FluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                                 DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_FluctuationCheck(TemplatePO templatePO,
+                                                                                 DataSourceConVO dataSourceConVO,
+                                                                                 DataCheckPO dataCheckPO,
+                                                                                 DataCheckExtendPO dataCheckExtendPO,
+                                                                                 QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                                 List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
                 tName = qualityReportSummary_paramDTO.getTableName(),
@@ -1661,6 +1742,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 break;
         }
 
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
+
         // 检查不通过，查询不通过的数据
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = 0;
@@ -1692,9 +1778,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params dataCheckSyncParamDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_ParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                               DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_ParentageCheck(TemplatePO templatePO,
+                                                                               DataSourceConVO dataSourceConVO,
+                                                                               DataCheckPO dataCheckPO,
+                                                                               DataCheckExtendPO dataCheckExtendPO,
+                                                                               QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                               List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = new QualityReportSummary_RuleDTO();
         return qualityReportSummary_ruleDTO;
     }
@@ -1710,9 +1801,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params dataCheckSyncParamDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_RegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                           DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_RegexCheck(TemplatePO templatePO,
+                                                                           DataSourceConVO dataSourceConVO,
+                                                                           DataCheckPO dataCheckPO,
+                                                                           DataCheckExtendPO dataCheckExtendPO,
+                                                                           QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                           List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
         String t_Name = qualityReportSummary_paramDTO.getTableNameFormat(),
                 tName = qualityReportSummary_paramDTO.getTableName(),
@@ -1742,6 +1838,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         sql_QueryCheckData += sqlWhere;
         sql_QueryCheckErrorDataCount += sqlWhere;
 
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
+
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
@@ -1765,9 +1866,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params dataCheckPO
      * @params dataCheckExtendPO
      * @params qualityReportSummary_paramDTO
+     * @params checkSqlList
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReport_SqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                                               DataCheckExtendPO dataCheckExtendPO, QualityReportSummary_ParamDTO qualityReportSummary_paramDTO) {
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_SqlScriptCheck(TemplatePO templatePO,
+                                                                               DataSourceConVO dataSourceConVO,
+                                                                               DataCheckPO dataCheckPO,
+                                                                               DataCheckExtendPO dataCheckExtendPO,
+                                                                               QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                               List<String> checkSqlList) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
 
         String sql_QueryCheckData = dataCheckExtendPO.getSqlCheckValue();
@@ -1788,6 +1894,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             sql_QueryCheckErrorDataCount = sql_QueryCheckData;
             sql_QueryDataTotalCount = sql_QueryCheckData;
         }
+
+        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        checkSqlList.add(sql_QueryCheckData);
+        checkSqlList.add(sql_QueryDataTotalCount);
+        checkSqlList.add(sql_QueryCheckErrorDataCount);
 
         // 错误数据条数小于5000，查询具体的错误明细数据
         if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
@@ -1819,9 +1930,16 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
      * @params errorDataTotalCount
      * @params sql_QueryCheckErrorDataCount
      */
-    public QualityReportSummary_RuleDTO dataCheck_QualityReportSummary_GetBasicInfo(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO, DataCheckExtendPO dataCheckExtendPO,
-                                                                                    QualityReportSummary_ParamDTO qualityReportSummary_paramDTO, SheetDataDto sheetDataDto, Integer checkDataTotalCount,
-                                                                                    String sql_QueryCheckData, String sql_QueryDataTotalCount, Integer errorDataTotalCount,
+    public QualityReportSummary_RuleDTO dataCheck_QualityReportSummary_GetBasicInfo(TemplatePO templatePO,
+                                                                                    DataSourceConVO dataSourceConVO,
+                                                                                    DataCheckPO dataCheckPO,
+                                                                                    DataCheckExtendPO dataCheckExtendPO,
+                                                                                    QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                                    SheetDataDto sheetDataDto,
+                                                                                    Integer checkDataTotalCount,
+                                                                                    String sql_QueryCheckData,
+                                                                                    String sql_QueryDataTotalCount,
+                                                                                    Integer errorDataTotalCount,
                                                                                     String sql_QueryCheckErrorDataCount) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = new QualityReportSummary_RuleDTO();
         qualityReportSummary_ruleDTO.setRuleName(dataCheckPO.getRuleName());

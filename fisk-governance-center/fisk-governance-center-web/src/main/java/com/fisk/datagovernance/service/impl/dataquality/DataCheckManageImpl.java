@@ -679,7 +679,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         }
 
         ResultEntity<QualityReportSummary_RuleDTO> resultEntity = dataQualityClientManage.dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
-                dataCheckExtendPO, templatePO, dataCheckConditionPOs, "");
+                dataCheckExtendPO, templatePO, dataCheckConditionPOs, "","","");
 
         return ResultEnum.getEnum(resultEntity.getCode());
     }
