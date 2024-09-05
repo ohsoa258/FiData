@@ -58,6 +58,6 @@ public interface ICustomScript {
      * @param dtoList
      * @return
      */
-    ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList);
+    ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList,Integer tblId);
 
 }

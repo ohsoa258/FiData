@@ -13,7 +13,6 @@ import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.RegexUtils;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
-import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
@@ -24,10 +23,7 @@ import com.fisk.common.service.factorycodepreview.factorycodepreviewdto.PublishF
 import com.fisk.common.service.factorycodepreview.impl.CodePreviewHelper;
 import com.fisk.common.service.flinkupload.FlinkFactoryHelper;
 import com.fisk.common.service.flinkupload.IFlinkJobUpload;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataColumnAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
-import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
+import com.fisk.common.service.metadata.dto.metadata.*;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.sqlparser.SqlParserUtils;
 import com.fisk.common.service.sqlparser.model.TableMetaDataObject;
@@ -98,6 +94,8 @@ import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL;
@@ -1832,7 +1830,6 @@ public class TableFieldsImpl
     @Override
     public ResultEnum delFile(long id, long tableId, long userId) {
         TableFieldsPO po = this.query().eq("id", id).select("id").one();
-
         if (po == null) {
             throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
@@ -1841,12 +1838,39 @@ public class TableFieldsImpl
         if (flat == 0) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);
         }
-        //异步删除元数据字段
-        MetaDataFieldDTO metaDataFieldDTO = new MetaDataFieldDTO();
-        metaDataFieldDTO.setFieldId((int) id);
-        metaDataFieldDTO.setTableId((int) tableId);
-        metaDataFieldDTO.setUserId(userId);
-        publishTaskClient.fieldDelete(metaDataFieldDTO);
+
+//        //异步删除元数据字段
+//        MetaDataFieldDTO metaDataFieldDTO = new MetaDataFieldDTO();
+//        metaDataFieldDTO.setFieldId((int) id);
+//        metaDataFieldDTO.setTableId((int) tableId);
+//        metaDataFieldDTO.setUserId(userId);
+//        publishTaskClient.fieldDelete(metaDataFieldDTO);
+
+        // 创建固定大小的线程池
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        // 提交任务并立即返回
+        executor.submit(() -> {
+            // 这里是异步执行的方法
+            log.info("异步任务开始执行");
+            try {
+                //获取平台配置-dmp_ods的信息 已经在catch块儿中 无需判断是否获取到
+                ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(2);
+                String conIp = resultEntity.getData().getConIp();
+                String conDbname = resultEntity.getData().getConDbname();
+
+                //获取限定名称
+                List<String> qNames = new ArrayList<>();
+                qNames.add(conIp + "_" + conDbname + "_" + po.getTableAccessId() + "_" + po.id);
+                MetaDataDeleteAttributeDTO metaDataDeleteAttributeDTO = new MetaDataDeleteAttributeDTO();
+                metaDataDeleteAttributeDTO.setQualifiedNames(qNames);
+                //删除字段元数据
+                dataManageClient.deleteFieldMetaData(metaDataDeleteAttributeDTO);
+            } catch (Exception e) {
+                log.error("数据接入-删除字段时-异步删除元数据任务执行出错：" + e);
+            }
+            log.info("异步任务执行结束");
+        });
+
         return ResultEnum.SUCCESS;
     }
 

@@ -49,6 +49,8 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -283,13 +285,30 @@ public class PhysicalTableController {
         list.add(deleteTableDetailDto);
         dataFactoryClient.editByDeleteTable(list);
 
+        MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
         if (openMetadata) {
             // 删除元数据
-            MetaDataDeleteAttributeDTO metaDataDeleteAttributeDto = new MetaDataDeleteAttributeDTO();
             metaDataDeleteAttributeDto.setQualifiedNames(nifiVO.qualifiedNames);
             metaDataDeleteAttributeDto.setClassifications(nifiVO.classifications);
             new Thread(() -> dataManageClient.deleteMetaData(metaDataDeleteAttributeDto)).start();
         }
+
+        //新版 删除元数据的方法
+        //创建固定大小的线程池 异步执行
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        //提交任务并立即返回
+        executor.submit(() -> {
+            log.info("异步任务开始执行");
+            try {
+                metaDataDeleteAttributeDto.qualifiedNames = nifiVO.qualifiedNames;
+                metaDataDeleteAttributeDto.classifications = nifiVO.classifications;
+                //删除字段元数据
+                dataManageClient.deleteFieldMetaData(metaDataDeleteAttributeDto);
+            } catch (Exception e) {
+                log.error("数据接入-删除表时-异步删除元数据任务执行出错：" + e);
+            }
+            log.info("异步任务执行结束");
+        });
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, result);
     }
