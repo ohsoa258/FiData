@@ -635,7 +635,7 @@ public class DimensionImpl
                         //删除字段元数据
                         dataManageClient.deleteFieldMetaData(deleteDto);
                     } catch (Exception e) {
-                        log.error("数仓建模-维度表删除字段时-异步删除元数据任务执行出错：" + e);
+                        log.error("数仓建模-维度表删除表时-异步删除元数据任务执行出错：" + e);
                     }
                     log.info("异步任务执行结束");
                 });

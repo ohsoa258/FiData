@@ -69,7 +69,6 @@ import org.springframework.util.CollectionUtils;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -225,7 +224,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                         //删除字段元数据
                         dataManageClient.deleteFieldMetaData(deleteDto);
                     } catch (Exception e) {
-                        log.error("数仓建模-删除字段时-异步删除元数据任务执行出错：" + e);
+                        log.error("数仓建模-删除事实表时-异步删除元数据任务执行出错：" + e);
                     }
                     log.info("异步任务执行结束");
                 });
@@ -233,6 +232,120 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             }
 
             return flat > 0 ? ResultEnum.SUCCESS : ResultEnum.SAVE_DATA_ERROR;
+        } catch (Exception e) {
+            log.error("deleteFact:" + e.getMessage());
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+    }
+
+    @Override
+    public ResultEntity<Object> deleteFactByCheck(int id) {
+        try {
+            // 删除之前检查该事实表是否已经被配置到存在的管道里面：
+            // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该事实表，
+            // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数仓建模的事实表对应的table type是5  数仓表任务-数仓事实表任务
+            CheckPhyDimFactTableIfExistsDTO checkDto = new CheckPhyDimFactTableIfExistsDTO();
+            checkDto.setTblId((long) id);
+            checkDto.setChannelDataEnum(ChannelDataEnum.getName(5));
+            ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(checkDto);
+            if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
+            }
+            List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
+            if (!CollectionUtils.isEmpty(data)) {
+                //这里的getWorkflowId 已经被替换为 workflowName
+                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+                log.info("当前要删除的表存在于以下管道中：" + collect);
+                return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH,collect);
+            }
+
+            FactPO po = mapper.selectById(id);
+            if (po == null) {
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            }
+            BusinessAreaPO businessArea = businessAreaImpl.getById(po.businessId);
+            if (businessArea == null) {
+                return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
+            }
+            //删除事实字段表
+            QueryWrapper<FactAttributePO> queryWrapper = new QueryWrapper<>();
+            queryWrapper.select("id").lambda().eq(FactAttributePO::getFactId, id);
+            List<Integer> factAttributeIds = (List) attributeMapper.selectObjs(queryWrapper);
+            if (!CollectionUtils.isEmpty(factAttributeIds)) {
+                ResultEnum resultEnum = factAttributeImpl.deleteFactAttribute(factAttributeIds);
+                if (ResultEnum.SUCCESS != resultEnum) {
+                    throw new FkException(resultEnum);
+                }
+            }
+            //拼接删除niFi参数
+            DataModelVO vo = niFiDelTable(po.businessId, id);
+            publishTaskClient.deleteNifiFlow(vo);
+            //拼接删除DW/Doris库中维度表
+            PgsqlDelTableDTO dto = delDwDorisTable(po.factTabName);
+            publishTaskClient.publishBuildDeletePgsqlTableTask(dto);
+
+            // 删除factory-dispatch对应的表配置
+            List<DeleteTableDetailDTO> list = new ArrayList<>();
+            DeleteTableDetailDTO deleteTableDetailDto = new DeleteTableDetailDTO();
+            deleteTableDetailDto.appId = String.valueOf(po.businessId);
+            deleteTableDetailDto.tableId = String.valueOf(id);
+            // 数仓事实
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.DW_FACT_TASK;
+            //解决对象赋值混乱
+            DeleteTableDetailDTO deleteTableDetail = JSON.parseObject(JSON.toJSONString(deleteTableDetailDto), DeleteTableDetailDTO.class);
+            list.add(deleteTableDetail);
+            // 分析事实
+            deleteTableDetailDto.channelDataEnum = ChannelDataEnum.OLAP_FACT_TASK;
+            list.add(deleteTableDetailDto);
+            dataFactoryClient.editByDeleteTable(list);
+
+            int flat = mapper.deleteByIdWithFill(po);
+            if (flat > 0) {
+                //删除atlas
+                MetaDataDeleteAttributeDTO deleteDto = new MetaDataDeleteAttributeDTO();
+                List<String> delQualifiedName = new ArrayList<>();
+                //删除dw
+                MetaDataInstanceAttributeDTO dataSourceConfigDw = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_DW.getValue());
+                if (dataSourceConfigDw != null && !CollectionUtils.isEmpty(dataSourceConfigDw.dbList)) {
+                    delQualifiedName.add(dataSourceConfigDw.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DW_FACT.getValue() + "_" + id);
+                }
+                //删除Olap
+                MetaDataInstanceAttributeDTO dataSourceConfigOlap = dimensionImpl.getDataSourceConfig(DataSourceConfigEnum.DMP_OLAP.getValue());
+                if (dataSourceConfigOlap != null && !CollectionUtils.isEmpty(dataSourceConfigOlap.dbList)) {
+                    delQualifiedName.add(dataSourceConfigOlap.dbList.get(0).qualifiedName + "_" + DataModelTableTypeEnum.DORIS_FACT.getValue() + "_" + id);
+                }
+
+                //原来开启同步元数据时 删除元数据的方法
+                if (openMetadata) {
+                    deleteDto.qualifiedNames = delQualifiedName;
+                    deleteDto.classifications = businessArea.getBusinessName();
+                    dataManageClient.deleteMetaData(deleteDto);
+                }
+
+                //新版 删除元数据的方法
+                //创建固定大小的线程池 异步执行
+                ExecutorService executor = Executors.newFixedThreadPool(1);
+                //提交任务并立即返回
+                executor.submit(() -> {
+                    log.info("异步任务开始执行");
+                    try {
+                        deleteDto.qualifiedNames = delQualifiedName;
+                        deleteDto.classifications = businessArea.getBusinessName();
+                        //删除字段元数据
+                        dataManageClient.deleteFieldMetaData(deleteDto);
+                    } catch (Exception e) {
+                        log.error("数仓建模-删除事实表时-异步删除元数据任务执行出错：" + e);
+                    }
+                    log.info("异步任务执行结束");
+                });
+
+            }
+
+            if (flat > 0){
+                return ResultEntityBuild.build(ResultEnum.SUCCESS);
+            } else {
+                return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
+            }
         } catch (Exception e) {
             log.error("deleteFact:" + e.getMessage());
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

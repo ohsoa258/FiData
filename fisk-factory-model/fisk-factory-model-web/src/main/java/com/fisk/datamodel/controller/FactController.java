@@ -63,6 +63,12 @@ public class FactController {
         return ResultEntityBuild.build(service.deleteFact(id));
     }
 
+    @ApiOperation("删除事实表 删除前检查是否在管道中")
+    @DeleteMapping("/deleteFactByCheck/{id}")
+    public ResultEntity<Object> deleteFactByCheck(@PathVariable("id") int id) {
+        return service.deleteFactByCheck(id);
+    }
+
     @ApiOperation("获取事实表以及事实字段表数据")
     @GetMapping("/getFactDropList")
     public ResultEntity<Object> getFactDropList() {

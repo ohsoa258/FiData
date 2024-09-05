@@ -34,6 +34,8 @@ public interface IFact extends IService<FactPO> {
      */
     ResultEnum deleteFact(int id);
 
+    ResultEntity<Object> deleteFactByCheck(int id);
+
     /**
      * 根据id获取事实表详情
      *

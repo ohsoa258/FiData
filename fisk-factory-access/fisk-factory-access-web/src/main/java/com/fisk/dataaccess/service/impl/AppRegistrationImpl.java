@@ -679,7 +679,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             log.info("查询到的库表字段详情：" + tables);
             //todo:将获取到的字段和已有字段作比较  已存在的不变动  不存在的删掉  多出来的则新增
             //已有的字段名称
-            List<String> existingFieldNames = fieldListPos.stream().map(TableFieldsPO::getFieldName).collect(Collectors.toList());
+            List<String> existingFieldNames = fieldListPos.stream().map(TableFieldsPO::getSourceFieldName).collect(Collectors.toList());
             //新同步过来的字段名称
             List<String> newlySyncedFieldNames = tables.stream().map(TableStructureDTO::getFieldName).collect(Collectors.toList());
 
@@ -724,18 +724,16 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
             }
 
-
             //3.不存在的删掉
             ArrayList<Long> fieldIdsNeededToBeDel = new ArrayList<>();
             for (TableFieldsPO fieldPO : fieldListPos) {
-                if (!newlySyncedFieldNames.contains(fieldPO.getFieldName())) {
+                if (!newlySyncedFieldNames.contains(fieldPO.getSourceFieldName())) {
                     fieldIdsNeededToBeDel.add(fieldPO.getId());
                 }
             }
             if (!CollectionUtils.isEmpty(fieldIdsNeededToBeDel)) {
                 tableFieldsImpl.removeByIds(fieldIdsNeededToBeDel);
             }
-
 
         } catch (Exception e) {
             log.error("hudi-入仓配置重新同步单张表--异常：" + e);
