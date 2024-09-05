@@ -167,7 +167,12 @@ public class WebServiceImpl implements IWebServiceServer {
         wsAccessDTO.setSourceSys(api_message.getSourceSys());
         wsAccessDTO.setIsAcknowledgement(0);
         //发送消息给数据分发服务
-        taskClient.wsAccessToConsume(wsAccessDTO);
+        try {
+            taskClient.wsAccessToConsume(wsAccessDTO);
+        }catch (Exception e){
+            log.error("调用数据分发失败，原因：",e);
+        }
+
         return responseMessage;
     }
 
