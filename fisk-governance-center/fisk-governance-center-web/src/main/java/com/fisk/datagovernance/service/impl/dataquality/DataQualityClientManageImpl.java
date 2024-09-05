@@ -880,7 +880,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 查询校验的数据总条数
         String sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
 
-        // 检查的SQL脚本赋值，如果执行过程中出现异常，将记录该脚本到数据库
+        // 记录检查的SQL脚本，如果执行过程中出现异常，将保存该脚本到数据库，方便排查定位问题
         checkSqlList.add(sql_QueryCheckData);
         checkSqlList.add(sql_QueryDataTotalCount);
         checkSqlList.add(sql_QueryCheckErrorDataCount);
