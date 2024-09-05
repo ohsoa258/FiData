@@ -1,5 +1,6 @@
 package com.fisk.datamodel.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -110,8 +111,13 @@ public class CustomScriptImpl
     }
 
     @Override
-    public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList) {
+    public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList,Integer tblId) {
+        //前端传参时如果没有传任何自定义加载后sql，则直接该表所有的加载后sql
         if (CollectionUtils.isEmpty(dtoList)) {
+            this.remove(
+              new LambdaQueryWrapper<CustomScriptPO>()
+                      .eq(CustomScriptPO::getTableId, tblId)
+            );
             return ResultEnum.SUCCESS;
         }
         List<CustomScriptPO> poList = CustomScriptMap.INSTANCES.dtoListToPoList(dtoList);

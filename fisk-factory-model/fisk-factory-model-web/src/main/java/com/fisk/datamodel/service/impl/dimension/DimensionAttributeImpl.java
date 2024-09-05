@@ -158,7 +158,7 @@ public class DimensionAttributeImpl
         }
 
         //自定义脚本
-        customScript.addOrUpdateCustomScript(dto.customScriptList);
+        customScript.addOrUpdateCustomScript(dto.customScriptList,dto.dimensionId);
 
         //删除维度字段属性
         List<Integer> ids = (List) dto.list.stream().filter(e -> e.id != 0).map(DimensionAttributeDTO::getId).collect(Collectors.toList());

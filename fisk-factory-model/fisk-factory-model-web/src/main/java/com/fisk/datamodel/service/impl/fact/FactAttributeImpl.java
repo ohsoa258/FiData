@@ -172,7 +172,7 @@ public class FactAttributeImpl
         }
 
         //自定义脚本
-        customScript.addOrUpdateCustomScript(dto.customScriptList);
+        customScript.addOrUpdateCustomScript(dto.customScriptList,dto.factId);
 
         //删除维度字段属性
         List<Integer> ids = (List) dto.list.stream().filter(e -> e.id != 0)
