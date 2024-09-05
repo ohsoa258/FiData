@@ -46,7 +46,7 @@ public class AuditLogsServiceImpl extends ServiceImpl<AuditLogsMapper, AuditLogs
 
         Page<AuditLogsPO> page = null;
         LambdaQueryWrapper<AuditLogsPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.orderByDesc(AuditLogsPO::getCreateTime);
+        wrapper.orderByDesc(AuditLogsPO::getId);
         //如果查询条件不为空
         if (queryType != null) {
 
