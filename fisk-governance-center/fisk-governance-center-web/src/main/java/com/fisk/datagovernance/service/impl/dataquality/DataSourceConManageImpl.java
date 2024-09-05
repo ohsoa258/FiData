@@ -256,15 +256,6 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 log.warn("【getFiDataConfigMetaData】平台数据源返回树状结构为空：" + dataSourceConVO.getSourceBusinessType().getName());
             }
         }
-
-        // 第三步：获取数据标准Tree结构并写入到FiData节点下
-        if (checkStandards) {
-            treeResult = dataManageClient.dataQuality_GetAllStandardsTree();
-            if (treeResult != null && treeResult.getCode() == ResultEnum.SUCCESS.getCode()) {
-                fiDataMetaDataTree_DataBaseList.add(treeResult.getData());
-            }
-        }
-
         fiDataMetaDataTree_Basics.setChildren(fiDataMetaDataTree_DataBaseList);
         return fiDataMetaDataTree_Basics;
     }
