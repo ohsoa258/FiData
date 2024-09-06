@@ -90,7 +90,7 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
             // 查询条件构造，查询与标准ID列表匹配的所有标准分组信息
             LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.in(DatacheckStandardsGroupPO::getStandardsId, standardByMenuId);
-            if (dto.getGroupName()!=null){
+            if (StringUtils.isNotEmpty(dto.getGroupName())){
                 queryWrapper.like(DatacheckStandardsGroupPO::getCheckGroupName, dto.getGroupName());
             }
             if (dto.getTemplateId()!=null && dto.getTemplateId()!=0){
