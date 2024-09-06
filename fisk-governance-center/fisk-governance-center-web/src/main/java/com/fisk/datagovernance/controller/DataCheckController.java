@@ -134,11 +134,9 @@ public class DataCheckController {
 
 
     @ApiOperation("获取数据校验数据元标准组中数据")
-    @GetMapping("/getDataCheckStandardsGroup")
-    public ResultEntity<PageDTO<DatacheckStandardsGroupVO>> getDataCheckStandardsGroup(@RequestParam("standardsId") Integer standardsId,
-                                                                                       @RequestParam("current") Integer current,
-                                                                                       @RequestParam("size") Integer size) {
-        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.getDataCheckStandardsGroup(standardsId, current, size));
+    @PostMapping("/getDataCheckStandardsGroup")
+    public ResultEntity<PageDTO<DatacheckStandardsGroupVO>> getDataCheckStandardsGroup(@RequestBody DataCheckStandardsGroupQueryDTO dto) {
+        return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.getDataCheckStandardsGroup(dto));
     }
 
     @ApiOperation("添加数据校验数据元标准组")

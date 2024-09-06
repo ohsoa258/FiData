@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckRuleGroupDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckStandardsGroupQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DatacheckStandardsGroupDTO;
 import com.fisk.datagovernance.entity.dataquality.DatacheckStandardsGroupPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckRuleGroupVO;
@@ -22,11 +23,10 @@ public interface IDatacheckStandardsGroupService extends IService<DatacheckStand
 
     /**
      * 获取数据校验数据元标准组中数据
-     *
-     * @param standardsId
+     * @param dto
      * @return
      */
-    PageDTO<DatacheckStandardsGroupVO> getDataCheckStandardsGroup(Integer standardsId, Integer current, Integer size);
+    PageDTO<DatacheckStandardsGroupVO> getDataCheckStandardsGroup(DataCheckStandardsGroupQueryDTO dto);
 
     /**
      * 添加数据校验数据元标准组

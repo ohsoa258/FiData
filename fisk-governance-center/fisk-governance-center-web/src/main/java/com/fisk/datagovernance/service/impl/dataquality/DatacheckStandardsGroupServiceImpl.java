@@ -29,8 +29,10 @@ import com.fisk.datagovernance.vo.dataquality.datacheck.DatacheckStandardsGroupV
 import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportRuleVO;
 import com.fisk.datagovernance.vo.dataquality.template.TemplateVO;
 import com.fisk.datamanage.client.DataManageClient;
+import com.fisk.datamanagement.dto.DataSet.CodeSetDTO;
 import com.fisk.datamanagement.dto.standards.StandardsBeCitedDTO;
 import com.fisk.datamanagement.dto.standards.StandardsDTO;
+import com.fisk.datamanagement.enums.ValueRangeTypeEnum;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -73,20 +75,31 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
     /**
      * 获取数据检查标准分组
      *
-     * @param standardsId 标准ID，根据此ID获取相应的标准分组信息
+     * @param dto dto 根据此查询条件获取相应的标准分组信息
      * @return 返回一个包含数据检查标准分组信息的列表
      */
     @Override
-    public PageDTO<DatacheckStandardsGroupVO> getDataCheckStandardsGroup(Integer standardsId, Integer current, Integer size) {
+    public PageDTO<DatacheckStandardsGroupVO> getDataCheckStandardsGroup(DataCheckStandardsGroupQueryDTO dto) {
         PageDTO<DatacheckStandardsGroupVO> pageDTO = new PageDTO<>();
         List<DatacheckStandardsGroupVO> groupDtoList = new ArrayList<>();
+        int current = dto.getCurrent();
+        int size = dto.getSize();
         // 根据菜单ID获取标准ID列表
-        List<Integer> standardByMenuId = dataManageClient.getStandardByMenuId(standardsId);
+        List<Integer> standardByMenuId = dataManageClient.getStandardByMenuId(dto.getStandardsMenuId());
         if (!CollectionUtils.isEmpty(standardByMenuId)) {
             // 查询条件构造，查询与标准ID列表匹配的所有标准分组信息
             LambdaQueryWrapper<DatacheckStandardsGroupPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.in(DatacheckStandardsGroupPO::getStandardsId, standardByMenuId)
-                    .orderByDesc(DatacheckStandardsGroupPO::getCreateTime);
+            queryWrapper.in(DatacheckStandardsGroupPO::getStandardsId, standardByMenuId);
+            if (dto.getGroupName()!=null){
+                queryWrapper.like(DatacheckStandardsGroupPO::getCheckGroupName, dto.getGroupName());
+            }
+            if (dto.getTemplateId()!=null && dto.getTemplateId()!=0){
+                queryWrapper.eq(DatacheckStandardsGroupPO::getTemplateId, dto.getTemplateId());
+            }
+            if (dto.getRuleExecuteNode()!=null && dto.getRuleExecuteNode()!=0){
+                queryWrapper.eq(DatacheckStandardsGroupPO::getRuleExecuteNode, dto.getRuleExecuteNode());
+            }
+            queryWrapper.orderByDesc(DatacheckStandardsGroupPO::getCreateTime);
             List<DatacheckStandardsGroupPO> groupPOList = this.list(queryWrapper);
             // 如果查询结果为空，直接返回空列表
             if (CollectionUtils.isEmpty(groupPOList)) {
@@ -195,6 +208,34 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                 this.removeById(groupPO.id);
                 return ruleCheckResultEnum;
             }
+            DataCheckEditDTO checkEditDTO = dataCheckList.get(0);
+            DataCheckExtendDTO dataCheckExtend = checkEditDTO.getDataCheckExtend();
+            groupPO.setRuleCheckType(checkEditDTO.getRuleCheckType());
+            groupPO.setRuleExecuteNode(checkEditDTO.getRuleExecuteNode());
+            groupPO.setTemplateId(checkEditDTO.getTemplateId());
+            if (dataCheckExtend != null){
+                groupPO.setRangeCheckType(dataCheckExtend.getRangeCheckType());
+                groupPO.setRangeType(dataCheckExtend.getRangeType());
+                groupPO.setRangeCheckValueRangeType(dataCheckExtend.getRangeCheckValueRangeType());
+                groupPO.setRangeCheckKeywordIncludeType(dataCheckExtend.getRangeCheckKeywordIncludeType());
+                groupPO.setRangeCheckOneWayOperator(dataCheckExtend.getRangeCheckOneWayOperator());
+                groupPO.setRangeCheckValue(dataCheckExtend.getRangeCheckValue());
+                groupPO.setStandardCheckType(dataCheckExtend.getStandardCheckType());
+                groupPO.setStandardCheckCharRangeType(dataCheckExtend.getStandardCheckCharRangeType());
+                groupPO.setStandardCheckTypeDateValue(dataCheckExtend.getStandardCheckTypeDateValue());
+                groupPO.setStandardCheckTypeLengthSeparator(dataCheckExtend.getStandardCheckTypeLengthSeparator());
+                groupPO.setStandardCheckTypeLengthOperator(dataCheckExtend.getStandardCheckTypeLengthOperator());
+                groupPO.setStandardCheckTypeLengthValue(dataCheckExtend.getStandardCheckTypeLengthValue());
+                groupPO.setStandardCheckTypeRegexpValue(dataCheckExtend.getStandardCheckTypeRegexpValue());
+                groupPO.setFluctuateCheckType(dataCheckExtend.getFluctuateCheckType());
+                groupPO.setFluctuateCheckOperator(dataCheckExtend.getFluctuateCheckOperator());
+                groupPO.setFluctuateCheckValue(dataCheckExtend.getFluctuateCheckValue());
+                groupPO.setParentageCheckType(dataCheckExtend.getParentageCheckType());
+                groupPO.setRegexpCheckValue(dataCheckExtend.getRegexpCheckValue());
+                groupPO.setRecordErrorData(dataCheckExtend.getRecordErrorData());
+                groupPO.setErrorDataRetentionTime(dataCheckExtend.getErrorDataRetentionTime());
+            }
+            this.updateById(groupPO);
         }
         return ResultEnum.SUCCESS;
     }
@@ -362,26 +403,29 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
 
             List<DataCheckEditDTO> dataCheckEditList = new ArrayList<>();
             if (!CollectionUtils.isEmpty(standardsBeCitedDTOList)) {
+                List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
                 for (StandardsBeCitedDTO standardsBeCitedDTO : standardsBeCitedDTOList) {
                     Integer dbId = standardsBeCitedDTO.getDbId();
                     DataCheckEditDTO checkEditDTO = new DataCheckEditDTO();
-                    DataCheckPO dataCheckPO1 = dataCheckPOList.get(0);
+//                    DataCheckPO dataCheckPO1 = dataCheckPOList.get(0);
                     checkEditDTO.setDatacheckGroupId((int) groupPO.id);
-                    checkEditDTO.setRuleCheckType(RuleCheckTypeEnum.getEnum(dataCheckPO1.getRuleCheckType()));
+                    checkEditDTO.setRuleCheckType(groupPO.getRuleCheckType());
                     checkEditDTO.setDatasourceId(standardsBeCitedDTO.getDbId());
-                    checkEditDTO.setRuleDescribe(dataCheckPO1.getRuleDescribe());
-                    checkEditDTO.setRuleExecuteNode(RuleExecuteNodeTypeEnum.getEnum(dataCheckPO1.getRuleExecuteNode()));
-                    if (!CollectionUtils.isEmpty(dataCheckExtendPOS)) {
-                        DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOS.stream().filter(f -> f.getRuleId() == dataCheckPO1.getId()).findFirst().orElse(null);
-                        if (dataCheckExtendPO != null && StringUtils.isNotEmpty(dataCheckPO1.getRuleIllustrate())) {
-                            String ruleIllustrate = dataCheckPO1.getRuleIllustrate().replace(dataCheckExtendPO.getFieldName(), standardsBeCitedDTO.getFieldName());
-                            checkEditDTO.setRuleIllustrate(ruleIllustrate);
-                        }
-                    }
+                    checkEditDTO.setRuleDescribe(groupPO.getDescription());
+                    checkEditDTO.setRuleExecuteNode(groupPO.getRuleExecuteNode());
+
+//                    if (!CollectionUtils.isEmpty(dataCheckExtendPOS)) {
+//                        DataCheckExtendPO dataCheckExtendPO = dataCheckExtendPOS.stream().filter(f -> f.getRuleId() == dataCheckPO1.getId()).findFirst().orElse(null);
+//                        if (dataCheckExtendPO != null && StringUtils.isNotEmpty(dataCheckPO1.getRuleIllustrate())) {
+//                            String ruleIllustrate = dataCheckPO1.getRuleIllustrate().replace(dataCheckExtendPO.getFieldName(), standardsBeCitedDTO.getFieldName());
+//                            checkEditDTO.setRuleIllustrate(ruleIllustrate);
+//                        }
+//                    }
+
+
                     checkEditDTO.setTableBusinessType(standardsBeCitedDTO.getTableBusinessType().getValue());
                     checkEditDTO.setRuleName(groupPO.getCheckGroupName() + standardsBeCitedDTO.getTableName() + standardsBeCitedDTO.getFieldName());
                     checkEditDTO.setRuleState(RuleStateEnum.Enable);
-                    checkEditDTO.setRuleWeight(dataCheckPO1.getRuleWeight());
                     //checkEditDTO.setTableDescribe(standardsBeCitedDTO.getFieldName());
                     checkEditDTO.setSchemaName(standardsBeCitedDTO.getSchemaName());
                     checkEditDTO.setTableUnique(standardsBeCitedDTO.getTableId());
@@ -391,39 +435,99 @@ public class DatacheckStandardsGroupServiceImpl extends ServiceImpl<DatacheckSta
                     checkEditDTO.setTableType(TableTypeEnum.TABLE);
                     checkEditDTO.setTemplateId(templateVOList.get(0).id);
                     checkEditDTO.setSourceType(SourceTypeEnum.FiData);
-                    checkEditDTO.setRuleExecuteSort(dataCheckPO1.getRuleExecuteSort());
-                    for (DataCheckPO dataCheckPO : dataCheckPOList) {
-                        if (dbId.equals(dataCheckPO.getDatasourceId())
-                                && standardsBeCitedDTO.getTableId().equals(dataCheckPO.getTableUnique())) {
-                            LambdaQueryWrapper<DataCheckExtendPO> query = new LambdaQueryWrapper<>();
-                            query.eq(DataCheckExtendPO::getRuleId, dataCheckPO.getId());
-                            DataCheckExtendPO dataCheckExtendPO = dataCheckExtendMapper.selectOne(query);
-                            if (standardsBeCitedDTO.getFieldId().equals(dataCheckExtendPO.fieldUnique)) {
-                                checkEditDTO = DataCheckMap.INSTANCES.poToDto_Edit(dataCheckPO);
+                    checkEditDTO.setTableDescribe(groupPO.getDescription());
+
+                    if (standardsDTO.getValueRangeType() == ValueRangeTypeEnum.DATASET){
+                        String ruleIllustrate = "检查"+checkEditDTO.getFieldName()+"字段值是否在指定的序列范围内，配置的序列范围为："+codeSetDTOList.stream().map(CodeSetDTO::getName).collect(Collectors.joining(","));
+                        checkEditDTO.setRuleIllustrate(ruleIllustrate);
+                    }else if (standardsDTO.getValueRangeType() == ValueRangeTypeEnum.VALUE){
+                            String ruleIllustrate = "检查"+checkEditDTO.getFieldName()+"字段值是否在指定的数值范围内，配置的数值范围为："+groupPO.getRangeCheckOneWayOperator()+groupPO.getRangeCheckValue();
+                            checkEditDTO.setRuleIllustrate(ruleIllustrate);
+                    }else if (standardsDTO.getValueRangeType() == ValueRangeTypeEnum.VALUE_RANGE){
+                        String ruleIllustrate = "检查"+checkEditDTO.getFieldName()+"字段值是否在指定的数值范围内，配置的数值范围为："+groupPO.getRangeCheckValue();
+                        checkEditDTO.setRuleIllustrate(ruleIllustrate);
+                    }
+
+                    if (!CollectionUtils.isEmpty(dataCheckPOList)){
+                        for (DataCheckPO dataCheckPO : dataCheckPOList) {
+                            if (dbId.equals(dataCheckPO.getDatasourceId())
+                                    && standardsBeCitedDTO.getTableId().equals(dataCheckPO.getTableUnique())) {
+                                LambdaQueryWrapper<DataCheckExtendPO> query = new LambdaQueryWrapper<>();
+                                query.eq(DataCheckExtendPO::getRuleId, dataCheckPO.getId());
+                                DataCheckExtendPO dataCheckExtendPO = dataCheckExtendMapper.selectOne(query);
+                                if (standardsBeCitedDTO.getFieldId().equals(dataCheckExtendPO.fieldUnique)) {
+                                    checkEditDTO = DataCheckMap.INSTANCES.poToDto_Edit(dataCheckPO);
+                                }
                             }
                         }
                     }
                     dataCheckEditList.add(checkEditDTO);
                 }
                 List<DataCheckExtendDTO> dataCheckExtendDTOS = DataCheckExtendMap.INSTANCES.poListToDtoList(dataCheckExtendPOS);
+                if (CollectionUtils.isEmpty(dataCheckExtendDTOS)){
+                    dataCheckExtendDTOS = new ArrayList<>();
+                    DataCheckExtendDTO dataCheckExtendDTO = new DataCheckExtendDTO();
+                    dataCheckExtendDTO.setRangeCheckType(groupPO.getRangeCheckType());
+                    dataCheckExtendDTO.setRangeType(groupPO.getRangeType());
+                    dataCheckExtendDTO.setRangeCheckValueRangeType(groupPO.getRangeCheckValueRangeType());
+                    dataCheckExtendDTO.setRangeCheckOneWayOperator(groupPO.getRangeCheckOneWayOperator());
+                    dataCheckExtendDTO.setRangeCheckValue(groupPO.getRangeCheckValue());
+                    if (standardsDTO.getValueRangeType() == ValueRangeTypeEnum.DATASET){
+                        dataCheckExtendDTO.setRangeCheckType(RangeCheckTypeEnum.SEQUENCE_RANGE);
+                        dataCheckExtendDTO.setRangeType(1);
+                        dataCheckExtendDTO.setRangeCheckValue(codeSetDTOList.stream().map(CodeSetDTO::getName).collect(Collectors.joining(",")));
+                    }else if (standardsDTO.getValueRangeType() == ValueRangeTypeEnum.VALUE){
+                        dataCheckExtendDTO.setRangeCheckType(RangeCheckTypeEnum.VALUE_RANGE);
+                        dataCheckExtendDTO.setRangeCheckValueRangeType(RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE);
+                        dataCheckExtendDTO.setRangeCheckOneWayOperator(standardsDTO.getSymbols());
+                        dataCheckExtendDTO.setRangeCheckValue(standardsDTO.getValueRange());
+                        dataCheckExtendDTO.setRangeType(1);
+                    }else if (standardsDTO.getValueRangeType() == ValueRangeTypeEnum.VALUE_RANGE){
+                        dataCheckExtendDTO.setRangeCheckType(RangeCheckTypeEnum.VALUE_RANGE);
+                        dataCheckExtendDTO.setRangeCheckValueRangeType(RangeCheckValueRangeTypeEnum.INTERVAL_VALUE);
+                        dataCheckExtendDTO.setRangeType(1);
+                        dataCheckExtendDTO.setRangeCheckOneWayOperator(standardsDTO.getSymbols());
+                        dataCheckExtendDTO.setRangeCheckValue(standardsDTO.getValueRange());
+                    }
+
+
+                    dataCheckExtendDTO.setRangeCheckKeywordIncludeType(groupPO.getRangeCheckKeywordIncludeType());
+
+
+                    dataCheckExtendDTO.setStandardCheckType(groupPO.getStandardCheckType());
+                    dataCheckExtendDTO.setStandardCheckCharRangeType(groupPO.getStandardCheckCharRangeType());
+                    dataCheckExtendDTO.setStandardCheckTypeDateValue(groupPO.getStandardCheckTypeDateValue());
+                    dataCheckExtendDTO.setStandardCheckTypeLengthSeparator(groupPO.getStandardCheckTypeLengthSeparator());
+                    dataCheckExtendDTO.setStandardCheckTypeLengthOperator(groupPO.getStandardCheckTypeLengthOperator());
+                    dataCheckExtendDTO.setStandardCheckTypeLengthValue(groupPO.getStandardCheckTypeLengthValue());
+                    dataCheckExtendDTO.setStandardCheckTypeRegexpValue(groupPO.getStandardCheckTypeRegexpValue());
+                    dataCheckExtendDTO.setFluctuateCheckType(groupPO.getFluctuateCheckType());
+                    dataCheckExtendDTO.setFluctuateCheckOperator(groupPO.getFluctuateCheckOperator());
+                    dataCheckExtendDTO.setFluctuateCheckValue(groupPO.getFluctuateCheckValue());
+                    dataCheckExtendDTO.setParentageCheckType(groupPO.getParentageCheckType());
+                    dataCheckExtendDTO.setRegexpCheckValue(groupPO.getRegexpCheckValue());
+                    dataCheckExtendDTO.setRecordErrorData(groupPO.getRecordErrorData());
+                    dataCheckExtendDTO.setErrorDataRetentionTime(groupPO.getErrorDataRetentionTime());
+                    dataCheckExtendDTOS.add(dataCheckExtendDTO);
+                }
                 Map<Integer, List<DataCheckExtendDTO>> extend = dataCheckExtendDTOS.stream().collect(groupingBy(i -> i.ruleId));
                 dataCheckEditList = dataCheckEditList.stream().map(i -> {
-                    DataCheckExtendDTO dataCheckExtendDTO = new DataCheckExtendDTO();
                     List<DataCheckExtendDTO> dataCheckExtendDTOS1 = extend.get(i.getId());
-                    if (CollectionUtils.isEmpty(dataCheckExtendDTOS1)) {
-                        for (List<DataCheckExtendDTO> value : extend.values()) {
-                            DataCheckExtendDTO extendDTO = value.get(0);
-                            BeanUtils.copyProperties(extendDTO, dataCheckExtendDTO,DataCheckExtendDTO.class);
-                            break;
-                        }
-                        dataCheckExtendDTO.fieldName = i.getFieldName();
-                        dataCheckExtendDTO.fieldUnique = i.getFieldUnique();
-                        i.setDataCheckExtend(dataCheckExtendDTO);
+                    if (i.getId() == 0) {
+                        DataCheckExtendDTO dataCheckExtendDTO = dataCheckExtendDTOS1 .get(0);
+                        DataCheckExtendDTO extendDTO = new DataCheckExtendDTO();
+                        BeanUtils.copyProperties(dataCheckExtendDTO, extendDTO,DataCheckExtendDTO.class);
+                        extendDTO.fieldName = i.getFieldName();
+                        extendDTO.fieldUnique = i.getFieldUnique();
+                        i.setDataCheckExtend(extendDTO);
                     } else {
-                        i.setDataCheckExtend(dataCheckExtendDTOS1.get(0));
+                        if (!CollectionUtils.isEmpty(dataCheckExtendDTOS1)){
+                            i.setDataCheckExtend(dataCheckExtendDTOS1.get(0));
+                        }
                     }
                     return i;
                 }).collect(Collectors.toList());
+
             }
             dto.setDataCheckList(dataCheckEditList);
             // 同步更新数据校验组下的质量规则
