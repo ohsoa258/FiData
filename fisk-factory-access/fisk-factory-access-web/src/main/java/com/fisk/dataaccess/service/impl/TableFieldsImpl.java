@@ -391,7 +391,7 @@ public class TableFieldsImpl
         success = syncmodeImpl.saveOrUpdate(modelSync);
 
         // 修改发布状态
-        model.publish = 0;
+        model.publish = PublishTypeEnum.ON_GOING.getValue();
         model.sheet = dto.sheet;
         model.startLine = dto.startLine;
         //stgToOds覆盖SQL语句脚本

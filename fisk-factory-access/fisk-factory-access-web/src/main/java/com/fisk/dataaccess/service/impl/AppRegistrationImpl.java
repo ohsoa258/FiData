@@ -5067,8 +5067,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         //获取应用引用的数据源在平台配置的信息
         ResultEntity<DataSourceDTO> dataSourceConfig;
 
-        //2意味着CDC接入
-        if (app.appType == 2) {
+        //2意味着CDC接入 3意味着JDBC接入
+        if (app.appType == 2 || app.appType == 3) {
             dataSourceConfig = userClient.getFiDataDataSourceById(systemIds.get(0));
         } else {
             dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);

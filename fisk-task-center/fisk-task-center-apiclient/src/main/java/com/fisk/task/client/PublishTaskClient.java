@@ -620,6 +620,15 @@ public interface PublishTaskClient {
     Page<NifiLogResultDTO> getDwAndAccessTblNifiLog(@RequestBody LogPageQueryDTO dto);
 
     /**
+     * 根据nifi内表的流程是否有流文件 判断表的最近一次同步任务是否真正结束
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/nifi/checkModelTblNifiSyncJobIsOver")
+    ResultEntity<Boolean> checkModelTblNifiSyncJobIsOver(@RequestBody LogPageQueryDTO dto);
+
+    /**
      * 获取数据接入表最后同步时间
      *
      * @param tblNames

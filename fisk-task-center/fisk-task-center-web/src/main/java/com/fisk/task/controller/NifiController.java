@@ -2,12 +2,13 @@ package com.fisk.task.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.davis.client.model.ProcessGroupEntity;
+import com.davis.client.model.ProcessGroupStatusDTO;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.accessAndModel.AccessAndModelTableDTO;
 import com.fisk.common.service.accessAndModel.LogPageQueryDTO;
 import com.fisk.common.service.accessAndModel.NifiLogResultDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
@@ -32,10 +33,11 @@ import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
 import com.fisk.task.listener.nifi.ISapBwListener;
 import com.fisk.task.listener.nifi.ISftpDataUploadListener;
 import com.fisk.task.po.TableNifiSettingPO;
+import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.service.pipeline.INifiSchedulingComponentService;
-import com.fisk.task.service.pipeline.impl.EtlLogImpl;
+import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.nifi.INiFiHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -74,6 +76,8 @@ public class NifiController {
     private ISapBwListener sapBwListener;
     @Resource
     private IApiListener apiListener;
+    @Resource
+    private ITableNifiSettingService iTableNifiSettingService;
 
     @Resource
     IEtlLog etlLog;
@@ -348,12 +352,14 @@ public class NifiController {
     public DwLogResultDTO getDwTblNifiLog(@RequestBody DwLogQueryDTO dwLogQueryDTO) {
         return apiListener.getDwTblNifiLog(dwLogQueryDTO);
     }
+
     @ApiOperation("主数据获取发布日志结果")
     @PostMapping("/getMdmTblNifiLog")
     public List<LogResultDTO> getMdmTblNifiLog(@RequestBody List<String> subRunIds) {
         return etlLog.getMdmTblNifiLog(subRunIds);
 
     }
+
     /**
      * 同步日志页面获取数接/数仓的指定表的nifi同步日志  根据表id 名称 类型
      *
@@ -366,5 +372,45 @@ public class NifiController {
         return apiListener.getDwAndAccessTblNifiLog(dto);
     }
 
+    /**
+     * 根据nifi内表的流程是否有流文件 判断表的最近一次同步任务是否真正结束
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("根据nifi内表的流程是否有流文件 判断表的最近一次同步任务是否真正结束")
+    @PostMapping("/checkModelTblNifiSyncJobIsOver")
+    public ResultEntity<Boolean> checkModelTblNifiSyncJobIsOver(@RequestBody LogPageQueryDTO dto) {
+        boolean flag = false;
+        try {
+            //首先根据表id-表类型获取到表的nifi组
+            TableNifiSettingPO po = iTableNifiSettingService.getByTableId(dto.getTblId(), dto.getTableType());
+            //然后判断组内是否有流文件 确定表任务是否已经结束 如果未结束则将最近一条日志记录改为正在运行的状态
+            Integer flowFilesQueued;
+            Integer activeThreadCount;
+            for (int i = 0; i < 3; i++) {
+                Thread.sleep(500);
+                ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(po.getTableComponentId());
+                ProcessGroupStatusDTO status = processGroup.getStatus();
+                //flowFilesQueued 组内流文件数量,如果为0代表组内无流文件
+                //activeThreadCount 组内活跃线程数量，为0代表没有正在工作的组件
+                flowFilesQueued = status.getAggregateSnapshot().getFlowFilesQueued();
+                activeThreadCount = status.getAggregateSnapshot().getActiveThreadCount();
+                log.info("管道内剩余流文件flowFilesQueued:{}", flowFilesQueued);
+                log.info("管道内正在执行线程数activeThreadCount:{}", activeThreadCount);
+                if (activeThreadCount == 0 && flowFilesQueued == 0) {
+                    flag = true;
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            log.error("获取数仓表的nifi流程状态失败,原因：" + e
+                    + ";表id:" + dto.getTblId()
+                    + ";表名称" + dto.getTableName()
+                    + ";表类型" + dto.getTableType());
+            throw new FkException(ResultEnum.DATA_MODEL_GET_NIFI_LOG_ERROR, e);
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, flag);
+    }
 
 }

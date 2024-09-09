@@ -87,9 +87,30 @@ public class NifiLogsImpl implements INifiLogs {
             if (app.getCode() != ResultEnum.SUCCESS.getCode()) {
                 throw new FkException(ResultEnum.GET_ACCESS_APP_ERROR);
             }
-            String appAbbreviation = app.getData().getAppAbbreviation();
-            dto.setTableName(appAbbreviation + "." + dto.getTableName());
+            if (app.data.whetherSchema){
+                String appAbbreviation = app.getData().getAppAbbreviation();
+                dto.setTableName(appAbbreviation + "." + dto.getTableName());
+            }else {
+                dto.setTableName(dto.getTableName());
+            }
         }
-        return taskClient.getDwAndAccessTblNifiLog(dto);
+        Page<NifiLogResultDTO> result =  taskClient.getDwAndAccessTblNifiLog(dto);
+
+
+        //查询该数仓表任务在nifi里面是否有流文件 判断该表最近一次任务是否真正同步结束
+        try {
+            if (result.getRecords().get(0).getResult()!=2){
+                ResultEntity<Boolean> resultEntity = taskClient.checkModelTblNifiSyncJobIsOver(dto);
+                //true代表nifi内没有流文件 false代表有流文件 证明最近一次同步任务状态是未结束
+                if (!resultEntity.getData()){
+                    result.getRecords().get(0).setState(0);
+                    result.getRecords().get(0).setResult(0);
+                }
+            }
+        }catch (Exception e){
+            log.error("获取数仓表任务在nifi里面是否有流文件失败：" + e);
+        }
+
+        return result;
     }
 }

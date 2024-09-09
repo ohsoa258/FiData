@@ -32,4 +32,5 @@ public interface IApiListener {
      * @return
      */
     Page<NifiLogResultDTO> getDwAndAccessTblNifiLog(LogPageQueryDTO dto);
+
 }
