@@ -622,7 +622,7 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         LambdaQueryWrapper<AccessDataPO> queryEntity = new LambdaQueryWrapper<>();
         queryEntity.eq(AccessDataPO::getEntityId,tableId);
         AccessDataPO accessDataPO = mapper.selectOne(queryEntity);
-        queryWrapper.lambda().eq(TableHistoryPO::getTableId,accessDataPO.getId());
+        queryWrapper.lambda().eq(TableHistoryPO::getTableId,accessDataPO.getId()).orderByDesc(TableHistoryPO::getCreateTime);
         List<TableHistoryDTO> tableHistoryDTOS = TableHistoryMap.INSTANCES.poListToDtoList(tableHistoryMapper.selectList(queryWrapper));
         List<String> SubRunIds = tableHistoryDTOS.stream().map(i -> i.getSubRunId()).filter(Objects::nonNull).collect(Collectors.toList());
 
