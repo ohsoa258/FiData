@@ -9,6 +9,7 @@ import com.fisk.mdm.dto.access.TableHistoryDTO;
 import com.fisk.mdm.entity.TableHistoryPO;
 import com.fisk.mdm.map.TableHistoryMap;
 import com.fisk.mdm.mapper.TableHistoryMapper;
+import com.fisk.mdm.service.AccessDataService;
 import com.fisk.mdm.service.ITableHistory;
 import com.fisk.task.client.PublishTaskClient;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,9 @@ public class TableHistoryImpl extends ServiceImpl<TableHistoryMapper, TableHisto
     TableHistoryMapper mapper;
     @Resource
     PublishTaskClient publishTaskClient;
+
+    @Resource
+    AccessDataService accessDataService;
 
     @Override
     public long addTableHistory(List<TableHistoryDTO> dto) {

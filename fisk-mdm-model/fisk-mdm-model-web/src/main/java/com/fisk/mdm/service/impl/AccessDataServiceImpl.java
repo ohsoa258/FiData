@@ -233,7 +233,9 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
         tableVersionSqlPO.setVersionNumber(String.valueOf(Instant.now().toEpochMilli()));
         tableVersionSqlPO.setHistoricalSql(dto.getAccessSql());
         tableVersionSqlPO.setTableId(accessDataPO.getEntityId());
-        tableVersionSqlPO.setVersionDes(dto.getRemark());
+        List<TableHistoryDTO> tableHistorys = dto.getTableHistorys();
+        TableHistoryDTO tableHistoryDTO = tableHistorys.get(0);
+        tableVersionSqlPO.setVersionDes(tableHistoryDTO.getRemark());
         tableVersionSqlService.save(tableVersionSqlPO);
 
         //系统变量
@@ -617,7 +619,10 @@ public class AccessDataServiceImpl extends ServiceImpl<AccessDataMapper, AccessD
     @Override
     public List<TableHistoryDTO> getTableHistoryList(Integer tableId) {
         QueryWrapper<TableHistoryPO> queryWrapper=new QueryWrapper<>();
-        queryWrapper.lambda().eq(TableHistoryPO::getTableId,tableId);
+        LambdaQueryWrapper<AccessDataPO> queryEntity = new LambdaQueryWrapper<>();
+        queryEntity.eq(AccessDataPO::getEntityId,tableId);
+        AccessDataPO accessDataPO = mapper.selectOne(queryEntity);
+        queryWrapper.lambda().eq(TableHistoryPO::getTableId,accessDataPO.getId());
         List<TableHistoryDTO> tableHistoryDTOS = TableHistoryMap.INSTANCES.poListToDtoList(tableHistoryMapper.selectList(queryWrapper));
         List<String> SubRunIds = tableHistoryDTOS.stream().map(i -> i.getSubRunId()).filter(Objects::nonNull).collect(Collectors.toList());
 
