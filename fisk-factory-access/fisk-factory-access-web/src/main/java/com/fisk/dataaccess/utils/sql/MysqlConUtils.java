@@ -258,18 +258,42 @@ public class MysqlConUtils {
         try {
             colNameList = new ArrayList<>();
 
-            DatabaseMetaData metaData = conn.getMetaData();
-            resultSet = metaData.getColumns(null, "%", tableName, "%");
-            while (resultSet.next()) {
+//            //这种方法获取不到字段描述 但可以获取主键
+//            DatabaseMetaData metaData = conn.getMetaData();
+//            resultSet = metaData.getColumns(null, "%", tableName, "%");
+//            while (resultSet.next()) {
+//                TableStructureDTO dto = new TableStructureDTO();
+//                // 获取字段名称
+//                dto.fieldName = resultSet.getString("COLUMN_NAME");
+//                // 获取字段长度
+//                dto.fieldLength = resultSet.getInt("COLUMN_SIZE");
+//                // 获取字段类型
+//                dto.fieldType = resultSet.getString("TYPE_NAME");
+//                // 字段描述
+//                dto.setFieldDes(resultSet.getString("REMARKS"));
+//                dto.sourceTblName = tableName;
+//                dto.sourceDbName = dbName;
+//                colNameList.add(dto);
+//            }
+
+            //通过如下方式获取
+            String query = "SELECT COLUMN_NAME, COLUMN_TYPE, CHARACTER_MAXIMUM_LENGTH, COLUMN_COMMENT "
+                    + "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+            PreparedStatement statement = conn.prepareStatement(query);
+            statement.setString(1, dbName); // 数据库名
+            statement.setString(2, tableName); // 表名
+            ResultSet rs = statement.executeQuery();
+
+            while (rs.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
-                // 获取字段名称
-                dto.fieldName = resultSet.getString("COLUMN_NAME");
-                // 获取字段长度
-                dto.fieldLength = resultSet.getInt("COLUMN_SIZE");
-                // 获取字段类型
-                dto.fieldType = resultSet.getString("TYPE_NAME");
-                // 字段描述
-                dto.setFieldDes(resultSet.getString("REMARKS"));
+                //字段名称
+                dto.fieldName = rs.getString("COLUMN_NAME");
+                //字段类型
+                dto.fieldType = rs.getString("COLUMN_TYPE");
+                //字段长度
+                dto.fieldLength = rs.getInt("CHARACTER_MAXIMUM_LENGTH");
+                //字段描述
+                dto.setFieldDes(rs.getString("COLUMN_COMMENT"));
                 dto.sourceTblName = tableName;
                 dto.sourceDbName = dbName;
                 colNameList.add(dto);
@@ -277,7 +301,7 @@ public class MysqlConUtils {
 
             //获取表的主键字段
             List<String> pks = new ArrayList<>();
-            primaryKeys = metaData.getPrimaryKeys(null, "%", tableName);
+            primaryKeys = conn.getMetaData().getPrimaryKeys(null, "%", tableName);
             while (primaryKeys.next()) {
                 pks.add(primaryKeys.getString("COLUMN_NAME"));
             }
