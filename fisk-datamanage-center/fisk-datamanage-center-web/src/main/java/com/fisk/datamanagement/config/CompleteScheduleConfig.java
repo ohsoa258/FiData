@@ -42,16 +42,33 @@ public class CompleteScheduleConfig implements SchedulingConfigurer {
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        //可以设置线程池大小
+//        scheduler.setPoolSize(10);
         scheduler.initialize();
 
         taskRegistrar.setScheduler(scheduler);
 
+        //定时任务1
         taskRegistrar.addTriggerTask(
                 // 1. 添加任务内容(Runnable)
                 this::sendEmailWithMetaAuditConfig,
                 // 2. 设置执行周期(Trigger)
                 this::getNextExecutionTime
         );
+
+        //可以设置多个定时任务 执行周期和执行的任务内容可以按需修改
+        /*
+        执行周期的方法可以按需修改，举例：根据要跑的任务，getNextExecutionTime方法
+        从库里拿执行的cron表达式时，库里可以有个字段，去确定我这个cron表达式是什么任务用的
+         */
+        //定时任务2
+//        taskRegistrar.addTriggerTask(
+//                //添加别的任务内容(Runnable)
+//                this::sendEmailWithMetaAuditConfig,
+//                //设置执行周期(Trigger)
+//                this::getNextExecutionTime
+//        );
+        //定时任务3......
     }
 
     /**

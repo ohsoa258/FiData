@@ -124,8 +124,7 @@ public class MetadataGlossaryMapImpl
             }
             return metadataEntitySimpleDTOS;
         } catch (Exception e) {
-            log.error("获取术语绑定的元数据失败：" + e.getMessage());
-            log.error("获取术语绑定的元数据失败堆栈：" + e);
+            log.error("获取术语绑定的元数据失败：" + e);
             throw new FkException(ResultEnum.GET_GLOSSARY_ASSIGN_METAS_ERROR);
         }
     }
