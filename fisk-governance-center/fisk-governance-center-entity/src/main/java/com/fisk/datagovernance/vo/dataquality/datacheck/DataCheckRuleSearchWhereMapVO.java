@@ -1,7 +1,10 @@
 package com.fisk.datagovernance.vo.dataquality.datacheck;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 /**
  * @author dick
@@ -22,4 +25,11 @@ public class DataCheckRuleSearchWhereMapVO {
      */
     @ApiModelProperty(value = "值")
     public Object value;
+
+    /**
+     * 值
+     */
+    @ApiModelProperty(value = "创建时间")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime createTime;
 }

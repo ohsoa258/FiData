@@ -386,6 +386,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                     String text = StringUtils.isNotEmpty(reportName) ? reportName + "(" + dataCheckLog.getCheckBatchNumber() + ")" : dataCheckLog.getCheckBatchNumber();
                     searchWhereMap_reportBatchNumber.setText(text);
                     searchWhereMap_reportBatchNumber.setValue(dataCheckLog.getCheckBatchNumber());
+                    searchWhereMap_reportBatchNumber.setCreateTime(dataCheckLog.getCreateTime());
                     reportBatchNumberMap.add(searchWhereMap_reportBatchNumber);
                 }
 
