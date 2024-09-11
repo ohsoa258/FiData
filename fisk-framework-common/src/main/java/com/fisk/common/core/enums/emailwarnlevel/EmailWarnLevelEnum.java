@@ -37,6 +37,14 @@ public enum EmailWarnLevelEnum implements BaseEnum {
             if (e.getName().equals(name))
                 return e;
         }
-        return null;
+        return EmailWarnLevelEnum.GREEN;
+    }
+
+    public static EmailWarnLevelEnum getEnum(int value) {
+        for (EmailWarnLevelEnum e : EmailWarnLevelEnum.values()) {
+            if (value == e.value)
+                return e;
+        }
+        return EmailWarnLevelEnum.GREEN;
     }
 }
