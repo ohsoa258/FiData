@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.dbutils.dto.TableNameDTO;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
@@ -150,4 +151,14 @@ public interface IFact extends IService<FactPO> {
 
 
     List<FactDTO> getFactTableByIds(List<Integer> ids);
+
+    /**
+     * 获取当前数仓表管理的管道有哪些
+     *
+     * @param tblId
+     * @param tblType
+     * @return
+     */
+    ResultEntity<List<NifiCustomWorkflowDetailDTO>> getDispatchOfTblByIdType(Integer tblId, Integer tblType);
+
 }

@@ -61,6 +61,16 @@ public class AuditLogWithEntityTypeAndDetailPO extends BasePO implements Seriali
      */
     public String afterValue;
 
+    /**
+     * 目录id
+     */
+    public Integer businessClassificationId;
+
+    /**
+     * 负责人
+     */
+    public String owner;
+
 
 //    /**
 //     * 发现时间

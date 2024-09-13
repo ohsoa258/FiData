@@ -1379,15 +1379,17 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                 .eq(NifiCustomWorkflowDetailPO::getTableType, tblType);
         List<NifiCustomWorkflowDetailPO> list = nifiCustomWorkflowDetailImpl.list(wrapper);
         List<String> collect = list.stream().map(NifiCustomWorkflowDetailPO::getWorkflowId).collect(Collectors.toList());
+
+        List<NifiCustomWorkflowDetailDTO> dtos = NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(list);
         for (int i = 0; i < collect.size(); i++) {
             NifiCustomWorkflowPO one = nifiCustomWorkflowImpl
                     .getOne(new LambdaQueryWrapper<NifiCustomWorkflowPO>()
                             .eq(NifiCustomWorkflowPO::getWorkflowId, collect.get(i)));
             //把workflowid替换为workflowName
-            list.get(i).setWorkflowId(one.workflowName);
+            dtos.get(i).setWorkflowName(one.workflowName);
         }
 
-        return NifiCustomWorkflowDetailMap.INSTANCES.listPoToDto(list);
+        return dtos;
     }
 
 }

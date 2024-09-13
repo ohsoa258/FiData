@@ -3,6 +3,7 @@ package com.fisk.datamodel.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datamodel.config.SwaggerConfig;
 import com.fisk.datamodel.dto.QueryDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaDTO;
@@ -141,4 +142,18 @@ public class FactController {
     public ResultEntity<List<FactDTO>> getFactTableByIds(@RequestBody List<Integer> ids) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFactTableByIds(ids));
     }
+
+    /**
+     * 获取当前数仓表管理的管道有哪些
+     *
+     * @param tblId
+     * @param tblType
+     * @return
+     */
+    @GetMapping("/getDispatchOfTblByIdType")
+    @ApiOperation("获取当前数仓表管理的管道有哪些")
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getDispatchOfTblByIdType(@RequestParam("tblId")Integer tblId, @RequestParam("tblType")Integer tblType) {
+        return service.getDispatchOfTblByIdType(tblId,tblType);
+    }
+
 }

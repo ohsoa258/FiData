@@ -542,7 +542,7 @@ public class DimensionImpl
             List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
             if (!CollectionUtils.isEmpty(data)) {
                 //这里的getWorkflowId 已经被替换为 workflowName
-                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
                 log.info("当前要删除的表存在于以下管道中：" + collect);
                 return ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH;
             }
@@ -1137,7 +1137,7 @@ public class DimensionImpl
         List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
         if (!CollectionUtils.isEmpty(data)) {
             //这里的getWorkflowId 已经被替换为 workflowName
-            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
             log.info("当前要删除的表存在于以下管道中：" + collect);
             return ResultEntityBuild.build(ResultEnum.FACT_EXISTS_IN_DISPATCH, collect);
         }

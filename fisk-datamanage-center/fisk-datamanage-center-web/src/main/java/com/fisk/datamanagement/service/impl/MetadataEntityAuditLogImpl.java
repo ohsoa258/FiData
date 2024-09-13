@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.ObjectInfoUtils;
@@ -215,16 +216,21 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
+        if (dto.getServiceType() == null) {
+            dto.setServiceType(ClassificationTypeEnum.ALL);
+        }
+
         AssetsChangeAnalysisDTO assetsChangeAnalysisDTO = new AssetsChangeAnalysisDTO();
 
         //转换时间
         LocalDateTime startTime = getLocalDateTime(dto.getStartTime());
         LocalDateTime endTime = getLocalDateTime(dto.getEndTime());
 
+        long betweenDays = startTime.until(endTime, ChronoUnit.DAYS);
+        //加一天 获取今天数据  例如  9.11 9.12  其实要获取的是9.11 0:00 - 9.13 0:00之间的数据
+        endTime = endTime.plus(1, ChronoUnit.DAYS);
         //获取类型
         EntityTypeEnum entityType = dto.getEntityType();
-
-        long betweenDays = startTime.until(endTime, ChronoUnit.DAYS);
 
         //增长线
         List<LineCountDTO> addLine = new ArrayList<>();
@@ -284,18 +290,30 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             categoryDetailChanges.add(tbl);
         }
 
-
         List<MetadataEntityAuditLogPOWithEntityType> list;
         List<MetadataEntityAuditLogPOWithEntityType> list1;
         //获取时间区间内的所有元数据变更日志 左连接元数据表获取元数据类型
         if (entityType.equals(EntityTypeEnum.ALL)) {
             list = auditLogMapper.getMetaChangesCharts(startTime, endTime);
+            //该集合用来计算表和字段占比 原因：不论选全部和还是选表或字段 那个表和字段占比图不要发生变化
+            list1 = new ArrayList<>(list);
         } else {
-            list = auditLogMapper.getMetaChangesChartsByOpType(startTime, endTime, entityType.getValue());
+            list = auditLogMapper.getMetaChangesChartsByEntityType(startTime, endTime, entityType.getValue());
+            //该集合用来计算表和字段占比 原因：不论选全部和还是选表或字段 那个表和字段占比图不要发生变化
+            list1 = auditLogMapper.getMetaChangesCharts(startTime, endTime);
         }
 
-        //该集合用来计算表和字段占比 原因：不论选全部和还是选表或字段 那个表和字段占比图不要发生变化
-        list1 = auditLogMapper.getMetaChangesCharts(startTime, endTime);
+        //根据服务类型 筛选出符合条件的数据
+        ClassificationTypeEnum serviceType = dto.getServiceType();
+        //如果是只查询外部数据源的影响性分析，则剔除掉不是外部数据源的元数据
+        if (serviceType.equals(ClassificationTypeEnum.EXTERNAL_DATA)) {
+            list.removeIf(po -> !"外部数据源".equals(po.owner));
+            list1.removeIf(po -> !"外部数据源".equals(po.owner));
+        } else if (!serviceType.equals(ClassificationTypeEnum.ALL)) {
+            //如果是查询其他服务的
+            list.removeIf(po -> !(po.classId == serviceType.getValue()));
+            list1.removeIf(po -> !(po.classId == serviceType.getValue()));
+        }
 
         for (int i = 0; i <= betweenDays; i++) {
             LineCountDTO lineCountDTO = new LineCountDTO();
@@ -385,7 +403,6 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                 }
             }
 
-
             //计算新增线 删除线 更新线 以及时间区间内新增个数 删除个数 修改个数
             switch (po.getOperationType()) {
                 case ADD:
@@ -450,15 +467,22 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             throw new FkException(ResultEnum.PARAMTER_ERROR);
         }
 
+        if (dto.getServiceType() == null) {
+            dto.setServiceType(ClassificationTypeEnum.ALL);
+        }
+
         //处理当前页
         if (dto.getCurrentPage() != 0) {
-            dto.setCurrentPage(dto.getCurrentPage() - 1);
+            dto.setCurrentPage((dto.getCurrentPage() - 1) * dto.getSize());
         }
 
         List<AssetsChangeAnalysisDetailDTO> results = new ArrayList<>();
         //转换时间
         LocalDateTime startTime = getLocalDateTime(dto.getStartTime());
         LocalDateTime endTime = getLocalDateTime(dto.getEndTime());
+        //加一天 获取今天数据  例如  9.11 9.12  其实要获取的是9.11 0:00 - 9.13 0:00之间的数据
+        endTime = endTime.plus(1, ChronoUnit.DAYS);
+
         /*
         获取查询的类型：
             ALL(0,"全部"),
@@ -483,6 +507,16 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                     dto.getCurrentPage(), dto.getSize());
 
             total = auditLogMapper.countMetaChangesChartsByOpType(startTime, endTime, entityType.getValue());
+        }
+
+        //根据服务类型 筛选出符合条件的数据
+        ClassificationTypeEnum serviceType = dto.getServiceType();
+        //如果是只查询外部数据源的影响性分析，则剔除掉不是外部数据源的元数据
+        if (serviceType.equals(ClassificationTypeEnum.EXTERNAL_DATA)) {
+            auditLogs.removeIf(po -> !"外部数据源".equals(po.owner));
+        } else if (!serviceType.equals(ClassificationTypeEnum.ALL)) {
+            //如果是查询其他服务的
+            auditLogs.removeIf(po -> !(po.businessClassificationId == serviceType.getValue()));
         }
 
         //获取所有表级元数据
@@ -556,7 +590,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (type.equals(EntityTypeEnum.RDBMS_COLUMN)) {
-                checkColumnChange(po, impactNames, metadataEntityPOS);
+                checkColumnChange(po, impactNames);
             }
             detailDTO.setImpactAnalysis(impactNames);
 
@@ -583,6 +617,8 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
         //转换时间
         LocalDateTime startTime = getLocalDateTime(dto.getStartTime());
         LocalDateTime endTime = getLocalDateTime(dto.getEndTime());
+        //加一天 获取今天数据  例如  9.11 9.12  其实要获取的是9.11 0:00 - 9.13 0:00之间的数据
+        endTime = endTime.plus(1, ChronoUnit.DAYS);
         /*
         获取查询的类型：
             ALL(0,"全部"),
@@ -602,6 +638,16 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             auditLogs = auditLogMapper.getMetaChangesChartsDetailNoPage(startTime, endTime);
         } else {
             auditLogs = auditLogMapper.getMetaChangesChartsDetailByOpTypeNoPage(startTime, endTime, entityType.getValue());
+        }
+
+        //根据服务类型 筛选出符合条件的数据
+        ClassificationTypeEnum serviceType = dto.getServiceType();
+        //如果是只查询外部数据源的影响性分析，则剔除掉不是外部数据源的元数据
+        if (serviceType.equals(ClassificationTypeEnum.EXTERNAL_DATA)) {
+            auditLogs.removeIf(po -> !"外部数据源".equals(po.owner));
+        } else if (!serviceType.equals(ClassificationTypeEnum.ALL)) {
+            //如果是查询其他服务的
+            auditLogs.removeIf(po -> !(po.businessClassificationId == serviceType.getValue()));
         }
 
         //获取所有表级元数据
@@ -683,7 +729,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
                 data.stream().filter(userDTO -> userDTO.getId().toString().equals(po.createUser)).findFirst().ifPresent(userDTO -> {
                     detailDTO.setOwnerId(userDTO.getUsername());
                 });
-                if (detailDTO.getOwnerId()==null){
+                if (detailDTO.getOwnerId() == null) {
                     detailDTO.setOwnerId("Auto");
                 }
             } else {
@@ -692,7 +738,7 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
 
             //如果是字段 则可以检索该字段的影响性分析  （即从血缘表查询数据）
             if (EntityTypeEnum.getValue(po.typeId).equals(EntityTypeEnum.RDBMS_COLUMN)) {
-                checkColumnChange(po, impactNames, metadataEntityPOS);
+                checkColumnChange(po, impactNames);
             }
             detailDTO.setImpactAnalysis(impactNames);
 
@@ -731,27 +777,9 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
     /**
      * 检索该字段的影响性分析
      */
-    private void checkColumnChange(AuditLogWithEntityTypeAndDetailPO po, List<String> impactNames, List<MetadataEntityPO> metadataEntityPOS) {
+    private void checkColumnChange(AuditLogWithEntityTypeAndDetailPO po, List<String> impactNames) {
         //获取该字段所属的表的元数据id
         int parentId = po.getParentId();
-
-//        String name = null;
-//        try {
-//            name = Objects.requireNonNull(metadataEntityPOS.stream()
-//                            .filter(metadataEntityPO -> metadataEntityPO.getId() == parentId)
-//                            .findFirst()
-//                            .orElse(null))
-//                    .getName();
-//        } catch (Exception e) {
-//            log.error("空指针：" + e);
-//            return;
-//        }
-//
-//
-//        //字段的父表
-//        if (!StringUtils.isEmpty(name)) {
-//            impactNames.add("【Parent:" + name + "】");
-//        }
 
         //获取表元数据的血缘 向下找
         List<LineageMapRelationPO> list = lineageMapRelationImpl.list(new LambdaQueryWrapper<LineageMapRelationPO>()

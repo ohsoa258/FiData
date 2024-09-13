@@ -31,6 +31,16 @@ public class MetadataEntityAuditLogPOWithEntityType extends BasePO implements Se
      */
     public Integer typeId;
 
+    /**
+     * 负责人
+     */
+    public String owner;
+
+    /**
+     * ClassificationTypeEnum 服务类型/目录类型
+     */
+    public Integer classId;
+
 
 //    /**
 //     * 发现时间

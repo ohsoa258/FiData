@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.datamodel.ModelTblTypePrefixEnum;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -144,7 +145,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
             if (!CollectionUtils.isEmpty(data)) {
                 //这里的getWorkflowId 已经被替换为 workflowName
-                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
                 log.info("当前要删除的表存在于以下管道中：" + collect);
                 return ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH;
             }
@@ -254,9 +255,9 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
             List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
             if (!CollectionUtils.isEmpty(data)) {
                 //这里的getWorkflowId 已经被替换为 workflowName
-                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+                List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
                 log.info("当前要删除的表存在于以下管道中：" + collect);
-                return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH,collect);
+                return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH, collect);
             }
 
             FactPO po = mapper.selectById(id);
@@ -341,7 +342,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
 
             }
 
-            if (flat > 0){
+            if (flat > 0) {
                 return ResultEntityBuild.build(ResultEnum.SUCCESS);
             } else {
                 return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -722,7 +723,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
         if (!CollectionUtils.isEmpty(data)) {
             //这里的getWorkflowId 已经被替换为 workflowName
-            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
             log.info("当前要删除的表存在于以下管道中：" + collect);
             return ResultEntityBuild.build(ResultEnum.FACT_EXISTS_IN_DISPATCH, collect);
         }
@@ -813,6 +814,29 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
     @Override
     public List<FactDTO> getFactTableByIds(List<Integer> ids) {
         return FactMap.INSTANCES.poListToFactDtoList(baseMapper.selectBatchIds(ids));
+    }
+
+    /**
+     * 获取当前数仓表管理的管道有哪些
+     *
+     * @param tblId
+     * @param tblType
+     * @return
+     */
+    @Override
+    public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getDispatchOfTblByIdType(Integer tblId, Integer tblType) {
+        // 删除之前检查该事实表是否已经被配置到存在的管道里面：
+        // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该事实表，
+        // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数仓建模的事实表对应的table type是5  数仓表任务-数仓事实表任务
+        CheckPhyDimFactTableIfExistsDTO checkDto = new CheckPhyDimFactTableIfExistsDTO();
+        checkDto.setTblId(Long.valueOf(tblId));
+        //0 维度 1事实
+        if (tblType == ModelTblTypePrefixEnum.DIM.getValue()) {
+            checkDto.setChannelDataEnum(ChannelDataEnum.getName(4));
+        } else {
+            checkDto.setChannelDataEnum(ChannelDataEnum.getName(5));
+        }
+        return dataFactoryClient.checkPhyTableIfExists(checkDto);
     }
 
     /**
@@ -936,23 +960,23 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
         List<FactAttributeUpdateDTO> factAttribute = factAttributeImpl.getFactAttribute(Math.toIntExact(factId));
 
         //获取所有维度表信息
-        List<DimensionPO> dimPos =  dimensionImpl.list(
+        List<DimensionPO> dimPos = dimensionImpl.list(
                 new LambdaQueryWrapper<DimensionPO>().select(DimensionPO::getDimensionTabName, DimensionPO::getId)
         );
 
         //从system模块获取dmp_dw数仓的信息
-        ResultEntity<DataSourceDTO> resultEntity =  userClient.getFiDataDataSourceById(dateDwSourceId);
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(dateDwSourceId);
         DataSourceDTO dataSourceDTO;
-        if (resultEntity.getCode()==ResultEnum.SUCCESS.getCode()){
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
             dataSourceDTO = resultEntity.getData();
-        }else {
+        } else {
             log.error("获取平台配置数据源dmp_dw信息失败");
             return dimNames;
         }
 
-        if (!CollectionUtils.isEmpty(factAttribute)){
+        if (!CollectionUtils.isEmpty(factAttribute)) {
             String configDetails = factAttribute.get(0).getConfigDetails();
-            if (StringUtils.isNotBlank(configDetails)){
+            if (StringUtils.isNotBlank(configDetails)) {
                 List<RelationDTO> relationDTOS = JSON.parseArray(configDetails, RelationDTO.class);
                 //获取到关联外键的维度表的名称
                 List<String> dimOriginalNames = relationDTOS.stream().map(RelationDTO::getTargetTable).collect(Collectors.toList());
@@ -961,7 +985,7 @@ public class FactImpl extends ServiceImpl<FactMapper, FactPO> implements IFact {
                 //元数据唯一限定表名称格式为: 数据库地址_数据库名称_表类型(1是维度)_表id  192.168.0.61_dmp_dw_1_50
 
                 for (DimensionPO dimPo : dimPos) {
-                    if (dimOriginalNames.contains(dimPo.getDimensionTabName())){
+                    if (dimOriginalNames.contains(dimPo.getDimensionTabName())) {
                         dimNames.add(dataSourceDTO.getConIp() + "_" + dataSourceDTO.getConDbname() + "_" + 1 + "_" + dimPo.getId());
                     }
                 }

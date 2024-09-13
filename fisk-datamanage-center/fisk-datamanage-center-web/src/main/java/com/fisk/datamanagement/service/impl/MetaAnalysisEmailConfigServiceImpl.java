@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.Dto.Excel.ExcelDto;
@@ -72,7 +74,7 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
     @Override
     public MetaAnalysisEmailConfigDTO getMetaAnalysisEmailConfig() {
         List<MetaAnalysisEmailConfigPO> list = this.list();
-        if (CollectionUtils.isEmpty(list)){
+        if (CollectionUtils.isEmpty(list)) {
             return new MetaAnalysisEmailConfigDTO();
         }
 
@@ -107,6 +109,10 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
             return;
         }
         MetaAnalysisEmailConfigPO metaAnalysisEmailConfigPO = list.get(0);
+
+        //获取邮件预警级别
+        int warnLevel = metaAnalysisEmailConfigPO.getWarnLevel();
+        int serviceType = metaAnalysisEmailConfigPO.getServiceType();
 
         //邮箱组id
         int emailGroupId = metaAnalysisEmailConfigPO.getEmailGroupId();
@@ -145,9 +151,24 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
                 dto.setEndTime(now.format(formatter));
                 break;
         }
+        ClassificationTypeEnum enumByValue = ClassificationTypeEnum.getEnumByValue(serviceType);
+        if (enumByValue == null){
+            enumByValue = ClassificationTypeEnum.ALL;
+        }
+
         dto.setEntityType(value);
+        dto.setServiceType(enumByValue);
         //2.查询周期内审计日志需要生成的excel数据 然后生成excel
         List<AssetsChangeAnalysisDetailDTO> metaChangesChartsDetailWithoutPage = auditLog.getMetaChangesChartsDetailWithoutPage(dto);
+        if (CollectionUtils.isEmpty(metaChangesChartsDetailWithoutPage)) {
+            log.info("没有获取到需要生成的excel的变更分析数据，无需发送邮件。");
+            return;
+        }
+
+        //如果是外部数据源，邮件内容请标注清楚
+        if (enumByValue.equals(ClassificationTypeEnum.EXTERNAL_DATA)) {
+            metaChangesChartsDetailWithoutPage.forEach(item -> item.setParentName("【外部数据源】" + item.getParentName()));
+        }
 
         String currentFileName = UUID.randomUUID().toString().replace("-", "") + ".xlsx";
         String uploadUrl = "D:/Excel/";
@@ -169,13 +190,11 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
         headerNames.add("创建人id/名称");
         headerNames.add("元数据类型编码");
 
-
         rowDto.setColumns(headerNames);
         singRows.add(rowDto);
         String sheetName = "Sheet01";
         sheet.setSheetName(sheetName);
         sheet.setSingRows(singRows);
-
 
         JSONArray jsonArray = null;
         String data = JSON.toJSONString(metaChangesChartsDetailWithoutPage);
@@ -191,7 +210,7 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
         ExcelReportUtil.createExcel(excelDto, uploadUrl, currentFileName, true);
 
         //3.发送邮件 携带刚生成的excel附件
-        sendEmail(emailGroupId, uploadUrl, currentFileName, dto.getStartTime(), dto.getEndTime());
+        sendEmail(emailGroupId, uploadUrl, currentFileName, dto.getStartTime(), dto.getEndTime(), warnLevel);
     }
 
     /**
@@ -199,7 +218,7 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
      *
      * @return
      */
-    private void sendEmail(int groupId, String excelPath, String fileName, String startTime, String endTime) {
+    private void sendEmail(int groupId, String excelPath, String fileName, String startTime, String endTime, int warnLevel) {
         //获取邮件组
         EmailGroupPO groupPO = iEmailGroupService.getById(groupId);
 
@@ -235,8 +254,9 @@ public class MetaAnalysisEmailConfigServiceImpl extends ServiceImpl<MetaAnalysis
             for (EmailUserPO emailUserPO : emailUserPOS) {
                 MailSenderDTO mailSenderDTO = new MailSenderDTO();
                 mailSenderDTO.setUser(data.getEmailServerAccount());
-                //邮件标题
-                mailSenderDTO.setSubject("FiData【数据资产 - 元数据变更分析】");
+                //邮件标题 根据预警级别的不同，标题不同
+                EmailWarnLevelEnum anEnum = EmailWarnLevelEnum.getEnum(warnLevel);
+                mailSenderDTO.setSubject("FiData" + "【" + anEnum.getName() + "】" + "【数据资产 - 元数据变更分析】");
                 //邮件正文
                 mailSenderDTO.setBody("【监测周期：" + startTime + " - " + endTime + " 】" + " 此邮件为数据资产元数据变更分析通知邮件，变更明细请参照附件。");
                 mailSenderDTO.setToAddress(emailUserPO.getEmailAddress());

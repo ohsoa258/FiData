@@ -1,6 +1,7 @@
 package com.fisk.datamanagement.dto.assetschangeanalysis;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.common.core.enums.datamanage.ClassificationTypeEnum;
 import com.fisk.datamanagement.enums.EntityTypeEnum;
 import com.fisk.datamanagement.enums.MetadataAuditOperationTypeEnum;
 import io.swagger.annotations.ApiModelProperty;
@@ -43,5 +44,13 @@ public class AssetsChangeAnalysisDetailQueryDTO implements Serializable {
 
     @ApiModelProperty(value = "每页条数")
     private Integer size;
+
+    /**
+     * 类型
+     * RDBMS_TABLE 表
+     * RDBMS_COLUMN 字段
+     */
+    @ApiModelProperty(value = "类型 RDBMS_TABLE表 RDBMS_COLUMN字段")
+    private ClassificationTypeEnum serviceType;
 
 }

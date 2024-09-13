@@ -791,7 +791,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
         if (!CollectionUtils.isEmpty(data)) {
             //这里的getWorkflowId 已经被替换为 workflowName
-            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowId).collect(Collectors.toList());
+            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
             log.info("当前要删除的表存在于以下管道中：" + collect);
             NifiVO nifiVO = new NifiVO();
             nifiVO.setWorkFlowName(collect);

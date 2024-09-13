@@ -10,6 +10,8 @@
             <result property="queryTime" column="query_time" jdbcType="INTEGER"/>
             <result property="entityType" column="entity_type" jdbcType="INTEGER"/>
             <result property="cronExp" column="cron_exp" jdbcType="VARCHAR"/>
+            <result property="warnLevel" column="warn_level" jdbcType="INTEGER"/>
+            <result property="serviceType" column="service_type" jdbcType="INTEGER"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>

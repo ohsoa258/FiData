@@ -3,6 +3,7 @@ package com.fisk.datamanagement.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
@@ -15,6 +16,7 @@ import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsParameterDTO;
 import com.fisk.datamanagement.dto.dataassets.DataAssetsResultDTO;
+import com.fisk.datamanagement.entity.MetadataEntityPO;
 import com.fisk.datamanagement.service.IDataAssets;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.system.client.UserClient;
@@ -27,6 +29,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author JianWenYang
@@ -45,8 +48,26 @@ public class DataAssetsImpl implements IDataAssets {
     @Resource
     DataModelClient dataModelClient;
 
+    @Resource
+    private MetadataEntityImpl metadataEntity;
+
     @Override
     public DataAssetsResultDTO getDataAssetsTableList(DataAssetsParameterDTO dto) {
+        //元数据树改为懒加载后，前端传过来的排序字段会存在为null的状态 因此加判断 如果前端没传 后端自己拿
+        if (StringUtils.isBlank(dto.columnName)){
+            List<String> columnNames = metadataEntity.list(
+                    new LambdaQueryWrapper<MetadataEntityPO>()
+                            .eq(MetadataEntityPO::getParentId, dto.entityId)
+                            .select(MetadataEntityPO::getName)
+            ).stream().map(MetadataEntityPO::getName).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(columnNames)){
+                dto.setColumnName(columnNames.get(0));
+            }else {
+                log.error("获取不到元数据表的字段，无法获取排序字段并查询数据，请联系系统管理员...");
+                throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+            }
+        }
+
         DataAssetsResultDTO data = new DataAssetsResultDTO();
         Connection conn = null;
         Statement st = null;
@@ -109,7 +130,7 @@ public class DataAssetsImpl implements IDataAssets {
 
             ResultSet rs = psst.executeQuery();
             log.debug("sql play success");
-            // 获取列数
+            //获取列数
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
             data.dataArray = columnDataList(rs, metaData, columnCount);
@@ -122,11 +143,11 @@ public class DataAssetsImpl implements IDataAssets {
                 log.debug("displayList is empty");
                 throw new FkException(ResultEnum.VISUAL_QUERY_ERROR);
             }
-            // if (!dto.export) {
+            //if (!dto.export) {
             log.debug("choose !dto.export");
             displayList.addAll(systemTableColumn());
             log.debug("displayList.addAll end");
-            //  }
+            //}
             log.debug("ready to close connection");
             psst.close();
             log.debug("close connection success");

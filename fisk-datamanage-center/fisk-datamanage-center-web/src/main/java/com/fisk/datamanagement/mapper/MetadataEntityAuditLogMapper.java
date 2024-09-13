@@ -25,13 +25,19 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
 
     List<AuditAnalysisDayChangeTotalVO> getDayTotal(String beginTime, String endTime);
 
-    @Select("SELECT a.id,a.operation_type,a.create_time,b.type_id FROM tb_metadata_entity_audit_log a LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
-            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND a.del_flag = 1 AND b.del_flag = 1;")
+    @Select("SELECT a.id,a.operation_type,a.create_time,b.type_id,b.owner,c.business_classification_id as class_id FROM tb_metadata_entity_audit_log a " +
+            "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
+            "LEFT JOIN tb_metadata_classification_map c ON b.id = c.metadata_entity_id " +
+            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND a.del_flag = 1 AND b.del_flag = 1 " +
+            "order by a.id DESC;")
     List<MetadataEntityAuditLogPOWithEntityType> getMetaChangesCharts(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
 
-    @Select("SELECT a.id,a.operation_type,a.create_time,b.type_id FROM tb_metadata_entity_audit_log a LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
-            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType}  AND a.del_flag = 1 AND b.del_flag = 1;")
-    List<MetadataEntityAuditLogPOWithEntityType> getMetaChangesChartsByOpType(@Param("startTime") LocalDateTime startTime,
+    @Select("SELECT a.id,a.operation_type,a.create_time,b.type_id,b.owner,c.business_classification_id as class_id FROM tb_metadata_entity_audit_log a " +
+            "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
+            "LEFT JOIN tb_metadata_classification_map c ON b.id = c.metadata_entity_id " +
+            "WHERE a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType}  AND a.del_flag = 1 AND b.del_flag = 1 " +
+            "order by a.id DESC;")
+    List<MetadataEntityAuditLogPOWithEntityType> getMetaChangesChartsByEntityType(@Param("startTime") LocalDateTime startTime,
                                                                               @Param("endTime") LocalDateTime endTime,
                                                                               @Param("entityType") Integer entityType);
 
@@ -44,17 +50,23 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
+            "b.owner," +
             "c.audit_id," +
             "c.attribute," +
             "c.before_value," +
-            "c.after_value" +
+            "c.after_value," +
+            "d.business_classification_id" +
             " FROM " +
             "tb_metadata_entity_audit_log a " +
             "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
             "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
+            "LEFT JOIN tb_metadata_classification_map d ON b.id = d.metadata_entity_id " +
             "WHERE " +
-            "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType}" +
-            " AND a.del_flag = 1 AND b.del_flag = 1  LIMIT #{current},#{size};")
+            "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType} " +
+            "AND a.del_flag = 1 " +
+            "AND b.del_flag = 1 " +
+            "order by a.id DESC " +
+            "LIMIT #{current},#{size};")
     List<AuditLogWithEntityTypeAndDetailPO> getMetaChangesChartsDetailByOpType(@Param("startTime") LocalDateTime startTime,
                                                                                @Param("endTime") LocalDateTime endTime,
                                                                                @Param("entityType") Integer entityType,
@@ -71,17 +83,23 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
+            "b.owner," +
             "c.audit_id," +
             "c.attribute," +
             "c.before_value," +
-            "c.after_value" +
+            "c.after_value," +
+            "d.business_classification_id" +
             " FROM " +
             "tb_metadata_entity_audit_log a " +
             "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
             "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
+            "LEFT JOIN tb_metadata_classification_map d ON b.id = d.metadata_entity_id " +
             "WHERE " +
             "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND b.type_id = #{entityType}" +
-            " AND a.del_flag = 1 AND b.del_flag = 1;")
+            "AND a.del_flag = 1 " +
+            "AND b.del_flag = 1 " +
+            "order by a.id DESC " +
+            ";")
     List<AuditLogWithEntityTypeAndDetailPO> getMetaChangesChartsDetailByOpTypeNoPage(@Param("startTime") LocalDateTime startTime,
                                                                                @Param("endTime") LocalDateTime endTime,
                                                                                @Param("entityType") Integer entityType
@@ -96,17 +114,23 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
+            "b.owner," +
             "c.audit_id," +
             "c.attribute," +
             "c.before_value," +
-            "c.after_value" +
+            "c.after_value," +
+            "d.business_classification_id" +
             " FROM " +
             "tb_metadata_entity_audit_log a " +
             "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
             "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
+            "LEFT JOIN tb_metadata_classification_map d ON b.id = d.metadata_entity_id " +
             "WHERE " +
             "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND (b.type_id = 3 or b.type_id = 6 ) " +
-            " AND a.del_flag = 1 AND b.del_flag = 1 LIMIT #{current},#{size};")
+            "AND a.del_flag = 1 " +
+            "AND b.del_flag = 1 " +
+            "order by a.id DESC " +
+            " LIMIT #{current},#{size};")
     List<AuditLogWithEntityTypeAndDetailPO> getMetaChangesChartsDetail(@Param("startTime") LocalDateTime startTime,
                                                                        @Param("endTime") LocalDateTime endTime,
                                                                        @Param("current") Integer current,
@@ -122,17 +146,23 @@ public interface MetadataEntityAuditLogMapper extends BaseMapper<MetadataEntityA
             "b.type_id," +
             "b.name," +
             "b.parent_id," +
+            "b.owner," +
             "c.audit_id," +
             "c.attribute," +
             "c.before_value," +
-            "c.after_value" +
+            "c.after_value," +
+            "d.business_classification_id" +
             " FROM " +
             "tb_metadata_entity_audit_log a " +
             "LEFT JOIN tb_metadata_entity b ON a.entity_id = b.id " +
             "LEFT JOIN tb_metadata_entity_audit_atrribute_change c ON a.id = c.audit_id " +
+            "LEFT JOIN tb_metadata_classification_map d ON b.id = d.metadata_entity_id " +
             "WHERE " +
             "a.create_time >= #{startTime} AND a.create_time <= #{endTime} AND (b.type_id = 3 or b.type_id = 6 ) " +
-            " AND a.del_flag = 1 AND b.del_flag = 1;")
+            "AND a.del_flag = 1 " +
+            "AND b.del_flag = 1 " +
+            "order by a.id DESC " +
+            ";")
     List<AuditLogWithEntityTypeAndDetailPO> getMetaChangesChartsDetailNoPage(@Param("startTime") LocalDateTime startTime,
                                                                        @Param("endTime") LocalDateTime endTime
     );

@@ -46,6 +46,18 @@ public class MetaAnalysisEmailConfigDTO implements Serializable {
     @ApiModelProperty(value = "cron表达式")
     private String cronExp;
 
+    /**
+     * 预警级别(EmailWarnLevelEnum)：
+     */
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)：")
+    private Integer warnLevel;
+
+    /**
+     * 服务类型(ClassificationTypeEnum)
+     */
+    @ApiModelProperty(value = "服务类型(ClassificationTypeEnum)")
+    private Integer serviceType;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

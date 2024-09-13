@@ -36,6 +36,16 @@ public class MetaAnalysisEmailConfigPO extends BasePO implements Serializable {
      */
     private String cronExp;
 
+    /**
+     * 预警级别(EmailWarnLevelEnum)
+     */
+    private Integer warnLevel;
+
+    /**
+     * 服务类型(ClassificationTypeEnum)
+     */
+    private Integer serviceType;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 

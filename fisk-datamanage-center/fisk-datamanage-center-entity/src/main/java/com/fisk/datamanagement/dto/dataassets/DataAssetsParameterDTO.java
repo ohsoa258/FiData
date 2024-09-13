@@ -18,6 +18,11 @@ public class DataAssetsParameterDTO {
     @ApiModelProperty(value = "guid")
     public String instanceGuid;
     /**
+     * 表id
+     */
+    @ApiModelProperty(value = "表id")
+    public String entityId;
+    /**
      * 数据库名称
      */
     @ApiModelProperty(value = "数据库名称")
