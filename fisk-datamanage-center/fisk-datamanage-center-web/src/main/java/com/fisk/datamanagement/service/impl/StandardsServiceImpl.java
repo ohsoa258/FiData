@@ -871,11 +871,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 StandardsDTO standards = getStandards(standardsPO.getMenuId());
                 List<StandardsBeCitedDTO> standardsBeCitedDTOList = standards.getStandardsBeCitedDTOList();
                 List<StandardsBeCitedDTO> collect = standardsBeCitedDTOList.stream().filter(i -> {
-                    if (!i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
-                            && !i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
-                        return true;
-                    } else {
+                    if (i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
+                            && i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
                         return false;
+                    } else {
+                        return true;
                     }
                 }).collect(Collectors.toList());
                 standards.setStandardsBeCitedDTOList(collect);
@@ -899,11 +899,11 @@ public class StandardsServiceImpl extends ServiceImpl<StandardsMapper, Standards
                 StandardsDTO standards = getStandards(standardsPO.getMenuId());
                 List<StandardsBeCitedDTO> standardsBeCitedDTOList = standards.getStandardsBeCitedDTOList();
                 List<StandardsBeCitedDTO> collect = standardsBeCitedDTOList.stream().filter(i -> {
-                    if (!i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
-                            && !i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
-                        return true;
-                    } else {
+                    if (i.getTableBusinessType().equals(standardsBeCitedPO.getTableBusinessType())
+                            && i.getFieldId().equals(standardsBeCitedPO.getFieldId())) {
                         return false;
+                    } else {
+                        return true;
                     }
                 }).collect(Collectors.toList());
                 standards.setStandardsBeCitedDTOList(collect);
