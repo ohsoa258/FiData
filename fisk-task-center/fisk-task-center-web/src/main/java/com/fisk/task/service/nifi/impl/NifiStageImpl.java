@@ -54,6 +54,7 @@ import com.fisk.task.service.nifi.INifiStage;
 import com.fisk.task.service.nifi.IPipelineTableLog;
 import com.fisk.task.service.pipeline.IEtlLog;
 import com.fisk.task.service.pipeline.ITableTopicService;
+import com.fisk.task.service.task.ITBETLIncremental;
 import com.fisk.task.utils.KafkaTemplateHelper;
 import com.fisk.task.utils.LocalDateUtil;
 import com.fisk.task.utils.NifiHelper;
@@ -123,6 +124,8 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
     RedisUtil redisUtil;
     @Value("${nifi.pipeline.maxTime}")
     public String maxTime;
+    @Resource
+    IEtlLog iEtlLog;
 
 
     @Override
@@ -173,8 +176,15 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         log.info("阶段日志保存:" + data);
         try {
             NifiStagePO nifiStagePO = new NifiStagePO();
-            String pipleName = "";
-            String JobName = "";
+            String inputString = data;
+
+            // 找到 message 字段的位置
+            int start = inputString.indexOf("\"message\":\"") + 11; // 11 是 "message":" 的长度
+            int end = inputString.indexOf("\",\"pipelJobTraceId\"", start);
+
+            // 提取 message 值并替换双引号
+            String message = inputString.substring(start, end).replace("\"", "\\\"");
+            data = inputString.substring(0, start) + message + inputString.substring(end);
             //转成集合
             data = "[" + data + "]";
             List<NifiStageMessageDTO> nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
@@ -203,6 +213,7 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                         appId = Integer.valueOf(topic[4]);
                         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         String format = simpleDateFormat.format(new Date());
+                        LocalDateTime now = LocalDateTime.now();
                         if (consumerServerEnable && Objects.equals(type, OlapTableEnum.DATASERVICES.getValue())) {
 
                             //错误日志修复
@@ -308,6 +319,56 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
                             pipelTaskLogPO1.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
                             pipelTaskLogPO1.setTableType(type);
                             iPipelTaskLog.save(pipelTaskLogPO1);
+                        }else if (Objects.equals(type, OlapTableEnum.MDM_DATA_ACCESS.getValue())) {
+                            //错误日志修复
+                            LambdaQueryWrapper<PipelTaskLogPO> queryWrapper = new LambdaQueryWrapper<>();
+                            queryWrapper.eq(PipelTaskLogPO::getTaskTraceId, nifiStageMessageDTO.pipelTaskTraceId)
+                                    .eq(PipelTaskLogPO::getType, DispatchLogEnum.taskend.getValue())
+                                    .eq(PipelTaskLogPO::getTableType, OlapTableEnum.MDM_DATA_ACCESS.getValue());
+                            PipelTaskLogPO pipelTaskLogPO = iPipelTaskLog.getOne(queryWrapper);
+
+                            if (pipelTaskLogPO != null) {
+                                pipelTaskLogPO.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                                iPipelTaskLog.updateById(pipelTaskLogPO);
+                            } else {
+                                TableServiceEmailDTO tableServiceEmailDTO = new TableServiceEmailDTO();
+                                tableServiceEmailDTO.appId = appId;
+                                tableServiceEmailDTO.msg = NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message;
+                                tableServiceEmailDTO.result = "【运行失败】";
+                                tableServiceEmailDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                                List<PipelTaskLogPO> pos = iPipelTaskLog.query()
+                                        .eq("task_trace_id", nifiStageMessageDTO.pipelTaskTraceId)
+                                        .eq("type", DispatchLogEnum.taskstart.getValue())
+                                        .list();
+
+                                if (org.apache.commons.collections4.CollectionUtils.isNotEmpty(pos)) {
+                                    PipelTaskLogPO taskLogPO = pos.get(0);
+                                    try {
+                                        Date date = new Date();
+                                        Date parse = simpleDateFormat.parse(taskLogPO.msg.substring(7, 26));
+                                        Long second = (date.getTime() - parse.getTime()) / 1000 % 60;
+                                        Long minutes = (date.getTime() - parse.getTime()) / (60 * 1000) % 60;
+                                        tableServiceEmailDTO.duration = minutes + "m " + second + "s";
+                                    } catch (ParseException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                            PipelTaskLogPO pipelTaskLogPO1 = new PipelTaskLogPO();
+                            pipelTaskLogPO1.setTaskTraceId(nifiStageMessageDTO.pipelTaskTraceId);
+                            pipelTaskLogPO1.setType(DispatchLogEnum.taskend.getValue());
+                            pipelTaskLogPO1.setTableId(tableAccessId);
+                            pipelTaskLogPO1.setMsg(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                            pipelTaskLogPO1.setTableType(type);
+                            iPipelTaskLog.save(pipelTaskLogPO1);
+
+                            LambdaQueryWrapper<TBETLlogPO> queryWrapper1 = new LambdaQueryWrapper<>();
+                            queryWrapper1.eq(TBETLlogPO::getCode, nifiStageMessageDTO.pipelTaskTraceId);
+                            TBETLlogPO one = iEtlLog.getOne(queryWrapper1);
+                            one.setEnddate(now);
+                            one.setErrordesc(NifiStageTypeEnum.RUN_FAILED.getName() + " - " + format + " - ErrorMessage:" + nifiStageMessageDTO.message);
+                            one.setStatus(2);
+                            iEtlLog.updateById(one);
                         }
                     } else if (topic.length == 7) {
                         String pipelineId = topic[3];
