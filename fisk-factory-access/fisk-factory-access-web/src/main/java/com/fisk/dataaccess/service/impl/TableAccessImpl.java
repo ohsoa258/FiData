@@ -769,6 +769,37 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     }
 
     /**
+     * cdc类型应用的表的单表删除
+     *
+     * @param id id
+     * @return 执行结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public ResultEnum deleteCdcData(long id) {
+        // 1.删除tb_table_access数据
+        TableAccessPO modelAccess = this.getById(id);
+        if (modelAccess == null) {
+            return ResultEnum.DATA_NOTEXISTS;
+        }
+        int deleteAccess = accessMapper.deleteByIdWithFill(modelAccess);
+        if (deleteAccess < 0) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        // 2.删除tb_table_fields数据
+        List<TableFieldsPO> list = tableFieldsImpl.query().eq("table_access_id", id).list();
+        try {
+            // 判断是否存在表字段
+            if (!CollectionUtils.isEmpty(list)) {
+                list.forEach(e -> fieldsMapper.deleteByIdWithFill(e));
+            }
+        } catch (Exception e) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
      * 删除数据
      *
      * @param id id

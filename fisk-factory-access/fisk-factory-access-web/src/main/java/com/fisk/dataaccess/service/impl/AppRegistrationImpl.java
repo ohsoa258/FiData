@@ -1588,7 +1588,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public void hudiSyncAllTablesByMerge(Integer dbId, Integer appDatasourceId, Long appId, String appName) {
         log.info("hudi入仓配置 增量同步时，先获取已同步到当前应用下的所有表名");
         LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(TableAccessPO::getTableName)
+        wrapper.select(TableAccessPO::getTableName, TableAccessPO::getId)
                 .eq(TableAccessPO::getAppId, appId);
         //获取到已经同步过的表名
         List<TableAccessPO> posAlreadyHave = tableAccessImpl.list(wrapper);
@@ -1777,6 +1777,21 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                             tableFieldsImpl.saveOrUpdateBatch(tableFieldsPOS);
                         }
                     }
+                }
+
+                //若是上游某张表删除了 配置库的元数据也给删掉
+                for (TableAccessPO tableAccessPO : posAlreadyHave) {
+                    boolean flag = false;
+                    for (TablePyhNameDTO table : tableNames) {
+                        if (tableAccessPO.getTableName().equals(table.getTableName())) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (!flag) {
+                        //删除配置库的元数据
+                        tableAccessImpl.deleteCdcData(tableAccessPO.getId());
+                   }
                 }
 
             } catch (Exception e) {

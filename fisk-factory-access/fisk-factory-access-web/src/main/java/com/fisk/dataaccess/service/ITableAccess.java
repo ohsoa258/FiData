@@ -59,6 +59,14 @@ public interface ITableAccess extends IService<TableAccessPO> {
     ResultEntity<NifiVO> deleteData(long id);
 
     /**
+     * cdc类型应用的表的单表删除
+     *
+     * @param id 请求参数
+     * @return 返回值
+     */
+    ResultEnum deleteCdcData(long id);
+
+    /**
      * 添加物理表(非实时)
      *
      * @param dto 请求参数
