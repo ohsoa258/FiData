@@ -18,7 +18,7 @@ public class NifiCustomWorkflowDetailDTO {
     public Long pid;
     @ApiModelProperty(value = "管道保存使用uuid")
     public String uuid;
-    @ApiModelProperty(value = "管道id")
+    @ApiModelProperty(value = "管道uuid")
     public String workflowId;
     @ApiModelProperty(value = "管道名称")
     public String workflowName;
@@ -101,4 +101,7 @@ public class NifiCustomWorkflowDetailDTO {
 
     @ApiModelProperty(value = "组件子集", required = true)
     public List<ChildrenWorkflowDetailDTO> childrenWorkflowDetailList;
+
+    @ApiModelProperty(value = "管道id")
+    public int dispatchId;
 }

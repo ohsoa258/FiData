@@ -1387,6 +1387,7 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
                             .eq(NifiCustomWorkflowPO::getWorkflowId, collect.get(i)));
             //把workflowid替换为workflowName
             dtos.get(i).setWorkflowName(one.workflowName);
+            dtos.get(i).setDispatchId(Math.toIntExact(one.id));
         }
 
         return dtos;
