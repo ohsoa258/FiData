@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkFlowDropDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowNumDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
+import com.fisk.datafactory.dto.customworkflow.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowPO;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
@@ -119,4 +116,6 @@ public interface INifiCustomWorkflow extends IService<NifiCustomWorkflowPO> {
     ResultEntity<Object> getNifiCustomWorkFlowPartInfo(String pipelTraceId);
 
     NifiCustomWorkflowDTO getNifiCustomWorkFlow(String workflowId);
+
+    List<WorkflowDTO> getWorkFlowNameByTableId(WorkFlowQueryDTO workFlowQueryDTO);
 }

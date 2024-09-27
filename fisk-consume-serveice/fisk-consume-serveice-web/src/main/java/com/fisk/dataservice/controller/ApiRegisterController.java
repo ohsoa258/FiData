@@ -8,6 +8,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datamanagement.dto.standards.StandardsMenuDTO;
 import com.fisk.datamanagement.dto.standards.StandardsSortDTO;
 import com.fisk.datamanagement.dto.standards.StandardsTreeDTO;
+import com.fisk.datamodel.dto.fact.FactTreeDTO;
 import com.fisk.dataservice.config.SwaggerConfig;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
@@ -199,5 +200,22 @@ public class ApiRegisterController {
     @PostMapping("/getAllTag")
     public ResultEntity<Object> getAllTag() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAllTag());
+    }
+    @ApiOperation("获取apitree(指标用)")
+    @GetMapping("/getApiTreeBusiness")
+    public List<ApiTreeBusinessDTO> getApiTreeBusiness() {
+        return service.getApiTreeBusiness();
+    }
+
+    @ApiOperation("根据字段id获取字段详情")
+    @PostMapping("/getApiAttributeByIds")
+    public ResultEntity<List<FieldConfigVO>> getApiAttributeByIds(@RequestBody List<Integer> fieldIds) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getApiAttributeByIds(fieldIds));
+    }
+
+    @ApiOperation("根据字段id获取字段详情")
+    @PostMapping("/getApiByIds")
+    public ResultEntity<List<ApiConfigVO>> getApiByIds(@RequestBody List<Integer> apiIds) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getApiByIds(apiIds));
     }
 }

@@ -66,6 +66,12 @@ public class AppRegisterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.pageFilter(dto));
     }
 
+    @ApiOperation("根据id获取应用信息")
+    @GetMapping("/getAppById/{appId}")
+    public ResultEntity<Object> getAppById(@PathVariable("appId") Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppById(appId));
+    }
+
     @ApiOperation("添加应用")
     @PostMapping("/add")
     public ResultEntity<Object> addData(@Validated @RequestBody AppRegisterDTO dto) {
@@ -139,4 +145,9 @@ public class AppRegisterController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getApiService());
     }
 
+    @ApiOperation("根据字段id获取字段详情")
+    @PostMapping("/getBusinessAppByIds")
+    public ResultEntity<List<AppRegisterVO>> getBusinessAppByIds(@RequestBody List<Integer> appIds){
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getBusinessAppByIds(appIds));
+    }
 }

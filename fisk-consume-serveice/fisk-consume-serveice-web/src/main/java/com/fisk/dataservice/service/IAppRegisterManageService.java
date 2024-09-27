@@ -146,4 +146,8 @@ public interface IAppRegisterManageService extends IService<AppConfigPO> {
      * @return
      */
     List<AppBusinessInfoDTO> getApiService();
+
+    List<AppRegisterVO> getBusinessAppByIds(List<Integer> appIds);
+
+    AppRegisterVO getAppById(Integer appId);
 }

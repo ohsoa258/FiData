@@ -42,6 +42,12 @@ public interface BusinessTargetinfoService {
     ResultEnum addTargetinfo(BusinessTargetinfoDefsDTO dto);
 
     /**
+     * 添加历史指标主题明细数据
+     * @param dto
+     */
+    ResultEnum addHistoryBusinessMetaDataDetail(BusinessTargetinfoDefsDTO dto);
+
+    /**
      * 删除指标主题明细数据
      * @param Id
      * @return

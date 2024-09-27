@@ -445,6 +445,89 @@ public class ApiRegisterManageImpl extends ServiceImpl<ApiRegisterMapper, ApiCon
         return tags;
     }
 
+    @Override
+    public List<ApiTreeBusinessDTO> getApiTreeBusiness() {
+        List<AppConfigPO> appConfigPOS = appRegisterManage.list();
+
+        List<BusinessApiDTO> businessApiDTOS = new ArrayList<>();
+
+        for (AppConfigPO appConfigPO : appConfigPOS) {
+            LambdaQueryWrapper<AppServiceConfigPO> wrapper1 = new LambdaQueryWrapper<>();
+            wrapper1.eq(AppServiceConfigPO::getAppId, appConfigPO.getId());
+            List<AppServiceConfigPO> appServiceConfigPOS = appServiceConfigMapper.selectList(wrapper1);
+            List<Integer> apiIds = appServiceConfigPOS.stream().map(i -> i.getServiceId()).collect(Collectors.toList());
+            if(CollectionUtils.isNotEmpty(apiIds)){
+                LambdaQueryWrapper<ApiConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+                queryWrapper.in(ApiConfigPO::getId, apiIds)
+                        .orderByAsc(ApiConfigPO::getApiName);
+                List<ApiConfigPO> apiConfigPOS = list(queryWrapper);
+
+                BusinessApiDTO businessApiDTO = new BusinessApiDTO();
+                businessApiDTO.setAppName(appConfigPO.getAppName());
+                businessApiDTO.setId(appConfigPO.getId());
+                List<ApiListDTO> apiListDTOS = new ArrayList<>();
+
+                for (ApiConfigPO apiConfigPO : apiConfigPOS) {
+                    LambdaQueryWrapper<FieldConfigPO> wrapper = new LambdaQueryWrapper<>();
+                    wrapper.eq(FieldConfigPO::getApiId, apiConfigPO.getId());
+                    List<FieldConfigPO> attributePOList = apiFieldManageImpl.list(wrapper);
+                    ApiListDTO apiListDTO = new ApiListDTO();
+                    apiListDTO.apiName = apiConfigPO.getApiName();
+                    apiListDTO.setApiId((int) apiConfigPO.getId());
+                    List<ApiAttributeDTO> attributeDataDTOS = new ArrayList<>();
+                    for (FieldConfigPO fieldConfigPO : attributePOList) {
+                        ApiAttributeDTO attributeDTO = new ApiAttributeDTO();
+                        attributeDTO.setApiId(fieldConfigPO.getApiId());
+                        attributeDTO.setFieldId((int)fieldConfigPO.getId());
+                        attributeDTO.setFieldName(fieldConfigPO.getFieldName());
+                        attributeDTO.setFieldDesc(fieldConfigPO.getFieldDesc());
+                        attributeDTO.setFieldType(fieldConfigPO.getFieldType());
+                        attributeDataDTOS.add(attributeDTO);
+                    }
+                    //维度字段
+                    apiListDTO.setAttributeList(attributeDataDTOS);
+                    apiListDTOS.add(apiListDTO);
+                }
+                businessApiDTO.setApiList(apiListDTOS);
+                businessApiDTOS.add(businessApiDTO);
+            }
+        }
+        ApiTreeBusinessDTO apiTreeBusinessDTO = new ApiTreeBusinessDTO();
+        apiTreeBusinessDTO.setApiTreeBusinessDTOList(businessApiDTOS);
+        List<ApiTreeBusinessDTO> apiTreeBusinessDTOList = new ArrayList<>();
+        apiTreeBusinessDTOList.add(apiTreeBusinessDTO);
+        return apiTreeBusinessDTOList;
+    }
+
+    @Override
+    public List<FieldConfigVO> getApiAttributeByIds(List<Integer> fieldIds) {
+
+        List<FieldConfigVO> fieldList = new ArrayList<>();
+        QueryWrapper<FieldConfigPO> query = new QueryWrapper<>();
+        query.lambda()
+                .in(FieldConfigPO::getId, fieldIds)
+                .eq(FieldConfigPO::getDelFlag, 1);
+        List<FieldConfigPO> selectList = apiFieldMapper.selectList(query);
+        if (CollectionUtils.isNotEmpty(selectList)) {
+            fieldList = ApiFieldMap.INSTANCES.listPoToVo(selectList);
+        }
+        return fieldList;
+    }
+
+    @Override
+    public List<ApiConfigVO> getApiByIds(List<Integer> apiIds) {
+        List<ApiConfigVO> apiList = new ArrayList<>();
+        QueryWrapper<ApiConfigPO> query = new QueryWrapper<>();
+        query.lambda()
+                .in(ApiConfigPO::getId, apiIds)
+                .eq(ApiConfigPO::getDelFlag, 1);
+        List<ApiConfigPO> selectList = this.list(query);
+        if (CollectionUtils.isNotEmpty(selectList)) {
+            apiList = ApiRegisterMap.INSTANCES.listPoToVo(selectList);
+        }
+        return apiList;
+    }
+
     public ResultEnum delAppServiceConfig(Integer appId, Integer type) {
         QueryWrapper<AppServiceConfigPO> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()

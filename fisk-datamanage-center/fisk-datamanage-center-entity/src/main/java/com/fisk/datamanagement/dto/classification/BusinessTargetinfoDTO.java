@@ -44,6 +44,7 @@ public class BusinessTargetinfoDTO {
     public String indexid;
     public List<BusinessExtendedfieldsDTO> dimensionData;
     public List<FacttreeListDTO> facttreeListData;
+    public List<ApitreeListDTO> apitreeListData;
     public DateTime createdTime;
     public String createdUser;
 

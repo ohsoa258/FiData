@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.baseObject.dto.PageDTO;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.datamodel.dto.fact.FactTreeDTO;
 import com.fisk.dataservice.dto.api.*;
 import com.fisk.dataservice.dto.appserviceconfig.AppTableServiceConfigDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
@@ -177,4 +178,9 @@ public interface IApiRegisterManageService extends IService<ApiConfigPO> {
 
     List<String> getAllTag();
 
+    List<ApiTreeBusinessDTO> getApiTreeBusiness();
+
+    List<FieldConfigVO> getApiAttributeByIds(List<Integer> fieldIds);
+
+    List<ApiConfigVO> getApiByIds(List<Integer> apiIds);
 }

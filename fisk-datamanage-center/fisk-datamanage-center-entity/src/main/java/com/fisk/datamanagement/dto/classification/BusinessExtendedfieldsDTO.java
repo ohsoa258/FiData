@@ -2,11 +2,13 @@ package com.fisk.datamanagement.dto.classification;
 
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fisk.datafactory.dto.customworkflow.WorkflowDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author xgf
@@ -33,5 +35,5 @@ public class BusinessExtendedfieldsDTO {
     @TableLogic
     public int delFlag;
 
-
+    public List<WorkflowDTO> workflow;
 }

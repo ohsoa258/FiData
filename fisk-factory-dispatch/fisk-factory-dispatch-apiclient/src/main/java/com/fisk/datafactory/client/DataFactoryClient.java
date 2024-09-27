@@ -4,6 +4,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.customworkflow.DispatchEmailDTO;
 import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
+import com.fisk.datafactory.dto.customworkflow.WorkFlowQueryDTO;
+import com.fisk.datafactory.dto.customworkflow.WorkflowDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.dto.dataaccess.DispatchRedirectDTO;
 import com.fisk.datafactory.dto.dataaccess.LoadDependDTO;
@@ -197,4 +199,8 @@ public interface DataFactoryClient {
     @GetMapping("/nifiCustomWorkflow/getNifiCustomWorkFlow/{workflowId}")
     @ApiOperation(value = "根据workflowId获取管道信息")
     ResultEntity<NifiCustomWorkflowDTO> getNifiCustomWorkFlow(@PathVariable("workflowId")String workflowId);
+
+    @PostMapping("/nifiCustomWorkflow/getWorkFlowNameByTableId")
+    @ApiOperation(value = "根据表组件表id获取管道名称及id")
+    ResultEntity<List<WorkflowDTO>> getWorkFlowNameByTableId(@RequestBody WorkFlowQueryDTO workFlowQueryDTO);
 }

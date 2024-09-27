@@ -3,8 +3,10 @@ package com.fisk.dataservice.map;
 import com.fisk.dataservice.dto.api.ApiConfigDTO;
 import com.fisk.dataservice.dto.api.ApiConfigEditDTO;
 import com.fisk.dataservice.entity.ApiConfigPO;
+import com.fisk.dataservice.entity.FieldConfigPO;
 import com.fisk.dataservice.vo.api.ApiConfigVO;
 import com.fisk.dataservice.vo.api.ApiSubVO;
+import com.fisk.dataservice.vo.api.FieldConfigVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -49,4 +51,14 @@ public interface ApiRegisterMap {
      * @return target
      */
     List<ApiSubVO> poToApiSubVO(List<ApiConfigPO> po);
+
+
+    /**
+     * list集合 po -> vo
+     *
+     * @param list source
+     * @return target
+     */
+    List<ApiConfigVO> listPoToVo(List<ApiConfigPO> list);
+
 }

@@ -53,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -572,5 +573,33 @@ public class NifiCustomWorkflowImpl extends ServiceImpl<NifiCustomWorkflowMapper
         queryWrapper.eq(NifiCustomWorkflowPO::getWorkflowId,workflowId);
         NifiCustomWorkflowPO nifiCustomWorkflowPO = getOne(queryWrapper);
         return NifiCustomWorkflowMap.INSTANCES.poToDto(nifiCustomWorkflowPO);
+    }
+
+    public List<WorkflowDTO> getWorkFlowNameByTableId(WorkFlowQueryDTO workFlowQueryDTO) {
+        List<WorkflowDTO> result = new ArrayList<>();
+        Integer tableType = workFlowQueryDTO.getTableType();
+        List<Integer> tableIds = workFlowQueryDTO.getTableIds();
+        LambdaQueryWrapper<NifiCustomWorkflowDetailPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(NifiCustomWorkflowDetailPO::getTableType,tableType);
+        queryWrapper.in(NifiCustomWorkflowDetailPO::getTableId,tableIds);
+        List<NifiCustomWorkflowDetailPO> nifiCustomWorkflowDetailPOS = customWorkflowDetailImpl.list(queryWrapper);
+        if (CollectionUtils.isNotEmpty(nifiCustomWorkflowDetailPOS)) {
+            List<String> workflowIds = nifiCustomWorkflowDetailPOS.stream()
+                    .map(NifiCustomWorkflowDetailPO::getWorkflowId).collect(Collectors.toList());
+            LambdaQueryWrapper<NifiCustomWorkflowPO> queryWrapper1 = new LambdaQueryWrapper<>();
+            queryWrapper1.in(NifiCustomWorkflowPO::getWorkflowId,workflowIds);
+            List<NifiCustomWorkflowPO> nifiCustomWorkflowPOS = this.list(queryWrapper1);
+            Map<String, NifiCustomWorkflowPO> workflowMap = nifiCustomWorkflowPOS.stream()
+                    .collect(Collectors.toMap(NifiCustomWorkflowPO::getWorkflowId, i -> i));
+            result = nifiCustomWorkflowDetailPOS.stream().map(i -> {
+                WorkflowDTO workflowDTO = new WorkflowDTO();
+                NifiCustomWorkflowPO nifiCustomWorkflowPO = workflowMap.get(i.getWorkflowId());
+                workflowDTO.setWorkflowName(nifiCustomWorkflowPO.getWorkflowName());
+                workflowDTO.setTableId(Integer.valueOf(i.getTableId()));
+                workflowDTO.setId((int) nifiCustomWorkflowPO.getId());
+                return workflowDTO;
+            }).collect(Collectors.toList());
+        }
+        return result;
     }
 }

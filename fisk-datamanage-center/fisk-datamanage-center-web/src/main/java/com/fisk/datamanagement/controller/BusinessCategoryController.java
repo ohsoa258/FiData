@@ -84,6 +84,12 @@ public class BusinessCategoryController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getFactTreeList());
     }
 
+    @ApiOperation("获取apitree")
+    @GetMapping("/dimension/getApiTrees")
+    public ResultEntity<Object> getApiTreeList() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, businessCategoryService.getApiTreeList());
+    }
+
 
     @ApiOperation("根据指标id展示新增维度数据")
     @GetMapping("/dimension/getDimensionTreeShow/{indexid}")
@@ -172,6 +178,12 @@ public class BusinessCategoryController {
     @PostMapping("/addBusinessMetaDataDetail")
     public ResultEntity<Object> addBusinessMetaDataDetail(@Validated @RequestBody BusinessTargetinfoDefsDTO dto) {
         return ResultEntityBuild.build(businessTargetinfoService.addTargetinfo(dto));
+    }
+
+    @ApiOperation("添加历史指标主题明细数据")
+    @PostMapping("/addHistoryBusinessMetaDataDetail")
+    public ResultEntity<Object> addHistoryBusinessMetaDataDetail(@Validated @RequestBody BusinessTargetinfoDefsDTO dto) {
+        return ResultEntityBuild.build(businessTargetinfoService.addHistoryBusinessMetaDataDetail(dto));
     }
 
 

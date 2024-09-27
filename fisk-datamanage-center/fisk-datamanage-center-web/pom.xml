@@ -273,6 +273,12 @@
             <version>1.0.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fisk</groupId>
+            <artifactId>fisk-factory-dispatch-apiclient</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>fisk-datamanage-center</finalName>
@@ -356,6 +362,10 @@
                         </include>
                         <include>
                             <groupId>com.fisk</groupId>
+                            <artifactId>fisk-factory-dispatch-apiclient</artifactId>
+                        </include>
+                        <include>
+                            <groupId>com.fisk</groupId>
                             <artifactId>fisk-system-center-apiclient</artifactId>
                         </include>
                         <include>
@@ -409,6 +419,7 @@
                                 fisk-governance-center-entity,
                                 fisk-mdm-model-entity,
                                 fisk-mdm-model-apiclient,
+                                fisk-factory-dispatch-apiclient,
                                 fisk-system-center-apiclient,
                                 fisk-system-center-entity,
                                 fisk-task-center-apiclient,

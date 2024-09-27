@@ -1,7 +1,8 @@
 package com.fisk.datamanagement.map;
 
+import com.fisk.datamanagement.dto.classification.ApitreelistHistoryDTO;
 import com.fisk.datamanagement.dto.classification.FacttreelistHistoryDTO;
-import com.fisk.datamanagement.entity.FactTreePOs;
+import com.fisk.datamanagement.entity.ApitreelistHistoryPO;
 import com.fisk.datamanagement.entity.FacttreelistHistoryPO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,12 +16,12 @@ import org.mapstruct.factory.Mappers;
  * @Description:
  */
 @Mapper(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface FactTreeHistoryMap {
-    FactTreeHistoryMap INSTANCES = Mappers.getMapper(FactTreeHistoryMap.class);
+public interface ApiTreeHistoryMap {
+    ApiTreeHistoryMap INSTANCES = Mappers.getMapper(ApiTreeHistoryMap.class);
 
     @Mappings({
             @Mapping(source = "createUser", target = "createdUser"),
             @Mapping(source = "createTime", target = "createdTime")
     })
-    FacttreelistHistoryDTO poToDto(FacttreelistHistoryPO po);
+    ApitreelistHistoryDTO poToDto(ApitreelistHistoryPO po);
 }

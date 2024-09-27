@@ -76,6 +76,8 @@ public interface BusinessCategoryService extends IService<BusinessCategoryPO> {
 
     JSONArray getFactTreeList();
 
+    JSONArray getApiTreeList();
+
     List<ParentBusinessTreeDTO> getParentBusinessDataList();
 
     List<BusinessMetaDataTreeDTO> getAllBusinessMetaDataList();

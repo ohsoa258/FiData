@@ -4,8 +4,12 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataEntityDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
+import com.fisk.dataservice.dto.api.ApiTreeBusinessDTO;
 import com.fisk.dataservice.dto.tableservice.TableServiceEmailDTO;
 import com.fisk.dataservice.dto.tableservice.TableServicePublishStatusDTO;
+import com.fisk.dataservice.vo.api.ApiConfigVO;
+import com.fisk.dataservice.vo.api.FieldConfigVO;
+import com.fisk.dataservice.vo.app.AppRegisterVO;
 import com.fisk.task.dto.task.BuildTableApiServiceDTO;
 import com.fisk.task.dto.task.BuildTableServiceDTO;
 import io.swagger.annotations.ApiOperation;
@@ -145,4 +149,21 @@ public interface ConsumeServeiceClient {
 
     @GetMapping("/datasource/getApiCustomDataSource")
     ResultEntity<List<com.fisk.system.dto.datasource.DataSourceDTO>> getApiCustomDataSource();
+
+    @ApiOperation("获取apitree(指标用)")
+    @GetMapping("/apiRegister/getApiTreeBusiness")
+    List<ApiTreeBusinessDTO> getApiTreeBusiness();
+
+    @ApiOperation("根据字段id获取字段详情")
+    @PostMapping("/apiRegister/getApiAttributeByIds")
+    ResultEntity<List<FieldConfigVO>> getApiAttributeByIds(@RequestBody List<Integer> fieldIds);
+
+    @ApiOperation("根据字段id获取字段详情")
+    @PostMapping("/apiRegister/getApiByIds")
+    ResultEntity<List<ApiConfigVO>> getApiByIds(@RequestBody List<Integer> apiIds);
+
+    @ApiOperation("根据字段id获取字段详情")
+    @PostMapping("/appRegister/getBusinessAppByIds")
+    ResultEntity<List<AppRegisterVO>> getBusinessAppByIds(@RequestBody List<Integer> appIds);
+
 }

@@ -12,6 +12,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.framework.exception.FkException;
+import com.fisk.consumeserveice.client.ConsumeServeiceClient;
 import com.fisk.datafactory.enums.DelFlagEnum;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategorySortDTO;
 import com.fisk.datamanagement.dto.businessclassification.BusinessCategoryTreeDTO;
@@ -26,6 +27,7 @@ import com.fisk.datamanagement.service.BusinessCategoryService;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.dimension.DimensionTreeDTO;
 import com.fisk.datamodel.dto.fact.FactTreeDTO;
+import com.fisk.dataservice.dto.api.ApiTreeBusinessDTO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.roleinfo.RoleInfoDTO;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,9 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
     BusinessCategoryMapper businessCategoryMapper;
     @Resource
     private DataModelClient dataModelClient;
+
+    @Resource
+    private ConsumeServeiceClient consumeServeiceClient;
     @Resource
     BusinessTargetinfoMapper businessTargetinfoMapper;
 
@@ -468,6 +473,45 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
                     data4.put("factFieldEnName", jsonObject2.getString("factFieldEnName"));
                     data4.put("factFieldCnName", jsonObject2.getString("factFieldCnName"));
                     data3.put("other", data4);
+                    array3.add(data3);
+                }
+                data2.put("chidList", array3);
+                array4.add(data2);
+            }
+            data1.put("chidList", array4);
+            data.add(data1);
+        }
+        return data;
+    }
+
+    @Override
+    public JSONArray getApiTreeList() {
+        List<ApiTreeBusinessDTO> aa = consumeServeiceClient.getApiTreeBusiness();
+        JSONArray array = new JSONArray();
+        array.add(aa.get(0).getApiTreeBusinessDTOList());
+        JSONArray jsonArray = array.getJSONArray(0);
+        JSONObject json = new JSONObject();
+        JSONArray data = new JSONArray();
+        for (int i = 0; i < jsonArray.size(); i++) {
+            JSONObject data1 = new JSONObject();
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            data1.put("id", jsonObject.getString("id"));
+            data1.put("name", jsonObject.getString("appName"));
+            JSONArray array1 = jsonObject.getJSONArray("apiList");
+            JSONArray array4 = new JSONArray();
+            for (int j = 0; j < array1.size(); j++) {
+                JSONObject data2 = new JSONObject();
+                JSONObject jsonObject1 = array1.getJSONObject(j);
+                data2.put("id", jsonObject1.getString("apiId"));
+                data2.put("name", jsonObject1.getString("apiName"));
+                JSONArray array2 = jsonObject1.getJSONArray("attributeList");
+                JSONArray array3 = new JSONArray();
+                for (int m = 0; m < array2.size(); m++) {
+                    JSONObject data3 = new JSONObject();
+                    JSONObject jsonObject2 = array2.getJSONObject(m);
+                    data3.put("id", jsonObject2.getString("fieldId"));
+                    data3.put("name", jsonObject2.getString("fieldName"));
+                    data3.put("cnName", jsonObject2.getString("fieldDesc"));
                     array3.add(data3);
                 }
                 data2.put("chidList", array3);

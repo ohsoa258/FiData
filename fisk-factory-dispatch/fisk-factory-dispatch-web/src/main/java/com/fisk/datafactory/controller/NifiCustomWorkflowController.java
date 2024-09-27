@@ -5,9 +5,7 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datafactory.config.SwaggerConfig;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowQueryDTO;
-import com.fisk.datafactory.dto.customworkflow.NifiCustomWorkflowUpdateDTO;
+import com.fisk.datafactory.dto.customworkflow.*;
 import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.vo.customworkflow.NifiCustomWorkflowVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
@@ -19,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * @author Lock
@@ -107,5 +106,11 @@ public class NifiCustomWorkflowController {
     @ApiOperation(value = "根据workflowId获取管道信息")
     public ResultEntity<NifiCustomWorkflowDTO> getNifiCustomWorkFlow(@PathVariable("workflowId")String workflowId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getNifiCustomWorkFlow(workflowId));
+    }
+
+    @PostMapping("/getWorkFlowNameByTableId")
+    @ApiOperation(value = "根据表组件表id获取管道名称及id")
+    public ResultEntity<List<WorkflowDTO>> getWorkFlowNameByTableId(@RequestBody WorkFlowQueryDTO workFlowQueryDTO) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getWorkFlowNameByTableId(workFlowQueryDTO));
     }
 }

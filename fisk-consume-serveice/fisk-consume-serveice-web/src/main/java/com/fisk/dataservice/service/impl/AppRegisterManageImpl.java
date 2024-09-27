@@ -31,10 +31,7 @@ import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.*;
 import com.fisk.dataservice.enums.ApiStateTypeEnum;
 import com.fisk.dataservice.enums.AppServiceTypeEnum;
-import com.fisk.dataservice.map.ApiBuiltinParmMap;
-import com.fisk.dataservice.map.ApiParmMap;
-import com.fisk.dataservice.map.AppApiMap;
-import com.fisk.dataservice.map.AppRegisterMap;
+import com.fisk.dataservice.map.*;
 import com.fisk.dataservice.mapper.*;
 import com.fisk.dataservice.service.IAppRegisterManageService;
 import com.fisk.dataservice.vo.api.FieldConfigVO;
@@ -952,5 +949,25 @@ public class AppRegisterManageImpl
                     appInfos.add(infoDTO);
                 });
         return appInfos;
+    }
+
+    @Override
+    public List<AppRegisterVO> getBusinessAppByIds(List<Integer> appIds) {
+        List<AppRegisterVO> appRegisterVOS = new ArrayList<>();
+        QueryWrapper<AppConfigPO> query = new QueryWrapper<>();
+        query.lambda()
+                .in(AppConfigPO::getId, appIds)
+                .eq(AppConfigPO::getAppType, 1)
+                .eq(AppConfigPO::getDelFlag, 1);
+        List<AppConfigPO> selectList = this.list(query);
+        if (CollectionUtils.isNotEmpty(selectList)) {
+            appRegisterVOS = AppRegisterMap.INSTANCES.listPoToVo(selectList);
+        }
+        return appRegisterVOS;
+    }
+
+    @Override
+    public AppRegisterVO getAppById(Integer appId) {
+        return baseMapper.getAppById(appId);
     }
 }

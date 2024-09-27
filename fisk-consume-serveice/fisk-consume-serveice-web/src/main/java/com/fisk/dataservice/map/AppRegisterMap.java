@@ -3,6 +3,7 @@ package com.fisk.dataservice.map;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataApplicationDTO;
 import com.fisk.dataservice.dto.app.*;
 import com.fisk.dataservice.entity.AppConfigPO;
+import com.fisk.dataservice.vo.app.AppRegisterVO;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
@@ -41,5 +42,11 @@ public interface AppRegisterMap {
 
     List<MetaDataApplicationDTO> poDtoMetaDataApplicationDtoList(List<AppConfigPO> po);
 
-
+    /**
+     * list集合 po -> vo
+     *
+     * @param list source
+     * @return target
+     */
+    List<AppRegisterVO> listPoToVo(List<AppConfigPO> list);
 }

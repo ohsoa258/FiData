@@ -49,4 +49,6 @@ public interface AppRegisterMapper extends FKBaseMapper<AppConfigPO> {
      */
     @Select("SELECT id,app_name,app_account,app_desc,app_password,app_principal,proxy_authorization_switch FROM tb_app_config WHERE app_account=#{appAccount} AND app_password=#{appPassword} AND del_flag=1;")
     AppConfigPO getByAppInfo(@Param("appAccount") String appAccount, @Param("appPassword") String appPassword);
+
+    AppRegisterVO getAppById(@Param("appId") Integer appId);
 }

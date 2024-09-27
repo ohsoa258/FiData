@@ -12,28 +12,26 @@ import java.util.List;
 
 /**
  * @Author: wangjian
- * @Date: 2024-03-29
+ * @Date: 2024-09-24
  * @Description:
  */
 @Data
-public class FacttreeListDTO {
+public class ApitreeListDTO {
     public Integer id;
 
     public String pid;
 
-    public String businessNameId;
+    public String appId;
 
-    public String businessName;
+    public String appName;
 
-    public String factTabNameId;
+    public String apiId;
 
-    public String factTabName;
+    public String apiName;
 
-    public String factFieldEnNameId;
+    public String attributeId;
 
-    public String factFieldEnName;
-
-    public String factFieldCnName;
+    public String attributeName;
     @ApiModelProperty(value = "创建时间(不传值,后台生成)")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -44,6 +42,4 @@ public class FacttreeListDTO {
 
     @TableLogic
     public int delFlag;
-
-    public List<WorkflowDTO> workflow;
 }
