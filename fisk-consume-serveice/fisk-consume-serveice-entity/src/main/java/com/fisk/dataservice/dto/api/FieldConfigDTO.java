@@ -54,4 +54,13 @@ public class FieldConfigDTO
      */
     @ApiModelProperty(value = "加密")
     public int encrypt;
+
+    @ApiModelProperty(value = "脱敏")
+    public Integer desensitization;
+
+    @ApiModelProperty(value = "数据分类")
+    public Integer dataClassification;
+
+    @ApiModelProperty(value = "数据等级")
+    public Integer dataLevel;
 }

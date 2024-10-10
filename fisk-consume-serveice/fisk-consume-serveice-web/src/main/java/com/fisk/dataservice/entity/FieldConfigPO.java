@@ -47,4 +47,19 @@ public class FieldConfigPO extends BasePO
 
     @TableField
     public Integer desensitization;
+
+    /**
+     * 数据分类：DataClassificationEnum
+     * PUBLIC_DATA(1, "公共数据", "public"),
+     * PERSONAL_DATA(2, "个人信息", "personal"),
+     * ORGANIZED_DATA(3, "组织数据", "organized"),
+     */
+    public Integer dataClassification;
+    /**
+     * 数据分级：DataLevelEnum
+     * LEVEL1(1, "一级（一般数据）", "green"),
+     * LEVEL2(2, "二级（重要数据）", "blue"),
+     * LEVEL4(4, "四级（核心数据）", "red"),
+     */
+    public Integer dataLevel;
 }

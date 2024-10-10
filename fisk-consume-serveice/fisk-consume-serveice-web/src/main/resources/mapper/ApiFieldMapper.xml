@@ -10,7 +10,10 @@
         field_type,
         field_sort,
         field_desc,
-        encrypt
+        encrypt,
+        desensitization,
+        data_classification,
+        data_level
         FROM
         tb_field_config
         WHERE del_flag=1
