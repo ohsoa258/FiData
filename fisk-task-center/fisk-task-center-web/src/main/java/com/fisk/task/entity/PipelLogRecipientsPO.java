@@ -35,5 +35,9 @@ public class PipelLogRecipientsPO extends BasePO implements Serializable {
 
     @ApiModelProperty(value = "启用状态 1、启用 2、禁用")
     private Integer enable;
-
+    /**
+     * 预警级别(EmailWarnLevelEnum)
+     */
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)")
+    private Integer warnLevel;
 }

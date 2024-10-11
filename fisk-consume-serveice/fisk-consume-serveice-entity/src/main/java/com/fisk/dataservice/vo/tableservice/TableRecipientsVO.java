@@ -49,4 +49,10 @@ public class TableRecipientsVO {
      */
     @ApiModelProperty(value = "启用状态")
     public int enable;
+
+    /**
+     * 预警级别(EmailWarnLevelEnum)
+     */
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)")
+    public Integer warnLevel;
 }

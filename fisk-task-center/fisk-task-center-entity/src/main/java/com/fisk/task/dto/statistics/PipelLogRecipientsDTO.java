@@ -29,4 +29,9 @@ public class PipelLogRecipientsDTO {
 
     @ApiModelProperty(value = "用户邮箱，多个分号分隔")
     public String userEmails;
+    /**
+     * 预警级别(EmailWarnLevelEnum)
+     */
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)")
+    public Integer warnLevel;
 }

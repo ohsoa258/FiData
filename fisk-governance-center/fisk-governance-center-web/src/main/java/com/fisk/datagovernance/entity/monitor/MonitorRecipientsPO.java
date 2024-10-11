@@ -29,4 +29,6 @@ public class MonitorRecipientsPO extends BasePO implements Serializable {
     @ApiModelProperty(value = "启用状态 1、启用 2、禁用")
     private Integer enable;
 
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)")
+    private Integer warnLevel;
 }

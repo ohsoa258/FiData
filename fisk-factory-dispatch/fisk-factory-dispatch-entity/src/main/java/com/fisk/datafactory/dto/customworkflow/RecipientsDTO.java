@@ -35,5 +35,10 @@ public class RecipientsDTO {
     @ApiModelProperty(value = "false只失败发  ,true成功也发,默认失败才发")
     public Integer sendMode;
 
+    /**
+     * 预警级别(EmailWarnLevelEnum)：
+     */
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)")
+    public Integer warnLevel;
 }
 

@@ -1,6 +1,7 @@
 package com.fisk.datafactory.dto.customworkflow;
 
 import com.fisk.common.core.baseObject.entity.BasePO;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.datafactory.dto.UserInfoDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -78,4 +79,10 @@ public class DispatchEmailDTO extends BasePO {
      */
     @ApiModelProperty(value = "body")
     public Map<String, String> body;
+
+    /**
+     * 预警级别(EmailWarnLevelEnum)
+     */
+    @ApiModelProperty(value = "预警级别(EmailWarnLevelEnum)")
+    public Integer warnLevel;
 }

@@ -2,6 +2,7 @@ package com.fisk.datafactory.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 
@@ -32,7 +33,10 @@ public class DispatchEmailPO extends BasePO {
      */
     public Integer sendMode;
 
-
+    /**
+     * 预警级别(EmailWarnLevelEnum)：
+     */
+    public Integer warnLevel;
 
 
 }

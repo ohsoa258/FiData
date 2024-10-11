@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
@@ -75,6 +76,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             pipelLogRecipientsVO.setUserEmails(list.get(0).getUserEmails());
             pipelLogRecipientsVO.setEnable(list.get(0).getEnable());
             pipelLogRecipientsVO.setWechatUserList(wechatUserList);
+            pipelLogRecipientsVO.setWarnLevel(list.get(0).getWarnLevel());
         }
         if (scheduleSetting != null) {
             pipelLogRecipientsVO.setCronExpression(scheduleSetting.getCronExpression());
@@ -92,6 +94,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             pipelLogRecipientsPO.setUserEmails(dto.getUserEmails());
             pipelLogRecipientsPO.setType(dto.getNoticeServerType());
             pipelLogRecipientsPO.setEnable(dto.enable);
+            pipelLogRecipientsPO.setWarnLevel(dto.warnLevel);
             pipelLogRecipientsPOS.add(pipelLogRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
@@ -101,6 +104,7 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
                 pipelLogRecipientsPO.setWechatUserName(t.getWechatUserName());
                 pipelLogRecipientsPO.setEnable(dto.enable);
                 pipelLogRecipientsPO.setType(dto.getNoticeServerType());
+                pipelLogRecipientsPO.setWarnLevel(dto.warnLevel);
                 pipelLogRecipientsPOS.add(pipelLogRecipientsPO);
             });
         }
@@ -211,7 +215,9 @@ public class PipelLogRecipientsServiceImpl extends ServiceImpl<PipelLogRecipient
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("管道执行情况"));
+            Integer warnLevel = email.get(0).getWarnLevel();
+            EmailWarnLevelEnum anEnum = EmailWarnLevelEnum.getEnum(warnLevel);
+            mailSenderDTO.setSubject(String.format("【"+anEnum.getName()+"】管道执行情况"));
 
             mailSenderDTO.setBody(content);
             //邮件收件人

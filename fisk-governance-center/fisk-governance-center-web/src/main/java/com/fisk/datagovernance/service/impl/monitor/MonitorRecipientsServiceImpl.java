@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
@@ -71,6 +72,7 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
             systemRecipientsVO.setNoticeServerId(list.get(0).getNoticeServerId());
             systemRecipientsVO.setUserEmails(list.get(0).getUserEmails());
             systemRecipientsVO.setEnable(list.get(0).getEnable());
+            systemRecipientsVO.setWarnLevel(list.get(0).getWarnLevel());
             systemRecipientsVO.setWechatUserList(wechatUserList);
         }
         return systemRecipientsVO;
@@ -86,6 +88,7 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
             monitorRecipientsPO.setUserEmails(dto.getUserEmails());
             monitorRecipientsPO.setType(dto.getNoticeServerType());
             monitorRecipientsPO.setEnable(dto.enable);
+            monitorRecipientsPO.setWarnLevel(dto.getWarnLevel());
             monitorRecipientsPOS.add(monitorRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
@@ -95,6 +98,7 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
                 monitorRecipientsPO.setWechatUserName(t.getWechatUserName());
                 monitorRecipientsPO.setEnable(dto.enable);
                 monitorRecipientsPO.setType(dto.getNoticeServerType());
+                monitorRecipientsPO.setWarnLevel(dto.getWarnLevel());
                 monitorRecipientsPOS.add(monitorRecipientsPO);
             });
         }
@@ -162,7 +166,9 @@ public class MonitorRecipientsServiceImpl extends ServiceImpl<MonitorRecipientsM
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("系统监控告警通知"));
+            Integer warnLevel = email.get(0).getWarnLevel();
+            EmailWarnLevelEnum anEnum = EmailWarnLevelEnum.getEnum(warnLevel);
+            mailSenderDTO.setSubject(String.format("【"+anEnum.getName()+"】系统监控告警通知"));
 
             mailSenderDTO.setBody(JSON.toJSONString(body));
             //邮件收件人

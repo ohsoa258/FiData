@@ -54,4 +54,10 @@ public class TableRecipientsDTO {
      */
     @ApiModelProperty(value = "告警条件：1 成功、2 失败、3 完成")
     public int alarmConditions;
+
+
+    /**
+     * 预警级别(EmailWarnLevelEnum)
+     */
+    public Integer warnLevel;
 }

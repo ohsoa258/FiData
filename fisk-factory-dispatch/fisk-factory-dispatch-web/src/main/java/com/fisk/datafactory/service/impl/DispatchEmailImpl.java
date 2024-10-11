@@ -3,6 +3,7 @@ package com.fisk.datafactory.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.utils.email.dto.MailSenderDTO;
@@ -146,7 +147,10 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("FiData数据管道(%s)运行结果通知", nifiCustomWorkflowPO.getWorkflowName()));
+            Integer warnLevel = email.getWarnLevel();
+            EmailWarnLevelEnum anEnum = EmailWarnLevelEnum.getEnum(warnLevel);
+
+            mailSenderDTO.setSubject(String.format("【"+anEnum.getName()+"】FiData数据管道(%s)运行结果通知", nifiCustomWorkflowPO.getWorkflowName()));
             //邮件正文
             String body = "";
 
@@ -252,6 +256,7 @@ public class DispatchEmailImpl extends ServiceImpl<DispatchEmailMapper, Dispatch
             emailPO.nifiCustomWorkflowId = dto.nifiCustomWorkflowId;
             emailPO.type = dto.type;
             emailPO.sendMode = dto.sendMode;
+            emailPO.setWarnLevel(dto.warnLevel);
             dispatchList.add(emailPO);
             this.saveBatch(dispatchList);
             //添加收件人(收件人单独一张表)

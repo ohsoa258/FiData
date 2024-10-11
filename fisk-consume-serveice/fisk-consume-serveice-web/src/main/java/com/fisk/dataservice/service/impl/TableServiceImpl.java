@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -393,6 +394,7 @@ public class TableServiceImpl
             tableRecipientsVO.setAlarmConditions(tableRecipientsPOList.get(0).getAlarmConditions());
             tableRecipientsVO.setUserEmails(tableRecipientsPOList.get(0).getUserEmails());
             tableRecipientsVO.setEnable(tableRecipientsPOList.get(0).getEnable());
+            tableRecipientsVO.setWarnLevel(tableRecipientsPOList.get(0).getWarnLevel());
             tableRecipientsVO.setWechatUserList(wechatUserList);
         }
         return tableRecipientsVO;
@@ -410,6 +412,7 @@ public class TableServiceImpl
             tableRecipientsPO.setUserEmails(dto.getUserEmails());
             tableRecipientsPO.setType(dto.getNoticeServerType());
             tableRecipientsPO.setEnable(dto.enable);
+            tableRecipientsPO.setWarnLevel(dto.getWarnLevel());
             tableRecipientsPOS.add(tableRecipientsPO);
         } else if (dto.getNoticeServerType() == 2 && CollectionUtils.isNotEmpty(dto.getWechatUserList())) {
             dto.getWechatUserList().forEach(t -> {
@@ -421,6 +424,7 @@ public class TableServiceImpl
                 tableRecipientsPO.setWechatUserName(t.getWechatUserName());
                 tableRecipientsPO.setEnable(dto.enable);
                 tableRecipientsPO.setType(dto.getNoticeServerType());
+                tableRecipientsPO.setWarnLevel(dto.getWarnLevel());
                 tableRecipientsPOS.add(tableRecipientsPO);
             });
         }
@@ -533,7 +537,9 @@ public class TableServiceImpl
             MailSenderDTO mailSenderDTO = new MailSenderDTO();
             mailSenderDTO.setUser(emailServerVO.getEmailServerAccount());
             //邮件标题
-            mailSenderDTO.setSubject(String.format("FiData" + serviceName + "服务(%s)运行结果通知", tableAppPO.getAppName()));
+            Integer warnLevel = email.get(0).getWarnLevel();
+            EmailWarnLevelEnum anEnum = EmailWarnLevelEnum.getEnum(warnLevel);
+            mailSenderDTO.setSubject(String.format("【"+anEnum.getName()+"】FiData" + serviceName + "服务(%s)运行结果通知", tableAppPO.getAppName()));
             //邮件正文
             String body = "";
 
