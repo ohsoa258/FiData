@@ -3433,6 +3433,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // API基本信息对象
         List<ApiBasicInfoDTO> apiBasicInfoDtoS = new ArrayList<>();
 
+        BigDecimal lastAddIndex = null;
         for (int i = 0; i < dtoList.size(); i++) {
             ApiConfigDTO dto = dtoList.get(i);
             List<TableAccessNonDTO> tableAccessDtoList = dto.list;
@@ -3455,16 +3456,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiCatalogueDTO.catalogueName = dto.apiName;
             apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO);
             catalogueIndex = addIndex;
-
-            // 设置目录 AES密钥
-            ApiCatalogueDTO apiCatalogueDTO1 = new ApiCatalogueDTO();
-            // 目录等级
-            apiCatalogueDTO1.grade = 3;
-            // 目录序号
-            apiCatalogueDTO1.catalogueIndex = "2.6.";
-            // 目录名称
-            apiCatalogueDTO1.catalogueName = "数据加密";
-            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO1);
+            lastAddIndex = addIndex;
 
             // 设置API基础信息(2.5.-2.5.5)
             ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
@@ -3570,6 +3562,20 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
             apiBasicInfoDtoS.add(apiBasicInfoDTO);
         }
+
+
+        // 设置目录 AES密钥
+        ApiCatalogueDTO apiCatalogueDTO1 = new ApiCatalogueDTO();
+        // 目录等级
+        apiCatalogueDTO1.grade = 3;
+        // 目录序号
+        apiCatalogueDTO1.catalogueIndex =  lastAddIndex.add(BigDecimal.valueOf(0.1)) + ".";
+        // 目录名称
+        apiCatalogueDTO1.catalogueName = "数据加密";
+        apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO1);
+
+        //数据加密 内容序号
+        apiDocDTO.lastAddIndex = lastAddIndex.add(BigDecimal.valueOf(0.1));
 
         apiDocDTO.apiBasicInfoDTOS.addAll(apiBasicInfoDtoS);
         return apiDocDTO;

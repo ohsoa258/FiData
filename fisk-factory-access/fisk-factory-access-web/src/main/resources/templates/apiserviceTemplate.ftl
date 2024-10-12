@@ -679,7 +679,7 @@
     <#-- AES密钥加密 START -->
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.&nbsp;&nbsp;数据加密</p>
+            <p style="font-weight: bold;">${lastAddIndex}&nbsp;&nbsp;数据加密</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">数据传输时，是否开启 AES128 数据加密(0否 1是):${isOpenAes}</p>
@@ -692,7 +692,7 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.1.&nbsp;&nbsp;apiaddress</p>
+            <p style="font-weight: bold;">${lastAddIndex}.1.&nbsp;&nbsp;apiaddress</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">/dataAccess/appRegistration/getAesKey</p>
@@ -700,7 +700,7 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.2.&nbsp;&nbsp;请求方式</p>
+            <p style="font-weight: bold;">${lastAddIndex}.2.&nbsp;&nbsp;请求方式</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">POST</p>
@@ -708,7 +708,7 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.3.&nbsp;&nbsp;参数(header)</p>
+            <p style="font-weight: bold;">${lastAddIndex}.3.&nbsp;&nbsp;参数(header)</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">Authorization: Bearer {token}</p>
@@ -716,7 +716,7 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.4.&nbsp;&nbsp;参数（body）</p>
+            <p style="font-weight: bold;">${lastAddIndex}.4.&nbsp;&nbsp;参数（body）</p>
         </div>
         <div>
             <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
@@ -798,7 +798,7 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.5.&nbsp;&nbsp;请求示例</p>
+            <p style="font-weight: bold;">${lastAddIndex}.5.&nbsp;&nbsp;请求示例</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">
@@ -810,7 +810,7 @@
     </div>
     <div>
         <div>
-            <p style="font-weight: bold;">2.6.6.&nbsp;&nbsp;返回示例</p>
+            <p style="font-weight: bold;">${lastAddIndex}.6.&nbsp;&nbsp;返回示例</p>
         </div>
         <div>
             <p style="text-indent: 2em;font-size: 12px">

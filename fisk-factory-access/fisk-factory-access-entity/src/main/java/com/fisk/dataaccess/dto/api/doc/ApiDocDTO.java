@@ -3,6 +3,7 @@ package com.fisk.dataaccess.dto.api.doc;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -86,10 +87,16 @@ public class ApiDocDTO {
     public String aesKey;
 
     /**
-     * AES密钥（base64编码）
+     * api id
      */
-    @ApiModelProperty(value = "AES密钥（base64编码）")
+    @ApiModelProperty(value = "api id")
     public Integer apiCode;
+
+    /**
+     * 数据加密 目录序号
+     */
+    @ApiModelProperty(value = "数据加密 目录序号")
+    public BigDecimal lastAddIndex;
 
     /**
      * 正式环境
