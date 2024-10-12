@@ -1,21 +1,28 @@
 package com.fisk.datagovernance.service.impl.monitor;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.datagovernance.dto.monitor.ServerMonitorConfigDTO;
 import com.fisk.datagovernance.entity.monitor.ServerMonitorConfigPO;
+import com.fisk.datagovernance.entity.monitor.ServerMonitorTypePO;
 import com.fisk.datagovernance.map.monitor.ServerMonitorConfigMap;
 import com.fisk.datagovernance.mapper.monitor.ServerMonitorConfigMapper;
 import com.fisk.datagovernance.service.monitor.ServerMonitorConfigService;
+import com.fisk.datagovernance.service.monitor.ServerMonitorTypeService;
 import com.fisk.datagovernance.vo.monitor.ServerMonitorConfigVO;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service("serverMonitorConfigService")
 public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorConfigMapper, ServerMonitorConfigPO> implements ServerMonitorConfigService {
 
 
+    @Resource
+    public ServerMonitorTypeService serverMonitorTypeService;
     @Override
     public String getServerMonitorConfig() {
         List<ServerMonitorConfigPO> config = this.list();
@@ -36,6 +43,11 @@ public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorCon
         List<ServerMonitorConfigPO> config = this.list();
         List<ServerMonitorConfigVO> result = config.stream().map(ServerMonitorConfigMap.INSTANCES::poToVO
         ).collect(Collectors.toList());
+        List<ServerMonitorTypePO> typePOS = serverMonitorTypeService.list();
+        Map<Integer, String> typeMap = typePOS.stream().collect(Collectors.toMap(i->(int)i.getId(), ServerMonitorTypePO::getServerType));
+        result.stream().forEach(i->{
+            i.setServerType(typeMap.get(Integer.valueOf(i.getServerType())));
+        });
         return result;
     }
 

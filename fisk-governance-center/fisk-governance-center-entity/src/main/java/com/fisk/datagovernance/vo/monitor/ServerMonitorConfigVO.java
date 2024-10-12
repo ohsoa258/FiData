@@ -24,5 +24,5 @@ public class ServerMonitorConfigVO {
     private String serverIp;
 
     @ApiModelProperty(value = "0:系统1:其他")
-    private Integer serverType;
+    private String serverType;
 }

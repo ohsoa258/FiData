@@ -26,6 +26,6 @@ public class ServerMonitorConfigPO extends BasePO implements Serializable {
     private String serverIp;
 
     @ApiModelProperty(value = "0:系统1:其他")
-    private Integer serverType;
+    private String serverType;
 
 }
