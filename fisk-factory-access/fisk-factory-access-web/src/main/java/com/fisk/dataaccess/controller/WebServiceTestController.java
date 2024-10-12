@@ -5,6 +5,8 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.api.ReceiveDataDTO;
+import com.fisk.dataaccess.service.impl.ApiConfigImpl;
 import com.fisk.dataaccess.webservice.service.WebServiceReceiveDataDTO;
 import com.fisk.dataaccess.webservice.service.WebServiceUserDTO;
 import io.swagger.annotations.Api;
@@ -19,6 +21,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 /**
  * @author lsj
@@ -113,6 +122,54 @@ public class WebServiceTestController {
             return ResultEntityBuild.build(ResultEnum.WEBSERVICE_GET_TOKEN_ERROR, e.getMessage());
         }
         return ResultEntityBuild.build(ResultEnum.SUCCESS, token);
+    }
+
+    @Resource
+    private ApiConfigImpl apiConfig;
+
+    @PostMapping("/AESTest")
+    @ApiModelProperty(value = "AES测试")
+    public void AESTest() {
+        // JSON 数据
+        String jsonData = "{\"data\": [{\"b\": \"数据b\", \"a\": \"数据a\"}]}";
+        String aseKey= "ScfDBzRCteDkQSt2tL6S2A==";
+        SecretKeySpec secretKeySpec = decryptionKey(aseKey);
+
+        //加密数据
+        String s = encryptJsonData(jsonData, secretKeySpec);
+
+        ReceiveDataDTO dto = new ReceiveDataDTO();
+        dto.setApiCode(48L);
+        dto.setPushData(s);
+        //推送
+        apiConfig.pushData(dto);
+    }
+
+    // AES加密 JSON 数据
+    private static String encryptJsonData(String jsonData, SecretKey secretKey) {
+
+        Cipher cipher = null;
+        try {
+            // 使用 ECB 模式和 PKCS5Padding 填充
+            cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            // 将 JSON 数据转换为字节数组
+            byte[] dataBytes = jsonData.getBytes(StandardCharsets.UTF_8);
+            // 加密数据
+            byte[] encryptedBytes = cipher.doFinal(dataBytes);
+            // 将加密后的数据转换为 Base64 编码
+            return Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // 将base64编码的密钥转换为AES密钥对象
+    private static SecretKeySpec decryptionKey(String base64EncodedKey) {
+        byte[] keyBytes = Base64.getDecoder().decode(base64EncodedKey);
+        // 将加密后的数据转换为 Base64 编码
+        return new SecretKeySpec(keyBytes, "AES");
     }
 
 }

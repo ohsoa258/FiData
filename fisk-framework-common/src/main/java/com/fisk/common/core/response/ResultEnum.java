@@ -241,6 +241,7 @@ public enum ResultEnum {
     ACCESS_HUDI_RESYNC_ERROR(5107, "hudi-入仓配置重新同步单张表--异常"),
     RESYNC_NO_FIELD_WARNING(5108, "没有字段的表不允许重新同步"),
     APICONFIG_ENCRYPT_ISNULL(5109, "api密钥不存在"),
+    GENERATE_AES_ERROR(5110, "生成AES密钥失败"),
 
     /**
      * 后台任务模块

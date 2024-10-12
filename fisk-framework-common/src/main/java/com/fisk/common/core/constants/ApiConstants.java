@@ -1144,6 +1144,17 @@ public class ApiConstants {
             "        GetTokenResponse getTokenResponse = sendPostWebRequest(GetTokenResponse.class,\n" +
             "                url, getTokenParams, null);\n" +
             "\n" +
+
+            "        /*getAesKey*/\n" +
+            "        String url = \"{api_prd_address}/dataAccess/appRegistration/getAesKey\";\n" +
+            "        // set request parameters\n" +
+            "        GetAesKeyRequest getAesKeyRequest = new GetAesKeyRequest();\n" +
+            "        getAesKeyRequest.apiCode = \"94\";\n" +
+            "        // send request\n" +
+            "        GetAesKeyResponse getAesKeyResponse = sendPostWebRequest(GetAesKeyResponse.class,\n" +
+            "                url, getAesKeyRequest, null);\n" +
+            "\n" +
+
             "        /*pushData*/\n" +
             "        url = \"{api_prd_address}/dataAccess/apiConfig/pushdata\";\n" +
             "        // set request parameters\n" +
@@ -1151,12 +1162,47 @@ public class ApiConstants {
             "        getDataRequest.apiCode = \"94\";\n" +
             "        getDataRequest.pushData = " +
             "       \"{\\\"data\\\": []\\n}\\n\";\n" +
+            "        /////////////////////////////////////This code is used on demand,\n         //depending on whether AES encryption is enabled for data transfer\n" +
+            "        // Get AES key\n" +
+            "        String aesKey= getAesKeyResponse.data;\n" +
+            "        SecretKeySpec secretKeySpec = decryptionKey(aseKey);\n" +
+            "        // Encrypt data\n" +
+            "        getDataRequest.pushData = encryptJsonData(jsonData, secretKeySpec);\n" +
+            "        /////////////////////////////////////This code is used on demand,\n         //depending on whether AES encryption is enabled for data transfer\n" +
+            "\n" +
             "        String getDataParams = JSONObject.toJSONString(getDataRequest);\n" +
             "        // send request\n" +
             "        GetDataResponse getDataResponse = sendPostWebRequest(GetDataResponse.class,\n" +
             "                url, getDataParams, getTokenResponse.data);\n" +
             "    }\n" +
             "\n" +
+            "    // AES encrypts JSON data\n" +
+            "    private static String encryptJsonData(String jsonData, SecretKey secretKey) {\n" +
+            "\n" +
+            "        Cipher cipher = null;\n" +
+            "        try {\n" +
+            "            // Use ECB mode and PKCS5Padding padding\n" +
+            "            cipher = Cipher.getInstance(\"AES/ECB/PKCS5Padding\");\n" +
+            "            cipher.init(Cipher.ENCRYPT_MODE, secretKey);\n" +
+            "            // Convert JSON data into byte arrays\n" +
+            "            byte[] dataBytes = jsonData.getBytes(StandardCharsets.UTF_8);\n" +
+            "            // Encrypt data\n" +
+            "            byte[] encryptedBytes = cipher.doFinal(dataBytes);\n" +
+            "            // Convert encrypted data to Base64 encoding\n" +
+            "            return Base64.getEncoder().encodeToString(encryptedBytes);\n" +
+            "        } catch (Exception e) {\n" +
+            "            e.printStackTrace();\n" +
+            "        }\n" +
+            "        return null;\n" +
+            "    }" +
+            "\n" +
+            "\n"+
+            "    // Convert the base64-encoded key to an AES key object\n" +
+            "    private static SecretKeySpec decryptionKey(String base64EncodedKey) {\n" +
+            "        byte[] keyBytes = Base64.getDecoder().decode(base64EncodedKey);\n" +
+            "        return new SecretKeySpec(keyBytes, \"AES\");\n" +
+            "    }\n" +
+            "\n"+
             "    public static <T> T sendPostWebRequest(Class<T> c, String url,\n" +
             "                                           String parameters, String token)\n" +
             "    {\n" +
@@ -1229,6 +1275,25 @@ public class ApiConstants {
             "        public Data data;\n" +
             "    }\n" +
             "\n" +
+
+            "\n" +
+            "    public class GetAesKeyRequest\n" +
+            "    {\n" +
+            "        public String apiCode;\n" +
+            "    }\n" +
+            "\n" +
+
+            "\n" +
+            "    public static class GetAesKeyResponse\n" +
+            "    {\n" +
+            "        public int code;\n" +
+            "\n" +
+            "        public String msg;\n" +
+            "\n" +
+            "        public Data data;\n" +
+            "    }\n" +
+            "\n" +
+
             "    public static class Data\n" +
             "    {\n" +
             "        public Integer current;\n" +

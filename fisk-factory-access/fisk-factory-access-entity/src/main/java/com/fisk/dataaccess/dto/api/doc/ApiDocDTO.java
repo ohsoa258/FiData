@@ -74,6 +74,24 @@ public class ApiDocDTO {
     public String uatAddress;
 
     /**
+     * 数据是否使用AES加密  0否 1是
+     */
+    @ApiModelProperty(value = "数据是否使用AES加密  0否 1是")
+    public Integer isOpenAes;
+
+    /**
+     * AES密钥（base64编码）
+     */
+    @ApiModelProperty(value = "AES密钥（base64编码）")
+    public String aesKey;
+
+    /**
+     * AES密钥（base64编码）
+     */
+    @ApiModelProperty(value = "AES密钥（base64编码）")
+    public Integer apiCode;
+
+    /**
      * 正式环境
      */
     @ApiModelProperty(value = "正式环境")

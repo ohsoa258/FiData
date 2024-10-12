@@ -22,6 +22,7 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.core.user.UserHelper;
 import com.fisk.common.core.user.UserInfo;
 import com.fisk.common.core.utils.TableNameGenerateUtils;
+import com.fisk.common.core.utils.aesutils.AesEncryptionDecryptionUtils;
 import com.fisk.common.core.utils.office.pdf.component.PDFHeaderFooter;
 import com.fisk.common.core.utils.office.pdf.component.PDFKit;
 import com.fisk.common.framework.exception.FkException;
@@ -93,6 +94,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -595,8 +597,29 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             }
         });
 
+        String aesKey = null;
+        int isOpenAes = 0;
+        if (!CollectionUtils.isEmpty(list)){
+            long apiId = list.get(0).getApiId();
+            //获取api对应的应用id
+            long appId = this.getOne(
+                    new LambdaQueryWrapper<ApiConfigPO>()
+                            .eq(ApiConfigPO::getId, apiId)
+                            .select(ApiConfigPO::getAppId)
+            ).getAppId();
+            AppRegistrationDTO app = appRegistrationImpl.getAppById(appId);
+            //查看应用是否开启AES加密
+            isOpenAes = app.getIsOpenAes();
+            if (isOpenAes == 1){
+                //获取AES密钥
+                aesKey = app.getAesKey();
+            }
+        }
+
         // api信息转换为文档实体
         ApiDocDTO docDTO = createApiDocDTO(dtoList);
+        docDTO.setAesKey(aesKey);
+        docDTO.setIsOpenAes(isOpenAes);
         // 生成pdf,返回文件名称
         PDFHeaderFooter headerFooter = new PDFHeaderFooter();
         PDFKit kit = new PDFKit();
@@ -682,6 +705,21 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             AppRegistrationPO modelApp = appRegistrationImpl.query().eq("id", apiConfigPo.appId).one();
             if (modelApp == null) {
                 return ResultEntityBuild.build(ResultEnum.APP_NOT_EXIST);
+            }
+
+            //2024-10-09 实时应用新增数据加密，数据使用ASE加密算法
+            //查看应用是否开启加密
+            int isOpenAes = modelApp.getIsOpenAes();
+            if (isOpenAes == 1) {
+                //获取base64转码的密钥 解码
+                String base64EncodedKey = modelApp.getAesKey();
+                byte[] keyBytes = Base64.getDecoder().decode(base64EncodedKey);
+                SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+
+                // 解密加密后的数据
+                String decryptedData = AesEncryptionDecryptionUtils.decryptJsonData(dto.getPushData(), secretKey);
+                //更换数据体
+                dto.setPushData(decryptedData);
             }
 
             //3.获取当前app选择的目标数据源类型
@@ -3402,6 +3440,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                 return apiDocDTO;
             }
 
+            //这个code只是作为生成的pdf里面的示例参数，就算是循环中值被改变也无所谓
+            apiDocDTO.setApiCode((int) dto.id);
+
             // 设置目录
             ApiCatalogueDTO apiCatalogueDTO = new ApiCatalogueDTO();
             BigDecimal incrementIndex = new BigDecimal("0.1");
@@ -3414,6 +3455,16 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             apiCatalogueDTO.catalogueName = dto.apiName;
             apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO);
             catalogueIndex = addIndex;
+
+            // 设置目录 AES密钥
+            ApiCatalogueDTO apiCatalogueDTO1 = new ApiCatalogueDTO();
+            // 目录等级
+            apiCatalogueDTO1.grade = 3;
+            // 目录序号
+            apiCatalogueDTO1.catalogueIndex = "2.6.";
+            // 目录名称
+            apiCatalogueDTO1.catalogueName = "数据加密";
+            apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO1);
 
             // 设置API基础信息(2.5.-2.5.5)
             ApiBasicInfoDTO apiBasicInfoDTO = new ApiBasicInfoDTO();
@@ -3471,7 +3522,6 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             } else {// 防止模板报错
                 apiBasicInfoDTO.pushDataJson = "&nbsp;&nbsp;No parameters";
             }
-
 
             // pushData json字段描述
             List<ApiResponseDTO> pushDataDtos = new ArrayList<>();
@@ -3591,6 +3641,30 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
     public List<ApiConfigDTO> getWebServiceList() {
         List<ApiConfigPO> list = list();
         return ApiConfigMap.INSTANCES.listPoToDto(list);
+    }
+
+    /**
+     * 根据api Id获取密钥
+     *
+     * @param apiCode
+     * @return
+     */
+    @Override
+    public Object getAesKeyByApiCode(String apiCode) {
+        if (StringUtils.isBlank(apiCode)){
+            return "apiCode不可为空";
+        }
+        ApiConfigPO one = this.getOne(
+                new LambdaQueryWrapper<ApiConfigPO>()
+                        .eq(ApiConfigPO::getId, apiCode)
+                        .select(ApiConfigPO::getAppId)
+        );
+        if (one != null){
+            AppRegistrationDTO app = appRegistrationImpl.getAppById(one.appId);
+            return app.aesKey;
+        }else {
+            return "未找到对应api";
+        }
     }
 
 //    public static void main(String[] args) {

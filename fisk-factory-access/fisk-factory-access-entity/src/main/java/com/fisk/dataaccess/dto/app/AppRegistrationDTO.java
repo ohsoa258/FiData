@@ -59,6 +59,18 @@ public class AppRegistrationDTO extends BaseDTO {
     public Integer ifAllowDatatransfer;
 
     /**
+     * 数据是否开启AES密钥加密  0否，1是
+     */
+    @ApiModelProperty(value = "数据是否开启AES密钥加密 0否，1是")
+    public Integer isOpenAes;
+
+    /**
+     * AES密钥
+     */
+    @ApiModelProperty(value = "AES密钥")
+    public String aesKey;
+
+    /**
      * hudi:是否同步全部表
      */
     @ApiModelProperty(value = "hudi:是否同步全部表 0否，1是")

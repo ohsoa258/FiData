@@ -7,6 +7,7 @@ import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.common.core.utils.aesutils.AesEncryptionDecryptionUtils;
 import com.fisk.common.server.metadata.AppBusinessInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleInfoDTO;
 import com.fisk.common.server.ocr.dto.businessmetadata.TableRuleParameterDTO;
@@ -14,6 +15,7 @@ import com.fisk.common.service.accessAndModel.AccessAndModelAppDTO;
 import com.fisk.common.service.dbMetaData.dto.*;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.AesKeyDTO;
 import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.app.*;
@@ -26,6 +28,7 @@ import com.fisk.dataaccess.dto.oraclecdc.CdcJobParameterDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.table.TablePyhNameDTO;
+import com.fisk.dataaccess.service.IApiConfig;
 import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.service.impl.AppDataSourceImpl;
 import com.fisk.dataaccess.service.impl.TableAccessImpl;
@@ -55,7 +58,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
+import javax.crypto.SecretKey;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -77,6 +80,8 @@ public class AppRegistrationController {
     private PublishTaskClient publishTaskClient;
     @Autowired
     private AppDataSourceImpl dataSource;
+    @Resource
+    private IApiConfig apiConfig;
 
     @PostMapping("/add")
     @ApiOperation(value = "添加")
@@ -401,9 +406,10 @@ public class AppRegistrationController {
     public ResultEntity<Object> getFieldsDataStructure(@RequestBody ColumnQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFieldsDataStructure(dto));
     }
+
     @ApiOperation("搜索数据元关联字段(数据标准用)")
     @GetMapping("/searchStandardBeCitedField")
-    public ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key){
+    public ResultEntity<Object> searchStandardBeCitedField(@RequestParam("key") String key) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.searchStandardBeCitedField(key));
     }
 
@@ -656,6 +662,46 @@ public class AppRegistrationController {
     @GetMapping("/getAppSourceAndTarget")
     public ResultEntity<List<DataSourceInfoDTO>> getAppSourceAndTarget(Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppSourceAndTarget(appId));
+    }
+
+    /**
+     * 生成AES密钥
+     *
+     * @return
+     */
+    @ApiOperation("生成AES密钥")
+    @GetMapping("/generateAesKey")
+    public ResultEntity<SecretKey> generateAesKey() {
+        try {
+            //返回值示例
+            //{
+            //  "code": 0,
+            //  "msg": "成功",
+            //  "data": {
+            //    "algorithm": "AES",
+            //    "encoded": "sOY25BXdGfFF3cYCsdyyjw==",
+            //    "format": "RAW",
+            //    "destroyed": false
+            //  },
+            //  "traceId": null
+            //}
+            //这个encoded的值是base64编码的密钥，使用时需要解析
+            return ResultEntityBuild.build(ResultEnum.SUCCESS, AesEncryptionDecryptionUtils.generateAes128Key());
+        } catch (Exception e) {
+            log.error("生成AES密钥失败", e);
+        }
+        return ResultEntityBuild.build(ResultEnum.GENERATE_AES_ERROR);
+    }
+
+    /**
+     * 根据api Id获取密钥
+     *
+     * @return
+     */
+    @ApiOperation("根据api Id获取密钥")
+    @PostMapping("/getAesKey")
+    public ResultEntity<Object> getAesKeyByApiCode(@RequestBody AesKeyDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, apiConfig.getAesKeyByApiCode(dto.getApiCode()));
     }
 
 }

@@ -675,6 +675,158 @@
             </div>
         </div>
     </#list>
+
+    <#-- AES密钥加密 START -->
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.&nbsp;&nbsp;数据加密</p>
+        </div>
+        <div>
+            <p style="text-indent: 2em;font-size: 12px">数据传输时，是否开启 AES128 数据加密(0否 1是):${isOpenAes}</p>
+            <p style="text-indent: 2em;font-size: 12px">调用接口时，若接口开启加密，请务必使用提供的密钥将传输的数据进行AES加密，以保护敏感数据。</p>
+            <p style="text-indent: 2em;font-size: 12px">加密后的数据需转为base64编码格式，方便数据传输。加密方式详见java代码案例。</p>
+        </div>
+        <#--        <div>-->
+        <#--            <p style="text-indent: 2em;font-size: 12px">${prdAddress}</p>-->
+        <#--        </div>-->
+    </div>
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.1.&nbsp;&nbsp;apiaddress</p>
+        </div>
+        <div>
+            <p style="text-indent: 2em;font-size: 12px">/dataAccess/appRegistration/getAesKey</p>
+        </div>
+    </div>
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.2.&nbsp;&nbsp;请求方式</p>
+        </div>
+        <div>
+            <p style="text-indent: 2em;font-size: 12px">POST</p>
+        </div>
+    </div>
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.3.&nbsp;&nbsp;参数(header)</p>
+        </div>
+        <div>
+            <p style="text-indent: 2em;font-size: 12px">Authorization: Bearer {token}</p>
+        </div>
+    </div>
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.4.&nbsp;&nbsp;参数（body）</p>
+        </div>
+        <div>
+            <table style="border-collapse: collapse; margin: auto; border: 1px solid #c6c6c6;width: 100%">
+                <thead>
+                <tr>
+                    <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">参数名
+                    </th>
+                    <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">必填
+                    </th>
+                    <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">类型
+                    </th>
+                    <th style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            background-color: #ddeeff;
+            padding: 8px 9px;
+            font-size: 14px;
+            font-weight: normal;
+            text-align: center;">说明
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">apiCode
+                        </td>
+                        <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">是
+                        </td>
+                        <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">int
+                        </td>
+                        <td style="border-collapse: collapse;
+            border: 1px solid #c6c6c6;
+            padding: 8px 9px;
+            font-size: 12px;
+            font-weight: normal;
+            text-align: center;
+            word-break: break-all;">api唯一标识:
+                            ${apiCode}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.5.&nbsp;&nbsp;请求示例</p>
+        </div>
+        <div>
+            <p style="text-indent: 2em;font-size: 12px">
+                {
+                "apiCode": "${apiCode}"
+                }
+            </p>
+        </div>
+    </div>
+    <div>
+        <div>
+            <p style="font-weight: bold;">2.6.6.&nbsp;&nbsp;返回示例</p>
+        </div>
+        <div>
+            <p style="text-indent: 2em;font-size: 12px">
+            {
+                "code": 0,
+                "msg": "xxx",
+                "data": "AES Key Value..."
+            }
+            </p>
+        </div>
+    </div>
+
+    <#-- AES密钥加密 END -->
+
+
+
 </div>
 
 <#--

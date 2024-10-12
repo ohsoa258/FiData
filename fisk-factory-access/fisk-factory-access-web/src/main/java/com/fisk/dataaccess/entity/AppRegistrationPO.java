@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -74,5 +75,16 @@ public class AppRegistrationPO extends BasePO {
      * hudi:是否同步全部表 0否，1是
      */
     public Integer ifSyncAllTables;
+
+
+    /**
+     * 数据是否开启AES密钥加密  0否，1是
+     */
+    public Integer isOpenAes;
+
+    /**
+     * AES密钥
+     */
+    public String aesKey;
 
 }

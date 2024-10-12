@@ -220,5 +220,14 @@ public interface IApiConfig extends IService<ApiConfigPO> {
      * @return
      */
     List<ApiConfigDTO> getWebServiceList();
+
+    /**
+     * 根据api Id获取密钥
+     *
+     * @param apiCode
+     * @return
+     */
+    Object getAesKeyByApiCode(String apiCode);
+
 }
 
