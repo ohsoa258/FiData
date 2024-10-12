@@ -7,6 +7,7 @@ import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.monitor.*;
 import com.fisk.datagovernance.service.monitor.*;
 import com.fisk.datagovernance.vo.monitor.ServerMonitorConfigVO;
+import com.fisk.datagovernance.vo.monitor.ServerMonitorTypeVO;
 import com.fisk.datagovernance.vo.monitor.SystemServerVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,6 +27,8 @@ public class SystemMonitorController {
     private SystemMonitorService systemMonitorService;
     @Resource
     private ServerMonitorService serverMonitorService;
+    @Resource
+    private ServerMonitorTypeService serverMonitorTypeService;
     @Resource
     private MonitorDropDownBoxService monitorDropDownBoxService;
     @Resource
@@ -145,5 +148,22 @@ public class SystemMonitorController {
     @GetMapping("/getSystemServerList")
     public ResultEntity<List<SystemServerVO>> getSystemServerList() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorService.getSystemServerList());
+    }
+
+    @ApiOperation("添加服务自定义类型")
+    @PostMapping("/addOrUpdateServerMonitorType")
+    public ResultEntity<Object> addOrUpdateServerMonitorType(@RequestBody ServerMonitorTypeDTO serverMonitorTypeDTO) {
+        return ResultEntityBuild.build(serverMonitorTypeService.addOrUpdateServerMonitorType(serverMonitorTypeDTO));
+    }
+    @ApiOperation("删除服务自定义类型")
+    @PostMapping("/deleteServerMonitorType")
+    public ResultEntity<Object> deleteServerMonitorType(@RequestParam ("id") Integer id) {
+        return ResultEntityBuild.build(serverMonitorTypeService.deleteServerMonitorType(id));
+    }
+
+    @ApiOperation("获取服务自定义类型")
+    @GetMapping("/getServerMonitorType")
+    public ResultEntity<List<ServerMonitorTypeVO>> getServerMonitorType() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,serverMonitorTypeService.getServerMonitorType());
     }
 }
