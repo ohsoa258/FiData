@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
+import com.fisk.common.core.enums.emailwarnlevel.EmailWarnLevelEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
@@ -263,7 +264,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportNoticeDTO.setReportId(qualityReportNoticePO.getReportId());
             qualityReportNoticeDTO.setReportNoticeType(qualityReportNoticePO.getReportNoticeType());
             qualityReportNoticeDTO.setBody(qualityReportNoticePO.getBody());
-            qualityReportNoticeDTO.setSubject(qualityReportNoticePO.getSubject());
+            Integer warnLevel = qualityReportNoticePO.getWarnLevel();
+            EmailWarnLevelEnum anEnum = EmailWarnLevelEnum.getEnum(warnLevel);
+            qualityReportNoticeDTO.setSubject("【"+anEnum.getName()+"】"+qualityReportNoticePO.getSubject());
+            qualityReportNoticeDTO.setSendType(qualityReportNoticePO.getSendType());
+            qualityReportNoticeDTO.setWarnLevel(qualityReportNoticePO.getWarnLevel());
             qualityReportNoticeDTO.setEmailServerId(qualityReportNoticePO.getEmailServerId());
 
             // 第五步：查询质量报告下的接收人
@@ -328,24 +333,38 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             isExistsCreateDirectory(absolutePath);
             attachmentInfoPO.setAbsolutePath(absolutePath);
             attachmentInfoPO.setCategory(AttachmentCateGoryEnum.QUALITY_VERIFICATION_SUMMARY_REPORT.getValue());
-            resultEnum = dataCheck_Summary_QualityReport_Create(qualityReportPO, qualityReportRules, dataCheckLogs,
+            Integer checkRuleNoPassCount = dataCheck_Summary_QualityReport_Create(qualityReportPO, qualityReportRules, dataCheckLogs,
                     attachmentInfoPO, reportBatchNumber, qualityReportLogPO);
-            if (resultEnum != ResultEnum.SUCCESS) {
-                log.info("【dataCheck_Summary_QualityReport_Create】创建summary返回错误信息：" + resultEnum.getMsg());
-                return ResultEntityBuild.buildData(resultEnum, "");
+
+//            if (checkRuleNoPassCount != ResultEnum.SUCCESS) {
+//                log.info("【dataCheck_Summary_QualityReport_Create】创建summary返回错误信息：" + resultEnum.getMsg());
+//                return ResultEntityBuild.buildData(resultEnum, "");
+//            }
+            boolean flag = true;
+            if (qualityReportNoticePO.sendType == 1){
+                if (checkRuleNoPassCount != 0){
+                    flag = false;
+                }
+            }else if (qualityReportNoticePO.sendType == 2){
+                if (checkRuleNoPassCount == 0){
+                    flag = false;
+                }
+            }
+            String sendResult = "不发送";
+            // 第九步：发送邮件,将summary报告发给指定收件人
+            if (flag){
+                ResultEntity<Object> sendResultObj = null;
+                QualityReportDTO qualityReportDTO = new QualityReportDTO();
+                qualityReportDTO.sendAttachment = true;
+                qualityReportDTO.setAttachmentName(attachmentInfoPO.getCurrentFileName());
+                qualityReportDTO.setAttachmentPath(attachmentInfoPO.getAbsolutePath());
+                qualityReportDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
+                qualityReportDTO.setCompanyLogoPath("");
+                qualityReportDTO.setQualityReportNotice(qualityReportNoticeDTO);
+                sendResultObj = qualityReportManage.sendEmailReport(qualityReportDTO);
+                sendResult = sendResultObj != null && sendResultObj.getCode() == ResultEnum.SUCCESS.getCode() ? "已发送" : "发送失败";
             }
 
-            // 第九步：发送邮件,将summary报告发给指定收件人
-            ResultEntity<Object> sendResultObj = null;
-            QualityReportDTO qualityReportDTO = new QualityReportDTO();
-            qualityReportDTO.sendAttachment = true;
-            qualityReportDTO.setAttachmentName(attachmentInfoPO.getCurrentFileName());
-            qualityReportDTO.setAttachmentPath(attachmentInfoPO.getAbsolutePath());
-            qualityReportDTO.setAttachmentActualName(attachmentInfoPO.getOriginalName());
-            qualityReportDTO.setCompanyLogoPath("");
-            qualityReportDTO.setQualityReportNotice(qualityReportNoticeDTO);
-            sendResultObj = qualityReportManage.sendEmailReport(qualityReportDTO);
-            String sendResult = sendResultObj != null && sendResultObj.getCode() == ResultEnum.SUCCESS.getCode() ? "已发送" : "发送失败";
             // String sendResult = "已发送";
 
             // 创建质量报告结束计时
@@ -387,7 +406,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, "");
     }
 
-    public ResultEnum dataCheck_Summary_QualityReport_Create(QualityReportPO qualityReportPO, List<QualityReportRulePO> qualityReportRules,
+    public Integer dataCheck_Summary_QualityReport_Create(QualityReportPO qualityReportPO, List<QualityReportRulePO> qualityReportRules,
                                                              List<DataCheckLogsPO> dataCheckLogs, AttachmentInfoPO attachmentInfoPO,
                                                              String reportBatchNumber, QualityReportLogPO qualityReportLogPO) {
         // 报告规则检查结果
@@ -491,7 +510,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         qualityReportLogPO.setReportRuleCheckAccuracy(bigDecimal_CheckDataAccuracy + "%");
         qualityReportLogPO.setReportRuleCheckResult(reportRuleCheckResult);
         qualityReportLogPO.setReportRuleCheckEpilogue(epilogue);
-        return ResultEnum.SUCCESS;
+        return checkRuleNoPassCount;
     }
 
     public ResultEnum dataCheck_Rule_QualityReport_Create(QualityReportPO qualityReportPO,

@@ -37,4 +37,21 @@ public class QualityReportNoticePO extends BasePO {
      * 正文
      */
     public String body;
+
+    /**
+     * 发送方式
+     * 0校验完成发送
+     * 1校验通过发送
+     * 2校验失败发送
+     */
+    public int sendType;
+
+    /**
+     * 预警级别
+     * 0红色预警
+     * 1橙色预警
+     * 2黄色预警
+     * 3绿色预警
+     */
+    public int warnLevel;
 }
