@@ -242,6 +242,7 @@ public enum ResultEnum {
     RESYNC_NO_FIELD_WARNING(5108, "没有字段的表不允许重新同步"),
     APICONFIG_ENCRYPT_ISNULL(5109, "api密钥不存在"),
     GENERATE_AES_ERROR(5110, "生成AES密钥失败"),
+    DATA_DECRYPTION_ERROR(5111,"数据解密失败，api已开启AES加密，请查看数据是否正确加密。"),
 
     /**
      * 后台任务模块

@@ -514,9 +514,9 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             dataModelVO.dataClassifyEnum = DataClassifyEnum.DATAACCESS;
             dataModelVO.userId = nifiVO.userId;
             // 删除nifi流程  目前只有api有nifi流程  restfulapi没有nifi流程
-            if (!CollectionUtils.isEmpty(appSourcesByAppId)){
+            if (!CollectionUtils.isEmpty(appSourcesByAppId)) {
                 AppDataSourceDTO dto1 = appSourcesByAppId.get(0);
-                if (dto1.getDriveType().equals(DataSourceTypeEnum.API.getName())){
+                if (dto1.getDriveType().equals(DataSourceTypeEnum.API.getName())) {
                     publishTaskClient.deleteNifiFlow(dataModelVO);
                 }
             }
@@ -599,7 +599,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
 
         String aesKey = null;
         int isOpenAes = 0;
-        if (!CollectionUtils.isEmpty(list)){
+        if (!CollectionUtils.isEmpty(list)) {
             long apiId = list.get(0).getApiId();
             //获取api对应的应用id
             long appId = this.getOne(
@@ -610,7 +610,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             AppRegistrationDTO app = appRegistrationImpl.getAppById(appId);
             //查看应用是否开启AES加密
             isOpenAes = app.getIsOpenAes();
-            if (isOpenAes == 1){
+            if (isOpenAes == 1) {
                 //获取AES密钥
                 aesKey = app.getAesKey();
             }
@@ -710,17 +710,23 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             //2024-10-09 实时应用新增数据加密，数据使用ASE加密算法
             //查看应用是否开启加密
             int isOpenAes = modelApp.getIsOpenAes();
-            if (isOpenAes == 1) {
-                //获取base64转码的密钥 解码
-                String base64EncodedKey = modelApp.getAesKey();
-                byte[] keyBytes = Base64.getDecoder().decode(base64EncodedKey);
-                SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+            try {
+                if (isOpenAes == 1) {
+                    //获取base64转码的密钥 解码
+                    String base64EncodedKey = modelApp.getAesKey();
+                    byte[] keyBytes = Base64.getDecoder().decode(base64EncodedKey);
+                    SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
 
-                // 解密加密后的数据
-                String decryptedData = AesEncryptionDecryptionUtils.decryptJsonData(dto.getPushData(), secretKey);
-                //更换数据体
-                dto.setPushData(decryptedData);
+                    // 解密加密后的数据
+                    String decryptedData = AesEncryptionDecryptionUtils.decryptJsonData(dto.getPushData(), secretKey);
+                    //更换数据体
+                    dto.setPushData(decryptedData);
+                }
+            } catch (Exception e) {
+                log.error("数据解密失败：" + e);
+                return ResultEntityBuild.build(ResultEnum.DATA_DECRYPTION_ERROR);
             }
+
 
             //3.获取当前app选择的目标数据源类型
             ResultEntity<DataSourceDTO> result = userClient.getFiDataDataSourceById(modelApp.targetDbId);
@@ -2577,10 +2583,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                                     return ResultEntityBuild.build(ResultEnum.FIELD_CKECK_NOPASS, checkResult);
                                 } else if (e.checkType.equals(RuleCheckTypeEnum.WEAK_RULE.getName())) {
                                     checkResultMsg.append(e.checkResultMsg).append("；");
-                                }else if (e.checkType.equals(RuleCheckTypeEnum.STRICT_RULE.getName())) {
+                                } else if (e.checkType.equals(RuleCheckTypeEnum.STRICT_RULE.getName())) {
                                     checkResultMsg.append(e.checkResultMsg).append("；");
-                                    targetTable = targetTable.stream().map(i->{
-                                        if (i.table.equals(e.getCheckDisplayTableName())){
+                                    targetTable = targetTable.stream().map(i -> {
+                                        if (i.table.equals(e.getCheckDisplayTableName())) {
                                             JSONArray jsonArray = new JSONArray();
                                             for (Object checkSuccessDatum : e.checkSuccessData) {
                                                 jsonArray.add(JSON.parseObject(JSON.toJSONString(checkSuccessDatum)));
@@ -3569,7 +3575,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
         // 目录等级
         apiCatalogueDTO1.grade = 3;
         // 目录序号
-        apiCatalogueDTO1.catalogueIndex =  lastAddIndex.add(BigDecimal.valueOf(0.1)) + ".";
+        apiCatalogueDTO1.catalogueIndex = lastAddIndex.add(BigDecimal.valueOf(0.1)) + ".";
         // 目录名称
         apiCatalogueDTO1.catalogueName = "数据加密";
         apiDocDTO.apiCatalogueDTOS.add(apiDocDTO.apiCatalogueDTOS.size() - 3, apiCatalogueDTO1);
@@ -3657,7 +3663,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
      */
     @Override
     public Object getAesKeyByApiCode(String apiCode) {
-        if (StringUtils.isBlank(apiCode)){
+        if (StringUtils.isBlank(apiCode)) {
             return "apiCode不可为空";
         }
         ApiConfigPO one = this.getOne(
@@ -3665,10 +3671,10 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
                         .eq(ApiConfigPO::getId, apiCode)
                         .select(ApiConfigPO::getAppId)
         );
-        if (one != null){
+        if (one != null) {
             AppRegistrationDTO app = appRegistrationImpl.getAppById(one.appId);
             return app.aesKey;
-        }else {
+        } else {
             return "未找到对应api";
         }
     }
