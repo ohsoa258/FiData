@@ -240,21 +240,29 @@ public class AppRegisterManageImpl
                 return ResultEnum.DS_APP_ACCOUNT_EXISTS;
             }
         }
+        String oldpwd = model.appPassword;
+        byte[] base64Encrypt = EnCryptUtils.base64Encrypt(dto.appPassword);
+        String pwd = new String(base64Encrypt);
+        dto.setAppPassword(pwd);
         AppRegisterMap.INSTANCES.editDtoToPo(dto, model);
-        if (dto.getProxyAuthorizationSwitch() != 1) {
-            model.setAppAccount("");
-            model.setAppPassword("");
+        if (dto.appType == 2){
+            if (dto.getProxyAuthorizationSwitch() != 1) {
+                model.setAppAccount("");
+                model.setAppPassword("");
+            }
         }
         int i = baseMapper.updateById(model);
         if (i > 0) {
             //同步元数据业务分类
-            if (openMetadata) {
-                ClassificationInfoDTO apiServiceByAppName = getApiServiceByAppName(dto.getAppName());
-                if (apiServiceByAppName != null) {
-                    apiServiceByAppName.setDelete(false);
-                    dataManageClient.appSynchronousClassification(apiServiceByAppName);
-                }
-            }
+//            if (openMetadata) {
+//                ClassificationInfoDTO apiServiceByAppName = getApiServiceByAppName(dto.getAppName());
+//                if (apiServiceByAppName != null) {
+//                    apiServiceByAppName.setDelete(false);
+//                    dataManageClient.appSynchronousClassification(apiServiceByAppName);
+//                }
+//            }
+            redisUtil.del(RedisKeyEnum.DATA_SERVER_APP_ID +":"+ model.getAppAccount() + oldpwd);
+            redisUtil.set(RedisKeyEnum.DATA_SERVER_APP_ID +":"+ model.getAppAccount() + model.appPassword,model.getId(), RedisKeyEnum.AUTH_USERINFO.getValue());
             return ResultEnum.SUCCESS;
         } else {
             return ResultEnum.SAVE_DATA_ERROR;
