@@ -204,4 +204,19 @@ public class DataCheckExtendDTO {
 
     @ApiModelProperty(value = "校验字段名称")
     public String checkFieldName;
+
+
+    /**
+     * 波动检查-类型
+     * 1普通模式
+     * 2高级模式
+     */
+    @ApiModelProperty(value = "波动检查-类型")
+    public Integer fluctuateCheckModeType;
+
+    /**
+     * 波动检查-实际值sql
+     */
+    @ApiModelProperty(value = "波动检查-实际值sql")
+    public String fluctuateCheckRealitySql;
 }
