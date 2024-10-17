@@ -36,7 +36,9 @@
         check_table_name,
         check_field_id,
         check_field_name,
-        allocate_field_names
+        allocate_field_names,
+        fluctuate_check_mode_type,
+        fluctuate_check_reality_sql
         FROM
         tb_datacheck_rule_extend
         WHERE

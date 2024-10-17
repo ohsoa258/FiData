@@ -167,4 +167,16 @@ public class DataCheckExtendPO extends BasePO {
      * 指定查询的字段名称，多个字段逗号分隔
      */
     public String allocateFieldNames;
+
+    /**
+     * 波动检查-类型
+     * 1普通模式
+     * 2高级模式
+     */
+    public Integer fluctuateCheckModeType;
+
+    /**
+     * 波动检查-实际值sql
+     */
+    public String fluctuateCheckRealitySql;
 }

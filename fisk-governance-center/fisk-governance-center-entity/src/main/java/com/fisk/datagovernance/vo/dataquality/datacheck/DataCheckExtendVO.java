@@ -204,4 +204,10 @@ public class DataCheckExtendVO {
 
     @ApiModelProperty(value = "校验字段名称")
     public String checkFieldName;
+
+    @ApiModelProperty(value = "波动检查-类型")
+    public Integer fluctuateCheckModeType;
+
+    @ApiModelProperty(value = "波动检查-实际值sql")
+    public String fluctuateCheckRealitySql;
 }

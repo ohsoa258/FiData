@@ -34,6 +34,7 @@ import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import com.google.common.base.Joiner;
 import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -1711,27 +1712,40 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         double thresholdValue = dataCheckExtendPO.getFluctuateCheckValue();
         double realityValue = 0.0;
         FluctuateCheckTypeEnum fluctuateCheckTypeEnum = FluctuateCheckTypeEnum.getEnum(dataCheckExtendPO.getFluctuateCheckType());
-        switch (fluctuateCheckTypeEnum) {
-            case AVG:
-                sql_QueryCheckData = String.format("SELECT AVG(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s ", f_Name, t_Name, fieldCheckWhereSql);
-                break;
-            case MIN:
-                sql_QueryCheckData = String.format("SELECT MIN(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
-                break;
-            case MAX:
-                sql_QueryCheckData = String.format("SELECT MAX(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
-                break;
-            case SUM:
-                sql_QueryCheckData = String.format("SELECT SUM(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
-                break;
-            case COUNT:
-                sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
-                break;
+        if (dataCheckExtendPO.getFluctuateCheckModeType() == 1){
+            switch (fluctuateCheckTypeEnum) {
+                case AVG:
+                    sql_QueryCheckData = String.format("SELECT AVG(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s ", f_Name, t_Name, fieldCheckWhereSql);
+                    break;
+                case MIN:
+                    sql_QueryCheckData = String.format("SELECT MIN(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
+                    break;
+                case MAX:
+                    sql_QueryCheckData = String.format("SELECT MAX(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
+                    break;
+                case SUM:
+                    sql_QueryCheckData = String.format("SELECT SUM(CAST(%s as int)) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
+                    break;
+                case COUNT:
+                    sql_QueryCheckData = String.format("SELECT COUNT(%s) AS realityValue FROM %s WHERE 1=1 %s", f_Name, t_Name, fieldCheckWhereSql);
+                    break;
+            }
+        }else if (dataCheckExtendPO.getFluctuateCheckModeType() == 2){
+            sql_QueryCheckData = dataCheckExtendPO.getFluctuateCheckRealitySql();
         }
 
         List<Map<String, Object>> maps = qualityReport_QueryTableData_Maps(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
         if (CollectionUtils.isNotEmpty(maps)) {
-            realityValue = Double.parseDouble(maps.get(0).get("realityValue").toString());
+            Map<String, Object> map = maps.get(0);
+            int size = map.values().size();
+            if (size == 1){
+                for (Object value : map.values()) {
+                    realityValue = Double.parseDouble(value.toString());
+                    break;
+                }
+            }else {
+                throw new RuntimeException("请检查实际值");
+            }
         }
         FluctuateCheckOperatorEnum fluctuateCheckOperatorEnum = FluctuateCheckOperatorEnum.getEnumByName(dataCheckExtendPO.getFluctuateCheckOperator());
         switch (fluctuateCheckOperatorEnum) {
@@ -1767,6 +1781,12 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         checkSqlList.add(sql_QueryDataTotalCount);
         checkSqlList.add(sql_QueryCheckErrorDataCount);
 
+
+        String  ruleIllustrate = dataCheckPO.getRuleIllustrate();
+        ruleIllustrate = ruleIllustrate.replace("###", String.valueOf(realityValue));
+        String addRuleIllustrate = realityValueThanThresholdValue(realityValue, thresholdValue);
+        ruleIllustrate+= "，"+addRuleIllustrate;
+        dataCheckPO.setRuleIllustrate(ruleIllustrate);
         // 检查不通过，查询不通过的数据
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = 0;
@@ -1785,6 +1805,20 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
         return qualityReportSummary_ruleDTO;
+    }
+
+    public String realityValueThanThresholdValue(double realityValue,double thresholdValue){
+        String addRuleIllustrate = "";
+        if (realityValue > thresholdValue) {
+            addRuleIllustrate = realityValue+">"+thresholdValue;
+        }
+        if (realityValue == thresholdValue) {
+            addRuleIllustrate = realityValue+"="+thresholdValue;
+        }
+        if (realityValue < thresholdValue) {
+            addRuleIllustrate = realityValue+"<"+thresholdValue;
+        }
+        return addRuleIllustrate;
     }
 
     /**

@@ -63,4 +63,9 @@ public class FilterSqlConstants {
      */
     public static final String TABLE_APP_REGISTRATION_SQL = " where Field in('app_name','app_principal','app_desc','create_time','create_user')";
 
+    /**
+     * 核查规则服务--应用注册
+     */
+    public static final String DATA_CHECK_APP_REGISTRATION_SQL = " where Field in('app_name','app_principal','app_desc','create_time','create_user')";
+
 }

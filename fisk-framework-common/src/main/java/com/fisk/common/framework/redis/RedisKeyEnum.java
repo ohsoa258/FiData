@@ -66,7 +66,8 @@ public enum RedisKeyEnum implements BaseEnum {
     TABLE_KSF_WEB_SERVER_SYNC(-1,"Ksf:tabelWebServerSync"),
     DATA_SERVER_API_DATA(40,"DataServer:dataServerApiData"),
 
-    DATA_SERVER_APP_ID(-1,"DataServer:dataServerAppId")
+    DATA_SERVER_APP_ID(-1,"DataServer:dataServerAppId"),
+    DATA_CHECK_SERVER_APP_ID(-1,"DataCHECKServer:dataCheckServerAppId")
     ;
 
     RedisKeyEnum(int value, String name) {
