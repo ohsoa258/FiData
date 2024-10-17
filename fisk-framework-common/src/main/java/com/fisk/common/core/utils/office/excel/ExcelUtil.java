@@ -7,7 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.util.HSSFColor;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.*;
@@ -29,8 +32,8 @@ public class ExcelUtil {
     private static final String[] parentMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述"};
     private static final String[] mainMetaDataHeaders = {"一级分类", "二级分类", "应用类型", "名称", "显示名称", "元数据类型", "描述", "校验规则"};
     private static final String[] childMetaDataHeaders = {"名称", "显示名称", "元数据类型", "描述", "类型", "长度", "校验规则"};
-    private static final String[] parentTargetinfoHeaders = {"一级分类","二级分类","负责部门","指标编码","指标类型","指标名称","指标描述/口径","指标范围",
-            "计量单位","统计周期","指标公式","指标脚本","指标来源","数据筛选条件","来源系统","来源数据表","指标状态","应用","订单渠道"};
+    private static final String[] parentTargetinfoHeaders = {"一级分类", "二级分类", "负责部门", "指标编码", "指标类型", "指标名称", "指标描述/口径", "指标范围",
+            "计量单位", "统计周期", "指标公式", "指标脚本", "指标来源", "数据筛选条件", "来源系统", "来源数据表", "指标状态", "应用", "订单渠道"};
 
     /**
      * 用户信息导出类
@@ -299,7 +302,7 @@ public class ExcelUtil {
                 for (TemplateAttributeDto attributeDto : twoLevelAttribute) {
                     Cell cell = dataRow.createCell(columnIndex);
                     columnIndex++;
-                    String key=attributeDto.getAttributeId()+"";
+                    String key = attributeDto.getAttributeId() + "";
                     if (row.containsKey(key)) {
                         cell.setCellValue((String) row.get(key));
                     }
@@ -331,7 +334,7 @@ public class ExcelUtil {
         Row row1 = sheet.createRow(0);
         Row row2 = sheet.createRow(1);
         //一级表头ID
-        Integer[] oneLevelHeader = {-2,-1 , 3, 4};
+        Integer[] oneLevelHeader = {-2, -1, 3, 4};
         for (Integer oneLevelId : oneLevelHeader) {
             //获取一级表头信息
             TemplateAttributeDto oneLevelAttribute = commonAttributeDtoList.stream().filter(e -> e.getAttributeId().equals(oneLevelId)).findFirst().orElse(null);

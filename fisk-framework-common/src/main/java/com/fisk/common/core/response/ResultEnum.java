@@ -243,6 +243,7 @@ public enum ResultEnum {
     APICONFIG_ENCRYPT_ISNULL(5109, "api密钥不存在"),
     GENERATE_AES_ERROR(5110, "生成AES密钥失败"),
     DATA_DECRYPTION_ERROR(5111,"数据解密失败，api已开启AES加密，请查看数据是否正确加密。"),
+    EXCEL_EXPORT_ERROR(5112,"数据湖管理-导出excel失败"),
 
     /**
      * 后台任务模块

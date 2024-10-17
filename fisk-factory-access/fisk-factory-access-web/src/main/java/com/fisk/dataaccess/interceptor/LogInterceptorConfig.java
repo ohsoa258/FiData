@@ -34,6 +34,8 @@ public class LogInterceptorConfig implements WebMvcConfigurer {
                         , "/error"
                         , "/csrf"
                         , "/"
-                        , "/webjars/**");
+                        , "/webjars/**"
+                        , "/dataAccessTree/exportCdcConfig"
+                );
     }
 }

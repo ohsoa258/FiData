@@ -6,7 +6,9 @@ import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataTableMetaDataReqDTO;
 import com.fisk.dataaccess.config.SwaggerConfig;
+import com.fisk.dataaccess.dto.access.ExportCdcConfigDTO;
 import com.fisk.dataaccess.dto.datamanagement.DataAccessSourceTableDTO;
+import com.fisk.dataaccess.dto.table.TableAccessDTO;
 import com.fisk.dataaccess.dto.taskschedule.ComponentIdDTO;
 import com.fisk.dataaccess.dto.taskschedule.DataAccessIdsDTO;
 import com.fisk.dataaccess.service.IDataAccess;
@@ -18,6 +20,7 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -76,4 +79,29 @@ public class DataAccessController {
     public ResultEntity<List<FiDataTableMetaDataDTO>> buildFiDataTableMetaData(@RequestBody FiDataTableMetaDataReqDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.buildFiDataTableMetaData(dto));
     }
+
+    /**
+     * 数据湖管理-导出配置数据
+     *
+     * @param dto
+     * @return
+     */
+    @ApiOperation("数据湖管理-导出配置数据")
+    @PostMapping("/exportCdcConfig")
+    public ResultEntity<Object> exportCdcConfig( @RequestBody ExportCdcConfigDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.exportCdcConfig(dto));
+    }
+
+    /**
+     * 根据应用id获取应用下的表名称和表id
+     *
+     * @param appId 应用id
+     * @return
+     */
+    @ApiOperation("根据应用id获取应用下的表名称和表id")
+    @GetMapping("/getTblsByAppId")
+    public ResultEntity<List<TableAccessDTO>> getTblsByAppId(@RequestParam("appId") Integer appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getTblsByAppId(appId));
+    }
+
 }
