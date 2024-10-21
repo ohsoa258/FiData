@@ -1783,7 +1783,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 for (TableAccessPO tableAccessPO : posAlreadyHave) {
                     boolean flag = false;
                     for (TablePyhNameDTO table : tableNames) {
-                        if (tableAccessPO.getTableName().equals(table.getTableName())) {
+                        //如果表名包含.  （包含架构名） 则将架构名称换为_
+                        String tableName = table.getTableName();
+                        if (tableName.contains(".")){
+                            tableName = tableName.replaceFirst("\\.", "_");
+                        }
+                        if (tableAccessPO.getTableName().equals(tableName)) {
                             flag = true;
                             break;
                         }
