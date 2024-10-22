@@ -31,6 +31,14 @@ public interface INifiStage {
     void saveNifiStage(String nifiStagePO, Acknowledgment acke);
 
     /**
+     * 保存Nifi阶段 - 数据接入restfulapi存储操作日志
+     *
+     * @param nifiStagePO
+     * @param acke
+     */
+    void saveNifiStageForAccessApi(String nifiStagePO, Acknowledgment acke);
+
+    /**
      * 建模覆盖方式代码预览
      *
      * @param dto

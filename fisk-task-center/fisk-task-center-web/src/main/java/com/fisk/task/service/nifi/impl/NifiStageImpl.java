@@ -576,6 +576,152 @@ public class NifiStageImpl extends ServiceImpl<NifiStageMapper, NifiStagePO> imp
         }
     }
 
+    /**
+     * 保存Nifi阶段日志 - 数据接入restfulapi存储操作日志
+     *
+     * @param data
+     * @param acke
+     */
+    @Override
+    public void saveNifiStageForAccessApi(String data, Acknowledgment acke) {
+        log.info("阶段日志保存:" + data);
+        try {
+            NifiStagePO nifiStagePO = new NifiStagePO();
+            //转成集合
+            data = "[" + data + "]";
+            List<NifiStageMessageDTO> nifiStageMessages = JSON.parseArray(data, NifiStageMessageDTO.class);
+            for (NifiStageMessageDTO nifiStageMessageDTO : nifiStageMessages) {
+                try {
+                    List<BulletinEntity> bulletins = new ArrayList<>();
+                    if (nifiStageMessageDTO.groupId != null) {
+                        ProcessGroupEntity processGroup = NifiHelper.getProcessGroupsApi().getProcessGroup(nifiStageMessageDTO.groupId);
+                        bulletins = processGroup.getBulletins();
+                        if (bulletins != null && bulletins.size() != 0) {
+                            nifiStageMessageDTO.message = bulletins.get(0).getBulletin().getMessage();
+                        }
+                    }
+                    String topicName = nifiStageMessageDTO.topic;
+                    if (StringUtils.isEmpty(nifiStageMessageDTO.pipelStageTraceId)) {
+                        nifiStageMessageDTO.pipelStageTraceId = UUID.randomUUID().toString();
+                    }
+                    String[] topic = topicName.split("\\.");
+                    int type = 0;
+                    int tableAccessId = 0;
+                    int appId = 0;
+                    //分类,长度为6的是普通调度,其他的是管道调度 4 6 7
+                    if (topic.length == 6) {
+                        tableAccessId = Integer.parseInt(topic[5]);
+                        type = Integer.parseInt(topic[3]);
+                        appId = Integer.parseInt(topic[4]);
+                    }
+
+                    nifiStagePO.comment = nifiStageMessageDTO.message;
+                    if (nifiStageMessageDTO.nifiStageDTO != null) {
+                        NifiStageDTO nifiStageDTO = nifiStageMessageDTO.nifiStageDTO;
+                        nifiStagePO = NifiStageMap.INSTANCES.dtoToPo(nifiStageDTO);
+                    } else {
+                        if (bulletins != null && bulletins.size() != 0) {
+                            String sourceId = bulletins.get(0).getSourceId();
+                            ProcessorEntity processor = NifiHelper.getProcessorsApi().getProcessor(sourceId);
+                            String description = processor.getComponent().getConfig().getComments();
+                            if (Objects.equals(description, NifiStageTypeEnum.QUERY_PHASE.getName())) {
+                                nifiStagePO.queryPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                                nifiStagePO.transitionPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                            } else if (Objects.equals(description, NifiStageTypeEnum.TRANSITION_PHASE.getName())) {
+                                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.NOT_RUN.getValue();
+                                nifiStagePO.transitionPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                            } else if (Objects.equals(description, NifiStageTypeEnum.INSERT_PHASE.getName())) {
+                                nifiStagePO.queryPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                                nifiStagePO.insertPhase = NifiStageTypeEnum.RUN_FAILED.getValue();
+                            }
+                        }
+                    }
+
+                    PipelineTableLogPO pipelineTableLogPO = new PipelineTableLogPO();
+                    pipelineTableLogPO.comment = nifiStagePO.comment;
+                    pipelineTableLogPO.componentId = nifiStagePO.componentId;
+                    pipelineTableLogPO.tableId = tableAccessId;
+                    pipelineTableLogPO.tableType = type;
+                    pipelineTableLogPO.appId = appId;
+                    if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
+                            Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUN_FAILED.getValue()) ||
+                            Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUN_FAILED.getValue())) {
+                        pipelineTableLogPO.state = NifiStageTypeEnum.RUN_FAILED.getValue();
+                    } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.RUNNING.getValue()) ||
+                            Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.RUNNING.getValue()) ||
+                            Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.RUNNING.getValue())) {
+                        pipelineTableLogPO.state = NifiStageTypeEnum.RUNNING.getValue();
+                    } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue()) &&
+                            Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue()) &&
+                            Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue())) {
+                        pipelineTableLogPO.state = NifiStageTypeEnum.SUCCESSFUL_RUNNING.getValue();
+                    } else if (Objects.equals(nifiStagePO.insertPhase, NifiStageTypeEnum.NOT_RUN.getValue()) &&
+                            Objects.equals(nifiStagePO.queryPhase, NifiStageTypeEnum.NOT_RUN.getValue()) &&
+                            Objects.equals(nifiStagePO.transitionPhase, NifiStageTypeEnum.NOT_RUN.getValue())) {
+                        pipelineTableLogPO.state = NifiStageTypeEnum.NOT_RUN.getValue();
+                    }
+                    pipelineTableLogPO.counts = nifiStageMessageDTO.counts;
+                    pipelineTableLogPO.endTime = nifiStageMessageDTO.endTime;
+                    pipelineTableLogPO.startTime = nifiStageMessageDTO.startTime;
+                    if (nifiStagePO.componentId == null || nifiStagePO.componentId == 0) {
+                        pipelineTableLogPO.dispatchType = 0;
+                    } else {
+                        pipelineTableLogPO.dispatchType = 1;
+                    }
+                    pipelineTableLog.insert(pipelineTableLogPO);
+
+                    //----------------------------------------------
+                    HashMap<Integer, Object> taskMap = new HashMap<>();
+                    //nifiStageMessageDTO.pipelTaskTraceId
+                    taskMap.put(DispatchLogEnum.taskcount.getValue(), nifiStageMessageDTO.counts);
+                    taskMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
+
+                    HashMap<Integer, Object> stagekMap = new HashMap<>();
+                    stagekMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
+                    stagekMap.put(DispatchLogEnum.entrydate.getValue(), nifiStageMessageDTO.entryDate);
+                    if (!StringUtils.isEmpty(nifiStageMessageDTO.pipelTaskTraceId)) {
+                        iPipelStageLog.savePipelTaskStageLog(nifiStageMessageDTO.pipelStageTraceId, nifiStageMessageDTO.pipelTaskTraceId, stagekMap);
+                    }
+                    if (StringUtils.isEmpty(nifiStagePO.comment) || !nifiStagePO.comment.contains("成功")) {
+                        taskMap.put(DispatchLogEnum.taskcomment.getValue(), nifiStagePO.comment);
+                        DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
+                        dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
+                        dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                        dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
+                        dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
+                        dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
+                        iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+                    }
+                    nifiStagePO.pipelineTableLogId = Math.toIntExact(pipelineTableLogPO.id);
+
+                } catch (Exception e) {
+                    DispatchExceptionHandlingDTO dispatchExceptionHandlingDTO = DispatchExceptionHandlingDTO.builder().build();
+                    dispatchExceptionHandlingDTO.comment = nifiStagePO.comment;
+                    dispatchExceptionHandlingDTO.pipelTraceId = nifiStageMessageDTO.pipelTraceId;
+                    dispatchExceptionHandlingDTO.pipelJobTraceId = nifiStageMessageDTO.pipelJobTraceId;
+                    dispatchExceptionHandlingDTO.pipelStageTraceId = nifiStageMessageDTO.pipelStageTraceId;
+                    dispatchExceptionHandlingDTO.pipelTaskTraceId = nifiStageMessageDTO.pipelTaskTraceId;
+                    log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+                    try {
+                        iPipelJobLog.exceptionHandlingLog(dispatchExceptionHandlingDTO);
+                    } catch (InterruptedException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
+            }
+        } catch (Exception e) {
+            log.error("系统异常" + StackTraceHelper.getStackTraceInfo(e));
+        } finally {
+            if (acke != null) {
+                acke.acknowledge();
+            }
+        }
+    }
+
     public void sendPublishCenter(NifiStageMessageDTO nifiStageMessage, NifiCustomWorkflowDetailDTO itselfPort, String topic) {
         KafkaReceiveDTO kafkaReceive = KafkaReceiveDTO.builder().build();
         kafkaReceive.topicType = TopicTypeEnum.COMPONENT_NIFI_FLOW.getValue();

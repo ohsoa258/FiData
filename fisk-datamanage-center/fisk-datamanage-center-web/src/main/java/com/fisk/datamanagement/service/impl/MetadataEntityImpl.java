@@ -59,6 +59,7 @@ import com.fisk.datamodel.enums.DataModelTableTypeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.system.dto.userinfo.UserDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +74,7 @@ import java.util.stream.Collectors;
  * @author JianWenYang
  */
 @Service
+@Slf4j
 public class MetadataEntityImpl
         extends ServiceImpl<MetadataEntityMapper, MetadataEntityPO>
         implements IMetadataEntity {
@@ -255,7 +257,7 @@ public class MetadataEntityImpl
         po.displayName = dto.displayName;
         po.owner = dto.owner;
         po.typeId = metadataEntityType.getTypeId(rdbmsType);
-        po.qualifiedName = dto.qualifiedName+"_external";
+        po.qualifiedName = dto.qualifiedName + "_external";
         //父级
         po.parentId = Integer.parseInt(parentEntityId);
         //字段数据分类
@@ -1759,61 +1761,82 @@ public class MetadataEntityImpl
      * @return
      */
     public LineAgeDTO getMetaDataKinship(String guid) {
-
-        //获取process-fromEntityId
+        //获取process-toEntityId
         List<LineageMapRelationPO> list = lineageMapRelation.query()
                 .eq("to_entity_id", guid)
                 .list();
         if (CollectionUtils.isEmpty(list)) {
             return new LineAgeDTO();
         }
-
         LineAgeDTO dto = new LineAgeDTO();
         dto.relations = new ArrayList<>();
         dto.guidEntityMap = new ArrayList<>();
 
-        List<LineageMapRelationPO> poList = new ArrayList<>();
-        poList.addAll(list);
-        //循环获取
+        List<LineageMapRelationPO> poList = new ArrayList<>(list);
+        Set<Integer> processedIds = new HashSet<>();
         for (LineageMapRelationPO po : list) {
-            boolean flat = true;
             List<Integer> ids = new ArrayList<>();
             ids.add(po.fromEntityId);
-            while (flat) {
-                List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("to_entity_id", ids).list();
-                if (CollectionUtils.isEmpty(list1)) {
-                    flat = false;
+
+            while (!ids.isEmpty()) {
+                try {
+                    List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("to_entity_id", ids).list();
+                    if (CollectionUtils.isEmpty(list1)) {
+                        break;
+                    }
+
+                    //避免重复
+                    for (LineageMapRelationPO relation : list1) {
+                        if (processedIds.add(relation.fromEntityId)) {
+                            poList.add(relation);
+                        }
+                    }
+
+                    ids.clear();
+                    ids.addAll(list1.stream().map(e -> e.fromEntityId).collect(Collectors.toList()));
+                } catch (Exception e) {
+                    // 处理异常，例如记录日志或抛出自定义异常
+                    log.info("该po.fromEntityId已经处理过，跳过pass");
                     break;
                 }
-                poList.addAll(list1);
-                ids.clear();
-                ids.addAll(list1.stream().map(e -> e.fromEntityId).collect(Collectors.toList()));
+
             }
         }
 
-        //获取process-toEntityId
+        //获取process-fromEntityId
         List<LineageMapRelationPO> list2 = lineageMapRelation.query()
                 .eq("from_entity_id", guid)
                 .list();
+        Set<Integer> processedIds2 = new HashSet<>();
         if (!CollectionUtils.isEmpty(list2)) {
             poList.addAll(list2);
             for (LineageMapRelationPO po : list2) {
-                boolean flat = true;
                 List<Integer> ids = new ArrayList<>();
                 ids.add(po.toEntityId);
-                while (flat) {
-                    List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("from_entity_id", ids).list();
-                    if (CollectionUtils.isEmpty(list1)) {
-                        flat = false;
+                while (!ids.isEmpty()) {
+                    try {
+                        List<LineageMapRelationPO> list1 = lineageMapRelation.query().in("from_entity_id", ids).list();
+                        if (CollectionUtils.isEmpty(list1)) {
+                            break;
+                        }
+
+                        //避免重复
+                        for (LineageMapRelationPO relation : list1) {
+                            if (processedIds2.add(relation.fromEntityId)) {
+                                poList.add(relation);
+                            }
+                        }
+
+                        ids.clear();
+                        ids.addAll(list1.stream().map(e -> e.toEntityId).collect(Collectors.toList()));
+                    }catch (Exception e){
+                        // 处理异常，例如记录日志或抛出自定义异常
+                        log.info("该po.fromEntityId已经处理过，跳过pass");
                         break;
                     }
-                    poList.addAll(list1);
-                    ids.clear();
-                    ids.addAll(list1.stream().map(e -> e.toEntityId).collect(Collectors.toList()));
                 }
             }
         }
-
 
         if (CollectionUtils.isEmpty(poList)) {
             return dto;
@@ -1831,9 +1854,9 @@ public class MetadataEntityImpl
         //反转
         Collections.reverse(collect);
 
-        for (Integer id : collect) {
-            MetadataEntityPO one = this.query().eq("id", id).one();
-            dto.guidEntityMap.add(addJsonObject(one));
+        List<MetadataEntityPO> pos = this.listByIds(collect);
+        for (MetadataEntityPO po : pos) {
+            dto.guidEntityMap.add(addJsonObject(po));
         }
 
         return dto;

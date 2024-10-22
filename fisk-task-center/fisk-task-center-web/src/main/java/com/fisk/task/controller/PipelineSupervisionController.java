@@ -87,6 +87,12 @@ public class PipelineSupervisionController {
         iNifiStage.saveNifiStage(data, null);
     }
 
+    @ApiOperation("保存Nifi阶段日志 - 数据接入restfulapi存储操作日志")
+    @PostMapping("/saveNifiStageForAccessApi")
+    public void saveNifiStageForAccessApi(@RequestParam String data) {
+        iNifiStage.saveNifiStageForAccessApi(data, null);
+    }
+
     /**
      * 日志数据补全
      *

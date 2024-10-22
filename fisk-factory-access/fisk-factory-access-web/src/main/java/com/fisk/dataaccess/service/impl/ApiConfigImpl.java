@@ -1625,7 +1625,7 @@ public class ApiConfigImpl extends ServiceImpl<ApiConfigMapper, ApiConfigPO> imp
             nifiStageMessageDto.nifiStageDTO = nifiStageDto;
 
             log.info("保存到task的日志信息: " + JSON.toJSONString(nifiStageMessageDto));
-            publishTaskClient.saveNifiStage(JSON.toJSONString(nifiStageMessageDto));
+            publishTaskClient.saveNifiStageForAccessApi(JSON.toJSONString(nifiStageMessageDto));
         } catch (Exception e) {
             Date endTime = new Date();
             nifiStageMessageDto.message = msg == null ? "运行失败" : msg;

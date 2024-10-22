@@ -358,6 +358,14 @@ public interface PublishTaskClient {
     void saveNifiStage(@RequestParam String data);
 
     /**
+     * saveNifiStage
+     *
+     * @return
+     */
+    @PostMapping("/pipeline/saveNifiStageForAccessApi")
+    void saveNifiStageForAccessApi(@RequestParam String data);
+
+    /**
      * 删除nifi管道
      *
      * @return
