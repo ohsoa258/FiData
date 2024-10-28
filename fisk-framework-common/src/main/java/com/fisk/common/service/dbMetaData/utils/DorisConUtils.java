@@ -38,10 +38,10 @@ public class DorisConUtils {
             List<String> tableNames = getTablesPlus(conn);
             if (CollectionUtils.isNotEmpty(tableNames)) {
                 for (String tableName : tableNames) {
-                    // mysql没有架构概念
+                    // doris没有架构概念
                     List<TableStructureDTO> colNames = getColNames(stmt, tableName);
                     TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                    // mysql没有架构概念
+                    // doris没有架构概念
                     tablePyhNameDTO.setTableFullName(tableName);
                     tablePyhNameDTO.setTableName(tableName);
                     tablePyhNameDTO.setFields(colNames);
@@ -86,7 +86,7 @@ public class DorisConUtils {
             if (CollectionUtils.isNotEmpty(tableNames)) {
                 for (String tableName : tableNames) {
                     TablePyhNameDTO tablePyhNameDTO = new TablePyhNameDTO();
-                    // mysql没有架构概念
+                    // doris没有架构概念
                     tablePyhNameDTO.setTableFullName(tableName);
                     tablePyhNameDTO.setTableName(tableName);
                     tag++;
@@ -149,7 +149,7 @@ public class DorisConUtils {
      * 获取数据库中所有表名称
      */
     public List<String> getTablesPlus(Connection conn) {
-        // MySql没有架构概念，此处直接查表
+        // doris没有架构概念，此处直接查表
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -172,7 +172,7 @@ public class DorisConUtils {
      */
     public static List<TableNameDTO> getTableName(Connection conn) {
         // 获取数据库中所有表名称
-        // MySql没有架构概念，此处直接查表
+        // doris没有架构概念，此处直接查表
         ArrayList<String> tablesList = null;
         try {
             DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -356,7 +356,7 @@ public class DorisConUtils {
                             case "default":
                             case "__internal_schema":
                             case "information_schema":
-                            case "mysql":
+                            case "doris":
                                 continue;
                         }
                         DorisCatalogDTO.CataLogDatabase cataLogDatabase = new DorisCatalogDTO.CataLogDatabase();

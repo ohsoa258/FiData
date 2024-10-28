@@ -90,12 +90,17 @@ public class SqlParmUtils {
                         } else {
                             paramValue_In = flag + "'" + item.parmValue + "'";
                         }
-                    } else {
-                        if (dataSourceType == DataSourceTypeEnum.MYSQL
-                                && (item.parmName.equals("start") || item.parmName.equals("end"))) {
+                    } else if (dataSourceType == DataSourceTypeEnum.MYSQL){
+                        if (item.parmName.equals("start") || item.parmName.equals("end")) {
                             paramValue_In = item.parmValue;
                         } else {
                             paramValue_In = flag + "'" + item.parmValue + "'";
+                        }
+                    }else if (dataSourceType == DataSourceTypeEnum.DM8){
+                        if (item.parmName.equals("start") || item.parmName.equals("end")) {
+                            paramValue_In = item.parmValue;
+                        } else {
+                            paramValue_In = flag  + item.parmValue;
                         }
                     }
                 }

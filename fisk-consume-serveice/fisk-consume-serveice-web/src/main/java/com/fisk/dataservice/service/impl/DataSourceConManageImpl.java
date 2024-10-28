@@ -19,10 +19,7 @@ import com.fisk.common.framework.redis.RedisKeyBuild;
 import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbMetaData.dto.*;
-import com.fisk.common.service.dbMetaData.utils.DorisConUtils;
-import com.fisk.common.service.dbMetaData.utils.MysqlConUtils;
-import com.fisk.common.service.dbMetaData.utils.PostgresConUtils;
-import com.fisk.common.service.dbMetaData.utils.SqlServerPlusUtils;
+import com.fisk.common.service.dbMetaData.utils.*;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.dataservice.dto.datasource.DataSourceConDTO;
@@ -430,6 +427,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         PostgresConUtils postgresConUtils = new PostgresConUtils();
         DorisConUtils dorisConUtils = new DorisConUtils();
+        DaMengConUtils daMengConUtils = new DaMengConUtils();
         try {
             DataSourceTypeEnum dataSourceTypeEnum = DataSourceTypeEnum.values()[conPo.conType];
             Connection connection = getStatement(dataSourceTypeEnum, conPo.getConStr(), conPo.getConAccount(), conPo.getConPassword());
@@ -450,7 +448,11 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                     break;
                 case DORIS:
                     // 表结构
-                    tableNameAndColumns = dorisConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.POSTGRESQL);
+                    tableNameAndColumns = dorisConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.DORIS);
+                    break;
+                case DM8:
+                    // 表结构
+                    tableNameAndColumns = daMengConUtils.getTableNameAndColumns(conPo.conStr, conPo.conAccount, conPo.conPassword, DataSourceTypeEnum.DM8);
                     break;
             }
             connection.close();
@@ -634,7 +636,7 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         MysqlConUtils mysqlConUtils = new MysqlConUtils();
         SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
         PostgresConUtils postgresConUtils = new PostgresConUtils();
-        DorisConUtils dorisConUtils = new DorisConUtils();
+        DaMengConUtils daMengConUtils = new DaMengConUtils();
         try {
             List<DataBaseViewDTO> viewNameAndColumns = null;
             switch (DataSourceTypeEnum.values()[conPo.conType]) {
@@ -649,6 +651,9 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
                 case POSTGRESQL:
                     // 表结构
                     viewNameAndColumns = postgresConUtils.loadViewDetails(DataSourceTypeEnum.POSTGRESQL, conPo.conStr, conPo.conAccount, conPo.conPassword);
+                    break;
+                case DM8:
+                    viewNameAndColumns = daMengConUtils.loadViewDetails(DataSourceTypeEnum.DM8, conPo.conStr, conPo.conAccount, conPo.conPassword);
                     break;
             }
 

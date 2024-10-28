@@ -362,7 +362,8 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
             } else if (apiInfo.getApiType() == ApiTypeEnum.CUSTOM_SQL.getValue()) {
                 List<SqlParmDto> sqlParamsDto = ApiParmMap.INSTANCES.listPoToSqlParmDto(paramList);
                 if (dataSourceConVO.getConType() == DataSourceTypeEnum.DORIS
-                        || dataSourceConVO.getConType() ==DataSourceTypeEnum.MYSQL){
+                        || dataSourceConVO.getConType() ==DataSourceTypeEnum.MYSQL
+                        || dataSourceConVO.getConType() ==DataSourceTypeEnum.DM8){
                     List<SqlParmDto> pageNo = sqlParamsDto.stream().filter(i -> i.parmName == "@start" || i.parmName == "@end").collect(Collectors.toList());
                     if (CollectionUtils.isEmpty(pageNo)){
                         SqlParmDto sqlParmStart = new SqlParmDto();

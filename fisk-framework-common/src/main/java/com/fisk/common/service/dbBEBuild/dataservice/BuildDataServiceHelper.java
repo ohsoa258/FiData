@@ -23,6 +23,8 @@ public class BuildDataServiceHelper {
                 return new BuildDataServiceMysqlCommandImpl();
             case DORIS:
                 return new BuildDataServiceDorisCommandImpl();
+            case DM8:
+                return new BuildDataServiceDorisCommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }
