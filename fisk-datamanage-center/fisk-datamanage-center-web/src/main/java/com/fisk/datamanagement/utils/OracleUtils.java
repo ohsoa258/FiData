@@ -281,7 +281,7 @@ public class OracleUtils {
                 // 字段类型
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
-                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                tableStructureDTO.fieldLength = (long) metaData.getColumnDisplaySize(i);
                 tableStructureDTO.fieldDes = metaData.getCatalogName(i);
                 colNameList.add(tableStructureDTO);
             }
@@ -523,17 +523,17 @@ public class OracleUtils {
             //dto.fieldDes = rs.getString("COMMENTS");
             dto.fieldName = rs.getString("COLUMN_NAME");
             dto.fieldType = rs.getString("DATA_TYPE");
-            dto.fieldLength = Integer.parseInt(rs.getString("DATA_LENGTH"));
+            dto.fieldLength = Long.valueOf(rs.getString("DATA_LENGTH"));
             dto.fieldPrecision = 0;
             OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
             switch (typeEnum) {
                 case NUMBER:
                     if (rs.getString("DATA_PRECISION") == null) {
-                        dto.fieldLength = 0;
+                        dto.fieldLength = 0L;
                         dto.fieldPrecision = 0;
                         break;
                     }
-                    dto.fieldLength = Integer.parseInt(rs.getString("DATA_PRECISION"));
+                    dto.fieldLength = Long.valueOf(rs.getString("DATA_PRECISION"));
                     dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
                     break;
                 default:

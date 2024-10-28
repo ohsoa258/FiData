@@ -28,7 +28,7 @@ public class TableStructureDTO {
      * 字段长度
      */
     @ApiModelProperty(value = "字段长度", required = true)
-    public int fieldLength;
+    public Long fieldLength;
 
     /**
      * 字段描述

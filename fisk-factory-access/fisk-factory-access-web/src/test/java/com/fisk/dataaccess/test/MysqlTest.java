@@ -130,7 +130,7 @@ public class MysqlTest {
 
             tableStructureDTO.fieldName = metaData.getColumnName(i);
             tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
-            tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+            tableStructureDTO.fieldLength = (long) metaData.getColumnDisplaySize(i);
 
 //            colNameList.add(metaData.getColumnName(i));
             colNameList.add(tableStructureDTO);

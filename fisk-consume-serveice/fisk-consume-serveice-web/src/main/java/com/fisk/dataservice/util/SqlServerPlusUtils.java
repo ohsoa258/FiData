@@ -289,7 +289,7 @@ public class SqlServerPlusUtils {
                 // 字段类型
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
-                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                tableStructureDTO.fieldLength = (long) metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
         } catch (SQLException e) {

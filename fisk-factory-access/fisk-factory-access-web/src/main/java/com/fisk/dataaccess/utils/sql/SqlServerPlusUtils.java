@@ -76,7 +76,7 @@ public class SqlServerPlusUtils {
                 // 获取字段名称
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
                 // 获取字段长度
-                dto.fieldLength = resultSet.getInt("COLUMN_SIZE");
+                dto.fieldLength = (long) resultSet.getInt("COLUMN_SIZE");
                 // 获取字段类型
                 dto.fieldType = resultSet.getString("TYPE_NAME");
                 // 字段描述
@@ -403,7 +403,7 @@ public class SqlServerPlusUtils {
                 // 字段类型
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
-                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                tableStructureDTO.fieldLength = (long) metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
         } catch (SQLException e) {

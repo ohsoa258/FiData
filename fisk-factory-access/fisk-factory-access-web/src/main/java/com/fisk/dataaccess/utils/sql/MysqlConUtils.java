@@ -231,7 +231,7 @@ public class MysqlConUtils {
                 // 字段类型
                 tableStructureDTO.fieldType = metaData.getColumnTypeName(i);
                 // 字段长度
-                tableStructureDTO.fieldLength = metaData.getColumnDisplaySize(i);
+                tableStructureDTO.fieldLength = (long) metaData.getColumnDisplaySize(i);
                 colNameList.add(tableStructureDTO);
             }
         } catch (SQLException e) {
@@ -291,7 +291,7 @@ public class MysqlConUtils {
                 //字段类型
                 dto.fieldType = rs.getString("COLUMN_TYPE");
                 //字段长度
-                dto.fieldLength = rs.getInt("CHARACTER_MAXIMUM_LENGTH");
+                dto.fieldLength = (long) rs.getInt("CHARACTER_MAXIMUM_LENGTH");
                 //字段描述
                 dto.setFieldDes(rs.getString("COLUMN_COMMENT"));
                 dto.sourceTblName = tableName;
@@ -313,7 +313,7 @@ public class MysqlConUtils {
                 }
             });
         } catch (SQLException e) {
-            log.error("mysql入参配置获取表名失败：" + e);
+            log.error("mysql入仓配置获取表名失败：" + e);
             throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
         } finally {
             AbstractCommonDbHelper.closeResultSet(resultSet);
