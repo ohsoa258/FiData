@@ -655,7 +655,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataCheckLogsPO.setCheckFailCount(String.valueOf(qualityReportSummary_ruleDTO.getCheckErrorDataCount()));
             dataCheckLogsPO.setCheckResult(qualityReportSummary_ruleDTO.getCheckStatus());
             dataCheckLogsPO.setCheckMsg("");
-            dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
+            dataCheckLogsPO.setCheckRuleIllustrate(qualityReportSummary_ruleDTO.getRuleIllustrate());
             dataCheckLogsPO.setErrorData("");
             dataCheckLogsPO.setCheckDataAccuracy(qualityReportSummary_ruleDTO.getDataAccuracy());
             dataCheckLogsPO.setCheckDataStartTime(checkDataStartTime);
@@ -914,7 +914,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1116,7 +1116,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         log.info("值域检查返回checkDataTotalCount：" + checkDataTotalCount);
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1207,7 +1207,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1675,7 +1675,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1786,7 +1786,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         ruleIllustrate = ruleIllustrate.replace("###", String.valueOf(realityValue));
         String addRuleIllustrate = realityValueThanThresholdValue(realityValue, thresholdValue);
         ruleIllustrate+= "，"+addRuleIllustrate;
-        dataCheckPO.setRuleIllustrate(ruleIllustrate);
         // 检查不通过，查询不通过的数据
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = 0;
@@ -1803,7 +1802,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,ruleIllustrate);
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1905,7 +1904,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1962,7 +1961,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         // 因为SQL脚本可能连表多条件查询，因此此处查询表数据条数也用检查的SQL
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
-                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount);
+                sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
     }
 
@@ -1994,7 +1993,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                                                                                     String sql_QueryCheckData,
                                                                                     String sql_QueryDataTotalCount,
                                                                                     Integer errorDataTotalCount,
-                                                                                    String sql_QueryCheckErrorDataCount) {
+                                                                                    String sql_QueryCheckErrorDataCount,
+                                                                                    String ruleIllustrate) {
         QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = new QualityReportSummary_RuleDTO();
         qualityReportSummary_ruleDTO.setRuleName(dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO.setRuleDescribe(dataCheckPO.getRuleDescribe());
@@ -2002,7 +2002,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         qualityReportSummary_ruleDTO.setFieldName(dataCheckExtendPO.getFieldName());
         TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
         qualityReportSummary_ruleDTO.setRuleTemplate(templateTypeEnum.getName());
-        qualityReportSummary_ruleDTO.setRuleIllustrate(dataCheckPO.getRuleIllustrate());
+        qualityReportSummary_ruleDTO.setRuleIllustrate(ruleIllustrate);
         double checkDataAccuracy = 0.00;
         String checkStatus = errorDataTotalCount == 0 ? "通过" : "不通过";
         if (checkDataTotalCount == 0) {
