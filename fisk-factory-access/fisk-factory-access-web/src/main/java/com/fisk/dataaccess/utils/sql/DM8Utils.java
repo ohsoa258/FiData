@@ -121,7 +121,11 @@ public class DM8Utils {
             while (resultSet.next()) {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
-                dto.fieldLength = Long.valueOf(resultSet.getString("DATA_LENGTH"));
+                //字段长度
+                String length = resultSet.getString("DATA_LENGTH");
+                if (length != null){
+                    dto.fieldLength = Long.valueOf(length);
+                }
                 dto.fieldType = resultSet.getString("DATA_TYPE");
                 colNameList.add(dto);
             }

@@ -61,7 +61,10 @@ public class SqlServerConUtils {
                 TableStructureDTO dto = new TableStructureDTO();
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
                 dto.fieldType = resultSet.getString("TYPE_NAME");
-                dto.fieldLength = Long.valueOf(resultSet.getString("COLUMN_SIZE"));
+                String columnSize = resultSet.getString("COLUMN_SIZE");
+                if (columnSize != null){
+                    dto.fieldLength = Long.valueOf(columnSize);
+                }
                 dto.fieldDes = resultSet.getString("REMARKS");
                 colNameList.add(dto);
             }

@@ -523,7 +523,11 @@ public class OracleUtils {
             //dto.fieldDes = rs.getString("COMMENTS");
             dto.fieldName = rs.getString("COLUMN_NAME");
             dto.fieldType = rs.getString("DATA_TYPE");
-            dto.fieldLength = Long.valueOf(rs.getString("DATA_LENGTH"));
+            String length = rs.getString("DATA_LENGTH");
+            if (length != null){
+                dto.fieldLength = Long.valueOf(length);
+            }
+
             dto.fieldPrecision = 0;
             OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
             switch (typeEnum) {
@@ -533,7 +537,10 @@ public class OracleUtils {
                         dto.fieldPrecision = 0;
                         break;
                     }
-                    dto.fieldLength = Long.valueOf(rs.getString("DATA_PRECISION"));
+                    String data_precision = rs.getString("DATA_PRECISION");
+                    if (data_precision != null){
+                        dto.fieldLength = Long.valueOf(data_precision);
+                    }
                     dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
                     break;
                 default:

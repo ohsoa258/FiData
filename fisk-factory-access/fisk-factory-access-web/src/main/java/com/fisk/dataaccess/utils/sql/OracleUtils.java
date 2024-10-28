@@ -518,21 +518,24 @@ public class OracleUtils {
             //dto.fieldDes = rs.getString("COMMENTS");
             dto.fieldName = rs.getString("COLUMN_NAME");
             dto.fieldType = rs.getString("DATA_TYPE");
-            dto.fieldLength = Long.valueOf(rs.getString("DATA_LENGTH"));
+            //字段长度
+            String length = rs.getString("DATA_LENGTH");
+            if (length != null){
+                dto.fieldLength = Long.valueOf(length);
+            }
             dto.fieldPrecision = 0;
             OracleTypeEnum typeEnum = OracleTypeEnum.getValue(dto.fieldType);
-            switch (typeEnum) {
-                case NUMBER:
-                    if (rs.getString("DATA_PRECISION") == null) {
-                        dto.fieldLength = 0L;
-                        dto.fieldPrecision = 0;
-                        break;
-                    }
-                    dto.fieldLength = Long.valueOf(rs.getString("DATA_PRECISION"));
-                    dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
-                    break;
-                default:
-                    break;
+            if (typeEnum == OracleTypeEnum.NUMBER) {
+                if (rs.getString("DATA_PRECISION") == null) {
+                    dto.fieldLength = 0L;
+                    dto.fieldPrecision = 0;
+                    return dto;
+                }
+                String data_precision = rs.getString("DATA_PRECISION");
+                if (data_precision != null) {
+                    dto.fieldLength = Long.valueOf(data_precision);
+                }
+                dto.fieldPrecision = Integer.parseInt(rs.getString("DATA_SCALE"));
             }
             return dto;
         } catch (SQLException e) {

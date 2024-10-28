@@ -76,7 +76,11 @@ public class SqlServerPlusUtils {
                 // 获取字段名称
                 dto.fieldName = resultSet.getString("COLUMN_NAME");
                 // 获取字段长度
-                dto.fieldLength = (long) resultSet.getInt("COLUMN_SIZE");
+                //字段长度
+                String length = resultSet.getString("COLUMN_SIZE");
+                if (length != null){
+                    dto.fieldLength = Long.valueOf(length);
+                }
                 // 获取字段类型
                 dto.fieldType = resultSet.getString("TYPE_NAME");
                 // 字段描述

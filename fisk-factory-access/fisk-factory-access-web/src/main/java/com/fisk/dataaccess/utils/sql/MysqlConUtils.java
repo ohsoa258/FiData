@@ -291,7 +291,10 @@ public class MysqlConUtils {
                 //字段类型
                 dto.fieldType = rs.getString("COLUMN_TYPE");
                 //字段长度
-                dto.fieldLength = (long) rs.getInt("CHARACTER_MAXIMUM_LENGTH");
+                String length = rs.getString("CHARACTER_MAXIMUM_LENGTH");
+                if (length != null){
+                    dto.fieldLength = Long.valueOf(length);
+                }
                 //字段描述
                 dto.setFieldDes(rs.getString("COLUMN_COMMENT"));
                 dto.sourceTblName = tableName;
