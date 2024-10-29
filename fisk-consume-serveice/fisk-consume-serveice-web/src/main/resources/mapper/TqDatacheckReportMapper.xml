@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pd.tangqiao.mapper.TqDatacheckReportMapper">
+<select id="getAll" resultType="pd.tangqiao.entity.TqDatacheckReportVO">
+    select * from tq_datacheck_report
+        where del_flag = 1
+    <if test="query.keyword !=null and query.keyword.length()>0 ">
+        and (state like concat('%', #{query.keyword}, '%')
+        or scenario like concat('%', #{query.keyword}, '%')
+        or data_item like concat('%', #{query.keyword}, '%')
+        or rule like concat('%', #{query.keyword}, '%')
+        or rule_illustrate like concat('%', #{query.keyword}, '%'))
+    </if>
+</select>
+</mapper>

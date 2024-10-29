@@ -2,6 +2,7 @@ package com.fisk.dataservice.config;
 
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.dataservice.FiskConsumeServeiceApplication;
+import com.google.common.base.Predicates;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -46,6 +47,8 @@ public static final String TAG_1 = "数据源接口";
     public static final String TAG_12 = "主数据版本sql";
     public static final String TAG_33 = "浦东塘桥-数据集成管理";
 
+    public static final String TQ_TAG_13 = "塘桥数据质量管理";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FiskConsumeServeiceApplication.class.getPackage().getName();
@@ -63,9 +66,13 @@ public static final String TAG_1 = "数据源接口";
                 .tags(new Tag(TAG_10,"代理服务接口"))
                 .tags(new Tag(TAG_11,"表服务API接口"))
                 .tags(new Tag(TAG_12,"主数据版本sql"))
+                .tags(new Tag(TQ_TAG_13,"塘桥数据质量管理"))
                 .tags(new Tag(TAG_33,"浦东塘桥-数据集成管理"))
                 .select()
-                .apis(RequestHandlerSelectors.basePackage(basePck))
+                .apis(Predicates.or(
+                                RequestHandlerSelectors.basePackage(basePck),
+                                RequestHandlerSelectors.basePackage("pd.tangqiao")
+                        ))
                 .paths(PathSelectors.any())
                 .build()
                 .securitySchemes(apiKey())
