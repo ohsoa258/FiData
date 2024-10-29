@@ -46,6 +46,11 @@ public static final String TAG_1 = "数据源接口";
     public static final String TAG_11 = "表服务API接口";
     public static final String TAG_12 = "主数据版本sql";
     public static final String TQ_TAG_13 = "塘桥数据质量管理";
+    public static final String TQ_TAG_14 = "塘桥审计数据安全管理";
+
+    public static final String TQ_TAG_15 = "塘桥审计数据安全接口管理";
+    public static final String TQ_TAG_16 = "塘桥数据订阅服务";
+    public static final String TQ_TAG_17 = "塘桥数据订阅Api服务";
 
 
 
@@ -74,6 +79,10 @@ public static final String TAG_1 = "数据源接口";
                 .tags(new Tag(TAG_11,"表服务API接口"))
                 .tags(new Tag(TAG_12,"主数据版本sql"))
                 .tags(new Tag(TQ_TAG_13,"塘桥数据质量管理"))
+                .tags(new Tag(TQ_TAG_14,"塘桥应用管理"))
+                .tags(new Tag(TQ_TAG_15,"塘桥审计数据安全接口管理"))
+                .tags(new Tag(TQ_TAG_16,"塘桥数据订阅服务"))
+                .tags(new Tag(TQ_TAG_17,"塘桥数据订阅Api服务"))
                 .tags(new Tag(TQ_TAG_33,"浦东塘桥-数据集成管理"))
                 .select()
                 .apis(Predicates.or(

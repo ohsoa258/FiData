@@ -13,20 +13,19 @@ import java.util.Date;
  * @Description:
  */
 @Data
-public class TqDatacheckReportVO {
+public class TqAppConfigVO {
     @ApiModelProperty(value = "id")
     private Integer id;
-    @ApiModelProperty(value = "状态")
-    private String state;
-    @ApiModelProperty(value = "场景")
-    private String scenario;
-    @ApiModelProperty(value = "数据项")
-    private String dataItem;
-    @ApiModelProperty(value = "规则")
-    private String rule;
-    @ApiModelProperty(value = "规则内容")
-    private String ruleIllustrate;
-    @ApiModelProperty(value = "发生时间")
+    @ApiModelProperty(value = "应用名称")
+    private String appName;
+    @ApiModelProperty(value = "应用描述")
+    private String appDesc;
+    @ApiModelProperty(value = "应用申请人")
+    public String appPrincipal;
+    @ApiModelProperty(value = "应用账号")
+    public String appAccount;
+    @ApiModelProperty(value = "密码/加密")
+    public String appPassword;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;

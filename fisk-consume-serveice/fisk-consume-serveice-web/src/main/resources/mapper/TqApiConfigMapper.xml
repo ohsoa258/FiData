@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pd.tangqiao.mapper.TqApiConfigMapper">
+    <select id="getAll" resultType="pd.tangqiao.entity.TqApiConfigVO">
+        select * from tq_api_config
+        where del_flag = 1
+          and app_id = #{query.appId}
+    </select>
+</mapper>
