@@ -1,5 +1,6 @@
 package pd.tangqiao.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import pd.tangqiao.entity.TqDatasourceConfigPO;
 import pd.tangqiao.service.TqDatasourceConfigPOService;
@@ -14,6 +15,52 @@ import org.springframework.stereotype.Service;
 @Service
 public class TqDatasourceConfigPOServiceImpl extends ServiceImpl<TqDatasourceConfigPOMapper, TqDatasourceConfigPO>
     implements TqDatasourceConfigPOService{
+
+    /**
+     * 添加数据源
+     *
+     * @param po
+     * @return
+     */
+    @Override
+    public Object add(TqDatasourceConfigPO po) {
+        return this.save(po);
+    }
+
+    /**
+     * 编辑数据源
+     *
+     * @param po
+     * @return
+     */
+    @Override
+    public Object edit(TqDatasourceConfigPO po) {
+        return this.updateById(po);
+    }
+
+    /**
+     * 删除数据源
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public Object del(Integer id) {
+        return removeById(id);
+    }
+
+    /**
+     * 分页回显
+     *
+     * @param currentPage
+     * @param size
+     * @return
+     */
+    @Override
+    public Object pageFilter(Integer currentPage, Integer size) {
+        Page<TqDatasourceConfigPO> tqDatasourceConfigPOPage = new Page<>(currentPage, size);
+        return this.page(tqDatasourceConfigPOPage);
+    }
 
 }
 

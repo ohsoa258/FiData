@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.fisk.dataservice",
+        "pd.tangqiao",
         "com.fisk.common.framework.advice",
         "com.fisk.common.framework.mdc",
         "com.fisk.common.framework.mybatis",
@@ -25,7 +26,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
         "com.fisk.common.framework.actuators",
         "com.fisk.common.service.pageFilter",
         "com.fisk.common.core.user"})
-@MapperScan("com.fisk.dataservice.mapper")
+@MapperScan({"com.fisk.dataservice.mapper"
+        ,"pd.tangqiao.mapper"
+})
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
         "com.fisk.system.client",

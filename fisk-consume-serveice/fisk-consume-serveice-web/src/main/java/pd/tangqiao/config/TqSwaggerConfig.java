@@ -1,4 +1,4 @@
-package com.fisk.dataservice.config;
+package pd.tangqiao.config;
 
 import com.fisk.common.core.constants.SystemConstants;
 import com.fisk.dataservice.FiskConsumeServeiceApplication;
@@ -21,49 +21,17 @@ import java.util.List;
  */
 @Configuration
 @EnableSwagger2
-public class SwaggerConfig {
+public class TqSwaggerConfig {
 
-//    public static final String TAG_1 = "datasource-controller";
-//    public static final String TAG_2 = "appregister-controller";
-//    public static final String TAG_3 = "apiregister-controller";
-//    public static final String TAG_4 = "apiservice-controller";
-//    public static final String TAG_5 = "logs-controller";
-//    public static final String TAG_6 = "dataAnalysisView-controller";
-//    public static final String TAG_7 = "tableservice-controller";
-//    public static final String TAG_8 = "serviceAnalyse-controller";
-//    public static final String TAG_9 = "apiTableViewService-controller";
-public static final String TAG_1 = "数据源接口";
-    public static final String TAG_2 = "应用接口";
-    public static final String TAG_3 = "API接口";
-    public static final String TAG_4 = "本地服务接口";
-    public static final String TAG_5 = "数据服务日志";
-    public static final String TAG_6 = "视图服务接口";
-    public static final String TAG_7 = "表服务接口";
-    public static final String TAG_8 = "数据分析服务";
-    public static final String TAG_9 = "数据服务元数据调用";
-    public static final String TAG_10 = "代理服务接口";
-    public static final String TAG_11 = "表服务API接口";
-    public static final String TAG_12 = "主数据版本sql";
-    public static final String TAG_33 = "浦东塘桥-数据集成管理";
+    public static final String TAG_1 = "浦东塘桥-数据集成管理";
 
     @Bean
-    public Docket createRestApi() {
+    public Docket createTqRestApi() {
         String basePck = FiskConsumeServeiceApplication.class.getPackage().getName();
         return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("浦东塘桥")
                 .apiInfo(apiInfo())
-                .tags(new Tag(TAG_1,"数据源接口"))
-                .tags(new Tag(TAG_2,"应用接口"))
-                .tags(new Tag(TAG_3,"API接口"))
-                .tags(new Tag(TAG_4,"本地服务接口"))
-                .tags(new Tag(TAG_5,"数据服务日志"))
-                .tags(new Tag(TAG_8,"服务数据分析"))
-                .tags(new Tag(TAG_6,"视图服务接口"))
-                .tags(new Tag(TAG_7,"表服务接口"))
-                .tags(new Tag(TAG_9,"数据服务元数据调用"))
-                .tags(new Tag(TAG_10,"代理服务接口"))
-                .tags(new Tag(TAG_11,"表服务API接口"))
-                .tags(new Tag(TAG_12,"主数据版本sql"))
-                .tags(new Tag(TAG_33,"浦东塘桥-数据集成管理"))
+                .tags(new Tag(TAG_1,"浦东塘桥-数据集成管理"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())

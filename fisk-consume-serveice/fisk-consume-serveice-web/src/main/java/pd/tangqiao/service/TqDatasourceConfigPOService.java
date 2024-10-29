@@ -10,4 +10,37 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface TqDatasourceConfigPOService extends IService<TqDatasourceConfigPO> {
 
+    /**
+     * 添加数据源
+     *
+     * @param po
+     * @return
+     */
+    Object add(TqDatasourceConfigPO po);
+
+    /**
+     * 编辑数据源
+     *
+     * @param po
+     * @return
+     */
+    Object edit(TqDatasourceConfigPO po);
+
+    /**
+     * 删除数据源
+     *
+     * @param id
+     * @return
+     */
+    Object del(Integer id);
+
+    /**
+     * 分页回显
+     *
+     * @param currentPage
+     * @param size
+     * @return
+     */
+    Object pageFilter(Integer currentPage, Integer size);
+
 }
