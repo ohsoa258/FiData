@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 import pd.tangqiao.entity.TqAppConfigPO;
+import pd.tangqiao.entity.TqCenterAppConfigPO;
 import pd.tangqiao.entity.TqCenterAppConfigVO;
 import pd.tangqiao.service.TqCenterAppConfigService;
 
@@ -33,13 +34,13 @@ public class CenterAppController {
     }
     @ApiOperation("添加应用")
     @PostMapping("/add")
-    public ResultEntity<Object> addData(@RequestBody TqAppConfigPO po) {
+    public ResultEntity<Object> addData(@RequestBody TqCenterAppConfigPO po) {
         return ResultEntityBuild.build(service.addData(po));
     }
 
     @ApiOperation("编辑应用")
     @PostMapping("/edit")
-    public ResultEntity<Object> editData(@RequestBody TqAppConfigPO po) {
+    public ResultEntity<Object> editData(@RequestBody TqCenterAppConfigPO po) {
         return ResultEntityBuild.build(service.editData(po));
     }
 

@@ -24,6 +24,8 @@ public class TqCenterApiConfigVO {
     private String apiCode;
     @ApiModelProperty(value = "api描述")
     private String apiDesc;
+    @ApiModelProperty(value = "状态")
+    private Integer state;
     @ApiModelProperty(value = "创建时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

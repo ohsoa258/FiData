@@ -24,6 +24,8 @@ public class TqApiConfigVO {
     private String field;
     @ApiModelProperty(value = "操作类型")
     private String operationType;
+    @ApiModelProperty(value = "状态")
+    private Integer state;
     @ApiModelProperty(value = "创建时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

@@ -22,4 +22,6 @@ public class TqApiConfigPO extends BasePO {
     private String field;
     @ApiModelProperty(value = "操作类型")
     private String operationType;
+    @ApiModelProperty(value = "状态")
+    private Integer state;
 }

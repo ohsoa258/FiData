@@ -23,4 +23,6 @@ public class TqCenterApiConfigPO extends BasePO {
     private String apiDesc;
     @ApiModelProperty(value = "appId")
     private Integer appId;
+    @ApiModelProperty(value = "状态")
+    private Integer state;
 }
