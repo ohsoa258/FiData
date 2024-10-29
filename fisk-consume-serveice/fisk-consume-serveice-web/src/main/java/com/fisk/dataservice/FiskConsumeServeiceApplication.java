@@ -24,8 +24,9 @@ import org.springframework.scheduling.annotation.EnableAsync;
         "com.fisk.common.framework.exception",
         "com.fisk.common.framework.actuators",
         "com.fisk.common.service.pageFilter",
-        "com.fisk.common.core.user"})
-@MapperScan("com.fisk.dataservice.mapper")
+        "com.fisk.common.core.user",
+        "pd.tangqiao"})
+@MapperScan({"com.fisk.dataservice.mapper","pd.tangqiao.mapper"})
 @EnableFeignClients(basePackages = {
         "com.fisk.auth.client",
         "com.fisk.system.client",
