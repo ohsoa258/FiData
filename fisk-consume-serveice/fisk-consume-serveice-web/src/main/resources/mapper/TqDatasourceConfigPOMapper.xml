@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pd.tangqiao.mapper.TqDatasourceConfigPOMapper">
+
+    <resultMap id="BaseResultMap" type="pd.tangqiao.entity.TqDatasourceConfigPO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="conStr" column="con_str" jdbcType="VARCHAR"/>
+            <result property="conIp" column="con_ip" jdbcType="VARCHAR"/>
+            <result property="conPort" column="con_port" jdbcType="INTEGER"/>
+            <result property="conDbname" column="con_dbname" jdbcType="VARCHAR"/>
+            <result property="conType" column="con_type" jdbcType="TINYINT"/>
+            <result property="conAccount" column="con_account" jdbcType="VARCHAR"/>
+            <result property="conPassword" column="con_password" jdbcType="VARCHAR"/>
+            <result property="protocol" column="protocol" jdbcType="VARCHAR"/>
+            <result property="platform" column="platform" jdbcType="VARCHAR"/>
+            <result property="serviceType" column="service_type" jdbcType="INTEGER"/>
+            <result property="serviceName" column="service_name" jdbcType="VARCHAR"/>
+            <result property="domainName" column="domain_name" jdbcType="VARCHAR"/>
+            <result property="sourceType" column="source_type" jdbcType="INTEGER"/>
+            <result property="sourceBusinessType" column="source_business_type" jdbcType="INTEGER"/>
+            <result property="purpose" column="purpose" jdbcType="VARCHAR"/>
+            <result property="principal" column="principal" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+            <result property="fileSuffix" column="file_suffix" jdbcType="INTEGER"/>
+            <result property="fileBinary" column="file_binary" jdbcType="VARCHAR"/>
+            <result property="pdbName" column="pdb_name" jdbcType="VARCHAR"/>
+            <result property="signatureMethod" column="signature_method" jdbcType="VARCHAR"/>
+            <result property="consumerKey" column="consumer_key" jdbcType="VARCHAR"/>
+            <result property="consumerSecret" column="consumer_secret" jdbcType="VARCHAR"/>
+            <result property="accessToken" column="access_token" jdbcType="VARCHAR"/>
+            <result property="tokenSecret" column="token_secret" jdbcType="VARCHAR"/>
+            <result property="accountKey" column="account_key" jdbcType="VARCHAR"/>
+            <result property="pwdKey" column="pwd_key" jdbcType="VARCHAR"/>
+            <result property="expirationTime" column="expiration_time" jdbcType="INTEGER"/>
+            <result property="token" column="token" jdbcType="VARCHAR"/>
+            <result property="authenticationMethod" column="authentication_method" jdbcType="INTEGER"/>
+            <result property="sysNr" column="sys_nr" jdbcType="VARCHAR"/>
+            <result property="lang" column="lang" jdbcType="VARCHAR"/>
+            <result property="apiKeyParameters" column="api_key_parameters" jdbcType="VARCHAR"/>
+            <result property="apiKeyCookie" column="api_key_cookie" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,con_str,
+        con_ip,con_port,con_dbname,
+        con_type,con_account,con_password,
+        protocol,platform,service_type,
+        service_name,domain_name,source_type,
+        source_business_type,purpose,principal,
+        create_time,create_user,update_time,
+        update_user,del_flag,file_suffix,
+        file_binary,pdb_name,signature_method,
+        consumer_key,consumer_secret,access_token,
+        token_secret,account_key,pwd_key,
+        expiration_time,token,authentication_method,
+        sys_nr,lang,api_key_parameters,
+        api_key_cookie
+    </sql>
+</mapper>
