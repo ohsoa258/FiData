@@ -13,6 +13,8 @@ import lombok.Data;
 public class TqCenterApiConfigQueryDTO {
     @ApiModelProperty(value = "appId")
     public Integer appId;
+    @ApiModelProperty(value = "搜索条件")
+    public String keyword;
     @ApiModelProperty(value = "分页对象")
     public Page<TqCenterApiConfigVO> page;
 }

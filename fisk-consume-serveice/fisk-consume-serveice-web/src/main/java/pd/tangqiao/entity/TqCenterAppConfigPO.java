@@ -23,4 +23,6 @@ public class TqCenterAppConfigPO extends BasePO {
     private String appAccount;
     @ApiModelProperty(value = "密码/MD5加密存储")
     private String appPassword;
+    @ApiModelProperty(value = "类型")
+    public Integer appType;
 }

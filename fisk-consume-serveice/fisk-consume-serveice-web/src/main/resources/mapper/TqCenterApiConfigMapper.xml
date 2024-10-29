@@ -5,6 +5,11 @@
     <select id="getAll" resultType="pd.tangqiao.entity.TqCenterApiConfigVO">
         select * from tq_center_api_config
         where del_flag = 1
-          and app_id = #{query.appId}
+        and app_id = #{query.appId}
+        <if test="query.keyword !=null and query.keyword.length()>0 ">
+            and (api_name like concat('%', #{query.keyword}, '%')
+            or api_desc like concat('%', #{query.keyword}, '%')
+            or api_code like concat('%', #{query.keyword}, '%'))
+        </if>
     </select>
 </mapper>
