@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pd.tangqiao.mapper.TqQuestionBankPOMapper">
+
+    <resultMap id="BaseResultMap" type="pd.tangqiao.entity.TqQuestionBankPO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="scene" column="scene" jdbcType="VARCHAR"/>
+            <result property="dataOpt" column="data_opt" jdbcType="VARCHAR"/>
+            <result property="successData" column="success_data" jdbcType="VARCHAR"/>
+            <result property="failureData" column="failure_data" jdbcType="VARCHAR"/>
+            <result property="ruleConfig" column="rule_config" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="INTEGER"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,scene,data_opt,
+        success_data,failure_data,rule_config,
+        status,create_time,create_user,
+        update_time,update_user,del_flag
+    </sql>
+</mapper>

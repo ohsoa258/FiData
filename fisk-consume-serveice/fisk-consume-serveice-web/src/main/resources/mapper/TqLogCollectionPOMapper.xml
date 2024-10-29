@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pd.tangqiao.mapper.TqLogCollectionPOMapper">
+
+    <resultMap id="BaseResultMap" type="pd.tangqiao.entity.TqLogCollectionPO">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="apiName" column="api_name" jdbcType="VARCHAR"/>
+            <result property="dataCount" column="data_count" jdbcType="INTEGER"/>
+            <result property="serviceType" column="service_type" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createUser" column="create_user" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
+            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,api_name,
+        data_count,service_type,create_time,
+        create_user,update_time,update_user,
+        del_flag
+    </sql>
+</mapper>

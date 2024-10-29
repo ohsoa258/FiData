@@ -28,23 +28,6 @@
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
             <result property="updateUser" column="update_user" jdbcType="VARCHAR"/>
             <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
-            <result property="fileSuffix" column="file_suffix" jdbcType="INTEGER"/>
-            <result property="fileBinary" column="file_binary" jdbcType="VARCHAR"/>
-            <result property="pdbName" column="pdb_name" jdbcType="VARCHAR"/>
-            <result property="signatureMethod" column="signature_method" jdbcType="VARCHAR"/>
-            <result property="consumerKey" column="consumer_key" jdbcType="VARCHAR"/>
-            <result property="consumerSecret" column="consumer_secret" jdbcType="VARCHAR"/>
-            <result property="accessToken" column="access_token" jdbcType="VARCHAR"/>
-            <result property="tokenSecret" column="token_secret" jdbcType="VARCHAR"/>
-            <result property="accountKey" column="account_key" jdbcType="VARCHAR"/>
-            <result property="pwdKey" column="pwd_key" jdbcType="VARCHAR"/>
-            <result property="expirationTime" column="expiration_time" jdbcType="INTEGER"/>
-            <result property="token" column="token" jdbcType="VARCHAR"/>
-            <result property="authenticationMethod" column="authentication_method" jdbcType="INTEGER"/>
-            <result property="sysNr" column="sys_nr" jdbcType="VARCHAR"/>
-            <result property="lang" column="lang" jdbcType="VARCHAR"/>
-            <result property="apiKeyParameters" column="api_key_parameters" jdbcType="VARCHAR"/>
-            <result property="apiKeyCookie" column="api_key_cookie" jdbcType="VARCHAR"/>
     </resultMap>
 
     <sql id="Base_Column_List">

@@ -60,6 +60,16 @@ public static final String TAG_1 = "数据源接口";
 
 
     public static final String TQ_TAG_33 = "浦东塘桥-数据集成管理";
+    public static final String TQ_TAG_34 = "浦东塘桥-数据质量任务管理";
+    public static final String TQ_TAG_35 = "浦东塘桥-标签数据管理";
+    public static final String TQ_TAG_36 = "浦东塘桥-问题库";
+    public static final String TQ_TAG_37 = "浦东塘桥-数据流程调度";
+    public static final String TQ_TAG_38 = "浦东塘桥-数据质量核查";
+    public static final String TQ_TAG_39 = "浦东塘桥-日志存储";
+    public static final String TQ_TAG_40 = "浦东塘桥-日志收集";
+    public static final String TQ_TAG_41 = "浦东塘桥-日志分析";
+    public static final String TQ_TAG_42 = "浦东塘桥-数据访问视图和权限管理";
+    public static final String TQ_TAG_43 = "浦东塘桥-数据脱敏加密管理";
 
     @Bean
     public Docket createRestApi() {
@@ -86,6 +96,16 @@ public static final String TAG_1 = "数据源接口";
                 .tags(new Tag(TQ_TAG_18,"塘桥中心库实施"))
                 .tags(new Tag(TQ_TAG_19,"塘桥中心库实施Api"))
                 .tags(new Tag(TQ_TAG_33,"浦东塘桥-数据集成管理"))
+                .tags(new Tag(TQ_TAG_34,"浦东塘桥-数据质量任务管理"))
+                .tags(new Tag(TQ_TAG_35,"浦东塘桥-标签数据管理"))
+                .tags(new Tag(TQ_TAG_36,"浦东塘桥-问题库"))
+                .tags(new Tag(TQ_TAG_37,"浦东塘桥-数据流程调度"))
+                .tags(new Tag(TQ_TAG_38,"浦东塘桥-数据质量核查"))
+                .tags(new Tag(TQ_TAG_39,"浦东塘桥-日志存储"))
+                .tags(new Tag(TQ_TAG_40,"浦东塘桥-日志收集"))
+                .tags(new Tag(TQ_TAG_41,"浦东塘桥-日志分析"))
+                .tags(new Tag(TQ_TAG_42,"浦东塘桥-数据访问视图和权限管理"))
+                .tags(new Tag(TQ_TAG_43,"浦东塘桥-数据脱敏加密管理"))
                 .select()
                 .apis(Predicates.or(
                                 RequestHandlerSelectors.basePackage(basePck),
