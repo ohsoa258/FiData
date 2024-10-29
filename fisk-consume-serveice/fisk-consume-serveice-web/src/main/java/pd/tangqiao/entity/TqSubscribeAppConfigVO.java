@@ -19,7 +19,7 @@ public class TqSubscribeAppConfigVO {
     @ApiModelProperty(value = "应用描述")
     public String appDesc;
     @ApiModelProperty(value = "接口数量")
-    public Integer apiNumber;
+    public int apiNumber;
     @ApiModelProperty(value = "创建人")
     public String appPrincipal;
     public List<TqSubscribeApiConfigPO> apiConfigPOS;

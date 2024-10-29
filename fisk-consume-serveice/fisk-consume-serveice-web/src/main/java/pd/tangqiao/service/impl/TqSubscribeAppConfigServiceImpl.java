@@ -36,8 +36,10 @@ public class TqSubscribeAppConfigServiceImpl extends ServiceImpl<TqSubscribeAppC
             Map<Integer, List<TqSubscribeApiConfigPO>> apiMap = apis.stream().collect(Collectors.groupingBy(TqSubscribeApiConfigPO::getAppId));
             records = records.stream().map(i->{
                 List<TqSubscribeApiConfigPO> tqSubscribeApiConfigPOS = apiMap.get(i.id);
-                i.setApiNumber(tqSubscribeApiConfigPOS.size());
-                i.setApiConfigPOS(tqSubscribeApiConfigPOS);
+                if (!CollectionUtils.isEmpty(tqSubscribeApiConfigPOS)){
+                    i.setApiNumber(tqSubscribeApiConfigPOS.size());
+                    i.setApiConfigPOS(tqSubscribeApiConfigPOS);
+                }
                 return i;
             }).collect(Collectors.toList());
             all.setRecords(records);
