@@ -45,9 +45,16 @@ public static final String TAG_1 = "数据源接口";
     public static final String TAG_10 = "代理服务接口";
     public static final String TAG_11 = "表服务API接口";
     public static final String TAG_12 = "主数据版本sql";
-    public static final String TAG_33 = "浦东塘桥-数据集成管理";
-
     public static final String TQ_TAG_13 = "塘桥数据质量管理";
+
+
+
+
+
+
+
+
+    public static final String TQ_TAG_33 = "浦东塘桥-数据集成管理";
 
     @Bean
     public Docket createRestApi() {
@@ -67,7 +74,7 @@ public static final String TAG_1 = "数据源接口";
                 .tags(new Tag(TAG_11,"表服务API接口"))
                 .tags(new Tag(TAG_12,"主数据版本sql"))
                 .tags(new Tag(TQ_TAG_13,"塘桥数据质量管理"))
-                .tags(new Tag(TAG_33,"浦东塘桥-数据集成管理"))
+                .tags(new Tag(TQ_TAG_33,"浦东塘桥-数据集成管理"))
                 .select()
                 .apis(Predicates.or(
                                 RequestHandlerSelectors.basePackage(basePck),

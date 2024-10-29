@@ -3,15 +3,15 @@ package pd.tangqiao.controller;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
+import com.fisk.dataservice.config.SwaggerConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
-import pd.tangqiao.config.TqSwaggerConfig;
 import pd.tangqiao.entity.TqDatasourceConfigPO;
 
 import javax.annotation.Resource;
 
-@Api(tags = {TqSwaggerConfig.TAG_1})
+@Api(tags = {SwaggerConfig.TQ_TAG_33})
 @RestController
 @RequestMapping("/tqDatasourceConfig")
 public class TqDatasourceConfigController {
