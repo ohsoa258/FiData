@@ -16,8 +16,6 @@ import java.util.Date;
 public class TqCenterApiConfigVO {
     @ApiModelProperty(value = "id")
     private Integer id;
-    @ApiModelProperty(value = "appId")
-    private Integer appId;
     @ApiModelProperty(value = "api名称")
     private String apiName;
     @ApiModelProperty(value = "api编码")
@@ -26,6 +24,8 @@ public class TqCenterApiConfigVO {
     private String apiDesc;
     @ApiModelProperty(value = "状态")
     private Integer state;
+    @ApiModelProperty(value = "api类型")
+    private Integer apiType;
     @ApiModelProperty(value = "创建时间")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
