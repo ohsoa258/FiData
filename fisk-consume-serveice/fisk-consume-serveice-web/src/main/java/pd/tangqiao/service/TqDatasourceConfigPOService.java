@@ -41,6 +41,6 @@ public interface TqDatasourceConfigPOService extends IService<TqDatasourceConfig
      * @param size
      * @return
      */
-    Object pageFilter(Integer currentPage, Integer size);
+    Object pageFilter(Integer currentPage, Integer size,Integer type);
 
 }

@@ -64,8 +64,11 @@ public class TqDatasourceConfigController {
      */
     @ApiOperation(value = "分页回显")
     @GetMapping("/pageFilter")
-    public ResultEntity<Object> pageFilter(@RequestParam("currentPage") Integer currentPage, @RequestParam("size") Integer size) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.pageFilter(currentPage, size));
+    public ResultEntity<Object> pageFilter(@RequestParam("currentPage") Integer currentPage,
+                                           @RequestParam("size") Integer size,
+                                           @RequestParam("type") Integer type
+    ) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.pageFilter(currentPage, size,type));
     }
 
 }
