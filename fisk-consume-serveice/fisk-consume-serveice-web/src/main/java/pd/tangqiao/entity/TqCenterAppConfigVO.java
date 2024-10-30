@@ -26,6 +26,8 @@ public class TqCenterAppConfigVO {
     public String appAccount;
     @ApiModelProperty(value = "密码/加密")
     public String appPassword;
+    @ApiModelProperty(value = "类型")
+    public Integer appType;
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
