@@ -1,5 +1,6 @@
 package pd.tangqiao.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
@@ -51,6 +52,9 @@ public class TqCenterApiConfigServiceImpl extends ServiceImpl<TqCenterApiConfigM
             po.setServiceId(apiId);
             list.add(po);
         }
+        LambdaQueryWrapper<TqAppServiceConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TqAppServiceConfigPO::getAppId,dto.appId);
+        appServiceConfigService.remove(queryWrapper);
         appServiceConfigService.saveBatch(list);
         return ResultEnum.SUCCESS;
     }

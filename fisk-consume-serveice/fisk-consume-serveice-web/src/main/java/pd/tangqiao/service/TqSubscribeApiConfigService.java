@@ -2,6 +2,7 @@ package pd.tangqiao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
+import pd.tangqiao.entity.BindApiDTO;
 import pd.tangqiao.entity.TqSubscribeApiConfigPO;
 
 import java.util.List;
@@ -20,5 +21,7 @@ public interface TqSubscribeApiConfigService extends IService<TqSubscribeApiConf
     ResultEnum addData(TqSubscribeApiConfigPO po);
 
     ResultEnum editData(TqSubscribeApiConfigPO po);
+
+    ResultEnum bindApi(BindApiDTO dto);
 }
 

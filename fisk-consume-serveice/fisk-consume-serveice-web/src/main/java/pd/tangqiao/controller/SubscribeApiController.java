@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pd.tangqiao.entity.BindApiDTO;
 import pd.tangqiao.entity.TqSubscribeApiConfigPO;
 import pd.tangqiao.service.TqSubscribeApiConfigService;
 
@@ -30,20 +31,26 @@ public class SubscribeApiController {
     @Resource
     TqSubscribeApiConfigService service;
 
-    @ApiOperation("添加api")
-    @PostMapping("/getAll")
-    public ResultEntity<List<TqSubscribeApiConfigPO>> getAll() {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAll());
-    }
-    @ApiOperation("添加api")
-    @PostMapping("/add")
-    public ResultEntity<Object> addData(@RequestBody TqSubscribeApiConfigPO po) {
-        return ResultEntityBuild.build(service.addData(po));
+//    @ApiOperation("添加api")
+//    @PostMapping("/getAll")
+//    public ResultEntity<List<TqSubscribeApiConfigPO>> getAll() {
+//        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getAll());
+//    }
+//    @ApiOperation("添加api")
+//    @PostMapping("/add")
+//    public ResultEntity<Object> addData(@RequestBody TqSubscribeApiConfigPO po) {
+//        return ResultEntityBuild.build(service.addData(po));
+//    }
+
+    @ApiOperation("绑定api")
+    @PostMapping("/bindApi")
+    public ResultEntity<Object> bindApi(@RequestBody BindApiDTO dto) {
+        return ResultEntityBuild.build(service.bindApi(dto));
     }
 
-    @ApiOperation("编辑api")
-    @PostMapping("/edit")
-    public ResultEntity<Object> editData(@RequestBody TqSubscribeApiConfigPO po) {
-        return ResultEntityBuild.build(service.editData(po));
-    }
+//    @ApiOperation("编辑api")
+//    @PostMapping("/edit")
+//    public ResultEntity<Object> editData(@RequestBody TqSubscribeApiConfigPO po) {
+//        return ResultEntityBuild.build(service.editData(po));
+//    }
 }

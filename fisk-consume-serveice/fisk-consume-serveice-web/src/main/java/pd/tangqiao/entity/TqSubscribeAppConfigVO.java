@@ -22,5 +22,5 @@ public class TqSubscribeAppConfigVO {
     public int apiNumber;
     @ApiModelProperty(value = "创建人")
     public String appPrincipal;
-    public List<TqSubscribeApiConfigPO> apiConfigPOS;
+    public List<TqSubscribeApiConfigVO> apiConfigPOS;
 }
