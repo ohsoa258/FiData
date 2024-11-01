@@ -6,12 +6,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.response.ResultEnum;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import pd.tangqiao.entity.TqSubscribeApiConfigPO;
-import pd.tangqiao.entity.TqSubscribeAppConfigPO;
-import pd.tangqiao.entity.TqSubscribeAppConfigVO;
+import pd.tangqiao.entity.*;
 import pd.tangqiao.mapper.TqSubscribeAppConfigMapper;
 import pd.tangqiao.service.TqSubscribeApiConfigService;
 import pd.tangqiao.service.TqSubscribeAppConfigService;
+import pd.tangqiao.service.TqSubscribeAppServiceConfigService;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -24,21 +23,22 @@ public class TqSubscribeAppConfigServiceImpl extends ServiceImpl<TqSubscribeAppC
 
     @Resource
     TqSubscribeApiConfigService apiConfigService;
+
+    @Resource
+    TqSubscribeAppServiceConfigService appServiceConfigService;
     @Override
     public Page<TqSubscribeAppConfigVO> getAll(Page<TqSubscribeAppConfigVO> page) {
         Page<TqSubscribeAppConfigVO> all = baseMapper.getAll(page);
         List<TqSubscribeAppConfigVO> records = all.getRecords();
         if (!CollectionUtils.isEmpty(records)){
             List<Integer> appIds = records.stream().map(TqSubscribeAppConfigVO::getId).collect(Collectors.toList());
-            LambdaQueryWrapper<TqSubscribeApiConfigPO> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.in(TqSubscribeApiConfigPO::getAppId,appIds);
-            List<TqSubscribeApiConfigPO> apis = apiConfigService.list(queryWrapper);
-            Map<Integer, List<TqSubscribeApiConfigPO>> apiMap = apis.stream().collect(Collectors.groupingBy(TqSubscribeApiConfigPO::getAppId));
+            List<TqSubscribeApiConfigVO> apilist = appServiceConfigService.apilist(appIds);
+            Map<Integer, List<TqSubscribeApiConfigVO>> apiMap = apilist.stream().collect(Collectors.groupingBy(TqSubscribeApiConfigVO::getAppId));
             records = records.stream().map(i->{
-                List<TqSubscribeApiConfigPO> tqSubscribeApiConfigPOS = apiMap.get(i.id);
-                if (!CollectionUtils.isEmpty(tqSubscribeApiConfigPOS)){
-                    i.setApiNumber(tqSubscribeApiConfigPOS.size());
-                    i.setApiConfigPOS(tqSubscribeApiConfigPOS);
+                List<TqSubscribeApiConfigVO> tqSubscribeApiConfigVOS = apiMap.get(i.id);
+                if (!CollectionUtils.isEmpty(tqSubscribeApiConfigVOS)){
+                    i.setApiNumber(tqSubscribeApiConfigVOS.size());
+                    i.setApiConfigPOS(tqSubscribeApiConfigVOS);
                 }
                 return i;
             }).collect(Collectors.toList());

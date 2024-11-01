@@ -40,9 +40,6 @@ public class TqCenterAppConfigServiceImpl extends ServiceImpl<TqCenterAppConfigM
     @Override
     public ResultEnum deleteData(int id) {
         this.removeById(id);
-        LambdaQueryWrapper<TqCenterApiConfigPO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(TqCenterApiConfigPO::getAppId,id);
-        apiConfigService.remove(queryWrapper);
         return ResultEnum.SUCCESS;
     }
 }
