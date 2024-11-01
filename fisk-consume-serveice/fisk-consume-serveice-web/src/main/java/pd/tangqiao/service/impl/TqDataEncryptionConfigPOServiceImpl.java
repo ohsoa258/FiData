@@ -26,6 +26,7 @@ public class TqDataEncryptionConfigPOServiceImpl extends ServiceImpl<TqDataEncry
     public Object editEncrypt(Integer id) {
         TqDataEncryptionConfigPO one = this.getOne(
                 new LambdaQueryWrapper<TqDataEncryptionConfigPO>()
+                        .eq(TqDataEncryptionConfigPO::getId, id)
         );
         if (one.getIsEncrypted() == 1) {
             one.setIsEncrypted(0);

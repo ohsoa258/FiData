@@ -26,6 +26,17 @@ public class TqDataQualityCheckPOServiceImpl extends ServiceImpl<TqDataQualityCh
 
         return this.page(new Page<>(currentPage, size));
     }
+
+    @Override
+    public Object check(Integer id) {
+        TqDataQualityCheckPO po = this.getById(id);
+        if (po.getStatus() == 0) {
+            po.setStatus(1);
+        } else {
+            po.setStatus(0);
+        }
+        return this.updateById(po);
+    }
 }
 
 

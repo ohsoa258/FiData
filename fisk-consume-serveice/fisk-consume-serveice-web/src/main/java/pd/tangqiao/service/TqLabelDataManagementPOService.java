@@ -27,4 +27,5 @@ public interface TqLabelDataManagementPOService extends IService<TqLabelDataMana
      */
     Object getLables();
 
+    Object edit(List<TqLabelDataManagementPO> dtos);
 }

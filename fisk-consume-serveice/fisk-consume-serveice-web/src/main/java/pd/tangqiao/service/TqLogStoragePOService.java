@@ -13,4 +13,6 @@ public interface TqLogStoragePOService extends IService<TqLogStoragePO> {
     Object add(TqLogStoragePO po);
 
     Object getLogList(Integer currentPage, Integer size);
+
+    Object archiveCleanupBackups(Integer id, Integer option);
 }

@@ -27,7 +27,7 @@ public class TqDataQualityCheckController {
      * @return
      */
     @PostMapping("/add")
-    @ApiOperation(value = "数据流程调度新增")
+    @ApiOperation(value = "数据质量核查新增")
     public ResultEntity<Object> add(@RequestBody TqDataQualityCheckPO po) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.add(po));
     }
@@ -38,8 +38,20 @@ public class TqDataQualityCheckController {
      * @return
      */
     @GetMapping("/getCheckList")
-    @ApiOperation(value = "数据流程调度回显")
+    @ApiOperation(value = "数据质量核查回显")
     public ResultEntity<Object> getFlowList(@RequestParam("currentPage") Integer currentPage, @RequestParam("size") Integer size) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getFlowList(currentPage,size));
+    }
+
+    /**
+     * 数据质量核查-审核
+     *
+     * @param id
+     * @return
+     */
+    @PostMapping("/check")
+    @ApiOperation(value = "数据质量核查-审核")
+    public ResultEntity<Object> check(@RequestParam("id") Integer id) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.check(id));
     }
 }

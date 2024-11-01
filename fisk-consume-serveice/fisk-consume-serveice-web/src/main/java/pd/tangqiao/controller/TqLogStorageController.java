@@ -7,9 +7,7 @@ import com.fisk.dataservice.config.SwaggerConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
-import pd.tangqiao.entity.TqDataQualityCheckPO;
 import pd.tangqiao.entity.TqLogStoragePO;
-import pd.tangqiao.service.TqDataQualityCheckPOService;
 import pd.tangqiao.service.TqLogStoragePOService;
 
 import javax.annotation.Resource;
@@ -35,6 +33,18 @@ public class TqLogStorageController {
     }
 
     /**
+     * 日志存储 归档1  清理2  备份3
+     *
+     * @param
+     * @return
+     */
+    @PostMapping("/archiveCleanupBackups")
+    @ApiOperation(value = "日志存储 归档1  清理2  备份3")
+    public ResultEntity<Object> archiveCleanupBackups(@RequestParam("id") Integer id, @RequestParam("option") Integer option) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.archiveCleanupBackups(id, option));
+    }
+
+    /**
      * 日志存储回显
      *
      * @return
@@ -42,6 +52,6 @@ public class TqLogStorageController {
     @GetMapping("/getLogList")
     @ApiOperation(value = "日志存储回显")
     public ResultEntity<Object> getLogList(@RequestParam("currentPage") Integer currentPage, @RequestParam("size") Integer size) {
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getLogList(currentPage,size));
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getLogList(currentPage, size));
     }
 }

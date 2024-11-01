@@ -3,10 +3,16 @@ package pd.tangqiao.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import org.springframework.stereotype.Service;
+import pd.tangqiao.entity.TqDatasourceConfigDTO;
 import pd.tangqiao.entity.TqDatasourceConfigPO;
+import pd.tangqiao.map.TqDatasourceMap;
 import pd.tangqiao.mapper.TqDatasourceConfigPOMapper;
 import pd.tangqiao.service.TqDatasourceConfigPOService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author 56263
@@ -60,9 +66,20 @@ public class TqDatasourceConfigPOServiceImpl extends ServiceImpl<TqDatasourceCon
     @Override
     public Object pageFilter(Integer currentPage, Integer size, Integer type) {
         Page<TqDatasourceConfigPO> tqDatasourceConfigPOPage = new Page<>(currentPage, size);
-        return this.page(tqDatasourceConfigPOPage,
+        Page<TqDatasourceConfigPO> page = this.page(tqDatasourceConfigPOPage,
                 new LambdaQueryWrapper<TqDatasourceConfigPO>().eq(TqDatasourceConfigPO::getSourceType, type)
         );
+        Page<TqDatasourceConfigDTO> bPage = new Page<>(currentPage, size);
+        List<TqDatasourceConfigDTO> dtos = new ArrayList<>();
+        List<TqDatasourceConfigPO> records = page.getRecords();
+        for (TqDatasourceConfigPO record : records) {
+            TqDatasourceConfigDTO dto = TqDatasourceMap.INSTANCES.poToDTO(record);
+            dto.setConType(DataSourceTypeEnum.getEnum(record.getConType()));
+            dtos.add(dto);
+        }
+        bPage.setRecords(dtos);
+        bPage.setTotal(page.getTotal());
+        return bPage;
     }
 
 }

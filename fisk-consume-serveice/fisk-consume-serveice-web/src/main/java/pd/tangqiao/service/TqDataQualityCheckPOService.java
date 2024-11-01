@@ -13,4 +13,6 @@ public interface TqDataQualityCheckPOService extends IService<TqDataQualityCheck
     Object add(TqDataQualityCheckPO po);
 
     Object getFlowList(Integer currentPage, Integer size);
+
+    Object check(Integer id);
 }

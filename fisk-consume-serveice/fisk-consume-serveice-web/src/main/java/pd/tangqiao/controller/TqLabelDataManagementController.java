@@ -33,6 +33,18 @@ public class TqLabelDataManagementController {
     }
 
     /**
+     * 修改规则标签
+     *
+     * @param dtos
+     * @return
+     */
+    @PostMapping("/edit")
+    @ApiOperation(value = "修改规则标签")
+    public ResultEntity<Object> edit(@RequestBody List<TqLabelDataManagementPO> dtos) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.edit(dtos));
+    }
+
+    /**
      * 获取标签集合
      *
      * @return

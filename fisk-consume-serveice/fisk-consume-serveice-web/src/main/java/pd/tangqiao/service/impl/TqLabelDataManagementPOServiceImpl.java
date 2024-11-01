@@ -1,5 +1,6 @@
 package pd.tangqiao.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import pd.tangqiao.entity.TqLabelDataManagementPO;
@@ -34,6 +35,17 @@ public class TqLabelDataManagementPOServiceImpl extends ServiceImpl<TqLabelDataM
     @Override
     public Object getLables() {
         return this.list();
+    }
+
+    @Override
+    public Object edit(List<TqLabelDataManagementPO> dtos) {
+        Integer ruleId = dtos.get(0).getRuleId();
+        //先删除原有标签
+        this.remove(new LambdaQueryWrapper<TqLabelDataManagementPO>()
+                .eq(TqLabelDataManagementPO::getRuleId, ruleId)
+        );
+        //再重新保存
+        return this.saveBatch(dtos);
     }
 }
 
