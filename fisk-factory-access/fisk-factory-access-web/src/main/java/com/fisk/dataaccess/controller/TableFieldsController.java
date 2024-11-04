@@ -66,6 +66,18 @@ public class TableFieldsController {
         return ResultEntityBuild.build(service.editForHive(dto));
     }
 
+    /**
+     * 保存&发布  Flink CDC 发布流程
+     *
+     * @param dto
+     * @return
+     */
+    @PutMapping("/editForFlink")
+    @ApiOperation(value = "Flink CDC 发布流程")
+    public ResultEntity<Object> editForFlink(@Validated @RequestBody TableAccessFlinkPublishDTO dto) {
+        return ResultEntityBuild.build(service.editForFlink(dto));
+    }
+
     @PostMapping("/loadDepend")
     @ApiOperation(value = "对表进行操作时,查询依赖")
     public ResultEntity<Object> loadDepend(@RequestBody OperateTableDTO dto) {

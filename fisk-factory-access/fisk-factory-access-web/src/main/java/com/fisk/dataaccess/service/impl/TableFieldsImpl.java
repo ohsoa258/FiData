@@ -61,6 +61,8 @@ import com.fisk.dataaccess.mapper.AppRegistrationMapper;
 import com.fisk.dataaccess.mapper.TableAccessMapper;
 import com.fisk.dataaccess.mapper.TableFieldsMapper;
 import com.fisk.dataaccess.service.*;
+import com.fisk.dataaccess.utils.createTblUtils.IBuildCreateTableFactory;
+import com.fisk.dataaccess.utils.createTblUtils.impl.CreateTableHelper;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
@@ -73,7 +75,6 @@ import com.fisk.datamodel.enums.SyncModeEnum;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
 import com.fisk.task.client.PublishTaskClient;
-import com.fisk.task.dto.metadatafield.MetaDataFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishFieldDTO;
 import com.fisk.task.dto.modelpublish.ModelPublishTableDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
@@ -91,6 +92,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -151,6 +155,7 @@ public class TableFieldsImpl
     private DataManageClient dataManageClient;
     @Resource
     private UserClient userClient;
+
     @Resource
     private IAppDataSource iAppDataSource;
     @Resource
@@ -466,6 +471,110 @@ public class TableFieldsImpl
 
         // 发布
         return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 保存&发布  Flink CDC 发布流程
+     *
+     * @param dto
+     * @return
+     */
+    @Override
+    public ResultEnum editForFlink(TableAccessFlinkPublishDTO dto) {
+
+        //1.将Flink流程有关sql存入数据库
+        long id = dto.getId();
+        TableAccessPO table = tableAccessImpl.getById(id);
+        table.setSourceSql(dto.getSourceSql());
+        table.setSinkSql(dto.getSinkSql());
+        table.setInsertSql(dto.getInsertSql());
+        tableAccessImpl.updateById(table);
+        log.info("Flink CDC--配置信息更新存储成功");
+
+        //2.在目标库建出目标表
+        boolean tableForFlinkCDC = createTableForFlinkCDC(table);
+
+        //3.todo:if tableForFlinkCDC = true; blablabla...
+
+        return ResultEnum.SUCCESS;
+    }
+
+    /**
+     * 在目标库建出目标表
+     *
+     * @param table
+     * @return
+     */
+    private boolean createTableForFlinkCDC(TableAccessPO table) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            //2.1获取目标库信息并连接
+            AppRegistrationPO app = appRegistration.getById(table.getAppId());
+            int targetDbId = app.getTargetDbId();
+            ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(targetDbId);
+            if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            DataSourceDTO data = resultEntity.getData();
+            connection = DbConnectionHelper.connection(
+                    data.getConStr(),
+                    data.getConAccount(),
+                    data.getConPassword(),
+                    data.getConType());
+            log.info("Flink CDC--连接目标库成功");
+
+            //是否使用简称作为schema
+            boolean whetherSchema = app.whetherSchema;
+            //简称值
+            String appAbbreviation = app.getAppAbbreviation();
+            String schemaName = whetherSchema ? appAbbreviation : "dbo";
+            int isExists = 0;
+
+            //2.2校验当前表是否已经存在于目标库
+            IBuildCreateTableFactory helper = CreateTableHelper.getCreateTableHelperByConType(data.getConType());
+
+            // 判断表是否存在 1存在 0不存在
+            String sql = helper.checkTableIfNotExists();
+            log.info("Flink CDC-校验表是否存在的sql语句{}", sql);
+            preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, schemaName);
+            preparedStatement.setString(2, table.getTableName());
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                isExists = resultSet.getInt("isExists");
+            }
+            log.info("Flink CDC--校验表是否存在的结果{}", isExists);
+            //todo:不存在则创建表 存在则暂时跳过
+            if (isExists == 1) {
+                return true;
+            }
+
+            //2.3获取当前表的字段信息
+            List<TableFieldsPO> fieldsPOS = this.list(
+                    new LambdaQueryWrapper<TableFieldsPO>()
+                            .eq(TableFieldsPO::getTableAccessId, table.getId())
+            );
+
+            //2.4根据数据源类型，获取建表sql
+            String buildTableSql = helper.createTable(table.getTableName(), fieldsPOS);
+            log.info("Flink CDC--建表语句: {}", buildTableSql);
+            //2.5执行建表语句
+            statement = connection.createStatement();
+            statement.execute(buildTableSql);
+            return true;
+
+        } catch (Exception e) {
+            log.error("Flink CDC 发布流程异常", e);
+            throw new FkException(ResultEnum.FLINK_PUBLISH_ERROR);
+        } finally {
+            AbstractCommonDbHelper.closeResultSet(resultSet);
+            AbstractCommonDbHelper.closeStatement(preparedStatement);
+            AbstractCommonDbHelper.closeStatement(statement);
+            AbstractCommonDbHelper.closeConnection(connection);
+        }
     }
 
     /**

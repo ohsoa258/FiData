@@ -60,6 +60,14 @@ public interface ITableFields extends IService<TableFieldsPO> {
     ResultEnum editForHive(TableAccessNonDTO dto);
 
     /**
+     * 保存&发布  Flink CDC 发布流程
+     *
+     * @param dto
+     * @return
+     */
+    ResultEnum editForFlink(TableAccessFlinkPublishDTO dto);
+
+    /**
      * 对表进行操作时,查询依赖
      *
      * @param dto dto

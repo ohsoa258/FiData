@@ -20,6 +20,7 @@ import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceFullInfoDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
@@ -660,8 +661,20 @@ public class AppRegistrationController {
      */
     @ApiOperation("根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称")
     @GetMapping("/getAppSourceAndTarget")
-    public ResultEntity<List<DataSourceInfoDTO>> getAppSourceAndTarget(Integer appId) {
+    public ResultEntity<List<DataSourceInfoDTO>> getAppSourceAndTarget(@RequestParam("appId") Integer appId) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppSourceAndTarget(appId));
+    }
+
+    /**
+     * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源详细信息
+     *
+     * @return
+     */
+    @ApiOperation("根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源详细信息")
+    @GetMapping("/getAppSourceAndTargetFullInfo")
+    public ResultEntity<List<DataSourceFullInfoDTO>> getAppSourceAndTargetFullInfo(@RequestParam("appId") Integer appId,
+                                                                                   @RequestParam("tblId") Integer tblId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAppSourceAndTargetFullInfo(appId, tblId));
     }
 
     /**

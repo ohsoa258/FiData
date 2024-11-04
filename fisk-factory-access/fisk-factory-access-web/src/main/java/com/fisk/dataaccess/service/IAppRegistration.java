@@ -20,6 +20,7 @@ import com.fisk.dataaccess.dto.SyncOneTblForHudiDTO;
 import com.fisk.dataaccess.dto.access.OdsFieldQueryDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceFullInfoDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
 import com.fisk.dataaccess.dto.hudi.HudiSyncDTO;
@@ -520,6 +521,13 @@ public interface IAppRegistration extends IService<AppRegistrationPO> {
      * @return
      */
     List<DataSourceInfoDTO> getAppSourceAndTarget(Integer appId);
+
+    /**
+     * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源详细信息
+     *
+     * @return
+     */
+    List<DataSourceFullInfoDTO> getAppSourceAndTargetFullInfo(Integer appId, Integer tblId);
 
     /**
      * 数据质量左侧Tree接口-获取ods数据源文件夹表层级

@@ -19,56 +19,65 @@ public class WebServiceDemo {
      * @Date 2023/10/13
      * @Version 1.0
      */
+//    public static void main(String[] args) {
+//        Client client = null;
+//        try {
+//            JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
+//            client = dcf.createClient("{web_service_address}");
+//
+//            // config HTTPConduit
+//            HTTPConduit conduit = (HTTPConduit) client.getConduit();
+//            HTTPClientPolicy policy = new HTTPClientPolicy();
+//            policy.setAllowChunking(false);
+//            // ConnectionTimeout 60 seconds
+//            policy.setConnectionTimeout(60000);
+//            // ReceiveTimeout 60 seconds
+//            policy.setReceiveTimeout(60000);
+//            conduit.setClient(policy);
+//
+//            // webServiceGetToken - variable
+//            WebServiceUserDTO webServiceUserDTO = new WebServiceUserDTO();
+//            webServiceUserDTO.setPassword("pwd");
+//            webServiceUserDTO.setUseraccount("username");
+//            // invoke methods : webServiceGetToken
+//            Object[] objects = client.invoke("webServiceGetToken", webServiceUserDTO);
+//            // webServiceGetToken receive data : token
+//            String token = objects[0].toString();
+//
+//            // webServicePushData - variable
+//            WebServiceReceiveDataDTO webServiceReceiveDataDTO = new WebServiceReceiveDataDTO();
+//            // WebServiceCode
+//            webServiceReceiveDataDTO.setWebServiceCode(123L);
+//            // your Json data
+//            webServiceReceiveDataDTO.setData("your Json data");
+//            // token
+//            webServiceReceiveDataDTO.setToken(token);
+//            // Start calling method - invoke("method name", parameter 1, parameter 2, parameter 3....);
+//            Object[] result = client.invoke("webServicePushData", webServiceReceiveDataDTO);
+//            // webServicePushData receive data : result
+//            String msg = JSON.toJSONString(result);
+//            // print result or do sth else
+//            System.out.println(msg);
+//        } catch (Exception e) {
+//            log.error("webService error--" + e);
+//        }finally {
+//            if (client != null) {
+//                try {
+//                    client.close();
+//                } catch (Exception e) {
+//                    log.error("webService error--" + e);
+//                }
+//            }
+//        }
+//    }
+
     public static void main(String[] args) {
-        Client client = null;
-        try {
-            JaxWsDynamicClientFactory dcf = JaxWsDynamicClientFactory.newInstance();
-            client = dcf.createClient("{web_service_address}");
-
-            // config HTTPConduit
-            HTTPConduit conduit = (HTTPConduit) client.getConduit();
-            HTTPClientPolicy policy = new HTTPClientPolicy();
-            policy.setAllowChunking(false);
-            // ConnectionTimeout 60 seconds
-            policy.setConnectionTimeout(60000);
-            // ReceiveTimeout 60 seconds
-            policy.setReceiveTimeout(60000);
-            conduit.setClient(policy);
-
-            // webServiceGetToken - variable
-            WebServiceUserDTO webServiceUserDTO = new WebServiceUserDTO();
-            webServiceUserDTO.setPassword("pwd");
-            webServiceUserDTO.setUseraccount("username");
-            // invoke methods : webServiceGetToken
-            Object[] objects = client.invoke("webServiceGetToken", webServiceUserDTO);
-            // webServiceGetToken receive data : token
-            String token = objects[0].toString();
-
-            // webServicePushData - variable
-            WebServiceReceiveDataDTO webServiceReceiveDataDTO = new WebServiceReceiveDataDTO();
-            // WebServiceCode
-            webServiceReceiveDataDTO.setWebServiceCode(123L);
-            // your Json data
-            webServiceReceiveDataDTO.setData("your Json data");
-            // token
-            webServiceReceiveDataDTO.setToken(token);
-            // Start calling method - invoke("method name", parameter 1, parameter 2, parameter 3....);
-            Object[] result = client.invoke("webServicePushData", webServiceReceiveDataDTO);
-            // webServicePushData receive data : result
-            String msg = JSON.toJSONString(result);
-            // print result or do sth else
-            System.out.println(msg);
-        } catch (Exception e) {
-            log.error("webService error--" + e);
-        }finally {
-            if (client != null) {
-                try {
-                    client.close();
-                } catch (Exception e) {
-                    log.error("webService error--" + e);
-                }
-            }
+        StringBuilder str = new StringBuilder("and ( app_type like '%2' or app_type like '%3' (or app_type like '%4') ) TOTAL ");
+        if (str.toString().contains("or")) {
+            str.replace(str.indexOf("(or"), str.indexOf("(or") + 1, "");
+            str.replace(str.indexOf(")"), str.indexOf(")") + 1, "");
         }
+        System.out.println(str.toString());
     }
 
 }

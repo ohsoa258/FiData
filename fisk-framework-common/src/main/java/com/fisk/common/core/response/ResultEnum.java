@@ -244,6 +244,9 @@ public enum ResultEnum {
     GENERATE_AES_ERROR(5110, "生成AES密钥失败"),
     DATA_DECRYPTION_ERROR(5111,"数据解密失败，api已开启AES加密，请查看数据是否正确加密。"),
     EXCEL_EXPORT_ERROR(5112,"数据湖管理-导出excel失败"),
+    FLINK_PUBLISH_ERROR(5113,"数据湖管理-Flink CDC表发布失败"),
+    GET_FLINK_FIELD_ERROR(5114,"当前选择的表字段为空，请先同步字段!"),
+    GET_FLINK_SCHEMA_ERROR(5115,"获取schema失败!"),
 
     /**
      * 后台任务模块

@@ -60,8 +60,10 @@ public class GenerateCondition {
             }
         }
 
+
         if (str.toString().contains("or")){
             str.replace(str.indexOf("(or"), str.indexOf("(or") + 3, "and (");
+            str.replace(str.indexOf("(or"), str.indexOf("(or") + 1, "");
             str.replace(str.indexOf("(or"), str.indexOf("(or") + 1, "");
             str.append(")");
         }

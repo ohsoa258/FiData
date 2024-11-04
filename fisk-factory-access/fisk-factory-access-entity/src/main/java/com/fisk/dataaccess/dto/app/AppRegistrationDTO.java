@@ -39,7 +39,7 @@ public class AppRegistrationDTO extends BaseDTO {
      */
     @ApiModelProperty(value = "应用描述")
     public String appDes;
-    @ApiModelProperty(value = "应用类型 (0:实时应用  1:非实时应用 2:CDC接入 3:JDBC接入)", required = true)
+    @ApiModelProperty(value = "应用类型 (0:实时应用  1:非实时应用 2:CDC接入 3:JDBC接入 4:Flink CDC)", required = true)
     public int appType;
     @ApiModelProperty(value = "应用负责人", required = true)
     public String appPrincipal;

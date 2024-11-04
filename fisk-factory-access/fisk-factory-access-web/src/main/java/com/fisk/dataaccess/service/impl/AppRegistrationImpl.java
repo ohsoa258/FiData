@@ -54,6 +54,7 @@ import com.fisk.dataaccess.dto.api.httprequest.ApiHttpRequestDTO;
 import com.fisk.dataaccess.dto.apiresultconfig.ApiResultConfigDTO;
 import com.fisk.dataaccess.dto.app.*;
 import com.fisk.dataaccess.dto.datafactory.AccessRedirectDTO;
+import com.fisk.dataaccess.dto.datasource.DataSourceFullInfoDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.hudi.HudiReSyncDTO;
@@ -1139,7 +1140,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return tblList;
     }
 
-
     /**
      * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称
      *
@@ -1181,6 +1181,101 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         return dtos;
     }
 
+    /**
+     * 根据应用id 获取当前应用引用的系统数据源和目标库的系统数据源   id+名称
+     *
+     * @return
+     */
+    @Override
+    public List<DataSourceFullInfoDTO> getAppSourceAndTargetFullInfo(Integer appId, Integer tblId) {
+        //获取应用信息
+        AppRegistrationPO app = this.getOne(new LambdaQueryWrapper<AppRegistrationPO>()
+                .select(AppRegistrationPO::getTargetDbId)
+                .eq(AppRegistrationPO::getId, appId)
+        );
+        List<DataSourceFullInfoDTO> dtos = new ArrayList<>();
+        //获取表信息
+        TableAccessPO table = tableAccessImpl.getById(tblId);
+        //获取表的任一字段信息，获取来源库的架构名和表名
+        List<TableFieldsPO> fieldList = tableFieldsImpl.list(
+                new LambdaQueryWrapper<TableFieldsPO>()
+                        .eq(TableFieldsPO::getTableAccessId, tblId)
+        );
+
+        //若因为种种原因导致表在平台配置库里面没有字段，则该表非正常，报错
+        if (!CollectionUtils.isEmpty(fieldList)) {
+            throw new FkException(ResultEnum.GET_FLINK_FIELD_ERROR);
+        }
+        String sourceTblName = fieldList.get(0).getSourceTblName();
+        //使用点号(.)分割字符串
+        String[] parts = sourceTblName.split("\\.");
+        String schemaName = null;
+        String tblName = null;
+        //检查分割后的数组长度是否合适
+        if (parts.length == 2) {
+            schemaName = parts[0];
+            tblName = parts[1];
+
+        } else {
+            throw new FkException(ResultEnum.GET_FLINK_SCHEMA_ERROR);
+        }
+        //先获取当前应用引用的系统数据源id
+        List<AppDataSourcePO> list = appDataSourceImpl.list(
+                new LambdaQueryWrapper<AppDataSourcePO>()
+                        .eq(AppDataSourcePO::getAppId, appId)
+        );
+
+        if (!CollectionUtils.isEmpty(list)) {
+            AppDataSourcePO po = list.get(0);
+            DataSourceFullInfoDTO sourceDto = new DataSourceFullInfoDTO();
+            //引用的数据源名称
+            sourceDto.setSourceName(po.getName());
+            //连接类型
+            sourceDto.setConnector("jdbc");
+            //数据库连接字符串
+            sourceDto.setUrl(po.getConnectStr());
+
+            //架构名
+            sourceDto.setSchemaName(schemaName);
+
+            //表名
+            sourceDto.setTableName(tblName);
+            //数据库用户名
+            sourceDto.setUserName(po.getConnectAccount());
+            //密码
+            sourceDto.setPassword(po.getConnectPwd());
+            //格式
+            sourceDto.setFormat("debezium-json");
+            //id
+            sourceDto.setId(po.getSystemDataSourceId());
+            dtos.add(sourceDto);
+        }
+
+        //获取目标库的系统数据源id和名称
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(app.getTargetDbId());
+        if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
+            DataSourceDTO data = resultEntity.getData();
+            DataSourceFullInfoDTO targetDto = new DataSourceFullInfoDTO();
+            targetDto.setSourceName(data.getName());
+            targetDto.setConnector("jdbc");
+            targetDto.setUrl(data.getConStr());
+            if (app.getWhetherSchema()) {
+                //架构名
+                targetDto.setSchemaName(app.appAbbreviation);
+            } else {
+                //架构名
+                targetDto.setSchemaName("dbo");
+            }
+            targetDto.setTableName(table.getTableName());
+            targetDto.setUserName(data.getConAccount());
+            targetDto.setPassword(data.getConPassword());
+            targetDto.setFormat("json");
+            targetDto.setId(data.getId());
+            dtos.add(targetDto);
+        }
+
+        return dtos;
+    }
 
     /**
      * hudi入仓配置 全量同步所有来源数据库对应库下的表信息到fidata平台配置库
@@ -1785,7 +1880,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     for (TablePyhNameDTO table : tableNames) {
                         //如果表名包含.  （包含架构名） 则将架构名称换为_
                         String tableName = table.getTableName();
-                        if (tableName.contains(".")){
+                        if (tableName.contains(".")) {
                             tableName = tableName.replaceFirst("\\.", "_");
                         }
                         if (tableAccessPO.getTableName().equals(tableName)) {
@@ -1796,7 +1891,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     if (!flag) {
                         //删除配置库的元数据
                         tableAccessImpl.deleteCdcData(tableAccessPO.getId());
-                   }
+                    }
                 }
 
             } catch (Exception e) {
@@ -3185,7 +3280,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     }).collect(Collectors.toList());
             fieldTreeList.addAll(fields);
             //外部目录表
-        }else if(table.tblType == TableBusinessTypeEnum.ACCESS_API.getValue()){
+        } else if (table.tblType == TableBusinessTypeEnum.ACCESS_API.getValue()) {
             List<DataQualityDataSourceTreeDTO> fields = this.tableFieldsImpl.query()
                     .eq("table_access_id", table.tblId)
                     .list().stream()
@@ -3207,7 +3302,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         return fieldDtoTree;
                     }).collect(Collectors.toList());
             fieldTreeList.addAll(fields);
-        }else if (table.tblType == TableBusinessTypeEnum.DORIS_CATALOG_TABLE.getValue()) {
+        } else if (table.tblType == TableBusinessTypeEnum.DORIS_CATALOG_TABLE.getValue()) {
             String trueCataLogName = table.catalogName;
             String dbName = table.dbName;
             String tbName = table.tblName;

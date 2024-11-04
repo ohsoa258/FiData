@@ -153,4 +153,19 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public Integer ifOpenCdc;
 
+    /**
+     * Flink Source Sql
+     */
+    public String sourceSql;
+
+    /**
+     * Flink Sink Sql
+     */
+    public String sinkSql;
+
+    /**
+     * Flink Insert Sql
+     */
+    public String insertSql;
+
 }
