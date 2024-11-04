@@ -102,6 +102,8 @@ public class SqlParmUtils {
                         } else {
                             paramValue_In = flag  + item.parmValue;
                         }
+                    }else{
+                        paramValue_In = flag + "'" + item.parmValue + "'";
                     }
                 }
             }
