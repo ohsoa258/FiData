@@ -31,6 +31,7 @@ public class TqViewsPermissionsConfigPOServiceImpl extends ServiceImpl<TqViewsPe
     public Object changePermissionById(Integer id) {
         TqViewsPermissionsConfigPO one = this.getOne(
                 new LambdaQueryWrapper<TqViewsPermissionsConfigPO>()
+                        .eq(TqViewsPermissionsConfigPO::getId, id)
         );
         if (one.getIsOpen() == 1) {
             one.setIsOpen(0);
