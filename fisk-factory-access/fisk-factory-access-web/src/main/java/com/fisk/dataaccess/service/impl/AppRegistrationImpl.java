@@ -1203,7 +1203,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         );
 
         //若因为种种原因导致表在平台配置库里面没有字段，则该表非正常，报错
-        if (!CollectionUtils.isEmpty(fieldList)) {
+        if (CollectionUtils.isEmpty(fieldList)) {
             throw new FkException(ResultEnum.GET_FLINK_FIELD_ERROR);
         }
         String sourceTblName = fieldList.get(0).getSourceTblName();
@@ -1215,9 +1215,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (parts.length == 2) {
             schemaName = parts[0];
             tblName = parts[1];
-
         } else {
-            throw new FkException(ResultEnum.GET_FLINK_SCHEMA_ERROR);
+            schemaName = "";
+            tblName = sourceTblName;
         }
         //先获取当前应用引用的系统数据源id
         List<AppDataSourcePO> list = appDataSourceImpl.list(
@@ -1228,16 +1228,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (!CollectionUtils.isEmpty(list)) {
             AppDataSourcePO po = list.get(0);
             DataSourceFullInfoDTO sourceDto = new DataSourceFullInfoDTO();
+            sourceDto.setConType(po.getDriveType().toUpperCase());
             //引用的数据源名称
             sourceDto.setSourceName(po.getName());
             //连接类型
             sourceDto.setConnector("jdbc");
             //数据库连接字符串
             sourceDto.setUrl(po.getConnectStr());
-
             //架构名
             sourceDto.setSchemaName(schemaName);
-
             //表名
             sourceDto.setTableName(tblName);
             //数据库用户名
@@ -1256,16 +1255,22 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         if (resultEntity.getCode() == ResultEnum.SUCCESS.getCode()) {
             DataSourceDTO data = resultEntity.getData();
             DataSourceFullInfoDTO targetDto = new DataSourceFullInfoDTO();
+            targetDto.setConType(data.conType.getName().toUpperCase());
             targetDto.setSourceName(data.getName());
             targetDto.setConnector("jdbc");
             targetDto.setUrl(data.getConStr());
-            if (app.getWhetherSchema()) {
-                //架构名
-                targetDto.setSchemaName(app.appAbbreviation);
-            } else {
-                //架构名
-                targetDto.setSchemaName("dbo");
+
+            if (data.conType.equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER)) {
+                if (app.getWhetherSchema()) {
+                    //架构名
+                    targetDto.setSchemaName(app.appAbbreviation);
+                } else {
+                    //架构名
+                    targetDto.setSchemaName("dbo");
+                }
             }
+
+            targetDto.setSchemaName("");
             targetDto.setTableName(table.getTableName());
             targetDto.setUserName(data.getConAccount());
             targetDto.setPassword(data.getConPassword());

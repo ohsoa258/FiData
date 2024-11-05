@@ -9,6 +9,9 @@ import lombok.Data;
 @Data
 public class DataSourceFullInfoDTO {
 
+    @ApiModelProperty(value = "数据库类型")
+    public String conType;
+
     @ApiModelProperty(value = "数据源名称")
     public String sourceName;
 
