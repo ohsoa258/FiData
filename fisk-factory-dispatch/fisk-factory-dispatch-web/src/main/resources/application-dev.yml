@@ -9,3 +9,4 @@ spring:
   redis:
     host: 192.168.11.130
 pipeline-async-switch: true
+kafkaBroker: 192.168.11.130:9092

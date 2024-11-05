@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fisk.common.core.constants.MqConstants;
 import com.fisk.common.core.enums.fidatadatasource.DataSourceConfigEnum;
 import com.fisk.common.core.enums.fidatadatasource.TableBusinessTypeEnum;
 import com.fisk.common.core.enums.task.nifi.SchedulingStrategyTypeEnum;
@@ -35,6 +36,7 @@ import com.fisk.datafactory.service.INifiCustomWorkflow;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
 import com.fisk.datafactory.service.ITaskSetting;
 import com.fisk.datafactory.utils.Base64ToMultipartFile;
+import com.fisk.datafactory.vo.customworkflowdetail.KafkaConfigVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
@@ -94,6 +96,8 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
 
     @Value("${pipeline-async-switch}")
     private Boolean pipelineAsyncSwitch;
+    @Value("${kafkaBroker}")
+    private String kafkaBroker;
 
 
     @Override
@@ -144,6 +148,15 @@ public class NifiCustomWorkflowDetailImpl extends ServiceImpl<NifiCustomWorkflow
         }
 
         return NifiCustomWorkflowDetailMap.INSTANCES.poToDto(model);
+    }
+
+    @Override
+    public KafkaConfigVO getKafkaConfig(long id) {
+        KafkaConfigVO kafkaConfigVO = new KafkaConfigVO();
+        kafkaConfigVO.setKafkaBroker(kafkaBroker);
+        kafkaConfigVO.setTopic(MqConstants.QueueConstants.BUILD_TASK_PUBLISH_FLOW);
+        kafkaConfigVO.setValue("{\"topic\": \"dmp.datafactory.nifi.\""+id+", \"topicType\": \"2\"}");
+        return kafkaConfigVO;
     }
 
     @Transactional(rollbackFor = Exception.class)

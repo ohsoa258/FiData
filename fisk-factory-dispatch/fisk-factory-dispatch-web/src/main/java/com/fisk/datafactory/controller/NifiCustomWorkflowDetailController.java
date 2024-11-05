@@ -11,6 +11,7 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.service.INifiCustomWorkflowDetail;
+import com.fisk.datafactory.vo.customworkflowdetail.KafkaConfigVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.client.PublishTaskClient;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
@@ -67,6 +68,13 @@ public class NifiCustomWorkflowDetailController {
     public ResultEntity<NifiCustomWorkflowDetailDTO> getData(@PathVariable("id") Long id) {
 
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getData(id));
+    }
+
+    @GetMapping("/getKafkaConfig/{id}")
+    @ApiOperation(value = "查询Kafka调用信息")
+    public ResultEntity<KafkaConfigVO> getKafkaConfig(@PathVariable("id") Long id) {
+
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getKafkaConfig(id));
     }
 
 

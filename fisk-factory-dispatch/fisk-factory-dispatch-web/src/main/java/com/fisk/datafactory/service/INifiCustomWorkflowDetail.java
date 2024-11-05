@@ -11,6 +11,7 @@ import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
 import com.fisk.datafactory.dto.customworkflowdetail.*;
 import com.fisk.datafactory.entity.NifiCustomWorkflowDetailPO;
+import com.fisk.datafactory.vo.customworkflowdetail.KafkaConfigVO;
 import com.fisk.datafactory.vo.customworkflowdetail.NifiCustomWorkflowDetailVO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
 
@@ -52,9 +53,10 @@ public interface INifiCustomWorkflowDetail extends IService<NifiCustomWorkflowDe
      */
     NifiCustomWorkflowDetailDTO getData(long id);
 
+    KafkaConfigVO getKafkaConfig(long id);
+
     /**
      * 修改管道详情
-     *
      * @param dto dto
      * @return 执行结果
      */
