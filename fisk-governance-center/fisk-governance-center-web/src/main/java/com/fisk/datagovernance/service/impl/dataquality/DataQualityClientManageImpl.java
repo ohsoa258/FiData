@@ -1790,15 +1790,24 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         SheetDataDto sheetDataDto = new SheetDataDto();
         Integer errorDataTotalCount = 0;
         if (!isValid) {
-            sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
-            sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
-
+            if (dataCheckExtendPO.getFluctuateCheckModeType() == 1) {
+                sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s ", f_Name, f_Allocate, t_Name, fieldCheckWhereSql);
+                sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+            }else if (dataCheckExtendPO.getFluctuateCheckModeType() == 2) {
+                sql_QueryCheckData = dataCheckExtendPO.getFluctuateCheckRealitySql();
+                sql_QueryCheckErrorDataCount = String.format("SELECT 1 AS errorTotalCount");
+            }
             errorDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryCheckErrorDataCount, "errorTotalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
             if (errorDataTotalCount > 0 && errorDataTotalCount <= 5000) {
                 sheetDataDto = qualityReport_QueryTableData_Sheet(dataSourceConVO, sql_QueryCheckData, dataCheckPO.getId(), dataCheckPO.getRuleName());
             }
+
         }
-        sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        if (dataCheckExtendPO.getFluctuateCheckModeType() == 1) {
+            sql_QueryDataTotalCount = String.format("SELECT COUNT(*) AS totalCount FROM %s WHERE 1=1 %s ", t_Name, fieldCheckWhereSql);
+        }else if (dataCheckExtendPO.getFluctuateCheckModeType() == 2){
+            sql_QueryDataTotalCount = String.format("SELECT 1 AS totalCount");
+        }
         Integer checkDataTotalCount = qualityReport_QueryTableTotalCount(dataSourceConVO, sql_QueryDataTotalCount, "totalCount", dataCheckPO.getId(), dataCheckPO.getRuleName());
         qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO,
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
