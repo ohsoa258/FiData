@@ -64,6 +64,7 @@ import com.fisk.dataaccess.service.*;
 import com.fisk.dataaccess.utils.createTblUtils.IBuildCreateTableFactory;
 import com.fisk.dataaccess.utils.createTblUtils.impl.CreateTableHelper;
 import com.fisk.dataaccess.utils.files.FileTxtUtils;
+import com.fisk.dataaccess.utils.flinkutils.FlinkSqlGatewayUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.OracleCdcUtils;
 import com.fisk.dataaccess.vo.datareview.DataReviewVO;
@@ -492,9 +493,10 @@ public class TableFieldsImpl
         log.info("Flink CDC--配置信息更新存储成功");
 
         //2.在目标库建出目标表
-        boolean tableForFlinkCDC = createTableForFlinkCDC(table);
+        createTableForFlinkCDC(table);
 
-        //3.todo:if tableForFlinkCDC = true; blablabla...
+        //3.建立flink job流程
+        FlinkSqlGatewayUtils.buildFlinkJob(table);
 
         return ResultEnum.SUCCESS;
     }
@@ -503,9 +505,8 @@ public class TableFieldsImpl
      * 在目标库建出目标表
      *
      * @param table
-     * @return
      */
-    private boolean createTableForFlinkCDC(TableAccessPO table) {
+    private void createTableForFlinkCDC(TableAccessPO table) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         Statement statement = null;
@@ -533,6 +534,12 @@ public class TableFieldsImpl
             String schemaName = whetherSchema ? appAbbreviation : "dbo";
             int isExists = 0;
 
+            String tableName = table.getTableName().substring(table.getTableName().indexOf('_') + 1);
+            tableName = TableNameGenerateUtils.buildMyFlinkOdsTableName(
+                    tableName,
+                    appAbbreviation,
+                    whetherSchema);
+
             //2.2校验当前表是否已经存在于目标库
             IBuildCreateTableFactory helper = CreateTableHelper.getCreateTableHelperByConType(data.getConType());
 
@@ -541,7 +548,7 @@ public class TableFieldsImpl
             log.info("Flink CDC-校验表是否存在的sql语句{}", sql);
             preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, schemaName);
-            preparedStatement.setString(2, table.getTableName());
+            preparedStatement.setString(2, tableName);
             resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
                 isExists = resultSet.getInt("isExists");
@@ -549,7 +556,7 @@ public class TableFieldsImpl
             log.info("Flink CDC--校验表是否存在的结果{}", isExists);
             //todo:不存在则创建表 存在则暂时跳过
             if (isExists == 1) {
-                return true;
+                return;
             }
 
             //2.3获取当前表的字段信息
@@ -557,14 +564,12 @@ public class TableFieldsImpl
                     new LambdaQueryWrapper<TableFieldsPO>()
                             .eq(TableFieldsPO::getTableAccessId, table.getId())
             );
-
             //2.4根据数据源类型，获取建表sql
-            String buildTableSql = helper.createTable(table.getTableName(), fieldsPOS);
+            String buildTableSql = helper.createTable(tableName, fieldsPOS);
             log.info("Flink CDC--建表语句: {}", buildTableSql);
             //2.5执行建表语句
             statement = connection.createStatement();
             statement.execute(buildTableSql);
-            return true;
 
         } catch (Exception e) {
             log.error("Flink CDC 发布流程异常", e);

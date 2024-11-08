@@ -1190,7 +1190,6 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     public List<DataSourceFullInfoDTO> getAppSourceAndTargetFullInfo(Integer appId, Integer tblId) {
         //获取应用信息
         AppRegistrationPO app = this.getOne(new LambdaQueryWrapper<AppRegistrationPO>()
-                .select(AppRegistrationPO::getTargetDbId)
                 .eq(AppRegistrationPO::getId, appId)
         );
         List<DataSourceFullInfoDTO> dtos = new ArrayList<>();
@@ -1232,7 +1231,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             //引用的数据源名称
             sourceDto.setSourceName(po.getName());
             //连接类型
-            sourceDto.setConnector("jdbc");
+            sourceDto.setConnector("sqlserver-cdc");
             //数据库连接字符串
             sourceDto.setUrl(po.getConnectStr());
             //架构名
@@ -1244,7 +1243,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             //密码
             sourceDto.setPassword(po.getConnectPwd());
             //格式
-            sourceDto.setFormat("debezium-json");
+//            sourceDto.setFormat("debezium-json");
             //id
             sourceDto.setId(po.getSystemDataSourceId());
             dtos.add(sourceDto);
@@ -1268,13 +1267,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     //架构名
                     targetDto.setSchemaName("dbo");
                 }
+            } else {
+                targetDto.setSchemaName("");
             }
 
-            targetDto.setSchemaName("");
-            targetDto.setTableName(table.getTableName());
+            targetDto.setTableName(tblName);
             targetDto.setUserName(data.getConAccount());
             targetDto.setPassword(data.getConPassword());
-            targetDto.setFormat("json");
+//            targetDto.setFormat("json");
             targetDto.setId(data.getId());
             dtos.add(targetDto);
         }
@@ -1288,6 +1288,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param dbId
      */
     public void hudiSyncAllTablesByFull(Integer dbId, Integer appDatasourceId, Long appId, String appName) {
+        //获取应用信息
+        AppRegistrationPO app = this.getById(appId);
         log.info("hudi 入仓配置 - 全量同步应用时先删除应用下的所有表-------------------------------");
         //先删除当前应用下的所有表和所有表的字段信息
         // 删除应用下的物理表
@@ -1364,11 +1366,18 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     fieldDTO.setSourceFieldName(field.fieldName);
                     fieldDTO.setSourceFieldType(field.fieldType);
                     fieldDTO.setFieldName(field.fieldName);
-                    //字段类型暂时写死为string
-                    fieldDTO.setFieldType("STRING");
+                    //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
+                    if (app.getAppType() == 4) {
+                        fieldDTO.setFieldLength(field.fieldLength);
+                        fieldDTO.setFieldType(field.fieldType);
+                    } else {
+                        //字段类型暂时写死为string
+                        fieldDTO.setFieldType("STRING");
 //                    fieldDTO.setFieldType(field.fieldType);
-                    //字段长度暂时不要
+                        //字段长度暂时不要
 //                    fieldDTO.setFieldLength((long) field.fieldLength);
+                    }
+
                     fieldDTO.setFieldDes(field.getFieldDes());
                     fieldDTO.setIsPrimarykey(field.getIsPk());
                     //1：是实时物理表的字段，
@@ -1447,11 +1456,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setSourceFieldName(field.fieldName);
                         fieldDTO.setSourceFieldType(field.fieldType);
                         fieldDTO.setFieldName(field.fieldName);
-                        //字段类型暂时写死为string
-                        fieldDTO.setFieldType("STRING");
+                        //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
+                        if (app.getAppType() == 4) {
+                            fieldDTO.setFieldLength(field.fieldLength);
+                            fieldDTO.setFieldType(field.fieldType);
+                        } else {
+                            //字段类型暂时写死为string
+                            fieldDTO.setFieldType("STRING");
 //                    fieldDTO.setFieldType(field.fieldType);
-                        //字段长度暂时不要
+                            //字段长度暂时不要
 //                    fieldDTO.setFieldLength((long) field.fieldLength);
+                        }
                         fieldDTO.setFieldDes(field.getFieldDes());
                         fieldDTO.setIsPrimarykey(field.getIsPk());
                         //1：是实时物理表的字段，
@@ -1686,6 +1701,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param dbId
      */
     public void hudiSyncAllTablesByMerge(Integer dbId, Integer appDatasourceId, Long appId, String appName) {
+        //获取应用信息
+        AppRegistrationPO app = this.getById(appId);
         log.info("hudi入仓配置 增量同步时，先获取已同步到当前应用下的所有表名");
         LambdaQueryWrapper<TableAccessPO> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(TableAccessPO::getTableName, TableAccessPO::getId)
@@ -1762,11 +1779,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setSourceFieldName(field.fieldName);
                         fieldDTO.setSourceFieldType(field.fieldType);
                         fieldDTO.setFieldName(field.fieldName);
-                        //字段类型暂时写死为string
-                        fieldDTO.setFieldType("STRING");
+                        //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
+                        if (app.getAppType() == 4) {
+                            fieldDTO.setFieldLength(field.fieldLength);
+                            fieldDTO.setFieldType(field.fieldType);
+                        } else {
+                            //字段类型暂时写死为string
+                            fieldDTO.setFieldType("STRING");
 //                    fieldDTO.setFieldType(field.fieldType);
-                        //字段长度暂时不要
+                            //字段长度暂时不要
 //                    fieldDTO.setFieldLength((long) field.fieldLength);
+                        }
                         fieldDTO.setFieldDes(field.getFieldDes());
                         fieldDTO.setIsPrimarykey(field.getIsPk());
                         //1：是实时物理表的字段，
@@ -1856,11 +1879,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                             fieldDTO.setSourceFieldName(field.fieldName);
                             fieldDTO.setSourceFieldType(field.fieldType);
                             fieldDTO.setFieldName(field.fieldName);
-                            //字段类型暂时写死为string
-                            fieldDTO.setFieldType("STRING");
+                            //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
+                            if (app.getAppType() == 4) {
+                                fieldDTO.setFieldLength(field.fieldLength);
+                                fieldDTO.setFieldType(field.fieldType);
+                            } else {
+                                //字段类型暂时写死为string
+                                fieldDTO.setFieldType("STRING");
 //                    fieldDTO.setFieldType(field.fieldType);
-                            //字段长度暂时不要
+                                //字段长度暂时不要
 //                    fieldDTO.setFieldLength((long) field.fieldLength);
+                            }
                             fieldDTO.setFieldDes(field.getFieldDes());
                             fieldDTO.setIsPrimarykey(field.getIsPk());
                             //1：是实时物理表的字段，

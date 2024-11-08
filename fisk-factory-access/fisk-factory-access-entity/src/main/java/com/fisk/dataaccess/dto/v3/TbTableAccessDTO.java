@@ -150,4 +150,22 @@ public class TbTableAccessDTO {
      */
     @ApiModelProperty(value = "hudi入仓配置是否开启cdc 0否 1是")
     public Integer ifOpenCdc;
+
+    /**
+     * Flink Source Sql
+     */
+    @ApiModelProperty(value = "Flink Source Sql")
+    public String sourceSql;
+
+    /**
+     * Flink Sink Sql
+     */
+    @ApiModelProperty(value = "Flink Sink Sql")
+    public String sinkSql;
+
+    /**
+     * Flink Insert Sql
+     */
+    @ApiModelProperty(value = "Flink Insert Sql")
+    public String insertSql;
 }

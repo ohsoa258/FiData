@@ -83,7 +83,7 @@ public class TableNameGenerateUtils {
     }
 
     /**
-     * 生成stg表名
+     * 生成ods目标表名
      *
      * @param tableName
      * @param appAbbreviation
@@ -100,6 +100,24 @@ public class TableNameGenerateUtils {
             str.append("_");
             str.append(appAbbreviation);
             str.append("_");
+        }
+        str.append(tableName);
+        return str.toString();
+    }
+
+    /**
+     * 生成flink ods目标表名
+     *
+     * @param tableName
+     * @param appAbbreviation
+     * @param whetherSchema
+     * @return
+     */
+    public static String buildMyFlinkOdsTableName(String tableName, String appAbbreviation, Boolean whetherSchema) {
+        StringBuilder str = new StringBuilder();
+        if (whetherSchema) {
+            str.append(appAbbreviation);
+            str.append(".");
         }
         str.append(tableName);
         return str.toString();

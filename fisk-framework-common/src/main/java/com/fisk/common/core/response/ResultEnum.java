@@ -247,6 +247,7 @@ public enum ResultEnum {
     FLINK_PUBLISH_ERROR(5113,"数据湖管理-Flink CDC表发布失败"),
     GET_FLINK_FIELD_ERROR(5114,"当前选择的表字段为空，请先同步字段!"),
     GET_FLINK_SCHEMA_ERROR(5115,"获取schema失败!"),
+    FLINK_BUILD_JOB_ERROR(5116,"建立Flink任务失败!"),
 
     /**
      * 后台任务模块

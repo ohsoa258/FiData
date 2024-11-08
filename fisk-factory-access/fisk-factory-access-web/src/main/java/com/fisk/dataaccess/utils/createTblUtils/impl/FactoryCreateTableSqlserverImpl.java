@@ -18,32 +18,32 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                     sql.append(tableFieldsPO.getFieldName())
                             .append(" ")
                             .append(tableFieldsPO.getFieldType())
-                            .append(" ")
+                            .append(" (")
                             .append(tableFieldsPO.getFieldLength())
-                            .append(" PRIMARY KEY,");
+                            .append(") PRIMARY KEY,");
+                } else {
+                    sql.append(tableFieldsPO.getFieldName())
+                            .append(" ")
+                            .append(tableFieldsPO.getFieldType())
+                            .append(" ")
+                            .append("PRIMARY KEY,");
                 }
-                sql.append(tableFieldsPO.getFieldName())
-                        .append(" ")
-                        .append(tableFieldsPO.getFieldType())
-                        .append(" ")
-                        .append("PRIMARY KEY,");
+            } else {
+                if (tableFieldsPO.getFieldType().equalsIgnoreCase("VARCHAR")
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NVARCHAR")) {
+                    sql.append(tableFieldsPO.getFieldName())
+                            .append(" ")
+                            .append(tableFieldsPO.getFieldType())
+                            .append(" (")
+                            .append(tableFieldsPO.getFieldLength())
+                            .append("),");
+                } else {
+                    sql.append(tableFieldsPO.getFieldName())
+                            .append(" ")
+                            .append(tableFieldsPO.getFieldType())
+                            .append(",");
+                }
             }
-
-            if (tableFieldsPO.getFieldType().equalsIgnoreCase("VARCHAR")
-                    || tableFieldsPO.getFieldType().equalsIgnoreCase("NVARCHAR")) {
-                sql.append(tableFieldsPO.getFieldName())
-                        .append(" ")
-                        .append(tableFieldsPO.getFieldType())
-                        .append(" ")
-                        .append(tableFieldsPO.getFieldLength())
-                        .append(",");
-            }
-            sql.append(tableFieldsPO.getFieldName())
-                    .append(" ")
-                    .append(tableFieldsPO.getFieldType())
-                    .append(",");
-
-
         }
         //去除多余逗号
         sql.deleteCharAt(sql.length() - 1);
