@@ -21,6 +21,15 @@ public class DataSourceFullInfoDTO {
     @ApiModelProperty(value = "url地址")
     public String url;
 
+    @ApiModelProperty(value = "ip")
+    public String ip;
+
+    @ApiModelProperty(value = "port")
+    public String port;
+
+    @ApiModelProperty(value = "dbName")
+    public String dbName;
+
     @ApiModelProperty(value = "架构名")
     public String schemaName;
 
@@ -38,5 +47,14 @@ public class DataSourceFullInfoDTO {
 
     @ApiModelProperty(value = "id")
     public long id;
+
+    @ApiModelProperty(value = "sourceSql")
+    public String sourceSql;
+
+    @ApiModelProperty(value = "sinkSql")
+    public String sinkSql;
+
+    @ApiModelProperty(value = "insertSql")
+    public String insertSql;
 
 }

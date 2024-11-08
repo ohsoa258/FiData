@@ -80,6 +80,8 @@ import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
 import com.fisk.dataaccess.service.IAppDataSource;
 import com.fisk.dataaccess.service.IAppRegistration;
+import com.fisk.dataaccess.utils.createTblUtils.IBuildCreateTableFactory;
+import com.fisk.dataaccess.utils.createTblUtils.impl.CreateTableHelper;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
@@ -1246,6 +1248,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //            sourceDto.setFormat("debezium-json");
             //id
             sourceDto.setId(po.getSystemDataSourceId());
+            sourceDto.setIp(po.getHost());
+            sourceDto.setPort(po.getPort());
+            sourceDto.setDbName(po.getDbName());
+            //生成 Flink sourceSql sinkSql insertSql
+            IBuildCreateTableFactory helper = CreateTableHelper.getCreateTableHelperByConType(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+
+            sourceDto.setSourceSql(helper.createSourceSql(tblName, fieldList, sourceDto));
+            sourceDto.setInsertSql(helper.createInsertSql(tblName, fieldList, sourceDto));
+
             dtos.add(sourceDto);
         }
 
@@ -1258,7 +1269,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             targetDto.setSourceName(data.getName());
             targetDto.setConnector("jdbc");
             targetDto.setUrl(data.getConStr());
-
+            targetDto.setIp(data.getConIp());
+            targetDto.setPort(String.valueOf(data.getConPort()));
+            targetDto.setDbName(data.getConDbname());
             if (data.conType.equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER)) {
                 if (app.getWhetherSchema()) {
                     //架构名
@@ -1276,6 +1289,11 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
             targetDto.setPassword(data.getConPassword());
 //            targetDto.setFormat("json");
             targetDto.setId(data.getId());
+
+            //生成 Flink sourceSql sinkSql insertSql
+            IBuildCreateTableFactory helper = CreateTableHelper.getCreateTableHelperByConType(data.conType);
+
+            targetDto.setSinkSql(helper.createSinkSql(tblName, fieldList, targetDto));
             dtos.add(targetDto);
         }
 
