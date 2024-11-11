@@ -917,7 +917,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                         dataSourceConfig.data.getConAccount(),
                         dataSourceConfig.data.getConPassword(),
                         dataSourceConfig.data.conType);
-                String tblName = TableNameGenerateUtils.buildMyFlinkOdsTableName(modelAccess.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+                String tblName = modelAccess.tableName;
+                tblName = tblName.substring(tblName.indexOf('_') + 1);
                 String dropSql = "DROP TABLE IF EXISTS " + tblName + ";";
                 log.info("删除Flink CDC目标表SQL:{}", dropSql);
                 statement = connection.createStatement();
