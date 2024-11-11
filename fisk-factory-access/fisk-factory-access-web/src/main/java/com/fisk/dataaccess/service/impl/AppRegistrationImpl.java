@@ -482,6 +482,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param dbId
      */
     public void hudiSyncOneTableToFidataConfig(Integer dbId, Integer appDatasourceId, Long appId, String appName, String tblName) {
+        //获取应用信息
+        AppRegistrationPO app = this.getById(appId);
         log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
         ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
         DataSourceDTO dto = datasource.getData();
@@ -569,11 +571,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 fieldDTO.setSourceFieldName(field.fieldName);
                 fieldDTO.setSourceFieldType(field.fieldType);
                 fieldDTO.setFieldName(field.fieldName);
-                //todo:字段类型暂时设置为STRING
-                fieldDTO.setFieldType("STRING");
-//                fieldDTO.setFieldType(field.fieldType);
-                //todo:字段长度暂时不要
-//                fieldDTO.setFieldLength((long) field.fieldLength);
+                //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
+                if (app.getAppType() == 4) {
+                    fieldDTO.setFieldLength(field.fieldLength);
+                    fieldDTO.setFieldType(field.fieldType);
+                } else {
+                    //字段类型暂时写死为string
+                    fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                    //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
+                }
                 fieldDTO.setFieldDes(field.getFieldDes());
                 fieldDTO.setIsPrimarykey(field.getIsPk());
                 //1：是实时物理表的字段，
@@ -612,6 +620,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      * @param tblName         表名称 （sqlserver的表名则带架构）
      */
     public void hudiReSyncOneTableToFidataConfig(Integer dbId, Integer appDatasourceId, Long appId, String appName, String tblName, Long tblId, List<TableFieldsPO> fieldListPos) {
+        //获取应用信息
+        AppRegistrationPO app = this.getById(appId);
         log.info("hudi入仓配置 同步所有来源数据库对应库下的表信息到fidata平台配置库");
         ResultEntity<DataSourceDTO> datasource = userClient.getFiDataDataSourceById(dbId);
         DataSourceDTO dto = datasource.getData();
@@ -706,11 +716,17 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 fieldDTO.setSourceFieldName(field.fieldName);
                 fieldDTO.setSourceFieldType(field.fieldType);
                 fieldDTO.setFieldName(field.fieldName);
-                //todo:字段类型暂时设置为STRING
-                fieldDTO.setFieldType("STRING");
-//                fieldDTO.setFieldType(field.fieldType);
-                //todo:字段长度暂时不要
-//                fieldDTO.setFieldLength((long) field.fieldLength);
+                //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
+                if (app.getAppType() == 4) {
+                    fieldDTO.setFieldLength(field.fieldLength);
+                    fieldDTO.setFieldType(field.fieldType);
+                } else {
+                    //字段类型暂时写死为string
+                    fieldDTO.setFieldType("STRING");
+//                    fieldDTO.setFieldType(field.fieldType);
+                    //字段长度暂时不要
+//                    fieldDTO.setFieldLength((long) field.fieldLength);
+                }
                 fieldDTO.setFieldDes(field.getFieldDes());
                 fieldDTO.setIsPrimarykey(field.getIsPk());
                 //1：是实时物理表的字段，
@@ -5069,7 +5085,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
      */
     @Override
     public Object syncOneTblForHudi(SyncOneTblForHudiDTO dto) {
-        log.info("hudi 入仓配置 - 开始同步所有表-------------------------------");
+        log.info("hudi 入仓配置 - 开始同步单张表-------------------------------");
         try {
             long appId = dto.getAppId();
             List<AppDataSourceDTO> appSourcesByAppId = appDataSourceImpl.getAppSourcesByAppId(appId);
@@ -5083,7 +5099,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 hudiSyncOneTableToFidataConfig(systemDataSourceId, appDatasourceId, appId, dto.getAppName(), tblName);
             }
         } catch (Exception e) {
-            log.error("hudi 入仓配置 - 开始同步所有表失败：" + e);
+            log.error("hudi 入仓配置 - 开始同步单张表失败：" + e);
             throw new FkException(ResultEnum.ERROR, e);
         }
         return ResultEnum.SUCCESS;
