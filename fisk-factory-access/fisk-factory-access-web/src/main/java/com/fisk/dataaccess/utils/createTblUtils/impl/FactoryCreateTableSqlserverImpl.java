@@ -76,7 +76,9 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" STRING,");
             } else if (tableFieldsPO.getFieldType().equalsIgnoreCase("TINYINT")
-                    || tableFieldsPO.getFieldType().equalsIgnoreCase("INT")) {
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("INT")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("int identity")
+            ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
                         .append("INT,");
@@ -92,7 +94,9 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                         .append("TIME(0),");
             } else if (tableFieldsPO.getFieldType().equalsIgnoreCase("DATETIME")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("DATETIME2")
-                    || tableFieldsPO.getFieldType().equalsIgnoreCase("SMALLDATETIME")) {
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("SMALLDATETIME")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("timestamp")
+            ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
                         .append("TIMESTAMP(3),");
@@ -187,7 +191,8 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" STRING,");
             } else if (tableFieldsPO.getFieldType().equalsIgnoreCase("TINYINT")
-                    || tableFieldsPO.getFieldType().equalsIgnoreCase("INT")) {
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("INT")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("int identity")) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
                         .append("INT,");
@@ -203,7 +208,9 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                         .append("TIME(0),");
             } else if (tableFieldsPO.getFieldType().equalsIgnoreCase("DATETIME")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("DATETIME2")
-                    || tableFieldsPO.getFieldType().equalsIgnoreCase("SMALLDATETIME")) {
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("SMALLDATETIME")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("timestamp")
+            ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
                         .append("TIMESTAMP(3),");
