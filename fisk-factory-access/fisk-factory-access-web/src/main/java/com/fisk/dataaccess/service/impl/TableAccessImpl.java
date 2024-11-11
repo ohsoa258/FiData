@@ -914,7 +914,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             Statement statement = null;
             try {
                 connection = DbConnectionHelper.connection(dataSourceConfig.data.getConStr(),
-                        dataSourceConfig.data.getCreateUser(),
+                        dataSourceConfig.data.getConAccount(),
                         dataSourceConfig.data.getConPassword(),
                         dataSourceConfig.data.conType);
                 String tblName = TableNameGenerateUtils.buildMyFlinkOdsTableName(modelAccess.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
