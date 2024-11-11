@@ -36,6 +36,7 @@ import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.BuildFactoryAccessHelper;
 import com.fisk.common.service.dbBEBuild.factoryaccess.IBuildAccessSqlCommand;
 import com.fisk.common.service.dbBEBuild.factoryaccess.dto.DataTypeConversionDTO;
+import com.fisk.common.service.mdmBEBuild.AbstractDbHelper;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataDbAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataInstanceAttributeDTO;
 import com.fisk.common.service.metadata.dto.metadata.MetaDataTableAttributeDTO;
@@ -87,11 +88,9 @@ import com.fisk.dataaccess.vo.pgsql.NifiVO;
 import com.fisk.dataaccess.vo.pgsql.TableListVO;
 import com.fisk.dataaccess.vo.table.PhyTblAndApiTblVO;
 import com.fisk.datafactory.client.DataFactoryClient;
-import com.fisk.datafactory.dto.check.CheckPhyDimFactTableIfExistsDTO;
 import com.fisk.datafactory.dto.components.ChannelDataChildDTO;
 import com.fisk.datafactory.dto.components.ChannelDataDTO;
 import com.fisk.datafactory.dto.components.NifiComponentsDTO;
-import com.fisk.datafactory.dto.customworkflowdetail.NifiCustomWorkflowDetailDTO;
 import com.fisk.datafactory.enums.ChannelDataEnum;
 import com.fisk.datagovernance.client.DataGovernanceClient;
 import com.fisk.datagovernance.dto.dataops.TableDataSyncDTO;
@@ -809,25 +808,25 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     @Override
     public ResultEntity<NifiVO> deleteData(long id) {
 
-        // 删除之前检查该物理表是否已经被配置到存在的管道里面：
-        // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该物理表，
-        // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数据接入的物理表对应的table type是3 数据湖表任务
-        CheckPhyDimFactTableIfExistsDTO dto = new CheckPhyDimFactTableIfExistsDTO();
-        dto.setTblId(id);
-        dto.setChannelDataEnum(ChannelDataEnum.getName(3));
-        ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(dto);
-        if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
-            return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
-        }
-        List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
-        if (!CollectionUtils.isEmpty(data)) {
-            //这里的getWorkflowId 已经被替换为 workflowName
-            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
-            log.info("当前要删除的表存在于以下管道中：" + collect);
-            NifiVO nifiVO = new NifiVO();
-            nifiVO.setWorkFlowName(collect);
-            return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH, nifiVO);
-        }
+//        // 删除之前检查该物理表是否已经被配置到存在的管道里面：
+//        // 方式：检查配置库-dmp_factory_db库 tb_nifi_custom_workflow_detail表内是否存在该物理表，
+//        // 如果存在则不允许删除，给出提示并告知该表被配置到哪个管道里面    tips:数据接入的物理表对应的table type是3 数据湖表任务
+//        CheckPhyDimFactTableIfExistsDTO dto = new CheckPhyDimFactTableIfExistsDTO();
+//        dto.setTblId(id);
+//        dto.setChannelDataEnum(ChannelDataEnum.getName(3));
+//        ResultEntity<List<NifiCustomWorkflowDetailDTO>> booleanResultEntity = dataFactoryClient.checkPhyTableIfExists(dto);
+//        if (booleanResultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+//            return ResultEntityBuild.build(ResultEnum.DISPATCH_REMOTE_ERROR);
+//        }
+//        List<NifiCustomWorkflowDetailDTO> data = booleanResultEntity.getData();
+//        if (!CollectionUtils.isEmpty(data)) {
+//            //这里的getWorkflowId 已经被替换为 workflowName
+//            List<String> collect = data.stream().map(NifiCustomWorkflowDetailDTO::getWorkflowName).collect(Collectors.toList());
+//            log.info("当前要删除的表存在于以下管道中：" + collect);
+//            NifiVO nifiVO = new NifiVO();
+//            nifiVO.setWorkFlowName(collect);
+//            return ResultEntityBuild.build(ResultEnum.ACCESS_PHYTABLE_EXISTS_IN_DISPATCH, nifiVO);
+//        }
 
         UserInfo userInfo = userHelper.getLoginUserInfo();
 
@@ -836,6 +835,13 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         if (modelAccess == null) {
             return ResultEntityBuild.build(ResultEnum.DATA_NOTEXISTS);
         }
+
+        //获取应用id
+        long appId = modelAccess.getAppId();
+        AppRegistrationPO app = appRegistrationImpl.getById(appId);
+        //获取应用类型
+        int appType = app.getAppType();
+
         int deleteAccess = accessMapper.deleteByIdWithFill(modelAccess);
         if (deleteAccess < 0) {
             return ResultEntityBuild.build(ResultEnum.SAVE_DATA_ERROR);
@@ -902,8 +908,30 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         log.info("删除的物理表信息,{}", vo);
 
-        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
+        //如果是Flink CDC 则需要删除建在dmp_ods里面的目标表
+        if (appType == 4) {
+            Connection connection = null;
+            Statement statement = null;
+            try {
+                connection = DbConnectionHelper.connection(dataSourceConfig.data.getConStr(),
+                        dataSourceConfig.data.getCreateUser(),
+                        dataSourceConfig.data.getConPassword(),
+                        dataSourceConfig.data.conType);
+                String tblName = TableNameGenerateUtils.buildMyFlinkOdsTableName(modelAccess.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
+                String dropSql = "DROP TABLE IF EXISTS " + tblName + ";";
+                log.info("删除Flink CDC目标表SQL:{}", dropSql);
+                statement = connection.createStatement();
+                statement.execute(dropSql);
 
+            } catch (Exception e) {
+                log.error("删除Flink CDC目标表失败", e);
+                throw new FkException(ResultEnum.DELETE_FLINK_ERROR);
+            } finally {
+                AbstractDbHelper.closeStatement(statement);
+                AbstractDbHelper.closeConnection(connection);
+            }
+        }
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, vo);
     }
 
     @TraceType(type = TraceTypeEnum.DATAACCESS_GET_ATLAS_BUILDTABLE_AND_COLUMN)

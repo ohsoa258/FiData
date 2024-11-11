@@ -573,7 +573,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 fieldDTO.setFieldName(field.fieldName);
                 //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
                 if (app.getAppType() == 4) {
-                    fieldDTO.setFieldLength(field.fieldLength);
+                    long fieldLength = field.fieldLength;
+                    if (fieldLength > 8000) {
+                        fieldDTO.setFieldLength(8000L);
+                    } else {
+                        fieldDTO.setFieldLength(fieldLength);
+                    }
                     fieldDTO.setFieldType(field.fieldType);
                 } else {
                     //字段类型暂时写死为string
@@ -718,7 +723,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                 fieldDTO.setFieldName(field.fieldName);
                 //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
                 if (app.getAppType() == 4) {
-                    fieldDTO.setFieldLength(field.fieldLength);
+                    long fieldLength = field.fieldLength;
+                    if (fieldLength > 8000) {
+                        fieldDTO.setFieldLength(8000L);
+                    } else {
+                        fieldDTO.setFieldLength(fieldLength);
+                    }
                     fieldDTO.setFieldType(field.fieldType);
                 } else {
                     //字段类型暂时写死为string
@@ -1402,7 +1412,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                     fieldDTO.setFieldName(field.fieldName);
                     //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
                     if (app.getAppType() == 4) {
-                        fieldDTO.setFieldLength(field.fieldLength);
+                        long fieldLength = field.fieldLength;
+                        if (fieldLength > 8000) {
+                            fieldDTO.setFieldLength(8000L);
+                        } else {
+                            fieldDTO.setFieldLength(fieldLength);
+                        }
                         fieldDTO.setFieldType(field.fieldType);
                     } else {
                         //字段类型暂时写死为string
@@ -1492,7 +1507,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setFieldName(field.fieldName);
                         //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
                         if (app.getAppType() == 4) {
-                            fieldDTO.setFieldLength(field.fieldLength);
+                            long fieldLength = field.fieldLength;
+                            if (fieldLength > 8000) {
+                                fieldDTO.setFieldLength(8000L);
+                            } else {
+                                fieldDTO.setFieldLength(fieldLength);
+                            }
                             fieldDTO.setFieldType(field.fieldType);
                         } else {
                             //字段类型暂时写死为string
@@ -1815,7 +1835,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                         fieldDTO.setFieldName(field.fieldName);
                         //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
                         if (app.getAppType() == 4) {
-                            fieldDTO.setFieldLength(field.fieldLength);
+                            long fieldLength = field.fieldLength;
+                            if (fieldLength > 8000) {
+                                fieldDTO.setFieldLength(8000L);
+                            } else {
+                                fieldDTO.setFieldLength(fieldLength);
+                            }
                             fieldDTO.setFieldType(field.fieldType);
                         } else {
                             //字段类型暂时写死为string
@@ -1915,7 +1940,12 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
                             fieldDTO.setFieldName(field.fieldName);
                             //如果是Flink CDC类型的应用 则需要正确获取字段长度和字段类型
                             if (app.getAppType() == 4) {
-                                fieldDTO.setFieldLength(field.fieldLength);
+                                long fieldLength = field.fieldLength;
+                                if (fieldLength > 8000) {
+                                    fieldDTO.setFieldLength(8000L);
+                                } else {
+                                    fieldDTO.setFieldLength(fieldLength);
+                                }
                                 fieldDTO.setFieldType(field.fieldType);
                             } else {
                                 //字段类型暂时写死为string

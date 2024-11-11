@@ -49,7 +49,7 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
             }
         }
         //去除多余逗号
-        sql.deleteCharAt(sql.length() - 1);
+        sql.append("fi_createtime DATETIME DEFAULT CURRENT_TIMESTAMP");
         sql.append(");");
         return String.valueOf(sql);
     }
