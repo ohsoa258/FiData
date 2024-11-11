@@ -78,6 +78,7 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
             } else if (tableFieldsPO.getFieldType().equalsIgnoreCase("TINYINT")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("INT")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("int identity")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("smallint")
             ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
@@ -96,6 +97,7 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("DATETIME2")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("SMALLDATETIME")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("timestamp")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("smalldatetime")
             ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
@@ -192,7 +194,9 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                         .append(" STRING,");
             } else if (tableFieldsPO.getFieldType().equalsIgnoreCase("TINYINT")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("INT")
-                    || tableFieldsPO.getFieldType().equalsIgnoreCase("int identity")) {
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("int identity")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("smallint")
+            ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
                         .append("INT,");
@@ -210,6 +214,7 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("DATETIME2")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("SMALLDATETIME")
                     || tableFieldsPO.getFieldType().equalsIgnoreCase("timestamp")
+                    || tableFieldsPO.getFieldType().equalsIgnoreCase("smalldatetime")
             ) {
                 sql.append(tableFieldsPO.getFieldName())
                         .append(" ")
