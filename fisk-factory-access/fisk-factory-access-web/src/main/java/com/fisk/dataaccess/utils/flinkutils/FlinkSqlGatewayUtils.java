@@ -108,7 +108,7 @@ public class FlinkSqlGatewayUtils {
      */
     private static void setCheckpointInterval(String sessionHandle) throws IOException {
         JsonObject statementData = new JsonObject();
-        statementData.addProperty("statement", "SET execution.checkpointing.interval = 10s;");
+        statementData.addProperty("statement", "SET execution.checkpointing.interval = 300s;");
         RequestBody body = RequestBody.create(JSON, statementData.toString());
         Request request = new Request.Builder()
                 .url(GATEWAY_HOST + "/v1/sessions/" + sessionHandle + "/statements")
