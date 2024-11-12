@@ -482,21 +482,45 @@ public class TableFieldsImpl
      */
     @Override
     public ResultEnum editForFlink(TableAccessFlinkPublishDTO dto) {
-
-        //1.将Flink流程有关sql存入数据库
         long id = dto.getId();
+        //先获取表信息
         TableAccessPO table = tableAccessImpl.getById(id);
-        table.setSourceSql(dto.getSourceSql());
-        table.setSinkSql(dto.getSinkSql());
-        table.setInsertSql(dto.getInsertSql());
-        tableAccessImpl.updateById(table);
-        log.info("Flink CDC--配置信息更新存储成功");
+        if (table == null) {
+            throw new FkException(ResultEnum.TABLE_NOT_EXIST);
+        }
+        //未在平台内开启cdc的表不允许发布flink
+        if (table.getIfOpenCdc() != 1) {
+            throw new FkException(ResultEnum.TABLE_NOT_OPEN_CDC);
+        }
+        try {
+            //1.将Flink流程有关sql存入数据库
+            table.setSourceSql(dto.getSourceSql());
+            table.setSinkSql(dto.getSinkSql());
+            table.setInsertSql(dto.getInsertSql());
+            //0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
+            table.setPublish(3);
+            tableAccessImpl.updateById(table);
+            log.info("Flink CDC--配置信息更新存储成功");
 
-        //2.在目标库建出目标表
-        createTableForFlinkCDC(table);
+            //2.在目标库建出目标表
+            log.info("Flink CDC--在目标库建出目标表ING");
+            createTableForFlinkCDC(table);
+            log.info("Flink CDC--在目标库建出目标表成功");
 
-        //3.建立flink job流程
-        FlinkSqlGatewayUtils.buildFlinkJob(table);
+            //3.建立flink job流程
+            log.info("Flink CDC--建立flink job流程ING");
+            FlinkSqlGatewayUtils.buildFlinkJob(table);
+            log.info("Flink CDC--建立flink job流程成功");
+
+            //发布成功
+            table.setPublish(1);
+            tableAccessImpl.updateById(table);
+        } catch (Exception e) {
+            table.setPublish(2);
+            tableAccessImpl.updateById(table);
+            log.error("Flink CDC--表发布失败,表名：" + table.getTableName() + "原因", e);
+            throw new FkException(ResultEnum.FLINK_PUBLISH_ERROR);
+        }
 
         return ResultEnum.SUCCESS;
     }

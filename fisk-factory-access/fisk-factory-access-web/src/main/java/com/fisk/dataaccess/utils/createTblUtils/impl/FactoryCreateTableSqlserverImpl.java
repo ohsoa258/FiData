@@ -17,7 +17,10 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
             //主键
             if (tableFieldsPO.getIsPrimarykey() == 1) {
                 if (tableFieldsPO.getFieldType().equalsIgnoreCase("VARCHAR")
-                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NVARCHAR")) {
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NVARCHAR")
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NCHAR")
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("CHAR")
+                ) {
                     sql.append(tableFieldsPO.getFieldName())
                             .append(" ")
                             .append(tableFieldsPO.getFieldType())
@@ -33,7 +36,10 @@ public class FactoryCreateTableSqlserverImpl implements IBuildCreateTableFactory
                 }
             } else {
                 if (tableFieldsPO.getFieldType().equalsIgnoreCase("VARCHAR")
-                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NVARCHAR")) {
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NVARCHAR")
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("NCHAR")
+                        || tableFieldsPO.getFieldType().equalsIgnoreCase("CHAR")
+                ) {
                     sql.append(tableFieldsPO.getFieldName())
                             .append(" ")
                             .append(tableFieldsPO.getFieldType())

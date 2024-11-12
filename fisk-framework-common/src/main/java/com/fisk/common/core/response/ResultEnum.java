@@ -248,7 +248,8 @@ public enum ResultEnum {
     GET_FLINK_FIELD_ERROR(5114,"当前选择的表字段为空，请先同步字段!"),
     GET_FLINK_SCHEMA_ERROR(5115,"获取schema失败!"),
     FLINK_BUILD_JOB_ERROR(5116,"建立Flink任务失败!"),
-    DELETE_FLINK_ERROR(5117,"删除Flink CDC表失败！!"),
+    DELETE_FLINK_ERROR(5117,"删除Flink CDC表失败!"),
+    TABLE_NOT_OPEN_CDC(5118,"表在中台内未开启CDC!请开启CDC后再发布"),
 
     /**
      * 后台任务模块
