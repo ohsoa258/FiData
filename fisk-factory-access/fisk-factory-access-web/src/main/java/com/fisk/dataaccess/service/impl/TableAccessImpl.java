@@ -1761,13 +1761,20 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             item.tableDtoList.forEach(tableAccessDataDTO -> {
                 //如果不是doris_catalog 则表名依据情况 要拼接ods_ 或简称作为schema...
                 if (!appDataSourceDTO.getDriveType().equals(DataSourceTypeEnum.DORIS_CATALOG.getName())) {
-                    tableAccessDataDTO.tableName = TableNameGenerateUtils.buildOdsTableName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
+                    //flink cdc类型的应用 表名和其他不同
+                    if (item.getAppType() == 4) {
+                        if (tableAccessDataDTO.tableName.contains("_")) {
+                            tableAccessDataDTO.tableName = tableAccessDataDTO.tableName.replaceFirst("_", ".");
+                        }
+                    } else {
+                        tableAccessDataDTO.tableName =
+                                TableNameGenerateUtils.buildOdsTableName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
+                    }
                 } else {
                     //如果是doris_catalog 则表名不要拼接ods_
                     tableAccessDataDTO.tableName = TableNameGenerateUtils.buildCatalogName(tableAccessDataDTO.tableName, item.appAbbreviation, item.whetherSchema);
                 }
             });
-
 
             if (item.tableDtoList.size() == 0 || tableFieldsList == null || tableFieldsList.size() == 0) {
                 continue;
@@ -1856,6 +1863,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.setAppName(po.getAppName());
             dto.setAppAbbreviation(po.getAppAbbreviation());
             dto.setTargetDbId(po.getTargetDbId());
+            dto.setAppType(po.getAppType());
             if (po.getWhetherSchema() != null) {
                 dto.setWhetherSchema(po.getWhetherSchema());
             }

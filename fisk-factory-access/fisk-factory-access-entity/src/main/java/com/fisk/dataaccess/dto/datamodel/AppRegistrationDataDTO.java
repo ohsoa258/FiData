@@ -21,6 +21,11 @@ public class AppRegistrationDataDTO {
     public boolean whetherSchema;
     @ApiModelProperty(value = "目标数据库ID")
     public Integer targetDbId;
+    /**
+     * 应用类型: 0: 实时应用   1: 非实时应用  2:CDC接入  3:JDBC接入
+     */
+    @ApiModelProperty(value = "应用类型")
+    public int appType;
     @ApiModelProperty(value = "表Dto列表")
     public List<TableAccessDataDTO> tableDtoList;
 
