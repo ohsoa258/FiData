@@ -5281,7 +5281,7 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         ResultEntity<DataSourceDTO> dataSourceConfig;
 
         //2意味着CDC接入 3意味着JDBC接入
-        if (app.appType == 2 || app.appType == 3) {
+        if (app.appType == 2 || app.appType == 3 || app.getAppType() == 4) {
             dataSourceConfig = userClient.getFiDataDataSourceById(systemIds.get(0));
         } else {
             dataSourceConfig = userClient.getFiDataDataSourceById(app.targetDbId);
@@ -5299,8 +5299,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         String dbName = dataSourceConfig.data.conDbname;
         // 实例
         MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
-        if (app.appType == 2) {
+        if (app.appType == 2 || app.appType == 3) {
             instance.setSourceName(dataSourceConfig.data.name + "(Hudi)");
+        } else if (app.appType == 4) {
+            instance.setSourceName(dataSourceConfig.data.name + "(Flink)");
         } else {
             instance.setSourceName(dataSourceConfig.data.name);
         }
@@ -5355,6 +5357,14 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //            String[] tableNames = tableAccess.getDisplayName().split("\\.");
 
             table.setName(tableAccess.getTableName());
+            table.setIsExistStg(false);
+            table.setIsCDC(true);
+        } else if (app.appType == 4) {
+            if (tableAccess.tableName.contains("_")) {
+                table.setName(tableAccess.tableName.replaceFirst("_", "."));
+            } else {
+                table.setName(tableAccess.getTableName());
+            }
             table.setIsExistStg(false);
             table.setIsCDC(true);
         } else {
