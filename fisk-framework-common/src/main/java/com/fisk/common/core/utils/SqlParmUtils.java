@@ -93,11 +93,21 @@ public class SqlParmUtils {
                     } else if (dataSourceType == DataSourceTypeEnum.MYSQL){
                         if (item.parmName.equals("start") || item.parmName.equals("end")) {
                             paramValue_In = item.parmValue;
+                        } else if (item.parmName.equals("current") || item.parmName.equals("size")) {
+                                paramValue_In = item.parmValue;
                         } else {
                             paramValue_In = flag + "'" + item.parmValue + "'";
                         }
                     }else if (dataSourceType == DataSourceTypeEnum.DM8){
                         if (item.parmName.equals("start") || item.parmName.equals("end")) {
+                            paramValue_In = item.parmValue;
+                        } else {
+                            paramValue_In = flag  + item.parmValue;
+                        }
+                    }else if (dataSourceType == DataSourceTypeEnum.SQLSERVER){
+                        if (item.parmName.equals("start") || item.parmName.equals("end")) {
+                            paramValue_In = item.parmValue;
+                        } else if (item.parmName.equals("current") || item.parmName.equals("size")) {
                             paramValue_In = item.parmValue;
                         } else {
                             paramValue_In = flag  + item.parmValue;
