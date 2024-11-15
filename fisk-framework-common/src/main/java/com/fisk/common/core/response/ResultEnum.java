@@ -306,6 +306,8 @@ public enum ResultEnum {
     WRONG_TABLE_TYPE_ERROR(8025, "表类型只能为 0：维度表 1事实表"),
 
     MDM_GET_NIFI_LOG_ERROR(8026, "主数据获取nifi同步日志失败"),
+    GET_CUSTOM_SQL_ERROR(8027, "获取数仓建模指定表的加载后语句失败！"),
+    NIFI_EXCUTE_MODEL_CUSTOM_SQL_ERROR(8027, "获取数仓建模指定表的加载后语句失败！"),
 
     /**
      * 数据工厂

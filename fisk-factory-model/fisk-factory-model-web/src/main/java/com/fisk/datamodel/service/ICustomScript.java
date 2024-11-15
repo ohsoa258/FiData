@@ -60,4 +60,13 @@ public interface ICustomScript {
      */
     ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList,Integer tblId);
 
+    /**
+     * 根据表id和类型获取指定数仓表的自定义加载后sql
+     *
+     * @param tblId
+     * @param tblType
+     * @return
+     */
+    List<CustomScriptDTO> getCustomSqlByTblIdType(Integer tblId, Integer tblType);
+
 }

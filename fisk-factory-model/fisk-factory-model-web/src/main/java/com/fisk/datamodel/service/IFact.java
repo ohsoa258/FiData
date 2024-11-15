@@ -11,6 +11,7 @@ import com.fisk.datamodel.dto.dimension.DimensionSqlDTO;
 import com.fisk.datamodel.dto.fact.*;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.entity.fact.FactPO;
+import com.fisk.mdm.dto.access.CustomScriptDTO;
 
 import java.util.List;
 

@@ -117,15 +117,10 @@ public class CustomScriptImpl
             this.remove(
               new LambdaQueryWrapper<CustomScriptPO>()
                       .eq(CustomScriptPO::getTableId, tblId)
+                      .eq(CustomScriptPO::getType, dtoList.get(0).type)
             );
             return ResultEnum.SUCCESS;
         }
-        List<CustomScriptPO> poList = CustomScriptMap.INSTANCES.dtoListToPoList(dtoList);
-        boolean b = this.saveOrUpdateBatch(poList);
-        if (!b) {
-            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
-        }
-
         //删除
         List<Integer> idList = dtoList
                 .stream()
@@ -133,12 +128,18 @@ public class CustomScriptImpl
                 .map(e -> e.id)
                 .collect(Collectors.toList());
 
-        if (CollectionUtils.isEmpty(idList)) {
-            return ResultEnum.SUCCESS;
+        if (!CollectionUtils.isEmpty(idList)) {
+            batchDelCustomScriptByIds(idList, dtoList.get(0).tableId, dtoList.get(0).type);
         }
 
-        return batchDelCustomScriptByIds(idList, dtoList.get(0).tableId, dtoList.get(0).type);
+        //添加
+        List<CustomScriptPO> poList = CustomScriptMap.INSTANCES.dtoListToPoList(dtoList);
+        boolean b = this.saveOrUpdateBatch(poList);
+        if (!b) {
+            throw new FkException(ResultEnum.SAVE_DATA_ERROR);
+        }
 
+        return ResultEnum.SUCCESS;
     }
 
     /**
@@ -186,5 +187,17 @@ public class CustomScriptImpl
         return String.join(";", collect);
     }
 
+
+    /**
+     * 根据表id和类型获取指定数仓表的自定义加载后sql
+     *
+     * @param tblId
+     * @param tblType
+     * @return
+     */
+    @Override
+    public List<CustomScriptDTO> getCustomSqlByTblIdType(Integer tblId, Integer tblType) {
+        return null;
+    }
 
 }

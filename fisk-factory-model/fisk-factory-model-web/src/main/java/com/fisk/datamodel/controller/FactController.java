@@ -14,6 +14,7 @@ import com.fisk.datamodel.dto.fact.FactTreeDTO;
 import com.fisk.datamodel.dto.fact.ModelSyncDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.datamodel.service.IFact;
+import com.fisk.mdm.dto.access.CustomScriptDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -155,5 +156,6 @@ public class FactController {
     public ResultEntity<List<NifiCustomWorkflowDetailDTO>> getDispatchOfTblByIdType(@RequestParam("tblId")Integer tblId, @RequestParam("tblType")Integer tblType) {
         return service.getDispatchOfTblByIdType(tblId,tblType);
     }
+
 
 }

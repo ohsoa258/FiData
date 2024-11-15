@@ -172,7 +172,7 @@ public class FactAttributeImpl
         }
 
         //自定义脚本
-        customScript.addOrUpdateCustomScript(dto.customScriptList,dto.factId);
+        customScript.addOrUpdateCustomScript(dto.customScriptList, dto.factId);
 
         //删除维度字段属性
         List<Integer> ids = (List) dto.list.stream().filter(e -> e.id != 0)
@@ -794,7 +794,7 @@ public class FactAttributeImpl
             dto.setDatasourceName(data.getName());
         }
         UserInfo userInfo = userHelper.getLoginUserInfo();
-        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos,userInfo.getToken());
+        ResultEntity<Object> result = dataManageClient.setStandardsByModelField(dtos, userInfo.getToken());
 
         return result.getData();
     }
