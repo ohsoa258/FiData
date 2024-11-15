@@ -117,7 +117,6 @@ public class CustomScriptImpl
             this.remove(
               new LambdaQueryWrapper<CustomScriptPO>()
                       .eq(CustomScriptPO::getTableId, tblId)
-                      .eq(CustomScriptPO::getType, dtoList.get(0).type)
             );
             return ResultEnum.SUCCESS;
         }
