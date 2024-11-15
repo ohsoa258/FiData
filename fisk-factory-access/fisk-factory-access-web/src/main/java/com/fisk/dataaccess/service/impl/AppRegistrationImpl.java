@@ -116,6 +116,7 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -5299,8 +5300,10 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
         String dbName = dataSourceConfig.data.conDbname;
         // 实例
         MetaDataInstanceAttributeDTO instance = new MetaDataInstanceAttributeDTO();
-        if (app.appType == 2) {
+        if (app.appType == 2 || app.appType == 3) {
             instance.setSourceName(dataSourceConfig.data.name + "(Hudi)");
+        } else if (app.appType == 4) {
+            instance.setSourceName(dataSourceConfig.data.name);
         } else {
             instance.setSourceName(dataSourceConfig.data.name);
         }
@@ -5355,6 +5358,15 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 //            String[] tableNames = tableAccess.getDisplayName().split("\\.");
 
             table.setName(tableAccess.getTableName());
+            table.setIsExistStg(false);
+            table.setIsCDC(true);
+        } else if (app.appType == 4) {
+            if (tableAccess.tableName.contains("_")) {
+                String tableName = tableAccess.tableName;
+                table.setName(tableName.contains("_") ? tableName.substring(tableName.indexOf("_") + 1) : tableName);
+            } else {
+                table.setName(tableAccess.getTableName());
+            }
             table.setIsExistStg(false);
             table.setIsCDC(true);
         } else {
