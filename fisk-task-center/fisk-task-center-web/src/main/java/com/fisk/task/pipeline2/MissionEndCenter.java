@@ -2,6 +2,7 @@ package com.fisk.task.pipeline2;
 
 import com.alibaba.fastjson.JSON;
 import com.fisk.common.core.constants.MqConstants;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.task.BusinessTypeEnum;
 import com.fisk.common.core.enums.task.TopicTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
@@ -436,14 +437,23 @@ public class MissionEndCenter {
                             taskMap.put(DispatchLogEnum.taskend.getValue(), NifiStageTypeEnum.SUCCESSFUL_RUNNING.getName() + " - " + format + " - 同步条数 : " + (Objects.isNull(kafkaReceive.numbers) ? 0 : kafkaReceive.numbers));
                             iPipelTaskLog.savePipelTaskLog(null, null, kafkaReceive.pipelTaskTraceId, taskMap, null, split[5], Integer.parseInt(split[3]));
                             //-------------------------------------------------------------
-                            //如果是事实维度表要删掉临时表
-                            if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DIMENSION.getValue()) || Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.FACT.getValue())) {
-                                TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.query().eq("table_access_id", split[5]).eq("type", split[3]).one();
-                                String tableName = tableNifiSetting.tableName;
-                                String dropSql = "DROP TABLE IF EXISTS temp_" + tableName;
-                                dropSql += ";DROP TABLE IF EXISTS stg_" + tableName;
-                                iJdbcBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
+                            //如果dmp_dw数仓类型是doris，则不再删除临时temp表
+                            ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(1);
+                            DataSourceTypeEnum conType = resultEntity.getData().getConType();
+                            if (!conType.equals(DataSourceTypeEnum.DORIS)){
+                                //如果是事实维度表要删掉临时表
+                                if (Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DIMENSION.getValue())
+                                        || Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.FACT.getValue())
+                                ) {
+                                    TableNifiSettingPO tableNifiSetting = iTableNifiSettingService.query().eq("table_access_id", split[5]).eq("type", split[3]).one();
+                                    String tableName = tableNifiSetting.tableName;
+                                    String dropSql = "DROP TABLE IF EXISTS temp_" + tableName;
+                                    dropSql += ";DROP TABLE IF EXISTS stg_" + tableName;
+                                    iJdbcBuild.postgreBuildTable(dropSql, BusinessTypeEnum.DATAMODEL);
+                                }
                             }
+
+
                             log.info("开始执行脚本");
                             log.info("consumerServerEnable参数，{}", consumerServerEnable);
                             if (consumerServerEnable && Objects.equals(Integer.parseInt(split[3]), OlapTableEnum.DATASERVICES.getValue())) {

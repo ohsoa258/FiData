@@ -111,12 +111,12 @@ public class CustomScriptImpl
     }
 
     @Override
-    public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList,Integer tblId) {
+    public ResultEnum addOrUpdateCustomScript(List<CustomScriptDTO> dtoList, Integer tblId) {
         //前端传参时如果没有传任何自定义加载后sql，则直接该表所有的加载后sql
         if (CollectionUtils.isEmpty(dtoList)) {
             this.remove(
-              new LambdaQueryWrapper<CustomScriptPO>()
-                      .eq(CustomScriptPO::getTableId, tblId)
+                    new LambdaQueryWrapper<CustomScriptPO>()
+                            .eq(CustomScriptPO::getTableId, tblId)
             );
             return ResultEnum.SUCCESS;
         }
@@ -195,8 +195,16 @@ public class CustomScriptImpl
      * @return
      */
     @Override
-    public List<CustomScriptDTO> getCustomSqlByTblIdType(Integer tblId, Integer tblType) {
-        return null;
+    public List<CustomScriptInfoDTO> getCustomSqlByTblIdType(Integer tblId, Integer tblType) {
+        QueryWrapper<CustomScriptPO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(CustomScriptPO::getTableId, tblId)
+                .eq(CustomScriptPO::getType, tblType);
+        List<CustomScriptPO> list = mapper.selectList(queryWrapper);
+        if (CollectionUtils.isEmpty(list)) {
+            return null;
+        }
+        return CustomScriptMap.INSTANCES.poListToDtoList(list);
     }
 
 }

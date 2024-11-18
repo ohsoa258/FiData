@@ -3539,7 +3539,10 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         }
 
         callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
-        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+
+        //2024-11-14 数仓建模的加载后语句不再由nifi执行
+//        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+        callDbProcedureProcessorDTO.sqlPostQuery = null;
 
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcess(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);
@@ -3574,7 +3577,9 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         String sqlPreQuery = buildNifiFlow.customScriptBefore;
 
         callDbProcedureProcessorDTO.sqlPreQuery = sqlPreQuery;
-        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+        //2024-11-14 数仓建模的加载后语句不再由nifi执行
+//        callDbProcedureProcessorDTO.sqlPostQuery = buildNifiFlow.customScriptAfter;
+        callDbProcedureProcessorDTO.sqlPostQuery = null;
 
         BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildCallDbProcedureProcessForDoris(callDbProcedureProcessorDTO);
         verifyProcessorResult(processorEntityBusinessResult);

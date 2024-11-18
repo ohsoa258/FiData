@@ -67,7 +67,7 @@ public class CustomScriptController {
      */
     @GetMapping("/getCustomSqlByTblIdType")
     @ApiOperation("根据表id和类型获取指定数仓表的自定义加载后sql")
-    public ResultEntity<List<CustomScriptDTO>> getCustomSqlByTblIdType(@RequestParam("tblId")Integer tblId, @RequestParam("tblType")Integer tblType) {
+    public ResultEntity<List<CustomScriptInfoDTO>> getCustomSqlByTblIdType(@RequestParam("tblId")Integer tblId, @RequestParam("tblType")Integer tblType) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS,service.getCustomSqlByTblIdType(tblId,tblType));
     }
 

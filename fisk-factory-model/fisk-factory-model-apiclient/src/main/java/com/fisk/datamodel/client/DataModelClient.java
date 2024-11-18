@@ -27,6 +27,7 @@ import com.fisk.datamodel.dto.businessarea.BusinessAreaGetDataDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaQueryTableDTO;
 import com.fisk.datamodel.dto.businessarea.BusinessAreaTableDetailDTO;
 import com.fisk.datamodel.dto.businessprocess.BusinessQueryDataParamDTO;
+import com.fisk.datamodel.dto.customscript.CustomScriptDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptInfoDTO;
 import com.fisk.datamodel.dto.customscript.CustomScriptQueryDTO;
 import com.fisk.datamodel.dto.dataops.DataModelTableInfoDTO;
@@ -489,4 +490,15 @@ public interface DataModelClient {
     @ApiOperation(value = "数据质量左侧Tree接口-根据表ID获取表下面的字段")
     @PostMapping("/business/dataQuality_GetDwTableFieldByTableId")
     ResultEntity<List<DataQualityDataSourceTreeDTO>> dataQuality_GetDwTableFieldByTableId(@RequestBody DwFieldQueryDTO dto);
+
+    /**
+     * 根据表id和类型获取指定数仓表的自定义加载后sql
+     *
+     * @param tblId
+     * @param tblType
+     * @return
+     */
+    @GetMapping("/CustomScript/getCustomSqlByTblIdType")
+    ResultEntity<List<CustomScriptInfoDTO>> getCustomSqlByTblIdType(@RequestParam("tblId")Integer tblId, @RequestParam("tblType")Integer tblType);
+
 }

@@ -67,6 +67,6 @@ public interface ICustomScript {
      * @param tblType
      * @return
      */
-    List<CustomScriptDTO> getCustomSqlByTblIdType(Integer tblId, Integer tblType);
+    List<CustomScriptInfoDTO> getCustomSqlByTblIdType(Integer tblId, Integer tblType);
 
 }
