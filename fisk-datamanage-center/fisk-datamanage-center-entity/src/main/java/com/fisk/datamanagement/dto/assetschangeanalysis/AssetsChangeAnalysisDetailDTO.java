@@ -56,6 +56,12 @@ public class AssetsChangeAnalysisDetailDTO {
     private String parentName;
 
     /**
+     * 父级别元数据Id
+     */
+    @ApiModelProperty(value = "父级别元数据Id")
+    private Integer parentId;
+
+    /**
      * 变更人id
      */
     @ApiModelProperty(value = "变更人")

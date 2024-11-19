@@ -561,8 +561,10 @@ public class MetadataEntityAuditLogImpl extends ServiceImpl<MetadataEntityAuditL
             MetadataEntityPO metadataEntityPO = map.getOrDefault(Long.valueOf(po.parentId), null);
             if (metadataEntityPO != null) {
                 detailDTO.setParentName(metadataEntityPO.getName());
+                detailDTO.setParentId(Math.toIntExact(metadataEntityPO.id));
             } else {
                 detailDTO.setParentName("");
+                detailDTO.setParentId(null);
             }
 
             detailDTO.setEntityType(po.operationType);
