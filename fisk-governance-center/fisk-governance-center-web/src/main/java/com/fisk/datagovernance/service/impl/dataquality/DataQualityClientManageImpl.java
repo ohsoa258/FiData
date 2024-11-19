@@ -955,6 +955,8 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
         DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
         RangeCheckTypeEnum rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
 
+        String targetTableName = qualityReport_GetSqlFieldFormat(dataSourceTypeEnum, dataCheckExtendPO.getCheckTableName());
+        String targetFieldName = qualityReport_GetSqlFieldFormat(dataSourceTypeEnum, dataCheckExtendPO.getCheckFieldName());
         // 如果元数据组ID不为空，序列范围-指定序列范围和取值范围的配置信息取自元数据组
         StandardsDTO standardsDTO = null;
         Integer dataCheckGroupId = dataCheckPO.getDatacheckGroupId();
@@ -978,7 +980,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             case SEQUENCE_RANGE:
                 // 表字段序列范围
                 if (dataCheckExtendPO.getRangeType() == 2) {
-                    String childrenQuery = String.format("SELECT %s FROM %s", f_Name, t_Name);
+                    String childrenQuery = String.format("SELECT %s FROM %s", targetFieldName, targetTableName);
                     sql_QueryCheckData = String.format("SELECT %s %s FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
                             f_Name, f_Allocate, t_Name, fieldCheckWhereSql, f_Name, childrenQuery);
                     sql_QueryCheckErrorDataCount = String.format("SELECT COUNT(*) AS errorTotalCount FROM %s WHERE 1=1 %s AND %s NOT IN (%s) ",
