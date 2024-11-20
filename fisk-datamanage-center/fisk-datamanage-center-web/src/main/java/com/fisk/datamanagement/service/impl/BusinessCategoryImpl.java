@@ -792,7 +792,11 @@ public class BusinessCategoryImpl extends ServiceImpl<BusinessCategoryMapper, Bu
                 List<ParentBusinessTreeDTO> children = new ArrayList<>();
                 for (int j = 0; j < list.size(); j++) {
                     if (list.get(j).pid.equals(parentList.get(i).id)) {
-                        children = childClassTree(list, parentList.get(i).id);
+                        if (list.get(j).type.equals(parentList.get(i).type)){
+                            children = childClassTree(list, parentList.get(i).id);
+                        }else {
+                            children.add(list.get(j));
+                        }
                     }
                 }
                 // 递归处理
