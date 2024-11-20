@@ -871,7 +871,7 @@ public class NiFiHelperImpl implements INiFiHelper {
         map.put("sql-pre-query", buildCallDbProcedureProcessorDTO.sqlPreQuery);
         map.put("sql-post-query", buildCallDbProcedureProcessorDTO.sqlPostQuery);
         //组件配置信息
-        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        MyProcessorConfigDTO config = new MyProcessorConfigDTO();
         config.setAutoTerminatedRelationships(autoRes);
         config.setProperties(map);
         config.setComments(buildCallDbProcedureProcessorDTO.details);
@@ -881,6 +881,18 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
+
+        //添加重试机制
+        List<String> relationShips = new ArrayList<>();
+        //配置需要重试的结果 failure retry
+        relationShips.add("failure");
+        config.setRetriedRelationships(relationShips);
+        //重试最长回退期 默认10分钟
+        config.setMaxBackoffPeriod("10 mins");
+        //重试回退策略 礼让
+        config.setBackoffMechanism("YIELD_PROCESSOR");
+        //重试次数 5次
+        config.setRetryCount(5);
         dto.setName(buildCallDbProcedureProcessorDTO.name);
         dto.setType(ProcessorTypeEnum.ExecuteSQL.getName());
         dto.setPosition(buildCallDbProcedureProcessorDTO.getPositionDTO());
