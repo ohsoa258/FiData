@@ -174,11 +174,11 @@ public class ApiServiceManageImpl implements IApiServiceManageService {
                     .collect(Collectors.joining("_"));
         }
         String redisKey = RedisKeyEnum.DATA_SERVER_API_DATA.getName()+":"+dto.apiCode+"_"+parmKey+"_"+dto.current+"_"+dto.size;
-        if (redisUtil.hasKey(redisKey)){
-            RedisData redisData = (RedisData) redisUtil.get(redisKey);
-            logPO = redisData.logPO;
+        RedisData redisResult = (RedisData) redisUtil.get(redisKey);
+        if (redisResult != null){
+            logPO = redisResult.logPO;
             logPO.setLogInfo("(本次查询为缓存数据)");
-            responseVO = redisData.getResponseVO();
+            responseVO = redisResult.getResponseVO();
             return ResultEntityBuild.buildData(resultEnum, responseVO);
         }
         try {

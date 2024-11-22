@@ -107,6 +107,11 @@ hystrix:
         sleepWindowInMilliseconds: 5000
         # 当请求错误比例到达n%时，开启熔断（默认50%）
         errorThresholdPercentage: 50
+  threadpool:
+    default:
+      coreSize: 30
+      maxQueueSize: 500
+      queueSizeRejectionThreshold: 300
 
 # 数据接入定时任务配置
 data-access-job:

@@ -18,7 +18,9 @@ public enum TemplateTypeEnum implements BaseEnum {
     FLUCTUATION_CHECK(105, "波动检查"),
     PARENTAGE_CHECK(106, "血缘检查"),
     REGEX_CHECK(107, "正则表达式检查"),
-    SQL_SCRIPT_CHECK(108, "SQL脚本检查");
+    SQL_SCRIPT_CHECK(108, "SQL脚本检查"),
+
+    DATASET_CHECK(109, "数据集对比检查");
 
     TemplateTypeEnum(int value, String name) {
         this.name = name;
