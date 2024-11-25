@@ -13,6 +13,9 @@ public class TbTableAccessQueryDTO {
     @ApiModelProperty(value = "表名")
     public String tableName;
 
+    @ApiModelProperty(value = "表显示名")
+    public String displayName;
+
     @ApiModelProperty(value = "同步类型")
     public Integer syncMode;
 

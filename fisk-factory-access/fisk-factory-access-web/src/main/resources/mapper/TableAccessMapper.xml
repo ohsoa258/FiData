@@ -21,7 +21,8 @@
         FROM
         `tb_etl_Incremental` t
         WHERE
-        id = ( SELECT MAX( id ) FROM tb_etl_Incremental WHERE object_name = t.object_name )) AS c ON CONCAT(( SELECT app_abbreviation FROM tb_app_registration WHERE id = a.app_id ), "_", a.`table_name` ) = c.object_name
+        id = ( SELECT MAX( id ) FROM tb_etl_Incremental WHERE object_name = t.object_name )) AS c ON CONCAT(( SELECT
+        app_abbreviation FROM tb_app_registration WHERE id = a.app_id ), "_", a.`table_name` ) = c.object_name
         WHERE
         a.del_flag = 1
         <if test="query.where !=null and query.where.length()>0 ">
@@ -31,8 +32,9 @@
 
     <insert id="insertTableAccessPo" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
             parameterType="com.fisk.dataaccess.entity.TableAccessPO">
-        insert into tb_table_access (app_id,is_realtime,table_name,del_flag) values
-        (#{tableAccessPo.appId},#{tableAccessPo.isRealtime},#{tableAccessPo.tableName},#{tableAccessPo.delFlag})
+        insert into tb_table_access (app_id, is_realtime, table_name, del_flag)
+        values (#{tableAccessPo.appId}, #{tableAccessPo.isRealtime}, #{tableAccessPo.tableName},
+                #{tableAccessPo.delFlag})
     </insert>
 
     <select id="getTableAccessListData" resultType="com.fisk.dataaccess.dto.v3.TbTableAccessDTO">
@@ -47,6 +49,9 @@
         <if test="query.tableName != null and query.tableName.length()>0">
             and a.table_name like CONCAT('%',#{query.tableName},'%')
         </if>
+        <if test="query.displayName != null and query.displayName.length()>0">
+            and a.display_name like CONCAT('%',#{query.displayName},'%')
+        </if>
         <if test="query.syncMode != null and query.syncMode>0">
             and b.sync_mode = ${query.syncMode}
         </if>
@@ -56,29 +61,29 @@
     </select>
 
     <select id="getTableInfo" resultType="com.fisk.dataaccess.dto.dataops.TableQueryDTO">
-        SELECT
-	    *
-        FROM
-	    (
-	    SELECT
-		CASE
-			b.whether_schema
-			WHEN 0 THEN
-			concat( 'ods_', b.app_abbreviation,'_', a.table_name ) ELSE concat( b.app_abbreviation, '.', a.table_name )
-		END AS ods_table_name,
-		CASE
-			b.whether_schema
-			WHEN 0 THEN
-			concat( 'stg_', b.app_abbreviation,'_', a.table_name ) ELSE concat( b.app_abbreviation, '.','stg_', a.table_name )
-		END AS stg_table_name,
-		a.app_id,
-		a.id
-	    FROM
-		tb_table_access AS a
-		INNER JOIN tb_app_registration AS b ON a.app_id = b.id where a.del_flag = 1 and b.del_flag = 1
-	        ) AS new_table
-        WHERE
-	    ods_table_name = #{tableName} or stg_table_name = #{tableName}
+        SELECT *
+        FROM (
+                 SELECT CASE
+                            b.whether_schema
+                            WHEN 0 THEN
+                                concat('ods_', b.app_abbreviation, '_', a.table_name)
+                            ELSE concat(b.app_abbreviation, '.', a.table_name)
+                            END AS ods_table_name,
+                        CASE
+                            b.whether_schema
+                            WHEN 0 THEN
+                                concat('stg_', b.app_abbreviation, '_', a.table_name)
+                            ELSE concat(b.app_abbreviation, '.', 'stg_', a.table_name)
+                            END AS stg_table_name,
+                        a.app_id,
+                        a.id
+                 FROM tb_table_access AS a
+                          INNER JOIN tb_app_registration AS b ON a.app_id = b.id
+                 where a.del_flag = 1
+                   and b.del_flag = 1
+             ) AS new_table
+        WHERE ods_table_name = #{tableName}
+           or stg_table_name = #{tableName}
     </select>
 
 </mapper>

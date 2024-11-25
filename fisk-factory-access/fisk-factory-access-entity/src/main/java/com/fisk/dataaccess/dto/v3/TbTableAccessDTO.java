@@ -168,4 +168,11 @@ public class TbTableAccessDTO {
      */
     @ApiModelProperty(value = "Flink Insert Sql")
     public String insertSql;
+
+    /**
+     * Flink jobid
+     */
+    @ApiModelProperty(value = "Flink jobid")
+    public String flinkJobid;
+
 }

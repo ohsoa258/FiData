@@ -159,4 +159,13 @@ public interface ITableFields extends IService<TableFieldsPO> {
      * @return
      */
     List<TableFieldDTO> searchColumn(String key);
+
+    /**
+     * Flink中止指定job
+     *
+     * @param jobId
+     * @return
+     */
+    Object cancelFlinkJob(String jobId,String tblId);
+
 }

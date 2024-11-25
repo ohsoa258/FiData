@@ -78,6 +78,21 @@ public class TableFieldsController {
         return ResultEntityBuild.build(service.editForFlink(dto));
     }
 
+    /**
+     * Flink中止指定job
+     *
+     * @param jobId
+     * @return
+     */
+    @ApiOperation(value = "Flink中止指定job")
+    @PostMapping("/cancelFlinkJob")
+    public ResultEntity<Object> cancelFlinkJob(
+            @Validated @RequestParam("jobId") String jobId,
+            @Validated @RequestParam("tblId") String tblId
+    ) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.cancelFlinkJob(jobId,tblId));
+    }
+
     @PostMapping("/loadDepend")
     @ApiOperation(value = "对表进行操作时,查询依赖")
     public ResultEntity<Object> loadDepend(@RequestBody OperateTableDTO dto) {

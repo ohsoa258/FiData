@@ -1,7 +1,5 @@
 package com.fisk.dataaccess.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
 import com.fisk.dataaccess.enums.ScanStartupModeEnum;
@@ -53,7 +51,7 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public Integer isRealtime;
     /**
-     * 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布
+     * 0: 未发布  1: 发布成功  2: 发布失败  3: 正在发布  4:已终止
      */
     public Integer publish;
 
@@ -167,5 +165,10 @@ public class TableAccessPO extends BasePO implements Serializable {
      * Flink Insert Sql
      */
     public String insertSql;
+
+    /**
+     * Flink jobid
+     */
+    public String flinkJobid;
 
 }

@@ -2,6 +2,7 @@ package com.fisk.dataaccess.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -509,11 +510,12 @@ public class TableFieldsImpl
 
             //3.建立flink job流程
             log.info("Flink CDC--建立flink job流程ING");
-            FlinkSqlGatewayUtils.buildFlinkJob(table);
+            String jobId = FlinkSqlGatewayUtils.buildFlinkJob(table);
             log.info("Flink CDC--建立flink job流程成功");
 
             //发布成功
             table.setPublish(1);
+            table.setFlinkJobid(jobId);
             tableAccessImpl.updateById(table);
         } catch (Exception e) {
             table.setPublish(2);
@@ -597,7 +599,7 @@ public class TableFieldsImpl
 
         } catch (Exception e) {
             log.error("Flink CDC 发布流程异常", e);
-            throw new FkException(ResultEnum.FLINK_PUBLISH_ERROR);
+            throw new FkException(ResultEnum.FLINK_PUBLISH_ERROR, e);
         } finally {
             AbstractCommonDbHelper.closeResultSet(resultSet);
             AbstractCommonDbHelper.closeStatement(preparedStatement);
@@ -2506,6 +2508,37 @@ public class TableFieldsImpl
     @Override
     public List<TableFieldDTO> searchColumn(String key) {
         return this.baseMapper.searchColumn(key);
+    }
+
+    /**
+     * Flink中止指定job
+     *
+     * @param jobId
+     * @return
+     */
+    @Override
+    @Transactional
+    public Object cancelFlinkJob(String jobId, String tblId) {
+
+        try {
+            log.info("Flink中止指定job开始,jobId:{}", jobId);
+            //1、终止flink job
+            String result = FlinkSqlGatewayUtils.stopJob(jobId);
+            log.info("Flink中止指定job结果:{}", result);
+
+            //2、修改物理表发布状态为 4 已中止
+            log.info("修改物理表" + tblId + "发布状态开始");
+            boolean update = tableAccessImpl.update(new LambdaUpdateWrapper<TableAccessPO>()
+                    .set(TableAccessPO::getPublish, 4)
+                    .eq(TableAccessPO::getId, tblId)
+            );
+            log.info("修改物理表" + tblId + "发布状态结果：" + update);
+            return result;
+
+        } catch (Exception e) {
+            log.error("Flink中止指定job失败,jobId:{},error:{}", jobId, e);
+            return ResultEnum.FLINK_STOP_JOB_ERROR;
+        }
     }
 
 }
