@@ -52,6 +52,7 @@ import com.fisk.dataaccess.dto.api.ApiColumnInfoDTO;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datamodel.*;
+import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
@@ -72,6 +73,7 @@ import com.fisk.dataaccess.map.TableAccessMap;
 import com.fisk.dataaccess.map.TableBusinessMap;
 import com.fisk.dataaccess.map.TableFieldsMap;
 import com.fisk.dataaccess.mapper.*;
+import com.fisk.dataaccess.service.IDataOps;
 import com.fisk.dataaccess.service.ITableAccess;
 import com.fisk.dataaccess.utils.dbdatasize.IBuildFactoryDbDataSizeCount;
 import com.fisk.dataaccess.utils.dbdatasize.impl.DbDataSizeCountHelper;
@@ -106,6 +108,8 @@ import com.fisk.task.dto.atlas.AtlasWriteBackDataDTO;
 import com.fisk.task.dto.daconfig.*;
 import com.fisk.task.dto.task.BuildNifiFlowDTO;
 import com.fisk.task.dto.task.BuildPhysicalTableDTO;
+import com.fisk.task.dto.task.BuildTableNifiSettingDTO;
+import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
@@ -219,6 +223,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     TableHistoryMapper tableHistoryMapper;
     @Resource
     private AppRegistrationImpl appRegistration;
+    @Resource
+    private IDataOps dataOps;
 
     /**
      * 数据库连接
@@ -3331,11 +3337,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         DataSourceDTO data = resultEntity.getData();
 
         if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.equals(data.getConType())) {
-            defaultScheamName = "dbo.ods" + app.appAbbreviation + "_";
+            defaultScheamName = "ods_" + app.appAbbreviation + "_";
         } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL.equals(data.getConType())) {
-            defaultScheamName = "public.ods" + app.appAbbreviation + "_";
+            defaultScheamName = "ods_" + app.appAbbreviation + "_";
         } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.equals(data.getConType())) {
-            defaultScheamName = "ods" + app.appAbbreviation + "_";
+            defaultScheamName = "ods_" + app.appAbbreviation + "_";
         }
 
         //拼接完整表名 架构.表名
@@ -3347,10 +3353,25 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             fullTblName = defaultScheamName + one.getTableName();
         }
 
+        TableInfoDTO tableInfo = dataOps.getTableInfo(fullTblName);
+
         //1表示数仓 2表示数接 3表示mdm
         tableDataSyncDTO.setDatasourceId(2);
         tableDataSyncDTO.setTableFullName(fullTblName);
-        return dataGovernanceClient.tableDataSync(tableDataSyncDTO);
+
+        BuildTableNifiSettingDTO buildTableNifiSetting = new BuildTableNifiSettingDTO();
+        buildTableNifiSetting.setUserId(userHelper.getLoginUserInfo().getId());
+        List<TableNifiSettingDTO> tableNifiSettings = new ArrayList<>();
+        TableNifiSettingDTO tableNifiSetting = new TableNifiSettingDTO();
+        tableNifiSetting.setTableName(tableDataSyncDTO.getTableFullName());
+        tableNifiSetting.setTableAccessId(tableInfo.getTableAccessId());
+        tableNifiSetting.setAppId(tableInfo.getAppId());
+        tableNifiSetting.setType(tableInfo.getOlapTable());
+        tableNifiSettings.add(tableNifiSetting);
+        buildTableNifiSetting.setTableNifiSettings(tableNifiSettings);
+        log.info("【tableDataSync】调用nifi同步表数据请求参数：" + JSON.toJSONString(buildTableNifiSetting));
+
+        return publishTaskClient.immediatelyStart(buildTableNifiSetting);
     }
 
     /**
