@@ -7,15 +7,20 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Objects;
 
 @Slf4j
+@Component
 public class FlinkSqlGatewayUtils {
 
-    private static final String GATEWAY_HOST = "http://192.168.1.92:8083";
-    private static final String RESTAPI_HOST = "http://192.168.1.92:8081";
+    @Value("${flink-gateway-host}")
+    private String GATEWAY_HOST;
+    @Value("${flink-restapi-host}")
+    private String RESTAPI_HOST;
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final OkHttpClient client = new OkHttpClient();
 
@@ -24,8 +29,8 @@ public class FlinkSqlGatewayUtils {
      *
      * @param tableInfo
      */
-    public static String buildFlinkJob(TableAccessPO tableInfo) {
-        String jobId = null;
+    public String buildFlinkJob(TableAccessPO tableInfo) {
+        String jobId;
         try {
             // 检查 SQL Gateway REST Endpoint 是否存在
             checkGatewayEndpoint();
@@ -58,12 +63,12 @@ public class FlinkSqlGatewayUtils {
         return jobId;
     }
 
-    private static void checkGatewayEndpoint() throws Exception {
+    private void checkGatewayEndpoint() throws Exception {
         Response response = sendGetRequest(GATEWAY_HOST + "/v1/info");
         log.info("Gateway Info: " + Objects.requireNonNull(response.body()).string());
     }
 
-    private static String openSession() throws IOException {
+    private String openSession() throws IOException {
         RequestBody body = RequestBody.create(JSON, "{}");
         Response response = sendPostRequest(GATEWAY_HOST + "/v1/sessions", body);
         JsonObject jsonResponse = new Gson().fromJson(Objects.requireNonNull(response.body()).string(), JsonObject.class);
@@ -78,7 +83,7 @@ public class FlinkSqlGatewayUtils {
      * @param tableInfo
      * @throws IOException
      */
-    private static void setPipelineName(String sessionHandle, TableAccessPO tableInfo) throws Exception {
+    private void setPipelineName(String sessionHandle, TableAccessPO tableInfo) throws Exception {
         JsonObject statementData = new JsonObject();
         statementData.addProperty("statement", "SET 'pipeline.name' = '" + "CDC_TASK_" + tableInfo.getTableName() + "_" + tableInfo.getId() + "'");
         RequestBody body = RequestBody.create(JSON, statementData.toString());
@@ -96,7 +101,7 @@ public class FlinkSqlGatewayUtils {
      * @param sessionHandle
      * @throws IOException
      */
-    private static void setCheckpointInterval(String sessionHandle) throws Exception {
+    private void setCheckpointInterval(String sessionHandle) throws Exception {
         JsonObject statementData = new JsonObject();
         statementData.addProperty("statement", "SET execution.checkpointing.interval = 300s;");
         RequestBody body = RequestBody.create(JSON, statementData.toString());
@@ -115,7 +120,7 @@ public class FlinkSqlGatewayUtils {
      * @param sourceSql
      * @throws IOException
      */
-    private static void createSourceTable(String sessionHandle, String sourceSql) throws Exception {
+    private void createSourceTable(String sessionHandle, String sourceSql) throws Exception {
         JsonObject statementData = new JsonObject();
         statementData.addProperty("statement", sourceSql);
         RequestBody body = RequestBody.create(JSON, statementData.toString());
@@ -133,7 +138,7 @@ public class FlinkSqlGatewayUtils {
      * @param sessionHandle
      * @throws IOException
      */
-    private static void createTargetTable(String sessionHandle, String sinkSql) throws Exception {
+    private void createTargetTable(String sessionHandle, String sinkSql) throws Exception {
         JsonObject statementData = new JsonObject();
         statementData.addProperty("statement", sinkSql);
         RequestBody body = RequestBody.create(JSON, statementData.toString());
@@ -151,7 +156,7 @@ public class FlinkSqlGatewayUtils {
      * @param sessionHandle
      * @throws IOException
      */
-    private static String createSqlJob(String sessionHandle, String insertSql) throws Exception {
+    private String createSqlJob(String sessionHandle, String insertSql) throws Exception {
         String jobId = null;
         JsonObject statementData = new JsonObject();
         statementData.addProperty("statement", insertSql);
@@ -171,13 +176,13 @@ public class FlinkSqlGatewayUtils {
      * @param operationHandleId
      * @throws IOException
      */
-    private static void getOperationResult(String sessionHandle, String operationHandleId) throws Exception {
+    private void getOperationResult(String sessionHandle, String operationHandleId) throws Exception {
         Response response = sendGetRequest(GATEWAY_HOST + "/v1/sessions/" + sessionHandle + "/operations/" + operationHandleId + "/result/0");
         log.info("Operation Result操作结果: " + response.body().string());
 
     }
 
-    private static String getOperationResultwithJobId(String sessionHandle, String operationHandleId) throws Exception {
+    private String getOperationResultwithJobId(String sessionHandle, String operationHandleId) throws Exception {
         String resultUrl = GATEWAY_HOST + "/v1/sessions/" + sessionHandle + "/operations/" + operationHandleId + "/result/0";
         int maxRetries = 10; // 最大重试次数
         int retryIntervalMillis = 1000; // 重试间隔时间（毫秒）
@@ -212,7 +217,7 @@ public class FlinkSqlGatewayUtils {
      *
      * @throws IOException
      */
-    private static void getAllJobsInfo() throws Exception {
+    private void getAllJobsInfo() throws Exception {
         Response response = sendGetRequest(RESTAPI_HOST + "/v1/jobs/overview");
         log.info(GATEWAY_HOST + "：当前Flink上的所有任务信息: " + response.body().string());
     }
@@ -222,7 +227,7 @@ public class FlinkSqlGatewayUtils {
      *
      * @throws IOException
      */
-    public static String stopJob(String jobId) throws Exception {
+    public String stopJob(String jobId) throws Exception {
         String url = RESTAPI_HOST + "/v1/jobs/" + jobId + "/stop";
         RequestBody body = RequestBody.create(JSON, "{}");
         Response response = sendPostRequest(url, body);

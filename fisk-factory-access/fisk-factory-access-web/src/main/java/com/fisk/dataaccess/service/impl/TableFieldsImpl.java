@@ -166,6 +166,9 @@ public class TableFieldsImpl
     @Resource
     FlinkConfigDTO flinkConfig;
 
+    @Resource
+    private FlinkSqlGatewayUtils flinkSqlGatewayUtils;
+
     @Value("${open-metadata}")
     private Boolean openMetadata;
 
@@ -489,6 +492,17 @@ public class TableFieldsImpl
         if (table == null) {
             throw new FkException(ResultEnum.TABLE_NOT_EXIST);
         }
+
+        //如果表的状态是已发布，则二次发布时，先尝试终止已发布的job
+        if (table.getPublish() == 1) {
+            try {
+                flinkSqlGatewayUtils.stopJob(table.getFlinkJobid());
+            } catch (Exception e) {
+                log.error("Flink中止指定job失败,jobId:{},error:{}", table.getFlinkJobid(), e);
+                return ResultEnum.FLINK_STOP_JOB_ERROR;
+            }
+        }
+
         //未在平台内开启cdc的表不允许发布flink
         if (table.getIfOpenCdc() != 1) {
             throw new FkException(ResultEnum.TABLE_NOT_OPEN_CDC);
@@ -510,7 +524,7 @@ public class TableFieldsImpl
 
             //3.建立flink job流程
             log.info("Flink CDC--建立flink job流程ING");
-            String jobId = FlinkSqlGatewayUtils.buildFlinkJob(table);
+            String jobId = flinkSqlGatewayUtils.buildFlinkJob(table);
             log.info("Flink CDC--建立flink job流程成功");
 
             //发布成功
@@ -2523,7 +2537,7 @@ public class TableFieldsImpl
         try {
             log.info("Flink中止指定job开始,jobId:{}", jobId);
             //1、终止flink job
-            String result = FlinkSqlGatewayUtils.stopJob(jobId);
+            String result = flinkSqlGatewayUtils.stopJob(jobId);
             log.info("Flink中止指定job结果:{}", result);
 
             //2、修改物理表发布状态为 4 已中止

@@ -249,8 +249,9 @@ public enum ResultEnum {
     GET_FLINK_SCHEMA_ERROR(5115,"获取schema失败!"),
     FLINK_BUILD_JOB_ERROR(5116,"建立Flink任务失败!"),
     DELETE_FLINK_ERROR(5117,"删除Flink CDC表失败!"),
-    TABLE_NOT_OPEN_CDC(5118,"表在中台内未开启CDC!请开启CDC后再发布"),
+    TABLE_NOT_OPEN_CDC(5118,"表在中台内未开启CDC!请开启CDC后再发布!"),
     FLINK_STOP_JOB_ERROR(5119,"flink终止指定job失败"),
+    FLINK_DUPLICATE_RELEASE_ERROR(5120,"flink job请勿重复发布!"),
 
     /**
      * 后台任务模块
