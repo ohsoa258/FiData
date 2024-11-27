@@ -427,6 +427,8 @@ public enum ResultEnum {
     DATA_QUALITY_AFTER_REPORT_TO_WHICH_VERIFICATION_RULE_LOG_BELONGS_NOT_FOUND(11038, "未找到校验规则日志所属报告"),
     DATA_QUALITY_SERVER_TYPE_ADD_IS_EXIST(11039,"添加失败，当前类型已存在"),
     DATA_QUALITY_SERVER_TYPE_DELETE_IS_EXIST(11040,"删除失败，当前类型已有绑定服务"),
+
+    DATASET_QUERY_PREVIEW(11041, "值对比执行sql应返回单个值请检查sql是否正确"),
     /**
      * 数据安全
      */

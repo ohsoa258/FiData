@@ -4,11 +4,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.FilterFieldDTO;
+import com.fisk.datagovernance.dto.dataquality.datacheck.AppApiSubDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.AppRegisterDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.AppRegisterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.AppRegisterQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.DatacheckServerAppConfigPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.AppRegisterVO;
+import com.fisk.dataservice.dto.app.AppApiSubSaveDTO;
 
 import java.util.List;
 
@@ -55,5 +57,10 @@ public interface DatacheckServerAppConfigService extends IService<DatacheckServe
      * @return 字段
      */
     List<FilterFieldDTO> getColumn();
+
+    /**
+     * app订阅api
+     */
+    ResultEnum appSubscribe(AppApiSubDTO dto);
 }
 

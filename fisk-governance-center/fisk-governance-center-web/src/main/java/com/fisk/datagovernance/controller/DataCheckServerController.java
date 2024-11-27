@@ -5,11 +5,13 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.datagovernance.config.SwaggerConfig;
+import com.fisk.datagovernance.dto.dataquality.datacheck.AppApiSubDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.AppRegisterDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.AppRegisterEditDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.AppRegisterQueryDTO;
 import com.fisk.datagovernance.service.dataquality.DatacheckServerAppConfigService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.AppRegisterVO;
+import com.fisk.dataservice.dto.app.AppApiSubSaveDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.validation.annotation.Validated;
@@ -58,5 +60,11 @@ public class DataCheckServerController {
     @GetMapping("/getColumn")
     public ResultEntity<Object> getBusinessColumn() {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getColumn());
+    }
+
+    @ApiOperation("应用订阅api")
+    @PostMapping("/appSubscribe")
+    public ResultEntity<Object> appSubscribe(@Validated @RequestBody AppApiSubDTO dto) {
+        return ResultEntityBuild.build(service.appSubscribe(dto));
     }
 }

@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.*;
 import com.fisk.datagovernance.entity.dataquality.DataSourceConPO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 
@@ -100,4 +100,6 @@ public interface IDataSourceConManageService extends IService<DataSourceConPO> {
     List<DataObsSqlDTO> getObsSqlByUser();
 
     ResultEnum saveOrUpdateObsSql(List<DataObsSqlDTO> list);
+
+    List<DataSourceVO> getAllDataSetSource();
 }

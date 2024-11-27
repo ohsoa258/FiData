@@ -36,6 +36,7 @@ import com.fisk.datagovernance.mapper.dataquality.DataSourceConMapper;
 import com.fisk.datagovernance.service.dataops.DataObsSqlService;
 import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.service.dataquality.IDatacheckStandardsGroupService;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 import com.fisk.datamanage.client.DataManageClient;
@@ -838,5 +839,16 @@ public class DataSourceConManageImpl extends ServiceImpl<DataSourceConMapper, Da
         } catch (Exception e) {
             throw new FkException(ResultEnum.DATA_QUALITY_CREATESTATEMENT_ERROR);
         }
+    }
+    @Override
+    public List<DataSourceVO> getAllDataSetSource() {
+        List<DataSourceConVO> allDataSource = getAllDataSource();
+        List<DataSourceVO> result = allDataSource.stream().map(i -> {
+            DataSourceVO dataSourceVO = new DataSourceVO();
+            dataSourceVO.setDataSourceId((int) i.id);
+            dataSourceVO.setDataSourceName(i.name);
+            return dataSourceVO;
+        }).collect(Collectors.toList());
+        return result;
     }
 }

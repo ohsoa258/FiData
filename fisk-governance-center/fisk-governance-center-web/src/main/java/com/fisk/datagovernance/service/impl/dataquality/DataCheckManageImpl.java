@@ -2,12 +2,14 @@ package com.fisk.datagovernance.service.impl.dataquality;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fisk.common.core.baseObject.dto.PageDTO;
+import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.enums.fidatadatasource.LevelTypeEnum;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEntityBuild;
@@ -33,7 +35,6 @@ import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportSummary_RuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
-import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.datagovernance.enums.dataquality.*;
 import com.fisk.datagovernance.map.dataquality.DataCheckConditionMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
@@ -59,7 +60,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.io.*;
+import java.io.File;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -176,7 +177,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
                 queryTableParam.setSourceId(query.getDatasourceId());
                 queryTableParam.setSourceType(query.getSourceType());
                 queryTableParams.add(queryTableParam);
-            }  else if(query.getLevelType() == LevelTypeEnum.FOLDER){
+            } else if (query.getLevelType() == LevelTypeEnum.FOLDER) {
                 // 点击文件夹暂时先返回空，后面会将文件夹ID固定
                 return page;
             } else if (query.getLevelType() == LevelTypeEnum.BASEFOLDER
@@ -675,12 +676,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
         }
         DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
-        if (dataSourceConVO == null) {
-            return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+        if (!"数据集对比检查".equals(templatePO.getTemplateName())){
+            if (dataSourceConVO == null) {
+                return ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS;
+            }
         }
 
+
         ResultEntity<QualityReportSummary_RuleDTO> resultEntity = dataQualityClientManage.dataVerificationAndPreVerification(dataSourceConVO, dataCheckPO,
-                dataCheckExtendPO, templatePO, dataCheckConditionPOs, "","","");
+                dataCheckExtendPO, templatePO, dataCheckConditionPOs, "", "", "");
 
         return ResultEnum.getEnum(resultEntity.getCode());
     }
@@ -3585,6 +3589,159 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
     @Override
     public Integer getDataCheckRoleTotal() {
         return this.baseMapper.getDataCheckRoleTotal();
+    }
+
+    @Override
+    public PageDTO<DataCheckVO> getAllDataSetRule(DataSetQueryDTO query) {
+        // 第一步：参数验证
+        PageDTO<DataCheckVO> page = new PageDTO<>();
+        List<DataCheckVO> filterRule = new ArrayList<>();
+        if (query == null) {
+            return page;
+        }
+        try {
+
+            // 第三步：获取所有表校验规则
+            List<Long> templateIdList = null;
+            if (query.getTemplateId() != 0) {
+                templateIdList = new ArrayList<>();
+                templateIdList.add(query.getTemplateId());
+            }
+            List<DataCheckVO> allRule = baseMapper.getAllDataSetRule(3,
+                    query.getRuleName(), null, templateIdList);
+            if (CollectionUtils.isEmpty(allRule)) {
+                return page;
+            }
+
+            log.info("getAllRule...规则数量：" + allRule.size());
+
+            filterRule = allRule;
+            if (CollectionUtils.isEmpty(filterRule)) {
+                return page;
+            }
+
+            log.info("getAllRule...规则数量-节点筛选后：" + filterRule.size());
+
+            List<Integer> ruleIds = filterRule.stream().map(DataCheckVO::getId).distinct().collect(Collectors.toList());
+            List<DataCheckExtendVO> dataCheckExtendVOList = dataCheckExtendMapper.getDataCheckExtendByRuleIdList(ruleIds);
+            List<QualityReportRuleVO> qualityReportRuleVOList = qualityReportMapper.getByRuleIds(ruleIds);
+
+            filterRule.forEach(t -> {
+                if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
+                    DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
+                    t.setDataCheckExtend(dataCheckExtendVO);
+                }
+                if (CollectionUtils.isNotEmpty(qualityReportRuleVOList)) {
+                    List<String> reportNameList = qualityReportRuleVOList.stream().filter(k -> k.getRuleId() == t.getId()).map(QualityReportRuleVO::getReportName).collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(reportNameList)) {
+                        t.setBelongToReportNameList(reportNameList);
+                    }
+                }
+            });
+
+            // 第五步：排序分页设置
+            query.current = query.current - 1;
+            page.setTotal(Long.valueOf(filterRule.size()));
+            page.setTotalPage((long) Math.ceil(1.0 * filterRule.size() / query.getSize()));
+            filterRule = filterRule.stream().sorted(
+                    // 1.先按照表名称排正序，并处理tableAlias为空的情况
+                    Comparator.comparing(DataCheckVO::getTableAlias, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 2.再按照执行节点排正序，并处理ruleExecuteNode为空的情况
+                            .thenComparing(DataCheckVO::getRuleExecuteNode, Comparator.nullsFirst(Comparator.naturalOrder()))
+                            // 3.再按照创建时间排倒叙，并处理创建时间为空的情况
+                            .thenComparing(DataCheckVO::getCreateTime, Comparator.nullsFirst(Comparator.reverseOrder()))
+            ).skip((query.current - 1 + 1) * query.size).limit(query.size).collect(Collectors.toList());
+            page.setItems(filterRule);
+        } catch (Exception ex) {
+            log.error("【getAllRule】查询校验规则列表异常：" + ex);
+            throw new FkException(ResultEnum.ERROR, ex);
+        }
+        return page;
+    }
+
+    @Override
+    public DataSetPreviewVO dataSetPreview(DataSetPreviewDTO dto) {
+        DataSetPreviewVO array = new DataSetPreviewVO();
+        Connection conn = null;
+        Statement st = null;
+        ResultSet rs = null;
+        ResultEntity<DataSourceDTO> dataSourceConfig = null;
+        try {
+            DataSourceConPO dataSourceConPO = dataSourceConManageImpl.getById(dto.dataSourceId);
+            dataSourceConfig = userClient.getFiDataDataSourceById(dataSourceConPO.getDatasourceId());
+            if (dataSourceConfig.code != ResultEnum.SUCCESS.getCode()) {
+                throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+            }
+            DataSourceDTO data = dataSourceConfig.data;
+
+            conn = getConnection(data);
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            st.setMaxRows(5);
+            rs = st.executeQuery(dto.sql);
+            // 获取数据集
+            array = resultSetToJsonArrayDataAccess(rs);
+
+            if (dto.dataSetType == DataSetTypeEnum.VALUE_COMPARE.getValue()){
+                if (array.fieldList.size() != 1){
+                    throw new FkException(ResultEnum.DATASET_QUERY_PREVIEW);
+                }
+            }
+        } catch (SQLException e) {
+            log.error("dataSetPreview ex:", e);
+            throw new FkException(ResultEnum.VISUAL_QUERY_ERROR, ":" + e.getMessage());
+        } finally {
+            AbstractCommonDbHelper.closeStatement(st);
+            AbstractCommonDbHelper.closeConnection(conn);
+        }
+        return array;
+    }
+
+
+
+    /**
+     * 数据库连接
+     *
+     * @param dto
+     * @return
+     */
+    public Connection getConnection(DataSourceDTO dto) {
+        AbstractCommonDbHelper dbHelper = new AbstractCommonDbHelper();
+        Connection connection = dbHelper.connection(dto.conStr, dto.conAccount,
+                dto.conPassword, dto.conType);
+        return connection;
+    }
+
+    public DataSetPreviewVO resultSetToJsonArrayDataAccess(ResultSet rs) throws SQLException, JSONException {
+        DataSetPreviewVO data = new DataSetPreviewVO();
+        // json数组
+        JSONArray array = new JSONArray();
+        Set<String> fieldSet = new HashSet<>();
+        // 获取列数
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        // 遍历ResultSet中的每条数据
+        int count = 1;
+        // 预览展示10行
+        int row = 5;
+        while (rs.next() && count <= row) {
+            JSONObject jsonObj = new JSONObject();
+            // 遍历每一列
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                //获取sql查询数据集合
+                String value = rs.getString(columnName);
+                jsonObj.put(columnName, value);
+                fieldSet.add(columnName);
+            }
+            count++;
+            array.add(jsonObj);
+        }
+
+        List<String> fieldList = new ArrayList(fieldSet);
+        Collections.reverse(fieldList);
+        data.dataArray = array;
+        data.fieldList = fieldList;
+        return data;
     }
 
     /**

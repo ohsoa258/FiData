@@ -2,6 +2,7 @@ package com.fisk.datagovernance.entity.dataquality;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fisk.common.core.baseObject.entity.BasePO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -179,4 +180,44 @@ public class DataCheckExtendPO extends BasePO {
      * 波动检查-实际值sql
      */
     public String fluctuateCheckRealitySql;
+
+    /**
+     * 数据集类型 1：行对比2：值对比
+     */
+    public Integer datasetType;
+
+    /**
+     * 数据集源id
+     */
+    public Integer datasetSourceId;
+
+    /**
+     * 数据集目标id
+     */
+    public Integer datasetTargetId;
+
+    /**
+     * 主键字段
+     */
+    public String primaryKeyValue;
+
+    /**
+     * 对比字段
+     */
+    public String compareValue;
+
+    /**
+     * 源sql
+     */
+    public String datasetSourceSql;
+
+    /**
+     * 目标sql
+     */
+    public String datasetTargetSql;
+
+    /**
+     * 数据集表头（前端回显用）
+     */
+    public String datasetTableHeader;
 }

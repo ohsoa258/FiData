@@ -11,12 +11,8 @@ import com.fisk.common.core.utils.dbutils.dto.TableColumnDTO;
 import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckResultVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckRuleSearchWhereVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -156,4 +152,18 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return
      */
     Integer getDataCheckRoleTotal();
+
+    /**
+     * 查询所有数据集规则
+     *
+     * @return 规则列表
+     */
+    PageDTO<DataCheckVO> getAllDataSetRule(DataSetQueryDTO query);
+
+    /**
+     * 预览sql
+     * @param dto
+     * @return
+     */
+    DataSetPreviewVO dataSetPreview(DataSetPreviewDTO dto);
 }

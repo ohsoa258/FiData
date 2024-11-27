@@ -210,4 +210,28 @@ public class DataCheckExtendVO {
 
     @ApiModelProperty(value = "波动检查-实际值sql")
     public String fluctuateCheckRealitySql;
+
+    @ApiModelProperty(value = "数据集类型 1：行对比2：值对比")
+    public Integer datasetType;
+
+    @ApiModelProperty(value = "数据集源id")
+    public Integer datasetSourceId;
+
+    @ApiModelProperty(value = "数据集目标id")
+    public Integer datasetTargetId;
+
+    @ApiModelProperty(value = "主键字段")
+    public String primaryKeyValue;
+
+    @ApiModelProperty(value = "对比字段")
+    public String compareValue;
+
+    @ApiModelProperty(value = "源sql")
+    public String datasetSourceSql;
+
+    @ApiModelProperty(value = "目标sql")
+    public String datasetTargetSql;
+
+    @ApiModelProperty(value = "数据集表头（前端回显用）")
+    public String datasetTableHeader;
 }

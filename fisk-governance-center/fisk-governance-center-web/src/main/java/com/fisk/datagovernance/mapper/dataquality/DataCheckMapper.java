@@ -39,6 +39,13 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      */
     Page<DataCheckVO> getPageAllRule(Page<DataCheckVO> page, @Param("query") DataCheckRulePageDTO query);
 
+        /**
+     * 查询数据校验数据集分页列表
+     *
+     * @return 查询结果
+     */
+    Page<DataCheckVO> getPageAllDataSetRule(Page<DataCheckVO> page, @Param("query") DataCheckRulePageDTO query);
+
     /**
      * 查询数据校验列表
      *
@@ -70,4 +77,14 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
     List<DeleteCheckResultVO> getDeleteDataCheckResult();
 
     Integer getDataCheckRoleTotal();
+
+        /**
+     * 查询数据校验列表（数据集）
+     *
+     * @return 查询结果
+     */
+    List<DataCheckVO> getAllDataSetRule(@Param("checkProcess") int checkProcess,
+                                 @Param("ruleName") String ruleName,
+                                 @Param("ruleState") String ruleState,
+                                 @Param("templateIds") List<Long> templateIds);
 }

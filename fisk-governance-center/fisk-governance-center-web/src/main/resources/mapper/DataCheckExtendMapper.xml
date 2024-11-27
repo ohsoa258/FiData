@@ -38,7 +38,15 @@
         check_field_name,
         allocate_field_names,
         fluctuate_check_mode_type,
-        fluctuate_check_reality_sql
+        fluctuate_check_reality_sql,
+        dataset_type,
+        dataset_source_id,
+        dataset_target_id,
+        primary_key_value,
+        compare_value,
+        dataset_source_sql,
+        dataset_target_sql,
+        dataset_table_header
         FROM
         tb_datacheck_rule_extend
         WHERE

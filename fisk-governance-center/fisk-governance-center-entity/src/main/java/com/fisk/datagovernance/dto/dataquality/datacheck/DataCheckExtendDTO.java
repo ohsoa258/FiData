@@ -219,4 +219,53 @@ public class DataCheckExtendDTO {
      */
     @ApiModelProperty(value = "波动检查-实际值sql")
     public String fluctuateCheckRealitySql;
+
+
+    /**
+     * 数据集类型 1：行对比2：值对比
+     */
+    @ApiModelProperty(value = "数据集类型 1：行对比2：值对比")
+    public Integer datasetType;
+
+    /**
+     * 数据集源id
+     */
+    @ApiModelProperty(value = "数据集源id")
+    public Integer datasetSourceId;
+
+    /**
+     * 数据集目标id
+     */
+    @ApiModelProperty(value = "数据集目标id")
+    public Integer datasetTargetId;
+
+    /**
+     * 主键字段
+     */
+    @ApiModelProperty(value = "主键字段")
+    public String primaryKeyValue;
+
+    /**
+     * 对比字段
+     */
+    @ApiModelProperty(value = "对比字段")
+    public String compareValue;
+
+    /**
+     * 源sql
+     */
+    @ApiModelProperty(value = "源sql")
+    public String datasetSourceSql;
+
+    /**
+     * 目标sql
+     */
+    @ApiModelProperty(value = "目标sql")
+    public String datasetTargetSql;
+
+    /**
+     * 数据集表头（前端回显用）
+     */
+    @ApiModelProperty(value = "数据集表头（前端回显用）")
+    public String datasetTableHeader;
 }
