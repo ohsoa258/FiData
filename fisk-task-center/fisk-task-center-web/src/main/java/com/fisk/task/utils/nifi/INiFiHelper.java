@@ -188,6 +188,17 @@ public interface INiFiHelper {
     BusinessResult<ConnectionEntity> buildConnectProcessors(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type);
 
     /**
+     * 连接两个Processor组件 是否集群
+     *
+     * @param groupId  组id
+     * @param sourceId 源组件的id
+     * @param targetId 目标组件的id
+     * @param type     自动结束的流程
+     * @return 连接entity
+     */
+    BusinessResult<ConnectionEntity> buildConnectProcessorsForNifiClusterEnable(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type);
+
+    /**
      * 连接两个Processor组件,多种关系
      *
      * @param groupId  组id
@@ -499,6 +510,7 @@ public interface INiFiHelper {
 
     /**
      * 修改nifi全局变量
+     *
      * @param variable
      */
     void updateNifiGlobalVariable(Map<String, String> variable);
@@ -620,6 +632,7 @@ public interface INiFiHelper {
 
     /**
      * 创建sftp组件
+     *
      * @param data
      * @return
      */
@@ -627,6 +640,7 @@ public interface INiFiHelper {
 
     /**
      * 修改控制器服务配置信息
+     *
      * @param dto 修改参数
      */
     BusinessResult<String> UpdateDbControllerServiceConfig(UpdateControllerServiceConfigDTO dto);

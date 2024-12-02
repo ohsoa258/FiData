@@ -105,6 +105,8 @@ public class NiFiHelperImpl implements INiFiHelper {
     private String nifiUsername;
     @Value("${nifi.password}")
     private String nifiPassword;
+    @Value("${nifi-cluster-enable}")
+    private Boolean nifiCluster;
     @Resource
     public RedisUtil redisUtil;
     @Resource
@@ -692,6 +694,13 @@ public class NiFiHelperImpl implements INiFiHelper {
         config.setAutoTerminatedRelationships(autoEnd);
         config.setComments(data.details);
         config.setSchedulingPeriod("1 sec");
+
+        //nifi是否是集群
+        if (nifiCluster) {
+            //配置执行模式  如果是集群nifi，则是主节点运行
+            config.setExecutionNode("PRIMARY");
+        }
+
         //组件整体配置
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(data.name);
@@ -904,6 +913,7 @@ public class NiFiHelperImpl implements INiFiHelper {
 
     /**
      * doris
+     *
      * @param buildCallDbProcedureProcessorDTO
      * @return
      */
@@ -1246,6 +1256,47 @@ public class NiFiHelperImpl implements INiFiHelper {
         ConnectionEntity entity = new ConnectionEntity();
         entity.setComponent(dto);
         entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        try {
+            ConnectionEntity res = NifiHelper.getProcessGroupsApi().createConnection(groupId, entity);
+            return BusinessResult.of(true, "连接器创建成功", res);
+        } catch (ApiException e) {
+            log.error("连接器创建失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "连接器创建失败" + e.getMessage(), null);
+        }
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ConnectionEntity> buildConnectProcessorsForNifiClusterEnable(String groupId, String sourceId, String targetId,
+                                                                                       AutoEndBranchTypeEnum type) {
+        //目标组件
+        ConnectableDTO targetProcessor = NifiHelper.buildConnectableDTO(groupId, targetId);
+        //源组件
+        ConnectableDTO sourceProcessor = NifiHelper.buildConnectableDTO(groupId, sourceId);
+        //连接条件
+        List<String> relationships = new ArrayList<>();
+        relationships.add(type.getName());
+
+        //连接器属性
+        ConnectionDTO dto = new ConnectionDTO();
+        dto.setDestination(targetProcessor);
+        dto.setSource(sourceProcessor);
+        dto.setName("test connect");
+        dto.setSelectedRelationships(relationships);
+
+        ConnectionEntity entity = new ConnectionEntity();
+        entity.setComponent(dto);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        //nifi是否是集群
+        if (nifiCluster) {
+            //集群下的阶段循环流
+            dto.setLoadBalanceStrategy(ConnectionDTO.LoadBalanceStrategyEnum.ROUND_ROBIN);
+            //压缩集群间传输的数据流
+            dto.setLoadBalanceCompression(ConnectionDTO.LoadBalanceCompressionEnum.COMPRESS_ATTRIBUTES_AND_CONTENT);
+        }
+
 
         try {
             ConnectionEntity res = NifiHelper.getProcessGroupsApi().createConnection(groupId, entity);

@@ -1960,10 +1960,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             ProcessorEntity putDatabaseRecord = null;
 
             // 如果是数据接入excel || 数据接入sapbw || 数据接入api
-            if (dto.excelFlow
-                    || dto.sapBwFlow
-                    || (conType != null && Objects.equals(DataSourceTypeEnum.API, conType))
-            ) {
+            if (dto.excelFlow || dto.sapBwFlow || (conType != null && Objects.equals(DataSourceTypeEnum.API, conType))) {
                 ProcessorEntity IHP = new ProcessorEntity();
                 //如果开启数据校验，则新建两个组件
                 if (dataValidation) {
@@ -2029,7 +2026,7 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 putDatabaseRecord = createPutDatabaseRecord(appGroupId, config, groupId, dto, targetDbPoolId, synchronousTypeEnum, tableNifiSettingPO);
                 tableNifiSettingPO.saveTargetDbProcessorId = putDatabaseRecord.getId();
                 //连接器c
-                componentConnector(groupId, updateField1.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
+                componentConnectorForNifiClusterEnable(groupId, updateField1.getId(), putDatabaseRecord.getId(), AutoEndBranchTypeEnum.SUCCESS);
                 componentsConnector(groupId, updateField1.getId(), supervisionId, autoEndBranchTypeEnums);
                 res.add(updateField);
                 res.add(updateField1);
@@ -3295,6 +3292,19 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      */
     private void componentConnector(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
         BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessors(groupId, sourceId, targetId, type);
+        verifyProcessorResult(sqlToPutRes);
+    }
+
+    /**
+     * 组件连接器 是否集群
+     *
+     * @param groupId  组id
+     * @param sourceId 连接器上方组件id
+     * @param targetId 连接器下方组件id
+     * @param type     连接类型
+     */
+    private void componentConnectorForNifiClusterEnable(String groupId, String sourceId, String targetId, AutoEndBranchTypeEnum type) {
+        BusinessResult<ConnectionEntity> sqlToPutRes = componentsBuild.buildConnectProcessorsForNifiClusterEnable(groupId, sourceId, targetId, type);
         verifyProcessorResult(sqlToPutRes);
     }
 
