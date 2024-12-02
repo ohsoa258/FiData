@@ -129,9 +129,6 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 .stream().
                 filter(t -> t.getDatasourceId() == fiDataSourceId && t.getDatasourceType() == SourceTypeEnum.FiData)
                 .findFirst().orElse(null);
-        if (dataSourceConVO == null) {
-            return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, null);
-        }
 
         // 第二步：查询模板信息
         QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
@@ -169,6 +166,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 TemplatePO templatePO = templatePOList.stream().filter(t -> t.getId() == dataCheckPO.getTemplateId()).findFirst().orElse(null);
                 if (templatePO == null) {
                     continue;
+                }
+                if (!"数据集对比检查".equals(templatePO.getTemplateName())){
+                    if (dataSourceConVO == null) {
+                        return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, null);
+                    }
                 }
                 TemplateTypeEnum templateTypeEnum = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
                 switch (templateTypeEnum) {
@@ -400,7 +402,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataCheckLogsManageImpl.saveBatch(dataCheckLogs);
             attachmentInfoImpl.saveBatch(attachmentInfos);
         } catch (Exception ex) {
-            log.error("【createQualityReport】创建质量报告异常：" + ex);
+            log.error("【createQualityReport】创建质量报告异常：" + ex.getMessage());
             throw new FkException(ResultEnum.ERROR, "【createQualityReport】 ex：" + ex);
         }
         log.info("【createQualityReport】创建质量报告-结束");
@@ -569,10 +571,14 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 continue;
             }
             //获取数据源
-            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
-            if (dataSourceConVO == null) {
-                continue;
+            DataSourceConVO dataSourceConVO = null;
+            if (!"数据集对比检查".equals(templatePO.getTemplateName())){
+                dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+                if (dataSourceConVO == null) {
+                    continue;
+                }
             }
+
             // 如果校验不通过且质量分析不为空，回写质量分析
             String qualityAnalysis = "";
             if (CollectionUtils.isNotEmpty(dataCheckLogQualityAnalysisList)) {
@@ -644,7 +650,9 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
             dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
             dataCheckLogsPO.setCheckTemplateName(qualityReportSummary_ruleDTO.getRuleTemplate());
-            dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+            if (!"数据集对比检查".equals(templatePO.getTemplateName())){
+                dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+            }
             dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.SUBSCRIPTION_REPORT_RULE_CHECK_LOG.getValue());
             dataCheckLogsPO.setSchemaName(dataCheckPO.getSchemaName());
             dataCheckLogsPO.setTableName(dataCheckPO.getTableName());
@@ -717,15 +725,17 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_TEMPLATE_DOES_NOT_EXIST.getCode());
                 return resultEntity;
             }
+            QualityReportSummary_ParamDTO qualityReportSummary_paramDTO = new QualityReportSummary_ParamDTO();
             //当前校验规则对应的 数据源
-            if (dataSourceConVO == null) {
-                resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_DATA_SOURCE_DOES_NOT_EXIST.getCode());
-                return resultEntity;
-            }
+            if (!"数据集对比检查".equals(templatePO.getTemplateName())){
+                if (dataSourceConVO == null) {
+                    resultEntity.setCode(ResultEnum.DATA_QUALITY_AFTER_SYNCHRONIZATION_PRE_VERIFICATION_DATA_SOURCE_DOES_NOT_EXIST.getCode());
+                    return resultEntity;
+                }
+
 
             // 获取表和字段信息，将其进行转义处理
             DataSourceTypeEnum dataSourceTypeEnum = dataSourceConVO.getConType();
-            QualityReportSummary_ParamDTO qualityReportSummary_paramDTO = new QualityReportSummary_ParamDTO();
             String tableName = "";
             String tableNameFormat = "";
             if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
@@ -771,7 +781,7 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             qualityReportSummary_paramDTO.setFieldCheckWhereSql(fieldCheckWhereSql);
             qualityReportSummary_paramDTO.setQualityAnalysis(qualityAnalysis);
             log.info("【dataVerificationAndPreVerification】...qualityReportSummary_paramDTO参数[{}]", JSONObject.toJSON(qualityReportSummary_paramDTO));
-
+            }
             checkSqlList = new ArrayList<>();
             QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
             qualityReportSummary_ruleDTO = dataCheck_QualityReport_Check(templatePO, dataSourceConVO,
@@ -849,6 +859,11 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
             case SQL_SCRIPT_CHECK:
                 qualityReportSummary_ruleDTO = dataCheck_QualityReport_SqlScriptCheck(templatePO,
                         dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
+                break;
+            //数据集检查
+            case DATASET_CHECK:
+                qualityReportSummary_ruleDTO = dataCheck_QualityReport_DataSetCheck(templatePO,
+                    dataSourceConVO, dataCheckPO, dataCheckExtendPO, qualityReportSummary_paramDTO, checkSqlList);
                 break;
         }
         return qualityReportSummary_ruleDTO;
@@ -1974,6 +1989,174 @@ public class DataQualityClientManageImpl implements IDataQualityClientManageServ
                 qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, sql_QueryCheckData,
                 sql_QueryDataTotalCount, errorDataTotalCount, sql_QueryCheckErrorDataCount,dataCheckPO.getRuleIllustrate());
         return qualityReportSummary_ruleDTO;
+    }
+
+    public QualityReportSummary_RuleDTO dataCheck_QualityReport_DataSetCheck(TemplatePO templatePO,
+                                                                               DataSourceConVO dataSourceConVO,
+                                                                               DataCheckPO dataCheckPO,
+                                                                               DataCheckExtendPO dataCheckExtendPO,
+                                                                               QualityReportSummary_ParamDTO qualityReportSummary_paramDTO,
+                                                                               List<String> checkSqlList) {
+        QualityReportSummary_RuleDTO qualityReportSummary_ruleDTO = null;
+
+        String sourceSql = dataCheckExtendPO.getDatasetSourceSql();
+        String targetSql = dataCheckExtendPO.getDatasetTargetSql();
+        Integer datasetSourceId = dataCheckExtendPO.getDatasetSourceId();
+        Integer datasetTargetId = dataCheckExtendPO.getDatasetTargetId();
+        String primaryKeyValue = dataCheckExtendPO.getPrimaryKeyValue();
+        String compareValue = dataCheckExtendPO.getCompareValue();
+        Integer datasetType = dataCheckExtendPO.getDatasetType();
+
+        List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+
+        //获取数据源
+        DataSourceConVO source = allDataSource.stream().filter(t -> t.getDatasourceId() == datasetSourceId).findFirst().orElse(null);
+
+        DataSourceConVO target = allDataSource.stream().filter(t -> t.getDatasourceId() == datasetSourceId).findFirst().orElse(null);
+        Integer errorDataTotalCount = 0;
+        Integer checkDataTotalCount = 0;
+        String ruleIllustrate = null;
+        SheetDataDto sheetDataDto = new SheetDataDto();
+        if (datasetType == DataSetTypeEnum.ROW_COMPARE.getValue()){
+            List<Map<String, Object>> sourceList = qualityReport_QueryTableData_Maps(source, sourceSql, dataCheckPO.id, dataCheckPO.ruleName);
+            List<Map<String, Object>> targetList = qualityReport_QueryTableData_Maps(target, targetSql, dataCheckPO.id, dataCheckPO.ruleName);
+            if (sourceList.size() != targetList.size()){
+                ruleIllustrate = "源表行数:"+sourceList.size()+"和目标行数"+targetList.size()+"数不一致";
+            }
+            Map<Object, Map<String, Object>> map1 = convertListToMap(sourceList, primaryKeyValue);
+            if (sourceList.size() != map1.size()){
+                ruleIllustrate = "源表主键重复";
+            }
+            Map<Object, Map<String, Object>> map2 = convertListToMap(targetList, primaryKeyValue);
+            if (targetList.size() != map2.size()){
+                ruleIllustrate = "目标表主键重复";
+            }
+            sheetDataDto.columns = Arrays.asList("主键:"+primaryKeyValue, "对比字段", "状态", "源表值", "目标表值");
+            sheetDataDto.setColumnData(new ArrayList<>());
+            errorDataTotalCount = compareTables(map1, map2,compareValue,sheetDataDto);
+            checkDataTotalCount = map1.size();
+            ruleIllustrate = "本次共比对"+checkDataTotalCount+"行数据，其中"+errorDataTotalCount+"行比对失败";
+
+        }else if (datasetType == DataSetTypeEnum.VALUE_COMPARE.getValue()){
+            List<Map<String, Object>> sourceList = qualityReport_QueryTableData_Maps(source, sourceSql, dataCheckPO.id, dataCheckPO.ruleName);
+            List<Map<String, Object>> targetList = qualityReport_QueryTableData_Maps(target, targetSql, dataCheckPO.id, dataCheckPO.ruleName);
+            Object sourceValue = sourceList.get(0).values().toArray()[0];
+            Object targetValue = targetList.get(0).values().toArray()[0];
+            if (sourceValue.equals(targetValue)){
+                ruleIllustrate = "本次值对比结果一致";
+                errorDataTotalCount = 0;
+                checkDataTotalCount = 1;
+            }else {
+                ruleIllustrate = "本次值对比结果不一致";
+                errorDataTotalCount = 1;
+                checkDataTotalCount = 1;
+            }
+        }
+
+        qualityReportSummary_paramDTO.setTableName(dataCheckPO.getRuleName());
+        dataCheckPO.setTableName(dataCheckPO.getRuleName());
+        dataCheckExtendPO.setFieldName(compareValue);
+        // 因为SQL脚本可能连表多条件查询，因此此处查询表数据条数也用检查的SQL
+        qualityReportSummary_ruleDTO = dataCheck_QualityReportSummary_GetBasicInfo(templatePO, null, dataCheckPO, dataCheckExtendPO,
+                qualityReportSummary_paramDTO, sheetDataDto, checkDataTotalCount, null,
+                null, errorDataTotalCount, null,ruleIllustrate);
+        return qualityReportSummary_ruleDTO;
+    }
+
+    // 将List转换为Map，键是主键字段，值是整个记录
+    private Map<Object, Map<String, Object>> convertListToMap(List<Map<String, Object>> list, String primaryKey) {
+        Map<Object, Map<String, Object>> resultMap = new HashMap<>();
+        for (Map<String, Object> record : list) {
+            Object key = record.get(primaryKey);
+            resultMap.put(key, record);
+        }
+        return resultMap;
+    }
+
+    // 比较两张表的数据并将错误数据记录到SheetDataDto对象中
+    private Integer compareTables(Map<Object, Map<String, Object>> map1,
+                                      Map<Object, Map<String, Object>> map2,
+                                      String compareField,
+                                      SheetDataDto sheetDataDto) {
+        Integer errorDataTotalCount = 0;
+        // 对map1中的每个记录进行比较
+        for (Object key : map1.keySet()) {
+            Map<String, Object> record1 = map1.get(key);
+            Map<String, Object> record2 = map2.get(key);
+
+            // 记录当前主键是否已经出现错误
+            boolean hasError = false;
+
+            // 如果map2中没有这个主键
+            if (record2 == null) {
+                // 记录为错误数据
+                List<String> row = new ArrayList<>();
+                row.add(key.toString());
+                row.add(compareField);
+                row.add("目标表没有此主键");
+                row.add(record1.get(compareField) != null ? record1.get(compareField).toString() : "NULL");
+                row.add("NULL");
+                sheetDataDto.columnData.add(row);
+                errorDataTotalCount = errorDataTotalCount+1;
+                continue;
+            }
+            // 将compareField按逗号分隔成多个字段
+            String[] compareFields = compareField.split(",");
+            // 遍历每个对比字段
+            for (String field : compareFields) {
+                // 获取对比字段的值
+                Object value1 = record1.get(field);
+                Object value2 = record2.get(field);
+
+                // 比较对比字段的值
+                if (value1 == null && value2 == null) {
+                    // 两者都为null，无需记录
+                } else if (value1 == null || value2 == null) {
+                    // 一方为null，数据不一致
+                    List<String> row = new ArrayList<>();
+                    row.add(key.toString());
+                    row.add(field);
+                    row.add("值比较(一方为NULL)");
+                    row.add(value1 != null ? value1.toString() : "NULL");
+                    row.add(value2 != null ? value2.toString() : "NULL");
+                    sheetDataDto.columnData.add(row);
+                    if (!hasError){
+                        errorDataTotalCount = errorDataTotalCount+1;
+                        hasError = true;
+                    }
+                } else if (!value1.equals(value2)) {
+                    // 值不一致
+                    List<String> row = new ArrayList<>();
+                    row.add(key.toString());
+                    row.add(field);
+                    row.add("值不一致");
+                    row.add(value1.toString());
+                    row.add(value2.toString());
+                    sheetDataDto.columnData.add(row);
+                    if (!hasError){
+                        errorDataTotalCount = errorDataTotalCount+1;
+                        hasError = true;
+                    }
+                }
+            }
+        }
+
+        // 对map2中存在但map1中不存在的记录进行处理
+        for (Object key : map2.keySet()) {
+            if (!map1.containsKey(key)) {
+                // 记录为错误数据
+                Map<String, Object> record2 = map2.get(key);
+                List<String> row = new ArrayList<>();
+                row.add(key.toString());
+                row.add(compareField);
+                row.add("源表没有此主键");
+                row.add("NULL");
+                row.add(record2.get(compareField) != null ? record2.get(compareField).toString() : "NULL");
+                sheetDataDto.columnData.add(row);
+                errorDataTotalCount = errorDataTotalCount+1;
+            }
+        }
+        return errorDataTotalCount;
     }
 
     /**

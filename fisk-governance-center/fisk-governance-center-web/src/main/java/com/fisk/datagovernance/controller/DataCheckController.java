@@ -194,4 +194,16 @@ public class DataCheckController {
     public ResultEntity<Object> editDataCheckByStandards(@RequestBody StandardsDTO dto) {
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, datacheckStandardsGroupService.editDataCheckByStandards(dto));
     }
+
+    @ApiOperation("查询全部数据集校验规则")
+    @PostMapping("/getAllDataSetRule")
+    public ResultEntity<PageDTO<DataCheckVO>> getAllDataSetRule(@RequestBody DataSetQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSetRule(dto));
+    }
+
+    @ApiOperation("预览")
+    @PostMapping("/dataSetPreview")
+    public ResultEntity<DataSetPreviewVO> dataSetPreview(@RequestBody DataSetPreviewDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.dataSetPreview(dto));
+    }
 }

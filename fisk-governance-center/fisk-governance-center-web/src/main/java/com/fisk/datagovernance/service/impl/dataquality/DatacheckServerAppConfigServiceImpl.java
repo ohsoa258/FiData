@@ -179,4 +179,9 @@ public class DatacheckServerAppConfigServiceImpl extends ServiceImpl<DatacheckSe
         dto.filterSql = FilterSqlConstants.DATA_CHECK_APP_REGISTRATION_SQL;
         return getMetadata.getMetadataList(dto);
     }
+
+    @Override
+    public ResultEnum appSubscribe(AppApiSubDTO dto) {
+        return null;
+    }
 }

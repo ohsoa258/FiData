@@ -220,9 +220,14 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                 }
                                 DataCheckExtendPO dataCheckExtendPO = finalDataCheckExtendPOList.stream().filter(r -> r.getRuleId() == rule.getRuleId()).findFirst().orElse(null);
 
-                                DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
-                                if (dataSourceConVO == null) {
-                                    return;
+                                if(dataCheckExtendPO.getDatasetSourceId() == null){
+                                    DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == dataCheckPO.getDatasourceId()).findFirst().orElse(null);
+                                    if (dataSourceConVO == null) {
+                                        return;
+                                    }
+                                    rule.setIp(dataSourceConVO.getConIp());
+                                    rule.setDbName(dataSourceConVO.getConDbname());
+                                    rule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
                                 }
                                 rule.setRuleName(dataCheckPO.getRuleName());
                                 rule.setRuleDescribe(dataCheckPO.getRuleDescribe());
@@ -230,9 +235,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                                 rule.setTableBusinessType(dataCheckPO.getTableBusinessType());
                                 rule.setTableTypeName(dataCheckPO.getTableType() == 1 ? "TABLE" : dataCheckPO.getTableType() == 2 ? "VIEW" : "");
                                 rule.setDataSourceId(dataCheckPO.getDatasourceId());
-                                rule.setIp(dataSourceConVO.getConIp());
-                                rule.setDbName(dataSourceConVO.getConDbname());
-                                rule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
+
                                 String tableNameFormat = "";
                                 if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
                                     tableNameFormat = dataCheckPO.getSchemaName() + ".";
@@ -532,7 +535,13 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 QualityReportExt_RuleVO cRule = new QualityReportExt_RuleVO();
                 DataSourceConVO dataSourceConVO = allDataSource.stream().filter(s -> s.getId() == t.getDatasourceId()).findFirst().orElse(null);
                 if (dataSourceConVO == null) {
-                    return;
+                    if (query.ruleDataSourceType != 3){
+                       return;
+                    }
+                }else {
+                    cRule.setIp(dataSourceConVO.getConIp());
+                    cRule.setDbName(dataSourceConVO.getConDbname());
+                    cRule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
                 }
                 if (CollectionUtils.isNotEmpty(dataCheckExtendVOList)) {
                     DataCheckExtendVO dataCheckExtendVO = dataCheckExtendVOList.stream().filter(k -> k.getRuleId() == t.getId()).findFirst().orElse(null);
@@ -545,9 +554,7 @@ public class QualityReportManageImpl extends ServiceImpl<QualityReportMapper, Qu
                 cRule.setName(t.getRuleName());
                 cRule.setDescribe(t.getRuleDescribe());
                 cRule.setStateName(t.getRuleState().getName());
-                cRule.setIp(dataSourceConVO.getConIp());
-                cRule.setDbName(dataSourceConVO.getConDbname());
-                cRule.setSourceTypeName(dataSourceConVO.getDatasourceType() == SourceTypeEnum.FiData ? "FiData" : "Customize");
+
                 String tableNameFormat = "";
                 if (StringUtils.isNotEmpty(t.getSchemaName())) {
                     tableNameFormat = t.getSchemaName() + ".";

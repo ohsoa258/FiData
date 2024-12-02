@@ -6,7 +6,6 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.common.service.dbMetaData.dto.DataQualityDataSourceTreeDTO;
-import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataTreeDTO;
 import com.fisk.datagovernance.config.SwaggerConfig;
 import com.fisk.datagovernance.dto.dataops.DataObsSqlDTO;
 import com.fisk.datagovernance.dto.dataops.ExecuteDataOpsSqlDTO;
@@ -18,6 +17,7 @@ import com.fisk.datagovernance.service.dataquality.IDataSourceConManageService;
 import com.fisk.datagovernance.vo.dataops.DataOpsSourceVO;
 import com.fisk.datagovernance.vo.dataops.DataOpsTableFieldVO;
 import com.fisk.datagovernance.vo.dataops.ExecuteResultVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataSourceVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.datasource.ExportResultVO;
 import io.swagger.annotations.Api;
@@ -153,5 +153,11 @@ public class DataSourceController {
     @ApiOperation("更新当前用户执行sql")
     public ResultEntity<Object> saveOrUpdateObsSql(@RequestBody List<DataObsSqlDTO> list) {
         return ResultEntityBuild.build(service.saveOrUpdateObsSql(list));
+    }
+
+    @ApiOperation("获取数据校验所有数据源")
+    @GetMapping("/getAllDataSource")
+    public ResultEntity<List<DataSourceVO>> getAllDataSetSource() {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getAllDataSetSource());
     }
 }
