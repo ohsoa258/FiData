@@ -455,6 +455,11 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 // todo:强生入仓配置 hudi的测试连接先不做
                 case HUDI:
 
+//                    ResultEntity<Object> resultEntity = dataAccessClient.testHudi(dto);
+//                    if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+//                        throw new FkException(ResultEnum.HUDI_CONNECT_ERROR);
+//                    }
+
                     return ResultEnum.SUCCESS;
                 case MONGODB:
                     ServerAddress serverAddress = new ServerAddress(dto.conIp, dto.conPort);
@@ -462,11 +467,18 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                     serverAddresses.add(serverAddress);
 
                     //账号 验证数据库名 密码
-                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr,dto.conPassword.toCharArray());
+                    MongoCredential scramSha1Credential = MongoCredential.createScramSha1Credential(dto.conAccount, dto.sysNr, dto.conPassword.toCharArray());
                     List<MongoCredential> mongoCredentials = new ArrayList<>();
                     mongoCredentials.add(scramSha1Credential);
 
                     mongoClient = new MongoClient(serverAddresses, mongoCredentials);
+                    return ResultEnum.SUCCESS;
+                case HIVE:
+                    log.info("注册HIVE驱动程序前...");
+                    Class.forName(DataSourceTypeEnum.HIVE.getDriverName());
+                    log.info("注册HIVE驱动程序后...");
+
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
@@ -496,6 +508,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
             }
         }
     }
+
 
     /**
      * 将文件转为二进制字符串
