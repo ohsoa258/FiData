@@ -228,6 +228,7 @@ public class FactAttributeImpl
             queryDTO.syncMode = dto.syncModeDTO.syncMode;
             queryDTO.openTransmission = dto.openTransmission;
             queryDTO.ifDropTargetTbl = dto.ifDropTargetTbl;
+            queryDTO.deltaTimes = dto.deltaTimes;
             return businessProcess.batchPublishBusinessProcess(queryDTO);
         }
         return ResultEnum.SUCCESS;

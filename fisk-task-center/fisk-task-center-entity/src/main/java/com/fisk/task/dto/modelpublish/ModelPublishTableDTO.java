@@ -1,5 +1,6 @@
 package com.fisk.task.dto.modelpublish;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -103,4 +104,10 @@ public class ModelPublishTableDTO {
      */
     @ApiModelProperty(value = "清空临时表脚本")
     public String deleteTempScript;
+
+    /**
+     * 接入的增量时间参数
+     */
+    @ApiModelProperty(value = "接入的增量时间参数")
+    public List<DeltaTimeDTO> deltaTimes;
 }

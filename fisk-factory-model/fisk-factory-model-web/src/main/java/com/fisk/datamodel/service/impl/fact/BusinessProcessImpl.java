@@ -279,6 +279,8 @@ public class BusinessProcessImpl
 
                 //拼接数据 待发布事实表的信息
                 ModelPublishTableDTO pushDto = new ModelPublishTableDTO();
+                //增量时间
+                pushDto.deltaTimes = dto.deltaTimes;
                 //表id
                 pushDto.tableId = Integer.parseInt(String.valueOf(item.id));
                 //表名

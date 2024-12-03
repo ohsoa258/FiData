@@ -58,13 +58,9 @@ public enum ResultEnum {
     SYSTEM_LOGO_NULL(1032, "系统logo文件不能为空"),
     SYSTEM_LOGO_ERROR(1033, "系统logo获取出错"),
     DATA_SOURCE_NAME_ALREADY_EXISTS(1034, "数据源名称已存在"),
-
-
     SQL_PARAMETER_NOTNULL(1035, "sql参数不能为空"),
-
     SQL_Not_SUPPORTED_YET_DBTYPE(1036, "暂不支持该数据库类型"),
     TABLE_NOT_PUBLISHED(1037, "该表未发布"),
-
     LOG_NOT_EXISTS(1038, "当前选择的服务类型在当前日期没有日志"),
     SERVICE_NOT_EXISTS(1039, "当前所选的服务不存在"),
     SET_KEEP_NUMBER_ERROR(1040, "设置stg保存时间失败"),
@@ -76,11 +72,10 @@ public enum ResultEnum {
     DATA_SOURCE_ALREADY_EXISTS(1046, "相同类型,ip,库名的数据源已存在!请您使用已配置的数据源。"),
     DISPATCH_REMOTE_ERROR(1047, "删除表时-远程调用管道模块失败"),
     ACCESS_PHYTABLE_EXISTS_IN_DISPATCH(1048, "禁止删除该表-该表存在于以下管道:"),
-
     RUN_ONCE_ERROR(1049, "RUN_ONCE执行失败请检查组件是否正常"),
-
     RUN_ONCE_LOCK(1050, "RUN_ONCE执行中，请勿重复执行"),
     GET_SYSTEM_EMAIL_SERVER_ERROR(1051, "获取平台配置邮件服务器信息失败"),
+    HUDI_CONNECT_ERROR(1052, "平台配置测试HUDI连接异常"),
 
 
     /**

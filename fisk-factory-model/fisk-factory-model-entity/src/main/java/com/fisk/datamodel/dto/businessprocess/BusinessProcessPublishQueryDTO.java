@@ -1,5 +1,6 @@
 package com.fisk.datamodel.dto.businessprocess;
 
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -37,4 +38,10 @@ public class BusinessProcessPublishQueryDTO {
      */
     @ApiModelProperty(value = "是否删除目标表")
     public boolean ifDropTargetTbl;
+
+    /**
+     * 增量时间参数
+     */
+    @ApiModelProperty(value = "接入的增量时间参数")
+    public List<DeltaTimeDTO> deltaTimes;
 }

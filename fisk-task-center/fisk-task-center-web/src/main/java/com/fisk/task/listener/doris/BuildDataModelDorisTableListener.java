@@ -15,7 +15,9 @@ import com.fisk.common.core.response.ResultEntity;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.dataaccess.client.DataAccessClient;
+import com.fisk.dataaccess.dto.access.DeltaTimeDTO;
 import com.fisk.dataaccess.enums.ComponentIdTypeEnum;
+import com.fisk.dataaccess.enums.SystemVariableTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishDataDTO;
 import com.fisk.datamodel.dto.modelpublish.ModelPublishStatusDTO;
@@ -48,6 +50,7 @@ import com.fisk.task.service.nifi.ITaskDwDim;
 import com.fisk.task.service.nifi.impl.AppNifiSettingServiceImpl;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
 import com.fisk.task.service.pipeline.impl.NifiConfigServiceImpl;
+import com.fisk.task.service.task.ITBETLIncremental;
 import com.fisk.task.utils.NifiHelper;
 import com.fisk.task.utils.NifiPositionHelper;
 import com.fisk.task.utils.StackTraceHelper;
@@ -60,6 +63,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -103,6 +107,8 @@ public class BuildDataModelDorisTableListener
     PublishTaskController pc;
     @Resource
     private TBETLIncrementalMapper incrementalMapper;
+    @Resource
+    private ITBETLIncremental itbetlIncremental;
     @Resource
     public UserClient userClient;
     @Resource
@@ -294,7 +300,7 @@ public class BuildDataModelDorisTableListener
             log.info("dw库生成函数:"+storedProcedure3);
             iPostgreBuild.postgreBuildTable(storedProcedure3, BusinessTypeEnum.DATAMODEL);*/
                 log.info("开始执行nifi创建数据同步");
-                //新建dmp_system_db库----tb_etl_Incremental表对象
+                //dmp_task_db库----tb_etl_Incremental表
                 TBETLIncrementalPO ETLIncremental = new TBETLIncrementalPO();
                 //数据同步流程的表名
                 ETLIncremental.objectName = modelPublishTableDTO.tableName;
@@ -303,12 +309,28 @@ public class BuildDataModelDorisTableListener
                 //数据同步批次号
                 ETLIncremental.incrementalObjectivescoreBatchno = UUID.randomUUID().toString();
 
+                List<DeltaTimeDTO> deltaTimes = modelPublishTableDTO.getDeltaTimes();
+                if (CollectionUtils.isNotEmpty(deltaTimes)) {
+                    for (DeltaTimeDTO deltaTime : deltaTimes) {
+                        if (SystemVariableTypeEnum.START_TIME.equals(deltaTime.getSystemVariableTypeEnum())) {
+                            ETLIncremental.incrementalObjectivescoreStart = stringToDate(deltaTime.getVariableValue());
+                        } else if (SystemVariableTypeEnum.END_TIME.equals(deltaTime.getSystemVariableTypeEnum())) {
+                            ETLIncremental.incrementalObjectivescoreEnd = stringToDate(deltaTime.getVariableValue());
+                        }
+                    }
+                }
+
                 Map<String, Object> conditionHashMap = new HashMap<>();
                 conditionHashMap.put("object_name", ETLIncremental.objectName);
                 //通过表名获取数据，校验是否已有同步记录
                 List<TBETLIncrementalPO> tbetlIncrementalPos = incrementalMapper.selectByMap(conditionHashMap);
                 if (tbetlIncrementalPos != null && tbetlIncrementalPos.size() > 0) {
-                    log.info("此表已有同步记录,无需重复添加");
+                    log.info("此表已有同步记录,无需重复添加,开始更新增量时间：start_time=" + ETLIncremental.incrementalObjectivescoreStart + ",end_time=" + ETLIncremental.incrementalObjectivescoreEnd);
+                    tbetlIncrementalPos.forEach(po -> {
+                        po.setIncrementalObjectivescoreStart(ETLIncremental.incrementalObjectivescoreStart);
+                        po.setIncrementalObjectivescoreEnd(ETLIncremental.incrementalObjectivescoreEnd);
+                    });
+                    itbetlIncremental.updateBatchById(tbetlIncrementalPos);
                 } else {
                     //没有同步记录，则插入一条
                     incrementalMapper.insert(ETLIncremental);
@@ -447,6 +469,22 @@ public class BuildDataModelDorisTableListener
             throw new FkException(ResultEnum.DATA_MODEL_PUBLISH_ERROR, e.toString(), e);
         } finally {
             acke.acknowledge();
+        }
+    }
+
+    /**
+     * 将字符串转换为 Date 对象
+     *
+     * @param dateString 日期字符串，格式为 "yyyy-MM-dd HH:mm:ss"
+     * @return 转换后的 Date 对象
+     */
+    private Date stringToDate(String dateString) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            return dateFormat.parse(dateString);
+        } catch (ParseException e) {
+            log.error("数仓建模-增量时间格式转换异常" + e + " 转换失败的值为：" + dateString);
+            return null;
         }
     }
 
