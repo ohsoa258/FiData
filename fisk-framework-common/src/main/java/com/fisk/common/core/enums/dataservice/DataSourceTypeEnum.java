@@ -51,6 +51,7 @@ public enum DataSourceTypeEnum implements BaseEnum {
     HUDI(17, "HUDI", "", ""),
     MONGODB(18, "MONGODB", "mongodb.jdbc.MongoDriver", ""),
     HIVE(19, "HIVE", "org.apache.hive.jdbc.HiveDriver", ""),
+    POWERBI_DATASETS(20, "POWERBI_DATASETS", "", ""),
 
     ;
 

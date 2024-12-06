@@ -247,6 +247,9 @@ public enum ResultEnum {
     TABLE_NOT_OPEN_CDC(5118,"表在中台内未开启CDC!请开启CDC后再发布!"),
     FLINK_STOP_JOB_ERROR(5119,"flink终止指定job失败"),
     FLINK_DUPLICATE_RELEASE_ERROR(5120,"flink job请勿重复发布!"),
+    PBI_GET_GROUP_ERROR(5121,"PowerBI获取用户工作区失败！"),
+    PBI_GET_DATASETS_ERROR(5122,"PowerBI获取工作区下的数据集失败！"),
+    PBI_GET_ACCESSTOKEN_ERROR(5123,"获取powerbi accessToken失败！"),
 
     /**
      * 后台任务模块
