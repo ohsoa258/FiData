@@ -1,5 +1,6 @@
 package com.fisk.datagovernance.service.impl.dataquality;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,11 +15,17 @@ import com.fisk.common.service.pageFilter.dto.MetaDataConfigDTO;
 import com.fisk.common.service.pageFilter.utils.GenerateCondition;
 import com.fisk.common.service.pageFilter.utils.GetMetadata;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
+import com.fisk.datagovernance.entity.dataquality.DatacheckServerApiConfigPO;
 import com.fisk.datagovernance.entity.dataquality.DatacheckServerAppConfigPO;
+import com.fisk.datagovernance.entity.dataquality.DatacheckServerFieldConfigPO;
 import com.fisk.datagovernance.map.dataquality.DatacheckServerAppConfigMap;
+import com.fisk.datagovernance.map.dataquality.DatacheckServerFieldConfigMap;
 import com.fisk.datagovernance.mapper.dataquality.DatacheckServerAppConfigMapper;
+import com.fisk.datagovernance.service.dataquality.DatacheckServerApiConfigService;
 import com.fisk.datagovernance.service.dataquality.DatacheckServerAppConfigService;
+import com.fisk.datagovernance.service.dataquality.DatacheckServerFieldConfigService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.AppRegisterVO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.AppServiceCountVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,6 +33,8 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service("datacheckServerAppConfigService")
 public class DatacheckServerAppConfigServiceImpl extends ServiceImpl<DatacheckServerAppConfigMapper, DatacheckServerAppConfigPO> implements DatacheckServerAppConfigService {
@@ -50,6 +59,12 @@ public class DatacheckServerAppConfigServiceImpl extends ServiceImpl<DatacheckSe
 
     @Resource
     private GetMetadata getMetadata;
+
+    @Resource
+    private DatacheckServerApiConfigService apiConfigService;
+
+    @Resource
+    private DatacheckServerFieldConfigService fieldConfigServiceService;
     @Override
     public Page<AppRegisterVO> pageFilter(AppRegisterQueryDTO query) {
         StringBuilder querySql = new StringBuilder();
@@ -62,22 +77,22 @@ public class DatacheckServerAppConfigServiceImpl extends ServiceImpl<DatacheckSe
 
         int totalCount = 0;
         Page<AppRegisterVO> registerVOPage = baseMapper.filter(query.page, data);
-//        if (registerVOPage != null && CollectionUtils.isNotEmpty(registerVOPage.getRecords())) {
-//            // 查询应用下的API个数
-//            List<AppServiceCountVO> appServiceCount = appApiMapper.getApiAppServiceCount();
-//            for (AppRegisterVO appRegisterVO : registerVOPage.getRecords()) {
-//                if (CollectionUtils.isNotEmpty(appServiceCount)) {
-//                    AppServiceCountVO appServiceCountVO = appServiceCount.stream().filter(k -> k.getAppId() == appRegisterVO.getId()).findFirst().orElse(null);
-//                    if (appServiceCountVO != null) {
-//                        appRegisterVO.setItemCount(appServiceCountVO.getCount());
-//                    }
-//                }
-//            }
-//            if (CollectionUtils.isNotEmpty(appServiceCount)) {
-//                totalCount = appServiceCount.stream().collect(Collectors.summingInt(AppServiceCountVO::getCount));
-//                registerVOPage.getRecords().get(0).setTotalCount(totalCount);
-//            }
-//        }
+        if (registerVOPage != null && CollectionUtils.isNotEmpty(registerVOPage.getRecords())) {
+            // 查询应用下的API个数
+            List<AppServiceCountVO> appServiceCount = apiConfigService.getApiAppServiceCount();
+            for (AppRegisterVO appRegisterVO : registerVOPage.getRecords()) {
+                if (CollectionUtils.isNotEmpty(appServiceCount)) {
+                    AppServiceCountVO appServiceCountVO = appServiceCount.stream().filter(k -> k.getAppId() == appRegisterVO.getId()).findFirst().orElse(null);
+                    if (appServiceCountVO != null) {
+                        appRegisterVO.setItemCount(appServiceCountVO.getCount());
+                    }
+                }
+            }
+            if (CollectionUtils.isNotEmpty(appServiceCount)) {
+                totalCount = appServiceCount.stream().collect(Collectors.summingInt(AppServiceCountVO::getCount));
+                registerVOPage.getRecords().get(0).setTotalCount(totalCount);
+            }
+        }
         return registerVOPage;
     }
 
@@ -182,6 +197,38 @@ public class DatacheckServerAppConfigServiceImpl extends ServiceImpl<DatacheckSe
 
     @Override
     public ResultEnum appSubscribe(AppApiSubDTO dto) {
-        return null;
+
+        LambdaQueryWrapper<DatacheckServerApiConfigPO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DatacheckServerApiConfigPO::getAppId, dto.appId);
+        List<DatacheckServerApiConfigPO> serverApiConfigPOS = apiConfigService.list(queryWrapper);
+        List<DatacheckServerApiConfigPO> collect = serverApiConfigPOS.stream().filter(i -> {
+            if (dto.checkRuleId.equals(i.getCheckRuleId())) {
+                return true;
+            }else {
+                return false;
+            }
+        }).collect(Collectors.toList());
+        if (CollectionUtils.isNotEmpty(collect)){
+            return ResultEnum.API_SUBSCRIBE_EXISTS;
+        }
+        DatacheckServerApiConfigPO datacheckServerApiConfigPO = new DatacheckServerApiConfigPO();
+
+        datacheckServerApiConfigPO.setApiCode(UUID.randomUUID().toString().replace("-", ""));
+        datacheckServerApiConfigPO.setApiDesc(dto.apiDesc);
+        datacheckServerApiConfigPO.setAppId(dto.appId);
+        datacheckServerApiConfigPO.setCheckRuleId(dto.checkRuleId);
+        datacheckServerApiConfigPO.setApiState(1);
+        apiConfigService.save(datacheckServerApiConfigPO);
+
+        List<ApiFieldDTO> apiFieldDTOList = dto.getApiFieldDTOList();
+        if (CollectionUtils.isNotEmpty(apiFieldDTOList)){
+            List<DatacheckServerFieldConfigPO> fieldConfigPOS = apiFieldDTOList.stream().map(DatacheckServerFieldConfigMap.INSTANCES::dtoToPo).collect(Collectors.toList());
+            fieldConfigPOS = fieldConfigPOS.stream().map(i->{
+                i.setApiId((int)datacheckServerApiConfigPO.getId());
+                return i;
+            }).collect(Collectors.toList());
+            fieldConfigServiceService.saveBatch(fieldConfigPOS);
+        }
+        return ResultEnum.SUCCESS;
     }
 }

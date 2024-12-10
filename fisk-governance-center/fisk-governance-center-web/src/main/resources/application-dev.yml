@@ -8,6 +8,12 @@ dataops:
 dataquality:
   # 数据库元数据对应 redis key
   metadataentity_key: DataQuality_MetaDataEntityKey
+  pdf:
+    # pdf文档模板路径
+#    path: /data/dev/fisk-governance-center-web/pdf
+    path: D:\work project\Fisk.DMP.Project\fisk-governance-center\fisk-governance-center-web\target\classes
+    # 接口文档中的环境信息
+    api_address: http://192.168.11.130:8083
 spring:
   application:
     name: datagovernance-service

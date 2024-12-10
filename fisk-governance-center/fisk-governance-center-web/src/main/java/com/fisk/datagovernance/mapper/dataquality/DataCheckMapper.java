@@ -39,13 +39,6 @@ public interface DataCheckMapper extends FKBaseMapper<DataCheckPO> {
      */
     Page<DataCheckVO> getPageAllRule(Page<DataCheckVO> page, @Param("query") DataCheckRulePageDTO query);
 
-        /**
-     * 查询数据校验数据集分页列表
-     *
-     * @return 查询结果
-     */
-    Page<DataCheckVO> getPageAllDataSetRule(Page<DataCheckVO> page, @Param("query") DataCheckRulePageDTO query);
-
     /**
      * 查询数据校验列表
      *

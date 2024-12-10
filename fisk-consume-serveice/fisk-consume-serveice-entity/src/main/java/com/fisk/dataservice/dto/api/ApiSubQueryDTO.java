@@ -5,12 +5,6 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
-/**
- * @author dick
- * @version v1.0
- * @description 查询api信息，含订阅信息
- * @date 2022/1/19 19:01
- */
 @Data
 public class ApiSubQueryDTO {
     /**

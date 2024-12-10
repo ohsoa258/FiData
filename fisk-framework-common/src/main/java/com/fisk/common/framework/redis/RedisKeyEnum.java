@@ -67,7 +67,7 @@ public enum RedisKeyEnum implements BaseEnum {
     DATA_SERVER_API_DATA(40,"DataServer:dataServerApiData"),
 
     DATA_SERVER_APP_ID(-1,"DataServer:dataServerAppId"),
-    DATA_CHECK_SERVER_APP_ID(-1,"DataCHECKServer:dataCheckServerAppId")
+    DATA_CHECK_SERVER_APP_ID(-1,"DataCheckServer:dataCheckServerAppId")
     ;
 
     RedisKeyEnum(int value, String name) {
