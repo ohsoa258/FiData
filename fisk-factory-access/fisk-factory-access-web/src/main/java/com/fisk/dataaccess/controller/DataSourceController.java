@@ -33,6 +33,19 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataSourceMeta(appId));
     }
 
+    @ApiOperation(value = "PowerBI:获取指定工作区下的数据集列表")
+    @GetMapping("/getPBIdatasetsByGroupId")
+    public ResultEntity<Object> getPBIdatasetsByGroupId(@RequestParam(value = "groupId") String groupId, @RequestParam(value = "appId") Long appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPBIdatasetsByGroupId(groupId,appId));
+    }
+
+    @ApiOperation(value = "PowerBI:获取指定数据集下的表")
+    @GetMapping("/getPBITablesByDatasetId")
+    public ResultEntity<Object> getPBITablesByDatasetId(@RequestParam(value = "groupId") String groupId,
+            @RequestParam(value = "datasetId") String datasetId, @RequestParam(value = "appId") Long appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPBITablesByDatasetId(groupId,datasetId,appId));
+    }
+
     /**
      * 数据接入，刷新redis里存储的表信息
      *

@@ -31,6 +31,7 @@ public enum DbTypeEnum implements BaseEnum {
     webservice(12,"webservice"),
     doris_catalog(13,"doris_catalog"),
     dm8(14,"dm8"),
+    powerbi_datasets(15, "powerbi_datasets"),
     ;
 
     DbTypeEnum(int value, String name) {

@@ -30,6 +30,7 @@ import com.fisk.system.entity.DataSourcePO;
 import com.fisk.system.map.DataSourceMap;
 import com.fisk.system.mapper.DataSourceMapper;
 import com.fisk.system.service.IDataSourceManageService;
+import com.fisk.system.utils.powerbi.PowerBIAuthUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -74,6 +75,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
     @Resource
     UserHelper userHelper;
+
+    @Resource
+    private PowerBIAuthUtils powerBIAuthUtils;
 
     @Override
     public List<DataSourceDTO> getSystemDataSource() {
@@ -157,6 +161,10 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                             filterQueryDTO.setColumnValue("17");
                         } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("MONGODB")) {
                             filterQueryDTO.setColumnValue("18");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("HIVE")) {
+                            filterQueryDTO.setColumnValue("19");
+                        } else if (filterQueryDTO.getColumnValue().equalsIgnoreCase("POWERBI_DATASETS")) {
+                            filterQueryDTO.setColumnValue("20");
                         }
                     }
                 });
@@ -480,6 +488,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
 
                     conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
                     return ResultEnum.SUCCESS;
+                case POWERBI_DATASETS:
+                    String accessToken = powerBIAuthUtils.getAccessToken(dto.powerbiTenantId, dto.powerbiClientId, dto.powerbiClientSecret);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }
@@ -637,6 +648,7 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         List<DataSourcePO> dataSourcePOS = baseMapper.selectList(dataSourcePOQueryWrapper);
         if (CollectionUtils.isNotEmpty(dataSourcePOS)) {
             dataSourcePOS.forEach(t -> {
+                //这个poToDto正常来讲是我们会使用mapstruct生成然后INSTANCE.xxx去使用，o.0但是这里是手动写的，加字段注意点进去手动加...
                 DataSourceDTO dataSourceDTO = poToDto(isShowPwd, t);
                 dataSourceList.add(dataSourceDTO);
             });
@@ -687,6 +699,9 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
         dataSourceDTO.setSysNr(t.getSysNr());
         dataSourceDTO.setLang(t.getLang());
         dataSourceDTO.setApiKeyParameters(t.getApiKeyParameters());
+        dataSourceDTO.setPowerbiClientId(t.getPowerbiClientId());
+        dataSourceDTO.setPowerbiClientSecret(t.getPowerbiClientSecret());
+        dataSourceDTO.setPowerbiTenantId(t.getPowerbiTenantId());
         if (isShowPwd) {
             dataSourceDTO.setConPassword(t.getConPassword());
         }

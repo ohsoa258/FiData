@@ -83,6 +83,7 @@ import com.fisk.dataaccess.service.IAppRegistration;
 import com.fisk.dataaccess.utils.createTblUtils.IBuildCreateTableFactory;
 import com.fisk.dataaccess.utils.createTblUtils.impl.CreateTableHelper;
 import com.fisk.dataaccess.utils.httprequest.Impl.BuildHttpRequestImpl;
+import com.fisk.dataaccess.utils.powerbiutils.PowerBIAuthUtils;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AppRegistrationVO;
 import com.fisk.dataaccess.vo.AtlasEntityQueryVO;
@@ -116,7 +117,6 @@ import com.fisk.task.dto.pipeline.PipelineTableLogVO;
 import com.fisk.task.dto.query.PipelineTableQueryDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
-import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
@@ -209,6 +209,8 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
     private Boolean openMetadata;
     @Resource
     PgsqlUtils pgsqlUtils;
+    @Resource
+    private PowerBIAuthUtils powerBIAuthUtils;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -3053,6 +3055,9 @@ public class AppRegistrationImpl extends ServiceImpl<AppRegistrationMapper, AppR
 
                     mongoClient = new MongoClient(serverAddresses, mongoCredentials);
                     allDatabases.addAll(new ArrayList<>());
+                    break;
+                case POWERBI_DATASETS:
+                    powerBIAuthUtils.getAccessToken(dto.powerbiTenantId, dto.powerbiClientId, dto.powerbiClientSecret);
                     break;
                 default:
                     break;

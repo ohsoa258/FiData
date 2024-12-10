@@ -330,9 +330,11 @@ public class TableFieldsImpl
         // 查询物理表
         TableAccessPO model = tableAccessImpl.getById(dto.id);
 
-        // 若为空则返回 数据不存在
-        if (model == null) {
-            return ResultEnum.DATA_NOTEXISTS;
+        //获取应用选择的数据源
+        AppDataSourcePO dataSourcePo = dataSourceImpl.query().eq("id", model.appDataSourceId).one();
+        //获取不到则抛出异常
+        if (dataSourcePo == null) {
+            throw new FkException(ResultEnum.DATA_NOTEXISTS);
         }
 
         //校验参数
@@ -429,6 +431,11 @@ public class TableFieldsImpl
         } else {
             model.whereScript = "";
         }
+        //powerbi 数据集id
+        model.pbiDatasetId = dto.pbiDatasetId;
+        //pbi username
+        model.pbiUsername = dto.pbiUsername;
+
         log.info("业务时间覆盖where条件语句, {}", model.whereScript);
         tableAccessImpl.updateById(model);
 
@@ -447,7 +454,7 @@ public class TableFieldsImpl
 
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
                 false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId,
-                dto.tableHistorys, null, sourceFieldNames);
+                dto.tableHistorys, null, sourceFieldNames, dataSourcePo);
 
         // 发布
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
@@ -796,18 +803,11 @@ public class TableFieldsImpl
                          Integer appDataSourceId,
                          List<TableHistoryDTO> dto,
                          String currUserName,
-                         List<String> sourceFieldNames) {
-
-        AppDataSourcePO dataSourcePo = null;
+                         List<String> sourceFieldNames,
+                         AppDataSourcePO dataSourcePo) {
         ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
         modelPublishStatus.tableId = accessId;
         try {
-            //获取应用数据源
-            dataSourcePo = dataSourceImpl.query().eq("id", appDataSourceId).one();
-            //获取不到则抛出异常
-            if (dataSourcePo == null) {
-                throw new FkException(ResultEnum.DATA_NOTEXISTS);
-            }
 
             //获取应用信息
             AppRegistrationPO appRegistrationPo = appRegistration.query().eq("id", appId).one();
@@ -2248,6 +2248,7 @@ public class TableFieldsImpl
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.FTP.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.API.getName()) ||
                 driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SAPBW.getName()) ||
+                driverTypes.contains(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POWERBI_DATASETS.getName()) ||
                 driverTypes.contains(RESTFULAPI.getName())) {
             String regex = "AND fidata_flow_batch_code='\\$\\{fragment.index}'";
             finalSql = finalSql.replaceAll(regex, "");

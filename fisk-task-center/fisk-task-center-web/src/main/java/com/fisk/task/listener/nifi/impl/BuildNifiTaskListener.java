@@ -1904,6 +1904,20 @@ public class BuildNifiTaskListener implements INifiTaskListener {
                 res.addAll(excelProcessorEntity);
 
                 /*
+                 * 如果是powerbi类型
+                 */
+            } else if (Objects.equals(DataSourceTypeEnum.POWERBI_DATASETS, conType)) {
+                //excelProcessorEntity = createExcelProcessorEntity(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+                /*
+                 * createExcelProcessorEntity2会返回一个集合，
+                 * 集合里面第一个是replaceTextForFtpProcess组件
+                 * 第二个是invokeHTTPForFtpProcessor组件
+                 */
+                excelProcessorEntity = createSapBwProcessorEntity3(appGroupId, groupId, config, tableNifiSettingPO, supervisionId, autoEndBranchTypeEnums, dto);
+
+                res.addAll(excelProcessorEntity);
+
+                /*
                  * 如果是api类型
                  */
             } else if (conType != null && Objects.equals(DataSourceTypeEnum.API, conType)) {
@@ -1959,8 +1973,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
             isLastId = false;
             ProcessorEntity putDatabaseRecord = null;
 
-            // 如果是数据接入excel || 数据接入sapbw || 数据接入api
-            if (dto.excelFlow || dto.sapBwFlow || (conType != null && Objects.equals(DataSourceTypeEnum.API, conType))) {
+            // 如果是数据接入excel || 数据接入sapbw || 数据接入api || 数据接入powerbi
+            if (dto.excelFlow
+                    || dto.sapBwFlow
+                    || (conType != null && Objects.equals(DataSourceTypeEnum.API, conType))
+                    || (conType != null && Objects.equals(DataSourceTypeEnum.POWERBI_DATASETS, conType))
+            ) {
                 ProcessorEntity IHP = new ProcessorEntity();
                 //如果开启数据校验，则新建两个组件
                 if (dataValidation) {
@@ -2106,7 +2124,12 @@ public class BuildNifiTaskListener implements INifiTaskListener {
              * 20230706 sjli
              * 是否开启数据校验
              */
-            if (!dto.excelFlow) {
+            if (
+                    !dto.excelFlow
+                            && !dto.sapBwFlow
+                            && !(conType != null && Objects.equals(DataSourceTypeEnum.API, conType))
+                            && !(conType != null && Objects.equals(DataSourceTypeEnum.POWERBI_DATASETS, conType))
+            ) {
                 if (dataValidation) {
                     if (Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.TOPGODS) || Objects.equals(synchronousTypeEnum, SynchronousTypeEnum.PGTOPG)) {
                         //---------------------------------
@@ -2600,6 +2623,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         componentConnector(groupId, replaceTextForSapBwProcess.getId(), invokeHTTPForSapBwProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
         processorEntities.add(replaceTextForSapBwProcess);
         processorEntities.add(invokeHTTPForSapBwProcessor);
+        tableNifiSettingPO.csvReaderId = null;
+        tableNifiSettingPO.avroRecordSetWriterId = null;
+        tableNifiSettingPO.convertRecordProcessorId = null;
+        tableNifiSettingPO.mergeContentProcessorId = null;
+
+        return processorEntities;
+    }
+
+    public List<ProcessorEntity> createSapBwProcessorEntity3(String appGroupId, String groupId, DataAccessConfigDTO config, TableNifiSettingPO tableNifiSettingPO, String supervisionId, List<AutoEndBranchTypeEnum> autoEndBranchTypeEnums, BuildNifiFlowDTO dto) {
+
+        List<ProcessorEntity> processorEntities = new ArrayList<>();
+        /**
+         * 流程中的第1个replaceTextForPowerBIProcess组件
+         */
+        ProcessorEntity replaceTextForPowerBIProcess = replaceTextForPowerBIProcess(config, groupId, dto);
+        tableNifiSettingPO.getFtpProcessorId = replaceTextForPowerBIProcess.getId();
+        //componentConnector(groupId, delSqlRes.getId(), replaceTextForFtpProcess.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        /**
+         * 流程中的第1个invokeHTTPForPowerBIProcessor组件
+         */
+        ProcessorEntity invokeHTTPForPowerBIProcessor = invokeHTTPForPowerBIProcessor(groupId);
+        tableNifiSettingPO.convertExcelToCsvProcessorId = invokeHTTPForPowerBIProcessor.getId();
+        componentConnector(groupId, replaceTextForPowerBIProcess.getId(), invokeHTTPForPowerBIProcessor.getId(), AutoEndBranchTypeEnum.SUCCESS);
+        processorEntities.add(replaceTextForPowerBIProcess);
+        processorEntities.add(invokeHTTPForPowerBIProcessor);
         tableNifiSettingPO.csvReaderId = null;
         tableNifiSettingPO.avroRecordSetWriterId = null;
         tableNifiSettingPO.convertRecordProcessorId = null;
@@ -4173,6 +4221,34 @@ public class BuildNifiTaskListener implements INifiTaskListener {
      * @param groupId 组id
      * @return 组件对象
      */
+    private ProcessorEntity replaceTextForPowerBIProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
+        BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
+        HashMap<String, Object> map = new HashMap<>();
+        //放入topic
+        map.put("topic", "${kafka.topic}");
+        //放入大批次号
+        map.put("fidata_batch_code", "${fidata_batch_code}");
+
+        buildReplaceTextProcessorDTO.name = "replaceTextForPowerBIProcess";
+        buildReplaceTextProcessorDTO.details = "query_phase";
+        buildReplaceTextProcessorDTO.groupId = groupId;
+        buildReplaceTextProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(9);
+        //替换流文件
+        buildReplaceTextProcessorDTO.evaluationMode = "Entire text";
+        buildReplaceTextProcessorDTO.maximumBufferSize = "100 MB";
+        //设置替换值为map，也就是map里面装载的连个键值对
+        buildReplaceTextProcessorDTO.replacementValue = JSON.toJSONString(map);
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildReplaceTextProcess(buildReplaceTextProcessorDTO, new ArrayList<>());
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * 调用api参数组件
+     *
+     * @param config  数据接入配置
+     * @param groupId 组id
+     * @return 组件对象
+     */
     private ProcessorEntity replaceTextForApiProcess(DataAccessConfigDTO config, String groupId, BuildNifiFlowDTO dto) {
         BuildReplaceTextProcessorDTO buildReplaceTextProcessorDTO = new BuildReplaceTextProcessorDTO();
         HashMap<String, Object> map = new HashMap<>();
@@ -4454,6 +4530,31 @@ public class BuildNifiTaskListener implements INifiTaskListener {
         buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
         buildInvokeHttpProcessorDTO.httpMethod = "POST";
         buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/task/nifi/sapBwToStg?Content-Type=application/json";
+        buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
+        buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
+        buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";
+        List<String> autoEnd = new ArrayList<>();
+        autoEnd.add("Response");
+        BusinessResult<ProcessorEntity> processorEntityBusinessResult = componentsBuild.buildInvokeHTTPProcessor(buildInvokeHttpProcessorDTO, autoEnd);
+        return processorEntityBusinessResult.data;
+    }
+
+    /**
+     * ftp调用api参数组件
+     *
+     * @param groupId 组id
+     * @return 组件对象
+     */
+    private ProcessorEntity invokeHTTPForPowerBIProcessor(String groupId) {
+        BuildInvokeHttpProcessorDTO buildInvokeHttpProcessorDTO = new BuildInvokeHttpProcessorDTO();
+        buildInvokeHttpProcessorDTO.name = "invokeHTTPForPowerBIProcessor";
+        buildInvokeHttpProcessorDTO.details = "query_phase";
+        buildInvokeHttpProcessorDTO.groupId = groupId;
+        buildInvokeHttpProcessorDTO.positionDTO = NifiPositionHelper.buildYPositionDTO(10);
+        buildInvokeHttpProcessorDTO.attributesToSend = "(?s)(^.*$)";
+        buildInvokeHttpProcessorDTO.contentType = "application/json;charset=UTF-8";
+        buildInvokeHttpProcessorDTO.httpMethod = "POST";
+        buildInvokeHttpProcessorDTO.remoteUrl = dataGovernanceUrl + "/task/nifi/powerBiToStg?Content-Type=application/json";
         buildInvokeHttpProcessorDTO.nifiToken = nifiToken;
         buildInvokeHttpProcessorDTO.socketConnectTimeout = "300 secs";
         buildInvokeHttpProcessorDTO.socketReadTimeout = "300 secs";

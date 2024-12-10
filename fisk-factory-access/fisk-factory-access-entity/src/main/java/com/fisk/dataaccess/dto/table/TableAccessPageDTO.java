@@ -1,6 +1,6 @@
 package com.fisk.dataaccess.dto.table;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.plugins.pagination .Page;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

@@ -182,4 +182,22 @@ public class AppDataSourcePO extends BasePO implements Serializable {
     @ApiModelProperty(value = "选择ApiKey验证方式时，登陆后获取到的cookie", required = true)
     public String apiKeyCookie;
 
+    /**
+     * powerbi应用客户端id
+     */
+    @ApiModelProperty(value = "powerbi应用客户端id")
+    public String powerbiClientId;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    @ApiModelProperty(value = "powerbi租户唯一标识符")
+    public String powerbiClientSecret;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    @ApiModelProperty(value = "powerbi租户唯一标识符")
+    public String powerbiTenantId;
+
 }

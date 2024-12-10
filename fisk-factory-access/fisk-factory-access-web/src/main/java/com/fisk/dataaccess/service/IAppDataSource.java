@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.fisk.common.core.response.ResultEntity;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
+import com.fisk.dataaccess.dto.pbi.PBItemDTO;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
 import com.fisk.dataaccess.dto.v3.SourceColumnMetaQueryDTO;
@@ -23,6 +24,15 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return dto
      */
     List<DataSourceDTO> getDataSourceMeta(long appId);
+
+    /**
+     * PowerBI:获取指定工作区下的数据集列表
+     *
+     * @param groupId
+     * @param appId
+     * @return
+     */
+    List<PBItemDTO> getPBIdatasetsByGroupId(String groupId, Long appId);
 
     /**
      * 根据appId重新加载所有数据源以及数据库、表数据
@@ -128,4 +138,13 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     List<AppDataSourceDTO> getAppSourcesByAppId(long appId);
+
+    /**
+     * PowerBI:获取指定数据集下的表
+     *
+     * @param datasetId
+     * @param appId
+     * @return
+     */
+    Object getPBITablesByDatasetId(String groupId,String datasetId, Long appId);
 }

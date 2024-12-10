@@ -157,6 +157,18 @@ public class TableAccessNonDTO extends BaseDTO {
     @ApiModelProperty(value = "sapbw-mdx语句集合", required = true)
     public List<String> mdxList;
 
+    /**
+     * powerbi 数据集id
+     */
+    @ApiModelProperty(value = "powerbi 数据集id")
+    public String pbiDatasetId;
+
+    /**
+     * pbi 查询时所用的用户名
+     */
+    @ApiModelProperty(value = "pbi 查询时所用的用户名")
+    public String pbiUsername;
+
     public TableAccessNonDTO(BaseEntity entity) {
         super(entity);
     }

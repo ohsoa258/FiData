@@ -15,4 +15,13 @@ public interface IpowerBiListener {
      * @return
      */
     ResultEnum powerBiTask(String data, Acknowledgment acke);
+
+    /**
+     * powerBi-Java代码同步
+     *
+     * @param toJSONString
+     * @return
+     */
+    ResultEnum powerBiToStg(String toJSONString);
+
 }

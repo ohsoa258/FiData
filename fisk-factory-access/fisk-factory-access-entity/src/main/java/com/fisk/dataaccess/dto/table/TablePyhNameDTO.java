@@ -54,6 +54,18 @@ public class TablePyhNameDTO extends BaseDTO {
     @ApiModelProperty(value = "表字段")
     public List<TableStructureDTO> fields;
 
+    /**
+     * powerbi 数据集各种item 的id
+     */
+    @ApiModelProperty(value = "powerbi 数据集各种item 的id")
+    public String guid;
+
+    /**
+     * item type
+     */
+    @ApiModelProperty(value = "item type")
+    public String type;
+
     public TablePyhNameDTO(BaseEntity entity) {
         super(entity);
     }

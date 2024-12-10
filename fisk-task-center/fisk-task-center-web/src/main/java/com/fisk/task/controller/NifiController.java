@@ -28,10 +28,7 @@ import com.fisk.task.dto.accessmdm.LogResultDTO;
 import com.fisk.task.dto.daconfig.DataAccessConfigDTO;
 import com.fisk.task.dto.kafka.KafkaReceiveDTO;
 import com.fisk.task.dto.task.NifiCustomWorkListDTO;
-import com.fisk.task.listener.nifi.IApiListener;
-import com.fisk.task.listener.nifi.INifiCustomWorkFlow;
-import com.fisk.task.listener.nifi.ISapBwListener;
-import com.fisk.task.listener.nifi.ISftpDataUploadListener;
+import com.fisk.task.listener.nifi.*;
 import com.fisk.task.po.TableNifiSettingPO;
 import com.fisk.task.service.nifi.ITableNifiSettingService;
 import com.fisk.task.service.nifi.impl.TableNifiSettingServiceImpl;
@@ -74,6 +71,8 @@ public class NifiController {
     INifiSchedulingComponentService iNifiSchedulingComponentService;
     @Resource
     private ISapBwListener sapBwListener;
+    @Resource
+    private IpowerBiListener powerBiListener;
     @Resource
     private IApiListener apiListener;
     @Resource
@@ -195,6 +194,7 @@ public class NifiController {
                 || dto.conType == DataSourceTypeEnum.HUDI
                 || dto.conType == DataSourceTypeEnum.API
                 || dto.conType == DataSourceTypeEnum.MONGODB
+                || dto.conType == DataSourceTypeEnum.POWERBI_DATASETS
         ) {
             return resultEntity;
         }
@@ -262,6 +262,7 @@ public class NifiController {
                 || dto.conType == DataSourceTypeEnum.API
                 || dto.conType == DataSourceTypeEnum.HUDI
                 || dto.conType == DataSourceTypeEnum.MONGODB
+                || dto.conType == DataSourceTypeEnum.POWERBI_DATASETS
         ) {
             return resultEntity;
         }
@@ -321,6 +322,18 @@ public class NifiController {
     @PostMapping("/sapBwToStg")
     public ResultEntity<Object> sapBwToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
         return ResultEntityBuild.build(sapBwListener.sapBwToStg(JSON.toJSONString(kafkaReceive)));
+    }
+
+    /**
+     * powerBi-Java代码同步
+     *
+     * @param kafkaReceive
+     * @return
+     */
+    @ApiOperation("powerBi-Java代码同步")
+    @PostMapping("/powerBiToStg")
+    public ResultEntity<Object> powerBiToStg(@RequestBody KafkaReceiveDTO kafkaReceive) {
+        return ResultEntityBuild.build(powerBiListener.powerBiToStg(JSON.toJSONString(kafkaReceive)));
     }
 
     @ApiOperation(value = "数据分发api启用或禁用")

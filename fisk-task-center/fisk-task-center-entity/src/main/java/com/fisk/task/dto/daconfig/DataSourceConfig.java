@@ -31,4 +31,40 @@ public class DataSourceConfig {
      */
     @ApiModelProperty(value = "物理表字段")
     public List<TableFieldsDTO> tableFieldsList;
+
+    /**
+     * powerbi应用客户端id
+     */
+    @ApiModelProperty(value = "powerbi应用客户端id")
+    public String powerbiClientId;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    @ApiModelProperty(value = "powerbi租户唯一标识符")
+    public String powerbiClientSecret;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    @ApiModelProperty(value = "powerbi租户唯一标识符")
+    public String powerbiTenantId;
+
+    /**
+     * powerbi数据集id
+     */
+    @ApiModelProperty(value = "powerbi数据集id")
+    public String pbiDatasetId;
+
+    /**
+     * pbi查询语句
+     */
+    @ApiModelProperty(value = "pbi查询语句")
+    public String pbiSql;
+
+    /**
+     * pbi 查询时所用的用户名
+     */
+    @ApiModelProperty(value = "pbi 查询时所用的用户名")
+    public String pbiUsername;
 }

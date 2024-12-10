@@ -15,6 +15,7 @@ import com.fisk.common.framework.redis.RedisUtil;
 import com.fisk.dataaccess.dto.app.AppDataSourceDTO;
 import com.fisk.dataaccess.dto.app.AppRegistrationDTO;
 import com.fisk.dataaccess.dto.datasource.DataSourceInfoDTO;
+import com.fisk.dataaccess.dto.pbi.PBItemDTO;
 import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
 import com.fisk.dataaccess.dto.tablestructure.TableStructureDTO;
 import com.fisk.dataaccess.dto.v3.DataSourceDTO;
@@ -24,6 +25,8 @@ import com.fisk.dataaccess.enums.DataSourceTypeEnum;
 import com.fisk.dataaccess.map.AppDataSourceMap;
 import com.fisk.dataaccess.mapper.AppDataSourceMapper;
 import com.fisk.dataaccess.service.IAppDataSource;
+import com.fisk.dataaccess.utils.powerbiutils.PBIUtils;
+import com.fisk.dataaccess.utils.powerbiutils.PowerBIAuthUtils;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
@@ -56,7 +59,15 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     @Resource
     DM8Utils dm8Utils;
     @Resource
+    private PBIUtils pbiUtils;
+    @Resource
+    private PowerBIAuthUtils powerBIAuthUtils;
+
+
+    @Resource
     AppRegistrationImpl appRegistration;
+    @Resource
+    private AppDataSourceImpl appDataSourceImpl;
 
     @Resource
     private UserClient userClient;
@@ -93,7 +104,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSource = dataSourceDTO;
                 }
             } catch (Exception e) {
-                log.error("redis中获取数据失败"+e);
+                log.error("redis中获取数据失败" + e);
                 //在测试openedge数据库时发现，如果库内表过多，导致存不进redis里面时，会导致返回空数据
                 dataSource = dataSourceDTO;
             }
@@ -101,6 +112,73 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         }
 
         return result;
+    }
+
+    /**
+     * PowerBI:获取指定工作区下的数据集列表
+     *
+     * @param groupId
+     * @param appId
+     * @return
+     */
+    @Override
+    public List<PBItemDTO> getPBIdatasetsByGroupId(String groupId, Long appId) {
+
+        List<AppDataSourcePO> list = appDataSourceImpl.list(
+                new LambdaQueryWrapper<AppDataSourcePO>()
+                        .eq(AppDataSourcePO::getAppId, appId)
+                        .select(AppDataSourcePO::getPowerbiClientId, AppDataSourcePO::getPowerbiClientSecret, AppDataSourcePO::getPowerbiTenantId)
+        );
+
+        if (CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        AppDataSourcePO po = list.get(0);
+        String accessToken = null;
+
+        try {
+            //获取pbi的 accessToken
+            accessToken = powerBIAuthUtils.getAccessToken(po.powerbiTenantId, po.powerbiClientId, po.powerbiClientSecret);
+        } catch (Exception e) {
+            log.error("获取powerbi accessToken失败", e);
+            throw new FkException(ResultEnum.PBI_GET_ACCESSTOKEN_ERROR);
+        }
+
+        return pbiUtils.getAllDatasets(accessToken, groupId);
+    }
+
+
+    /**
+     * PowerBI:获取指定数据集下的表
+     *
+     * @param datasetId
+     * @param appId
+     * @return
+     */
+    @Override
+    public Object getPBITablesByDatasetId(String groupId, String datasetId, Long appId) {
+
+        List<AppDataSourcePO> list = appDataSourceImpl.list(
+                new LambdaQueryWrapper<AppDataSourcePO>()
+                        .eq(AppDataSourcePO::getAppId, appId)
+                        .select(AppDataSourcePO::getPowerbiClientId, AppDataSourcePO::getPowerbiClientSecret, AppDataSourcePO::getPowerbiTenantId)
+        );
+
+        if (CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        AppDataSourcePO po = list.get(0);
+        String accessToken = null;
+
+        try {
+            //获取pbi的 accessToken
+            accessToken = powerBIAuthUtils.getAccessToken(po.powerbiTenantId, po.powerbiClientId, po.powerbiClientSecret);
+        } catch (Exception e) {
+            log.error("获取powerbi accessToken失败", e);
+            throw new FkException(ResultEnum.PBI_GET_ACCESSTOKEN_ERROR);
+        }
+
+        return pbiUtils.getAllTables(accessToken, groupId, datasetId);
     }
 
     @Override
@@ -159,6 +237,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             } else if (DataSourceTypeEnum.DM8.getName().equalsIgnoreCase(dataSource.driveType)) {
                 // 表结构
                 dataSource.tableDtoList = dm8Utils.getTableNameAndColumns(DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8), po.getDbName());
+            } else if (DataSourceTypeEnum.POWERBI_DATASETS.getName().equalsIgnoreCase(dataSource.driveType)) {
+                //获取pbi的 accessToken
+                String accessToken = powerBIAuthUtils.getAccessToken(po.powerbiTenantId, po.powerbiClientId, po.powerbiClientSecret);
+                dataSource.appName = po.name;
+                //pbi获取token下的所有工作区 group
+                dataSource.tableDtoList = pbiUtils.getAllGroupsByToken(accessToken);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -260,7 +344,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         for (AppDataSourcePO po : list) {
             DataSourceInfoDTO dto = new DataSourceInfoDTO();
             dto.id = po.id;
-            dto.name = po.dbName;
+            if (StringUtils.isNotBlank(po.dbName)){
+                dto.name = po.dbName;
+            }else {
+                dto.name = po.name;
+            }
+
             data.add(dto);
         }
 
@@ -414,6 +503,12 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     dataSourceDTOS.add(dataSourceDTO);
                 }
             });
+        } else if (driverType.equalsIgnoreCase(DataSourceTypeEnum.POWERBI_DATASETS.getName())) {
+            data.forEach(dataSourceDTO -> {
+                if (dataSourceDTO.conType.getValue() == 20) {
+                    dataSourceDTOS.add(dataSourceDTO);
+                }
+            });
         }
         return dataSourceDTOS;
     }
@@ -516,6 +611,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSourcePO.lang = dto.lang;
                 dataSourcePO.apiKeyParameters = dto.apiKeyParameters;
                 dataSourcePO.apiKeyCookie = dto.apiKeyCookie;
+                dataSourcePO.powerbiClientId = dto.powerbiClientId;
+                dataSourcePO.powerbiClientSecret = dto.powerbiClientSecret;
+                dataSourcePO.powerbiTenantId = dto.powerbiTenantId;
                 appDataSourcePOS.add(dataSourcePO);
             }
             return updateBatchById(appDataSourcePOS);

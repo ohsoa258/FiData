@@ -192,4 +192,19 @@ public class DataSourcePO extends BasePO {
      */
     public String lang;
 
+    /**
+     * powerbi应用客户端id
+     */
+    public String powerbiClientId;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    public String powerbiClientSecret;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    public String powerbiTenantId;
+
 }

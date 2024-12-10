@@ -79,6 +79,8 @@ import com.fisk.dataaccess.utils.dbdatasize.IBuildFactoryDbDataSizeCount;
 import com.fisk.dataaccess.utils.dbdatasize.impl.DbDataSizeCountHelper;
 import com.fisk.dataaccess.utils.keepnumberfactory.IBuildKeepNumber;
 import com.fisk.dataaccess.utils.keepnumberfactory.impl.BuildKeepNumberSqlHelper;
+import com.fisk.dataaccess.utils.powerbiutils.PBIUtils;
+import com.fisk.dataaccess.utils.powerbiutils.PowerBIAuthUtils;
 import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
 import com.fisk.dataaccess.utils.sql.MysqlConUtils;
 import com.fisk.dataaccess.utils.sql.SapBwUtils;
@@ -202,6 +204,10 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
     GetConfigDTO getConfig;
     @Resource
     RedisUtil redisUtil;
+    @Resource
+    private PBIUtils pbiUtils;
+    @Resource
+    private PowerBIAuthUtils powerBIAuthUtils;
 
     @Value("${sftp.nifi-file-path}")
     private String nifiFilePath;
@@ -635,6 +641,97 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         data.fieldNameDTOList = fieldNameDTOList.stream().collect(Collectors.toList());
         data.dataArray = array;
         return data;
+    }
+
+    /**
+     * 将查询到的powerbi数据集内容置换为odsResultDTO
+     *
+     * @param data
+     * @return
+     */
+    private OdsResultDTO powerbiDataToOdsResultDTO(String data) {
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(2);
+        if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        DataSourceDTO odsConfig = resultEntity.getData();
+
+        OdsResultDTO dto = new OdsResultDTO();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+        //转换数据
+        JSONArray array = extractRows(data);
+        // 获取前 11 行数据  查询预览只展示前11条
+        JSONArray subArray;
+        if (array.size() > 15) {
+            subArray = new JSONArray(array.subList(0, 11));
+        } else {
+            subArray = new JSONArray(array);
+        }
+
+        Set<String> fieldNames = getFieldNames(subArray);
+
+        //获取列名
+        for (String fieldName : fieldNames) {
+            FieldNameDTO fieldDto = new FieldNameDTO();
+            fieldDto.sourceTableName = fieldName.substring(0, fieldName.indexOf("["));
+            fieldDto.sourceFieldName = fieldName.substring(fieldName.indexOf("[") + 1, fieldName.indexOf("]"));
+            if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL.equals(odsConfig.conType)) {
+                fieldDto.sourceFieldType = "VARCHAR";
+                fieldDto.fieldType = "VARCHAR";
+            } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.equals(odsConfig.conType)) {
+                fieldDto.sourceFieldType = "NVARCHAR";
+                fieldDto.fieldType = "NVARCHAR";
+            } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.equals(odsConfig.conType)) {
+                fieldDto.sourceFieldType = "VARCHAR";
+                fieldDto.fieldType = "VARCHAR";
+            }
+
+            fieldDto.fieldName = fieldName.substring(fieldName.indexOf("[") + 1, fieldName.indexOf("]"));
+
+            fieldDto.fieldLength = "500";
+            fieldNameDTOList.add(fieldDto);
+        }
+        dto.fieldNameDTOList = fieldNameDTOList;
+
+        //powerbi查询数据  列名外面会被表名包一层  例如  表a的字段b   a[b]  我们需要处理一下
+        subArray.forEach(obj -> {
+            JSONObject jsonObject = (JSONObject) obj;
+            for (String fieldName : fieldNames) {
+                String fieldValue = jsonObject.getString(fieldName);
+                String newFieldName = fieldName.substring(fieldName.indexOf("[") + 1, fieldName.indexOf("]"));
+                jsonObject.put(newFieldName, fieldValue);
+                jsonObject.remove(fieldName); // 删除原始的键
+            }
+        });
+
+        dto.setDataArray(subArray);
+        return dto;
+    }
+
+    /**
+     * 获取powerbi查询api返回的数据行
+     *
+     * @param jsonData
+     * @return
+     */
+    private JSONArray extractRows(String jsonData) {
+        JSONObject jsonObject = JSONObject.parseObject(jsonData);
+        JSONArray resultsArray = jsonObject.getJSONArray("results");
+        JSONObject firstResult = resultsArray.getJSONObject(0);
+        JSONArray tablesArray = firstResult.getJSONArray("tables");
+        JSONObject firstTable = tablesArray.getJSONObject(0);
+        return firstTable.getJSONArray("rows");
+    }
+
+    /**
+     * 获取powerbi查询api返回的数据行中的字段
+     *
+     * @param jsonArray
+     * @return
+     */
+    private Set<String> getFieldNames(JSONArray jsonArray) {
+        JSONObject firstObject = jsonArray.getJSONObject(0);
+        return new HashSet<>(firstObject.keySet());
     }
 
     /**
@@ -1194,6 +1291,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 List<String> list = JSONArray.parseArray(mdxSqlList, String.class);
                 sapBwConfig.setMdxList(list);
                 break;
+            case POWERBI_DATASETS:
+                // 设置pbi配置信息
+                sourceDsConfig.setPowerbiClientId(modelDataSource.getPowerbiClientId());
+                sourceDsConfig.setPowerbiClientSecret(modelDataSource.getPowerbiClientSecret());
+                sourceDsConfig.setPowerbiTenantId(modelDataSource.getPowerbiTenantId());
+                sourceDsConfig.setPbiDatasetId(modelAccess.getPbiDatasetId());
+                sourceDsConfig.setPbiSql(modelAccess.getSqlScript());
+                sourceDsConfig.setPbiUsername(modelAccess.getPbiUsername());
+                break;
             default:
                 break;
         }
@@ -1539,6 +1645,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.powerbi_datasets.getName())
                         ) {
                             f.type = "数据湖表任务";
                         }
@@ -2448,6 +2555,15 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 Instant inst2 = Instant.now();
                 log.info("执行mdx时间 : " + Duration.between(inst1, inst2).toMillis());
 
+            } else if (DataSourceTypeEnum.POWERBI_DATASETS.getName().equalsIgnoreCase(po.driveType)) {
+                //获取pbi token
+                String accessToken = powerBIAuthUtils.getAccessToken(po.powerbiTenantId, po.powerbiClientId, po.powerbiClientSecret);
+                //执行dax语句 获取查询结果
+                String data = pbiUtils.executePowerBiQuery(accessToken, query.querySql, query.datasetid, query.impersonatedUserName);
+                array = powerbiDataToOdsResultDTO(data);
+                array.sql = query.querySql;
+                Instant inst2 = Instant.now();
+                log.info("执行powerbi dax语句时间 : " + Duration.between(inst1, inst2).toMillis());
             } else {
                 AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
                 conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
@@ -2507,8 +2623,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Instant inst5 = Instant.now();
         System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
 
-        //数据类型转换
-        typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
+        //powerbi暂时无需数据转换，前面已经全部处理为字符串
+        if (!dataSourceTypeEnum.equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POWERBI_DATASETS)) {
+            //数据类型转换
+            typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
+        }
 
         return array;
     }
@@ -2685,6 +2804,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             queryDto.querySql = dto.sqlScript;
             queryDto.mdxList = dto.mdxList;
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
+            queryDto.impersonatedUserName = dto.pbiUsername;
+            queryDto.datasetid = dto.pbiDatasetId;
             return filterSqlFieldList(listField, queryDto);
         }
         return null;

@@ -175,4 +175,16 @@ public class TbTableAccessDTO {
     @ApiModelProperty(value = "Flink jobid")
     public String flinkJobid;
 
+    /**
+     * powerbi 数据集id
+     */
+    @ApiModelProperty(value = "powerbi 数据集id")
+    public String pbiDatasetId;
+
+    /**
+     * pbi 查询时所用的用户名
+     */
+    @ApiModelProperty(value = "pbi 查询时所用的用户名")
+    public String pbiUsername;
+
 }

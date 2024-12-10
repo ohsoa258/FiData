@@ -263,4 +263,22 @@ public class DataSourceDTO {
      */
     @ApiModelProperty(value = "JCO_LANG", required = true)
     public String lang;
+
+    /**
+     * powerbi应用客户端id
+     */
+    @ApiModelProperty(value = "powerbi应用客户端id")
+    public String powerbiClientId;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    @ApiModelProperty(value = "powerbi租户唯一标识符")
+    public String powerbiClientSecret;
+
+    /**
+     * powerbi租户唯一标识符
+     */
+    @ApiModelProperty(value = "powerbi租户唯一标识符")
+    public String powerbiTenantId;
 }

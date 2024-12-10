@@ -29,7 +29,10 @@
         ds.lang AS lang,
         ds.api_key_parameters as apiKeyParameters,
         ds.api_key_cookie as apiKeyCookie,
-        ds.authentication_method as authenticationMethod
+        ds.authentication_method as authenticationMethod,
+        ds.powerbi_client_id as powerbiClientId,
+        ds.powerbi_client_secret as powerbiClientSecret,
+        ds.powerbi_tenant_id as powerbiTenantId
         FROM
         tb_datasource_config ds
         LEFT JOIN tb_user_info users ON ds.create_user = users.id

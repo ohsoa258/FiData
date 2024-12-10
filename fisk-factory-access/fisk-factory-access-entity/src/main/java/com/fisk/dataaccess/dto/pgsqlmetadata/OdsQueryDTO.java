@@ -35,6 +35,10 @@ public class OdsQueryDTO {
     public int appDataSourceId;
     @ApiModelProperty(value = "sapbw-mdx语句集合", required = true)
     public List<String> mdxList;
+    @ApiModelProperty(value = "pbi数据集id")
+    public String datasetid;
+    @ApiModelProperty(value = "pbi用户名")
+    public String impersonatedUserName;
 
     /*
      * 接入的增量时间参数

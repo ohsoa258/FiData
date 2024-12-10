@@ -171,4 +171,14 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public String flinkJobid;
 
+    /**
+     * powerbi 数据集id
+     */
+    public String pbiDatasetId;
+
+    /**
+     * pbi 查询时所用的用户名
+     */
+    public String pbiUsername;
+
 }
