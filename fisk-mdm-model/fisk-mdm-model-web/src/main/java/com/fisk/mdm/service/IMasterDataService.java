@@ -8,7 +8,6 @@ import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberVO;
 import com.fisk.mdm.vo.model.ModelDropDownVO;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -32,6 +31,14 @@ public interface IMasterDataService {
      * @return
      */
     ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto, HttpServletResponse response);
+
+    /**
+     * 分页
+     *
+     * @param dto
+     * @param response
+     */
+    void downLoadList(MasterDataQueryDTO dto, HttpServletResponse response);
 
     /**
      * 获取模型实体版本数据
