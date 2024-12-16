@@ -3,10 +3,7 @@ package com.fisk.common.service.dbBEBuild.dataservice;
 import com.fisk.common.core.enums.dataservice.DataSourceTypeEnum;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.exception.FkException;
-import com.fisk.common.service.dbBEBuild.dataservice.impl.BuildDataServiceDorisCommandImpl;
-import com.fisk.common.service.dbBEBuild.dataservice.impl.BuildDataServiceMysqlCommandImpl;
-import com.fisk.common.service.dbBEBuild.dataservice.impl.BuildDataServicePgCommandImpl;
-import com.fisk.common.service.dbBEBuild.dataservice.impl.BuildDataServiceSqlServerCommandImpl;
+import com.fisk.common.service.dbBEBuild.dataservice.impl.*;
 
 /**
  * @author dick
@@ -24,7 +21,7 @@ public class BuildDataServiceHelper {
             case DORIS:
                 return new BuildDataServiceDorisCommandImpl();
             case DM8:
-                return new BuildDataServiceDorisCommandImpl();
+                return new BuildDataServiceDaMengCommandImpl();
             default:
                 throw new FkException(ResultEnum.ENUM_TYPE_ERROR);
         }

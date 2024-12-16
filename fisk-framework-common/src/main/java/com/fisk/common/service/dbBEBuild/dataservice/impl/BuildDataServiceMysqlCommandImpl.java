@@ -33,7 +33,14 @@ public class BuildDataServiceMysqlCommandImpl implements IBuildDataServiceSqlCom
 
     @Override
     public String buildQueryCountSql(String tableName, String queryConditions) {
-        return null;
+        StringBuilder str = new StringBuilder();
+        str.append("SELECT COUNT(*) AS totalNum FROM ");
+        str.append(tableName);
+        str.append(" WHERE 1=1 ");
+        if (!StringUtils.isEmpty(queryConditions)) {
+            str.append(queryConditions);
+        }
+        return str.toString();
     }
 
     @Override

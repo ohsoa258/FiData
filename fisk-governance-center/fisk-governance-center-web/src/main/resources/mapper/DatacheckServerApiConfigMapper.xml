@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fisk.datagovernance.mapper.dataquality.DatacheckServerApiConfigMapper">
+
+    <select id="getApiSubAll" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.ApiSeverSubVO">
+        SELECT
+            a.id,
+            a.app_id,
+            a.check_rule_id,
+            b.rule_name,
+            a.api_code,
+            a.api_desc,
+            a.api_state
+        FROM
+            tb_datacheck_server_api_config a
+                LEFT JOIN tb_datacheck_rule b ON a.check_rule_id = b.id
+        WHERE
+            a.del_flag = 1
+          AND b.del_flag = 1
+        <if test="query.keyword != null and query.keyword != ''">
+          AND b.rule_name LIKE #{query.keyword}
+        </if>
+        LIMIT #{pageNo},#{size}
+    </select>
+
+    <select id="getApiSubAllCount" resultType="Integer">
+        SELECT
+        count(1) as mumber
+        FROM
+        tb_datacheck_server_api_config a
+        LEFT JOIN tb_datacheck_rule b ON a.check_rule_id = b.id
+        WHERE
+        a.del_flag = 1
+        AND b.del_flag = 1
+        <if test="query.keyword != null and query.keyword != ''">
+            AND b.rule_name LIKE #{query.keyword}
+        </if>
+    </select>
+</mapper>

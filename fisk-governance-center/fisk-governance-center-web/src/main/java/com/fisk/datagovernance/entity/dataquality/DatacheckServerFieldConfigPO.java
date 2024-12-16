@@ -18,9 +18,6 @@ public class DatacheckServerFieldConfigPO extends BasePO {
     @ApiModelProperty(value = "API Id")
     private Integer apiId;
 
-    @ApiModelProperty(value = "字段Id")
-    private String fieldId;
-
     @ApiModelProperty(value = "字段名称")
     private String fieldName;
 

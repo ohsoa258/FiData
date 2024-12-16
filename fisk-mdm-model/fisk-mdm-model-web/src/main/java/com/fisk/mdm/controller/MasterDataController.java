@@ -50,6 +50,12 @@ public class MasterDataController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getMasterDataPage(dto, response));
     }
 
+    @ApiOperation("下载实体数据")
+    @PostMapping("/downLoadList")
+    public void  downLoadList(@Validated @RequestBody MasterDataQueryDTO dto) {
+        service.downLoadList(dto, response);
+    }
+
     @ApiOperation("获取模型、实体、版本下拉列表")
     @GetMapping("/getModelEntityVersionStruct")
     public ResultEntity<Object> getModelEntityVersionStruct() {

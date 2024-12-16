@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * @author dick
@@ -21,11 +22,11 @@ public class AppApiSubDTO {
     public Integer appId;
 
     /**
-     * apiId
+     * 规则Id
      */
-    @ApiModelProperty(value = "apiId")
+    @ApiModelProperty(value = "规则Id")
     @NotNull()
-    public Integer apiId;
+    public Integer checkRuleId;
 
     /**
      * API状态 1启用、0禁用
@@ -33,4 +34,16 @@ public class AppApiSubDTO {
     @ApiModelProperty(value = "apiState")
     @NotNull()
     public Integer apiState;
+
+    /**
+     * 描述
+     */
+    @ApiModelProperty(value = "描述")
+    public String apiDesc;
+
+    /**
+     * api入参字段
+     */
+    @ApiModelProperty(value = "api入参字段")
+    public List<ApiFieldDTO> apiFieldDTOList;
 }

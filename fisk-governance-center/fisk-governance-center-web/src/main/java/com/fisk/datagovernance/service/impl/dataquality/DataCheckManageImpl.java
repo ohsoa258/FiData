@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -32,6 +33,7 @@ import com.fisk.common.service.dbMetaData.dto.ColumnQueryDTO;
 import com.fisk.common.service.dbMetaData.dto.FiDataMetaDataReqDTO;
 import com.fisk.dataaccess.client.DataAccessClient;
 import com.fisk.datagovernance.dto.dataquality.datacheck.*;
+import com.fisk.datagovernance.dto.dataquality.datacheck.api.RequstDTO;
 import com.fisk.datagovernance.dto.dataquality.datasource.QueryTableRuleDTO;
 import com.fisk.datagovernance.dto.dataquality.qualityreport.QualityReportSummary_RuleDTO;
 import com.fisk.datagovernance.entity.dataquality.*;
@@ -41,8 +43,10 @@ import com.fisk.datagovernance.map.dataquality.DataCheckExtendMap;
 import com.fisk.datagovernance.map.dataquality.DataCheckMap;
 import com.fisk.datagovernance.mapper.dataquality.*;
 import com.fisk.datagovernance.service.dataquality.DatacheckCodeService;
+import com.fisk.datagovernance.service.dataquality.DatacheckServerFieldConfigService;
 import com.fisk.datagovernance.service.dataquality.IDataCheckManageService;
 import com.fisk.datagovernance.vo.dataquality.datacheck.*;
+import com.fisk.datagovernance.vo.dataquality.datacheck.api.ResponseVO;
 import com.fisk.datagovernance.vo.dataquality.datasource.DataSourceConVO;
 import com.fisk.datagovernance.vo.dataquality.qualityreport.QualityReportRuleVO;
 import com.fisk.datamanage.client.DataManageClient;
@@ -121,6 +125,15 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
 
     @Resource
     private AttachmentInfoMapper attachmentInfoMapper;
+
+    @Resource
+    DatacheckServerAppConfigMapper appConfigMapper;
+
+    @Resource
+    DatacheckServerApiConfigMapper apiConfigMapper;
+
+    @Resource
+    DatacheckServerFieldConfigService fieldConfigService;
 
     @Resource
     private UserHelper userHelper;
@@ -899,59 +912,27 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         return ResultEntityBuild.buildData(resultEnum, dataCheckResults);
     }
 
-    public DataCheckResultVO interface_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
-                                                 DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
-        // 第一步：获取检查结果基础信息
-        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
-
-        // 第二步：判断检查的字段是否存在，存在则获取字段值
-        String tName = dataCheckSyncParamDTO.getTableName();
-        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+    public JSONArray interfaceNullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                        DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
         String fName = dataCheckSyncParamDTO.getFieldName();
-        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
-        JSONArray errorDataList = new JSONArray();
-        JSONArray successDataList = new JSONArray();
         for (int i = 0; i < data.size(); i++) {
             JSONObject jsonObject = data.getJSONObject(i);
             if (jsonObject.containsKey(fName)) {
                 String value = jsonObject.getString(fName);
                 if (StringUtils.isEmpty(value)) {
-                    errorDataList.add(jsonObject);
+                    returnData = jsonObject;
+                    returnData.put(returnField, "字段"+fName+"空值校验失败");
+                    result.add(returnData);
                 } else {
-                    successDataList.add(jsonObject);
+                    returnData = jsonObject;
+                    returnData.put(returnField, "字段"+fName+"空值校验通过");
+                    result.add(returnData);
                 }
-            } else {
-                dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
-                return dataCheckResultVO;
             }
         }
-
-        // 第三步：判断字段值是否通过空值检查
-        if (CollectionUtils.isNotEmpty(errorDataList)) {
-            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
-                dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
-                dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
-                dataCheckResultVO.setCheckResult(WARN);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
-                dataCheckResultVO.setCheckSuccessData(data);
-            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
-                dataCheckResultVO.setCheckResult(FAIL);
-                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
-                dataCheckResultVO.setCheckSuccessData(successDataList);
-            }
-            if (dataCheckExtendPO.getRecordErrorData() == 1) {
-                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
-            }
-            dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
-        } else {
-            dataCheckResultVO.setCheckResult(SUCCESS);
-            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
-            dataCheckResultVO.setCheckSuccessData(successDataList);
-        }
-        return dataCheckResultVO;
+        return result;
     }
 
     public DataCheckResultVO interface_RangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
@@ -981,7 +962,7 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
         JSONArray successDataList = new JSONArray();
         RangeCheckTypeEnum rangeCheckTypeEnum = null;
         ValueRangeTypeEnum valueRangeType = standardsDTO.getValueRangeType();
-        if (datacheckGroupId != null) {
+        if (datacheckGroupId == null) {
             rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
         } else {
             switch (valueRangeType) {
@@ -3784,5 +3765,1123 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             log.error("【获取表信息失败】,{}", e);
             return null;
         }
+    }
+
+
+    public ResultEntity<Object> getData(RequstDTO dto) {
+        JSONArray responseVO = new JSONArray();
+        String appAccount = "";
+        ResultEnum resultEnum = ResultEnum.REQUEST_SUCCESS;
+        if (StringUtils.isEmpty(dto.apiCode)){
+            resultEnum = ResultEnum.ERROR;
+        }
+//        List<HashMap<String, Object>> parmList = dto.getData();
+        if (CollectionUtils.isEmpty(dto.data)){
+            resultEnum = ResultEnum.ERROR;
+        }
+        UserInfo userInfo = userHelper.getLoginUserInfo();
+        if (userInfo == null) {
+            return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, responseVO);
+        }
+
+        // 第一步：验证是否已进行授权认证
+        appAccount = userInfo.getUsername();
+        if (appAccount == null || appAccount.isEmpty()) {
+            return ResultEntityBuild.buildData(ResultEnum.AUTH_LOGIN_INFO_INVALID, responseVO);
+        }
+
+        // 第二步：验证当前应用（下游系统）是否有效
+        DatacheckServerAppConfigPO appInfo = appConfigMapper.getByAppAccount(appAccount);
+        if (appInfo == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_APP_EXISTS, responseVO);
+        } else {
+//            logPO.setAppId(Math.toIntExact(appInfo.getId()));
+        }
+
+        // 第三步：验证当前请求的API是否有效
+        DatacheckServerApiConfigPO apiInfo = apiConfigMapper.getByApiCode(dto.apiCode);
+        if (apiInfo == null) {
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_API_EXISTS, responseVO);
+        }
+
+        String returnField = null;
+        LambdaQueryWrapper<DatacheckServerFieldConfigPO> queryFieldWrapper = new LambdaQueryWrapper<>();
+        queryFieldWrapper.eq(DatacheckServerFieldConfigPO::getApiId, apiInfo.getId());
+        List<DatacheckServerFieldConfigPO> fieldConfigPO = fieldConfigService.list(queryFieldWrapper);
+        if (CollectionUtils.isEmpty(fieldConfigPO)){
+            return ResultEntityBuild.buildData(ResultEnum.DS_APISERVICE_FIELD_IS_NULL, responseVO);
+        }else {
+            for (DatacheckServerFieldConfigPO datacheckServerFieldConfigPO : fieldConfigPO) {
+                if (datacheckServerFieldConfigPO.getReturnFlag() == 1){
+                    returnField = datacheckServerFieldConfigPO.getFieldName();
+                    continue;
+                }
+                JSONObject jsonObject = dto.data.getJSONObject(0);
+                boolean flag = jsonObject.keySet().contains(datacheckServerFieldConfigPO.getFieldName());
+                if (!flag){
+                    resultEnum = ResultEnum.DS_APISERVICE_FIELD_IS_NOT_EXISTS;
+                }
+            }
+        }
+        //第一步： 查询该api调用的校验规则
+        DataCheckPO dataCheckRule = this.getById(apiInfo.getCheckRuleId());
+        try {
+            // 第二步：查询数据源信息
+            List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+            if (allDataSource == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, responseVO);
+            }
+            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == dataCheckRule.getDatasourceId()).findFirst().orElse(null);
+            if (dataSourceConVO == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, responseVO);
+            }
+
+            // 第三步：查询数据校验模块下的模板
+            QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+            templatePOQueryWrapper.lambda()
+                    .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATA_CHECK_MODULE.getValue())
+                    .eq(TemplatePO::getTemplateState, 1)
+                    .eq(TemplatePO::getDelFlag, 1)
+                    .eq(TemplatePO::getId,dataCheckRule.getTemplateId());
+            TemplatePO templatePO = templateMapper.selectOne(templatePOQueryWrapper);
+            if (templatePO == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, responseVO);
+            }
+            // 第四步:查询表检查规则的扩展属性
+            QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+            dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+                    .eq(DataCheckExtendPO::getRuleId, dataCheckRule.getId());
+            DataCheckExtendPO dataCheckExtend = dataCheckExtendMapper.selectOne(dataCheckExtendPOQueryWrapper);
+            if (dataCheckExtend == null) {
+                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, responseVO);
+            }
+            // 获取表和字段信息，将其进行转义处理
+            String tableName = "";
+            String tableNameFormat = "";
+            if (StringUtils.isNotEmpty(dataCheckRule.getSchemaName())) {
+                tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckRule.getSchemaName()) + ".";
+                tableName = dataCheckRule.getSchemaName() + ".";
+            }
+            tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckRule.getTableName());
+            tableName += dataCheckRule.getTableName();
+
+            String fieldName = "";
+            String fieldNameFormat = "";
+            if (StringUtils.isNotEmpty(dataCheckExtend.getFieldName())) {
+                fieldNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckExtend.getFieldName());
+                fieldName = dataCheckExtend.getFieldName();
+            }
+            DataCheckSyncParamDTO dataCheckSyncParamDTO = new DataCheckSyncParamDTO();
+            dataCheckSyncParamDTO.setTableName(tableName);
+            dataCheckSyncParamDTO.setTableNameFormat(tableNameFormat);
+            dataCheckSyncParamDTO.setFieldName(fieldName);
+            dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
+            TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+            switch (templateType) {
+                case NULL_CHECK:
+                    responseVO = interfaceNullCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case RANGE_CHECK:
+                    responseVO = interfaceRangeCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case STANDARD_CHECK:
+                    responseVO = interfaceStandardCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case DUPLICATE_DATA_CHECK:
+                    responseVO = interfaceDuplicateDateCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case FLUCTUATION_CHECK:
+                    responseVO = interfaceFluctuationCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case PARENTAGE_CHECK:
+                    //todo 规则服务无血缘校验
+                    responseVO = interfaceParentageCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case REGEX_CHECK:
+                    responseVO = interfaceRegexCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+                case SQL_SCRIPT_CHECK:
+                    //todo 规则服务无SQL校验
+                    responseVO = interfaceSqlScriptCheck(templatePO, dataSourceConVO, dataCheckRule, dataCheckExtend, dto.data, dataCheckSyncParamDTO,returnField);
+                    break;
+            }
+        }catch (Exception e){
+
+        }
+        return ResultEntityBuild.build(resultEnum,responseVO);
+    }
+
+//    public ResponseVO interfaceCheckData(RequstDTO dto) {
+//
+//        log.info("规则服务api流程进入数据校验...校验参数[{}]", JSONObject.toJSON(dto));
+//
+//        List<DataCheckResultVO> dataCheckResults = new ArrayList<>();
+//        List<DataCheckLogsPO> dataCheckLogs = new ArrayList<>();
+//        ResultEnum resultEnum = ResultEnum.SUCCESS;
+//
+//        try {
+//            // 第一步：查询数据源信息
+//            List<DataSourceConVO> allDataSource = dataSourceConManageImpl.getAllDataSource();
+//            if (allDataSource == null) {
+//                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, dataCheckResults);
+//            }
+//            DataSourceConVO dataSourceConVO = allDataSource.stream().filter(t -> t.getDatasourceId() == dto.getFiDataDataSourceId()).findFirst().orElse(null);
+//            if (dataSourceConVO == null) {
+//                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATASOURCE_NOT_EXISTS, dataCheckResults);
+//            }
+//
+//            // 第二步：查询数据校验模块下的模板
+//            QueryWrapper<TemplatePO> templatePOQueryWrapper = new QueryWrapper<>();
+//            templatePOQueryWrapper.lambda()
+//                    .eq(TemplatePO::getModuleType, ModuleTypeEnum.DATA_CHECK_MODULE.getValue())
+//                    .eq(TemplatePO::getTemplateState, 1)
+//                    .eq(TemplatePO::getDelFlag, 1);
+//            List<TemplatePO> templatePOList = templateMapper.selectList(templatePOQueryWrapper);
+//            if (CollectionUtils.isEmpty(templatePOList)) {
+//                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_TEMPLATE_EXISTS, dataCheckResults);
+//            }
+//
+//            // 第三步：查询配置的表检查规则信息
+//            Set<String> tableUniques = dto.body.keySet();
+//            List<Long> templateIds = templatePOList.stream().map(TemplatePO::getId).collect(Collectors.toList());
+//            QueryWrapper<DataCheckPO> dataCheckPOQueryWrapper = new QueryWrapper<>();
+//            dataCheckPOQueryWrapper.lambda()
+//                    .eq(DataCheckPO::getDatasourceId, dataSourceConVO.getId())
+//                    .eq(DataCheckPO::getDelFlag, 1)
+//                    .eq(DataCheckPO::getRuleState, RuleStateEnum.Enable.getValue())
+//                    .eq(DataCheckPO::getRuleExecuteNode, RuleExecuteNodeTypeEnum.BEFORE_SYNCHRONIZATION.getValue())
+//                    .in(DataCheckPO::getTableUnique, tableUniques)
+//                    .in(DataCheckPO::getTemplateId, templateIds)
+//                    .orderByAsc(DataCheckPO::getRuleExecuteSort);
+//            List<DataCheckPO> dataCheckPOList = baseMapper.selectList(dataCheckPOQueryWrapper);
+//            if (CollectionUtils.isEmpty(dataCheckPOList)) {
+//                return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dataCheckResults);
+//            }
+//
+//            // 第四步：查询表检查规则的扩展属性
+//            List<Long> ruleIds = dataCheckPOList.stream().map(DataCheckPO::getId).collect(Collectors.toList());
+//            QueryWrapper<DataCheckExtendPO> dataCheckExtendPOQueryWrapper = new QueryWrapper<>();
+//            dataCheckExtendPOQueryWrapper.lambda().eq(DataCheckExtendPO::getDelFlag, 1)
+//                    .in(DataCheckExtendPO::getRuleId, ruleIds);
+//            List<DataCheckExtendPO> dataCheckExtends = dataCheckExtendMapper.selectList(dataCheckExtendPOQueryWrapper);
+//            if (CollectionUtils.isEmpty(dataCheckExtends)) {
+//                return ResultEntityBuild.buildData(ResultEnum.DATA_QUALITY_DATACHECK_RULE_ERROR, dataCheckResults);
+//            }
+//
+//            // 第五步：循环规则，解析数据，验证数据是否合规
+//            for (DataCheckPO dataCheckPO : dataCheckPOList) {
+//                TemplatePO templatePO = templatePOList.stream()
+//                        .filter(item -> item.getId() == dataCheckPO.getTemplateId()).findFirst()
+//                        .orElse(null);
+//                DataCheckExtendPO dataCheckExtendPO = dataCheckExtends.stream()
+//                        .filter(item -> item.getRuleId() == dataCheckPO.getId()).findFirst()
+//                        .orElse(null);
+//                if (templatePO == null) {
+//                    log.info("【interfaceCheckData】模板为空，当前检查规则标识为：" + dataCheckPO.getId());
+//                    log.info("【interfaceCheckData】模板为空，当前检查规则名称为：" + dataCheckPO.getRuleName());
+//                    continue;
+//                }
+//                if (dataCheckExtendPO == null) {
+//                    log.info("【interfaceCheckData】扩展属性为空，当前检查规则标识为：" + dataCheckPO.getId());
+//                    log.info("【interfaceCheckData】扩展属性为空，当前检查规则名称为：" + dataCheckPO.getRuleName());
+//                    continue;
+//                }
+//                JSONArray data = dto.body.get(dataCheckPO.getTableUnique());
+//                if (CollectionUtils.isEmpty(data)) {
+//                    log.info("【interfaceCheckData】数据集为空，当前检查规则标识为：" + dataCheckPO.getId());
+//                    log.info("【interfaceCheckData】数据集为空，当前检查规则名称为：" + dataCheckPO.getRuleName());
+//                    continue;
+//                }
+//
+//                // 获取表和字段信息，将其进行转义处理
+//                String tableName = "";
+//                String tableNameFormat = "";
+//                if (StringUtils.isNotEmpty(dataCheckPO.getSchemaName())) {
+//                    tableNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getSchemaName()) + ".";
+//                    tableName = dataCheckPO.getSchemaName() + ".";
+//                }
+//                tableNameFormat += nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckPO.getTableName());
+//                tableName += dataCheckPO.getTableName();
+//
+//                String fieldName = "";
+//                String fieldNameFormat = "";
+//                if (StringUtils.isNotEmpty(dataCheckExtendPO.getFieldName())) {
+//                    fieldNameFormat = nifiSync_GetSqlFieldFormat(dataSourceConVO.getConType(), dataCheckExtendPO.getFieldName());
+//                    fieldName = dataCheckExtendPO.getFieldName();
+//                }
+//                DataCheckSyncParamDTO dataCheckSyncParamDTO = new DataCheckSyncParamDTO();
+//                dataCheckSyncParamDTO.setTableName(tableName);
+//                dataCheckSyncParamDTO.setTableNameFormat(tableNameFormat);
+//                dataCheckSyncParamDTO.setFieldName(fieldName);
+//                dataCheckSyncParamDTO.setFieldNameFormat(fieldNameFormat);
+//                dataCheckSyncParamDTO.setBatchNumber(dto.getBatchNumber());
+//                dataCheckSyncParamDTO.setSmallBatchNumber(dto.getSmallBatchNumber());
+//
+//                DataCheckResultVO dataCheckResult = null;
+//                TemplateTypeEnum templateType = TemplateTypeEnum.getEnum(templatePO.getTemplateType());
+//                try {
+//                    switch (templateType) {
+//                        case NULL_CHECK:
+//                            dataCheckResult = interface_NullCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case RANGE_CHECK:
+//                            dataCheckResult = interface_RangeCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case STANDARD_CHECK:
+//                            dataCheckResult = interface_StandardCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case DUPLICATE_DATA_CHECK:
+//                            dataCheckResult = interface_DuplicateDateCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case FLUCTUATION_CHECK:
+//                            dataCheckResult = interface_FluctuationCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case PARENTAGE_CHECK:
+//                            dataCheckResult = interface_ParentageCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case REGEX_CHECK:
+//                            dataCheckResult = interface_RegexCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                        case SQL_SCRIPT_CHECK:
+//                            dataCheckResult = interface_SqlScriptCheck(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data, dataCheckSyncParamDTO);
+//                            break;
+//                    }
+//                    dto.body.put(dataCheckPO.getTableUnique(), dataCheckResult.checkSuccessData);
+//                } catch (Exception ruleEx) {
+//                    if (dataCheckResult == null) {
+//                        dataCheckResult = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+//                    }
+//                    dataCheckResult.setCheckResult(FAIL);
+//                    dataCheckResult.setCheckResultMsg(String.format("代号：【%s】，触发系统异常，%s未通过", dataCheckPO.getRuleName(), templateType.getName()));
+//                    log.error("【interfaceCheckData】执行检查规则时触发系统异常：" + ruleEx);
+//                }
+//                if (dataCheckResult != null) {
+//                    // 第六步：验证规则是否全部校验通过，并记录日志
+//                    if (dataCheckResult.getCheckResult().equals(FAIL)) {
+//                        resultEnum = ResultEnum.DATA_QUALITY_DATACHECK_CHECK_NOPASS;
+//                    }
+//                    // 第七步：记录数据校验日志
+//                    if (dataCheckExtendPO.getRecordErrorData() == 1) {
+//                        DataCheckLogsPO dataCheckLogsPO = new DataCheckLogsPO();
+//                        dataCheckLogsPO.setRuleId(Math.toIntExact(dataCheckPO.getId()));
+//                        dataCheckLogsPO.setRuleName(dataCheckPO.getRuleName());
+//                        dataCheckLogsPO.setTemplateId(Math.toIntExact(templatePO.getId()));
+//                        dataCheckLogsPO.setFiDatasourceId(dataSourceConVO.getDatasourceId());
+//                        dataCheckLogsPO.setLogType(DataCheckLogTypeEnum.INTERFACE_DATA_CHECK_LOG.getValue());
+//                        dataCheckLogsPO.setSchemaName(dataCheckResult.getCheckSchema());
+//                        dataCheckLogsPO.setTableName(dataCheckResult.getCheckTable());
+//                        dataCheckLogsPO.setFieldName(dataCheckResult.getCheckField());
+//                        dataCheckLogsPO.setCheckTemplateName(dataCheckResult.getCheckTemplateName());
+//                        dataCheckLogsPO.setCheckBatchNumber(dataCheckSyncParamDTO.getBatchNumber());
+//                        dataCheckLogsPO.setCheckSmallBatchNumber(dataCheckSyncParamDTO.getSmallBatchNumber());
+//                        dataCheckLogsPO.setCheckTotalCount(dataCheckResult.getCheckTotalCount());
+//                        dataCheckLogsPO.setCheckFailCount(dataCheckResult.getCheckFailCount());
+//                        dataCheckLogsPO.setCheckResult(dataCheckResult.getCheckResult().toString());
+//                        dataCheckLogsPO.setCheckMsg(dataCheckResult.getCheckResultMsg());
+//                        dataCheckLogsPO.setCheckRuleIllustrate(dataCheckPO.getRuleIllustrate());
+//                        dataCheckLogsPO.setErrorData(dataCheckResult.getCheckErrorData());
+//                        dataCheckLogs.add(dataCheckLogsPO);
+//                        // 清空校验不通过的数据字段，减少返回的字节流
+//                        dataCheckResult.checkErrorData = null;
+//                    }
+//                    dataCheckResults.add(dataCheckResult);
+//                }
+//            }
+//            dataCheckResults = dataCheckResults.stream().map(i -> {
+//                JSONArray data = dto.body.get(i.getCheckTableUnique());
+//                i.setCheckSuccessData(data);
+//                return i;
+//            }).collect(Collectors.toList());
+//            // 第八步：保存数据检查日志
+//            if (CollectionUtils.isNotEmpty(dataCheckLogs)) {
+//                dataCheckLogsManage.saveLog(dataCheckLogs);
+//            }
+//        } catch (Exception ex) {
+//            log.error("【interfaceCheckData】执行异常：" + ex);
+//            throw new FkException(ResultEnum.DATA_QUALITY_DATACHECK_RULE_EXEC_ERROR, ex);
+//        }
+//        return ResultEntityBuild.buildData(resultEnum, dataCheckResults);
+//    }
+
+
+    public DataCheckResultVO interface_NullCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                 DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO) {
+        // 第一步：获取检查结果基础信息
+        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+
+        // 第二步：判断检查的字段是否存在，存在则获取字段值
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
+        JSONArray errorDataList = new JSONArray();
+        JSONArray successDataList = new JSONArray();
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            if (jsonObject.containsKey(fName)) {
+                String value = jsonObject.getString(fName);
+                if (StringUtils.isEmpty(value)) {
+                    errorDataList.add(jsonObject);
+                } else {
+                    successDataList.add(jsonObject);
+                }
+            } else {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg("待校验的JSON数据格式异常，未包含指定字段key【" + fName + "】");
+                return dataCheckResultVO;
+            }
+        }
+
+        // 第三步：判断字段值是否通过空值检查
+        if (CollectionUtils.isNotEmpty(errorDataList)) {
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue()) {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
+                dataCheckResultVO.setCheckSuccessData(data);
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.WEAK_RULE.getValue()) {
+                dataCheckResultVO.setCheckResult(WARN);
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过，但检查规则未设置强规则将继续放行数据", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
+                dataCheckResultVO.setCheckSuccessData(data);
+            } else if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s未通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
+                dataCheckResultVO.setCheckSuccessData(successDataList);
+            }
+            if (dataCheckExtendPO.getRecordErrorData() == 1) {
+                dataCheckResultVO.setCheckErrorData(JSONArray.toJSONString(errorDataList));
+            }
+            dataCheckResultVO.setCheckFailCount(String.valueOf(errorDataList.size()));
+        } else {
+            dataCheckResultVO.setCheckResult(SUCCESS);
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，字段名：【%s】，规则代号：【%s】，%s通过", tName, fName, dataCheckPO.ruleName, TemplateTypeEnum.NULL_CHECK.getName()));
+            dataCheckResultVO.setCheckSuccessData(successDataList);
+        }
+        return dataCheckResultVO;
+    }
+
+
+    public JSONArray interfaceRangeCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                         DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+        // 第一步：获取检查结果基础信息
+        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+        Integer datacheckGroupId = dataCheckPO.datacheckGroupId;
+        DatacheckStandardsGroupPO groupPO = datacheckStandardsGroupService.getById(datacheckGroupId);
+        StandardsDTO standardsDTO = new StandardsDTO();
+        if (datacheckGroupId != null) {
+            ResultEntity<StandardsDTO> standards = dataManageClient.getStandards(groupPO.getStandardsMenuId());
+            if (standards.code == ResultEnum.SUCCESS.getCode()) {
+                standardsDTO = standards.data;
+            } else {
+                throw new FkException(ResultEnum.REMOTE_SERVICE_CALLFAILED);
+            }
+        }
+        if (standardsDTO == null) {
+            log.info("数据元未查询到匹配数据请检查并清理脏数据,数据元id" + datacheckGroupId);
+        }
+        // 第二步：判断检查的字段是否存在，存在则获取字段值
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
+        JSONArray errorDataList = new JSONArray();
+        JSONArray successDataList = new JSONArray();
+        RangeCheckTypeEnum rangeCheckTypeEnum = null;
+        ValueRangeTypeEnum valueRangeType = standardsDTO.getValueRangeType();
+        if (datacheckGroupId == null) {
+            rangeCheckTypeEnum = RangeCheckTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckType());
+        } else {
+            switch (valueRangeType) {
+                case DATASET:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.SEQUENCE_RANGE;
+                    break;
+                case VALUE:
+                case VALUE_RANGE:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.VALUE_RANGE;
+                    break;
+                case NONE:
+                    rangeCheckTypeEnum = RangeCheckTypeEnum.NONE;
+                    break;
+            }
+        }
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            if (jsonObject.containsKey(fName)) {
+
+                String checkValue = jsonObject.getString(fName);
+
+                // 第三步：判断字段值是否通过值域验证
+                switch (rangeCheckTypeEnum) {
+                    case SEQUENCE_RANGE:
+                        if (datacheckGroupId != null) {
+                            List<CodeSetDTO> codeSetDTOList = standardsDTO.getCodeSetDTOList();
+                            List<String> fieldValues = new ArrayList<>();
+                            fieldValues.add(checkValue);
+                            List<String> list = codeSetDTOList.stream().map(v -> v.getName()).collect(Collectors.toList());
+                            List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
+                            if (CollectionUtils.isNotEmpty(valid)) {
+                                returnData = jsonObject;
+                                returnData.put(returnField, "字段"+fName+"值域验证失败");
+                                result.add(returnData);
+                            } else {
+                                returnData = jsonObject;
+                                returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                result.add(returnData);
+                            }
+                        } else {
+                            // 序列范围
+                            if (dataCheckExtendPO.rangeType == 2) {
+                                String childrenQuery = String.format("SELECT %s FROM %s", dataCheckExtendPO.getCheckFieldName(), dataCheckExtendPO.getCheckTableName());
+                                Connection conn = null;
+                                Statement st = null;
+                                try {
+                                    Class.forName(dataSourceConVO.conType.getDriverName());
+                                    conn = DriverManager.getConnection(dataSourceConVO.conStr, dataSourceConVO.conAccount, dataSourceConVO.conPassword);
+                                    st = conn.createStatement();
+                                    //无需判断ddl语句执行结果,因为如果执行失败会进catch
+                                    log.info("开始执行脚本:{}", childrenQuery);
+                                    ResultSet resultSet = st.executeQuery(childrenQuery);
+                                    List<String> list = resultSetToList(resultSet);
+                                    List<String> fieldValues = new ArrayList<>();
+                                    fieldValues.add(checkValue);
+                                    List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
+                                    if (CollectionUtils.isNotEmpty(valid)) {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域验证失败");
+                                        result.add(returnData);
+                                    } else {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                        result.add(returnData);
+                                    }
+                                } catch (Exception e) {
+                                    errorDataList.add(jsonObject);
+                                    dataCheckResultVO.setCheckResult(FAIL);
+                                    dataCheckResultVO.setCheckResultMsg("查询关联表" + dataCheckExtendPO.getCheckTableName() + "异常,请检查连接是否正常");
+                                } finally {
+                                    try {
+                                        assert st != null;
+                                        st.close();
+                                        conn.close();
+                                    } catch (SQLException e) {
+                                        errorDataList.add(jsonObject);
+                                        dataCheckResultVO.setCheckResult(FAIL);
+                                        dataCheckResultVO.setCheckResultMsg("数据库连接关闭异常");
+                                        log.error("数据库连接关闭异常", e);
+                                    }
+                                }
+                            } else {
+                                List<String> fieldValues = new ArrayList<>();
+                                fieldValues.add(checkValue);
+                                List<String> list = Arrays.asList(dataCheckExtendPO.getRangeCheckValue().split(","));
+                                List<String> valid = RegexUtils.subtractValid(fieldValues, list, true);
+                                if (CollectionUtils.isNotEmpty(valid)) {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域验证失败,对比值为"+dataCheckExtendPO.getRangeCheckValue()+",当前值为"+checkValue);
+                                    result.add(returnData);
+                                } else {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                    result.add(returnData);
+                                }
+                            }
+                        }
+                        break;
+                    case VALUE_RANGE:
+                        if (datacheckGroupId != null) {
+                            if (valueRangeType == ValueRangeTypeEnum.VALUE) {
+                                Double rangeCheckValue = Double.valueOf(standardsDTO.getValueRange());
+                                String rangeCheckOneWayOperator = standardsDTO.getSymbols();
+
+                                if (StringUtils.isEmpty(checkValue)) {
+                                    errorDataList.add(jsonObject);
+                                } else {
+                                    Double value = Double.valueOf(checkValue);
+                                    boolean isValid = false;
+
+                                    switch (rangeCheckOneWayOperator) {
+                                        case ">":
+                                            isValid = value > rangeCheckValue;
+                                            break;
+                                        case ">=":
+                                            isValid = value >= rangeCheckValue;
+                                            break;
+                                        case "=":
+                                            isValid = value.equals(rangeCheckValue); // Use equals for Double comparison
+                                            break;
+                                        case "!=":
+                                            isValid = !value.equals(rangeCheckValue);
+                                            break;
+                                        case "<":
+                                            isValid = value < rangeCheckValue;
+                                            break;
+                                        case "<=":
+                                            isValid = value <= rangeCheckValue;
+                                            break;
+                                        default:
+                                            log.info("值域检查-取值范围-单向取值-未匹配到有效的运算符：" + rangeCheckOneWayOperator);
+                                            break;
+                                    }
+                                    if (isValid) {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                        result.add(returnData);
+                                    } else {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域验证失败");
+                                        result.add(returnData);
+                                    }
+                                }
+                            } else if (valueRangeType == ValueRangeTypeEnum.VALUE_RANGE) {
+                                // 取值范围-区间取值
+                                Double lowerBound_Int = Double.valueOf(standardsDTO.getValueRange());
+                                Double upperBound_Int = Double.valueOf(standardsDTO.getValueRangeMax());
+                                if (StringUtils.isNotEmpty(checkValue)) {
+                                    Double value = Double.valueOf(checkValue);
+                                    if (value < lowerBound_Int || value > upperBound_Int) {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域验证失败,取值范围："+lowerBound_Int+"-"+upperBound_Int);
+                                        result.add(returnData);
+                                    } else {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                        result.add(returnData);
+                                    }
+                                } else {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域验证失败,取值范围："+lowerBound_Int+"-"+upperBound_Int);
+                                    result.add(returnData);
+                                }
+                            }
+                        } else {
+                            RangeCheckValueRangeTypeEnum rangeCheckValueRangeTypeEnum = RangeCheckValueRangeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckValueRangeType());
+                            if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.INTERVAL_VALUE) {
+                                // 取值范围-区间取值
+                                Double lowerBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[0]);
+                                Double upperBound_Int = Double.valueOf(dataCheckExtendPO.getRangeCheckValue().split("~")[1]);
+                                if (StringUtils.isNotEmpty(checkValue)) {
+                                    Double value = Double.valueOf(checkValue);
+                                    if (value < lowerBound_Int || value > upperBound_Int) {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域验证失败,取值范围："+lowerBound_Int+"-"+upperBound_Int);
+                                        result.add(returnData);
+                                    } else {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                        result.add(returnData);
+                                    }
+                                } else {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域验证失败,取值范围："+lowerBound_Int+"-"+upperBound_Int);
+                                    result.add(returnData);
+                                }
+                            } else if (rangeCheckValueRangeTypeEnum == RangeCheckValueRangeTypeEnum.UNIDIRECTIONAL_VALUE) {
+                                Double rangeCheckValue = Double.valueOf(dataCheckExtendPO.getRangeCheckValue());
+                                String rangeCheckOneWayOperator = dataCheckExtendPO.getRangeCheckOneWayOperator();
+
+                                if (StringUtils.isEmpty(checkValue)) {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域验证失败,对比值为"+rangeCheckOneWayOperator+""+rangeCheckValue);
+                                    result.add(returnData);
+                                } else {
+                                    Double value = Double.valueOf(checkValue);
+                                    boolean isValid = false;
+
+                                    switch (rangeCheckOneWayOperator) {
+                                        case ">":
+                                            isValid = value > rangeCheckValue;
+                                            break;
+                                        case ">=":
+                                            isValid = value >= rangeCheckValue;
+                                            break;
+                                        case "=":
+                                            isValid = value.equals(rangeCheckValue); // Use equals for Double comparison
+                                            break;
+                                        case "!=":
+                                            isValid = !value.equals(rangeCheckValue);
+                                            break;
+                                        case "<":
+                                            isValid = value < rangeCheckValue;
+                                            break;
+                                        case "<=":
+                                            isValid = value <= rangeCheckValue;
+                                            break;
+                                        default:
+                                            log.info("值域检查-取值范围-单向取值-未匹配到有效的运算符：" + rangeCheckOneWayOperator);
+                                            break;
+                                    }
+                                    if (isValid) {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                        result.add(returnData);
+                                    } else {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"值域验证失败,对比值为"+rangeCheckOneWayOperator+""+rangeCheckValue);
+                                        result.add(returnData);
+                                    }
+                                }
+                            } else {
+                                log.info("同步前-值域检查-取值范围-未匹配到有效的枚举：" + rangeCheckValueRangeTypeEnum.getName());
+                            }
+                        }
+                        break;
+                    case DATE_RANGE:
+                        // 日期范围
+                        List<DateTimeFormatter> formatters = Arrays.asList(
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+                                DateTimeFormatter.ofPattern("yyyy-M-dd"),
+                                DateTimeFormatter.ofPattern("yyyy/M/dd"),
+                                DateTimeFormatter.ofPattern("yyyy/MM/dd")
+                        );
+                        List<DateTimeFormatter> formatters1 = Arrays.asList(
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                                DateTimeFormatter.ofPattern("yyyy-M-dd HH:mm:ss"),
+                                DateTimeFormatter.ofPattern("yyyy/M/dd HH:mm:ss"),
+                                DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss")
+                        );
+                        try {
+                            LocalDateTime dateTime = null;
+                            if (StringUtils.isNotEmpty(checkValue)) {
+                                if (checkValue.length() > 10) {
+                                    dateTime = DateTimeUtils.parseDateTime(checkValue, formatters1);
+                                } else {
+                                    LocalDate localDate = DateTimeUtils.parseDate(checkValue, formatters);
+                                    if (localDate != null) {
+                                        dateTime = DateTimeUtils.convertLocalDateToDateTime(localDate);
+                                    }
+                                }
+                            }
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            String timeRangeString = dataCheckExtendPO.getRangeCheckValue();
+                            String[] timeRange = timeRangeString.split("~");
+                            LocalDateTime startTime = LocalDateTime.parse(timeRange[0], formatter);
+                            LocalDateTime endTime = LocalDateTime.parse(timeRange[1], formatter);
+                            if (dateTime != null) {
+                                if (dateTime.isBefore(startTime) || dateTime.isAfter(endTime)) {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域验证失败,取值范围："+startTime.toString()+"-"+endTime.toString());
+                                    result.add(returnData);
+                                } else {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"值域校验通过");
+                                    result.add(returnData);
+                                }
+                            } else {
+                                returnData = jsonObject;
+                                returnData.put(returnField, "字段"+fName+"值域验证失败,取值范围："+startTime.toString()+"-"+endTime.toString());
+                                result.add(returnData);
+                            }
+                        } catch (DateTimeParseException e) {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"值域验证失败");
+                            result.add(returnData);
+                        }
+                        break;
+                    case KEYWORDS_INCLUDE:
+                        // 关键字包含
+                        RangeCheckKeywordIncludeTypeEnum rangeCheckKeywordIncludeTypeEnum = RangeCheckKeywordIncludeTypeEnum.getEnum(dataCheckExtendPO.getRangeCheckKeywordIncludeType());
+                        String rangeCheckValue = dataCheckExtendPO.getRangeCheckValue();
+
+                        boolean isValid = false;
+                        switch (rangeCheckKeywordIncludeTypeEnum) {
+                            case CONTAINS_KEYWORDS:
+                                isValid = checkValue.contains(rangeCheckValue);
+                                break;
+                            case INCLUDE_KEYWORDS_BEFORE:
+                                isValid = checkValue.startsWith(rangeCheckValue);
+                                break;
+                            case INCLUDE_KEYWORDS_AFTER:
+                                isValid = checkValue.endsWith(rangeCheckValue);
+                                break;
+                            default:
+                                log.info("同步前-值域检查-关键字包含-未匹配到有效的枚举: " + rangeCheckKeywordIncludeTypeEnum.getName());
+                                break;
+                        }
+                        if (isValid) {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"值域校验通过");
+                            result.add(returnData);
+                        } else {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"值域验证失败,关键字为"+rangeCheckValue);
+                            result.add(returnData);
+                        }
+                        break;
+                }
+            }
+        }
+        return result;
+    }
+
+
+    public JSONArray interfaceStandardCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                            DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+
+        // 第一步：判断检查的字段是否存在，存在则获取字段值
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        StandardCheckTypeEnum standardCheckTypeEnum = StandardCheckTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckType());
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            if (jsonObject.containsKey(fName)) {
+
+                String checkValue = jsonObject.getString(fName);
+
+                // 第二步：判断字段值是否通过规范检查
+                switch (standardCheckTypeEnum) {
+                    case DATE_FORMAT:
+                        // 日期格式
+                        List<String> list = Arrays.asList(dataCheckExtendPO.getStandardCheckTypeDateValue().split(","));
+                        boolean validDateFormat = false;
+                        validDateFormat = DateTimeUtils.isValidDateOrTimeFormat(checkValue, list);
+                        if (!validDateFormat) {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"日期格式规范验证失败");
+                            result.add(returnData);
+                        } else {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"规范验证通过");
+                            result.add(returnData);
+                        }
+                        break;
+                    case CHARACTER_PRECISION_LENGTH_RANGE:
+                        // 字符范围
+                        StandardCheckCharRangeTypeEnum standardCheckCharRangeTypeEnum = StandardCheckCharRangeTypeEnum.getEnum(dataCheckExtendPO.getStandardCheckCharRangeType());
+                        if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_PRECISION_RANGE) {
+                            int minFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[0]);
+                            int maxFieldLength = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue().split("~")[1]);
+                            if (StringUtils.isNotEmpty(checkValue)) {
+                                String regex = Pattern.quote(dataCheckExtendPO.getStandardCheckTypeLengthSeparator());
+                                List<String> values = Arrays.asList(checkValue.split(regex));
+                                if (values.stream().count() >= 2) {
+                                    String value = values.get(Math.toIntExact(values.stream().count() - 1));
+                                    if (value.length() < minFieldLength || value.length() > maxFieldLength) {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"规范验证失败,字段范围："+minFieldLength+"~"+maxFieldLength);
+                                        result.add(returnData);
+                                    } else {
+                                        returnData = jsonObject;
+                                        returnData.put(returnField, "字段"+fName+"规范验证通过");
+                                        result.add(returnData);
+                                    }
+                                }
+                            } else {
+                                returnData = jsonObject;
+                                returnData.put(returnField, "字段"+fName+"规范验证失败,字段范围："+minFieldLength+"~"+maxFieldLength);
+                                result.add(returnData);
+                            }
+                        } else if (standardCheckCharRangeTypeEnum == StandardCheckCharRangeTypeEnum.CHARACTER_LENGTH_RANGE) {
+                            String standardCheckTypeLengthOperator = dataCheckExtendPO.getStandardCheckTypeLengthOperator();
+                            int standardCheckTypeLengthValue = Integer.parseInt(dataCheckExtendPO.getStandardCheckTypeLengthValue());
+                            if (StringUtils.isEmpty(checkValue)) {
+                                returnData = jsonObject;
+                                returnData.put(returnField, "字段"+fName+"规范验证失败,字段范围："+standardCheckTypeLengthOperator+""+standardCheckTypeLengthValue);
+                                result.add(returnData);
+                            } else {
+                                int checkValueLength = checkValue.length();
+                                boolean isValid = false;
+                                switch (standardCheckTypeLengthOperator) {
+                                    case ">":
+                                        isValid = checkValueLength > standardCheckTypeLengthValue;
+                                        break;
+                                    case ">=":
+                                        isValid = checkValueLength >= standardCheckTypeLengthValue;
+                                        break;
+                                    case "<":
+                                        isValid = checkValueLength < standardCheckTypeLengthValue;
+                                        break;
+                                    case "<=":
+                                        isValid = checkValueLength <= standardCheckTypeLengthValue;
+                                        break;
+                                    case "=":
+                                        isValid = checkValueLength == standardCheckTypeLengthValue;
+                                        break;
+                                    case "!=":
+                                        isValid = checkValueLength != standardCheckTypeLengthValue;
+                                        break;
+                                    default:
+                                        log.info("同步前-规范检查-字符范围-字符长度范围-未匹配到有效的运算符：" + standardCheckTypeLengthOperator);
+                                        break;
+                                }
+
+                                if (isValid) {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"规范验证通过");
+                                    result.add(returnData);
+                                } else {
+                                    returnData = jsonObject;
+                                    returnData.put(returnField, "字段"+fName+"规范验证失败,字段范围："+standardCheckTypeLengthOperator+""+standardCheckTypeLengthValue);
+                                    result.add(returnData);
+                                }
+                            }
+                        } else {
+                            log.info("同步前-规范检查-字符范围-未匹配到有效的枚举：" + standardCheckCharRangeTypeEnum.getName());
+                        }
+                        break;
+                    case URL_ADDRESS:
+                        // URL地址
+                        String standardCheckTypeRegexpValue = dataCheckExtendPO.getStandardCheckTypeRegexpValue();
+                        boolean validURL = RegexUtils.isValidPattern(checkValue, standardCheckTypeRegexpValue, false);
+                        if (!validURL) {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"规范验证失败,URL地址："+standardCheckTypeRegexpValue);
+                            result.add(returnData);
+                        } else {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"规范验证通过");
+                            result.add(returnData);
+                        }
+                        break;
+                    case BASE64_BYTE_STREAM:
+                        // BASE64字节流
+                        boolean validBase64String = RegexUtils.isBase64String(checkValue, false);
+                        if (!validBase64String) {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"不是BASE64字节流，规范验证失败");
+                            result.add(returnData);
+                        } else {
+                            returnData = jsonObject;
+                            returnData.put(returnField, "字段"+fName+"规范验证通过");
+                            result.add(returnData);
+                        }
+                        break;
+                }
+            }
+        }
+        return result;
+    }
+
+    public JSONArray interfaceDuplicateDateCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                                 DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+
+        // 第二步：判断检查的字段是否存在，存在则获取字段值并判断是否重复
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        List<String> fieldNames = Arrays.asList(dataCheckExtendPO.getFieldName().split(","));
+        List<String> fieldValues = new ArrayList<>();
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            String value = "";
+            for (String fieldName : fieldNames) {
+                if (jsonObject.containsKey(fieldName)) {
+                    value += jsonObject.getString(fieldName) + "_";
+                }
+            }
+            if (fieldValues.contains(value.toLowerCase())) {
+                returnData = jsonObject;
+                returnData.put(returnField, "字段"+fName+"重复数据验证失败");
+                result.add(returnData);
+            } else {
+                returnData = jsonObject;
+                returnData.put(returnField, "字段"+fName+"重复数据验证通过");
+                result.add(returnData);
+            }
+            fieldValues.add(value.toLowerCase());
+        }
+
+        return result;
+    }
+
+    public JSONArray interfaceFluctuationCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                               DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+
+        // 第一步：获取检查结果基础信息
+        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+
+        // 第二步：判断检查的字段是否存在，存在则获取字段值
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
+        List<String> fieldValues = new ArrayList<>();
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            if (jsonObject.containsKey(fName)) {
+                fieldValues.add(jsonObject.getString(fName));
+            }
+        }
+
+        // 第三步：获取字段聚合后的数据
+        boolean isValid = true;
+        double thresholdValue = dataCheckExtendPO.getFluctuateCheckValue();
+        double realityValue = 0.0;
+        FluctuateCheckTypeEnum fluctuateCheckTypeEnum = FluctuateCheckTypeEnum.getEnum(dataCheckExtendPO.getFluctuateCheckType());
+        switch (fluctuateCheckTypeEnum) {
+            case AVG:
+                List<Double> filterValues = fieldValues.stream()
+                        .filter(StringUtils::isNotEmpty)
+                        .map(Double::parseDouble)
+                        .collect(Collectors.toList());
+
+                if (CollectionUtils.isNotEmpty(filterValues)) {
+                    double sum = filterValues.stream().mapToDouble(Double::doubleValue).sum();
+                    realityValue = sum / filterValues.size();
+                }
+                break;
+            case MIN:
+                Optional<Double> optionalMin = fieldValues.stream()
+                        .filter(StringUtils::isNotEmpty)
+                        .map(Double::parseDouble)
+                        .min(Double::compareTo);
+                if (optionalMin.isPresent()) {
+                    realityValue = optionalMin.get();
+                }
+                break;
+            case MAX:
+                Optional<Double> optionalMax = fieldValues.stream()
+                        .filter(StringUtils::isNotEmpty)
+                        .map(Double::parseDouble)
+                        .max(Double::compareTo);
+                if (optionalMax.isPresent()) {
+                    realityValue = optionalMax.get();
+                }
+                break;
+            case SUM:
+                realityValue = fieldValues.stream()
+                        .filter(StringUtils::isNotEmpty)
+                        .map(Double::parseDouble)
+                        .mapToDouble(Double::doubleValue).sum();
+                break;
+            case COUNT:
+                realityValue = fieldValues.stream().count();
+                break;
+        }
+
+        // 第四步：判断字段值是否通过波动检查
+        FluctuateCheckOperatorEnum fluctuateCheckOperatorEnum = FluctuateCheckOperatorEnum.getEnumByName(dataCheckExtendPO.getFluctuateCheckOperator());
+        switch (fluctuateCheckOperatorEnum) {
+            case GREATER_THAN:
+                if (realityValue > thresholdValue) {
+                    isValid = false;
+                }
+                break;
+            case GREATER_THAN_OR_EQUAL:
+                if (realityValue >= thresholdValue) {
+                    isValid = false;
+                }
+                break;
+            case EQUAL:
+                if (realityValue == thresholdValue) {
+                    isValid = false;
+                }
+                break;
+            case LESS_THAN:
+                if (realityValue < thresholdValue) {
+                    isValid = false;
+                }
+                break;
+            case LESS_THAN_OR_EQUAL:
+                if (realityValue <= thresholdValue) {
+                    isValid = false;
+                }
+                break;
+        }
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            returnData = jsonObject;
+            if (isValid) {
+                returnData.put(returnField, "字段"+fName+"波动检查通过");
+            } else {
+                returnData.put(returnField, "字段"+fName+"波动检查未通过");
+            }
+            result.add(returnData);
+        }
+        return result;
+    }
+
+
+    public JSONArray interfaceParentageCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                             DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+
+        // 第一步：获取检查结果基础信息
+        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+
+        // 调用元数据接口查询表上下游血缘信息
+        String tableName = dataCheckPO.getSchemaName() + "." + dataCheckPO.getTableName();
+        String upTableName = "";
+        String downTableName = "";
+
+        boolean isValid = false;
+        ParentageCheckTypeEnum parentageCheckTypeEnum = ParentageCheckTypeEnum.getEnum(dataCheckExtendPO.getParentageCheckType());
+        switch (parentageCheckTypeEnum) {
+            case CHECK_UPSTREAM_BLOODLINE:
+                if (StringUtils.isNotEmpty(upTableName)) {
+                    isValid = true;
+                }
+                break;
+            case CHECK_DOWNSTREAM_BLOODLINE:
+                if (StringUtils.isNotEmpty(downTableName)) {
+                    isValid = true;
+                }
+                break;
+            case CHECK_UPSTREAM_AND_DOWNSTREAM_BLOODLINE:
+                if (StringUtils.isNotEmpty(upTableName) && StringUtils.isNotEmpty(downTableName)) {
+                    isValid = true;
+                }
+                break;
+        }
+
+        if (!isValid) {
+            if (dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRONG_RULE.getValue() || dataCheckPO.getRuleCheckType() == RuleCheckTypeEnum.STRICT_RULE.getValue()) {
+                dataCheckResultVO.setCheckResult(FAIL);
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】-【%s】检查未通过", tableName, TemplateTypeEnum.PARENTAGE_CHECK.getName(), parentageCheckTypeEnum));
+                dataCheckResultVO.setCheckSuccessData(data);
+            } else {
+                dataCheckResultVO.setCheckResult(WARN);
+                dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】-【%s】检查未通过，但检查规则未设置强规则将继续放行数据", tableName, TemplateTypeEnum.PARENTAGE_CHECK.getName(), parentageCheckTypeEnum));
+                dataCheckResultVO.setCheckSuccessData(data);
+            }
+        } else {
+            dataCheckResultVO.setCheckResult(SUCCESS);
+            dataCheckResultVO.setCheckResultMsg(String.format("表名：【%s】，【%s】-【%s】检查通过", tableName, TemplateTypeEnum.PARENTAGE_CHECK.getName(), parentageCheckTypeEnum));
+            dataCheckResultVO.setCheckSuccessData(data);
+        }
+        return result;
+    }
+
+    public JSONArray interfaceRegexCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                         DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+
+        // 第一步：获取检查结果基础信息
+        DataCheckResultVO dataCheckResultVO = interface_GetCheckResultBasisInfo(templatePO, dataSourceConVO, dataCheckPO, dataCheckExtendPO, data);
+
+        // 第二步：判断检查的字段是否存在，存在则获取字段值
+        String tName = dataCheckSyncParamDTO.getTableName();
+        String t_Name = dataCheckSyncParamDTO.getTableNameFormat();
+        String fName = dataCheckSyncParamDTO.getFieldName();
+        String f_Name = dataCheckSyncParamDTO.getFieldNameFormat();
+        for (int i = 0; i < data.size(); i++) {
+            JSONObject jsonObject = data.getJSONObject(i);
+            if (jsonObject.containsKey(fName)) {
+                String checkValue = jsonObject.getString(fName);
+                boolean isValid = RegexUtils.isValidPattern(checkValue, dataCheckExtendPO.getRegexpCheckValue(), false);
+                if (!isValid) {
+                    returnData = jsonObject;
+                    returnData.put(returnField, "字段"+fName+"正则表达式校验失败");
+                    result.add(returnData);
+                } else {
+                    returnData = jsonObject;
+                    returnData.put(returnField, "字段"+fName+"正则表达式校验通过");
+                    result.add(returnData);
+                }
+            }
+        }
+        return result;
+    }
+
+    public JSONArray interfaceSqlScriptCheck(TemplatePO templatePO, DataSourceConVO dataSourceConVO, DataCheckPO dataCheckPO,
+                                             DataCheckExtendPO dataCheckExtendPO, JSONArray data, DataCheckSyncParamDTO dataCheckSyncParamDTO,String returnField) {
+        JSONArray result = new JSONArray();
+        JSONObject returnData;
+        return result;
     }
 }

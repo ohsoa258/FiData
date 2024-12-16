@@ -429,13 +429,21 @@ public enum ResultEnum {
     DATA_QUALITY_SERVER_TYPE_DELETE_IS_EXIST(11040,"删除失败，当前类型已有绑定服务"),
 
     DATASET_QUERY_PREVIEW(11041, "值对比执行sql应返回单个值请检查sql是否正确"),
+
+    API_SUBSCRIBE_EXISTS(11042, "订阅已存在"),
+
+    DS_APISERVICE_API_FIELD_EMPTY(11043, "API未配置字段信息，请检查字段配置"),
+
+    DS_APISERVICE_FIELD_IS_NULL(11044,"配置参数为空请先配置参数"),
+
+    DS_APISERVICE_FIELD_IS_NOT_EXISTS(11045,"传入参数与配置参数不一致请检查字段是否正确"),
     /**
      * 数据安全
      */
     FIELD_NAME_IS_SELECTED(12001, "当前字段已被设置,请重新选择"),
     ROW_SECURITYNAME_EXISTS(12002, "当前权限名称已存在"),
     USERGROUP_PERMISSION_ONLY(12003, "用户(组)已设置过权限,不允许设置两种,请检查参数"),
-    CAN_NOT_DELETE_NAME_OR_CODE(12004, "无法删除“name”或“code”"),
+    CAN_NOT_DELETE_NAME_OR_CODE(12004, "无法删除“name”或“code”  "),
     INTELLIGENT_DISCOVERY_RULE_NAME_ALREADY_EXISTS(12005, "智能发现规则名称已存在"),
     INTELLIGENT_DISCOVERY_CONFIGURATION_DOES_NOT_EXIST(12006, "智能发现配置不存在"),
     INTELLIGENT_DISCOVERY_SCAN_CONFIGURATION_DOES_NOT_EXIST(12007, "智能发现扫描配置不存在"),

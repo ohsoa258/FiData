@@ -68,6 +68,8 @@ public class SwaggerConfig {
 
     public static final String DATA_CHECK_SERVER_CONTROLLER = "核查规则服务API";
 
+    public static final String DATA_CHECK_SERVER = "核查规则服务API接口";
+
     @Bean
     public Docket createRestApi() {
         String basePck = FkDataGovernanceApplication.class.getPackage().getName();
@@ -95,6 +97,7 @@ public class SwaggerConfig {
                 .tags(new Tag(ACCESS_LAKE_MONITOR,"数据湖入湖监控"))
                 .tags(new Tag(NIFI_LOGS,"nifi同步日志"))
                 .tags(new Tag(DATA_CHECK_SERVER_CONTROLLER,"核查规则服务API"))
+                .tags(new Tag(DATA_CHECK_SERVER,"核查规则服务API接口"))
                 .select()
                 .apis(RequestHandlerSelectors.basePackage(basePck))
                 .paths(PathSelectors.any())
