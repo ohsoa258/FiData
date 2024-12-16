@@ -187,6 +187,13 @@ public class BuildAtlasTableAndColumnTaskListener
                 // nifi组件并发数量（目前只给数接/数仓的查询组件开启并发）
                 bfd.concurrencyNums = buildPhysicalTableDTO.concurrencyNums;
 
+                //mongo相关配置
+                bfd.mongoQueryCondition = buildPhysicalTableDTO.mongoQueryCondition;
+                bfd.mongoNeededFileds = buildPhysicalTableDTO.mongoNeededFileds;
+                bfd.mongoCollectionName = buildPhysicalTableDTO.mongoCollectionName;
+                bfd.mongoDocTypeMap = buildPhysicalTableDTO.mongoDocTypeMap;
+                bfd.mongoDatabaseName = buildPhysicalTableDTO.mongoDatabaseName;
+
                 log.info("nifi传入参数：" + JSON.toJSONString(bfd));
                 //统一traceid,让流程串起来,原来traceid各自步骤的traceid是各自的,未了让流程能串起来,所以改成一样的,
                 // 当然可以再加个父级traceid进去,各自步骤还是各自的,但这样就要加字段存,为了实现这么个功能改表不值得

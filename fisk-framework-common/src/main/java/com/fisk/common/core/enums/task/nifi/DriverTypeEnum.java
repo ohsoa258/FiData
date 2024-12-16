@@ -15,7 +15,9 @@ public enum DriverTypeEnum implements BaseEnum {
     POSTGRESQL(2,"org.postgresql.Driver"),
     ORACLE(3,"oracle.jdbc.driver.OracleDriver"),
     OPENEDGE(4,"com.ddtek.jdbc.openedge.OpenEdgeDriver"),
-    DORIS(5, "com.mysql.jdbc.Driver");
+    DORIS(5, "com.mysql.jdbc.Driver"),
+    MONGODB(6, ""),
+    ;
     DriverTypeEnum(int value, String name) {
         this.value = value;
         this.name = name;

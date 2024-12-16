@@ -181,4 +181,28 @@ public class TableAccessPO extends BasePO implements Serializable {
      */
     public String pbiUsername;
 
+    /**
+     * 当前mongo表的字段:字段类型map
+     */
+    public String mongoDocTypeMap;
+
+    /**
+     * mongo查询bson字符串
+     * 举例:{"username": "Tom"}
+     */
+    public String mongoQueryCondition;
+
+    /**
+     * mongo指定返回字段
+     * 举例:{"_id": 1, "username": 1, "product": 1, "price": 1, "type": 1}
+     */
+    public String mongoNeededFileds;
+
+    /**
+     * 对应的mongodb集合名称
+     */
+    public String mongoCollectionName;
+
+
+
 }

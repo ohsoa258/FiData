@@ -32,6 +32,7 @@ public enum DbTypeEnum implements BaseEnum {
     doris_catalog(13,"doris_catalog"),
     dm8(14,"dm8"),
     powerbi_datasets(15, "powerbi_datasets"),
+    mongodb(16, "mongodb"),
     ;
 
     DbTypeEnum(int value, String name) {

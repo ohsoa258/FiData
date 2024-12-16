@@ -30,6 +30,7 @@ import com.fisk.dataaccess.utils.powerbiutils.PowerBIAuthUtils;
 import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceSaveDTO;
+import com.mongodb.client.MongoClient;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.ext.Environment;
 import lombok.extern.slf4j.Slf4j;
@@ -123,17 +124,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
      */
     @Override
     public List<PBItemDTO> getPBIdatasetsByGroupId(String groupId, Long appId) {
-
-        List<AppDataSourcePO> list = appDataSourceImpl.list(
-                new LambdaQueryWrapper<AppDataSourcePO>()
-                        .eq(AppDataSourcePO::getAppId, appId)
-                        .select(AppDataSourcePO::getPowerbiClientId, AppDataSourcePO::getPowerbiClientSecret, AppDataSourcePO::getPowerbiTenantId)
-        );
-
-        if (CollectionUtils.isEmpty(list)) {
-            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
-        }
-        AppDataSourcePO po = list.get(0);
+        AppDataSourcePO po = getDataSourcePO(appId);
         String accessToken = null;
 
         try {
@@ -157,17 +148,7 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
      */
     @Override
     public Object getPBITablesByDatasetId(String groupId, String datasetId, Long appId) {
-
-        List<AppDataSourcePO> list = appDataSourceImpl.list(
-                new LambdaQueryWrapper<AppDataSourcePO>()
-                        .eq(AppDataSourcePO::getAppId, appId)
-                        .select(AppDataSourcePO::getPowerbiClientId, AppDataSourcePO::getPowerbiClientSecret, AppDataSourcePO::getPowerbiTenantId)
-        );
-
-        if (CollectionUtils.isEmpty(list)) {
-            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
-        }
-        AppDataSourcePO po = list.get(0);
+        AppDataSourcePO po = getDataSourcePO(appId);
         String accessToken = null;
 
         try {
@@ -181,9 +162,58 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         return pbiUtils.getAllTables(accessToken, groupId, datasetId);
     }
 
+    /**
+     * 根据应用id获取应用选择的数据源
+     *
+     * @param appId
+     * @return
+     */
+    private AppDataSourcePO getDataSourcePO(long appId) {
+        List<AppDataSourcePO> list = appDataSourceImpl.list(
+                new LambdaQueryWrapper<AppDataSourcePO>()
+                        .eq(AppDataSourcePO::getAppId, appId)
+        );
+
+        if (CollectionUtils.isEmpty(list)) {
+            throw new FkException(ResultEnum.DATASOURCE_INFORMATION_ISNULL);
+        }
+        return list.get(0);
+    }
+
+    /**
+     * 根据mongodb数据集名称获取fields
+     *
+     * @param collectionName
+     * @param appId
+     * @return
+     */
+    @Override
+    public Object getDocumentsByCollectionName(String collectionName, Long appId) {
+        AppDataSourcePO po = getDataSourcePO(appId);
+        MongoClient mongoClient = null;
+        try {
+            MongoDbUtils mongoDbUtils = new MongoDbUtils();
+            //获取mongoclient
+            mongoClient = DbConnectionHelper.myMongoClient(po.host, Integer.valueOf(po.port), po.sysNr, po.connectAccount, po.connectPwd);
+            if (mongoClient == null) {
+                return null;
+            }
+
+            return mongoDbUtils.getDocumentsByCollection(mongoClient, po.dbName, collectionName);
+        } catch (Exception e) {
+            log.error("获取mongodb指定集合下的所有文档失败:" + e);
+            throw new FkException(ResultEnum.ACCESS_TREE_GET_MONGO_DOCUMENT_ERROR);
+        } finally {
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
+        }
+    }
+
     @Override
     public DataSourceDTO setDataSourceMeta(long appId, long appDataSourceId) {
         MyDestinationDataProvider myProvider = null;
+        MongoClient mongoClient = null;
         try {
             DataSourceDTO dataSource = mapper.getDataSource(appDataSourceId);
             if (dataSource == null) {
@@ -243,6 +273,14 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                 dataSource.appName = po.name;
                 //pbi获取token下的所有工作区 group
                 dataSource.tableDtoList = pbiUtils.getAllGroupsByToken(accessToken);
+            } else if (DataSourceTypeEnum.MONGODB.getName().equalsIgnoreCase(dataSource.driveType)) {
+                MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                //获取mongoclient
+                mongoClient = DbConnectionHelper.myMongoClient(po.host, Integer.valueOf(po.port), po.sysNr, po.connectAccount, po.connectPwd);
+                if (mongoClient == null) {
+                    return null;
+                }
+                dataSource.tableDtoList = mongoDbUtils.getCollectionsForAccess(mongoClient, po.dbName);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -257,6 +295,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             if (myProvider != null) {
                 Environment.unregisterDestinationDataProvider(myProvider);
             }
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
     }
 
@@ -267,36 +308,54 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             log.error(dto.appId + ":" + JSON.toJSONString(ResultEnum.DATASOURCE_INFORMATION_ISNULL));
             return null;
         }
-        AppDataSourcePO po = this.query().eq("id", dto.appId).one();
-        if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
-            MysqlConUtils mysqlConUtils = new MysqlConUtils();
-            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
-            return mysqlConUtils.getColNames(conn, dto.name);
-        } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(dataSource.driveType)) {
-            OracleUtils oracleUtils = new OracleUtils();
-            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
-            return dto.queryType == 1 ? oracleUtils.getTableColumnInfoList(conn, po.serviceName, dto.name) : null;
-        } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSource.driveType)) {
-            SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
-            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
-            return sqlServerPlusUtils.getViewField(conn, dto.name);
-        } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
+        MongoClient mongoClient = null;
+        try {
+            AppDataSourcePO po = this.query().eq("id", dto.appId).one();
+            if (DataSourceTypeEnum.MYSQL.getName().equalsIgnoreCase(dataSource.driveType)) {
+                MysqlConUtils mysqlConUtils = new MysqlConUtils();
+                Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.MYSQL);
+                return mysqlConUtils.getColNames(conn, dto.name);
+            } else if (DataSourceTypeEnum.ORACLE.getName().equalsIgnoreCase(dataSource.driveType)) {
+                OracleUtils oracleUtils = new OracleUtils();
+                Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.ORACLE);
+                return dto.queryType == 1 ? oracleUtils.getTableColumnInfoList(conn, po.serviceName, dto.name) : null;
+            } else if (DataSourceTypeEnum.SQLSERVER.getName().equalsIgnoreCase(dataSource.driveType)) {
+                SqlServerPlusUtils sqlServerPlusUtils = new SqlServerPlusUtils();
+                Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER);
+                return sqlServerPlusUtils.getViewField(conn, dto.name);
+            } else if (DataSourceTypeEnum.POSTGRESQL.getName().equalsIgnoreCase(dataSource.driveType)) {
 
-            Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
-            return dto.queryType == 1 ? pgsqlUtils.getTableColumnName(conn, dto.name) : null;
-        } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(dataSource.driveType)) {
-            // 表结构
-            Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
-            return OpenEdgeUtils.getColumnsName(con, dto.name);
-        } else if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(dataSource.driveType)) {
-            ProviderAndDestination providerAndDestination =
-                    DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
-            JCoDestination destination = providerAndDestination.getDestination();
-            MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
-            return SapBwUtils.getVariablesByCubeName(destination, myProvider, dto.name);
-        } else if (DataSourceTypeEnum.DM8.getName().equalsIgnoreCase(dataSource.driveType)) {
-            Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8);
-            return dm8Utils.getColumnsName(con, dto.name, po.dbName);
+                Connection conn = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL);
+                return dto.queryType == 1 ? pgsqlUtils.getTableColumnName(conn, dto.name) : null;
+            } else if (DataSourceTypeEnum.OPENEDGE.getName().equalsIgnoreCase(dataSource.driveType)) {
+                // 表结构
+                Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
+                return OpenEdgeUtils.getColumnsName(con, dto.name);
+            } else if (DataSourceTypeEnum.SAPBW.getName().equalsIgnoreCase(dataSource.driveType)) {
+                ProviderAndDestination providerAndDestination =
+                        DbConnectionHelper.myDestination(po.host, po.sysNr, po.port, po.connectAccount, po.connectPwd, po.lang);
+                JCoDestination destination = providerAndDestination.getDestination();
+                MyDestinationDataProvider myProvider = providerAndDestination.getMyProvider();
+                return SapBwUtils.getVariablesByCubeName(destination, myProvider, dto.name);
+            } else if (DataSourceTypeEnum.DM8.getName().equalsIgnoreCase(dataSource.driveType)) {
+                Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DM8);
+                return dm8Utils.getColumnsName(con, dto.name, po.dbName);
+            } else if (DataSourceTypeEnum.MONGODB.getName().equalsIgnoreCase(dataSource.driveType)) {
+                MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                //获取mongoclient
+                mongoClient = DbConnectionHelper.myMongoClient(po.host, Integer.valueOf(po.port), po.sysNr, po.connectAccount, po.connectPwd);
+                if (mongoClient == null) {
+                    return null;
+                }
+                return mongoDbUtils.getDocumentsByCollectionV2(mongoClient, po.dbName, dto.name);
+            }
+        } catch (Exception e) {
+            log.error("查询数据源表信息失败：" + e);
+            throw new FkException(ResultEnum.DATAACCESS_GETFIELD_ERROR);
+        } finally {
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
         return null;
     }
@@ -344,9 +403,9 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
         for (AppDataSourcePO po : list) {
             DataSourceInfoDTO dto = new DataSourceInfoDTO();
             dto.id = po.id;
-            if (StringUtils.isNotBlank(po.dbName)){
+            if (StringUtils.isNotBlank(po.dbName)) {
                 dto.name = po.dbName;
-            }else {
+            } else {
                 dto.name = po.name;
             }
 

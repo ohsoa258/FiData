@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -56,6 +57,7 @@ import com.fisk.dataaccess.dto.dataops.TableInfoDTO;
 import com.fisk.dataaccess.dto.doris.DorisTblSchemaDTO;
 import com.fisk.dataaccess.dto.modelpublish.ModelPublishStatusDTO;
 import com.fisk.dataaccess.dto.oraclecdc.CdcHeadConfigDTO;
+import com.fisk.dataaccess.dto.pbi.PBItemDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsQueryDTO;
 import com.fisk.dataaccess.dto.pgsqlmetadata.OdsResultDTO;
 import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
@@ -81,10 +83,7 @@ import com.fisk.dataaccess.utils.keepnumberfactory.IBuildKeepNumber;
 import com.fisk.dataaccess.utils.keepnumberfactory.impl.BuildKeepNumberSqlHelper;
 import com.fisk.dataaccess.utils.powerbiutils.PBIUtils;
 import com.fisk.dataaccess.utils.powerbiutils.PowerBIAuthUtils;
-import com.fisk.dataaccess.utils.sql.DbConnectionHelper;
-import com.fisk.dataaccess.utils.sql.MysqlConUtils;
-import com.fisk.dataaccess.utils.sql.SapBwUtils;
-import com.fisk.dataaccess.utils.sql.SqlServerConUtils;
+import com.fisk.dataaccess.utils.sql.*;
 import com.fisk.dataaccess.vo.AtlasIdsVO;
 import com.fisk.dataaccess.vo.TableAccessVO;
 import com.fisk.dataaccess.vo.TableNameVO;
@@ -115,9 +114,13 @@ import com.fisk.task.dto.task.TableNifiSettingDTO;
 import com.fisk.task.enums.DbTypeEnum;
 import com.fisk.task.enums.OdsDataSyncTypeEnum;
 import com.fisk.task.enums.OlapTableEnum;
+import com.google.gson.Gson;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
 import com.sap.conn.jco.JCoDestination;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -134,6 +137,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Lock
@@ -734,6 +738,64 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         return new HashSet<>(firstObject.keySet());
     }
 
+
+    /**
+     * 将查询到的mongodb Documents内容置换为odsResultDTO
+     *
+     * @param documents
+     * @return
+     */
+    private OdsResultDTO mongoDocToOdsResultDTO(FindIterable<Document> documents, String collectionName) {
+        ResultEntity<DataSourceDTO> resultEntity = userClient.getFiDataDataSourceById(2);
+        if (resultEntity.code != ResultEnum.SUCCESS.getCode()) {
+            throw new FkException(ResultEnum.DATA_SOURCE_ERROR);
+        }
+        DataSourceDTO odsConfig = resultEntity.getData();
+
+        OdsResultDTO dto = new OdsResultDTO();
+        List<FieldNameDTO> fieldNameDTOList = new ArrayList<>();
+
+        List<PBItemDTO> pbItemDTOS = new MongoDbUtils().extractDocuments(documents);
+
+        //获取列名
+        for (PBItemDTO pbItemDTO : pbItemDTOS) {
+            FieldNameDTO fieldDto = new FieldNameDTO();
+            fieldDto.sourceTableName = collectionName;
+            fieldDto.sourceFieldName = pbItemDTO.name;
+            if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POSTGRESQL.equals(odsConfig.conType)) {
+                fieldDto.sourceFieldType = "VARCHAR";
+                fieldDto.fieldType = "VARCHAR";
+            } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.SQLSERVER.equals(odsConfig.conType)) {
+                fieldDto.sourceFieldType = "NVARCHAR";
+                fieldDto.fieldType = "NVARCHAR";
+            } else if (com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.DORIS.equals(odsConfig.conType)) {
+                fieldDto.sourceFieldType = "VARCHAR";
+                fieldDto.fieldType = "VARCHAR";
+            }
+
+            fieldDto.fieldName = pbItemDTO.name;
+
+            fieldDto.fieldLength = "2000";
+            fieldNameDTOList.add(fieldDto);
+        }
+        dto.fieldNameDTOList = fieldNameDTOList;
+
+        //转换
+        List<Document> finaDocs = StreamSupport.stream(documents.limit(15).spliterator(), false)
+                .collect(Collectors.toList());
+        dto.setDataArray(convert(finaDocs));
+        return dto;
+    }
+
+    public JSONArray convert(List<Document> documents) {
+        JSONArray jsonArray = new JSONArray();
+        for (Document doc : documents) {
+            Object parse = JSONObject.parse(doc.toJson());
+            jsonArray.add(parse);
+        }
+        return jsonArray;
+    }
+
     /**
      * @return com.fisk.dataaccess.entity.TableSyncmodePO
      * @description 查询单条TableSyncmode信息
@@ -1299,6 +1361,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 sourceDsConfig.setPbiDatasetId(modelAccess.getPbiDatasetId());
                 sourceDsConfig.setPbiSql(modelAccess.getSqlScript());
                 sourceDsConfig.setPbiUsername(modelAccess.getPbiUsername());
+                break;
+            case MONGODB:
+                sourceDsConfig.setType(DriverTypeEnum.MONGODB);
                 break;
             default:
                 break;
@@ -2541,6 +2606,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         Connection conn = null;
         Statement st = null;
         ResultSet rs = null;
+        MongoClient mongoClient = null;
         com.fisk.common.core.enums.dataservice.DataSourceTypeEnum dataSourceTypeEnum = com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.getEnum(po.driveType.toUpperCase());
         try {
             // 如果是sapbw
@@ -2564,6 +2630,41 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                 array.sql = query.querySql;
                 Instant inst2 = Instant.now();
                 log.info("执行powerbi dax语句时间 : " + Duration.between(inst1, inst2).toMillis());
+            } else if (DataSourceTypeEnum.MONGODB.getName().equalsIgnoreCase(po.driveType)) {
+                // 创建 MongoClient
+                mongoClient = DbConnectionHelper
+                        .myMongoClient(po.host, Integer.valueOf(po.port), po.sysNr, po.connectAccount, po.connectPwd);
+                // 获取数据库
+                if (mongoClient == null) {
+                    return null;
+                }
+                MongoDbUtils mongoDbUtils = new MongoDbUtils();
+                FindIterable<Document> documents = mongoDbUtils.mongodbQuery(mongoClient, po.dbName,
+                        query.mongoCollectionName,
+                        query.mongoQueryCondition,
+                        query.mongoNeededFileds);
+
+                //物理表id不为空，说明是前端调用
+                if (query.tblId != null) {
+                    log.info("获取mongodb指定集合下的字段元数据map并开始存储");
+                    //解析查询结果，获取mongodb指定集合下的字段元数据map
+                    Map<String, Set<String>> mongoCollectionMetadata = mongoDbUtils.getMongoCollectionMetadata(documents);
+
+                    Gson gson = new Gson();
+                    String jsonString = gson.toJson(mongoCollectionMetadata);
+                    this.update(
+                            new LambdaUpdateWrapper<TableAccessPO>()
+                                    .set(TableAccessPO::getMongoDocTypeMap, jsonString)
+                                    .eq(TableAccessPO::getId, query.tblId));
+                }
+
+                //转换数据
+                array = mongoDocToOdsResultDTO(documents, query.mongoCollectionName);
+                array.sql = query.querySql;
+
+                //记录时间
+                Instant inst2 = Instant.now();
+                log.info("执行mongodb find语句时间 : " + Duration.between(inst1, inst2).toMillis());
             } else {
                 AbstractCommonDbHelper helper = new AbstractCommonDbHelper();
                 conn = helper.connection(po.connectStr, po.connectAccount, po.connectPwd, dataSourceTypeEnum);
@@ -2619,6 +2720,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             AbstractCommonDbHelper.closeResultSet(rs);
             AbstractCommonDbHelper.closeStatement(st);
             AbstractCommonDbHelper.closeConnection(conn);
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
         }
         Instant inst5 = Instant.now();
         System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
@@ -2631,6 +2735,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
 
         return array;
     }
+
 
     /**
      * 不同数据库类型转换
@@ -2697,7 +2802,14 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
         //装载业务时间覆盖需要的条件sql  2023-04-28 李世纪：该属性目前不需要了，业务时间的覆盖语句已经包含条件sql
         dto.whereScript = "";
         // 非实时物理表才有sql
-        if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName()) && !dto.driveType.getName().equals(DbTypeEnum.api.getName()) && !dto.driveType.getName().equals(DbTypeEnum.oracle_cdc.getName()) && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName()) && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName()) && !dto.driveType.getName().equals(DbTypeEnum.webservice.getName())) {
+        if (!dto.driveType.getName().equals(DbTypeEnum.RestfulAPI.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.api.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.oracle_cdc.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.ftp.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.sftp.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.webservice.getName())
+                && !dto.driveType.getName().equals(DbTypeEnum.mongodb.getName())
+        ) {
             String tableName = TableNameGenerateUtils.buildTableName(tableAccessPo.tableName, registrationPo.appAbbreviation, registrationPo.whetherSchema);
             DataTranDTO dtDto = new DataTranDTO();
             dtDto.tableName = tableName;
@@ -2708,6 +2820,7 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             dto.selectSql = tableAccessPo.sqlScript;
             dto.queryStartTime = converSql.get(SystemVariableTypeEnum.START_TIME.getValue());
             dto.queryEndTime = converSql.get(SystemVariableTypeEnum.END_TIME.getValue());
+
         }
         //        dto.selectSql = tableAccessPo.sqlScript;
         return ResultEntityBuild.buildData(ResultEnum.SUCCESS, dto);
@@ -2806,6 +2919,9 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             queryDto.tableName = TableNameGenerateUtils.buildTableName(modelAccess.tableName, modelReg.appAbbreviation, modelReg.whetherSchema);
             queryDto.impersonatedUserName = dto.pbiUsername;
             queryDto.datasetid = dto.pbiDatasetId;
+            queryDto.mongoQueryCondition = dto.mongoQueryCondition;
+            queryDto.mongoNeededFileds = dto.mongoNeededFileds;
+            queryDto.mongoCollectionName = dto.mongoCollectionName;
             return filterSqlFieldList(listField, queryDto);
         }
         return null;

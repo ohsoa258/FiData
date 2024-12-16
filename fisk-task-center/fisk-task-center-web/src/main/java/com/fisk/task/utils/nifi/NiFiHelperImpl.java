@@ -201,6 +201,53 @@ public class NiFiHelperImpl implements INiFiHelper {
         }
     }
 
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ControllerServiceEntity> buildMongoDbControllerService(BuildDbControllerServiceDTO data) {
+        //entity对象
+        ControllerServiceEntity entity = new ControllerServiceEntity();
+
+        //对象的属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("mongo-uri", data.conUrl);
+//        map.put("Database Driver Class Name", data.driverName);
+//        map.put("database-driver-locations", data.driverLocation);
+        map.put("Database User", data.user);
+        map.put("Password", data.pwd);
+//        map.put("Max Total Connections", "500");
+//        map.put("Max Wait Time", "30000 millis");
+//        if (StringUtils.isNotEmpty(data.dbcpMaxIdleConns)) {
+//            map.put("dbcp-max-idle-conns", data.dbcpMaxIdleConns);
+//        }
+
+        ControllerServiceDTO dto = new ControllerServiceDTO();
+        dto.setType(ControllerServiceTypeEnum.MONGODB_CONTROLLER_SERVICE.getName());
+        dto.setName(data.name);
+        dto.setComments(data.details);
+        dto.setProperties(map);
+
+        entity.setPosition(data.positionDTO);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        entity.setComponent(dto);
+
+        try {
+            ControllerServiceEntity res = NifiHelper.getProcessGroupsApi().createControllerService(data.groupId, entity);
+            //是否将控制器服务打开
+            if (data.enabled) {
+                BusinessResult<ControllerServiceEntity> model = updateDbControllerServiceState(res);
+                if (model.success) {
+                    return BusinessResult.of(true, "控制器服务创建成功，并开启运行", res);
+                } else {
+                    return BusinessResult.of(false, model.msg, null);
+                }
+            }
+            return BusinessResult.of(true, "控制器服务创建成功", res);
+        } catch (ApiException e) {
+            log.error("创建连接池失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建连接池失败: " + e.getMessage(), null);
+        }
+    }
+
     //创建AvroRecordSetWriter
     @Override
     @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
@@ -244,6 +291,51 @@ public class NiFiHelperImpl implements INiFiHelper {
         } catch (ApiException e) {
             log.error("创建AvroRecordSetWriter失败，【" + e.getResponseBody() + "】: ", e);
             return BusinessResult.of(false, "创建AvroRecordSetWriter失败: " + e.getMessage(), null);
+        }
+    }
+
+    @Override
+    @TraceType(type = TraceTypeEnum.TASK_NIFI_ERROR)
+    public BusinessResult<ControllerServiceEntity> buildJsonTreeReaderService(BuildAvroRecordSetWriterServiceDTO data) {
+        //entity对象
+        ControllerServiceEntity entity = new ControllerServiceEntity();
+
+        //对象的属性
+        Map<String, String> map = new HashMap<>(5);
+        //avro-embedded
+        if (StringUtils.isNotEmpty(data.schemaWriteStrategy)) {
+            map.put("Schema Write Strategy", "avro-embedded");
+        }
+        if (StringUtils.isNotEmpty(data.schemaAccessStrategy)) {
+            //schema-text-property
+            map.put("schema-access-strategy", "schema-text-property");
+        }
+        if (StringUtils.isNotEmpty(data.schemaArchitecture)) {
+            map.put("schema-text", data.schemaArchitecture);
+        }
+
+
+        ControllerServiceDTO dto = new ControllerServiceDTO();
+        dto.setType(ControllerServiceTypeEnum.JSONTREEREADER.getName());
+        dto.setName(data.name);
+        dto.setComments(data.details);
+        dto.setProperties(map);
+
+        entity.setPosition(data.positionDTO);
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        entity.setComponent(dto);
+
+        try {
+            ControllerServiceEntity res = NifiHelper.getProcessGroupsApi().createControllerService(data.groupId, entity);
+            BusinessResult<ControllerServiceEntity> model = updateDbControllerServiceState(res);
+            if (model.success) {
+                return BusinessResult.of(true, "控制器服务创建成功，并开启运行", res);
+            } else {
+                return BusinessResult.of(false, model.msg, null);
+            }
+        } catch (ApiException e) {
+            log.error("创建JsonTreeReader失败，【" + e.getResponseBody() + "】: ", e);
+            return BusinessResult.of(false, "创建JsonTreeReader失败: " + e.getMessage(), null);
         }
     }
 
@@ -346,6 +438,37 @@ public class NiFiHelperImpl implements INiFiHelper {
         ProcessorDTO dto = new ProcessorDTO();
         dto.setName(buildUpdateRecordDTO.name);
         dto.setType(ProcessorTypeEnum.UPDATERECORD.getName());
+        dto.setPosition(buildUpdateRecordDTO.getPositionDTO());
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+
+        return buildProcessor(buildUpdateRecordDTO.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildConvertMongoJsonToAvro(BuildConvertRecordDTO buildUpdateRecordDTO) {
+        List<String> auto = new ArrayList<>(2);
+        //流程分支，是否自动结束
+        auto.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        auto.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
+
+        //组件属性
+        Map<String, String> map = new HashMap<>(5);
+        map.put("record-reader", buildUpdateRecordDTO.recordReader);
+        map.put("record-writer", buildUpdateRecordDTO.recordWriter);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setProperties(map);
+        config.setAutoTerminatedRelationships(auto);
+        config.setComments(buildUpdateRecordDTO.details);
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(buildUpdateRecordDTO.name);
+        dto.setType(ProcessorTypeEnum.CONVERTRECORD.getName());
         dto.setPosition(buildUpdateRecordDTO.getPositionDTO());
 
         //组件传输对象
@@ -1070,6 +1193,73 @@ public class NiFiHelperImpl implements INiFiHelper {
         ProcessorEntity entity = new ProcessorEntity();
         entity.setRevision(NifiHelper.buildRevisionDTO());
         return buildProcessor(executeSQLRecordDTO.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildGetMongoProcess(GetMongoDTO mongoDTO) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.ORIGINAL.getName());
+        Map<String, String> map = new HashMap<>();
+        map.put("mongo-client-service", mongoDTO.clientService);
+        map.put("Mongo Database Name", mongoDTO.mongoDatabaseName);
+        map.put("Mongo Collection Name", mongoDTO.mongoCollectionName);
+        map.put("json-type", mongoDTO.JSONType);
+        if (StringUtils.isNotEmpty(mongoDTO.query)){
+            map.put("Query", mongoDTO.query);
+        }
+        if (StringUtils.isNotEmpty(mongoDTO.projection)){
+            map.put("Projection", mongoDTO.projection);
+        }
+        map.put("results-per-flowfile", mongoDTO.resultsPerFlowFile);
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        if (mongoDTO.concurrencyNums != null) {
+            // 组件并发数量
+            config.setConcurrentlySchedulableTaskCount(mongoDTO.concurrencyNums);
+        }
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(mongoDTO.name);
+        dto.setType(ProcessorTypeEnum.GetMongo.getName());
+        dto.setPosition(mongoDTO.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(mongoDTO.groupId, entity, dto, config);
+    }
+
+    @Override
+    public BusinessResult<ProcessorEntity> buildConvertAvroToJSON(GetMongoDTO mongoDTO) {
+        //流程分支，是否自动结束
+        List<String> autoRes = new ArrayList<>();
+        autoRes.add(AutoEndBranchTypeEnum.FAILURE.getName());
+        Map<String, String> map = new HashMap<>();
+
+        //组件配置信息
+        ProcessorConfigDTO config = new ProcessorConfigDTO();
+        config.setAutoTerminatedRelationships(autoRes);
+        config.setProperties(map);
+        if (mongoDTO.concurrencyNums != null) {
+            // 组件并发数量
+            config.setConcurrentlySchedulableTaskCount(mongoDTO.concurrencyNums);
+        }
+
+        //组件整体配置
+        ProcessorDTO dto = new ProcessorDTO();
+        dto.setName(mongoDTO.name);
+        dto.setType(ProcessorTypeEnum.ConvertAvroToJSON.getName());
+        dto.setPosition(mongoDTO.positionDTO);
+
+        //组件传输对象
+        ProcessorEntity entity = new ProcessorEntity();
+        entity.setRevision(NifiHelper.buildRevisionDTO());
+        return buildProcessor(mongoDTO.groupId, entity, dto, config);
     }
 
     @Override

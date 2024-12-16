@@ -34,7 +34,10 @@ public enum ProcessorTypeEnum implements BaseEnum {
     FETCHFTP(20,"org.apache.nifi.processors.standard.FetchFTP"),
     FETCHSFTP(23,"org.apache.nifi.processors.standard.FetchSFTP"),
     GENERATEFLOWFILE(21,"org.apache.nifi.processors.standard.GenerateFlowFile"),
-    INVOKEHTTP(22,"org.apache.nifi.processors.standard.InvokeHTTP");
+    INVOKEHTTP(22,"org.apache.nifi.processors.standard.InvokeHTTP"),
+    GetMongo(23,"org.apache.nifi.processors.mongodb.GetMongo"),
+
+    ;
 
 
 

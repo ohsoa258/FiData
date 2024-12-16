@@ -201,4 +201,36 @@ public class BuildPhysicalTableDTO extends MQBaseDTO {
     @ApiModelProperty(value = "数据源连接字符串or身份验证地址")
     public String connectStr;
 
+    /**
+     * mongo查询bson字符串
+     * 举例:{"username": "Tom"}
+     */
+    @ApiModelProperty(value = "mongo查询bson字符串")
+    public String mongoQueryCondition;
+
+    /**
+     * mongo指定返回字段
+     * 举例:{"_id": 1, "username": 1, "product": 1, "price": 1, "type": 1}
+     */
+    @ApiModelProperty(value = "mongo指定返回字段")
+    public String mongoNeededFileds;
+
+    /**
+     * 对应的mongodb数据库名称
+     */
+    @ApiModelProperty(value = "对应的mongodb数据库名称")
+    public String mongoDatabaseName;
+
+    /**
+     * 对应的mongodb集合名称
+     */
+    @ApiModelProperty(value = "对应的mongodb集合名称")
+    public String mongoCollectionName;
+
+    /**
+     * 当前mongo表的字段:字段类型map
+     */
+    @ApiModelProperty(value = "当前mongo表的字段:字段类型map")
+    public String mongoDocTypeMap;
+
 }

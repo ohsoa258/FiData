@@ -147,4 +147,13 @@ public interface IAppDataSource extends IService<AppDataSourcePO> {
      * @return
      */
     Object getPBITablesByDatasetId(String groupId,String datasetId, Long appId);
+
+    /**
+     * 根据mongodb数据集名称获取fields
+     *
+     * @param collectionName
+     * @return
+     */
+    Object getDocumentsByCollectionName(String collectionName,Long appId);
+
 }

@@ -45,4 +45,31 @@ public class OdsQueryDTO {
      */
     @ApiModelProperty(value = "接入的增量时间参数")
     public List<DeltaTimeDTO> deltaTimes;
+
+    /**
+     * mongo查询bson字符串
+     * 举例:{"username": "Tom"}
+     */
+    @ApiModelProperty(value = "mongo查询bson字符串")
+    public String mongoQueryCondition;
+
+    /**
+     * mongo指定返回字段
+     * 举例:{"_id": 1, "username": 1, "product": 1, "price": 1, "type": 1}
+     */
+    @ApiModelProperty(value = "mongo指定返回字段")
+    public String mongoNeededFileds;
+
+    /**
+     * 对应的mongodb集合名称
+     */
+    @ApiModelProperty(value = "对应的mongodb集合名称")
+    public String mongoCollectionName;
+
+    /**
+     * 如果应用选择的数据源类型是mongodb，请传递物理表id
+     */
+    @ApiModelProperty(value = "如果应用选择的数据源类型是mongodb，请传递物理表id")
+    public Long tblId;
+
 }

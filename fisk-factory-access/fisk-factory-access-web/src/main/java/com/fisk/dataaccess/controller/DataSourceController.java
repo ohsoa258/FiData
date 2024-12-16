@@ -46,6 +46,13 @@ public class DataSourceController {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getPBITablesByDatasetId(groupId,datasetId,appId));
     }
 
+    @ApiOperation(value = "根据mongodb数据集名称获取fields")
+    @GetMapping("/getDocumentsByCollectionName")
+    public ResultEntity<Object> getDocumentsByCollectionName(@RequestParam(value = "collectionName") String collectionName,
+                                                             @RequestParam(value = "appId") Long appId) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDocumentsByCollectionName(collectionName,appId));
+    }
+
     /**
      * 数据接入，刷新redis里存储的表信息
      *

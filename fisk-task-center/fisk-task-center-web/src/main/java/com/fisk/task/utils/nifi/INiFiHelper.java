@@ -53,6 +53,14 @@ public interface INiFiHelper {
     BusinessResult<ControllerServiceEntity> buildDbControllerService(BuildDbControllerServiceDTO dto);
 
     /**
+     * 数据库连接对象创建
+     *
+     * @param dto dto
+     * @return 创建的连接对象
+     */
+    BusinessResult<ControllerServiceEntity> buildMongoDbControllerService(BuildDbControllerServiceDTO dto);
+
+    /**
      * 获取控制器服务的实体
      *
      * @param id controller-service的id
@@ -304,6 +312,16 @@ public interface INiFiHelper {
     /**
      * ExecuteSQLRecordProcess
      *
+     * @param mongoDTO
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildGetMongoProcess(GetMongoDTO mongoDTO);
+
+    BusinessResult<ProcessorEntity> buildConvertAvroToJSON(GetMongoDTO mongoDTO);
+
+    /**
+     * ExecuteSQLRecordProcess
+     *
      * @param executeSQLRecordDTO executeSQLRecordDTO
      * @return Processor组件
      */
@@ -334,12 +352,28 @@ public interface INiFiHelper {
     BusinessResult<ProcessorEntity> buildUpdateRecord(BuildUpdateRecordDTO buildUpdateRecordDTO);
 
     /**
+     * buildConvertMongoJsonToAvro
+     *
+     * @param buildUpdateRecordDTO BuildConvertRecordDTO
+     * @return Processor组件
+     */
+    BusinessResult<ProcessorEntity> buildConvertMongoJsonToAvro(BuildConvertRecordDTO buildUpdateRecordDTO);
+
+    /**
      * buildAvroRecordSetWriterService
      *
      * @param data data
      * @return 控制器服务
      */
     BusinessResult<ControllerServiceEntity> buildAvroRecordSetWriterService(BuildAvroRecordSetWriterServiceDTO data);
+
+    /**
+     * buildAvroRecordSetWriterService
+     *
+     * @param data data
+     * @return 控制器服务
+     */
+    BusinessResult<ControllerServiceEntity> buildJsonTreeReaderService(BuildAvroRecordSetWriterServiceDTO data);
 
     /**
      * 更新组件配置

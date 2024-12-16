@@ -17,7 +17,11 @@ public enum ControllerServiceTypeEnum implements BaseEnum {
     REDISCONNECTIONPOOL(3,"org.apache.nifi.redis.service.RedisConnectionPoolService"),
     REDISDISTRIBUTEMAPCACHECLIENTSERVICE(4,"org.apache.nifi.redis.service.RedisDistributedMapCacheClientService"),
     CSVREADER(5,"org.apache.nifi.csv.CSVReader"),
-    KEYTABCREDENTIALSSERVICE(6,"org.apache.nifi.kerberos.KeytabCredentialsService");
+    KEYTABCREDENTIALSSERVICE(6,"org.apache.nifi.kerberos.KeytabCredentialsService"),
+    MONGODB_CONTROLLER_SERVICE (7,"org.apache.nifi.mongodb.MongoDBControllerService"),
+    JSONTREEREADER (8,"org.apache.nifi.json.JsonTreeReader"),
+    ;
+
 
 
     ControllerServiceTypeEnum(int value, String name) {

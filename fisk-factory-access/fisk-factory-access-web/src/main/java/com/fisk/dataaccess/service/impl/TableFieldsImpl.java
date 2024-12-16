@@ -436,6 +436,12 @@ public class TableFieldsImpl
         //pbi username
         model.pbiUsername = dto.pbiUsername;
 
+        //mongodb的额外配置
+        model.mongoQueryCondition = dto.mongoQueryCondition;
+        model.mongoNeededFileds = dto.mongoNeededFileds;
+        model.mongoCollectionName = dto.mongoCollectionName;
+
+
         log.info("业务时间覆盖where条件语句, {}", model.whereScript);
         tableAccessImpl.updateById(model);
 
@@ -454,7 +460,8 @@ public class TableFieldsImpl
 
         publish(success, model.appId, model.id, model.tableName, dto.flag, dto.openTransmission, null,
                 false, dto.deltaTimes, versionSql, dto.tableSyncmodeDTO, model.appDataSourceId,
-                dto.tableHistorys, null, sourceFieldNames, dataSourcePo);
+                dto.tableHistorys, null, sourceFieldNames, dataSourcePo,
+                model.mongoQueryCondition,model.mongoNeededFileds,model.mongoCollectionName,model.mongoDocTypeMap);
 
         // 发布
         return success ? ResultEnum.SUCCESS : ResultEnum.UPDATE_DATA_ERROR;
@@ -804,7 +811,12 @@ public class TableFieldsImpl
                          List<TableHistoryDTO> dto,
                          String currUserName,
                          List<String> sourceFieldNames,
-                         AppDataSourcePO dataSourcePo) {
+                         AppDataSourcePO dataSourcePo,
+                         String mongoQueryCondition,
+                         String mongoNeededFileds,
+                         String mongoCollectionName,
+                         String mongoDocTypeMap
+                         ) {
         ModelPublishStatusDTO modelPublishStatus = new ModelPublishStatusDTO();
         modelPublishStatus.tableId = accessId;
         try {
@@ -837,6 +849,14 @@ public class TableFieldsImpl
                 ResultEntity<BuildPhysicalTableDTO> result = tableAccessImpl.getBuildPhysicalTableDTO(accessId, appDataSourceId);
 
                 BuildPhysicalTableDTO data = result.data;
+
+                //mongodb额外配置
+                data.mongoQueryCondition = mongoQueryCondition;
+                data.mongoNeededFileds = mongoNeededFileds;
+                data.mongoCollectionName = mongoCollectionName;
+                data.mongoDocTypeMap = mongoDocTypeMap;
+                data.mongoDatabaseName = dataSourcePo.dbName;
+
                 //查询组件并发个数
                 if (syncMode.concurrencyNums == null) {
                     syncMode.setConcurrencyNums(1);

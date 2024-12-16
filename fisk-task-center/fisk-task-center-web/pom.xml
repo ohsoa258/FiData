@@ -304,6 +304,20 @@
             <version>1.5.31</version>
         </dependency>
 
+
+        <!-- Jackson for JSON parsing -->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--            <version>2.15.2</version>-->
+<!--        </dependency>-->
+
+        <!-- Apache Avro for schema generation -->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>1.11.1</version>
+        </dependency>
     </dependencies>
 
 

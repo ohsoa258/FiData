@@ -6,6 +6,11 @@ import com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider;
 import com.fisk.common.framework.exception.FkException;
 import com.fisk.common.service.dbBEBuild.AbstractCommonDbHelper;
 import com.fisk.dataaccess.dto.sapbw.ProviderAndDestination;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.sap.conn.jco.JCoDestination;
 import com.sap.conn.jco.JCoDestinationManager;
 import com.sap.conn.jco.JCoException;
@@ -56,9 +61,9 @@ public class DbConnectionHelper {
             // 测试连接
             destination.ping();
             log.info("注册SAPBW驱动程序后...");
-          //如果报这个错，
-          // java.lang.IllegalStateException: DestinationDataProvider already registered [com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider
-          // 意味着该连接信息已经注册过 则直接使用即可
+            //如果报这个错，
+            // java.lang.IllegalStateException: DestinationDataProvider already registered [com.fisk.common.core.utils.jcoutils.MyDestinationDataProvider
+            // 意味着该连接信息已经注册过 则直接使用即可
         } catch (IllegalStateException e) {
             log.info("该连接信息已经注册过 则直接使用即可");
             providerAndDestination.setMyProvider(myProvider);
@@ -83,6 +88,23 @@ public class DbConnectionHelper {
         providerAndDestination.setMyProvider(myProvider);
         providerAndDestination.setDestination(destination);
         return providerAndDestination;
+    }
+
+    public static MongoClient myMongoClient(String host, Integer port, String dbName, String connectAccount, String connectPwd) {
+        MongoClient mongoClient = null;
+        try {
+            // 连接到 MongoDB 数据库
+            mongoClient = MongoClients.create(MongoClientSettings.builder()
+                    .applyToClusterSettings(builder ->
+                            builder.hosts(java.util.Collections.singletonList(new ServerAddress(host, port)))
+                    ).credential(MongoCredential.createCredential(connectAccount, dbName, connectPwd.toCharArray()))
+                    .build());
+
+            return mongoClient;
+        } catch (Exception e) {
+            log.error("mongodb获取schema信息失败，原因：" + e.getMessage());
+        }
+        return null;
     }
 
 

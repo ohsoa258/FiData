@@ -193,7 +193,6 @@ public class NifiController {
                 || dto.conType == DataSourceTypeEnum.DORIS_CATALOG
                 || dto.conType == DataSourceTypeEnum.HUDI
                 || dto.conType == DataSourceTypeEnum.API
-                || dto.conType == DataSourceTypeEnum.MONGODB
                 || dto.conType == DataSourceTypeEnum.POWERBI_DATASETS
         ) {
             return resultEntity;

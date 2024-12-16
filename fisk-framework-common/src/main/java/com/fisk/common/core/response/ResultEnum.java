@@ -251,6 +251,7 @@ public enum ResultEnum {
     PBI_GET_DATASETS_ERROR(5122,"PowerBI获取工作区下的数据集失败！"),
     PBI_GET_ACCESSTOKEN_ERROR(5123,"获取powerbi accessToken失败！"),
     POWERBI_NIFI_SYNC_ERROR(5124, "PowerBI-NIFI同步报错"),
+    ACCESS_TREE_GET_MONGO_DOCUMENT_ERROR(5125, "获取mongodb指定集合下的文档失败！"),
 
     /**
      * 后台任务模块
