@@ -121,3 +121,6 @@ timed:
   setDataStructure: "0 0 0 1 * ? "
 
 fiData-data-mdm-source: 3
+
+downloadpath: /data/dev/downloadMdmExcel
+#downloadpath: D:\download\test

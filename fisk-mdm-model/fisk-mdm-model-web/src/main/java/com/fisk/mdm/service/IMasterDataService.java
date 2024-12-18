@@ -2,6 +2,7 @@ package com.fisk.mdm.service;
 
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.service.pageFilter.dto.OperatorVO;
+import com.fisk.mdm.dto.file.FileDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.vo.attributeGroup.AttributeGroupDropDownVO;
 import com.fisk.mdm.vo.masterdata.BathUploadMemberListVO;
@@ -31,14 +32,15 @@ public interface IMasterDataService {
      * @return
      */
     ResultObjectVO getMasterDataPage(MasterDataQueryDTO dto, HttpServletResponse response);
-
     /**
      * 分页
      *
      * @param dto
      * @param response
      */
-    void downLoadList(MasterDataQueryDTO dto, HttpServletResponse response);
+    FileDTO downLoadList(MasterDataQueryDTO dto, HttpServletResponse response);
+
+    void downLoadExcel(FileDTO dto, HttpServletResponse response);
 
     /**
      * 获取模型实体版本数据
