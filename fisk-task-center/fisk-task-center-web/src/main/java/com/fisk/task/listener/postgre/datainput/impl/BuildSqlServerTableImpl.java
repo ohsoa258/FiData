@@ -127,9 +127,9 @@ public class BuildSqlServerTableImpl implements IbuildTable {
             selectTable = selectTable.substring(0, selectTable.length() - 2);
         } else {
             //select * from sys.schemas ss left join sys.tables st on ss.schema_id=st.schema_id where ss.name ='dbo' and st.name='stg_dim_ghs3'
-            selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = 'dbo' ";
+            selectTable = "select count(*) from sys.tables st left join sys.schemas ss on ss.schema_id=st.schema_id where ss.name = 'dbo' and ";
             for (String tableName : buildPhysicalTableDTO.apiTableNames) {
-                selectTable += " st.name='dbo.ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
+                selectTable += " st.name='ods_" + buildPhysicalTableDTO.appAbbreviation + "_" + tableName + "' or";
             }
             selectTable = selectTable.substring(0, selectTable.length() - 2);
         }
