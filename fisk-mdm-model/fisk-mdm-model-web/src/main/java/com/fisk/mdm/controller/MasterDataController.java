@@ -6,6 +6,7 @@ import com.fisk.common.core.response.ResultEntityBuild;
 import com.fisk.common.core.response.ResultEnum;
 import com.fisk.common.framework.advice.ControllerAOPConfig;
 import com.fisk.mdm.config.SwaggerConfig;
+import com.fisk.mdm.dto.file.FileDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.service.IMasterDataService;
 import com.fisk.mdm.vo.resultObject.ResultObjectVO;
@@ -52,8 +53,14 @@ public class MasterDataController {
 
     @ApiOperation("下载实体数据")
     @PostMapping("/downLoadList")
-    public void  downLoadList(@Validated @RequestBody MasterDataQueryDTO dto) {
-        service.downLoadList(dto, response);
+    public ResultEntity<FileDTO> downLoadList1(@Validated @RequestBody MasterDataQueryDTO dto) {
+        return ResultEntityBuild.build(ResultEnum.SUCCESS,service.downLoadList(dto, response));
+    }
+
+    @ApiOperation("下载excel数据")
+    @PostMapping("/downLoadExcel")
+    public void downLoadExcel(@Validated @RequestBody FileDTO dto) {
+        service.downLoadExcel(dto, response);
     }
 
     @ApiOperation("获取模型、实体、版本下拉列表")

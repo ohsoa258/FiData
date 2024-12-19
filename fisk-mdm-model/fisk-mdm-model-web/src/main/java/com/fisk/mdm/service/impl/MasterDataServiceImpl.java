@@ -18,11 +18,12 @@ import com.fisk.common.service.mdmBEBuild.dto.InsertImportDataDTO;
 import com.fisk.common.service.mdmBEBuild.dto.MasterDataPageDTO;
 import com.fisk.common.service.mdmBEOperate.BuildCodeHelper;
 import com.fisk.common.service.mdmBEOperate.IBuildCodeCommand;
+import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
 import com.fisk.common.service.pageFilter.dto.FilterQueryDTO;
 import com.fisk.common.service.pageFilter.dto.OperatorVO;
 import com.fisk.mdm.dto.attribute.AttributeInfoDTO;
 import com.fisk.mdm.dto.attributeGroup.AttributeGroupDTO;
-import com.fisk.common.service.mdmBEOperate.dto.CodeRuleDTO;
+import com.fisk.mdm.dto.file.FileDTO;
 import com.fisk.mdm.dto.masterdata.*;
 import com.fisk.mdm.dto.stgbatch.StgBatchDTO;
 import com.fisk.mdm.dto.viwGroup.ViwGroupDetailsDTO;
@@ -35,7 +36,10 @@ import com.fisk.mdm.map.ModelMap;
 import com.fisk.mdm.mapper.AttributeMapper;
 import com.fisk.mdm.mapper.EntityMapper;
 import com.fisk.mdm.mapper.ModelMapper;
-import com.fisk.mdm.service.*;
+import com.fisk.mdm.service.CodeRuleService;
+import com.fisk.mdm.service.EntityService;
+import com.fisk.mdm.service.IMasterDataService;
+import com.fisk.mdm.service.ProcessService;
 import com.fisk.mdm.utils.mdmBEBuild.TableNameGenerateUtils;
 import com.fisk.mdm.utlis.DataSynchronizationUtils;
 import com.fisk.mdm.utlis.MasterDataFormatVerifyUtils;
@@ -65,8 +69,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -129,6 +133,9 @@ public class MasterDataServiceImpl implements IMasterDataService {
     private String username;
     @Value("${pgsql-mdm.password}")
     private String password;
+
+    @Value("${downloadpath}")
+    private String filePath;
 
     /**
      * 系统字段
@@ -221,13 +228,59 @@ public class MasterDataServiceImpl implements IMasterDataService {
     }
 
     @Override
-    public void downLoadList(MasterDataQueryDTO dto, HttpServletResponse response) {
+    public FileDTO downLoadList(MasterDataQueryDTO dto, HttpServletResponse response) {
         if (dto.getViewId() != 0) {
-            downloadViewData(dto, response);
+            return downloadViewData(dto, response);
         } else if (!CollectionUtils.isEmpty(dto.getAttributeGroups())) {
-            downloadAttributeGroupData(dto, response);
+             return downloadAttributeGroupData(dto, response);
         }
-        downloadMasterData(dto, response);
+        return downloadMasterData(dto, response);
+    }
+
+    @Override
+    public void downLoadExcel(FileDTO dto, HttpServletResponse response) {
+        File file = new File(filePath+File.separator+dto.getFilePath());
+
+        // 判断文件是否存在
+        if (!file.exists()) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        // 设置响应头，告诉浏览器这是一个文件下载
+        response.setContentType("application/octet-stream;charset=UTF-8");
+        // 设置文件大小
+        response.setContentLengthLong(file.length());
+        // 设置下载文件名
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + dto.getFileName() + ".xlsx\"");
+        response.addHeader("Pargam", "no-cache");
+        response.addHeader("Cache-Control", "no-cache");
+        // 获取输入流读取文件
+        try (InputStream inputStream = Files.newInputStream(file.toPath());
+             OutputStream outputStream = response.getOutputStream()) {
+
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+
+            // 将文件内容写入响应输出流，浏览器会收到文件并启动下载
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            // 确保所有数据都被写入到客户端
+            outputStream.flush();
+
+            // 文件下载成功后，删除原文件
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    // 如果删除失败，打印日志或记录警告信息
+                    log.warn("删除文件失败: " + file.getAbsolutePath());
+                }
+            }
+        } catch (IOException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);  // 如果发生错误，设置500状态码
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -277,7 +330,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param response
      * @return
      */
-    public void  downloadMasterData(MasterDataQueryDTO dto, HttpServletResponse response) {
+    public FileDTO downloadMasterData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
         EntityVO entityVo = entityService.getDataById(dto.getEntityId());
@@ -307,14 +360,15 @@ public class MasterDataServiceImpl implements IMasterDataService {
         attributeGroupVo.setAttributes(attributeColumnVoList);
         attributeGroupVoList.add(attributeGroupVo);
         resultObjectVO.setAttributes(attributeGroupVoList);
-        downLoadData(resultObjectVO, dto, tableName, attributeColumnVoList, response);
+       return downLoadData(resultObjectVO, dto, tableName, attributeColumnVoList, response);
     }
 
-    public void downLoadData(ResultObjectVO resultObjectVO,
+    public FileDTO downLoadData(ResultObjectVO resultObjectVO,
                                           MasterDataQueryDTO dto,
                                           String tableName,
                                           List<AttributeColumnVO> attributeColumnVoList,
                                           HttpServletResponse response) {
+        FileDTO fileDTO = new FileDTO();
         //数据类型英文名称赋值
         attributeColumnVoList
                 .stream()
@@ -372,21 +426,21 @@ public class MasterDataServiceImpl implements IMasterDataService {
             }
             //创建人/更新人id替换为名称
             ReplenishUserInfo.replenishFiDataUserName(data, client, UserFieldEnum.USER_NAME);
-            //是否导出
-            if (dto.getExport()) {
-                ExportResultVO vo = new ExportResultVO();
-                List<String> nameList = newColumnList.stream().map(e -> e.getName()).collect(Collectors.toList());
-                List<String> nameDisplayList = newColumnList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
-                vo.setHeaderList(nameList);
-                vo.setDataArray(data);
-                vo.setHeaderDisplayList(nameDisplayList);
-                vo.setFileName(tableName);
-                exportExcel(vo, response);
-            }
+
+            ExportResultVO vo = new ExportResultVO();
+            List<String> nameList = newColumnList.stream().map(e -> e.getName()).collect(Collectors.toList());
+            List<String> nameDisplayList = newColumnList.stream().map(e -> e.getDisplayName()).collect(Collectors.toList());
+            vo.setHeaderList(nameList);
+            vo.setDataArray(data);
+            vo.setHeaderDisplayList(nameDisplayList);
+            vo.setFileName(tableName);
+            fileDTO = exportExcel1(vo);
         } catch (Exception e) {
             log.error("getMasterDataPage:", e.getMessage());
         }
+        return fileDTO;
     }
+
 
     /**
      * 自定义视图筛选
@@ -470,7 +524,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param response
      * @return
      */
-    public void downloadViewData(MasterDataQueryDTO dto, HttpServletResponse response) {
+    public FileDTO downloadViewData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
         ViwGroupVO viwGroupVO = viwGroupService.getDataByGroupId(dto.getViewId()).get(0);
@@ -535,7 +589,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
         attributeGroupVo.setAttributes(attributeColumnVoList);
         attributeGroupVoList.add(attributeGroupVo);
         resultObjectVO.setAttributes(attributeGroupVoList);
-        downLoadData(resultObjectVO, dto, viwGroupVO.getColumnName(), attributeColumnVoList, response);
+        return downLoadData(resultObjectVO, dto, viwGroupVO.getColumnName(), attributeColumnVoList, response);
     }
 
     /**
@@ -597,7 +651,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
      * @param response
      * @return
      */
-    public void downloadAttributeGroupData(MasterDataQueryDTO dto, HttpServletResponse response) {
+    public FileDTO downloadAttributeGroupData(MasterDataQueryDTO dto, HttpServletResponse response) {
         //准备返回对象
         ResultObjectVO resultObjectVO = new ResultObjectVO();
         EntityVO entityVo = entityService.getDataById(dto.getEntityId());
@@ -639,7 +693,7 @@ public class MasterDataServiceImpl implements IMasterDataService {
                     .collect(Collectors.toList());
         }
         resultObjectVO.setAttributes(attributeGroupVoList);
-        downLoadData(resultObjectVO, dto, tableName, attributeColumnVoList, response);
+        return downLoadData(resultObjectVO, dto, tableName, attributeColumnVoList, response);
     }
 
     public ResultObjectVO queryMasterData(ResultObjectVO resultObjectVO,
@@ -1537,6 +1591,65 @@ public class MasterDataServiceImpl implements IMasterDataService {
             throw new FkException(ResultEnum.SQL_ANALYSIS);
         }
         return ResultEnum.SUCCESS;
+    }
+
+
+    public FileDTO exportExcel1(ExportResultVO vo) {
+        FileDTO fileDTO = new FileDTO();
+
+        SXSSFWorkbook workbook = new SXSSFWorkbook(1000);
+        Sheet sheet = workbook.createSheet("sheet1");
+        Row row1 = sheet.createRow(0);
+
+        // 如果表头为空，返回错误
+        if (CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
+            return fileDTO;
+        }
+
+        // 添加表头
+        for (int i = 0; i < vo.getHeaderDisplayList().size(); i++) {
+            row1.createCell(i).setCellValue(vo.getHeaderDisplayList().get(i));
+        }
+        String fileName =  System.currentTimeMillis() + ".xlsx";
+        // 临时文件路径和文件名
+        String tmpFilePath = filePath + File.separator + fileName;  // 使用当前时间戳防止文件名冲突
+        File tmpFile = new File(tmpFilePath);
+
+        try (FileOutputStream fileOut = new FileOutputStream(tmpFile)) {
+            // 批量写入数据，避免一次性加载到内存
+            for (int i = 0; i < vo.getDataArray().size(); i++) {
+                Map<String, Object> jsonObject = vo.getDataArray().get(i);
+                Row row = sheet.createRow(i + 1);
+
+                for (int j = 0; j < vo.getHeaderList().size(); j++) {
+                    Cell cell = row.createCell(j);
+                    Object value = jsonObject.get(vo.getHeaderList().get(j));
+
+                    if (value instanceof Number) {
+                        cell.setCellValue(((Number) value).doubleValue());
+                    } else {
+                        cell.setCellValue(value == null ? "" : value.toString());
+                    }
+                }
+            }
+            fileDTO.setFileName(vo.getFileName());
+            fileDTO.setFilePath(fileName);
+            // 最终写入文件
+            workbook.write(fileOut);
+        } catch (Exception e) {
+            log.error("export excel error:", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
+        } finally {
+            try {
+                workbook.close();
+                workbook.dispose();
+            } catch (IOException e) {
+                log.error("Error closing workbook", e);
+            }
+        }
+
+        // 返回文件路径及文件名
+        return fileDTO;
     }
 
     /**
