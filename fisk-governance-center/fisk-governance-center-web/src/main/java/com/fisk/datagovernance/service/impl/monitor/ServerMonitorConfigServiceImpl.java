@@ -46,6 +46,7 @@ public class ServerMonitorConfigServiceImpl extends ServiceImpl<ServerMonitorCon
         List<ServerMonitorTypePO> typePOS = serverMonitorTypeService.list();
         Map<Integer, String> typeMap = typePOS.stream().collect(Collectors.toMap(i->(int)i.getId(), ServerMonitorTypePO::getServerType));
         result.stream().forEach(i->{
+            i.setServerTypeId(Integer.valueOf(i.getServerType()));
             i.setServerType(typeMap.get(Integer.valueOf(i.getServerType())));
         });
         return result;
