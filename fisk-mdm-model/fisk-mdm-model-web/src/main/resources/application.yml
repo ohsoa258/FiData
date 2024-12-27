@@ -122,5 +122,5 @@ timed:
 
 fiData-data-mdm-source: 3
 
-downloadpath: /data/dev/downloadMdmExcel
+#downloadpath: /data/dev/downloadMdmExcel
 #downloadpath: D:\download\test

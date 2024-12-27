@@ -88,4 +88,16 @@ public class UserAuthController {
         return userAuthService.qsLogin(token);
     }
 
+
+    /**
+     * Azure AD--单点登录
+     *
+     * @return 返回值 accesstoken
+     */
+    @ApiOperation(value = "Azure AD--单点登录")
+    @PostMapping("/azureAdLogin")
+    public ResultEntity<String> azureAdLogin(@RequestParam("code") String code) {
+        return userAuthService.azureAdLogin(code);
+    }
+
 }

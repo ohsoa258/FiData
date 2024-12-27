@@ -21,6 +21,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -41,6 +43,14 @@ public class DataCheckController {
 
     @Resource
     private DatacheckCodeService datacheckCodeService;
+
+    /**
+     * 基于构造器注入
+     */
+    private final HttpServletResponse response;
+    public DataCheckController(HttpServletResponse response) {
+        this.response = response;
+    }
 
     @ApiOperation("获取规则搜索条件")
     @GetMapping("/getRuleSearchWhere")
@@ -100,6 +110,12 @@ public class DataCheckController {
     @PostMapping("/getDataCheckLogsPage")
     public ResultEntity<Page<DataCheckLogsVO>> getDataCheckLogsPage(@RequestBody DataCheckLogsQueryDTO dto) {
         return ResultEntityBuild.build(ResultEnum.SUCCESS, service.getDataCheckLogsPage(dto));
+    }
+
+    @ApiOperation("下载数据检查结果日志分页列表")
+    @PostMapping("/downloadDataCheckLogs")
+    public void downloadDataCheckLogs(@RequestBody DataCheckLogsQueryDTO dto) {
+        service.downloadDataCheckLogs(dto,response);
     }
 
     @ApiOperation("根据日志Id查询数据检查结果")

@@ -131,6 +131,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
 //            return ResultEnum.USERNAME_EXISTS;
 //        }
 
+        //判断邮箱是否存在
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getEmail, dto.email);
+        UserPO userPO = mapper.selectOne(queryWrapper);
+        if (userPO != null){
+            return ResultEnum.EMAIL_EXISTS;
+        }
+
         // 2.对密码进行加密
         dto.password = passwordEncoder.encode(dto.getPassword());
         UserPO po = UserMap.INSTANCES.dtoToPo(dto);
@@ -189,6 +198,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserPO> implements 
                 return ResultEnum.USERNAME_EXISTS;
             }
         }
+
+        //判断邮箱是否存在
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda()
+                .eq(UserPO::getEmail, dto.email);
+        UserPO user = mapper.selectOne(queryWrapper);
+        if (user != null && user.id != dto.id){
+            return ResultEnum.EMAIL_EXISTS;
+        }
+
         /*if (userPO != null){
             return ResultEnum.USERNAME_EXISTS;
         }*/

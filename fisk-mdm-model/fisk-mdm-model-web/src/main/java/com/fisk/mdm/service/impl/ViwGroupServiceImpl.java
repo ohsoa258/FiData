@@ -643,8 +643,8 @@ public class ViwGroupServiceImpl implements ViwGroupService {
 
             // 别名名称
             String aliasAdd = ALIAS_MARK + count1.incrementAndGet();
-            int res = count1.get() - 1;
-            String aliasReduce = ALIAS_MARK + res;
+//            int res = count1.get() - 1;
+            String aliasReduce = ALIAS_MARK + 1;
             AttributeVO data = attributeService.getById(detailsDto.getAttributeId()).getData();
             AttributeVO doMainData = attributeService.getById(e).getData();
             // 查询域属性的实体名称

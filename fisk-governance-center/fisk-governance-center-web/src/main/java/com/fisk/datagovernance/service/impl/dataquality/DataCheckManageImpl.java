@@ -55,16 +55,28 @@ import com.fisk.datamanagement.dto.standards.StandardsDTO;
 import com.fisk.datamanagement.enums.ValueRangeTypeEnum;
 import com.fisk.datamodel.client.DataModelClient;
 import com.fisk.mdm.client.MdmClient;
+import com.fisk.mdm.vo.masterdata.ExportResultVO;
 import com.fisk.system.client.UserClient;
 import com.fisk.system.dto.datasource.DataSourceDTO;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -3280,6 +3292,102 @@ public class DataCheckManageImpl extends ServiceImpl<DataCheckMapper, DataCheckP
             }
         }
         return all;
+    }
+
+    @Override
+    public void downloadDataCheckLogs(DataCheckLogsQueryDTO dto, HttpServletResponse response) {
+        List<DataCheckLogExcelVO> all = dataCheckLogsMapper.getDataCheckLogExcel(dto);
+        if (all != null && CollectionUtils.isNotEmpty(all)) {
+            for (DataCheckLogExcelVO dataCheckLogsVO : all) {
+                // 秒转分
+                if (StringUtils.isNotEmpty(dataCheckLogsVO.getCheckDataDuration())) {
+                    int minutes = Integer.parseInt(dataCheckLogsVO.getCheckDataDuration()) / 60;
+                    int seconds = Integer.parseInt(dataCheckLogsVO.getCheckDataDuration()) % 60;
+                    dataCheckLogsVO.setCheckDataDuration(minutes + "分" + seconds + "秒");
+                }
+            }
+        }
+        ExportVO exportVO = new ExportVO();
+        exportVO.setDataArray(all);
+        List<String> displayHeaderList = Arrays.asList("报告名称", "规则名称", "检查规则内容","规则类型", "检查表", "检查字段", "检查结果", "检查数据条数", "错误数据条数", "检查时间", "检查耗时", "质量分析");
+        exportVO.setHeaderDisplayList(displayHeaderList);
+        List<String> headerList = Arrays.asList("reportName", "ruleName", "checkRuleIllustrate", "checkTemplateName", "tableName", "fieldName", "checkResult", "checkTotalCount", "checkFailCount", "checkDataStartTime", "checkDataDuration", "qualityAnalysis");
+        exportVO.setHeaderList(headerList);
+        exportVO.setFileName("质量检测日志分析");
+        exportExcel(exportVO, response);
+    }
+
+    public void exportExcel(ExportVO vo, HttpServletResponse response) {
+        Workbook workbook = new SXSSFWorkbook();
+        Sheet sheet = workbook.createSheet("sheet1");
+        Row row1 = sheet.createRow(0);
+        if (CollectionUtils.isEmpty(vo.getHeaderDisplayList())) {
+            ResultEntityBuild.build(ResultEnum.CODE_NOT_EXIST);
+        }
+        //添加表头
+        for (int i = 0; i < vo.getHeaderDisplayList().size(); i++) {
+            row1.createCell(i).setCellValue(vo.getHeaderDisplayList().get(i));
+        }
+        if (!CollectionUtils.isEmpty(vo.getDataArray())) {
+            for (int i = 0; i < vo.getDataArray().size(); i++) {
+                Row  row =  sheet.createRow(i + 1);
+                DataCheckLogExcelVO excelVO = vo.getDataArray().get(i);
+                for (int j = 0; j < vo.getHeaderList().size(); j++) {
+                    Cell cell =  row.createCell(j);
+                    String header = vo.getHeaderList().get(j);
+                    Object value = null;
+                    if("reportName".equals(header)){
+                        value = excelVO.getReportName();
+                    }else if("ruleName".equals(header)){
+                        value = excelVO.getRuleName();
+                    }else if("checkRuleIllustrate".equals(header)){
+                        value = excelVO.getCheckRuleIllustrate();
+                    }else if("checkTemplateName".equals(header)){
+                        value = excelVO.getCheckTemplateName();
+                    }else if("tableName".equals(header)){
+                        if(excelVO.getSchemaName() != null){
+                            value = excelVO.getSchemaName() + "." + excelVO.getTableName();
+                        }else {
+                            value = excelVO.getTableName();
+                        }
+                    }else if("fieldName".equals(header)){
+                        value = excelVO.getFieldName();
+                    }else if("checkResult".equals(header)){
+                        value = excelVO.getCheckResult();
+                    }else if("checkTotalCount".equals(header)){
+                        value = excelVO.getCheckTotalCount();
+                    }else if("checkFailCount".equals(header)){
+                        value = excelVO.getCheckFailCount();
+                    }else if("checkDataStartTime".equals(header)){
+                        value = excelVO.getCheckDataStartTime();
+                    }else if("checkDataDuration".equals(header)){
+                        value = excelVO.getCheckDataDuration();
+                    }else if("qualityAnalysis".equals(header)){
+                        value = excelVO.getQualityAnalysis();
+                    }
+                    if (value instanceof Number) {
+                        cell.setCellValue(((Number) value).doubleValue()); // 或者使用其他Number类型
+                    } else {
+                        cell.setCellValue(value == null ? "" : value.toString());
+                    }
+                }
+            }
+        }
+        //将文件存到指定位置
+        try {
+            //输出Excel文件
+            OutputStream output = response.getOutputStream();
+            response.reset();
+            response.setContentType("application/octet-stream;charset=UTF-8");
+            response.addHeader("Content-Disposition", "attachment;filename="+ URLEncoder.encode(vo.getFileName(), "UTF-8") +".xlsx");
+            response.addHeader("Pargam", "no-cache");
+            response.addHeader("Cache-Control", "no-cache");
+            workbook.write(output);
+            output.close();
+        } catch (Exception e) {
+            log.error("export excel error:", e);
+            throw new FkException(ResultEnum.SQL_ANALYSIS);
+        }
     }
 
     @Override

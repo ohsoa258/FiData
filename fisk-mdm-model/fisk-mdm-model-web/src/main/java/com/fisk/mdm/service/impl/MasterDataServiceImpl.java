@@ -134,9 +134,6 @@ public class MasterDataServiceImpl implements IMasterDataService {
     @Value("${pgsql-mdm.password}")
     private String password;
 
-    @Value("${downloadpath}")
-    private String filePath;
-
     /**
      * 系统字段
      */
@@ -239,12 +236,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
 
     @Override
     public void downLoadExcel(FileDTO dto, HttpServletResponse response) {
+        String filePath = System.getProperty("user.dir")+ File.separator +"downloadExcel";
         File file = new File(filePath+File.separator+dto.getFilePath());
-
-        // 判断文件是否存在
-        if (!file.exists()) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return;
+        File directory = new File(filePath);
+        log.info("filePath:"+filePath);
+        // 判断目录是否存在，不存在则创建目录
+        if (!directory.exists()) {
+            directory.mkdirs();
         }
 
         // 设置响应头，告诉浏览器这是一个文件下载
@@ -1612,6 +1610,13 @@ public class MasterDataServiceImpl implements IMasterDataService {
         }
         String fileName =  System.currentTimeMillis() + ".xlsx";
         // 临时文件路径和文件名
+        String filePath = System.getProperty("user.dir")+ File.separator +"downloadExcel";
+        log.info("filePath:{}",filePath);
+        File directory = new File(filePath);
+        // 判断目录是否存在，不存在则创建目录
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
         String tmpFilePath = filePath + File.separator + fileName;  // 使用当前时间戳防止文件名冲突
         File tmpFile = new File(tmpFilePath);
 
