@@ -491,6 +491,10 @@ public class DataSourceManageImpl extends ServiceImpl<DataSourceMapper, DataSour
                 case POWERBI_DATASETS:
                     String accessToken = powerBIAuthUtils.getAccessToken(dto.powerbiTenantId, dto.powerbiClientId, dto.powerbiClientSecret);
                     return ResultEnum.SUCCESS;
+                case PI:
+                    Class.forName(DataSourceTypeEnum.PI.getDriverName());
+                    conn = DriverManager.getConnection(dto.conStr, dto.conAccount, dto.conPassword);
+                    return ResultEnum.SUCCESS;
                 default:
                     return ResultEnum.DS_DATASOURCE_CON_WARN;
             }

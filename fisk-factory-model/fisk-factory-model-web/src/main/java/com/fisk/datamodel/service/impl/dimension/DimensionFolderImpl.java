@@ -587,7 +587,7 @@ public class DimensionFolderImpl
         }
         DimensionFolderPO po = new DimensionFolderPO();
         po.dimensionFolderCnName = "公共域维度";
-        po.dimensionFolderEnName = "Common domain dimension";
+        po.dimensionFolderEnName = "Commondomaindimension";
         po.share = true;
         if (!this.save(po)) {
             throw new FkException(ResultEnum.SAVE_DATA_ERROR);

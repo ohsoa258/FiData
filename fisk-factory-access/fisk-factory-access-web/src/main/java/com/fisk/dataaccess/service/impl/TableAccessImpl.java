@@ -1643,7 +1643,19 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                     List<AppDataSourcePO> dataSourcePo = appDataSourceImpl.query().eq("app_id", e.id).list();
                     if (!CollectionUtils.isEmpty(dataSourcePo)) {
                         for (AppDataSourcePO item : dataSourcePo) {
-                            if (item.driveType.equalsIgnoreCase(DataSourceTypeEnum.MYSQL.getName()) || item.driveType.equalsIgnoreCase(DataSourceTypeEnum.SQLSERVER.getName()) || item.driveType.equalsIgnoreCase(DataSourceTypeEnum.ORACLE.getName()) || item.driveType.equalsIgnoreCase(DataSourceTypeEnum.OPENEDGE.getName())) {
+                            if (item.driveType.equalsIgnoreCase(DbTypeEnum.sqlserver.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.mysql.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.oracle.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.postgresql.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.sftp.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.openedge.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.sapbw.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.powerbi_datasets.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.mongodb.getName())
+                                    || item.driveType.equalsIgnoreCase(DbTypeEnum.pi.getName())
+                            ) {
                                 list.add(e);
                             }
                         }
@@ -1711,6 +1723,8 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.dm8.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.api.getName())
                                 || item.driveType.equalsIgnoreCase(DbTypeEnum.powerbi_datasets.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.mongodb.getName())
+                                || item.driveType.equalsIgnoreCase(DbTypeEnum.pi.getName())
                         ) {
                             f.type = "数据湖表任务";
                         }
@@ -2725,10 +2739,11 @@ public class TableAccessImpl extends ServiceImpl<TableAccessMapper, TableAccessP
             }
         }
         Instant inst5 = Instant.now();
-        System.out.println("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
+        log.info("最终执行时间 : " + Duration.between(inst1, inst5).toMillis());
 
         //powerbi暂时无需数据转换，前面已经全部处理为字符串
-        if (!dataSourceTypeEnum.equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POWERBI_DATASETS)) {
+        if (!dataSourceTypeEnum.equals(com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.POWERBI_DATASETS)
+        ) {
             //数据类型转换
             typeConversion(dataSourceTypeEnum, array.fieldNameDTOList, registration.targetDbId);
         }

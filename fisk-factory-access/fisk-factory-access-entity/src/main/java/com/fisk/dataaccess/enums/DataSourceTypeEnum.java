@@ -29,6 +29,7 @@ public enum DataSourceTypeEnum implements BaseEnum {
     HUDI(15, "hudi"),
     MONGODB(16, "mongodb"),
     POWERBI_DATASETS(17, "powerbi_datasets"),
+    PI(18, "pi"),
     ;
 
     DataSourceTypeEnum(int value, String name) {

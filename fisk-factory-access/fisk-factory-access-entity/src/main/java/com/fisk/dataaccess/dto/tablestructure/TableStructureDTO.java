@@ -37,6 +37,12 @@ public class TableStructureDTO {
     public String fieldDes;
 
     /**
+     * PI数据库数据的工程单位
+     */
+    @ApiModelProperty(value = "PI数据库数据的工程单位", required = true)
+    public String engUnits;
+
+    /**
      * 字段精度
      */
     @ApiModelProperty(value = "字段精度", required = true)

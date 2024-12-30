@@ -171,6 +171,14 @@
             <version>2.8.8</version>
         </dependency>
 
+        <!-- PI实时数据库驱动 -->
+        <dependency>
+            <groupId>com.osisoft</groupId>
+            <artifactId>pijdbc</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/src/main/resources/lib/PIJDBCDriver.jar</systemPath>
+        </dependency>
 
     </dependencies>
 

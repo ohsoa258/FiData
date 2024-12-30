@@ -63,6 +63,8 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
     private PBIUtils pbiUtils;
     @Resource
     private PowerBIAuthUtils powerBIAuthUtils;
+    @Resource
+    private PiPlusUtils piPlusUtils;
 
 
     @Resource
@@ -281,6 +283,11 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
                     return null;
                 }
                 dataSource.tableDtoList = mongoDbUtils.getCollectionsForAccess(mongoClient, po.dbName);
+            } else if (DataSourceTypeEnum.PI.getName().equalsIgnoreCase(dataSource.driveType)) {
+                //todo；PI实时数据库公司没有环境，具体测试需要放到客户环境测试
+                //表结构
+                Connection con = DbConnectionHelper.connection(po.connectStr, po.connectAccount, po.connectPwd, com.fisk.common.core.enums.dataservice.DataSourceTypeEnum.OPENEDGE);
+                dataSource.tableDtoList = piPlusUtils.getTableNameAndColumns(con, po.dbName);
             }
 
             if (CollectionUtils.isNotEmpty(dataSource.tableDtoList)) {
@@ -845,6 +852,10 @@ public class AppDataSourceImpl extends ServiceImpl<AppDataSourceMapper, AppDataS
             driverName = DataSourceTypeEnum.HUDI.getName();
         } else if (DataSourceTypeEnum.MONGODB.getName().equalsIgnoreCase(driverName)) {
             driverName = DataSourceTypeEnum.MONGODB.getName();
+        } else if (DataSourceTypeEnum.POWERBI_DATASETS.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.POWERBI_DATASETS.getName();
+        } else if (DataSourceTypeEnum.PI.getName().equalsIgnoreCase(driverName)) {
+            driverName = DataSourceTypeEnum.PI.getName();
         }
         return driverName;
     }
