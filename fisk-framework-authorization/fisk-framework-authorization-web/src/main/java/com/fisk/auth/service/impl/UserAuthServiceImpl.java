@@ -2,6 +2,8 @@ package com.fisk.auth.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fisk.auth.constants.JwtConstants;
 import com.fisk.auth.dto.UserAuthDTO;
 import com.fisk.auth.dto.ssologin.SSOResultEntityDTO;
@@ -30,17 +32,24 @@ import com.fisk.system.dto.userinfo.UserDTO;
 import com.fisk.system.enums.ssologin.SSORoleInfoEnum;
 import io.jsonwebtoken.JwtParser;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import sun.net.www.http.HttpClient;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static com.fisk.auth.constants.JwtConstants.COOKIE_NAME;
 
@@ -68,6 +77,18 @@ public class UserAuthServiceImpl implements UserAuthService {
      * JWT解析器
      */
     private JwtParser jwtParser;
+
+    @Value("${AzureAD.tenantId}")
+    private String tenantId;
+
+    @Value("${AzureAD.clientId}")
+    private String clientId;
+
+    @Value("${AzureAD.clientSecret}")
+    private String clientSecret;
+
+    @Value("${AzureAD.redirectUri}")
+    private String redirectUri;
 
     @Override
     public ResultEntity<String> login(UserAuthDTO userAuthDTO) {
@@ -320,6 +341,119 @@ public class UserAuthServiceImpl implements UserAuthService {
             log.error("强生交通单点登录方法报错stack：" + e);
             throw new FkException(ResultEnum.SSO_LOGIN_FAILURE, e);
         }
+    }
+
+    @Override
+    public ResultEntity<String> azureAdLogin(String code) {
+        String fidataToken = null;
+        try {
+            // 第一步：发送POST请求获取access_token
+            String accessToken = getAccessToken(tenantId, clientId, clientSecret, code, redirectUri);
+            if (accessToken!= null) {
+                // 第二步：使用获取到的access_token发送GET请求获取用户信息
+                String userInfoJson = getUserInfo(accessToken);
+                if (userInfoJson!= null) {
+                    // 解析JSON获取mail字段（这里简化使用字符串处理，实际项目中建议使用JSON解析库如Jackson、Gson等）
+                    String email = extractMailFromJson(userInfoJson);
+                    // wangjian@fisksoft.com
+                    if (email!= null) {
+                        ResultEntity<List<UserDTO>> resultEntity = userClient.getAllUserListWithPwd();
+                        if (resultEntity.getCode() != ResultEnum.SUCCESS.getCode()) {
+                            throw new FkException(ResultEnum.ERROR, "获取用户列表失败");
+                        }
+                        List<UserDTO> userDTOS = resultEntity.getData();
+                        for (UserDTO userDTO : userDTOS) {
+                            if (email.equals(userDTO.getEmail())) {
+                                //4、如果用户邮箱匹配成功 则触发平台自己的登录
+                                UserAuthDTO userAuthDTO = new UserAuthDTO();
+                                userAuthDTO.setUserAccount(userDTO.getUserAccount());
+                                String password = userDTO.getPassword();
+                                userAuthDTO.setPassword(password);
+                                ResultEntity<String> loginResult = insideLogin(userAuthDTO);
+                                if (loginResult.getCode() != ResultEnum.SUCCESS.getCode()) {
+                                    throw new FkException(ResultEnum.ERROR, "登录失败");
+                                }
+                                fidataToken = loginResult.getData();
+                                break;
+                            }
+                        }
+                        if (fidataToken != null) {
+                            return ResultEntityBuild.buildData(ResultEnum.SUCCESS, fidataToken);
+                        } else {
+                            return ResultEntityBuild.buildData(ResultEnum.SSO_LOGIN_FAILURE, "单点登录失败,用户信息不匹配。");
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ResultEntityBuild.buildData(ResultEnum.SSO_LOGIN_FAILURE, "单点登录失败,用户信息不匹配。");
+    }
+
+    private static String extractMailFromJson(String json) {
+        try {
+            JSONObject jsonObject = JSONObject.parseObject(json);
+            return jsonObject.getString("mail");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static String getUserInfo(String accessToken) throws IOException {
+        String userInfoUrl = "https://graph.microsoft.com/v1.0/me";
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        HttpGet httpGet = new HttpGet(userInfoUrl);
+        httpGet.setHeader("Authorization", "Bearer " + accessToken);
+
+        HttpResponse response = httpClient.execute(httpGet);
+        if (response.getStatusLine().getStatusCode() == 200) {
+            return EntityUtils.toString(response.getEntity(),"UTF-8");
+        }
+        return null;
+    }
+
+    private String getAccessToken(String tenantId, String clientId, String clientSecret, String code, String redirectUri) throws IOException {
+        String tokenUrl = "https://login.microsoftonline.com/" + tenantId + "/oauth2/v2.0/token";
+        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
+        HttpPost httpPost = new HttpPost(tokenUrl);
+        Map<String, String> params = new HashMap<>();
+        params.put("client_id", clientId);
+        params.put("client_secret", clientSecret);
+        params.put("grant_type", "authorization_code");
+        params.put("code", code);
+        params.put("redirect_uri", redirectUri);
+
+        httpPost.setEntity(new StringEntity(buildQueryString(params)));
+        httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        HttpResponse response = httpClient.execute(httpPost);
+        if (response.getStatusLine().getStatusCode() == 200) {
+            return parseAccessTokenFromResponse(EntityUtils.toString(response.getEntity()));
+        }
+        return null;
+    }
+
+    private String parseAccessTokenFromResponse(String responseBody) {
+        try {
+            JSONObject jsonObject = JSONObject.parseObject(responseBody);
+            return jsonObject.getString("access_token");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private String buildQueryString(Map<String, String> params) {
+        StringBuilder queryString = new StringBuilder();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (queryString.length() > 0) {
+                queryString.append("&");
+            }
+            queryString.append(entry.getKey()).append("=").append(entry.getValue());
+        }
+        return queryString.toString();
     }
 
     /**

@@ -102,3 +102,8 @@ hystrix:
       coreSize: 30
       maxQueueSize: 500
       queueSizeRejectionThreshold: 300
+AzureAD:
+  tenantId: cd6ec314-7506-4ed6-b46e-681443ca18e3
+  clientId: 84f4618d-8336-43eb-9ef3-e2ec85f39806
+  clientSecret: tHa8Q~J08rqUdqSBOnbDEnwRSBegzkjlp5RmiduT
+  redirectUri: https://192.168.11.130:83/dmp/Home/Default

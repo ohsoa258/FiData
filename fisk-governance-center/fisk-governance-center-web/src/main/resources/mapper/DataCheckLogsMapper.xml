@@ -61,4 +61,49 @@
         </if>
         ORDER BY log.create_time,log.rule_id DESC
     </select>
+
+    <select id="getDataCheckLogExcel" resultType="com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogExcelVO">
+        SELECT
+        replog.report_name,
+        log.rule_name,
+        log.check_rule_illustrate,
+        log.check_template_name,
+        log.schema_name,
+        log.table_name,
+        log.field_name,
+        log.check_result,
+        log.check_total_count,
+        log.check_fail_count,
+        log.check_data_start_time,
+        log.check_data_duration,
+        log.quality_analysis
+        FROM
+        tb_datacheck_rule_logs log
+        LEFT JOIN tb_quality_report_log replog ON log.check_batch_number = replog.report_batch_number
+        WHERE
+        log.del_flag =1 AND replog.del_flag =1
+        <if test="query.logType !=0 ">
+            and log.log_type = #{query.logType}
+        </if>
+        <if test="query.reportBatchNumber !=null and query.reportBatchNumber != '' ">
+            and log.check_batch_number = #{query.reportBatchNumber}
+        </if>
+        <if test="query.ruleId !=0 ">
+            and log.rule_id = #{query.ruleId}
+        </if>
+        <if test="query.templateId !=0 ">
+            and log.template_id = #{query.templateId}
+        </if>
+        <if test="query.ruleName !=null and query.ruleName !='' ">
+            and log.rule_name like concat('%', #{query.ruleName}, '%')
+        </if>
+        <if test="query.tableFullName != null and query.tableFullName != '' ">
+            AND (
+            CASE
+            WHEN IFNULL( log.schema_name, '' )= '' THEN
+            log.table_name ELSE CONCAT( log.schema_name, '.', log.table_name )
+            END = #{query.tableFullName})
+        </if>
+        ORDER BY log.create_time,log.rule_id DESC
+    </select>
 </mapper>

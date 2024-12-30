@@ -1,7 +1,6 @@
 package com.fisk.mdm.job;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,12 +15,10 @@ import java.io.File;
 @Component
 public class CleardDownLoadExcelTask {
 
-    @Value("${downloadpath}")
-    private String filePath;
-
     // 每天凌晨1点执行任务
     @Scheduled(cron = "0 0 1 * * ?")
     public void doTask() {
+        String filePath = System.getProperty("user.dir")+ File.separator +"downloadExcel";
         // 获取文件夹路径
         File directory = new File(filePath);
 

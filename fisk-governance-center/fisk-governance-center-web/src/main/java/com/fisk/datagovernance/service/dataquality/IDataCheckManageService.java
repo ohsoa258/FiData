@@ -13,6 +13,7 @@ import com.fisk.datagovernance.dto.dataquality.datacheck.*;
 import com.fisk.datagovernance.entity.dataquality.DataCheckPO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -94,6 +95,8 @@ public interface IDataCheckManageService extends IService<DataCheckPO> {
      * @return 分页列表
      */
     Page<DataCheckLogsVO> getDataCheckLogsPage(DataCheckLogsQueryDTO dto);
+
+    void downloadDataCheckLogs(DataCheckLogsQueryDTO dto, HttpServletResponse response);
 
     /**
      * 检查日志结果

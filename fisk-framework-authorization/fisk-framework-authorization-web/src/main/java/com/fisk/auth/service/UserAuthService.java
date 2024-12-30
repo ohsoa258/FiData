@@ -48,4 +48,11 @@ public interface UserAuthService {
      * @return accessToken
      */
     ResultEntity<String> qsLogin(String token);
+
+    /**
+     * Azure AD--单点登录
+     *
+     * @return accessToken
+     */
+    ResultEntity<String> azureAdLogin(String code);
 }

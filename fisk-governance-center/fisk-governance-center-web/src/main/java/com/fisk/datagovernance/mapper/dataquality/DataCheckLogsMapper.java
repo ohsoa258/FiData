@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fisk.common.framework.mybatis.FKBaseMapper;
 import com.fisk.datagovernance.dto.dataquality.datacheck.DataCheckLogsQueryDTO;
 import com.fisk.datagovernance.entity.dataquality.DataCheckLogsPO;
+import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogExcelVO;
 import com.fisk.datagovernance.vo.dataquality.datacheck.DataCheckLogsVO;
-import com.fisk.datagovernance.vo.dataquality.datacheck.DeleteCheckResultVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -23,6 +23,7 @@ public interface DataCheckLogsMapper extends FKBaseMapper<DataCheckLogsPO>
 {
     Page<DataCheckLogsVO> getAll(Page<DataCheckLogsVO> page, @Param("query") DataCheckLogsQueryDTO query);
 
+    List<DataCheckLogExcelVO> getDataCheckLogExcel(@Param("query") DataCheckLogsQueryDTO query);
     @Select("SELECT\n" +
             "\tid,\n" +
             "\trule_id AS ruleId,\n" +

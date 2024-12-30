@@ -77,6 +77,8 @@ public enum ResultEnum {
     GET_SYSTEM_EMAIL_SERVER_ERROR(1051, "获取平台配置邮件服务器信息失败"),
     HUDI_CONNECT_ERROR(1052, "平台配置测试HUDI连接异常"),
 
+    EMAIL_EXISTS(1053, "邮箱不能重复"),
+
 
     /**
      * 报表可视化服务，错误码从2000开始
